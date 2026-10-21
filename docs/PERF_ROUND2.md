@@ -611,3 +611,53 @@ assumes that the committed ids form a dense prefix (it probes `next_id`
 upward until the first id that is missing), and committing the writer stores
 of a call concurrently would let a crash leave a later id durable and an
 earlier one lost.
+
+## Summary and proof
+
+| # | change | result | cut or not done |
+|---|---|---|---|
+| 1 | store-once cache per open store | N stores on N threads scale 1.95x / 3.8x / 7.3x / 8.0x at 2 / 4 / 8 / 16 stores on tmpfs (`main`: 1.0x); NVMe, 16 stores: 199 -> 984 calls/s, p99 403 -> 48 ms; single store and all outputs unchanged | |
+| 2 | dedupe key without `src` / `rt` | real 30-day sample: 11.9% of records dedupe; index -8.3%, originals -6.8%, total -7.1%; TraceBench byte-identical | reads of a repeat cost a second frame (item 4) |
+| 3 | index segment version 3 | index -31.5% on tier 1, -24.6% on the real sample (bar -30%: missed there by 5 points); search identical, latency equal | the id table (12% of the new index) stays; fingerprints cut to 96 bits not taken |
+| 4 | read paths | cold `get` -15% (8/8 pairs); multi-row reads on `query_threads`: 1-hour `time_range` 5.1 -> 3.2 / 2.5 / 2.0 ms at 2 / 4 / 8 threads | larger cache, smaller frames, dropping the digest: not worth it (55 us floor per cold frame) |
+| 5 | long queries | `max_query_terms` (off by default): 64 KB query on the 1.7M-row store 60.6 -> 7.7 ms p50 with 256, no quality change on any labelled set | no lossless win exists; the default is the reviewer's |
+| 6 | fsync audit | engine: at most one flush per batch in both log modes; the extra flush was the capture-state save, 4.7 -> 2.7 (3 writers) and 3.2 -> 1.2 (1 writer) syncs per append call; 1 store: 281 -> 955 calls/s | one flush for several writers of a call: breaks the dense-prefix recovery |
+
+Proof, per branch tip (`cargo test --workspace --locked`; `cargo clippy
+--workspace --all-targets --locked` against the 81 warnings of `main`, compared
+as (message, file) pairs; `tracebench verify` on `smoke.tbe`, 1,237 checks, for
+`oojuro` and `oojuro:log=private`):
+
+| tip | tests (baseline 258 passed, 2 ignored) | new clippy warnings | verify |
+|---|---|---|---|
+| item 1 | 262 passed | 0 (one in the probe, fixed in the same commit) | 1,237 / 1,237, both |
+| item 2 | 271 passed, 3 ignored | 0 (four in the first version, fixed) | 1,237 / 1,237, both |
+| item 3 | 277 passed | 0 | 1,237 / 1,237, both |
+| item 4 | 279 passed | 0 | 1,237 / 1,237, both |
+| item 5 | 280 passed | 0 | (same engine paths) |
+| item 6 | 281 passed, 3 ignored | 0 | 1,237 / 1,237, both |
+
+Exactness at the last tip: the 30,905 tier-1 turn-loop queries return the same
+ranked ids and score bits from the store `main` built (version 2 segments) and
+from a store built by this tip with a deterministic load (30,905 identical,
+0 continued, 0 other); SciFact, NFCorpus, FiQA (dev), LongMemEval (dev) and the
+agent-trace turn loop give the same value in every metric as `main`. Formats:
+index segments version 3 and relaxed entry lists are not readable by a build
+from before this round; stores written by `main` open, answer, append and merge
+(`crates/oojuro-trace/tests/compat.rs`, fixture written by `main`).
+
+Review and merge, in order (each branch is cut from the previous one, so
+`git merge --ff-only` of each in turn fast-forwards `main`):
+
+```bash
+git log --oneline main..perf-6-fsync-audit
+git diff main perf-1-store-cache
+git diff perf-1-store-cache perf-2-dedupe-key
+git diff perf-2-dedupe-key perf-3-lean-index
+git diff perf-3-lean-index perf-4-read-paths
+git diff perf-4-read-paths perf-5-long-queries
+git diff perf-5-long-queries perf-6-fsync-audit
+git checkout main
+for b in perf-1-store-cache perf-2-dedupe-key perf-3-lean-index perf-4-read-paths \
+         perf-5-long-queries perf-6-fsync-audit; do git merge --ff-only $b; done
+```
