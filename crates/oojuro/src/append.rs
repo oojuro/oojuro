@@ -17,6 +17,10 @@
 //! `append-seen.bin`, bounded to the newest [`SEEN_CAP`]. Forgetting a
 //! record does not drop its key, so a re-sent history never brings a
 //! forgotten message back.
+//!
+//! The cache belongs to the open store (it lives in the journal's [`Reader`]
+//! state and is loaded on the store's first append), so journals of
+//! different stores never share it or wait for each other.
 use crate::{Result, journal::Owner};
 use oojuro_capture::{
     Rec, hash64,
@@ -33,7 +37,7 @@ use std::{
     fs,
     io::Write,
     path::{Path, PathBuf},
-    sync::Mutex,
+    sync::{Arc, Mutex},
 };
 
 /// One record from no log file.
@@ -104,7 +108,7 @@ pub const SEEN_CAP: usize = 1 << 18;
 pub const SEEN_FILE: &str = "append-seen.bin";
 
 /// Dedupe keys seen, with the id of the record stored under each.
-struct Seen {
+pub(crate) struct Seen {
     path: PathBuf,
     map: HashMap<u64, u64>,
     order: VecDeque<u64>,
@@ -172,16 +176,10 @@ impl Seen {
     }
 }
 
-/// The store has one owning process, so one cache per process is exact.
-static SEEN: Mutex<Option<Seen>> = Mutex::new(None);
-
-fn with_seen<T>(store: &Path, f: impl FnOnce(&mut Seen) -> Result<T>) -> Result<T> {
-    let mut g = SEEN.lock().unwrap_or_else(|e| e.into_inner());
-    if g.as_ref().is_none_or(|s| s.path != store.join(SEEN_FILE)) {
-        *g = Some(Seen::load(store)?);
-    }
-    f(g.as_mut().unwrap())
-}
+/// One store's cache, shared by the clones of its journal's reader. The
+/// store has one owning writer, so the lock is never contended; it only
+/// lets the writer's `&Reader` reach the cache.
+pub(crate) type SeenCache = Arc<Mutex<Option<Seen>>>;
 
 /// Session id of a session key.
 pub fn session_id(key: &str) -> u64 {
@@ -206,9 +204,13 @@ struct Ready {
 impl Owner<'_> {
     /// Append records that come from no log file (see the module docs).
     pub fn append(&mut self, records: &[NewRecord]) -> Result<Appended> {
-        let store = self.cap.dir.clone();
         self.cap.refresh_policy();
-        with_seen(&store, |seen| self.append_with(records, seen))
+        let cache = Arc::clone(&self.reader.seen);
+        let mut g = cache.lock().unwrap_or_else(|e| e.into_inner());
+        if g.is_none() {
+            *g = Some(Seen::load(&self.cap.dir)?);
+        }
+        self.append_with(records, g.as_mut().unwrap())
     }
 
     fn append_with(&mut self, records: &[NewRecord], seen: &mut Seen) -> Result<Appended> {
@@ -423,5 +425,55 @@ impl Owner<'_> {
             }
         }
         0
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::journal::Journal;
+    use std::sync::mpsc;
+    use std::time::Duration;
+
+    fn scratch(name: &str) -> PathBuf {
+        let base = std::env::var_os("TMPDIR").map(PathBuf::from).unwrap_or_else(std::env::temp_dir);
+        let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().subsec_nanos();
+        base.join(format!("oj-seen-{name}-{}-{nanos}", std::process::id()))
+    }
+
+    fn one(text: &str, key: &str) -> NewRecord {
+        NewRecord {
+            writer: "w".into(),
+            kind: "tool_result".into(),
+            text: text.into(),
+            via: "hook".into(),
+            dedupe: key.into(),
+            ..NewRecord::default()
+        }
+    }
+
+    /// A store's append never touches another store's cache lock: with
+    /// store A mid-append (its lock held) store B still completes.
+    #[test]
+    fn a_store_does_not_wait_for_another_stores_cache() {
+        let (da, db) = (scratch("a"), scratch("b"));
+        let ja = Journal::open(&da).unwrap();
+        let mut jb = Journal::open(&db).unwrap();
+        let held = Arc::clone(&ja.reader().seen);
+        let _a_is_appending = held.lock().unwrap();
+        let (tx, rx) = mpsc::channel();
+        std::thread::scope(|s| {
+            s.spawn(|| {
+                let out = jb.owner().append(&[one("hello", "k1")]).unwrap();
+                tx.send(out.ids.len()).unwrap();
+            });
+            let n = rx.recv_timeout(Duration::from_secs(60)).expect("store B waited for store A's cache");
+            assert_eq!(n, 1);
+        });
+        drop(_a_is_appending);
+        drop(ja);
+        drop(jb);
+        let _ = fs::remove_dir_all(&da);
+        let _ = fs::remove_dir_all(&db);
     }
 }

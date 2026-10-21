@@ -111,6 +111,8 @@ struct Writers {
 pub struct Reader {
     db: Arc<TraceDb>,
     writers: Arc<RwLock<Writers>>,
+    /// The store-once cache of `Owner::append` (this store's own).
+    pub(crate) seen: crate::append::SeenCache,
     store: PathBuf,
 }
 
@@ -142,7 +144,8 @@ impl Journal {
 
     /// Wrap a capture owner (the recorder opens it with its own options).
     pub fn from_capture(cap: Capture) -> Self {
-        let reader = Reader { db: Arc::clone(&cap.db), writers: Arc::default(), store: cap.dir.clone() };
+        let reader =
+            Reader { db: Arc::clone(&cap.db), writers: Arc::default(), seen: Arc::default(), store: cap.dir.clone() };
         let j = Self { cap, reader };
         j.sync_writers();
         j
