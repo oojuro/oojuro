@@ -3,12 +3,15 @@
 //!   codecs dump   <corpus.rec> <out.txt>
 //!   codecs whole  <corpus.rec> <sample_bytes> <codec>...
 //!   codecs blocks <corpus.rec> <sample_bytes> <block_bytes> <dict_bytes> <codec>...
+//!   codecs run    <corpus.rec> <sample_bytes> <label> <tmp_dir>   (oojuro run format; profile from env)
 //!
 //! Every mode verifies a byte-exact roundtrip (BLAKE3) and prints one JSON line
 //! per codec. Timings are single-threaded wall clock. `blocks` packs whole
 //! records in append order into independent blocks of at least `block_bytes`
 //! raw bytes (0 = one record per block) and measures cold excerpt fetches:
-//! 400 queries x 20 random records, 2 KiB at a random offset, no decode cache.
+//! QUERIES (400) x 20 random records, EXCERPT (1 KiB) at a random offset, no
+//! decode cache. With a dictionary (dict_bytes > 0), zstd uses it as a trained
+//! dictionary, LZ4 its last 64 KiB and brotli its content as a custom dictionary.
 
 use oojuro_store::corpus::{CorpusRecord, read_corpus};
 use oojuro_store::util::{Rng, percentile};
@@ -118,7 +121,28 @@ impl<'a> Ctx<'a> {
                     ..Default::default()
                 };
                 let mut out = Vec::new();
-                brotli::BrotliCompress(&mut &src[..], &mut out, &params).unwrap();
+                if self.side.raw_dict.is_empty() {
+                    brotli::BrotliCompress(&mut &src[..], &mut out, &params).unwrap();
+                } else {
+                    // Custom dictionary (shared LZ77 prefix), as in brotli's `-D`.
+                    let (mut ib, mut ob) = ([0u8; 4096], [0u8; 4096]);
+                    let mut nop = |_: &mut brotli::interface::PredictionModeContextMap<brotli::InputReferenceMut>,
+                                   _: &mut [brotli::interface::StaticCommand],
+                                   _: brotli::InputPair,
+                                   _: &mut brotli::enc::StandardAlloc| ();
+                    brotli::BrotliCompressCustomIoCustomDict(
+                        &mut brotli::IoReaderWrapper(&mut &src[..]),
+                        &mut brotli::IoWriterWrapper(&mut out),
+                        &mut ib,
+                        &mut ob,
+                        &params,
+                        brotli::enc::StandardAlloc::default(),
+                        &mut nop,
+                        &self.side.raw_dict,
+                        std::io::Error::other("eof"),
+                    )
+                    .unwrap();
+                }
                 out
             }
             Spec::Xz { preset } => {
@@ -184,8 +208,17 @@ impl<'a> Ctx<'a> {
             Spec::Lz4Hc(_) => lz4::block::decompress(src, Some(raw_len as i32)).unwrap(),
             Spec::Brotli { .. } => {
                 let mut out = Vec::with_capacity(raw_len);
-                let mut r = brotli::Decompressor::new(src, 1 << 16);
-                read_upto(&mut r, &mut out, upto);
+                if self.side.raw_dict.is_empty() {
+                    let mut r = brotli::Decompressor::new(src, 1 << 16);
+                    read_upto(&mut r, &mut out, upto);
+                } else {
+                    use brotli::{Allocator, SliceWrapperMut};
+                    let mut a = brotli::enc::StandardAlloc::default();
+                    let mut d = <brotli::enc::StandardAlloc as Allocator<u8>>::alloc_cell(&mut a, self.side.raw_dict.len());
+                    d.slice_mut().copy_from_slice(&self.side.raw_dict);
+                    let mut r = brotli::Decompressor::new_with_custom_dict(src, 1 << 16, d);
+                    read_upto(&mut r, &mut out, upto);
+                }
                 out
             }
             Spec::Xz { .. } => {
@@ -222,6 +255,11 @@ impl<'a> Ctx<'a> {
             Spec::Fsst => self.side.fsst.as_ref().unwrap().decompressor().decompress(src),
         }
     }
+}
+
+/// 1-minute load average when a measurement starts (the machine is shared).
+fn load1() -> f64 {
+    std::fs::read_to_string("/proc/loadavg").ok().and_then(|s| s.split_whitespace().next()?.parse().ok()).unwrap_or(f64::NAN)
 }
 
 fn read_upto(r: &mut impl Read, out: &mut Vec<u8>, upto: usize) {
@@ -271,6 +309,7 @@ fn whole(path: &str, sample_bytes: usize, codecs: &[String]) {
             fsst: matches!(spec, Spec::Fsst).then(|| train_fsst(&recs)),
         };
         let mut ctx = Ctx::new(spec, &side);
+        let load = load1();
         let t = Instant::now();
         let packed = ctx.compress(&text);
         let ct = t.elapsed().as_secs_f64();
@@ -282,7 +321,7 @@ fn whole(path: &str, sample_bytes: usize, codecs: &[String]) {
         println!(
             "{}",
             json!({"mode":"whole","corpus":corpus_name(path),"codec":c,"raw":text.len(),"stored":packed.len(),
-                "ratio":packed.len() as f64 / text.len() as f64,"c_mbps":mb/ct,"d_mbps":mb/dt,"roundtrip":ok})
+                "ratio":packed.len() as f64 / text.len() as f64,"c_mbps":mb/ct,"d_mbps":mb/dt,"roundtrip":ok,"load1":load})
         );
         assert!(ok, "roundtrip failed for {c}");
     }
@@ -295,6 +334,7 @@ fn whole_tokenized(path: &str, text: &[u8], inner: &str, label: &str) {
     let side = Side { zdict: None, raw_dict: Vec::new(), fsst: None };
     let mut ctx = Ctx::new(parse(inner), &side);
     let s = std::str::from_utf8(text).unwrap();
+    let load = load1();
     let t = Instant::now();
     let ids = bpe.encode_ordinary(s);
     let mut stream = Vec::with_capacity(ids.len() * 3);
@@ -318,7 +358,7 @@ fn whole_tokenized(path: &str, text: &[u8], inner: &str, label: &str) {
         "{}",
         json!({"mode":"whole","corpus":corpus_name(path),"codec":label,"raw":text.len(),"stored":packed.len(),"tokens":ids.len(),
             "bytes_per_token":text.len() as f64/ids.len() as f64,"varint_stream":stream.len(),
-            "ratio":packed.len() as f64 / text.len() as f64,"c_mbps":mb/ct,"d_mbps":mb/dt,"roundtrip":ok})
+            "ratio":packed.len() as f64 / text.len() as f64,"c_mbps":mb/ct,"d_mbps":mb/dt,"roundtrip":ok,"load1":load})
     );
     assert!(ok, "tokenizer roundtrip failed");
 }
@@ -445,6 +485,13 @@ fn blocks(path: &str, sample_bytes: usize, block_bytes: usize, dict_bytes: usize
                         side.raw_dict = dict[dict.len().saturating_sub(65536)..].to_vec();
                         side_bytes += side.raw_dict.len();
                     }
+                    // Brotli gets the raw-content tail of the same trained dictionary
+                    // (a zstd dictionary is header + entropy tables + content; the
+                    // first 4 KiB, which hold the tables, are dropped).
+                    Spec::Brotli { .. } if !dict.is_empty() => {
+                        side.raw_dict = dict[4096.min(dict.len())..].to_vec();
+                        side_bytes += side.raw_dict.len();
+                    }
                     _ => {}
                 }
                 side
@@ -459,6 +506,7 @@ fn blocks(path: &str, sample_bytes: usize, block_bytes: usize, dict_bytes: usize
         } else {
             sides.iter().map(|s| Ctx::new(spec.clone(), s)).collect()
         };
+        let load = load1();
         let t = Instant::now();
         let packed: Vec<Vec<u8>> = blocks.iter().enumerate().map(|(i, b)| ctxs[dict_of(i)].compress(b)).collect();
         let ct = t.elapsed().as_secs_f64();
@@ -470,8 +518,10 @@ fn blocks(path: &str, sample_bytes: usize, block_bytes: usize, dict_bytes: usize
         }
         let dt = t.elapsed().as_secs_f64();
         assert!(ok, "roundtrip failed for {c}");
-        // Cold excerpt fetches: QUERIES (default 400) x 20 hits, each a 2 KiB range.
+        // Cold excerpt fetches: QUERIES (default 400) x 20 hits, each an EXCERPT range.
         let queries: usize = std::env::var("QUERIES").ok().and_then(|q| q.parse().ok()).unwrap_or(400);
+        // Excerpt length per fetch (EXCERPT, default 1 KiB; the track's first runs used 2 KiB).
+        let excerpt: usize = std::env::var("EXCERPT").ok().and_then(|q| q.parse().ok()).unwrap_or(1024);
         let mut rng = Rng::new(42);
         let (mut per_query, mut per_fetch) = (Vec::new(), Vec::new());
         let mut checksum = 0u64;
@@ -480,13 +530,13 @@ fn blocks(path: &str, sample_bytes: usize, block_bytes: usize, dict_bytes: usize
             for _ in 0..20 {
                 let i = rng.below(recs.len());
                 let (b, off, len) = loc[i];
-                let want = len.min(2048);
+                let want = len.min(excerpt);
                 let start = off + rng.below(len - want + 1);
                 let tf = Instant::now();
                 let out = ctxs[dict_of(b)].decompress(&packed[b], blocks[b].len(), start + want);
-                let excerpt = &out[start..start + want];
+                let piece = &out[start..start + want];
                 per_fetch.push(tf.elapsed().as_secs_f64() * 1e6);
-                checksum = checksum.wrapping_add(excerpt.first().copied().unwrap_or(0) as u64);
+                checksum = checksum.wrapping_add(piece.first().copied().unwrap_or(0) as u64);
             }
             per_query.push(tq.elapsed().as_secs_f64() * 1e6);
         }
@@ -506,11 +556,92 @@ fn blocks(path: &str, sample_bytes: usize, block_bytes: usize, dict_bytes: usize
                 "c_mbps":mb/ct,"d_mbps":mb/dt,"train_s":train_s,
                 "fetch_us_p50":percentile(&mut per_fetch.clone(),0.5),"fetch_us_p99":percentile(&mut per_fetch,0.99),
                 "query20_us_p50":percentile(&mut per_query.clone(),0.5),"query20_us_p99":percentile(&mut per_query,0.99),
-                "group":if by_kind {"kind"} else {"append"},
+                "group":if by_kind {"kind"} else {"append"},"excerpt":excerpt,"queries":queries,
                 "kind_ratio":if by_kind {json!((0..7).filter(|&k| kind_raw[k] > 0).map(|k| (oojuro_store::corpus::KIND_NAMES[k], kind_stored[k] as f64 / kind_raw[k] as f64)).collect::<std::collections::BTreeMap<_,_>>())} else {json!(null)},
-                "roundtrip":ok,"check":checksum})
+                "roundtrip":ok,"check":checksum,"load1":load})
         );
     }
+}
+
+/// Oojuro's own run format (`oojuro_store::run`, what TraceDb writes for
+/// originals) on the same sample: one run file, then a full scan and cold
+/// excerpt fetches through `RunReader` with no frame cache. Profile from the
+/// environment: LEVEL (19), FRAME (64 KiB), CHUNK (1024; 0 = no dedupe),
+/// DICT (512 KiB cap; 0 = none), DICT_SCALE (256: dictionary ~1/256 of the
+/// rows), STARTER (1 = the shipped starter dictionary when DICT=0), THREADS
+/// (1; compress speed is reported per thread count). Excerpts as in `blocks`.
+fn run_mode(path: &str, sample_bytes: usize, label: &str, dir: &str) {
+    use oojuro_store::run::{RunOptions, RunReader, write_run};
+    let recs = sample(read_corpus(Path::new(path)).unwrap(), sample_bytes);
+    let raw: usize = recs.iter().map(|r| r.text.len()).sum();
+    let ev = |k: &str, d: usize| std::env::var(k).ok().and_then(|v| v.parse().ok()).unwrap_or(d);
+    let starter = ev("STARTER", 0) == 1;
+    let opts = RunOptions {
+        level: ev("LEVEL", 19) as i32,
+        frame_bytes: ev("FRAME", 64 << 10),
+        dedupe_chunk: ev("CHUNK", 1024) as u32,
+        dict_bytes: ev("DICT", 512 << 10),
+        dict_scale: ev("DICT_SCALE", 256) as u64,
+        threads: ev("THREADS", 1),
+        shared_dict: starter.then(|| oojuro_store::starter::v1().clone()),
+        ..RunOptions::default()
+    };
+    let file = Path::new(dir).join(format!("{}-{label}.run", corpus_name(path)));
+    let _ = std::fs::remove_file(&file);
+    let load = load1();
+    let t = Instant::now();
+    let info = write_run(&file, &mut recs.iter().map(|r| r.text.clone()), &opts).unwrap();
+    let ct = t.elapsed().as_secs_f64();
+    let shared = starter.then(|| oojuro_store::starter::v1());
+    // Full scan with the reader cache TraceDb uses (4 MiB: one-hop dedupe
+    // references usually land in a recently decoded frame); excerpts below
+    // are cold (no cache).
+    let rd = RunReader::open_with(&file, 0, shared).unwrap();
+    let scan_rd = RunReader::open_with(&file, 4 << 20, shared).unwrap();
+    let t = Instant::now();
+    let mut ok = true;
+    let mut i = 0usize;
+    scan_rd.scan(0, scan_rd.len(), &mut |_, text| {
+        ok &= text == &recs[i].text[..];
+        i += 1;
+        Ok(())
+    })
+    .unwrap();
+    let dt = t.elapsed().as_secs_f64();
+    ok &= i == recs.len();
+    assert!(ok, "run roundtrip failed");
+    let queries: usize = ev("QUERIES", 400);
+    let excerpt: usize = ev("EXCERPT", 1024);
+    let mut rng = Rng::new(42);
+    let (mut per_query, mut per_fetch) = (Vec::new(), Vec::new());
+    let mut check = 0u64;
+    for _ in 0..queries {
+        let tq = Instant::now();
+        for _ in 0..20 {
+            let i = rng.below(recs.len());
+            let len = recs[i].text.len();
+            let want = len.min(excerpt);
+            let start = rng.below(len - want + 1);
+            let tf = Instant::now();
+            let out = rd.get_range(i as u64, start, start + want).unwrap();
+            per_fetch.push(tf.elapsed().as_secs_f64() * 1e6);
+            ok &= out == recs[i].text[start..start + want];
+            check = check.wrapping_add(out.first().copied().unwrap_or(0) as u64);
+        }
+        per_query.push(tq.elapsed().as_secs_f64() * 1e6);
+    }
+    assert!(ok, "run excerpt mismatch");
+    let mb = raw as f64 / 1e6;
+    println!(
+        "{}",
+        json!({"mode":"run","corpus":corpus_name(path),"codec":format!("oojuro-run:{label}"),"options":format!("{opts:?}"),
+            "raw":raw,"stored":info.file_bytes,"ratio":info.file_bytes as f64/raw as f64,"c_mbps":mb/ct,"d_mbps":mb/dt,
+            "threads":opts.threads,"excerpt":excerpt,"queries":queries,
+            "fetch_us_p50":percentile(&mut per_fetch.clone(),0.5),"fetch_us_p99":percentile(&mut per_fetch,0.99),
+            "query20_us_p50":percentile(&mut per_query.clone(),0.5),"query20_us_p99":percentile(&mut per_query,0.99),
+            "roundtrip":ok,"check":check,"load1":load})
+    );
+    let _ = std::fs::remove_file(&file);
 }
 
 /// Content-defined dedupe potential: fraction of bytes in FastCDC chunks seen
@@ -587,6 +718,7 @@ fn main() {
         Some("fmindex") => fmindex(&a[2], a[3].parse().unwrap()),
         Some("dedupe") => dedupe(&a[2], a[3].parse().unwrap()),
         Some("whole") => whole(&a[2], a[3].parse().unwrap(), &a[4..]),
+        Some("run") => run_mode(&a[2], a[3].parse().unwrap(), &a[4], &a[5]),
         Some("blocks") => blocks(&a[2], a[3].parse().unwrap(), a[4].parse().unwrap(), a[5].parse().unwrap(), &a[6..]),
         _ => eprintln!("usage: codecs dump|whole|blocks ..."),
     }

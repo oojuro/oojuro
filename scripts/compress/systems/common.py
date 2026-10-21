@@ -110,6 +110,70 @@ def timed_reads(fn, batches):
     return pct(lat, 50), pct(lat, 99)
 
 
+def save_pending(system, rows):
+    """Size/verify rows waiting for their locked read-latency loop (crash-safe staging)."""
+    d = os.path.join(SYS, system); os.makedirs(d, exist_ok=True)
+    with open(os.path.join(d, "pending.json"), "w") as f:
+        json.dump(rows, f)
+
+
+def load_pending(system):
+    p = os.path.join(SYS, system, "pending.json")
+    return json.load(open(p)) if os.path.exists(p) else []
+
+
+def flags(argv):
+    """argv -> (corpora, resume, build_only). --resume: reuse staged rows + existing stores;
+    --build-only: stage rows and keep stores, skip the locked read phase."""
+    fl = {a.split("=")[0] for a in argv[1:] if a.startswith("--")}
+    cs = [a for a in argv[1:] if not a.startswith("--")] or CORPORA
+    return cs, "--resume" in fl, "--build-only" in fl
+
+
+GAP_S = 15  # idle time between two bench-lock holds so other sessions' waiters get the lock
+
+
+# corpora whose stores get the timed 200-query loop (one bench-lock hold each); the lock
+# queue on the shared box made one hold per (variant, corpus) infeasible
+READ_CORPORA = set(os.environ.get("READ_CORPORA", "swe").split(","))
+
+
+def finish(system, rows, reader, cleanup=None, group=lambda r: 0):
+    """Measure the staged rows of READ_CORPORA, then emit every row.
+    reader(row) -> (p50, p99) runs one timed 200-query loop and must not load/merge/clean up.
+    Rows with the same group(row) share one bench-lock hold (a few seconds of back-to-back
+    loops; each loop is timed separately); holds are separated by GAP_S outside the lock.
+    cleanup(row) (drop table / delete index / rm store) always runs outside the lock.
+    Builds ran outside the bench lock, so load_s stays null."""
+    save_pending(system, rows)
+    skip = os.environ.get("SKIP_READS")  # reason string: emit staged rows without timed reads
+    todo = [] if skip else [r for r in rows if r["corpus"] in READ_CORPORA]
+    groups = {}
+    for r in todo:
+        groups.setdefault(group(r), []).append(r)
+    for gi, (g, rs) in enumerate(groups.items()):
+        if gi:
+            time.sleep(GAP_S)
+        with bench_lock():
+            for r in rs:
+                res = reader(r)
+                if res is not None:
+                    r["read20_us_p50"], r["read20_us_p99"] = res
+        for r in rs:
+            r["notes"] += f"; bench-lock hold shared by {len(rs)} back-to-back 200-query loop(s) of this system"
+    for r in rows:
+        if skip:
+            r["notes"] += f"; point-read latency not measured: {skip}"
+        elif r["corpus"] not in READ_CORPORA:
+            r["notes"] += f"; point-read latency measured only for corpus {'/'.join(sorted(READ_CORPORA))} (bench-lock queue budget)"
+    for i, r in enumerate(rows):
+        if cleanup:
+            cleanup(r)
+        r.pop("_ctx", None)
+        emit(**r)
+        save_pending(system, rows[i + 1:])
+
+
 def du_sb(path):
     return int(subprocess.check_output(["du", "-sb", path]).split()[0])
 
@@ -149,3 +213,11 @@ def wait_http(url, timeout=180, ok=lambda code, body: code == 200):
             pass
         time.sleep(1)
     raise RuntimeError(f"timeout waiting for {url}")
+
+
+def rebuild_list(argv):
+    """--rebuild=c1,c2 : corpora whose staged rows are dropped and rebuilt on --resume."""
+    for a in argv[1:]:
+        if a.startswith("--rebuild="):
+            return a.split("=", 1)[1].split(",")
+    return []

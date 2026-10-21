@@ -21,3 +21,9 @@ blake3.workspace = true
 crc32fast.workspace = true
 memmap2 = "0.9.11"
 rust-stemmers = "=1.2.0"
+
+# examples/index_probe.rs (index layout study: alternative encodings and dictionaries)
+[dev-dependencies]
+fst = "0.4.7"
+roaring = "0.11.5"
+bitpacking = "0.9.3"

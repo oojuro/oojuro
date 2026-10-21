@@ -23,6 +23,8 @@ arm-lance = ["dep:lancedb", "dep:lance", "dep:lance-io", "dep:object_store", "de
 
 [dependencies]
 oojuro-trace = { path = "../oojuro-trace" }
+# searchprobe --max-df: the engine's query-word normalization
+oojuro-nine = { path = "../oojuro-nine" }
 serde.workspace = true
 serde_json.workspace = true
 blake3.workspace = true

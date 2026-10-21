@@ -25,6 +25,19 @@ pub use profile::{reset as profile_reset, snapshot as profile_snapshot};
 pub use shared::{LogBinding, SharedLog, SharedLogOptions, SharedLogStats};
 pub use v4::{Background, Nine, Options, Passage, Receipts, RoutingEntropy};
 
+/// The normalized terms (with counts) the index builds a row's postings
+/// from: the engine's own analysis, exposed for harness simulations and
+/// probes (the index layout study). Changes nothing in the engine.
+pub fn index_terms(text: &str) -> Vec<(String, u32)> {
+    segment::analyze(text).map(|a| a.terms).unwrap_or_default()
+}
+
+/// The normalized term one query word maps to (lowercase, then stemmed
+/// when ASCII alphabetic), as query parsing maps each word.
+pub fn query_term(word: &str) -> String {
+    normalize_word(&word.to_lowercase()).into_owned()
+}
+
 /// Journal `sync_data` calls made so far by this process: private journals
 /// (one per committed round of each store) and the shared log (one per
 /// round across all its stores). For measuring syncs per commit.

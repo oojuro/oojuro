@@ -11,6 +11,12 @@
 //! the turn's first event). `--size N` is exactly N bytes (cut at a char
 //! boundary): the turn's first event, then the same agent's earlier events,
 //! newest first, joined by newlines (an agent's recent context as the query).
+//!
+//! `run --max-df F` times the query-side simulation of an index that stops
+//! terms whose df exceeds F of the agent store's indexed rows (df read from
+//! the store's segment dictionaries; the same word rule as the bench arm
+//! `nine-maxdf:F`). `kinds --data X [--tier N] --out F`
+//! writes one byte per event id (kind code, 255 = none) for `index_probe`.
 use oojuro_trace::{EventIn, Options, TraceDb};
 use oojuro_tracebench::{
     Result,
@@ -266,6 +272,139 @@ fn queries(tier: &Tier, cut: usize, single: bool, size: usize, limit: usize) -> 
         .collect()
 }
 
+/// Term -> df summed over an agent store's segment dictionaries, and its
+/// indexed rows (rows without the stored-only flag).
+fn store_df(agent_dir: &Path) -> Result<(std::collections::HashMap<String, u64>, u64)> {
+    fn varint(b: &[u8], p: &mut usize) -> u64 {
+        let (mut v, mut s) = (0u64, 0);
+        loop {
+            let x = b[*p];
+            *p += 1;
+            v |= u64::from(x & 0x7f) << s;
+            if x < 0x80 {
+                return v;
+            }
+            s += 7;
+        }
+    }
+    let u64_at = |b: &[u8], p: usize| u64::from_le_bytes(b[p..p + 8].try_into().unwrap());
+    let u32_at = |b: &[u8], p: usize| u32::from_le_bytes(b[p..p + 4].try_into().unwrap());
+    let mut df = std::collections::HashMap::new();
+    let mut indexed = 0u64;
+    for e in std::fs::read_dir(agent_dir)? {
+        let p = e?.path();
+        if p.extension().is_none_or(|x| x != "idx") {
+            continue;
+        }
+        let map = std::fs::read(&p)?;
+        let rows = u32_at(&map, 20) as usize;
+        let sec: Vec<usize> = (0..9).map(|i| u64_at(&map, 32 + 8 * i) as usize).collect();
+        indexed += (0..rows).filter(|r| u32_at(&map, sec[0] + 40 * r + 28) & 1 == 0).count() as u64;
+        let (s_dict, s_dindex, s_end) = (sec[6], sec[7], sec[8]);
+        let blocks = (s_end - s_dindex) / 8;
+        for b in 0..blocks {
+            let start = s_dict + u64_at(&map, s_dindex + 8 * b) as usize;
+            let end = if b + 1 < blocks { s_dict + u64_at(&map, s_dindex + 8 * (b + 1)) as usize } else { s_dindex };
+            let mut q = start;
+            varint(&map, &mut q);
+            let mut prev: Vec<u8> = Vec::new();
+            while q < end {
+                let shared = varint(&map, &mut q) as usize;
+                let n = varint(&map, &mut q) as usize;
+                let mut term = prev[..shared].to_vec();
+                term.extend_from_slice(&map[q..q + n]);
+                q += n;
+                let d = varint(&map, &mut q);
+                varint(&map, &mut q);
+                varint(&map, &mut q);
+                *df.entry(String::from_utf8(term.clone())?).or_default() += d;
+                prev = term;
+            }
+        }
+    }
+    Ok((df, indexed))
+}
+
+/// Blank out query words whose normalized term has df above `limit` (the
+/// rule of oojuro-bench `arms/nine_maxdf.rs`: stop words stay, at least one
+/// non-stop word stays, quoted literal queries are not rewritten).
+fn drop_frequent_words(text: &str, df: &dyn Fn(&str) -> u64, limit: f64) -> (String, usize, bool) {
+    let t = text.trim();
+    if t.len() >= 2 && t.starts_with('"') && t.ends_with('"') {
+        return (text.to_string(), 0, false);
+    }
+    let mut words: Vec<(usize, usize, String, bool)> = Vec::new();
+    let mut start: Option<usize> = None;
+    let push = |s: usize, e: usize, words: &mut Vec<(usize, usize, String, bool)>| {
+        let w = &text[s..e];
+        if !w.bytes().any(|b| b != b'_') {
+            return;
+        }
+        let lower = w.to_lowercase();
+        let stop = lower.len() <= 6 && oojuro_nine::QUERY_STOP_WORDS.contains(&lower.as_str());
+        words.push((s, e, oojuro_nine::query_term(&lower), stop));
+    };
+    for (i, c) in text.char_indices() {
+        if c.is_alphanumeric() || c == '_' {
+            start.get_or_insert(i);
+        } else if let Some(s) = start.take() {
+            push(s, i, &mut words);
+        }
+    }
+    if let Some(s) = start {
+        push(s, text.len(), &mut words);
+    }
+    let mut dfs: std::collections::HashMap<&str, u64> = Default::default();
+    for w in &words {
+        if !w.3 {
+            dfs.entry(w.2.as_str()).or_insert_with(|| df(&w.2));
+        }
+    }
+    if dfs.is_empty() {
+        return (text.to_string(), 0, false);
+    }
+    let mut drop: Vec<&str> = dfs.iter().filter(|(_, d)| **d as f64 > limit).map(|(t, _)| *t).collect();
+    let all_frequent = drop.len() == dfs.len();
+    if all_frequent {
+        let keep = dfs.iter().min_by(|a, b| a.1.cmp(b.1).then(a.0.cmp(b.0))).map(|x| *x.0).unwrap();
+        drop.retain(|t| *t != keep);
+    }
+    if drop.is_empty() {
+        return (text.to_string(), 0, all_frequent);
+    }
+    let mut out = text.as_bytes().to_vec();
+    let mut n = 0;
+    for w in &words {
+        if !w.3 && drop.contains(&w.2.as_str()) {
+            out[w.0..w.1].fill(b' ');
+            n += 1;
+        }
+    }
+    (String::from_utf8(out).expect("blanked whole chars"), n, all_frequent)
+}
+
+fn kinds(v: &[String]) -> Result<()> {
+    let data = PathBuf::from(flag(v, "--data").ok_or("--data")?);
+    let tier_n: u32 = flag(v, "--tier").map_or(Ok(1), |s| s.parse())?;
+    let out = PathBuf::from(flag(v, "--out").ok_or("--out")?);
+    let base = Base::open(&data)?;
+    let tier = Tier::new(&base, tier_n);
+    let mut k: Vec<u8> = Vec::new();
+    let mut b = Vec::new();
+    for i in 0..tier.plan.len() {
+        tier.batch(i, &mut b);
+        for e in &b {
+            let id = e.id as usize;
+            if k.len() <= id {
+                k.resize(id + 1, 255);
+            }
+            k[id] = e.kind;
+        }
+    }
+    std::fs::write(out, &k)?;
+    Ok(())
+}
+
 fn run(v: &[String]) -> Result<()> {
     let dir = PathBuf::from(flag(v, "--dir").ok_or("--dir")?);
     let info: Value = serde_json::from_slice(&std::fs::read(dir.join("probe.json"))?)?;
@@ -284,7 +423,23 @@ fn run(v: &[String]) -> Result<()> {
     let tier = Tier::new(&base, info["tier"].as_u64().ok_or("tier")? as u32);
     let single = info["single"].as_bool().unwrap_or(false);
     let cut = info["cut"].as_u64().ok_or("cut")? as usize;
-    let qs = queries(&tier, cut, single, size, limit);
+    let mut qs = queries(&tier, cut, single, size, limit);
+    // --max-df F: blank query words of terms with df > F of the store's indexed rows
+    let max_df: Option<f64> = flag(v, "--max-df").map(|s| s.parse()).transpose()?;
+    let (mut dropped, mut all_frequent) = (0usize, 0usize);
+    if let Some(f) = max_df {
+        let mut stores: std::collections::HashMap<u32, (std::collections::HashMap<String, u64>, u64)> = Default::default();
+        for q in qs.iter_mut() {
+            if !stores.contains_key(&q.agent) {
+                stores.insert(q.agent, store_df(&dir.join(format!("agent-{:05}", q.agent)))?);
+            }
+            let (df, rows) = &stores[&q.agent];
+            let (t, n, all) = drop_frequent_words(&q.text, &|t: &str| df.get(t).copied().unwrap_or(0), f * *rows as f64);
+            q.text = t;
+            dropped += n;
+            all_frequent += all as usize;
+        }
+    }
     let qbytes: usize = qs.iter().map(|q| q.text.len()).sum();
     let qthreads: usize = flag(v, "--qthreads").map_or(Ok(1), |s| s.parse())?;
     // --entropy all: score every candidate (the engine default); topk: the
@@ -384,7 +539,8 @@ fn run(v: &[String]) -> Result<()> {
         "label": label, "dir": dir, "records": info["records"], "single": single, "size": size,
         "stores": rows.len(), "rows_total": rows.iter().sum::<usize>(), "rows_max": rows.iter().max(),
         "queries": qs.len(), "mean_query_bytes": qbytes as f64 / nq, "threads": threads, "k": k,
-        "query_threads": qthreads, "exact_entropy": exact_entropy,
+        "query_threads": qthreads, "exact_entropy": exact_entropy, "max_df": max_df,
+        "dropped_words_per_query": dropped as f64 / qs.len().max(1) as f64, "all_frequent_queries": all_frequent,
         "mean_terms": work[0] as f64 / nq, "mean_candidates": work[1] as f64 / nq,
         "mean_postings": work[2] as f64 / nq, "mean_scored": work[3] as f64 / nq,
         "rounds": summaries, "loadavg_before": load_before, "loadavg_after": loadavg(),
@@ -466,6 +622,7 @@ fn main() -> Result<()> {
         Some("build") => build(&v),
         Some("run") => run(&v),
         Some("compare") => compare(&v),
-        _ => Err("usage: searchprobe build|run|compare ...".into()),
+        Some("kinds") => kinds(&v),
+        _ => Err("usage: searchprobe build|run|compare|kinds ...".into()),
     }
 }

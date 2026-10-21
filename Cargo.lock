@@ -4614,11 +4614,14 @@ dependencies = [
 name = "oojuro-nine"
 version = "0.1.0"
 dependencies = [
+ "bitpacking",
  "blake3",
  "crc32fast",
+ "fst",
  "lz4_flex 0.11.6",
  "memmap2",
  "oojuro-core",
+ "roaring",
  "rust-stemmers",
  "serde",
  "serde_json",
@@ -4704,6 +4707,7 @@ dependencies = [
  "lancedb",
  "memmap2",
  "object_store 0.14.2",
+ "oojuro-nine",
  "oojuro-store",
  "oojuro-trace",
  "postgres",

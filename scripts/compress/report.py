@@ -51,7 +51,7 @@ for name in ("floors.swe.jsonl", "floors.ohjson.jsonl", "floors.rest.jsonl"):
 results["floors"] = floors
 
 sc = {}
-for d in rows("scorecard.jsonl"):
+for d in rows("scorecard.jsonl") + rows("scorecard-archive.jsonl") + rows("scorecard-p32.jsonl"):
     s = sc.setdefault((d.get("label", "default"), d["corpus"]), {"build": [], "read": []})
     s[d["phase"]].append(d)
 results["scorecard"] = {}
@@ -73,6 +73,8 @@ for (label, c), s in sorted(sc.items()):
         "compact_mbps": med(comp),
         "compact_mbps_spread": spread(comp),
         "verify_mismatches": sum(x["verify_mismatches"] for x in b),
+        "append_during_us_p50": med([x["append_during_compaction_us_p50"] for x in b if x.get("append_during_compaction_us_p50") == x.get("append_during_compaction_us_p50") and x.get("append_during_compaction_us_p50") is not None]),
+        "append_during_us_p99": med([x["append_during_compaction_us_p99"] for x in b if x.get("append_during_compaction_us_p99") is not None]),
     }
     if r:
         agg.update({
@@ -114,18 +116,22 @@ results["sweep"] = [
 os.makedirs(DEST, exist_ok=True)
 json.dump(results, open(os.path.join(DEST, "results.json"), "w"), indent=1, sort_keys=True)
 
-print("### Store scorecard (full corpora, median of reps)\n")
-print("| corpus | raw MB | hot-only | compacted | zstd -19 --long=27 | xz -9 | append p50 / p99 µs | top-20 excerpt p50 / p99 µs | RSS MiB (RSS/raw) | open ms | compaction MB/s | reps |")
-print("|---|---|---|---|---|---|---|---|---|---|---|---|")
-for c in CORPORA:
-    a = results["scorecard"].get(f"default/{c}")
-    fl = floors.get(c, {})
-    if not a:
+for label, title in [("default", "default profile (64 KiB frames)"), ("archive", "archive profile (256 KiB frames, 1 MiB dict)"), ("p32", "default profile on the 32 MiB prefixes the journal was measured on")]:
+    keys = [c for c in CORPORA if f"{label}/{c}" in results["scorecard"]]
+    if not keys:
         continue
-    print(f"| {c} | {a['raw']/1e6:,.0f} | {f4(a['hot_ratio'])} | **{f4(a['ratio'])}** | {f4(fl.get('zstd19_long27'))} | {f4(fl.get('xz9'))} | "
-          f"{a['append_us_p50']:,.0f} / {a['append_us_p99']:,.0f} | {a.get('q20_us_p50', float('nan')):,.0f} / {a.get('q20_us_p99', float('nan')):,.0f} | "
-          f"{a.get('rss_mib', float('nan')):,.1f} ({f4(a.get('rss_ratio'))}) | {a.get('open_ms', float('nan')):,.1f} | {f1(a['compact_mbps'])} | {a['reps']} |")
-print()
+    print(f"### Store scorecard: {title}, median (min–max) of reps\n")
+    print("| corpus | raw MB | compacted | zstd -19 --long=27 | xz -9 | append p50 / p99 µs (quiet) | append p50 / p99 µs (during compaction) | top-20 excerpt p50 / p99 µs | RSS MiB (RSS/raw) | open ms | compaction MB/s (4 threads) | reps |")
+    print("|---|---|---|---|---|---|---|---|---|---|---|---|")
+    for c in keys:
+        a = results["scorecard"][f"{label}/{c}"]
+        fl = floors.get(c, {}) if label != "p32" else {}
+        rs = a["ratio_spread"]
+        print(f"| {c} | {a['raw']/1e6:,.0f} | **{f4(a['ratio'])}** ({f4(rs[0])}–{f4(rs[1])}) | {f4(fl.get('zstd19_long27'))} | {f4(fl.get('xz9'))} | "
+              f"{a['append_us_p50']:,.0f} / {a['append_us_p99']:,.0f} | {a.get('append_during_us_p50', float('nan')):,.0f} / {a.get('append_during_us_p99', float('nan')):,.0f} | "
+              f"{a.get('q20_us_p50', float('nan')):,.0f} / {a.get('q20_us_p99', float('nan')):,.0f} | "
+              f"{a.get('rss_mib', float('nan')):,.1f} ({f4(a.get('rss_ratio'))}) | {a.get('open_ms', float('nan')):,.1f} | {f1(a['compact_mbps'])} | {a['reps']} |")
+    print()
 
 print("### Whole-sample leaderboard (64 MiB sample, bytes/raw; MB/s single-thread)\n")
 codecs = sorted({k.rsplit('/', 1)[0] for k in results["whole"]}, key=lambda s: (s.split(':')[0], s))

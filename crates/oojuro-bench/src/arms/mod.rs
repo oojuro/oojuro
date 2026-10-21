@@ -4,6 +4,7 @@ use crate::{Arm, Result};
 use std::collections::HashMap;
 
 pub mod nine;
+pub mod nine_maxdf;
 pub mod nine_v3;
 #[cfg(feature = "sqlite-arm")]
 pub mod sqlite;
@@ -19,11 +20,15 @@ pub fn builtin(name: &str) -> Result<Box<dyn Arm>> {
     match name {
         "nine" => Ok(Box::new(nine::NineArm::default())),
         "nine-v3" => Ok(Box::new(nine_v3::NineV3Arm::default())),
+        n if n.starts_with("nine-maxdf:") => {
+            let frac: f64 = n["nine-maxdf:".len()..].parse().map_err(|_| format!("{n}: want nine-maxdf:<fraction>"))?;
+            Ok(Box::new(nine_maxdf::NineMaxDfArm::new(frac)))
+        }
         #[cfg(feature = "tantivy-arm")]
         "tantivy" => Ok(Box::new(tantivy::TantivyArm::default())),
         #[cfg(feature = "sqlite-arm")]
         "sqlite" | "sqlite-fts5" => Ok(Box::new(sqlite::SqliteArm::default())),
-        _ => Err(format!("unknown built-in arm {name:?}; known: {BUILTIN:?} or cmd:<argv>").into()),
+        _ => Err(format!("unknown built-in arm {name:?}; known: {BUILTIN:?}, nine-maxdf:<frac> or cmd:<argv>").into()),
     }
 }
 
