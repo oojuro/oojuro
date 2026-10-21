@@ -466,3 +466,82 @@ cold frame is the decoder and CRC setup); dropping the BLAKE3 digest on full
 frame reads (13 us of ~80, the only check of the decoded body, and a lone read
 no longer pays it); matching SQLite's 9 us (a page-cache hit on uncompressed
 data) is not reachable with compressed 64 KiB frames.
+
+## Item 5. Long queries on big single stores
+
+Baseline (single store, 1.29M events in 1.7M rows, 5 segments, the largest 1.2M
+rows; 64 KB queries = an agent's recent context, 897 distinct words; 8 query
+threads, load 4): **p50 60.6 ms, p99 89 ms**, 27.6M postings and 295k candidates
+per query (`PERF_SEARCH`: 50 / 76 ms on the quiet machine of that study).
+
+**Finding.** A word's postings are read whole, and a query is the union of its
+words: the candidate set is every row holding any word, and every candidate is
+scored against each word (the model's background is counted over the candidates,
+so a word cannot be skipped by a bound that is known before the scan;
+`PERF_SEARCH` documents why block-max style pruning is not exact here). The
+cost is the posting volume, and the common words are most of it: dropping a
+long query's most frequent words removes nearly all of its postings (below:
+27.6M -> 5.6M with 499 of 897 words kept, 0.3M with 133). There is no lossless
+win. What is simple is a **bound on the number of distinct words**.
+
+**Change** (`oojuro-nine` `Options::max_query_terms`, `TraceDb`
+`Options::max_query_terms`, `maxterms=` in the TraceBench arm, `--max-terms` in
+`searchprobe`, `max_terms=` in the `oojuro-bench` nine arm). Default 0: no
+bound, **nothing changes**. A query with more distinct words than the bound
+keeps the rarest ones that occur in the store (document frequency over all
+segments and the fresh segment; ties by word) and ranks exactly as if it held
+only those and the words that occur nowhere (which cost no postings); a quoted
+phrase is never cut. Test (`a_bound_on_query_terms_keeps_the_rarest_words...`):
+bounds at or above the word count equal the unbounded result bit for bit; below
+it the result equals the unbounded result of the query written with only the
+kept words (ids, score bits, word and candidate counts), for bounds 1, 2, 4
+and 6; a phrase is untouched.
+
+**With the bound off nothing moved**: `searchprobe` of this branch on the store
+`main` built returns the identical 30,905 lists (and 30/30 on the big store);
+the one-thread tier-1 probe (thread CPU, 5 alternating rounds) is 1.171 (1.156-
+1.236) ms p50 for `main` and 1.172 (1.159-1.245) for this branch at 200 B,
+3.24 and 3.25 at 4 KB, 9.40 and 9.30 at 64 KB.
+
+**With the bound on** (single store, 8 threads, 60 queries per size, wall ms
+p50 / p99; "kept" = mean distinct words used, "postings" = mean postings read):
+
+| query | no bound | 512 | 256 | 128 | 64 |
+|---|---:|---:|---:|---:|---:|
+| 4 KB (176 words) | 22.7 / 34.8 | 24.2 / 35.2 (176, 10.2M) | 22.6 / 39.4 (175, 9.9M) | 6.6 / 34.1 (119, 3.9M) | 3.3 / 26.0 (63, 0.9M) |
+| 16 KB (374 words) | 32.6 / 51.6 | 29.8 / 49.3 (361, 15.3M) | **10.5 / 32.5** (232, 5.8M) | 5.2 / 32.9 (126, 1.7M) | 3.5 / 36.1 (65, 0.3M) |
+| 64 KB (897 words) | 60.6 / 89.0 (27.6M) | 13.3 / 46.7 (499, 5.6M) | **7.7 / 36.8** (258, 1.2M) | 5.6 / 28.7 (133, 0.3M) | 5.1 / 10.7 (69, 0) |
+
+(The bound only acts on a query with more words than it, so 4 KB queries with
+176 words are untouched by 256 and 512; the first query of a run also pays the
+skip-table build, which is the p99.) One thread, tier-1 per-agent stores
+(thread CPU p50 / p99): 16 KB 5.2 / 8.0 -> 2.4 / 4.5 ms, 64 KB 9.1 / 14.6 ->
+2.9 / 6.6 ms with a bound of 256.
+
+**Quality.** The bound is a ranking decision, so it is measured on every
+labelled set (one run each, `oojuro-bench`, nine arm, `--config max_terms=N`;
+nDCG@10 / recall):
+
+| set | no bound | 256 | 128 | 64 |
+|---|---:|---:|---:|---:|
+| SciFact, NFCorpus, FiQA (dev) | .6767 / .2925 / .2879 | same | same | same |
+| ArguAna dev (long queries) | .5367 / R@100 .9644 | .5359 / .9644 | .5330 / .9581 | .4984 / .9182 |
+| ArguAna heldout | .5514 / .9602 | .5515 / .9602 | .5485 / .9634 | .5172 / .9397 |
+| turn loop dev (4 KiB queries) | .2607 / R@20 .5343 | .2607 / .5343 | .2608 / .5225 | .2763 / .5406 |
+| turn loop heldout | .1510 / .3456 | .1505 / .3452 | .1522 / .3673 | .1503 / .3532 |
+
+Short-query sets cannot change (their queries have fewer words). With a bound
+of 256 the long-query sets are equal to 0.001 in nDCG@10 and recall; 128 costs
+0.003 on ArguAna; 64 costs 0.035-0.040 there (and its +0.016 on the dev turn
+loop is not reproduced on heldout). There is no labelled set of 16-64 KB
+queries, so the agreement with the unbounded ranking is the only measure there,
+and it is low (identical top-20 lists: 82% of 16 KB queries with 512, 28% with
+256; for 64 KB queries 12% with 512, 5% with 256; mean top-20 overlap .94 and
+.63 at 16 KB, .33 and .26 at 64 KB): removing the common words changes which
+records an agent's whole context points at, for better or worse, and nothing
+here can say which.
+
+**Decision.** Off by default (the change is the setting, `max_query_terms`).
+Setting it to 256 is the recommended choice: no measured quality change on any
+labelled set, 8x faster at 64 KB, 3x at 16 KB, unchanged below 256 words; the
+choice of default is the reviewer's.
