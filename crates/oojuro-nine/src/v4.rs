@@ -868,7 +868,7 @@ impl State {
             for (c, (pos, s)) in cursors.iter().enumerate() {
                 if *pos < s.rows as usize {
                     let local = s.time_at(*pos);
-                    let at = s.meta(local).valid_at;
+                    let at = s.valid_at(local);
                     if at <= to && best.is_none_or(|b| (at, s.start + local) < (b.0, b.1)) {
                         best = Some((at, s.start + local, c));
                     }
@@ -2221,9 +2221,8 @@ fn flush_fresh(
         pairs.sort_unstable();
         pairs
     };
-    w.ids(sorted(&fresh.id_fps))?;
-    w.keys(sorted(&fresh.key_fps))?;
-    w.time(fresh.time.iter().map(|(_, local)| *local))?;
+    w.fingerprints(sorted(&fresh.id_fps), sorted(&fresh.key_fps))?;
+    w.time(|| fresh.time.iter().map(|(_, local)| *local))?;
     let mut multi = multi.to_vec();
     multi.sort_unstable();
     multi.dedup();

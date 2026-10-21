@@ -1,10 +1,11 @@
-//! Stores written by an older build stay readable (docs/PERF_ROUND2.md, item 2).
+//! Stores written by an older build stay readable (docs/PERF_ROUND2.md, items 2 and 3).
 //!
-//! `tests/fixtures/main-store/` was written by `main` at `df8fa85` (records
+//! `tests/fixtures/main-store/` was written by `main` at `df8fa85` (index
+//! segments of version 2, 40-byte rows, full key and time tables; records
 //! with captured-style `src` / `rt` args that never deduplicated) together
 //! with `expected.txt`, the answers `main` gave over it. The tests open it with
-//! this build and check the same answers, then append, flush and merge on top
-//! of it (repeats of text main stored now deduplicate) and compare with a store
+//! this build and check the same answers, then append, flush and merge (version
+//! 2 and version 3 segments in one merge) on top of it and compare with a store
 //! this build wrote from scratch. Regenerate the fixture with a build of `main`:
 //!
 //! ```text
@@ -303,6 +304,21 @@ fn new_segments_and_duplicates_join_a_store_main_wrote() {
     // window learns the texts in main's segments (relaxed keys over their
     // args, which carry their own src and rt)
     std::fs::remove_file(s.0.join("db/cols.ckpt")).unwrap();
+    let versions = |dir: &Path| -> Vec<u32> {
+        let mut v = Vec::new();
+        for a in std::fs::read_dir(dir.join("db")).unwrap().flatten() {
+            for f in std::fs::read_dir(a.path()).into_iter().flatten().flatten() {
+                if f.path().extension().is_some_and(|x| x == "idx") {
+                    let b = std::fs::read(f.path()).unwrap();
+                    v.push(u32::from_le_bytes(b[8..12].try_into().unwrap()));
+                }
+            }
+        }
+        v.sort_unstable();
+        v
+    };
+    let old = versions(&s.0);
+    assert!(!old.is_empty() && old.iter().all(|v| *v == 2), "main wrote version 2 segments: {old:?}");
     let db = TraceDb::open(&s.0.join("db"), opts(4)).unwrap();
     load(&db, &extra, &[], 100);
     let (_, dups) = db.dedupe_stats();
@@ -311,6 +327,8 @@ fn new_segments_and_duplicates_join_a_store_main_wrote() {
     db.flush().unwrap();
     db.settle().unwrap();
     assert_eq!(snapshot(&db, last), want, "after the old and new segments merged");
+    let now = versions(&s.0);
+    assert!(now.contains(&3) && now.len() < old.len() + 8, "version 2 inputs were merged into version 3 segments: {now:?}");
     // every event reads back with the args it was appended with
     for e in evs.iter().chain(&extra) {
         let got = db.get(e.id).unwrap().unwrap();

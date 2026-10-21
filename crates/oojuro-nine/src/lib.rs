@@ -15,6 +15,7 @@ pub use context::{ContextPacket, decode_context};
 pub mod archive;
 mod codec;
 pub mod profile;
+mod rows;
 mod segment;
 mod shared;
 mod text;

@@ -7,13 +7,18 @@
 //!   header (192 B): magic `NINEX004`, version, start row, row count, term
 //!     count, section offsets, total token length, total scope, total
 //!     original text bytes, and min/max valid_at and recorded_at
-//!   rows   row_count × 40 B: valid_at i64, recorded_at i64, length u32,
-//!          scope u32, text_len u32, flags u32 (bit0: stored only, not
-//!          indexed), id_prefix u64 (big-endian
-//!          first 8 id bytes, for tie-breaks without reading originals)
+//!   rows   version 1 and 2: row_count × 40 B: valid_at i64, recorded_at i64,
+//!          length u32, scope u32, text_len u32, flags u32 (bit0: stored
+//!          only, not indexed), id_prefix u64 (big-endian first 8 id bytes,
+//!          for tie-breaks without reading originals). Version 3: the same
+//!          fields packed per block of 128 rows (`rows.rs`, about 10 B a row)
 //!   ids    row_count × 20 B: (id fingerprint u128, local row u32), sorted
-//!   keys   row_count × 20 B: (key fingerprint u128, local row u32), sorted
-//!   time   row_count × 4 B: local rows sorted by (valid_at, row)
+//!   keys   version 1 and 2: row_count × 20 B: (key fingerprint u128, local
+//!          row u32), sorted. Version 3: only the rows whose key is not their
+//!          id (almost none in an event store); every other row's key is its
+//!          id, so the ids section answers for it
+//!   time   version 1 and 2: row_count × 4 B: local rows sorted by (valid_at,
+//!          row). Version 3: empty; the order is derived on first use
 //!   multi  n × 16 B: sorted key fingerprints with more than one version among
 //!          rows up to this segment's end
 //!   postings  per term, a bit stream (LSB first, padded to a byte): per
@@ -32,6 +37,7 @@
 //! Sections are written in this order by a streaming writer, so flushes and
 //! multi-gigabyte merges never hold a whole segment in memory.
 use crate::codec::{get_varint, put_varint};
+use crate::rows::{self, Rows};
 use crate::text::{normalize_word, retrieval_terms};
 use oojuro_core::{Record, Result};
 use std::{
@@ -46,8 +52,9 @@ pub(crate) type Row = u32;
 
 const MAGIC: [u8; 8] = *b"NINEX004";
 const END: [u8; 8] = *b"NINEXEND";
-/// Written version; version 1 (LEB128 postings) is still read.
-const VERSION: u32 = 2;
+/// Written version; version 1 (LEB128 postings, 40 B rows) and 2 (Rice
+/// postings, 40 B rows, full key and time tables) are still read.
+const VERSION: u32 = 3;
 
 /// Tests can write version 1 segments (LEB128 postings) on this thread, to
 /// check that every read path still serves old stores.
@@ -275,6 +282,12 @@ pub(crate) struct DiskSegment {
     map: memmap2::Mmap,
     sections: [usize; 9],
     version: u32,
+    /// Version 3: where the packed rows are.
+    packed: Option<Rows>,
+    /// Version 3: rows whose key is not their id, sorted.
+    exc: Vec<u32>,
+    /// Version 3: local rows in (valid_at, row) order, built on first use.
+    time: std::sync::OnceLock<Box<[u32]>>,
     pub archive: Box<dyn crate::archive::Run>,
     /// Ids of rows read for search results (rows are immutable, and an
     /// erasure writes a new segment): consecutive turns return many of the
@@ -465,7 +478,7 @@ impl DiskSegment {
             return Err("index segment checksum mismatch".into());
         }
         let version = u32_at(&map, 8);
-        if version != VERSION && version != 1 {
+        if !(1..=VERSION).contains(&version) {
             return Err("unsupported index segment version".into());
         }
         let start = u32_at(&map, 16);
@@ -487,22 +500,46 @@ impl DiskSegment {
             scope: total_scope,
         };
         let n = rows as usize;
-        let expect = [
-            (S_ROWS, S_IDS, n * ROW_BYTES),
-            (S_IDS, S_KEYS, n * FP_BYTES),
-            (S_KEYS, S_TIME, n * FP_BYTES),
-            (S_TIME, S_MULTI, n * 4),
-        ];
+        let layout_err = || -> Result<Self> { Err("index segment layout is inconsistent".into()) };
         if sections[S_ROWS] != HEADER
             || sections.windows(2).any(|w| w[0] > w[1])
             || sections[S_END] != body
-            || expect.iter().any(|(a, b, len)| sections[*b] - sections[*a] != *len)
             || (sections[S_POST] - sections[S_MULTI]) % 16 != 0
             || (sections[S_END] - sections[S_DINDEX]) % 8 != 0
             || archive.len() != u64::from(rows)
             || u64::from(start) + u64::from(rows) > u64::from(u32::MAX)
         {
-            return Err("index segment layout is inconsistent".into());
+            return layout_err();
+        }
+        let (mut packed, mut exc) = (None, Vec::new());
+        if version >= 3 {
+            let keys_len = sections[S_TIME] - sections[S_KEYS];
+            if sections[S_KEYS] - sections[S_IDS] != n * FP_BYTES
+                || keys_len % FP_BYTES != 0
+                || keys_len / FP_BYTES > n
+                || sections[S_MULTI] != sections[S_TIME]
+            {
+                return layout_err();
+            }
+            packed = Some(Rows::new(&map, sections[S_ROWS], sections[S_IDS], n)?);
+            for i in 0..keys_len / FP_BYTES {
+                let row = u32_at(&map, sections[S_KEYS] + i * FP_BYTES + 16);
+                if row >= rows {
+                    return layout_err();
+                }
+                exc.push(row);
+            }
+            exc.sort_unstable();
+        } else {
+            let expect = [
+                (S_ROWS, S_IDS, n * ROW_BYTES),
+                (S_IDS, S_KEYS, n * FP_BYTES),
+                (S_KEYS, S_TIME, n * FP_BYTES),
+                (S_TIME, S_MULTI, n * 4),
+            ];
+            if expect.iter().any(|(a, b, len)| sections[*b] - sections[*a] != *len) {
+                return layout_err();
+            }
         }
         Ok(Self {
             id,
@@ -516,6 +553,9 @@ impl DiskSegment {
             map,
             sections,
             version,
+            packed,
+            exc,
+            time: std::sync::OnceLock::new(),
             archive,
             ids: std::sync::Mutex::new(HashMap::new()),
             skips: std::sync::Mutex::new(HashMap::new()),
@@ -560,6 +600,9 @@ impl DiskSegment {
 
     #[inline]
     pub fn meta(&self, local: u32) -> RowMeta {
+        if let Some(p) = &self.packed {
+            return p.meta(&self.map, local as usize);
+        }
         let at = self.sections[S_ROWS] + local as usize * ROW_BYTES;
         let b = &self.map[..];
         RowMeta {
@@ -576,13 +619,30 @@ impl DiskSegment {
     /// (scope, length) of one row, without decoding the rest of its metadata.
     #[inline]
     pub fn scope_length(&self, local: u32) -> (u32, u32) {
+        if let Some(p) = &self.packed {
+            return p.scope_length(&self.map, local as usize);
+        }
         let at = self.sections[S_ROWS] + local as usize * ROW_BYTES;
         (u32_at(&self.map, at + 20), u32_at(&self.map, at + 16))
     }
 
+    /// valid_at of one row, without decoding the rest of its metadata.
+    #[inline]
+    pub fn valid_at(&self, local: u32) -> i64 {
+        if let Some(p) = &self.packed {
+            return p.valid_at(&self.map, local as usize);
+        }
+        i64_at(&self.map, self.sections[S_ROWS] + local as usize * ROW_BYTES)
+    }
+
+    /// Entries in the fingerprint table of `section` (ids, or keys).
+    fn fp_count(&self, section: usize) -> usize {
+        (self.sections[section + 1] - self.sections[section]) / FP_BYTES
+    }
+
     fn fp_range(&self, section: usize, fp: u128) -> impl Iterator<Item = u32> + '_ {
         let base = self.sections[section];
-        let n = self.rows as usize;
+        let n = self.fp_count(section);
         let key = move |i: usize| u128_at(&self.map, base + i * FP_BYTES);
         let (mut lo, mut hi) = (0, n);
         while lo < hi {
@@ -602,8 +662,18 @@ impl DiskSegment {
         self.fp_range(S_IDS, fp)
     }
 
-    pub fn rows_with_key(&self, fp: u128) -> impl Iterator<Item = u32> + '_ {
-        self.fp_range(S_KEYS, fp)
+    /// Rows whose key fingerprint is `fp`, ascending. Version 3 stores only
+    /// the rows whose key is not their id: every other row has the key of
+    /// its id.
+    pub fn rows_with_key(&self, fp: u128) -> std::vec::IntoIter<u32> {
+        if self.version < 3 {
+            return self.fp_range(S_KEYS, fp).collect::<Vec<_>>().into_iter();
+        }
+        let mut rows: Vec<u32> =
+            self.fp_range(S_IDS, fp).filter(|r| self.exc.binary_search(r).is_err()).collect();
+        rows.extend(self.fp_range(S_KEYS, fp));
+        rows.sort_unstable();
+        rows.into_iter()
     }
 
     pub fn multi_keys(&self) -> impl Iterator<Item = u128> + '_ {
@@ -614,7 +684,20 @@ impl DiskSegment {
     /// Local row at position `i` of the (valid_at, row) order.
     #[inline]
     pub fn time_at(&self, i: usize) -> u32 {
-        u32_at(&self.map, self.sections[S_TIME] + 4 * i)
+        if self.version < 3 {
+            return u32_at(&self.map, self.sections[S_TIME] + 4 * i);
+        }
+        self.time_order()[i]
+    }
+
+    /// Version 3 keeps no time table: the order is sorted out of the rows
+    /// the first time a range read or a merge asks for it.
+    fn time_order(&self) -> &[u32] {
+        self.time.get_or_init(|| {
+            let mut v: Vec<(i64, u32)> = (0..self.rows).map(|l| (self.valid_at(l), l)).collect();
+            v.sort_unstable();
+            v.into_iter().map(|(_, l)| l).collect()
+        })
     }
 
     /// First position in the time order whose valid_at is >= `at`.
@@ -622,7 +705,7 @@ impl DiskSegment {
         let (mut lo, mut hi) = (0, self.rows as usize);
         while lo < hi {
             let mid = (lo + hi) / 2;
-            if self.meta(self.time_at(mid)).valid_at < at {
+            if self.valid_at(self.time_at(mid)) < at {
                 lo = mid + 1;
             } else {
                 hi = mid;
@@ -855,13 +938,25 @@ impl DiskSegment {
         }
     }
 
-    /// (fingerprint, local row) pairs of the id or key table, in order.
-    pub fn fp_entries(&self, keys: bool) -> impl Iterator<Item = (u128, u32)> + '_ {
-        let base = self.sections[if keys { S_KEYS } else { S_IDS }];
-        (0..self.rows as usize).map(move |i| {
-            let at = base + i * FP_BYTES;
-            (u128_at(&self.map, at), u32_at(&self.map, at + 16))
-        })
+    /// (fingerprint, local row) pairs of the id or key table, in order. The
+    /// key table of a version 3 segment is derived: the ids of the rows whose
+    /// key is their id, merged with the stored exceptions.
+    pub fn fp_entries(&self, keys: bool) -> Box<dyn Iterator<Item = (u128, u32)> + '_> {
+        let table = move |section: usize| {
+            let base = self.sections[section];
+            (0..self.fp_count(section)).map(move |i| {
+                let at = base + i * FP_BYTES;
+                (u128_at(&self.map, at), u32_at(&self.map, at + 16))
+            })
+        };
+        if !keys {
+            return Box::new(table(S_IDS));
+        }
+        if self.version < 3 {
+            return Box::new(table(S_KEYS));
+        }
+        let plain = table(S_IDS).filter(|(_, r)| self.exc.binary_search(r).is_err());
+        Box::new(Merge2 { a: plain.peekable(), b: table(S_KEYS).peekable() })
     }
 
     /// Dictionary cursor in term byte order (for merges).
@@ -884,6 +979,29 @@ impl DiskSegment {
             })?;
         }
         Ok(())
+    }
+}
+
+/// Two ascending streams merged into one ascending stream.
+struct Merge2<A: Iterator<Item = (u128, u32)>, B: Iterator<Item = (u128, u32)>> {
+    a: std::iter::Peekable<A>,
+    b: std::iter::Peekable<B>,
+}
+
+impl<A: Iterator<Item = (u128, u32)>, B: Iterator<Item = (u128, u32)>> Iterator for Merge2<A, B> {
+    type Item = (u128, u32);
+    fn next(&mut self) -> Option<Self::Item> {
+        match (self.a.peek(), self.b.peek()) {
+            (Some(x), Some(y)) => {
+                if x <= y {
+                    self.a.next()
+                } else {
+                    self.b.next()
+                }
+            }
+            (Some(_), None) => self.a.next(),
+            (None, _) => self.b.next(),
+        }
     }
 }
 
@@ -1142,7 +1260,7 @@ impl Iterator for Postings<'_> {
 }
 
 /// Streaming writer for one immutable segment, rows `start..start + n`.
-/// Call the section methods in order: `rows`, `ids`, `keys`, `time`,
+/// Call the section methods in order: `rows`, `fingerprints`, `time`,
 /// `multi`, then `term` for every term in strictly increasing byte order,
 /// then `finish`. The header is patched last; the CRC covers everything.
 pub(crate) struct SegmentWriter {
@@ -1215,26 +1333,42 @@ impl SegmentWriter {
 
     pub fn rows(&mut self, meta: impl IntoIterator<Item = RowMeta>) -> Result<()> {
         self.section(S_ROWS)?;
-        let mut b = [0u8; ROW_BYTES];
-        for m in meta {
-            b[..8].copy_from_slice(&m.valid_at.to_le_bytes());
-            b[8..16].copy_from_slice(&m.recorded_at.to_le_bytes());
-            b[16..20].copy_from_slice(&m.length.to_le_bytes());
-            b[20..24].copy_from_slice(&m.scope.to_le_bytes());
-            b[24..28].copy_from_slice(&m.text_len.to_le_bytes());
-            b[28..32].copy_from_slice(&m.flags.to_le_bytes());
-            b[32..40].copy_from_slice(&m.id_prefix.to_be_bytes());
-            self.put(&b)?;
-            self.span.add(&m);
-            self.total_text += u64::from(m.text_len);
-            self.rows = self
-                .rows
-                .checked_add(1)
-                .ok_or("segment row count overflow")?;
+        if write_version() >= 3 {
+            let mut enc = rows::Encoder::default();
+            for m in meta {
+                self.count_row(&m)?;
+                if let Some(block) = enc.push(m) {
+                    self.put(block)?;
+                }
+            }
+            if let Some(block) = enc.last() {
+                self.put(block)?;
+            }
+            self.put(&enc.table())?;
+        } else {
+            let mut b = [0u8; ROW_BYTES];
+            for m in meta {
+                b[..8].copy_from_slice(&m.valid_at.to_le_bytes());
+                b[8..16].copy_from_slice(&m.recorded_at.to_le_bytes());
+                b[16..20].copy_from_slice(&m.length.to_le_bytes());
+                b[20..24].copy_from_slice(&m.scope.to_le_bytes());
+                b[24..28].copy_from_slice(&m.text_len.to_le_bytes());
+                b[28..32].copy_from_slice(&m.flags.to_le_bytes());
+                b[32..40].copy_from_slice(&m.id_prefix.to_be_bytes());
+                self.put(&b)?;
+                self.count_row(&m)?;
+            }
         }
         if u64::from(self.start) + u64::from(self.rows) > u64::from(u32::MAX) {
             return Err("segment rows exceed the row space".into());
         }
+        Ok(())
+    }
+
+    fn count_row(&mut self, m: &RowMeta) -> Result<()> {
+        self.span.add(m);
+        self.total_text += u64::from(m.text_len);
+        self.rows = self.rows.checked_add(1).ok_or("segment row count overflow")?;
         Ok(())
     }
 
@@ -1261,21 +1395,77 @@ impl SegmentWriter {
         Ok(())
     }
 
-    /// (id fingerprint, local row) pairs sorted ascending.
-    pub fn ids(&mut self, pairs: impl IntoIterator<Item = (u128, u32)>) -> Result<()> {
-        self.fp_section(S_IDS, pairs)
+    /// The id table and the key table: (fingerprint, local row) pairs, each
+    /// sorted ascending and covering every row. A version 3 segment keeps the
+    /// whole id table and, of the key table, only the entries no id entry
+    /// repeats (a row whose key is its id has the same entry in both).
+    pub fn fingerprints(
+        &mut self,
+        ids: impl IntoIterator<Item = (u128, u32)>,
+        keys: impl IntoIterator<Item = (u128, u32)>,
+    ) -> Result<()> {
+        if write_version() < 3 {
+            self.fp_section(S_IDS, ids)?;
+            return self.fp_section(S_KEYS, keys);
+        }
+        self.section(S_IDS)?;
+        let mut keys = keys.into_iter().peekable();
+        let mut exceptions: Vec<(u128, u32)> = Vec::new();
+        let (mut last_id, mut last_key) = (None, None);
+        let (mut n_ids, mut matched) = (0u32, 0u32);
+        for (fp, local) in ids {
+            if local >= self.rows || last_id.is_some_and(|l| l > (fp, local)) {
+                return Err("fingerprint table must be sorted and in range".into());
+            }
+            last_id = Some((fp, local));
+            // key entries ahead of this id entry belong to rows with another id
+            while let Some(&k) = keys.peek() {
+                if k >= (fp, local) {
+                    break;
+                }
+                if k.1 >= self.rows || last_key.is_some_and(|l| l > k) {
+                    return Err("fingerprint table must be sorted and in range".into());
+                }
+                last_key = Some(k);
+                exceptions.push(k);
+                keys.next();
+            }
+            if keys.peek() == Some(&(fp, local)) {
+                last_key = Some((fp, local));
+                matched += 1;
+                keys.next();
+            }
+            self.put(&fp.to_le_bytes())?;
+            self.put(&local.to_le_bytes())?;
+            n_ids += 1;
+        }
+        for k in keys {
+            if k.1 >= self.rows || last_key.is_some_and(|l| l > k) {
+                return Err("fingerprint table must be sorted and in range".into());
+            }
+            last_key = Some(k);
+            exceptions.push(k);
+        }
+        if n_ids != self.rows || matched as usize + exceptions.len() != self.rows as usize {
+            return Err("fingerprint table must cover every row".into());
+        }
+        self.section(S_KEYS)?;
+        for (fp, local) in exceptions {
+            self.put(&fp.to_le_bytes())?;
+            self.put(&local.to_le_bytes())?;
+        }
+        Ok(())
     }
 
-    /// (key fingerprint, local row) pairs sorted ascending.
-    pub fn keys(&mut self, pairs: impl IntoIterator<Item = (u128, u32)>) -> Result<()> {
-        self.fp_section(S_KEYS, pairs)
-    }
-
-    /// Local rows in (valid_at, row) order.
-    pub fn time(&mut self, locals: impl IntoIterator<Item = u32>) -> Result<()> {
+    /// Local rows in (valid_at, row) order. Version 3 keeps no table (the
+    /// reader derives the order), so `locals` is not even asked for.
+    pub fn time<I: IntoIterator<Item = u32>>(&mut self, locals: impl FnOnce() -> I) -> Result<()> {
         self.section(S_TIME)?;
+        if write_version() >= 3 {
+            return Ok(());
+        }
         let mut n = 0u32;
-        for local in locals {
+        for local in locals() {
             if local >= self.rows {
                 return Err("time order row out of range".into());
             }
@@ -1551,5 +1741,173 @@ mod postings_tests {
         }
         .collect();
         assert_eq!(got, vec![(4, 1), (7, 2), (307, 1)]);
+    }
+}
+
+#[cfg(test)]
+mod table_tests {
+    use super::*;
+    use crate::archive::Run;
+
+    struct Dummy(u64);
+    impl Run for Dummy {
+        fn len(&self) -> u64 {
+            self.0
+        }
+        fn file_bytes(&self) -> u64 {
+            0
+        }
+        fn get(&self, _: u64) -> Result<Vec<u8>> {
+            Err("no originals".into())
+        }
+        fn scan(&self, _: u64, _: u64, _: &mut dyn FnMut(u64, &[u8]) -> Result<()>) -> Result<()> {
+            Err("no originals".into())
+        }
+    }
+
+    fn mix(mut z: u64) -> u64 {
+        z = z.wrapping_add(0x9E37_79B9_7F4A_7C15);
+        z = (z ^ (z >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+        z = (z ^ (z >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+        z ^ (z >> 31)
+    }
+
+    fn fp(x: u64) -> u128 {
+        (u128::from(mix(x)) << 64) | u128::from(mix(!x))
+    }
+
+    struct Fixture {
+        meta: Vec<RowMeta>,
+        ids: Vec<u128>,
+        keys: Vec<u128>,
+    }
+
+    /// `n` rows with id fingerprints of their own; keys equal ids except for
+    /// a share of rows that share a key group (versions), take another row's
+    /// id as their key, or sit alone under a key of their own.
+    fn fixture(n: usize, seed: u64, exceptions: u64) -> Fixture {
+        let meta: Vec<RowMeta> = (0..n)
+            .map(|i| {
+                let r = mix(seed ^ i as u64);
+                RowMeta {
+                    valid_at: if r.is_multiple_of(5) { 7 } else { 1_790_000_000_000_000 + ((r >> 8) % 100_000_000) as i64 },
+                    recorded_at: if r.is_multiple_of(3) { 7 } else { 1_790_000_000_000_000 + ((r >> 12) % 1_000_000) as i64 },
+                    length: (r >> 20) as u32 % 5000,
+                    scope: (r >> 40) as u32 % 700,
+                    text_len: (r >> 7) as u32 % 100_000,
+                    flags: (r & 1) as u32,
+                    id_prefix: id_prefix(&(100_000 + i).to_string()),
+                }
+            })
+            .collect();
+        let ids: Vec<u128> = (0..n).map(|i| fp(seed ^ (i as u64) << 20)).collect();
+        let keys: Vec<u128> = (0..n)
+            .map(|i| match mix(seed ^ 0x55 ^ i as u64) % 100 {
+                x if x < exceptions => fp(seed ^ 0xAAAA ^ (i as u64 % 9)), // a group of versions
+                x if x < exceptions * 2 => ids[(mix(i as u64 ^ seed) as usize) % n], // another row's id
+                x if x < exceptions * 3 => fp(seed ^ 0xBBBB ^ i as u64), // a key of its own
+                _ => ids[i],
+            })
+            .collect();
+        Fixture { meta, ids, keys }
+    }
+
+    fn write(path: &Path, f: &Fixture, v1: bool) -> DiskSegment {
+        WRITE_V1.with(|v| v.set(v1));
+        let n = f.meta.len();
+        let sorted = |fps: &[u128]| {
+            let mut p: Vec<(u128, u32)> = fps.iter().copied().zip(0u32..).collect();
+            p.sort_unstable();
+            p
+        };
+        let mut w = SegmentWriter::create(path, 1000).unwrap();
+        w.rows(f.meta.iter().copied()).unwrap();
+        w.fingerprints(sorted(&f.ids), sorted(&f.keys)).unwrap();
+        let mut order: Vec<(i64, u32)> = f.meta.iter().map(|m| m.valid_at).zip(0u32..).collect();
+        order.sort_unstable();
+        w.time(|| order.iter().map(|x| x.1)).unwrap();
+        w.multi(Vec::new()).unwrap();
+        w.finish().unwrap();
+        WRITE_V1.with(|v| v.set(false));
+        DiskSegment::open(1, path, Box::new(Dummy(n as u64))).unwrap()
+    }
+
+    fn scratch(name: &str) -> std::path::PathBuf {
+        let base = std::env::var_os("TMPDIR").map(std::path::PathBuf::from).unwrap_or_else(std::env::temp_dir);
+        let nanos = std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().subsec_nanos();
+        let d = base.join(format!("nine-tables-{name}-{}-{nanos}", std::process::id()));
+        std::fs::create_dir_all(&d).unwrap();
+        d
+    }
+
+    /// The packed rows, the key exceptions and the derived time order answer
+    /// exactly like the version 2 tables for the same data.
+    #[test]
+    fn version_three_tables_answer_like_version_two() {
+        let dir = scratch("v3v2");
+        for (n, exceptions, seed) in [(0usize, 0u64, 1u64), (1, 0, 2), (300, 0, 3), (300, 7, 4), (1500, 10, 5), (1500, 33, 6), (129, 33, 7)] {
+            let f = fixture(n, seed, exceptions);
+            let old = write(&dir.join(format!("old-{n}-{seed}.idx")), &f, true);
+            let new = write(&dir.join(format!("new-{n}-{seed}.idx")), &f, false);
+            assert_eq!((old.version(), new.version()), (1, 3));
+            for l in 0..n as u32 {
+                assert_eq!(new.meta(l), old.meta(l), "row {l}");
+                assert_eq!(new.meta(l), f.meta[l as usize], "row {l}");
+                assert_eq!(new.scope_length(l), old.scope_length(l));
+                assert_eq!(new.valid_at(l), f.meta[l as usize].valid_at);
+            }
+            assert_eq!(new.fp_entries(false).collect::<Vec<_>>(), old.fp_entries(false).collect::<Vec<_>>());
+            assert_eq!(new.fp_entries(true).collect::<Vec<_>>(), old.fp_entries(true).collect::<Vec<_>>(), "key table, n {n} seed {seed}");
+            assert_eq!((0..n).map(|i| new.time_at(i)).collect::<Vec<_>>(), (0..n).map(|i| old.time_at(i)).collect::<Vec<_>>());
+            for at in [i64::MIN, 0, 7, 8, 1_790_000_000_000_000, 1_790_000_050_000_000, i64::MAX] {
+                assert_eq!(new.time_lower_bound(at), old.time_lower_bound(at));
+            }
+            // lookups: every id and key present, and some absent
+            let mut probes: Vec<u128> = f.ids.iter().chain(&f.keys).copied().collect();
+            probes.extend([0, 1, u128::MAX, fp(99), fp(98)]);
+            for p in probes {
+                assert_eq!(new.rows_with_id(p).collect::<Vec<_>>(), old.rows_with_id(p).collect::<Vec<_>>());
+                assert_eq!(new.rows_with_key(p).collect::<Vec<_>>(), old.rows_with_key(p).collect::<Vec<_>>(), "key {p:x}");
+            }
+            // what the tables hold: ids in full, a fraction of the keys
+            if exceptions == 0 && n > 0 {
+                assert_eq!(new.exc.len(), 0);
+            }
+            if n >= 300 {
+                assert!(new.file_bytes() < old.file_bytes(), "{} vs {} bytes", new.file_bytes(), old.file_bytes());
+            }
+        }
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn fingerprint_tables_must_cover_every_row() {
+        let dir = scratch("cover");
+        let f = fixture(10, 9, 0);
+        let sorted = |fps: &[u128]| {
+            let mut p: Vec<(u128, u32)> = fps.iter().copied().zip(0u32..).collect();
+            p.sort_unstable();
+            p
+        };
+        let try_write = |ids: Vec<(u128, u32)>, keys: Vec<(u128, u32)>, name: &str| {
+            let mut w = SegmentWriter::create(&dir.join(name), 0).unwrap();
+            w.rows(f.meta.iter().copied()).unwrap();
+            w.fingerprints(ids, keys)
+        };
+        assert!(try_write(sorted(&f.ids), sorted(&f.keys), "ok").is_ok());
+        let mut short = sorted(&f.keys);
+        short.pop();
+        assert!(try_write(sorted(&f.ids), short, "short").is_err());
+        let mut twice = sorted(&f.keys);
+        twice.push(twice[0]);
+        twice.sort_unstable();
+        assert!(try_write(sorted(&f.ids), twice, "twice").is_err());
+        let mut unsorted = sorted(&f.ids);
+        unsorted.swap(0, 1);
+        assert!(try_write(unsorted, sorted(&f.keys), "unsorted").is_err());
+        let mut out_of_range = sorted(&f.keys);
+        out_of_range[3].1 = 99;
+        assert!(try_write(sorted(&f.ids), out_of_range, "range").is_err());
+        let _ = std::fs::remove_dir_all(&dir);
     }
 }

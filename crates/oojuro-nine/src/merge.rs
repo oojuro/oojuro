@@ -150,9 +150,8 @@ pub(super) fn write_merged(
                 .collect(),
         )
     };
-    w.ids(rebased(false))?;
-    w.keys(rebased(true))?;
-    w.time(
+    w.fingerprints(rebased(false), rebased(true))?;
+    w.time(|| {
         kmerge(
             inputs
                 .iter()
@@ -160,13 +159,13 @@ pub(super) fn write_merged(
                     let shift = s.start - start;
                     Box::new((0..s.rows as usize).map(move |i| {
                         let l = s.time_at(i);
-                        (s.meta(l).valid_at, l + shift)
+                        (s.valid_at(l), l + shift)
                     })) as Box<dyn Iterator<Item = (i64, u32)>>
                 })
                 .collect(),
         )
-        .map(|(_, l)| l),
-    )?;
+        .map(|(_, l)| l)
+    })?;
     let mut multi: Vec<u128> = inputs.iter().flat_map(|s| s.multi_keys()).collect();
     multi.sort_unstable();
     multi.dedup();
@@ -437,9 +436,8 @@ pub(super) fn write_erased(
         }
         m
     }))?;
-    w.ids(s.fp_entries(false))?;
-    w.keys(s.fp_entries(true))?;
-    w.time((0..s.rows as usize).map(|i| s.time_at(i)))?;
+    w.fingerprints(s.fp_entries(false), s.fp_entries(true))?;
+    w.time(|| (0..s.rows as usize).map(|i| s.time_at(i)))?;
     w.multi(s.multi_keys())?;
     let mut cursor = s.terms_cursor();
     while let Some((term, info)) = cursor.next_term()? {
