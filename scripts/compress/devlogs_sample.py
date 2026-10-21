@@ -1,11 +1,11 @@
-"""Owner-journal sample for the codec leaderboard (never committed: data
-stays under .scratch). Reads `oojuro export` JSON lines on stdin, keeps
-whole sessions chosen in a fixed hash order (sha256 of the session id)
-until at least TARGET bytes of text are kept, and writes them in append
-(id) order as an OJCORP01 corpus (crates/oojuro-store/src/corpus.rs).
+"""Developer-journal sample ("devlogs") for the codec leaderboard (never
+committed: data stays under .scratch). Reads `oojuro export` JSON lines on
+stdin, keeps whole sessions chosen in a fixed hash order (sha256 of the
+session id) until at least TARGET bytes of text are kept, and writes them in
+append (id) order as an OJCORP01 corpus (crates/oojuro-store/src/corpus.rs).
 Prints aggregate counts only, never text.
 
-  oojuro export --from 60d | python3 -I owner_sample.py <out.rec> [target_bytes]
+  oojuro export --from 60d | python3 -I devlogs_sample.py <out.rec> [target_bytes]
 
 Two passes need the input twice, so stdin is first spooled to a zstd file
 next to the output (private dir), then removed.
@@ -28,7 +28,8 @@ def lines():
 size = {}
 for d in lines():
     size[d["session"]] = size.get(d["session"], 0) + len(d["text"].encode())
-order = sorted(size, key=lambda s: hashlib.sha256(("oojuro-owner-sample-v1:" + s).encode()).hexdigest())
+SALT = "oojuro-owner-sample-v1:"  # fixed: the salt is part of the sample's identity (the recorded results)
+order = sorted(size, key=lambda s: hashlib.sha256((SALT + s).encode()).hexdigest())
 keep, total = set(), 0
 for s in order:
     if total >= target:

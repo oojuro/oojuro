@@ -5,9 +5,9 @@
 #   -std=c++17 -DP1_MODE=2 -DP3_BATCH -DP2_FASTMATH -DLSTM_QUANT=8 -Ofast -march=native -DNDEBUG
 # (makefile uses clang++-17; here zig's bundled clang). The `cmix` target only;
 # the enwik9 preprocessors are not needed.
-# Usage: . ~/.sa-agents/oojuro-toolchain/env.sh compress; bash build_cmix.sh
+# Usage: bash build_cmix.sh   (EXT=dir overrides the install prefix)
 set -euo pipefail
-EXT=${EXT:-$HOME/.sa-agents/oojuro-compress/.scratch/ext}
+EXT=${EXT:-$HOME/.cache/oojuro-ext}
 URL=https://github.com/byronknoll/cmix
 COMMIT=194af9cd133b8b741d2a53afca13ed0ca453c276
 SRC=$EXT/src/cmix/repo; BIN=$EXT/bin; mkdir -p "$BIN" "$EXT/src/cmix"

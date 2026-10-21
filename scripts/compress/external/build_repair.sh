@@ -12,9 +12,9 @@
 #      (sequence as 4-byte ints, no entropy coder). Flags from its src/CMakeLists.txt:
 #      -O3 -DNORMAL_EXPAND.
 # Binaries: bin/repair-nav, bin/despair-nav, bin/repair-wan, bin/despair-wan
-# Usage: . ~/.sa-agents/oojuro-toolchain/env.sh compress; bash build_repair.sh
+# Usage: bash build_repair.sh   (EXT=dir overrides the install prefix)
 set -euo pipefail
-EXT=${EXT:-$HOME/.sa-agents/oojuro-compress/.scratch/ext}
+EXT=${EXT:-$HOME/.cache/oojuro-ext}
 BIN=$EXT/bin; mkdir -p "$BIN"
 
 # (a) Navarro

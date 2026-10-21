@@ -1,15 +1,12 @@
 #!/bin/bash
-# Timed runs for track/compress on the bench box (one job at a time there, so
+# Timed runs for the compression track on a bench box (one job at a time there, so
 # no bench lock and no systemd scope). Phases, one box job each:
 #   store   scorecard: default (6 corpora), archive (3), 32 MiB prefixes (5), 3 reps
 #   search  archive search latency (4 corpora) + turn loop (record vs coarse arms)
 #   codecs  whole-sample speed panel + random-access block leaderboard, 3 reps
-# Submit from the dev machine:
-#   ~/.sa-agents/oojuro-benchbox/bench-remote compress \
-#     --sync ~/.sa-agents/oojuro-compress/.scratch/data/corpus \
-#     --sync ~/.sa-agents/oojuro-compress/.scratch/data/s64 \
-#     --sync ~/.sa-agents/oojuro-compress/.scratch/data/p32 \
-#     -- 'bash scripts/compress/box_job.sh store'
+# Submit from the dev machine: sync .scratch/data/corpus, .scratch/data/s64 and
+# .scratch/data/p32 to the box, then run there
+#   bash scripts/compress/box_job.sh store     # or search, codecs
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 phase=${1:?store|search|codecs}

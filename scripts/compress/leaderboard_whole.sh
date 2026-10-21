@@ -6,8 +6,12 @@
 # Resumable: (corpus, codec, rep) already present in $OUT are skipped. Each
 # invocation takes the shared bench lock separately so other sessions interleave.
 set -uo pipefail
-LOCK=${OOJURO_BENCH_LOCK:-$HOME/.cache/oojuro-bench.lock}; mkdir -p "$(dirname "$LOCK")"
+LOCKFILE=${OOJURO_BENCH_LOCK:-$HOME/.cache/oojuro-bench.lock}; mkdir -p "$(dirname "$LOCKFILE")"
 cd "$(dirname "$0")/../.."
+# Local defaults: a 3 GiB scope and the shared bench lock. On a box that runs one
+# job at a time (no user systemd), run with SCOPE= LOCK=.
+SCOPE=${SCOPE-systemd-run --user --scope -q -p MemoryMax=3G --}
+LOCK=${LOCK-flock $LOCKFILE}
 BIN=target/release/codecs
 OUT=${OUT:-.scratch/out/whole.jsonl}
 SAMPLE=67108864
@@ -27,7 +31,7 @@ sys.exit(1)"
 }
 run() { # rep corpus codec
   done_already "$1" "$2" "$3" && return
-  flock "$LOCK" systemd-run --user --scope -q -p MemoryMax=3G -- \
+  $LOCK $SCOPE \
     $BIN whole ".scratch/data/corpus/$2.rec" $SAMPLE "$3" | sed "s/^{/{\"rep\":$1,/" >> "$OUT"
 }
 for c in swe ohjson othink hermes ohsft fiqa; do

@@ -3,9 +3,9 @@
 Path: fewest bytes on disk and in RAM for agent text, fully lossless,
 while per-turn writes and top-20 excerpt reads stay fast. Branch
 `track/compress` (from main 7b98903), started 2026-10-20; its measured
-sections are merged here. The closing pass on `v1-compress2` (2026-10-21)
-finished the in-process leaderboard on every corpus plus a sample of the
-owner's journal, ran the external codecs everywhere, evaluated a cold archive
+sections are merged here. The closing pass (2026-10-21) finished the
+in-process leaderboard on every corpus plus a sample of a developer's own
+journal (`devlogs`), ran the external codecs everywhere, evaluated a cold archive
 tier and the search index, and ends with a summary: **what we use, what we
 tried, what we rejected and why, what to adopt next** (last section).
 
@@ -85,7 +85,7 @@ journal stores them plus an envelope per record, see E0).
 | ohsft | SWE-Gym/OpenHands-SFT-Trajectories (MIT) | 23,554 | 31.5 | tool_result 70% |
 | fiqa | BeIR/fiqa corpus (CC-BY-SA-4.0), non-agent control | 57,600 | 44.3 | doc |
 | nfcorpus | BeIR/nfcorpus corpus, control (floors only) | 3,633 | 5.8 | doc |
-| owner | a developer's live journal: `oojuro export --from 60d` on 2026-10-21 (546,835 records, 1,135 MB of text, 1,938 sessions, 74 writers); the 64 MiB sample keeps 125 whole sessions chosen in a fixed hash order (`scripts/compress/owner_sample.py`), in append order. Private: kept under `.scratch/`, never committed | 29,237 | 67.9 | tool_result 49%, system 33%, tool_call 15%, answer 1.3%, user 1.1%, thinking 0.2% (journal: 50 / 32 / 15 / 1.7 / 1.4 / 0.1%) |
+| devlogs | a developer's live journal: `oojuro export --from 60d` on 2026-10-21 (546,835 records, 1,135 MB of text, 1,938 sessions, 74 writers); the 64 MiB sample keeps 125 whole sessions chosen in a fixed hash order (`scripts/compress/devlogs_sample.py`), in append order. Private: kept under `.scratch/`, never committed | 29,237 | 67.9 | tool_result 49%, system 33%, tool_call 15%, answer 1.3%, user 1.1%, thinking 0.2% (journal: 50 / 32 / 15 / 1.7 / 1.4 / 0.1%) |
 
 `xlam-function-calling-60k` is gated (login required); hermes (which includes
 glaive function calling) substitutes. Records are what an agent appends: the
@@ -360,7 +360,7 @@ key). Cost (full corpora, store, attrs = session in both arms): ohsft 0.1214
 → 0.1484 (+22%), hermes 0.0866 → 0.1826 (+111%: every repeat there is a
 shared system prompt or tool schema across conversations), swe 0.0513 →
 0.0716 (+40%), ohjson 0.0987 → 0.1049 (+6%). **Option, off by default**
-(`Options::domain_dedupe`); a decision for the owner: per-session erasure
+(`Options::domain_dedupe`); a product decision: per-session erasure
 domains vs global dedupe with whole-store rewrites on erase. Middle ground,
 domains of G consecutive sessions as an agent/tenant proxy (hermes / ohsft):
 global 0.0866 / 0.1214; G=256 0.1219 / 0.1279; G=16 0.1745 / 0.1455; per
@@ -376,17 +376,17 @@ global ratio; hermes (shared prompts across every conversation) is the case
 that needs global dedupe.
 
 **E21 — cold-start dictionary from other public agent text** (a dictionary
-shipped with the store for small stores; licensing of training data is an
-owner decision). Frames-only ratio, 64 KiB frames, 112 KiB dictionary:
+shipped with the store for small stores; licensing of training data is a
+product decision). Frames-only ratio, 64 KiB frames, 112 KiB dictionary:
 ohsft none 0.1422, trained on swe 0.1290, on ohjson 0.1260, self-trained
 (in-sample) 0.1162; hermes 0.0964 / 0.0913 / 0.0906 / 0.0822. A foreign
 agent-text dictionary recovers 40–60% of the self-trained gain and costs a
 store nothing if it ships in the binary — useful until a store has its own
-(≥ 4 MiB). **Candidate**, pending a licensing ruling on the training text.
+(≥ 4 MiB). **Candidate**, pending a licensing decision on the training text.
 
 ## Search over compressed frames (archive tier, E18)
 
-Question (Ryan): can the archive be searched while compressed, the way
+Question: can the archive be searched while compressed, the way
 vector search works over compressed vectors? Two arms share the tokenizer
 (lowercase alphanumeric runs) and BM25 (k1 1.2, b 0.75); only the index
 differs (`oojuro_store::search`, harness arms `archive-rec` /
@@ -416,8 +416,7 @@ in cold frames when queried):
 
 After the fix (a compaction is finished at the next batch, so the hot/cold
 boundary depends only on the data), all gates pass for every arm
-(`bench-results/archive-turnloop-dev-capped.json`, run without the lock:
-latency indicative only):
+(run without the lock: latency indicative only):
 
 | arm (32-term queries) | nDCG@20 | recall@20 | search p50 ms (indicative) | gates |
 |---|---|---|---|---|
@@ -490,12 +489,12 @@ index sizes will differ.
 
 In v1's own engine (nine) the question looks different: nine stores **no
 positions** (postings are row + tf), so the "freqs-only" saving above is
-already banked, and on the owner's journal thinking is 0.2% of the index
+already banked, and on the `devlogs` journal thinking is 0.2% of the index
 (0.6% counting its rows). See the next section.
 
 ## Search index: where the bytes go and what would shrink it (2026-10-21)
 
-The index is about a third of the owner's live journal (~107 MB of 326 MB on
+The index is about a third of the `devlogs` live journal (~107 MB of 326 MB on
 disk). The live store is off limits, so the journal was exported (`oojuro
 export --from 60d`, 546,835 records, 1,135 MB of text) and replayed into a
 fresh store with the recorder's own options and indexing rule
@@ -516,7 +515,7 @@ dictionary layouts, df and kind attribution), the `nine-maxdf` bench arm,
 |---|---:|---:|---:|---:|---:|
 | rebuild, before settling merges | 116.9 | 246.6 | 67.1 | 3.4 | 434.0 |
 | rebuild, after settling (6 merges) | 109.7 | 199.7 | 67.1 (33.6 after close) | 3.4 | 379.9 |
-| live (coordinator's figure) | ~107 | | | | 326 |
+| live (measured on the running store) | ~107 | | | | 326 |
 
 The index lands within 2.5% of live. The archive depends on merge history
 (247 → 200 MB from settling alone), which explains most of the total gap.
@@ -531,7 +530,7 @@ traces, whose args carry no provenance; the live path never got the win.)
 
 **Where the bytes go** (MB, % of index):
 
-| part | owner (546,835 rows, 390,372 indexed; 39.9M postings; 1.11M terms) | base1m tier 1 (792,118 rows; 24.0M postings) |
+| part | devlogs (546,835 rows, 390,372 indexed; 39.9M postings; 1.11M terms) | base1m tier 1 (792,118 rows; 24.0M postings) |
 |---|---:|---:|
 | rows (40 B/row) | 21.87 (19.9%) | 31.68 (28.2%) |
 | ids (20 B/row) | 10.94 (10.0%) | 15.84 (14.1%) |
@@ -546,10 +545,10 @@ traces, whose args carry no provenance; the live path never got the win.)
 | positions, skip tables on disk | none | none |
 | columns (TraceDb checkpoint; not the index) | 3.4 | 12.6 |
 
-Terms with df = 1 are 57% of the owner's terms and 71% of its dictionary
+Terms with df = 1 are 57% of the devlogs terms and 71% of its dictionary
 bytes (hash-like identifiers). Share of postings in terms whose df exceeds
 1 / 5 / 10 / 25% of rows: 76 / 49 / 30 / 11% (base1m 74 / 49 / 32 / 13%). By
-kind (owner, rows included): tool_result 48.8%, tool_call 31.1%, system
+kind (devlogs, rows included): tool_result 48.8%, tool_call 31.1%, system
 12.0% (156k stored-only rows: rows but no postings), assistant 4.5%, user
 2.3%, thinking 0.6%.
 
@@ -560,7 +559,7 @@ estimated as postings per tier-1 query (52.7k at 200 B, 283k at 4 KB) x the
 decode-time difference. Tier-1 baseline CPU p50 / p99: 200 B 1.15 / 2.83 ms,
 4 KB 3.18 / 5.18 ms.
 
-| encoding | owner MB (bits/posting) | index Δ owner / base1m | decode ns/posting | est. Δ p50 at 200 B / 4 KB |
+| encoding | devlogs MB (bits/posting) | index Δ devlogs / base1m | decode ns/posting | est. Δ p50 at 200 B / 4 KB |
 |---|---:|---:|---:|---:|
 | **Rice + gamma (today)** | **46.94 (9.42)** | — | 5.45 | — |
 | entropy bound | 45.15 (9.06) | −1.6% / −1.4% | | |
@@ -578,14 +577,14 @@ size lever. **Keep Rice.**
 **(b) Positions.** None are stored. A quoted query takes candidates from its
 terms' postings and confirms each candidate on its original text
 (`phrase_start`), which is exact; there is no proximity scoring. Adding
-positions would cost ~126 MB on the owner store (+115% of the index; base1m
+positions would cost ~126 MB on the devlogs store (+115% of the index; base1m
 +64 MB, +57%). **Not recommended**; nothing in v1 needs them.
 
 **(c) Thinking records** (the design decision of 2026-10-20 indexes thinking):
 
 | corpus | thinking share of index | thinking stored-only (measured) | drop tf for thinking (est.) |
 |---|---:|---:|---:|
-| owner | 0.2% (0.6% with rows) | −0.23 MB (est.) | −0.04 MB |
+| devlogs | 0.2% (0.6% with rows) | −0.23 MB (est.) | −0.04 MB |
 | othink sample (82% thinking) | 48.8% | 2.03 → 1.18 MB (−42%) | −0.41 MB |
 | swe sample (14% thinking) | 11.4% | 7.60 → 5.81 MB (−23.5%)* | −0.22 MB |
 
@@ -596,12 +595,12 @@ nDCG@10 dev .2627 → .2656, heldout .1590 → .1647, recall@20 +0.009 /
 +0.012. The turnloop labels never mark thinking relevant, so this setup can
 only reward unindexing; the cost of losing an agent's own reasoning from
 search is unmeasured. Dropping tf for thinking: not measured, not
-recommended. **Keep the ruling**: on real journals thinking is 0.2% of the
+recommended. **Keep the decision**: on real journals thinking is 0.2% of the
 index.
 
-**(d) Term dictionary** (owner today 16.78 MB = 15.3% of the index):
+**(d) Term dictionary** (devlogs today 16.78 MB = 15.3% of the index):
 
-| layout | owner MB | Δ owner / base1m |
+| layout | devlogs MB | Δ devlogs / base1m |
 |---|---:|---:|
 | front-coded, 32-term blocks, df/cf/len inline (today) | 16.78 | — |
 | 128-term blocks | 16.35 | −2.6% / −3.4% |
@@ -614,23 +613,23 @@ prefixes or suffixes. Lookup speed of larger blocks not timed.
 
 **(e) Fixed per-row tables** (PERF_STORE "Next #1"; lossless):
 
-| table | owner today → lean MB | base1m today → lean MB | how |
+| table | devlogs today → lean MB | base1m today → lean MB | how |
 |---|---|---|---|
 | rows | 21.87 → 5.35 | 31.68 → 8.40 | bit-pack each field per 128-row block (FOR-128); recorded_at equals valid_at in every row (store a flag) |
 | ids | 10.94 → 0 | 15.84 → 0.10 | TraceDb ids are decimal and ascend with rows: binary-search the id column, list exceptions (64-bit fingerprint + row instead: 5.80 / 7.92) |
-| keys | 10.94 → 0 | 15.84 → 5.74 | store only rows whose key differs from the id (owner 0; base1m 286,888 status revisions) |
+| keys | 10.94 → 0 | 15.84 → 5.74 | store only rows whose key differs from the id (devlogs 0; base1m 286,888 status revisions) |
 | time | 2.19 → 0 | 3.17 → 0 | rebuild at open by sorting valid_at (or runs: 1.13 / 0.11) |
 | **total** | **45.93 → 5.35 (−37.0% of index)** | **66.54 → 14.23 (−46.5%)** | |
 
 With 64-bit id fingerprints instead of numeric ids and time as runs, the
-owner saving is −30.6%. Read cost not timed (row metadata is read only for
+devlogs saving is −30.6%. Read cost not timed (row metadata is read only for
 finalists, PERF_SEARCH P3).
 
 **(f) Stopping very frequent terms** (an index that drops terms above a df
 threshold but keeps row lengths, simulated exactly on the query side by the
 `nine-maxdf` arm; bytes are the dropped lists + dictionary entries):
 
-| df above | owner bytes saved | tier-1 CPU p50, 200 B / 4 KB | turnloop nDCG@10 dev / heldout | turnloop recall@20 dev / heldout | SciFact nDCG@10 dev / heldout | NFCorpus | FiQA |
+| df above | devlogs bytes saved | tier-1 CPU p50, 200 B / 4 KB | turnloop nDCG@10 dev / heldout | turnloop recall@20 dev / heldout | SciFact nDCG@10 dev / heldout | NFCorpus | FiQA |
 |---|---:|---:|---:|---:|---:|---:|---:|
 | none | — | 1.15 / 3.18 ms | .2627 / .1590 | .3659 / .3391 | .677 / .707 | .293 / .339 | .288 / .235 |
 | 25% | 3.5 MB (3.2%) | 0.40 / 2.50 ms | .2600 / .1578 | .3509 / .3349 | .674 / .708 | .292 / .335 | .287 / .237 |
@@ -642,10 +641,9 @@ up to 27% nDCG@10 on FiQA and 10% on SciFact: **rejected** as an index
 change. 25% keeps BEIR within ±0.004 but costs turnloop recall@20 −0.015
 on dev, for 3% of the bytes: **rejected** as a size lever. Its real value is
 latency (2–3x faster tier-1 queries), which a query-side cutoff gets with no
-format change; that changes rankings, so it is a ranking decision for the
-owner, measured here.
+format change; that changes rankings, so it is a ranking decision, measured here.
 
-**What to adopt for the index, in order** (owner: 1.135 GB raw, index today
+**What to adopt for the index, in order** (devlogs: 1.135 GB raw, index today
 96.6 MB per GB of raw text):
 
 | # | change | MB saved per GB raw | cost |
@@ -657,13 +655,13 @@ owner, measured here.
 | 5 | dictionary: drop the unused `cf`, then df/offset columns with 128-term blocks | 2.2 | time lookups first |
 | 6 | capture: dedupe key without `src`/`rt` (keep each repeat's own args in its `B` entry) | 6.3 index + 6.2 originals | capture change; erasure tests |
 
-Items 1–5 are lossless and take the owner index from 109.7 to ~66.7 MB
+Items 1–5 are lossless and take the devlogs index from 109.7 to ~66.7 MB
 (−39%); with 6, ~60 MB. Doc-id encodings, positions, thinking policy, FST and
 term stopping are not worth adopting.
 
 ## Codec leaderboard (all corpora, 2026-10-21)
 
-Every codec the track planned, on all six public samples plus the owner's
+Every codec the track planned, on all six public samples plus the devlogs
 journal sample, whole-sample and as random-access blocks; external codecs
 (context mixing, BWT, OpenZL, Re-Pair) on every corpus; Oojuro's own run
 format as its own rows. Runner: `scripts/compress/leaderboard2.sh` (in-process,
@@ -673,14 +671,14 @@ tables from `scripts/compress/report2.py`; aggregates (no text) in
 
 Method:
 - **Samples**: the 64 MiB append-order samples (hermes, ohsft and fiqa are
-  smaller than 64 MiB and run whole) and the owner sample. Every row decodes
+  smaller than 64 MiB and run whole) and the devlogs sample. Every row decodes
   and compares every byte.
 - **Sizes** come from an unlocked pass over the full samples (exact).
   **Speeds and fetch latencies** come from separate passes under the bench
   lock, one hold per codec (whole sample) or per (corpus, block size,
-  dictionary) group: whole sample on othink and owner plus the track's
+  dictionary) group: whole sample on othink and devlogs plus the track's
   locked swe and ohjson runs; blocks on 16 MiB prefixes of swe, othink and
-  owner; run profiles on the full 64 MiB of the same three. Tables show the
+  devlogs; run profiles on the full 64 MiB of the same three. Tables show the
   median over the timed corpora; single thread; the 1-minute load average
   (12–48 during this pass, from other sessions) is recorded with every row.
 - **Fetch** = one cold 1 KiB excerpt at a random offset of a random record,
@@ -702,17 +700,17 @@ Method:
   does not have (simulated separately below). Run compress speed includes
   dedupe and dictionary training; the scan uses the 4 MiB frame cache
   TraceDb uses; fetches are cold.
-- **Not run**: brotli + dictionary at quality 9/11 on ohjson and owner at
+- **Not run**: brotli + dictionary at quality 9/11 on ohjson and devlogs at
   4–16 KiB and per record (the Rust brotli 8.0.4 encoder panics with a custom
   dictionary on those inputs: index out of bounds in `brotli_bit_stream.rs`);
   paq8px and Re-Pair use 8 MiB prefixes (paq8px runs at ~5 KB/s). **cmix:
-  skipped by owner decision (2026-10-21): it needs ~32 GB of RAM and runs at
+  skipped (2026-10-21): it needs ~32 GB of RAM and runs at
   ~2 KB/s, so it cannot be used in the product; paq8px already gives the
   floor.**
 
 **Headline.**
 - **Per record and 4 KiB blocks: zstd + trained dictionary wins on every
-  corpus** (level 19/22; owner 0.277 per record, 0.263 at 4 KiB). Brotli 11
+  corpus** (level 19/22; devlogs 0.277 per record, 0.263 at 4 KiB). Brotli 11
   with a custom dictionary comes within 0.1–7% where it ran, at 3–20x slower
   fetches and 4–25x slower compression. FSST per record stays at 0.54–0.68:
   its symbol table cannot see repeats across records.
@@ -722,16 +720,16 @@ Method:
 - **64 KiB: Oojuro's default run beats every codec on six of seven
   corpora**, because it dedupes 1 KiB chunks across the run before
   compressing: vs zstd 19 + dictionary at the same block size, swe −35%,
-  hermes −57%, owner −27%, ohsft −20%, ohjson −6%, othink −2%; fiqa (BEIR
+  hermes −57%, devlogs −27%, ohsft −20%, ohjson −6%, othink −2%; fiqa (BEIR
   prose, no repeats) is the exception, where PPMd o6 wins by 3%.
 - **256 KiB: the archive profile** wins five of seven; PPMd o6 wins on
   othink and fiqa (prose and thinking) at ~30x the fetch time.
 - **Whole sample (no random access)**: context mixing sets the floor (zpaq
-  -m5 on all, paq8px on 8 MiB prefixes, owner 0.0845 / 0.0757); the best
+  -m5 on all, paq8px on 8 MiB prefixes, devlogs 0.0845 / 0.0757); the best
   in-process codec is PPMd8 order 16 with 1 GiB of model on six corpora
-  (owner 0.1004) and xz -9e on swe; BWT (libbsc -b64) beats xz -9e on six
+  (devlogs 0.1004) and xz -9e on swe; BWT (libbsc -b64) beats xz -9e on six
   of seven (hermes +3%) at 20–40 MB/s each way.
-- **Where we stand** (owner sample): flush runs 0.214, merged runs 0.171,
+- **Where we stand** (devlogs sample): flush runs 0.214, merged runs 0.171,
   archive profile 0.153; the same data as one stream is 0.124 at zstd 19,
   0.111 at xz -9e, 0.110 with bsc, 0.0845 with zpaq -m5. v1's random-access
   default costs 1.38x a whole-sample zstd 19 and 2.0x the context-mixing
@@ -739,13 +737,13 @@ Method:
 
 P-frames on top of the archive profile (`dedupe-exp PREFIX=sim`, a frame
 may compress against the raw body of the earlier frame it references most):
-swe −1.2%, hermes −1.5%, owner −1.3%, ohjson / othink / ohsft / fiqa 0.0%,
+swe −1.2%, hermes −1.5%, devlogs −1.3%, ohjson / othink / ohsft / fiqa 0.0%,
 with 4–14% more frame decodes per fetch. With 512 KiB dictionaries they buy
 almost nothing (E11 found the same): **rejected**.
 
 ### Best codec per block size and corpus (bytes / raw byte)
 
-| block | swe | ohjson | othink | hermes | ohsft | fiqa | owner |
+| block | swe | ohjson | othink | hermes | ohsft | fiqa | devlogs |
 |---|---|---|---|---|---|---|---|
 | one record per block | 0.2236 zstd:19 +dict | 0.1795 zstd:19 +dict | 0.2146 zstd:19 +dict | 0.2795 zstd:19 +dict | 0.2079 zstd:19 +dict | 0.3858 zstd:19 +dict | 0.2771 zstd:19 +dict |
 | 4 KiB | 0.1686 zstd:22 +dict | 0.1507 zstd:22 +dict | 0.2135 zstd:22 +dict | 0.2258 zstd:22 +dict | 0.1777 zstd:22 +dict | 0.3449 zstd:22 +dict | 0.2629 zstd:22 +dict |
@@ -755,7 +753,7 @@ almost nothing (E11 found the same): **rejected**.
 
 ### Oojuro's own run format on the same samples (bytes / raw byte; one thread)
 
-| profile | swe | ohjson | othink | hermes | ohsft | fiqa | owner | compress MB/s | scan MB/s | 1 KiB fetch p50 / p99 µs |
+| profile | swe | ohjson | othink | hermes | ohsft | fiqa | devlogs | compress MB/s | scan MB/s | 1 KiB fetch p50 / p99 µs |
 |---|---|---|---|---|---|---|---|---|---|---|
 | flush | 0.0717 | 0.1439 | 0.2658 | 0.1076 | 0.1518 | 0.4154 | 0.2138 | 108 | 636 | 91.7 / 236 |
 | default | 0.0534 | 0.1076 | 0.2013 | 0.0841 | 0.1199 | 0.3279 | 0.1708 | 3.28 | 588 | 83.2 / 216 |
@@ -765,9 +763,9 @@ almost nothing (E11 found the same): **rejected**.
 
 ### Whole-sample leaderboard (64 MiB samples; bytes / raw byte; best per corpus in bold)
 
-Speeds: single-thread MB/s, median over the locked runs (swe and ohjson from the track's locked pass, othink and owner from this one); external codecs as measured by `run_external.sh` (unlocked, †).
+Speeds: single-thread MB/s, median over the locked runs (swe and ohjson from the track's locked pass, othink and devlogs from this one); external codecs as measured by `run_external.sh` (unlocked, †).
 
-| codec | swe | ohjson | othink | hermes | ohsft | fiqa | owner | compress MB/s | decompress MB/s |
+| codec | swe | ohjson | othink | hermes | ohsft | fiqa | devlogs | compress MB/s | decompress MB/s |
 |---|---|---|---|---|---|---|---|---|---|
 | ppmd8:16:1024 | 0.0351 | 0.0703 | 0.1494 | 0.0544 | 0.0700 | 0.2077 | 0.1004 | 4.89 | 5.00 |
 | tok:ppmd8:8:256 | 0.0341 | 0.0754 | 0.1536 | 0.0553 | 0.0755 | 0.2109 | 0.1094 | 4.44 | 26.8 |
@@ -818,13 +816,13 @@ Speeds: single-thread MB/s, median over the locked runs (swe and ohjson from the
 | zpaq 7.15 -method 1 | 0.0494 | 0.1178 | 0.2523 | 0.0957 | 0.1255 | 0.3825 | 0.1693 | 23.9 † | 77.3 † |
 | Re-Pair (Wan) -i (first 8 MiB) | 0.0660 | 0.1601 | 0.3609 | 0.1530 | 0.1336 | 0.4972 | 0.2328 | 1.20 † | 107 † |
 | Re-Pair (Navarro, no entropy coder) (first 8 MiB) | 0.1352 | 0.2547 | 0.4814 | 0.2828 | 0.2469 | 0.6077 | 0.3938 | 3.34 † | 83.3 † |
-| cmix v21 | skipped by owner decision (2026-10-21): needs ~32 GB RAM and runs at ~2 KB/s; paq8px gives the floor | | | | | | | | |
+| cmix v21 | skipped (2026-10-21): needs ~32 GB RAM and runs at ~2 KB/s; paq8px gives the floor | | | | | | | | |
 
 † single unlocked run, indicative.
 
 ### Random access, one record per block (bytes / raw byte incl. dictionary and 16 B per block; 1 KiB excerpt fetch)
 
-| codec | swe | ohjson | othink | hermes | ohsft | fiqa | owner | compress MB/s | decompress MB/s | fetch p50 µs | fetch p99 µs |
+| codec | swe | ohjson | othink | hermes | ohsft | fiqa | devlogs | compress MB/s | decompress MB/s | fetch p50 µs | fetch p99 µs |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | zstd:19 +dict | **0.2236** | **0.1795** | **0.2146** | **0.2795** | **0.2079** | **0.3858** | **0.2771** | 5.21 | 660 | 0.962 | 37.7 |
 | brotli:11:24 +dict | 0.2262 | 0.1835 | 0.2152 | 0.2877 | 0.2085 | 0.4128 | … | 0.218 | 113 | 18.4 | 118 |
@@ -837,7 +835,7 @@ Speeds: single-thread MB/s, median over the locked runs (swe and ohjson from the
 
 ### Random access, 4 KiB blocks (bytes / raw byte incl. dictionary and 16 B per block; 1 KiB excerpt fetch)
 
-| codec | swe | ohjson | othink | hermes | ohsft | fiqa | owner | compress MB/s | decompress MB/s | fetch p50 µs | fetch p99 µs |
+| codec | swe | ohjson | othink | hermes | ohsft | fiqa | devlogs | compress MB/s | decompress MB/s | fetch p50 µs | fetch p99 µs |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | zstd:22 +dict | **0.1686** | **0.1507** | **0.2135** | **0.2258** | **0.1777** | **0.3449** | **0.2629** | 3.86 | 726 | 3.95 | 36.8 |
 | zstd:19 +dict | 0.1687 | 0.1512 | 0.2135 | 0.2259 | 0.1784 | 0.3449 | 0.2629 | 4.19 | 871 | 3.97 | 47.9 |
@@ -869,7 +867,7 @@ Speeds: single-thread MB/s, median over the locked runs (swe and ohjson from the
 
 ### Random access, 16 KiB blocks (bytes / raw byte incl. dictionary and 16 B per block; 1 KiB excerpt fetch)
 
-| codec | swe | ohjson | othink | hermes | ohsft | fiqa | owner | compress MB/s | decompress MB/s | fetch p50 µs | fetch p99 µs |
+| codec | swe | ohjson | othink | hermes | ohsft | fiqa | devlogs | compress MB/s | decompress MB/s | fetch p50 µs | fetch p99 µs |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | zstd:22 +dict | 0.1211 | **0.1310** | **0.2107** | **0.2083** | 0.1619 | **0.3342** | **0.2507** | 4.01 | 942 | 12.5 | 36.2 |
 | zstd:19 +dict | 0.1212 | 0.1316 | 0.2107 | 0.2084 | 0.1625 | 0.3342 | 0.2508 | 4.67 | 958 | 12.3 | 40.3 |
@@ -901,7 +899,7 @@ Speeds: single-thread MB/s, median over the locked runs (swe and ohjson from the
 
 ### Random access, 64 KiB blocks (bytes / raw byte incl. dictionary and 16 B per block; 1 KiB excerpt fetch)
 
-| codec | swe | ohjson | othink | hermes | ohsft | fiqa | owner | compress MB/s | decompress MB/s | fetch p50 µs | fetch p99 µs |
+| codec | swe | ohjson | othink | hermes | ohsft | fiqa | devlogs | compress MB/s | decompress MB/s | fetch p50 µs | fetch p99 µs |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | **oojuro** run, default profile | **0.0534** | **0.1076** | **0.2013** | **0.0841** | **0.1199** | 0.3279 | **0.1708** | 3.28 | 588 | 83.2 | 216 |
 | brotli:11:24 +dict | 0.0810 | 0.1128 | 0.2039 | 0.1929 | 0.1452 | 0.3269 | 0.2306 | 1.15 | 394 | 162 | 225 |
@@ -935,7 +933,7 @@ Speeds: single-thread MB/s, median over the locked runs (swe and ohjson from the
 
 ### Random access, 256 KiB blocks (bytes / raw byte incl. dictionary and 16 B per block; 1 KiB excerpt fetch)
 
-| codec | swe | ohjson | othink | hermes | ohsft | fiqa | owner | compress MB/s | decompress MB/s | fetch p50 µs | fetch p99 µs |
+| codec | swe | ohjson | othink | hermes | ohsft | fiqa | devlogs | compress MB/s | decompress MB/s | fetch p50 µs | fetch p99 µs |
 |---|---|---|---|---|---|---|---|---|---|---|---|
 | **oojuro** run, archive profile | **0.0473** | **0.0991** | 0.1985 | **0.0788** | **0.1102** | 0.3185 | **0.1530** | 2.96 | 383 | 240 | 624 |
 | brotli:11:24 +dict | 0.0564 | 0.1007 | 0.1990 | 0.1706 | 0.1323 | 0.3191 | 0.2044 | 1.00 | 360 | 625 | 920 |
@@ -978,19 +976,17 @@ zpaq (`-method 3` / `5`) run per block as their CLIs
 (`scripts/compress/cold_tier.sh`): sizes and roundtrips for every block
 (zpaq -m5 decodes the first block of each sample only), CPU from
 `/usr/bin/time`; under the bench lock, one block per (corpus, size) is
-encoded and decoded on swe, othink and owner for latency. PPMd o8, xz -9,
+encoded and decoded on swe, othink and devlogs for latency. PPMd o8, xz -9,
 zstd 19/22 with a window covering the block, and brotli 11 run in process
 (`leaderboard2.sh ratio-cold` / `time-cold`, 20 fetches per configuration on
 the full 64 MiB). bsc and zpaq must decode a whole block per excerpt; the
 in-process coders stop at the excerpt (half a block on average). Also
 measured: v1's own run format with 4 / 16 MiB frames (`cold4`, `cold16`).
 
-Money: the price card charges **$0.05 per GB-month of text kept**, i.e.
-$50 per raw TB-month regardless of compression; storage costs us ~$0.023
-per GB-month (S3), so every 0.01 of bytes/raw saved is **$0.23 per raw
-TB-month** of margin. Today the owner's live journal is 326 MB on disk for
-1,135 MB of text (0.287 bytes/raw, ~$6.6 per raw TB-month, 13% of the
-price); its originals are 0.18–0.22 of raw (the replay in the index
+Cost: object storage lists at ~$0.023 per GB-month (S3 Standard), so every
+0.01 of bytes/raw saved is **$0.23 per raw TB-month**. Today the `devlogs`
+live journal is 326 MB on disk for 1,135 MB of text (0.287 bytes/raw, ~$6.6
+per raw TB-month); its originals are 0.18–0.22 of raw (the replay in the index
 section: 0.176 with merges settled, 0.217 before) and the default merged
 runs reach 0.171 on the sample.
 
@@ -998,7 +994,7 @@ runs reach 0.171 on the sample.
 
 Fetch = time to return one 1 KiB excerpt = decode its block (bsc and zpaq always decode the whole block; the in-process coders stop at the excerpt). External coders: one block encoded and decoded under the lock per (corpus, size), CPU MB/s from the size pass. Savings: S3 at $0.023 per GB-month, per TB of raw text kept, vs the default run profile on the same corpus (originals only; the index is unchanged).
 
-| codec | block | swe | ohjson | othink | hermes | ohsft | fiqa | owner | compress MB/s (CPU) | decompress MB/s (CPU) | 1 KiB fetch p50 | saved $/TB-month (owner) | saved $/TB-month (median, agent corpora) |
+| codec | block | swe | ohjson | othink | hermes | ohsft | fiqa | devlogs | compress MB/s (CPU) | decompress MB/s (CPU) | 1 KiB fetch p50 | saved $/TB-month (devlogs) | saved $/TB-month (median, agent corpora) |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|---|
 | **oojuro run, default** | 64 KiB | 0.0534 | 0.1076 | 0.2013 | 0.0841 | 0.1199 | 0.3279 | 0.1708 | 3.28 | 588 | 83.2 µs | 0 | 0 |
 | zpaq -m5 | 1 MiB | 0.0370 | 0.0807 | 0.1486 | 0.1114 | 0.0935 | 0.2461 | 0.1466 | 0.435 | 0.448 | 2,965 ms | +0.56 | +0.58 |
@@ -1038,31 +1034,31 @@ Fetch = time to return one 1 KiB excerpt = decode its block (bsc and zpaq always
 
 | corpus | block | ppmd8:8:256 | xz:9 | zstd:19:w24 |
 |---|---|---|---|---|
+| devlogs | 256 KiB | 0.2644 | 0.3210 | 0.3254 |
+| devlogs | 1024 KiB | 0.2644 | 0.3210 | 0.3254 |
+| devlogs | 4096 KiB | 0.2644 | 0.3210 | 0.3254 |
+| devlogs | 16384 KiB | 0.2644 | 0.3210 | 0.3254 |
 | othink | 256 KiB | 0.1820 | 0.2191 | 0.2230 |
 | othink | 1024 KiB | 0.1756 | 0.2051 | 0.2091 |
 | othink | 4096 KiB | 0.1716 | 0.1951 | 0.1989 |
 | othink | 16384 KiB | 0.1688 | 0.1875 | 0.1913 |
-| owner | 256 KiB | 0.2644 | 0.3210 | 0.3254 |
-| owner | 1024 KiB | 0.2644 | 0.3210 | 0.3254 |
-| owner | 4096 KiB | 0.2644 | 0.3210 | 0.3254 |
-| owner | 16384 KiB | 0.2644 | 0.3210 | 0.3254 |
 | swe | 256 KiB | 0.0883 | 0.0982 | 0.0981 |
 | swe | 1024 KiB | 0.0831 | 0.0860 | 0.0862 |
 | swe | 4096 KiB | 0.0826 | 0.0795 | 0.0796 |
 | swe | 16384 KiB | 0.0829 | 0.0761 | 0.0762 |
 
-Reading (owner journal first, then the median over the six agent corpora):
+Reading (devlogs first, then the median over the six agent corpora):
 
 1. **Most of the cold-tier gain needs no new codec.** Plain zstd 19 with a
-   16 MiB window over 16 MiB blocks takes the owner sample from 0.171 to
+   16 MiB window over 16 MiB blocks takes the devlogs sample from 0.171 to
    0.129 (−25%; agent corpora −10 to −36%), decodes at ~1.1 GB/s and returns
-   a 1 KiB excerpt in ~4 ms. That is **$0.97 per raw TB-month** on the owner
-   ($0.45 median), ~2% of the price.
+   a 1 KiB excerpt in ~4 ms. That is **$0.97 per raw TB-month** on devlogs
+   ($0.45 median).
 2. **BWT adds 4% more for 100x the read cost.** libbsc -e2 at 16 MiB: 0.124
    (−27%), $1.08 per TB-month (+$0.11 over zstd), but every excerpt decodes
    the whole block (~0.5 s at 16 MiB, 35–45 MB/s) and it is a new C++
    dependency.
-   At 1 MiB it is worse than today's default on the owner (0.180): small BWT
+   At 1 MiB it is worse than today's default on devlogs (0.180): small BWT
    blocks lose the cross-record redundancy dedupe and the dictionary catch.
 3. **Context mixing is the floor, not a tier.** zpaq -m5 at 16 MiB: 0.096
    (−44%, $1.72 per TB-month) at 0.4 MB/s both ways: 30–50 s to serve one
@@ -1072,11 +1068,11 @@ Reading (owner journal first, then the median over the six agent corpora):
    zpaq -m3 is beaten by bsc everywhere.
 4. **PPMd o8 for thinking**: on thinking-only frames (othink) it is 12–18%
    smaller than zstd 19 at 256 KiB–16 MiB (table below), but thinking is
-   0.1–0.2% of the owner's journal and PPMd decodes at ~10–25 MB/s
+   0.1–0.2% of the devlogs journal and PPMd decodes at ~10–25 MB/s
    (0.15–0.55 s per excerpt at 4–16 MiB). On mixed
-   agent text it trails BWT and zstd at 16 MiB (owner 0.140).
+   agent text it trails BWT and zstd at 16 MiB (devlogs 0.140).
 5. **Our own format, bigger frames.** v1's run format with 4 MiB frames
-   (dedupe + dictionary) is the best 4 MiB option (owner 0.139, −19%,
+   (dedupe + dictionary) is the best 4 MiB option (devlogs 0.139, −19%,
    1.5 ms excerpts); at 16 MiB it loses to plain zstd (0.135 vs 0.129): at
    that window zstd finds repeats more cheaply than 1 KiB dedupe references.
    The reader's 4 MiB frame cache cannot hold such frames, so full scans
@@ -1086,13 +1082,13 @@ Reading (owner journal first, then the median over the six agent corpora):
 **Recommendation: no separate cold codec. Add, at most, a cold *profile*
 of the existing format** (zstd 19, 16 MiB frames with a matching window,
 no chunk dedupe, no dictionary) for merged runs nobody has read for N days:
-−25% of originals on the owner journal, ~$1 per raw TB-month, ~4 ms
+−25% of originals on the devlogs journal, ~$1 per raw TB-month, ~4 ms
 excerpts, same decoder. It is worth doing after the cheaper levers in the
 summary (index tables, recorder dedupe, compacting idle stores), which save
 as much with no read cost. libbsc would add ~$0.11 per TB-month for
-100x the read CPU and a new dependency: not worth it at this price. zpaq /
+100x the read CPU and a new dependency: not worth it at this saving. zpaq /
 paq8px / cmix-class coders only make sense for a deep archive that is never
-searched, which the price card ("text kept searchable") does not sell.
+searched, and this store keeps text searchable.
 
 ## System comparators (64 MiB samples, bytes/raw; every row read back byte-exact)
 
@@ -1134,13 +1130,13 @@ serve one record without decoding its archive. The cold profile candidate
 
 ## Summary: what we use, what we tried, what we rejected, what to adopt next (2026-10-21)
 
-Money below is per raw TB-month at the price card ($0.05 per GB-month of
-text kept = $50) and our S3 cost (~$0.023 per GB-month): 0.01 bytes/raw =
-$0.23. The owner's journal costs ~0.287 bytes/raw on disk today (~$6.6).
+Money below is per raw TB-month at the S3 Standard list price (~$0.023 per
+GB-month): 0.01 bytes/raw = $0.23. The devlogs journal costs ~0.287
+bytes/raw on disk today (~$6.6).
 
 ### What v1 uses
 
-| layer | what | owner journal |
+| layer | what | devlogs journal |
 |---|---|---|
 | originals, small stores | flush runs: zstd 3 + shipped starter dictionary, 64 KiB frames, 1 KiB FastCDC dedupe inside a run (P3) | 0.214 (sample) |
 | originals, merged | zstd 19 + dictionary trained per run (≤ 512 KiB, ~1/256 of the text, E12), same frames and dedupe (E4, E16) | 0.171 (sample); 1.38x whole-sample zstd 19, 2.0x zpaq -m5 |
@@ -1157,7 +1153,7 @@ the engine adopted (E16); erase with proof (E19); a shipped starter
 dictionary from permissive public traces (E21 → P3); record-level dedupe
 (P1, but see the finding above); Rice postings (P5). On the leaderboard,
 v1's default run beats every codec at 64 KiB blocks on six of seven corpora
-(−27% vs zstd 19 + dictionary on the owner sample).
+(−27% vs zstd 19 + dictionary on the devlogs sample).
 
 ### Tried and rejected (why)
 
@@ -1175,32 +1171,32 @@ v1's default run beats every codec at 64 KiB blocks on six of seven corpora
 | xz, bzip2, PPMd for random access | lose to zstd + dictionary at ≤ 64 KiB on agent text | 5–50x slower fetches; PPMd wins only on prose/thinking at ≥ 64 KiB |
 | OpenZL 0.3 (untrained) | within ±13% of zstd 6 | no gain over zstd without training |
 | Re-Pair (Wan, Navarro) | ~2x zstd 19 (Wan, 8 MiB prefixes); Navarro ~4x | grammar compression without a strong entropy stage |
-| context mixing: zpaq -m5, paq8px | the floor: owner 0.085 (zpaq), 0.076 (paq8px, 8 MiB) | 0.2–0.4 MB/s and ~5 KB/s: cannot serve excerpts |
-| cmix | — | skipped by owner decision (2026-10-21): ~32 GB of RAM, ~2 KB/s; paq8px gives the floor |
-| cold tier with BWT / context mixing / PPMd | bsc −27%, zpaq -m5 −44% (owner, 16 MiB) | bsc adds 4% over plain 16 MiB zstd for 100x read CPU; zpaq takes 30–50 s per excerpt |
+| context mixing: zpaq -m5, paq8px | the floor: devlogs 0.085 (zpaq), 0.076 (paq8px, 8 MiB) | 0.2–0.4 MB/s and ~5 KB/s: cannot serve excerpts |
+| cmix | — | skipped (2026-10-21): ~32 GB of RAM, ~2 KB/s; paq8px gives the floor |
+| cold tier with BWT / context mixing / PPMd | bsc −27%, zpaq -m5 −44% (devlogs, 16 MiB) | bsc adds 4% over plain 16 MiB zstd for 100x read CPU; zpaq takes 30–50 s per excerpt |
 | index: Elias-Fano, PForDelta, Roaring doc ids; FST dictionary | doc ids +2% to +51% of the index; FST −1% of the dictionary vs −15% for front coding with columns | Rice is within 4% of the bound; hash-like terms share no prefixes |
 | index: positions | +115% index | nothing needs them: phrases are verified on originals |
 | index: stopping terms with df > 5–25% | −3 to −17% index | costs up to 27% nDCG@10 (FiQA) or 4% recall@20 (turnloop) |
-| index: thinking stored-only / tf-free | −0.2% on the owner index | not worth overriding the 2026-10-20 ruling |
+| index: thinking stored-only / tf-free | −0.2% on the devlogs index | not worth overriding the 2026-10-20 decision |
 
-Still open for the owner (measured, not decided): erasure domains (E20:
+Still open (measured, not decided): erasure domains (E20:
 per-session domains cost +6% to +111%), a starter dictionary from
-consenting users' own logs (P3), a query-side frequent-term cutoff as a
+opt-in contributed logs (P3), a query-side frequent-term cutoff as a
 latency lever (2–4x faster tier-1 queries, changes rankings), and the cold
 profile below.
 
 ### Adopt next, in order
 
-| # | change | owner journal effect | $/raw TB-month | cost and risk |
+| # | change | devlogs journal effect | $/raw TB-month | cost and risk |
 |---|---|---|---:|---|
 | 1 | **Recorder dedupe key without `src`/`rt`** (keep each repeat's own args in its `B` entry) | 12.3% of records stored once: index −6.5%, originals −3.5% | ~0.29 | capture change; erasure and provenance tests |
 | 2 | **Lean fixed index tables** (keys only where ≠ id, no id table for numeric ids, bit-packed rows, time order rebuilt at open) | index −37% | ~0.82 | segment format v3, read path for finalists |
 | 3 | **Dictionary cleanup** (drop the unused `cf`, df/offset columns, 128-term blocks) | dictionary −15% (index −2.2%) | ~0.05 | time lookups first |
 | 4 | **Compact idle small stores** (PERF_STORE Next #2): most stores never reach a merge | flush 0.214 → merged 0.171 on stores that never merge; settling the rebuild alone took originals 247 → 200 MB | up to ~0.99 | a daemon policy; `compact_archive` exists |
 | 5 | **Archive profile for old merged runs** (256 KiB frames, 512 B chunks, 512 KiB dictionary; no P-frames) | originals −10% | ~0.41 | excerpt 0.08 → 0.24 ms |
-| 6 | **Cold profile** (zstd 19, 16 MiB frames, no chunk dedupe or dictionary) for runs unread for N days, instead of 5 for those | originals −25% | ~0.97 | 4 ms excerpts; recompress CPU repaid in ~3 months; owner decision |
+| 6 | **Cold profile** (zstd 19, 16 MiB frames, no chunk dedupe or dictionary) for runs unread for N days, instead of 5 for those | originals −25% | ~0.97 | 4 ms excerpts; recompress CPU repaid in ~3 months; product decision |
 
 Items 1–3 are lossless and leave search results unchanged; together they
-take the owner index from 109.7 MB to ~60 MB. With 1–5, the owner journal
+take the devlogs index from 109.7 MB to ~60 MB. With 1–5, the devlogs journal
 would go from ~0.287 to roughly 0.22 bytes/raw (~$5.0 per raw TB-month);
 with 6 instead of 5, ~0.20. None of these needs a new codec or library.

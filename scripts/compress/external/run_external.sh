@@ -2,7 +2,6 @@
 # Measure external lossless codecs on the s64 agent-data corpora.
 #
 # Usage:
-#   . ~/.sa-agents/oojuro-toolchain/env.sh compress
 #   bash run_external.sh verify <suite>...   # one unlocked repetition: ratio + byte-exact roundtrip (+ indicative speed)
 #   bash run_external.sh time   <suite>...   # one more locked, timed repetition of every fast config
 #   bash run_external.sh aggregate           # rebuild .scratch/out/ext-codecs.jsonl from the per-run rows
@@ -10,7 +9,7 @@
 #   Full protocol used for the leaderboard:
 #     verify bsc openzl repair zpaq cmix paq8px ; 3 x (time bsc openzl zpaq) ; aggregate
 #
-# Lock policy (coordinator ruling, 2026-10-20): only codecs that finish a 64 MiB
+# Lock policy: only codecs that finish a 64 MiB
 # run in under ~60 s are timed under the shared bench lock, 3 repetitions
 # (bsc, OpenZL, zpaq -method 1/3). Everything slower (zpaq -method 5, paq8px,
 # cmix, Re-Pair) is run once, unlocked; its speed is reported with
@@ -41,11 +40,11 @@
 # the start of each timed invocation is recorded, and CPU-time MB/s is
 # reported next to wall-clock MB/s.
 set -uo pipefail
-ROOT=$HOME/.sa-agents/oojuro-compress
-EXT=$ROOT/.scratch/ext; BIN=$EXT/bin; DATA=${DATA:-$ROOT/.scratch/data/s64}
+ROOT=$(cd "$(dirname "$0")/../../.." && pwd)   # repository root
+EXT=${EXT:-$HOME/.cache/oojuro-ext}; BIN=$EXT/bin; DATA=${DATA:-$ROOT/.scratch/data/s64}
 OUT=${OUT:-$ROOT/.scratch/out/ext-codecs.jsonl}
 ROWS=${ROWS:-${OUT%.jsonl}.runs.jsonl}
-LOCK=$HOME/.sa-agents/oojuro-bench.lock
+LOCK=${OOJURO_BENCH_LOCK:-$HOME/.cache/oojuro-bench.lock}; mkdir -p "$(dirname "$LOCK")"
 ALL_CORPORA="swe ohjson othink hermes ohsft fiqa"
 P8=8388608
 WORK=${WORK:-$EXT/work}   # per-session work dir (parallel runs must not share one)

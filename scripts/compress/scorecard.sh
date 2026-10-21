@@ -4,8 +4,12 @@
 # Bench stores live under .scratch/stores/score/<corpus> and are removed after
 # each rep (they are rebuilt from .scratch/data/corpus/<corpus>.rec).
 set -uo pipefail
-LOCK=${OOJURO_BENCH_LOCK:-$HOME/.cache/oojuro-bench.lock}; mkdir -p "$(dirname "$LOCK")"
+LOCKFILE=${OOJURO_BENCH_LOCK:-$HOME/.cache/oojuro-bench.lock}; mkdir -p "$(dirname "$LOCKFILE")"
 cd "$(dirname "$0")/../.."
+# Local defaults: a 3 GiB scope and the shared bench lock. On a box that runs one
+# job at a time (no user systemd), run with SCOPE= LOCK=.
+SCOPE=${SCOPE-systemd-run --user --scope -q -p MemoryMax=3G --}
+LOCK=${LOCK-flock $LOCKFILE}
 B=target/release/store-bench
 DATA=${DATA:-.scratch/data/corpus}
 D=.scratch/stores/score-${LABEL:-default}
@@ -14,9 +18,9 @@ export SYNC_BATCHES=${SYNC_BATCHES:-2000} COMPACT_EVERY=${COMPACT_EVERY:-6710886
 for rep in ${REPS:-1 2 3}; do
   for c in ${CORPORA:-swe ohjson othink hermes ohsft fiqa}; do
     tag="{\"rep\":$rep,\"label\":\"${LABEL:-default}\","
-    flock "$LOCK" systemd-run --user --scope -q -p MemoryMax=3G -- \
+    $LOCK $SCOPE \
       $B build "$DATA/$c.rec" "$D/$c" | sed "s/^{/$tag/"
-    flock "$LOCK" systemd-run --user --scope -q -p MemoryMax=3G -- \
+    $LOCK $SCOPE \
       $B read "$D/$c" 1000 | sed "s/^{/$tag\"corpus\":\"$c\",/"
     rm -rf -- "${D:?}/$c"
   done

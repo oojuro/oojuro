@@ -8,8 +8,8 @@
 #   nice -n 19 systemd-run --user --scope -p MemoryMax=3G -- scripts/compress/cold_tier.sh size [corpus...]   # sizes + roundtrip, unlocked
 #   scripts/compress/cold_tier.sh time [corpus...]   # one block per (codec, size) encoded and decoded under the bench lock
 #
-# Input: the first 64 MiB of each sample's raw text (s64/<c>.txt; owner:
-# .scratch/owner/owner.txt), cut into blocks with `split -b`. Output: JSON
+# Input: the first 64 MiB of each sample's raw text (s64/<c>.txt; devlogs:
+# .scratch/devlogs/devlogs.txt), cut into blocks with `split -b`. Output: JSON
 # lines in .scratch/out/cold-ext.jsonl: stored bytes (sum of every block's
 # output file; zpaq archives include their own small headers), CPU seconds
 # (user+sys, /usr/bin/time) and wall time per block. zpaq -method 5 decodes
@@ -18,15 +18,15 @@
 # block.
 set -uo pipefail
 cd "$(dirname "$0")/../.."
-EXT=${EXT:-$HOME/.sa-agents/oojuro-compress/.scratch/ext/bin}
-PUB=${PUB:-$HOME/.sa-agents/oojuro-compress/.scratch/data/s64}
+EXT=${EXT:-$HOME/.cache/oojuro-ext/bin}
+PUB=${PUB:-.scratch/data/s64}
 W=${W:-.scratch/cold}
 OUT=${OUT:-.scratch/out/cold-ext.jsonl}
-LOCKFILE=$HOME/.sa-agents/oojuro-bench.lock
+LOCKFILE=${OOJURO_BENCH_LOCK:-$HOME/.cache/oojuro-bench.lock}; mkdir -p "$(dirname "$LOCKFILE")"
 SIZES=${SIZES:-1 4 16}
 CONFIGS=${CONFIGS:-bsc:e1 bsc:e2 zpaq:3 zpaq:5}
 mkdir -p "$W" "$(dirname "$OUT")"
-txt() { [ "$1" = owner ] && echo .scratch/owner/owner.txt || echo "$PUB/$1.txt"; }
+txt() { [ "$1" = devlogs ] && echo .scratch/devlogs/devlogs.txt || echo "$PUB/$1.txt"; }
 
 # t <outfile> <cmd...>: run, write "wall_s cpu_s maxrss_kb rc"
 t() {
@@ -105,7 +105,7 @@ case $MODE in
   size|time) ;;
   *) sed -n 2,19p "$0"; exit 2 ;;
 esac
-for c in ${@:-swe ohjson othink hermes ohsft fiqa owner}; do
+for c in ${@:-swe ohjson othink hermes ohsft fiqa devlogs}; do
   for mb in $SIZES; do
     for cfg in $CONFIGS; do
       if python3 -I -c '

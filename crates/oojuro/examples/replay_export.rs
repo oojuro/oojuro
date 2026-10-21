@@ -88,6 +88,7 @@ fn event(e: &Ev) -> EventIn<'_> {
     EventIn {
         id: e.id,
         session: e.session,
+        parent_session: 0, // not in an export
         agent: e.agent,
         turn: e.turn,
         seq: e.seq,

@@ -15,9 +15,9 @@
 # it is left out and OPENZL_HAS_ML_SELECTOR_TRAINER is not defined, which the
 # sources support (tools/training/train.cpp #if-guards it). Compression and
 # decompression paths are unaffected.
-# Usage: . ~/.sa-agents/oojuro-toolchain/env.sh compress; bash build_openzl.sh
+# Usage: bash build_openzl.sh   (EXT=dir overrides the install prefix)
 set -euo pipefail
-EXT=${EXT:-$HOME/.sa-agents/oojuro-compress/.scratch/ext}
+EXT=${EXT:-$HOME/.cache/oojuro-ext}
 URL=https://github.com/facebook/openzl
 COMMIT=2d30fdebd9e43eb03d7bca3ef3e2f15732d8ab7a
 D=$EXT/src/openzl; SRC=$D/repo; BIN=$EXT/bin; mkdir -p "$BIN" "$D/dl"

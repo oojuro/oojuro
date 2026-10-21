@@ -84,23 +84,35 @@ def pct(xs, p):
     return xs[lo] + (xs[hi] - xs[lo]) * (k - lo)
 
 
+_HELD = [False]
+
+
 @contextlib.contextmanager
 def bench_lock():
-    """Same lock as `flock $OOJURO_BENCH_LOCK <cmd>` (flock(2), exclusive)."""
+    """Same lock as `flock $OOJURO_BENCH_LOCK <cmd>` (flock(2), exclusive).
+    Re-entrant within this process (a group hold wraps several timed loops)."""
+    if _HELD[0]:
+        yield
+        return
     os.makedirs(os.path.dirname(LOCK), exist_ok=True)
     fd = os.open(LOCK, os.O_RDWR | os.O_CREAT, 0o644)
     try:
         fcntl.flock(fd, fcntl.LOCK_EX)
+        _HELD[0] = True
         yield
     finally:
+        _HELD[0] = False
         fcntl.flock(fd, fcntl.LOCK_UN)
         os.close(fd)
 
 
-def timed_reads(fn, batches):
-    """fn(list_of_seqs) -> dict seq->text. One lock around the whole loop."""
+def timed_reads(fn, batches, prep=None):
+    """fn(list_of_seqs) -> dict seq->text. One lock around the whole loop. prep() runs inside
+    the lock before timing (untimed): e.g. reopen an HTTP connection that idled while queued."""
     lat = []
     with bench_lock():
+        if prep:
+            prep()
         for b in batches:
             t0 = time.perf_counter_ns()
             got = fn(b)

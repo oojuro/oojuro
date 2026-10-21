@@ -6,10 +6,11 @@
 # terms. Only the query loops take the shared bench lock (BENCH_LOCK).
 set -uo pipefail
 cd "$(dirname "$0")/../.."
-# Local defaults: a 3 GiB scope and the shared bench lock. On the bench box
-# (one job at a time, no user systemd) run with SCOPE= LOCK=.
+# Local defaults: a 3 GiB scope and the shared bench lock. On a box that runs one
+# job at a time (no user systemd), run with SCOPE= LOCK=.
+LOCKFILE=${OOJURO_BENCH_LOCK:-$HOME/.cache/oojuro-bench.lock}; mkdir -p "$(dirname "$LOCKFILE")"
 SCOPE=${SCOPE-systemd-run --user --scope -q -p MemoryMax=3G --}
-LOCK=${LOCK-flock $HOME/.sa-agents/oojuro-bench.lock}
+LOCK=${LOCK-flock $LOCKFILE}
 BIN=target/release/archive-search
 OUT=${OUT:-.scratch/out/archive-search.jsonl}
 W=.scratch/search; mkdir -p "$W"

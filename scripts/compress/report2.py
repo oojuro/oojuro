@@ -6,18 +6,17 @@ Reads whole2.jsonl, blocks2.jsonl, run2.jsonl, cold-ext.jsonl, think2.jsonl
 (scripts/compress/leaderboard2.sh, cold_tier.sh) and ext-codecs.jsonl
 (external/run_external.sh aggregate). Sizes come from the unlocked "ratio"
 pass on the full 64 MiB samples; speeds and excerpt latencies from the
-locked "time" pass (whole: swe from the track's locked run, othink, owner;
-blocks: 16 MiB prefixes of swe, othink, owner; run profiles: 64 MiB of swe,
-othink, owner), reported as the median over those corpora. Writes aggregates
+locked "time" pass (whole: swe from the track's locked run, othink, devlogs;
+blocks: 16 MiB prefixes of swe, othink, devlogs; run profiles: 64 MiB of swe,
+othink, devlogs), reported as the median over those corpora. Writes aggregates
 only (no text) to the JSON file and prints markdown to stdout.
 """
 import json, os, statistics, sys
 
 OUT = sys.argv[1] if len(sys.argv) > 1 else ".scratch/out"
 DEST = sys.argv[2] if len(sys.argv) > 2 else "docs/benchmarks/compress/leaderboard-v2.json"
-CORPORA = ["swe", "ohjson", "othink", "hermes", "ohsft", "fiqa", "owner"]
-S3 = 0.023  # USD per GB-month (S3 standard, our cost)
-PRICE = 0.05  # USD per GB-month of text kept (price card, raw text)
+CORPORA = ["swe", "ohjson", "othink", "hermes", "ohsft", "fiqa", "devlogs"]
+S3 = 0.023  # USD per GB-month (S3 Standard list price)
 
 
 def rows(name):
@@ -89,7 +88,7 @@ for d in ext:
         e["d_mbps"].append(d["d_mbps_median"])
 
 print("### Whole-sample leaderboard (64 MiB samples; bytes / raw byte; best per corpus in bold)\n")
-print("Speeds: single-thread MB/s, median over the locked runs (swe and ohjson from the track's locked pass, othink and owner from this one); external codecs as measured by `run_external.sh` (unlocked, †).\n")
+print("Speeds: single-thread MB/s, median over the locked runs (swe and ohjson from the track's locked pass, othink and devlogs from this one); external codecs as measured by `run_external.sh` (unlocked, †).\n")
 print("| codec | " + " | ".join(CORPORA) + " | compress MB/s | decompress MB/s |")
 print("|---|" + "---|" * (len(CORPORA) + 2))
 order = sorted(wr, key=lambda k: statistics.mean([wr[k][c] for c in CORPORA if c in wr[k]] or [9]))
@@ -111,7 +110,7 @@ for k in sorted(res["external"], key=lambda k: statistics.mean(list(res["externa
     note = " (first 8 MiB)" if pre else ""
     mark = "" if e["timing"] == "locked" else " †"
     print(f"| {k}{note} | " + " | ".join(txt) + f" | {fs(med(e['c_mbps']))}{mark} | {fs(med(e['d_mbps']))}{mark} |")
-print("| cmix v21 | skipped by owner decision (2026-10-21): needs ~32 GB RAM and runs at ~2 KB/s; paq8px gives the floor | | | | | | | | |")
+print("| cmix v21 | skipped (2026-10-21): needs ~32 GB RAM and runs at ~2 KB/s; paq8px gives the floor | | | | | | | | |")
 print("\n† single unlocked run, indicative.\n")
 
 # ---------------------------------------------------------------- blocks
@@ -204,10 +203,10 @@ for name, mib in (("oojuro-run:cold4", 4), ("oojuro-run:cold16", 16)):
 default = rr.get("oojuro-run:default", {})
 print("### Cold archive tier candidates (independent blocks of 1-16 MiB; bytes / raw byte)\n")
 print("Fetch = time to return one 1 KiB excerpt = decode its block (bsc and zpaq always decode the whole block; the in-process coders stop at the excerpt). External coders: one block encoded and decoded under the lock per (corpus, size), CPU MB/s from the size pass. Savings: S3 at $0.023 per GB-month, per TB of raw text kept, vs the default run profile on the same corpus (originals only; the index is unchanged).\n")
-print("| codec | block | " + " | ".join(CORPORA) + " | compress MB/s (CPU) | decompress MB/s (CPU) | 1 KiB fetch p50 | saved $/TB-month (owner) | saved $/TB-month (median, agent corpora) |")
+print("| codec | block | " + " | ".join(CORPORA) + " | compress MB/s (CPU) | decompress MB/s (CPU) | 1 KiB fetch p50 | saved $/TB-month (devlogs) | saved $/TB-month (median, agent corpora) |")
 print("|---|---|" + "---|" * (len(CORPORA) + 5))
 print("| **oojuro run, default** | 64 KiB | " + " | ".join(f4(default.get(c)) for c in CORPORA) + f" | {fs(res['run'].get('oojuro-run:default', {}).get('c_mbps'))} | {fs(res['run'].get('oojuro-run:default', {}).get('d_mbps'))} | {fs(res['run'].get('oojuro-run:default', {}).get('fetch_us_p50'))} µs | 0 | 0 |")
-AGENT = ["swe", "ohjson", "othink", "hermes", "ohsft", "owner"]
+AGENT = ["swe", "ohjson", "othink", "hermes", "ohsft", "devlogs"]
 for (name, mib), e in sorted(cold.items(), key=lambda kv: (kv[0][1], statistics.mean(list(kv[1]["ratio"].values()) or [9]))):
     r = e["ratio"]
     if e.get("inproc"):
@@ -222,11 +221,11 @@ for (name, mib), e in sorted(cold.items(), key=lambda kv: (kv[0][1], statistics.
         tw = [x["d_wall_s"] / max(x["blocks_decoded"], 1) for x in e["time"]]
         fetch = med(tw)
         fetch_s = f"{fs(fetch * 1000)} ms" if fetch else "…"
-    sav_owner = (default["owner"] - r["owner"]) * 1000 * S3 if "owner" in r and "owner" in default else None
+    sav_devlogs = (default["devlogs"] - r["devlogs"]) * 1000 * S3 if "devlogs" in r and "devlogs" in default else None
     sav_mean = med([(default[c] - r[c]) * 1000 * S3 for c in AGENT if c in r and c in default])
     print(f"| {name} | {mib} MiB | " + " | ".join(f4(r.get(c)) for c in CORPORA) +
-          f" | {fs(cs)} | {fs(ds)} | {fetch_s} | {'…' if sav_owner is None else f'{sav_owner:+.2f}'} | {'…' if sav_mean is None else f'{sav_mean:+.2f}'} |")
-    res["cold"][f"{name} {mib} MiB"] = {"ratio": r, "c_mbps": cs, "d_mbps": ds, "fetch_p50": fetch, "saved_usd_per_tb_month_owner": sav_owner,
+          f" | {fs(cs)} | {fs(ds)} | {fetch_s} | {'…' if sav_devlogs is None else f'{sav_devlogs:+.2f}'} | {'…' if sav_mean is None else f'{sav_mean:+.2f}'} |")
+    res["cold"][f"{name} {mib} MiB"] = {"ratio": r, "c_mbps": cs, "d_mbps": ds, "fetch_p50": fetch, "saved_usd_per_tb_month_devlogs": sav_devlogs,
                                          "saved_usd_per_tb_month_agent_median": sav_mean}
 print()
 
