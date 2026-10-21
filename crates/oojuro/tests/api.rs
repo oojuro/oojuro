@@ -353,3 +353,33 @@ fn search_windows_are_engine_views_and_lists_are_never_cut_short() {
     assert_eq!(now[0].0, first);
     assert_eq!(run(None, None, 2), now[..2]);
 }
+
+/// One tie rule (`docs/SEARCH_FIXES.md`): equal scores rank newer first,
+/// then by id as text, in the engine and in the journal's merge of writers,
+/// so a smaller k is always a prefix of a larger one.
+#[test]
+fn tied_scores_rank_the_same_for_every_k_and_across_writers() {
+    let s = Scratch::new("ties");
+    let mut j = Journal::open(&s.path("journal")).unwrap();
+    let t0 = 1_700_000_000_000_000i64;
+    for i in 0..24i64 {
+        // identical scores; times repeat so that ids also break ties, and
+        // ids cross from one to two digits
+        let w = if i % 3 == 0 { "agent:b" } else { "agent:a" };
+        j.remember(w, &format!("zebra parser note {}", 100 + i), None, Some(t0 + i / 4)).unwrap();
+    }
+    let r = j.reader();
+    let ranked = |k: usize, writers: &[&str]| {
+        let mut a = args("zebra parser", k);
+        a.filters.writers = writers.iter().map(|w| w.to_string()).collect();
+        r.search(&a).unwrap().iter().map(|h| (h.id, h.score_bits.to_bits(), h.ts_us)).collect::<Vec<_>>()
+    };
+    for writers in [&["agent:a"][..], &["agent:a", "agent:b"][..]] {
+        let all = ranked(24, writers);
+        assert!(all.windows(2).all(|w| w[0].1 == w[1].1), "every score ties: {all:?}");
+        assert!(all.windows(2).all(|w| w[0].2 > w[1].2 || (w[0].2 == w[1].2 && w[0].0.to_string() < w[1].0.to_string())));
+        for k in 1..all.len() {
+            assert_eq!(ranked(k, writers), all[..k], "k={k} {writers:?}");
+        }
+    }
+}

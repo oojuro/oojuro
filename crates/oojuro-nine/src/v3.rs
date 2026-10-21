@@ -795,16 +795,46 @@ impl V3 {
                 }
             })
             .sum::<usize>() as f64;
+        // A candidate background below BACKGROUND_FLOOR_RECORDS * MU of mass
+        // is padded with whole-view text up to that mass (the v4 rule).
+        let floor = crate::BACKGROUND_FLOOR_RECORDS * MU;
+        let pad = (!collection.is_empty() && total < floor).then(|| {
+            let mass = |i: usize| if scope_model { self.rows[i].scope } else { self.rows[i].length };
+            let in_view = |i: usize, view: &mut HashMap<_, _>| {
+                self.rows[i].record.valid_at >= from && self.latest(i, q, view)
+            };
+            let view_total: usize = (0..self.rows.len())
+                .filter(|i| in_view(*i, &mut view))
+                .map(mass)
+                .sum();
+            let counts: HashMap<&String, usize> = query
+                .keys()
+                .map(|term| {
+                    let n = self.postings[term]
+                        .iter()
+                        .filter(|p| in_view(p.row, &mut view))
+                        .map(|p| if scope_model { 1 } else { p.count })
+                        .sum();
+                    (term, n)
+                })
+                .collect();
+            (floor - total, counts, view_total as f64)
+        });
+        let pad = pad.filter(|p| p.2 > 0.0);
         let background: HashMap<_, _> = query
             .keys()
             .map(|term| {
                 let count = collection[term] as f64;
-                (
-                    term.clone(),
-                    (count + literal_probability(term)) / (total + 1.0),
-                )
+                let p = match &pad {
+                    None => (count + literal_probability(term)) / (total + 1.0),
+                    Some((r, view, view_total)) => {
+                        (count + r * view[term] as f64 / view_total + literal_probability(term)) / (total + r + 1.0)
+                    }
+                };
+                (term.clone(), p)
             })
             .collect();
+        metrics.background_pad = pad.as_ref().map_or(0.0, |p| p.0);
         let baseline = query
             .iter()
             .map(|(term, count)| -(*count as f64) * background[term].log2())

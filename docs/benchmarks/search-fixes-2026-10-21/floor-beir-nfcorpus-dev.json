@@ -1,0 +1,628 @@
+{
+  "schema": "oojuro-scorecard-v1",
+  "created_at": "2026-10-21T15:37:29Z",
+  "harness": {
+    "args": [
+      "<checkout>/.scratch/fix2/oojuro-bench",
+      "beir",
+      "--dataset",
+      "beir-nfcorpus",
+      "--split",
+      "dev",
+      "--arm",
+      "v1=cmd:<checkout>/.scratch/fix/oojuro-bench serve --arm nine",
+      "--arm",
+      "floor=nine",
+      "--runs",
+      "1",
+      "--work",
+      "<tmp>/sf-bench",
+      "--out",
+      "<checkout>/.scratch/bench2/beir-nfcorpus-dev.json"
+    ],
+    "binary": "<checkout>/.scratch/fix2/oojuro-bench",
+    "commit": "d1de2887f144-dirty"
+  },
+  "hardware": {
+    "build_profile": "release",
+    "cpu": "AMD Ryzen 7 8845HS w/ Radeon 780M Graphics",
+    "kernel": "7.0.0-34-generic",
+    "load_avg": "16.99 22.28 20.90 12/3787 3941354",
+    "logical_cpus": 16,
+    "mem_total": "29062768 kB",
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "swap_total": "8388604 kB",
+    "work_filesystem": {
+      "device": "/dev/nvme0n1p2",
+      "fstype": "ext4",
+      "mount": "/"
+    }
+  },
+  "suite": "beir",
+  "dataset": "beir-nfcorpus",
+  "split": "dev",
+  "settings": {
+    "averaging": "mean over every labelled split query; an empty result scores 0",
+    "batch_docs": 1000,
+    "bench_lock": "held for the whole run",
+    "build_time_included": "reported separately as build_s; not in query latency",
+    "cache": "warm: queries run in the build process right after the last append",
+    "documents": 3633,
+    "identical_ids": "a hit whose id equals the query id is dropped before scoring (BEIR ignore_identical_ids)",
+    "isolation": "child process per run in a systemd --user scope, MemoryMax=3G, MemorySwapMax=0",
+    "k": 100,
+    "queries": 102,
+    "runs": 1
+  },
+  "arms": [
+    {
+      "label": "v1",
+      "spec": "cmd:<checkout>/.scratch/fix/oojuro-bench serve --arm nine",
+      "info": {
+        "name": "nine",
+        "version": "dirichlet-scope-128-v1:scope-scaled-raw-frequency-v1:english-snowball-1.2.0-v1",
+        "commit": "5ad3dad60bec",
+        "durability": "v4: one journal write + sync_data per append_batch (group commit); query receipts buffered (synced on close)",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "search_refs(from=i64::MIN); max_context_bytes unbounded; in-engine query cache on"
+        ]
+      },
+      "gates": {
+        "byte_exact": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "checked": 707,
+              "first": null,
+              "mismatched": 0
+            },
+            "runs": 1
+          }
+        }
+      },
+      "quality": {
+        "mrr@10": {
+          "median": 0.46690787426081554,
+          "min": 0.46690787426081554,
+          "max": 0.46690787426081554,
+          "n": 1,
+          "runs": [
+            0.46690787426081554
+          ]
+        },
+        "ndcg@10": {
+          "median": 0.29322106839056733,
+          "min": 0.29322106839056733,
+          "max": 0.29322106839056733,
+          "n": 1,
+          "runs": [
+            0.29322106839056733
+          ]
+        },
+        "recall@10": {
+          "median": 0.15504748112487568,
+          "min": 0.15504748112487568,
+          "max": 0.15504748112487568,
+          "n": 1,
+          "runs": [
+            0.15504748112487568
+          ]
+        },
+        "recall@100": {
+          "median": 0.24307187888498988,
+          "min": 0.24307187888498988,
+          "max": 0.24307187888498988,
+          "n": 1,
+          "runs": [
+            0.24307187888498988
+          ]
+        }
+      },
+      "storage": {
+        "disk_alloc_bytes": {
+          "median": 5873664.0,
+          "min": 5873664.0,
+          "max": 5873664.0,
+          "n": 1,
+          "runs": [
+            5873664.0
+          ]
+        },
+        "disk_bytes": {
+          "median": 5860644.0,
+          "min": 5860644.0,
+          "max": 5860644.0,
+          "n": 1,
+          "runs": [
+            5860644.0
+          ]
+        },
+        "disk_ratio": {
+          "median": 1.0125691637460597,
+          "min": 1.0125691637460597,
+          "max": 1.0125691637460597,
+          "n": 1,
+          "runs": [
+            1.0125691637460597
+          ]
+        },
+        "raw_text_bytes": {
+          "median": 5787895.0,
+          "min": 5787895.0,
+          "max": 5787895.0,
+          "n": 1,
+          "runs": [
+            5787895.0
+          ]
+        }
+      },
+      "memory": {
+        "peak_cgroup_bytes": {
+          "median": 39481344.0,
+          "min": 39481344.0,
+          "max": 39481344.0,
+          "n": 1,
+          "runs": [
+            39481344.0
+          ]
+        },
+        "peak_cgroup_ratio": {
+          "median": 6.821364934920209,
+          "min": 6.821364934920209,
+          "max": 6.821364934920209,
+          "n": 1,
+          "runs": [
+            6.821364934920209
+          ]
+        },
+        "peak_rss_bytes": {
+          "median": 35389440.0,
+          "min": 35389440.0,
+          "max": 35389440.0,
+          "n": 1,
+          "runs": [
+            35389440.0
+          ]
+        },
+        "peak_rss_ratio": {
+          "median": 6.11438873718338,
+          "min": 6.11438873718338,
+          "max": 6.11438873718338,
+          "n": 1,
+          "runs": [
+            6.11438873718338
+          ]
+        },
+        "steady_anon_bytes": {
+          "median": 30461952.0,
+          "min": 30461952.0,
+          "max": 30461952.0,
+          "n": 1,
+          "runs": [
+            30461952.0
+          ]
+        },
+        "steady_anon_ratio": {
+          "median": 5.263045027596388,
+          "min": 5.263045027596388,
+          "max": 5.263045027596388,
+          "n": 1,
+          "runs": [
+            5.263045027596388
+          ]
+        },
+        "steady_cgroup_bytes": {
+          "median": 38957056.0,
+          "min": 38957056.0,
+          "max": 38957056.0,
+          "n": 1,
+          "runs": [
+            38957056.0
+          ]
+        },
+        "steady_cgroup_ratio": {
+          "median": 6.730781398073047,
+          "min": 6.730781398073047,
+          "max": 6.730781398073047,
+          "n": 1,
+          "runs": [
+            6.730781398073047
+          ]
+        },
+        "steady_rss_bytes": {
+          "median": 35106816.0,
+          "min": 35106816.0,
+          "max": 35106816.0,
+          "n": 1,
+          "runs": [
+            35106816.0
+          ]
+        },
+        "steady_rss_ratio": {
+          "median": 6.0655585493517075,
+          "min": 6.0655585493517075,
+          "max": 6.0655585493517075,
+          "n": 1,
+          "runs": [
+            6.0655585493517075
+          ]
+        }
+      },
+      "speed": {
+        "build_docs_per_s": {
+          "median": 4588.202950485015,
+          "min": 4588.202950485015,
+          "max": 4588.202950485015,
+          "n": 1,
+          "runs": [
+            4588.202950485015
+          ]
+        },
+        "build_s": {
+          "median": 0.791813274,
+          "min": 0.791813274,
+          "max": 0.791813274,
+          "n": 1,
+          "runs": [
+            0.791813274
+          ]
+        },
+        "qps_serial": {
+          "median": 1498.0833345572578,
+          "min": 1498.0833345572578,
+          "max": 1498.0833345572578,
+          "n": 1,
+          "runs": [
+            1498.0833345572578
+          ]
+        },
+        "search_p50_us": {
+          "median": 89.0,
+          "min": 89.0,
+          "max": 89.0,
+          "n": 1,
+          "runs": [
+            89.0
+          ]
+        },
+        "search_p99_us": {
+          "median": 1245.0,
+          "min": 1245.0,
+          "max": 1245.0,
+          "n": 1,
+          "runs": [
+            1245.0
+          ]
+        },
+        "search_roundtrip_p50_us": {
+          "median": 119.0,
+          "min": 119.0,
+          "max": 119.0,
+          "n": 1,
+          "runs": [
+            119.0
+          ]
+        },
+        "search_roundtrip_p99_us": {
+          "median": 1334.0,
+          "min": 1334.0,
+          "max": 1334.0,
+          "n": 1,
+          "runs": [
+            1334.0
+          ]
+        }
+      },
+      "breakdown": {},
+      "error": null
+    },
+    {
+      "label": "floor",
+      "spec": "nine",
+      "info": {
+        "name": "nine",
+        "version": "dirichlet-scope-128-v1:scope-scaled-raw-frequency-v1:english-snowball-1.2.0-v1",
+        "commit": "d1de2887f144-dirty",
+        "durability": "v4: one journal write + sync_data per append_batch (group commit); query receipts buffered (synced on close)",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "search_refs(from=i64::MIN); max_context_bytes unbounded; in-engine query cache on"
+        ]
+      },
+      "gates": {
+        "byte_exact": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "checked": 708,
+              "first": null,
+              "mismatched": 0
+            },
+            "runs": 1
+          }
+        }
+      },
+      "quality": {
+        "mrr@10": {
+          "median": 0.46690787426081554,
+          "min": 0.46690787426081554,
+          "max": 0.46690787426081554,
+          "n": 1,
+          "runs": [
+            0.46690787426081554
+          ]
+        },
+        "ndcg@10": {
+          "median": 0.29252859237836376,
+          "min": 0.29252859237836376,
+          "max": 0.29252859237836376,
+          "n": 1,
+          "runs": [
+            0.29252859237836376
+          ]
+        },
+        "recall@10": {
+          "median": 0.1548784479943821,
+          "min": 0.1548784479943821,
+          "max": 0.1548784479943821,
+          "n": 1,
+          "runs": [
+            0.1548784479943821
+          ]
+        },
+        "recall@100": {
+          "median": 0.24307187888498988,
+          "min": 0.24307187888498988,
+          "max": 0.24307187888498988,
+          "n": 1,
+          "runs": [
+            0.24307187888498988
+          ]
+        }
+      },
+      "storage": {
+        "disk_alloc_bytes": {
+          "median": 5873664.0,
+          "min": 5873664.0,
+          "max": 5873664.0,
+          "n": 1,
+          "runs": [
+            5873664.0
+          ]
+        },
+        "disk_bytes": {
+          "median": 5860639.0,
+          "min": 5860639.0,
+          "max": 5860639.0,
+          "n": 1,
+          "runs": [
+            5860639.0
+          ]
+        },
+        "disk_ratio": {
+          "median": 1.0125682998741339,
+          "min": 1.0125682998741339,
+          "max": 1.0125682998741339,
+          "n": 1,
+          "runs": [
+            1.0125682998741339
+          ]
+        },
+        "raw_text_bytes": {
+          "median": 5787895.0,
+          "min": 5787895.0,
+          "max": 5787895.0,
+          "n": 1,
+          "runs": [
+            5787895.0
+          ]
+        }
+      },
+      "memory": {
+        "peak_cgroup_bytes": {
+          "median": 38555648.0,
+          "min": 38555648.0,
+          "max": 38555648.0,
+          "n": 1,
+          "runs": [
+            38555648.0
+          ]
+        },
+        "peak_cgroup_ratio": {
+          "median": 6.661428377674439,
+          "min": 6.661428377674439,
+          "max": 6.661428377674439,
+          "n": 1,
+          "runs": [
+            6.661428377674439
+          ]
+        },
+        "peak_rss_bytes": {
+          "median": 35762176.0,
+          "min": 35762176.0,
+          "max": 35762176.0,
+          "n": 1,
+          "runs": [
+            35762176.0
+          ]
+        },
+        "peak_rss_ratio": {
+          "median": 6.178787970410659,
+          "min": 6.178787970410659,
+          "max": 6.178787970410659,
+          "n": 1,
+          "runs": [
+            6.178787970410659
+          ]
+        },
+        "steady_anon_bytes": {
+          "median": 30834688.0,
+          "min": 30834688.0,
+          "max": 30834688.0,
+          "n": 1,
+          "runs": [
+            30834688.0
+          ]
+        },
+        "steady_anon_ratio": {
+          "median": 5.327444260823667,
+          "min": 5.327444260823667,
+          "max": 5.327444260823667,
+          "n": 1,
+          "runs": [
+            5.327444260823667
+          ]
+        },
+        "steady_cgroup_bytes": {
+          "median": 38035456.0,
+          "min": 38035456.0,
+          "max": 38035456.0,
+          "n": 1,
+          "runs": [
+            38035456.0
+          ]
+        },
+        "steady_cgroup_ratio": {
+          "median": 6.571552524708896,
+          "min": 6.571552524708896,
+          "max": 6.571552524708896,
+          "n": 1,
+          "runs": [
+            6.571552524708896
+          ]
+        },
+        "steady_rss_bytes": {
+          "median": 35569664.0,
+          "min": 35569664.0,
+          "max": 35569664.0,
+          "n": 1,
+          "runs": [
+            35569664.0
+          ]
+        },
+        "steady_rss_ratio": {
+          "median": 6.145526827974591,
+          "min": 6.145526827974591,
+          "max": 6.145526827974591,
+          "n": 1,
+          "runs": [
+            6.145526827974591
+          ]
+        }
+      },
+      "speed": {
+        "build_docs_per_s": {
+          "median": 4756.417142182368,
+          "min": 4756.417142182368,
+          "max": 4756.417142182368,
+          "n": 1,
+          "runs": [
+            4756.417142182368
+          ]
+        },
+        "build_s": {
+          "median": 0.763810215,
+          "min": 0.763810215,
+          "max": 0.763810215,
+          "n": 1,
+          "runs": [
+            0.763810215
+          ]
+        },
+        "qps_serial": {
+          "median": 1322.66556012293,
+          "min": 1322.66556012293,
+          "max": 1322.66556012293,
+          "n": 1,
+          "runs": [
+            1322.66556012293
+          ]
+        },
+        "search_p50_us": {
+          "median": 98.0,
+          "min": 98.0,
+          "max": 98.0,
+          "n": 1,
+          "runs": [
+            98.0
+          ]
+        },
+        "search_p99_us": {
+          "median": 326.0,
+          "min": 326.0,
+          "max": 326.0,
+          "n": 1,
+          "runs": [
+            326.0
+          ]
+        },
+        "search_roundtrip_p50_us": {
+          "median": 131.0,
+          "min": 131.0,
+          "max": 131.0,
+          "n": 1,
+          "runs": [
+            131.0
+          ]
+        },
+        "search_roundtrip_p99_us": {
+          "median": 385.0,
+          "min": 385.0,
+          "max": 385.0,
+          "n": 1,
+          "runs": [
+            385.0
+          ]
+        }
+      },
+      "breakdown": {},
+      "error": null
+    }
+  ],
+  "references": [
+    {
+      "dataset": "beir-nfcorpus",
+      "metric": "ndcg@10",
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-nfcorpus.flat.md",
+      "split": "test",
+      "system": "Anserini BM25 flat",
+      "uses_llm": false,
+      "value": 0.3218
+    },
+    {
+      "dataset": "beir-nfcorpus",
+      "metric": "recall@100",
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-nfcorpus.flat.md",
+      "split": "test",
+      "system": "Anserini BM25 flat",
+      "uses_llm": false,
+      "value": 0.2457
+    },
+    {
+      "dataset": "beir-nfcorpus",
+      "metric": "ndcg@10",
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-nfcorpus.multifield.md",
+      "split": "test",
+      "system": "Anserini BM25 multifield",
+      "uses_llm": false,
+      "value": 0.3254
+    },
+    {
+      "dataset": "beir-nfcorpus",
+      "metric": "recall@100",
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-nfcorpus.multifield.md",
+      "split": "test",
+      "system": "Anserini BM25 multifield",
+      "uses_llm": false,
+      "value": 0.25
+    }
+  ],
+  "notes": [
+    "Published references use the full BEIR test split; this run uses a frozen subset."
+  ]
+}

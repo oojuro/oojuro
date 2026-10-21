@@ -52,7 +52,19 @@ pub struct TimelineMetrics {
     /// [`SourceMatch::continued`]); 0 when the list was not continued.
     #[serde(default)]
     pub continued_matches: usize,
+    /// Whole-view mass added to a small candidate background (see
+    /// [`BACKGROUND_FLOOR_RECORDS`]); 0 when the candidates were enough.
+    #[serde(default)]
+    pub background_pad: f64,
 }
+
+/// The candidate-set background (the default) is estimated from at least
+/// this many records of `mu` mass: a smaller candidate set is padded with
+/// whole-view text, in proportion to the view's own statistics, up to
+/// `BACKGROUND_FLOOR_RECORDS * mu`. Without it a single candidate is its own
+/// background and scores about 0 bits however well it matches. Candidate
+/// sets at or above the floor are scored exactly as before.
+pub const BACKGROUND_FLOOR_RECORDS: f64 = 64.0;
 
 #[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct TimelineStats {

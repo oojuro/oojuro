@@ -746,6 +746,47 @@ impl State {
         total
     }
 
+    /// Occurrences of each term in the view, counted as the background
+    /// counts them: records containing it (`scope`) or its total frequency.
+    /// Fully visible segments of a store without versions answer from
+    /// their dictionary; the rest decode the term's postings and check each
+    /// row (as `Background::View` does during its scan).
+    fn view_term_counts(&self, terms: &[&str], q: &Query, from: i64, scope: bool) -> Vec<u64> {
+        let visible = |span: &Span| {
+            span.min_valid >= from && span.max_valid <= q.valid_at && span.max_recorded <= q.known_at
+        };
+        let unversioned = self.groups.list.is_empty();
+        let mut memo = HashMap::new();
+        terms
+            .iter()
+            .map(|term| {
+                let mut n = 0u64;
+                for s in &self.segments {
+                    let Some(info) = s.term(term) else { continue };
+                    if unversioned && visible(&s.span) {
+                        n += if scope { u64::from(info.df) } else { info.cf };
+                        continue;
+                    }
+                    for (local, tf) in s.postings(info) {
+                        let m = s.meta(local);
+                        if m.valid_at >= from && self.latest(s.start + local, &m, q, &mut memo) {
+                            n += if scope { 1 } else { u64::from(tf) };
+                        }
+                    }
+                }
+                if let Some(list) = self.fresh.postings.get(*term) {
+                    for &(local, tf) in list {
+                        let m = self.fresh.meta[local as usize];
+                        if m.valid_at >= from && self.latest(self.fresh.start + local, &m, q, &mut memo) {
+                            n += if scope { 1 } else { u64::from(tf) };
+                        }
+                    }
+                }
+                n
+            })
+            .collect()
+    }
+
     /// v3 `latest`: is `row` the visible revision of its key in this view?
     fn latest(
         &self,
@@ -3202,11 +3243,40 @@ fn rank(
             .map(|(scope, length)| u64::from(if scope_model { *scope } else { *length }))
             .sum::<u64>() as f64
     };
-    let background: Vec<f64> = terms
-        .iter()
-        .enumerate()
-        .map(|(i, (t, _))| (collection[i] as f64 + literal_probability(t)) / (total + 1.0))
-        .collect();
+    // A candidate background holding less than BACKGROUND_FLOOR_RECORDS * mu
+    // of mass is padded with whole-view text up to that mass: with one
+    // candidate it would be that record, which then saves no bits
+    // (docs/SEARCH_FIXES.md, F3). Larger candidate sets are unchanged.
+    let floor = crate::BACKGROUND_FLOOR_RECORDS * mu;
+    let pad = if !(whole_view && any_hits) && any_hits && total < floor {
+        let view_total = st.view_mass(q, from, scope_model);
+        let names: Vec<&str> = terms
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| retained[*i])
+            .map(|(_, (t, _))| t.as_str())
+            .collect();
+        let mut counts = st.view_term_counts(&names, q, from, scope_model).into_iter();
+        let view: Vec<u64> = (0..terms.len()).map(|i| if retained[i] { counts.next().unwrap_or(0) } else { 0 }).collect();
+        (view_total > 0).then(|| (floor - total, view, view_total as f64))
+    } else {
+        None
+    };
+    let background: Vec<f64> = match &pad {
+        None => terms
+            .iter()
+            .enumerate()
+            .map(|(i, (t, _))| (collection[i] as f64 + literal_probability(t)) / (total + 1.0))
+            .collect(),
+        Some((r, view, view_total)) => terms
+            .iter()
+            .enumerate()
+            .map(|(i, (t, _))| {
+                (collection[i] as f64 + r * view[i] as f64 / view_total + literal_probability(t)) / (total + r + 1.0)
+            })
+            .collect(),
+    };
+    metrics.background_pad = pad.as_ref().map_or(0.0, |p| p.0);
     let baseline = terms
         .iter()
         .enumerate()

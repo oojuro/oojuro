@@ -447,6 +447,24 @@ fn sparse_scope_scores_match_dense_query_likelihood_on_historical_views() -> Res
                 .collect();
             query.retain(|term, _| eligible.iter().any(|(_, counts)| counts.contains_key(term)));
             let total: usize = eligible.iter().map(|(_, c)| c.len()).sum();
+            // Below the floor the background is padded with the view's own
+            // statistics (every visible record) up to the floor's mass.
+            let view: Vec<HashMap<String, usize>> = db
+                .rows
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| visible.contains(i))
+                .map(|(_, row)| {
+                    let mut counts = HashMap::<String, usize>::new();
+                    for term in retrieval_terms(&row.record.text) {
+                        *counts.entry(normalize_word(&term).into_owned()).or_default() += 1;
+                    }
+                    counts
+                })
+                .collect();
+            let view_total = view.iter().map(HashMap::len).sum::<usize>() as f64;
+            let floor = crate::BACKGROUND_FLOOR_RECORDS * MU;
+            let pad = (!eligible.is_empty() && (total as f64) < floor).then(|| floor - total as f64);
             let background: BTreeMap<_, _> = query
                 .keys()
                 .map(|term| {
@@ -454,10 +472,15 @@ fn sparse_scope_scores_match_dense_query_likelihood_on_historical_views() -> Res
                         .iter()
                         .map(|(_, c)| usize::from(c.contains_key(term)))
                         .sum::<usize>();
-                    (
-                        term.clone(),
-                        (count as f64 + literal_probability(term)) / (total as f64 + 1.),
-                    )
+                    let in_view = view.iter().filter(|c| c.contains_key(term)).count() as f64;
+                    let p = match pad {
+                        None => (count as f64 + literal_probability(term)) / (total as f64 + 1.),
+                        Some(r) => {
+                            (count as f64 + r * in_view / view_total + literal_probability(term))
+                                / (total as f64 + r + 1.)
+                        }
+                    };
+                    (term.clone(), p)
                 })
                 .collect();
             let dense: HashMap<_, _> = eligible
@@ -512,12 +535,15 @@ fn scope_mass_matches_hand_probabilities_escape_mass_and_addressed_fallback() ->
     db.insert(r("left", "left-key", "alpha alpha beta", 1, 1))?;
     db.insert(r("right", "right-key", "alpha gamma gamma gamma", 1, 1))?;
     let words = ["alpha", "beta", "gamma"];
+    // Scope mass 4 (2 + 2) is below the floor: the background is padded with
+    // the view's statistics (here the same two records) by floor - 4.
+    let pad = crate::BACKGROUND_FLOOR_RECORDS * MU - 4.;
     let background = [
-        (2. + literal_probability("alpha")) / 5.,
-        (1. + literal_probability("beta")) / 5.,
-        (1. + literal_probability("gamma")) / 5.,
+        (2. + pad * 2. / 4. + literal_probability("alpha")) / (4. + pad + 1.),
+        (1. + pad * 1. / 4. + literal_probability("beta")) / (4. + pad + 1.),
+        (1. + pad * 1. / 4. + literal_probability("gamma")) / (4. + pad + 1.),
     ];
-    let escape = (1. - words.iter().map(|w| literal_probability(w)).sum::<f64>()) / 5.;
+    let escape = (1. - words.iter().map(|w| literal_probability(w)).sum::<f64>()) / (4. + pad + 1.);
     assert!((background.iter().sum::<f64>() + escape - 1.).abs() < 1e-12);
     let found = db.find("alpha beta", i64::MIN, 2, 10)?;
     for (id, counts, n) in [("left", [2., 1., 0.], 3.), ("right", [1., 0., 3.], 4.)] {
@@ -533,7 +559,9 @@ fn scope_mass_matches_hand_probabilities_escape_mass_and_addressed_fallback() ->
         assert!((hit.score_bits - score).abs() < 1e-10);
     }
     let literal = db.find("\"alpha\"", i64::MIN, 2, 10)?;
-    let old_background = (3. + literal_probability("alpha")) / 8.;
+    // Length mass 7 (3 + 4), padded the same way: alpha is 3 of 7 tokens.
+    let pad = crate::BACKGROUND_FLOOR_RECORDS * MU - 7.;
+    let old_background = (3. + pad * 3. / 7. + literal_probability("alpha")) / (7. + pad + 1.);
     for (id, tf, n) in [("left", 2., 3.), ("right", 1., 4.)] {
         let expected = ((tf + 128. * old_background) / ((n + 128.) * old_background)).log2();
         assert!(

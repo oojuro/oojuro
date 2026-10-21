@@ -274,12 +274,41 @@ impl EventInfo {
 /// One hit of [`TraceDb::search_where`].
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct SearchHit {
+    /// The event reported: the matched record's own event, or (deleted or
+    /// a holder) its earliest live duplicate.
     pub id: u64,
     pub bits: f64,
     /// Past the query's identifier-anchored view
     /// (`oojuro_nine::SourceMatch::continued`): after every anchored hit of
     /// this store, with bits from the query's unanchored ranking.
     pub continued: bool,
+    /// The matched record's valid time and id: the engine's tie-breakers.
+    pub time: i64,
+    pub row: u64,
+}
+
+impl SearchHit {
+    /// The ranking order of hits, the engine's own (`oojuro_nine`'s
+    /// `select_top`): more bits first, then the newer valid time, then the
+    /// id ascending as text (decimal ids compare as strings: "10" < "9").
+    /// A store's hits come in this order (its continued part after its
+    /// anchored part), so merging stores by it never reorders a store.
+    pub fn rank_cmp(&self, other: &Self) -> std::cmp::Ordering {
+        other
+            .bits
+            .total_cmp(&self.bits)
+            .then(other.time.cmp(&self.time))
+            .then_with(|| cmp_decimal_text(self.row, other.row))
+    }
+}
+
+/// Order of two numbers as decimal text, without allocating.
+pub fn cmp_decimal_text(a: u64, b: u64) -> std::cmp::Ordering {
+    let digits = |x: u64| x.checked_ilog10().unwrap_or(0) + 1;
+    let (da, db) = (digits(a), digits(b));
+    let wa = u128::from(a) * 10u128.pow(db.saturating_sub(da));
+    let wb = u128::from(b) * 10u128.pow(da.saturating_sub(db));
+    wa.cmp(&wb).then(da.cmp(&db))
 }
 
 /// Result of [`TraceDb::erasure_scan`].
@@ -1205,37 +1234,40 @@ impl TraceDb {
         loop {
             let m = nine.find(query, from, to, want)?;
             let got = m.matches.len();
-            let cands: Vec<(EventInfo, f64, bool)> = {
+            let cands: Vec<(EventInfo, SearchHit)> = {
                 let c = self.cols.read().unwrap();
                 let mut taken = std::collections::HashSet::new();
                 m.matches
                     .iter()
-                    .filter_map(|x| Some((x.id.parse::<u64>().ok()?, x.score_bits, x.continued)))
-                    .filter_map(|(id, bits, continued)| {
+                    .filter_map(|x| {
+                        let row = x.id.parse::<u64>().ok()?;
+                        Some(SearchHit { id: row, bits: x.score_bits, continued: x.continued, time: x.time, row })
+                    })
+                    .filter_map(|hit| {
                         // a hit is its record's text: report the record's event,
                         // or (deleted, or a holder) its earliest live duplicate
-                        let x = c.get(id)?;
+                        let x = c.get(hit.row)?;
                         if x.is_event() {
-                            return Some((x, bits, continued));
+                            return Some((x, hit));
                         }
                         c.dups_of(agent, x.src)
                             .iter()
                             .filter_map(|d| c.get(*d))
                             .filter(|d| d.is_event() && d.ts <= to)
                             .min_by_key(|d| (d.ts, d.id))
-                            .map(|d| (d, bits, continued))
+                            .map(|d| (d, hit))
                     })
-                    .filter(|(x, _, _)| taken.insert(x.id))
-                    .map(|(x, bits, continued)| (EventInfo::of(&x), bits, continued))
+                    .filter(|(x, _)| taken.insert(x.id))
+                    .map(|(x, hit)| (EventInfo::of(&x), SearchHit { id: x.id, ..hit }))
                     .collect()
             };
             let mut out = Vec::with_capacity(k.min(cands.len()));
-            for (info, bits, continued) in cands {
+            for (info, hit) in cands {
                 if out.len() == k {
                     break;
                 }
                 if keep(&info) {
-                    out.push(SearchHit { id: info.id, bits, continued });
+                    out.push(hit);
                 }
             }
             // Dropped hits are replaced from further down while the engine

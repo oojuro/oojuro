@@ -27,7 +27,7 @@ use oojuro_capture::{
     state::STATE_FILE,
     time::{format_rfc3339_us, now_us},
 };
-use oojuro_trace::{EventIn, EventInfo, EventOut, Filter, TraceDb};
+use oojuro_trace::{EventIn, EventInfo, EventOut, Filter, SearchHit, TraceDb};
 use std::{
     collections::{BTreeMap, BTreeSet, HashMap},
     path::{Path, PathBuf},
@@ -604,7 +604,7 @@ impl Reader {
         }
         let cut = self.context_cut(f)?;
         // One list per writer, in its store's order (see `merge_lists`).
-        let mut lists: Vec<Vec<(f64, u64)>> = Vec::new();
+        let mut lists: Vec<Vec<SearchHit>> = Vec::new();
         for (agent, writer) in self.agents(&f.writers) {
             let plain = plain_session(&writer);
             let want_session = f.key.as_deref().map(|k| key_session(&writer, k));
@@ -638,18 +638,14 @@ impl Reader {
             };
             // [from, to] is the engine's view (its statistics and identifier
             // anchoring see only that window); `keep` applies the rest.
-            let found = self.db.search_where(agent, &a.query, from, to, a.k, &mut keep)?;
-            let (mut list, mut continued): (Vec<_>, Vec<_>) = found.into_iter().partition(|h| !h.continued);
-            list.sort_by(|x, y| better(x.bits, x.id, y.bits, y.id));
-            continued.sort_by(|x, y| better(x.bits, x.id, y.bits, y.id));
-            lists.push(list.into_iter().chain(continued).map(|h| (h.bits, h.id)).collect());
+            lists.push(self.db.search_where(agent, &a.query, from, to, a.k, &mut keep)?);
         }
         let hits = merge_lists(&lists, a.k);
-        let ids: Vec<u64> = hits.iter().map(|h| h.1).collect();
+        let ids: Vec<u64> = hits.iter().map(|h| h.id).collect();
         let events = self.db.get_many(&ids)?;
         let pq = prefix(&a.query, 65_536);
         let mut out = Vec::with_capacity(hits.len());
-        for ((bits, _), e) in hits.iter().zip(events) {
+        for (SearchHit { bits, .. }, e) in hits.iter().zip(events) {
             let Some(e) = e else { continue }; // deleted meanwhile
             let rec = self.record(&e);
             let (start, end) = match oojuro_nine::extract_passage(&e.text, pq, a.excerpt_bytes.max(1)) {
@@ -812,29 +808,26 @@ impl Reader {
     }
 }
 
-/// Ranking order of two hits: more bits first, then the lower id.
-fn better(bits_a: f64, id_a: u64, bits_b: f64, id_b: u64) -> std::cmp::Ordering {
-    bits_b.total_cmp(&bits_a).then(id_a.cmp(&id_b))
-}
-
-/// The best `k` of several ranked lists `(bits, id)`, keeping each list's
-/// own order: repeatedly the better head (by [`better`]). When every list
-/// is sorted by [`better`] this is the sort of all hits, truncated; a list
-/// whose continued part follows its anchored part keeps that order.
-fn merge_lists(lists: &[Vec<(f64, u64)>], k: usize) -> Vec<(f64, u64)> {
+/// The best `k` of the stores' ranked lists, each in its store's order:
+/// repeatedly the better head by [`SearchHit::rank_cmp`], the engine's own
+/// order (bits, then newer, then id as text). Each list is sorted by that
+/// order (a continued part follows its anchored part), so the result is
+/// the stores' hits in that order, and a smaller `k` is always a prefix of
+/// a larger one.
+fn merge_lists(lists: &[Vec<SearchHit>], k: usize) -> Vec<SearchHit> {
     let mut at = vec![0usize; lists.len()];
     let mut out = Vec::with_capacity(k.min(lists.iter().map(Vec::len).sum()));
     while out.len() < k {
-        let mut best: Option<(f64, u64, usize)> = None;
+        let mut best: Option<(SearchHit, usize)> = None;
         for (i, list) in lists.iter().enumerate() {
-            if let Some(&(bits, id)) = list.get(at[i])
-                && best.is_none_or(|(b, j, _)| better(bits, id, b, j).is_lt())
+            if let Some(h) = list.get(at[i])
+                && best.is_none_or(|(b, _)| h.rank_cmp(&b).is_lt())
             {
-                best = Some((bits, id, i));
+                best = Some((*h, i));
             }
         }
-        let Some((bits, id, i)) = best else { break };
-        out.push((bits, id));
+        let Some((h, i)) = best else { break };
+        out.push(h);
         at[i] += 1;
     }
     out
@@ -844,36 +837,61 @@ fn merge_lists(lists: &[Vec<(f64, u64)>], k: usize) -> Vec<(f64, u64)> {
 mod tests {
     use super::*;
 
+    fn hit(bits: f64, time: i64, id: u64, continued: bool) -> SearchHit {
+        SearchHit { id, bits, continued, time, row: id }
+    }
+
     #[test]
-    fn merging_sorted_lists_equals_the_old_sort_and_keeps_continued_hits_last() {
+    fn merging_ranked_lists_is_the_engine_order_and_keeps_continued_hits_last() {
         let mut s = 7u64;
         let mut next = |m: u64| {
             s = s.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
             (s >> 33) % m
         };
         let mut id = 0;
-        for round in 0..200 {
-            let lists: Vec<Vec<(f64, u64)>> = (0..1 + next(4))
+        for round in 0..300 {
+            let lists: Vec<Vec<SearchHit>> = (0..1 + next(4))
                 .map(|_| {
-                    let mut l: Vec<(f64, u64)> = (0..next(30))
+                    let mut l: Vec<SearchHit> = (0..next(30))
                         .map(|_| {
-                            id += 1 + next(3);
-                            (next(12) as f64 - 4.0, id) // many exact ties
+                            id += 1 + next(3); // ids cross decimal lengths (9, 10, 99, 100, ...)
+                            hit(next(6) as f64 - 2.0, next(3) as i64, id, false) // many exact ties
                         })
                         .collect();
-                    l.sort_by(|x, y| better(x.0, x.1, y.0, y.1));
+                    l.sort_by(|a, b| a.rank_cmp(b));
                     l
                 })
                 .collect();
-            for k in [0, 1, 5, 40, 200] {
-                let mut all: Vec<(f64, u64)> = lists.iter().flatten().copied().collect();
-                all.sort_by(|x, y| y.0.total_cmp(&x.0).then(x.1.cmp(&y.1))); // the merge before this fix
-                all.truncate(k);
-                assert_eq!(merge_lists(&lists, k), all, "round {round} k {k}");
+            let mut all: Vec<SearchHit> = lists.iter().flatten().copied().collect();
+            all.sort_by(|a, b| a.rank_cmp(b));
+            for k in [0, 1, 2, 5, 40, 200] {
+                let got = merge_lists(&lists, k);
+                assert_eq!(got, all[..k.min(all.len())], "round {round} k {k}");
             }
         }
         // a store's continued hits (here 50 and 40 bits) stay after its anchored one
-        let lists = vec![vec![(1.0, 1), (50.0, 2), (40.0, 3)], vec![(30.0, 4), (0.5, 5)]];
-        assert_eq!(merge_lists(&lists, 5), vec![(30.0, 4), (1.0, 1), (50.0, 2), (40.0, 3), (0.5, 5)]);
+        let lists = vec![
+            vec![hit(1.0, 0, 1, false), hit(50.0, 0, 2, true), hit(40.0, 0, 3, true)],
+            vec![hit(30.0, 0, 4, false), hit(0.5, 0, 5, false)],
+        ];
+        let ids: Vec<u64> = merge_lists(&lists, 5).iter().map(|h| h.id).collect();
+        assert_eq!(ids, vec![4, 1, 2, 3, 5]);
+    }
+
+    #[test]
+    fn decimal_text_order_is_string_order() {
+        let mut s = 11u64;
+        let mut next = || {
+            s = s.wrapping_mul(6364136223846793005).wrapping_add(1442695040888963407);
+            s
+        };
+        let mut cases = vec![(0, 0), (1, 10), (9, 10), (10, 100), (12, 1), (u64::MAX, 1), (u64::MAX, u64::MAX / 10)];
+        for _ in 0..20_000 {
+            let (a, b) = (next() >> (next() % 64), next() >> (next() % 64));
+            cases.push((a, b));
+        }
+        for (a, b) in cases {
+            assert_eq!(oojuro_trace::cmp_decimal_text(a, b), a.to_string().cmp(&b.to_string()), "{a} {b}");
+        }
     }
 }

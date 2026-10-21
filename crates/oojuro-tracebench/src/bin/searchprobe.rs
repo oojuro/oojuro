@@ -303,11 +303,11 @@ fn run(v: &[String]) -> Result<()> {
     let mut summaries = Vec::new();
     let mut lines: Vec<Option<String>> = (0..qs.len()).map(|_| None).collect();
     let mut per_query: Vec<String> = Vec::new();
-    let mut work = [0u64; 4];
+    let mut work = [0u64; 5];
     for round in 0..rounds {
         let faults = minor_faults();
         let next = AtomicUsize::new(0);
-        let res: Mutex<Vec<(usize, u64, u64, u64, String, [u64; 4])>> = Mutex::new(Vec::new());
+        let res: Mutex<Vec<(usize, u64, u64, u64, String, [u64; 5])>> = Mutex::new(Vec::new());
         let t0 = Instant::now();
         std::thread::scope(|s| {
             for _ in 0..threads.max(1) {
@@ -342,6 +342,7 @@ fn run(v: &[String]) -> Result<()> {
                             mt.candidate_records as u64,
                             mt.posted_rows_visited as u64,
                             mt.scored_records as u64,
+                            mt.background_pad.ceil() as u64,
                         ];
                         mine.push((i, ns, cpu, pcpu, line, w));
                     }
@@ -353,7 +354,7 @@ fn run(v: &[String]) -> Result<()> {
         let mut lat = Lat::default();
         let mut cpu = Lat::default();
         let mut pcpu = Lat::default();
-        work = [0; 4];
+        work = [0; 5];
         for (i, ns, c, pc, line, w) in res.into_inner().unwrap() {
             lat.add_ns(ns);
             cpu.add_ns(c);
@@ -362,7 +363,7 @@ fn run(v: &[String]) -> Result<()> {
                 work[j] += w[j];
             }
             if round == 0 {
-                per_query.push(format!("{} {} {} {} {} {} {}", qs[i].plan, c, ns, w[0], w[1], w[2], w[3]));
+                per_query.push(format!("{} {} {} {} {} {} {} {}", qs[i].plan, c, ns, w[0], w[1], w[2], w[3], w[4]));
                 lines[i] = Some(line);
             } else if lines[i].as_deref() != Some(line.as_str()) {
                 return Err(format!("round {round}: query {i} differs between rounds").into());

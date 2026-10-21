@@ -315,7 +315,12 @@ pub fn pick_injection(hits: &[Ref], s: &Settings, prompt: &str, turn_start_us: i
         .filter(|h| h.score_bits >= s.min_bits && h.ts_us < turn_start_us && !echo(h, prompt))
         .map(|h| (h.score_bits + recency_bits(s.recency, session, h), h))
         .collect();
-    keep.sort_by(|a, b| b.0.total_cmp(&a.0).then(a.1.id.cmp(&b.1.id)));
+    // ties: the search's own rule (oojuro_trace::SearchHit::rank_cmp)
+    keep.sort_by(|a, b| {
+        b.0.total_cmp(&a.0)
+            .then(b.1.ts_us.cmp(&a.1.ts_us))
+            .then_with(|| oojuro_trace::cmp_decimal_text(a.1.id, b.1.id))
+    });
     let mut keep: Vec<&Ref> = keep.into_iter().map(|x| x.1).collect();
     keep.truncate(s.top_k as usize);
     let writer = keep.first()?.writer.clone();

@@ -451,6 +451,10 @@ than 20) keep their list as an exact prefix, filled to 20
 1.06 / 1.86 -> 1.20 / 2.35 ms (load 5-9), all of it in the continued
 queries.
 
+F3 (same doc): a candidate background below 64 x mu of mass is padded with
+whole-view text. All 25,220 unpadded tier-1 turn-loop queries stay
+bit-identical, and the 5,685 padded ones (18%) score on the normal scale.
+
 ## Risks
 
 - **Routing entropy in TraceDb now covers the top k** (P6). Ids, scores and

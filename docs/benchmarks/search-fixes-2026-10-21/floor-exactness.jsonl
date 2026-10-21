@@ -1,0 +1,7 @@
+{"size":"0","compare":{"lines": 30905, "unpadded": 25220, "unpadded_identical": 25220, "padded": 5685, "padded_identical": 0, "padded_same_ids": 2611, "padded_same_top1": 5128, "unpadded_differs": 0}}
+{"size":"0-all","compare":{"lines": 30905, "unpadded": 25220, "unpadded_identical": 25220, "padded": 5685, "padded_identical": 0, "padded_same_ids": 2611, "padded_same_top1": 5128, "unpadded_differs": 0}}
+{"size":"1024","compare":{"lines": 200, "unpadded": 162, "unpadded_identical": 162, "padded": 38, "padded_identical": 0, "padded_same_ids": 14, "padded_same_top1": 36, "unpadded_differs": 0}}
+{"size":"4096","compare":{"lines": 200, "unpadded": 188, "unpadded_identical": 188, "padded": 12, "padded_identical": 0, "padded_same_ids": 4, "padded_same_top1": 12, "unpadded_differs": 0}}
+{"size":"16384","compare":{"lines": 200, "unpadded": 194, "unpadded_identical": 194, "padded": 6, "padded_identical": 0, "padded_same_ids": 2, "padded_same_top1": 6, "unpadded_differs": 0}}
+{"size":"65536","compare":{"lines": 200, "unpadded": 198, "unpadded_identical": 198, "padded": 2, "padded_identical": 0, "padded_same_ids": 0, "padded_same_top1": 2, "unpadded_differs": 0}}
+{"size":"262144","compare":{"lines": 200, "unpadded": 200, "unpadded_identical": 200, "padded": 0, "padded_identical": 0, "padded_same_ids": 0, "padded_same_top1": 0, "unpadded_differs": 0}}

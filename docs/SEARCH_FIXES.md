@@ -189,17 +189,132 @@ $B/oojuro-bench turnloop --set swe-agent --split dev --trajectories 50 --backgro
 $B/tracebench verify --arm oojuro:log=private --data $DATA/smoke.tbe
 ```
 
+## F3: small candidate sets scored near 0 bits (follow-up)
+
+**Cause.** The default background is estimated from the candidate set:
+PB(w) = (count of w among candidates + P0(w)) / (candidate mass + 1). In
+the research this acts as query-length-adaptive smoothing:
+`TRACK_LEXICAL.md` E2 shows that the term gains see mu * view mass /
+candidate mass. A whole-view background with one mu won the short dev
+queries but lost held-out ArguAna (long queries), so it was rejected as
+the default. The adaptivity has no lower limit on the candidate mass,
+though. When the candidates are a few records, the background is mostly
+the records being scored, and they save almost nothing. With one
+candidate, each present term's gain log2(1 + tf/(mu PB)) equals that
+term's share of the length penalty, so the score is about 0 bits however
+well it matches. This happens for an identifier with few occurrences
+(anchored), a quoted phrase, or rare words. The injection hook then drops
+exactly the best hit (`min_bits` 8).
+
+**Fix (`crates/oojuro-nine`, v4 and the v3 oracle).** The candidate
+background is never estimated from less than
+`BACKGROUND_FLOOR_RECORDS` (64) x mu of mass (8,192 scope or length units
+at mu 128). A smaller candidate set is padded up to that mass with
+whole-view text, in proportion to the view's own statistics:
+
+```text
+r      = 64 * mu - M_C                      (only when M_C < 64 * mu)
+PB(w)  = (c_C(w) + r * c_V(w) / M_V + P0(w)) / (M_C + r + 1)
+```
+
+`c_C` and `M_C` are the candidate counts and mass the background always
+used. `c_V` and `M_V` are the same counts over the query's view: the same
+two clocks, lower bound and current revisions, so a later row changes
+nothing. Fully visible segments read them from their dictionaries; other
+segments decode the term's postings. Candidate sets at or above the floor
+use the old expression, bit for bit. Terms count in the penalty exactly as
+before. The floor is continuous (r goes to 0 at the floor). It caps the
+adaptive smoothing at mu_eff of about M_V / 64 instead of letting it grow
+without bound. The 64 was fixed before any eval ran and was not swept.
+`TimelineMetrics::background_pad` reports r.
+
+**Tests.** `a_small_candidate_set_is_scored_against_a_padded_background`
+covers a single anchored candidate, a single rare-word candidate, no
+future rows, and no padding above the floor, against the v3 oracle. The
+single anchored candidate scores 44.7 bits (52.9 for the same record read
+as words). With the floor at 0 the test fails at 0.12 bits. The v3 dense
+query-likelihood oracle and the hand-computed probabilities now compute
+the padding independently, over historical views.
+
+**Exactness** (tier-1, base = v1 engine; `scripts/perfsearch/pad_compare.py`):
+
+| queries | unpadded: identical | padded | padded, same top hit | padded, same ids |
+|---|---:|---:|---:|---:|
+| 30,905 turn-loop (both entropy settings) | 25,220 / 25,220 | 5,685 | 5,128 | 2,611 |
+| 200 at 1 / 4 / 16 / 64 / 256 KB | 162 / 188 / 194 / 198 / 200, all identical | 38 / 12 / 6 / 2 / 0 | 36 / 12 / 6 / 2 / - | 14 / 4 / 2 / 0 / - |
+
+**Score scale** (top hit of each turn-loop query, bits):
+
+| | p10 | p50 | p90 | at least 8 bits |
+|---|---:|---:|---:|---:|
+| unpadded (unchanged) | 16.8 | 42.4 | 84.5 | 97.5% |
+| padded, before | 0.0 | 8.1 | 29.7 | 50.4% |
+| padded, after | 4.8 | 21.8 | 47.6 | 86.1% |
+
+On the outcome-eval store (sympy-23413), the sympy-16792 near-verbatim
+issue goes from 0.7 to 521.6 bits (787.3 when the query is read as words),
+and the sympy-14976 issue at `--to` its time from 0.5 to 270.3. The
+continued hits after them are unchanged.
+
+**Quality** (v1 engine vs floor, dev splits, all metrics at full precision):
+
+| eval | v1 | floor |
+|---|---|---|
+| BEIR SciFact (93 q) | nDCG@10 0.67671, R@100 0.89355 | equal on all 4 metrics |
+| BEIR FiQA (219 q) | nDCG@10 0.28791, R@100 0.58092 | equal on all 4 metrics |
+| BEIR NFCorpus (102 q) | nDCG@10 0.29322, R@10 0.15505 | nDCG@10 0.29253, R@10 0.15488; MRR, R@100 equal |
+| LongMemEval | turn nDCG@10 0.69620, session R_all@5 0.85887 | 0.69692, 0.86207; others equal |
+| turnloop swe-agent (239 turns) | nDCG@10 0.24636, nDCG@20 0.28356, R@20 0.52176, hit@20 0.58577, MRR@10 0.22424 | 0.26071, 0.29477, 0.53431, 0.59833, 0.23228 |
+
+NFCorpus is the one drop, and it comes only from padded queries: 18 of
+its 102 dev queries are 1-2 word queries with 2 to 53 candidates. Six
+moved. `sweeteners` (34 candidates) fell 0.852 to 0.789, and `anisakis`,
+`serotonin` and `BPH` fell 0.003 to 0.012. `magnesium` and `cinnamon`
+rose. For a one-word query the floor changes the tf-versus-length balance
+inside the small set, so ranks shift either way. Normal sets are
+bit-identical everywhere.
+
+**Latency** (tier 1, one query thread, CPU ms p50 / p99, median of 3
+rounds, arms alternating under the bench lock). Other sessions saturated
+the machine during this run (load 9 to 274), so these are indicative
+only:
+
+| query | v1 | floor |
+|---|---:|---:|
+| turn-loop 200 B (1,000 q) | 1.41 / 3.25 | 1.27 / 2.83 |
+| 200 B | 1.27 / 2.92 | 1.77 / 3.42 (one round at load 45) |
+| 1 KB | 2.39 / 6.92 | 2.47 / 7.23 |
+| 4 KB (200 q) | 4.53 / 9.83 | 4.17 / 9.46 |
+| 16 KB | 6.06 / 11.86 | 6.21 / 10.85 |
+| 64 KB (100 q) | 9.94 / 15.72 | 10.29 / 15.65 |
+| 256 KB | 14.73 / 19.53 | 15.18 / 21.56 |
+
+Split per turn-loop query: the 834 unpadded queries per round go from 1.44
+/ 3.34 to 1.24 / 2.74, and the 166 padded ones from 1.75 / 4.32 to 1.55 /
+3.09. Both groups move by the same 12%, which is load drift, so the
+padding has no cost visible at this noise level. With every segment
+visible, the padding adds an O(segments) view mass and one dictionary
+lookup per retained term and segment. Only historical views decode
+postings. `tracebench verify` on smoke: 1,237/1,237 for `oojuro` and
+`oojuro:log=private`.
+
+## F4: one tie rule (follow-up)
+
+Equal scores rank newer first, then by id ascending as text (decimal ids
+compare as strings, "10" < "9"). This is the engine's own order
+(`select_top`). `SearchHit` carries the matched row's time and id, and
+`SearchHit::rank_cmp` is the rule. The journal merges the stores' lists in
+that order and no longer re-sorts them (it used to re-sort ties by numeric
+id). So within a store, and across stores, a smaller k is always a prefix
+of a larger one. The injection hook breaks its ties the same way.
+`tied_scores_rank_the_same_for_every_k_and_across_writers` checks 24
+exactly tied records over two writers, with repeated times and ids that
+cross digit counts, for every k. It fails on the old merge. A randomized
+merge test and a decimal-text order test (20,000 pairs against
+`to_string`) cover the rest.
+
 ## Noticed, not changed
 
-- Tiny anchored views score near 0 bits (the candidate-set background is
-  the record itself). The injection hook drops hits under `min_bits` (8),
-  and anchored hits with few occurrences can fall under it.
-  `Background::View` would avoid it, but it changes rankings, so it needs
-  the dev/held-out protocol.
-- Ties: the engine orders equal scores by newest first, then the journal
-  re-sorts them by id. With k smaller than a tie group, a smaller k can
-  pick a different member than a larger k would put first (seen while
-  writing the journal test; it predates this change).
 - Deduplicated text: a row's time is its first stored event's time. A
   duplicate event older than its row (out-of-order timestamps) cannot be
   found in a window or view that ends before the row: that was already true

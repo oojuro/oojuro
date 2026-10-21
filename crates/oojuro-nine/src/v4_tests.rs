@@ -76,6 +76,7 @@ fn same_metrics(a: &TimelineMetrics, b: &TimelineMetrics, context: &str) {
     assert_eq!(a.query_terms, b.query_terms, "{context}");
     assert_eq!(a.eligible_outcomes, b.eligible_outcomes, "{context}");
     assert_eq!(a.continued_matches, b.continued_matches, "{context}");
+    assert_eq!(a.background_pad.to_bits(), b.background_pad.to_bits(), "{context}");
     assert_eq!(
         a.background_query_bits.to_bits(),
         b.background_query_bits.to_bits(),
@@ -1464,5 +1465,80 @@ fn an_anchored_view_smaller_than_k_continues_with_the_unanchored_ranking() -> Re
     assert!(longer[4..].iter().all(|m| m.continued));
     assert_eq!(ids(&longer[4..]), ids(&after));
     assert_eq!(bits(&longer[4..]), bits(&after));
+    Ok(())
+}
+
+/// F3 (`docs/SEARCH_FIXES.md`): the candidate background of a small
+/// candidate set is padded with whole-view text, so the best match of a
+/// small set scores on the same scale as matches of a large one (the
+/// injection hook's `min_bits` of 8 means the same thing), without future
+/// rows and without changing large candidate sets.
+#[test]
+fn a_small_candidate_set_is_scored_against_a_padded_background() -> Result<()> {
+    let vocabulary = [
+        "printer", "latex", "series", "limit", "integral", "solver", "parser", "lambda", "matrix",
+        "symbol", "expression", "array", "backend", "function", "result", "argument", "module",
+        "precision", "float", "rational", "simplify", "derivative", "polynomial", "factor",
+        "sympify", "evaluate", "numeric", "complex", "domain", "interval", "plot", "tensor",
+        "vector", "quantum", "physics", "units", "geometry", "point", "circle", "logic",
+    ];
+    let mut records = Vec::new();
+    for i in 0..1_500usize {
+        let text = (0..12 + i % 20)
+            .map(|j| vocabulary[(i * 7 + j * 3 + j * j) % vocabulary.len()])
+            .collect::<Vec<_>>()
+            .join(" ");
+        records.push(r(&format!("r{i:03}"), &format!("r{i:03}"), &text, i as i64, i as i64));
+    }
+    let issue = "the cython backend declares autofunc_result with an incorrect signature for the \
+                 array argument; the generated wrapper rejects the matrix expression";
+    records.push(r("issue", "issue", issue, 1_600, 1_600));
+    let (a, b) = (Scratch::new(), Scratch::new());
+    let mut v3 = V3::open(&a.0)?;
+    let v4 = Nine::open_with(&b.0, small(4_000))?;
+    for rec in &records {
+        v3.insert(rec.clone())?;
+        v4.insert(rec.clone())?;
+    }
+    fn search(v3: &mut V3, v4: &Nine, text: &str, valid: i64, k: usize) -> Result<(Matches, TimelineMetrics)> {
+        let mut q = Query::new(text, valid);
+        q.k = k;
+        let got = v4.search_refs(&q, i64::MIN)?;
+        let metrics = v4.metrics();
+        same(&v3.search_refs(&q, i64::MIN)?, &got, &format!("oracle q={text:?}"));
+        same_metrics(&v3.metrics(), &metrics, &format!("oracle q={text:?}"));
+        Ok((got, metrics))
+    }
+    let mut find = |text: &str, valid: i64, k: usize| search(&mut v3, &v4, text, valid, k);
+    // The identifier anchors the view to the issue alone: one candidate.
+    let (anchored, m) = find(issue, 2_000, 1)?;
+    assert_eq!((anchored.matches[0].id.as_str(), m.candidate_records), ("issue", 1));
+    let bits = anchored.matches[0].score_bits;
+    assert!(bits >= 8.0, "the best and only candidate must clear min_bits: {bits}");
+    assert!(m.background_pad > 0.0);
+    // On the scale of the same record when the query is read as words (a
+    // large candidate set, not padded).
+    let (words, mw) = find(&issue.replace("autofunc_result", "autofunc result"), 2_000, 1)?;
+    assert_eq!((words.matches[0].id.as_str(), mw.background_pad), ("issue", 0.0));
+    let ratio = bits / words.matches[0].score_bits;
+    eprintln!("anchored {bits:.1} bits, as words {:.1} bits", words.matches[0].score_bits);
+    assert!((0.25..4.0).contains(&ratio), "{bits} vs {} bits", words.matches[0].score_bits);
+    // A rare word in one record: also a single candidate, also above min_bits.
+    let (rare, mr) = find("rejects wrapper", 2_000, 5)?;
+    assert_eq!(rare.matches.len(), 1);
+    assert!(mr.background_pad > 0.0 && rare.matches[0].score_bits >= 8.0, "{:?}", rare.matches);
+    // The padding comes from the query's view only: rows written after it
+    // change nothing in an earlier view.
+    let before = find("rejects wrapper array", 1_700, 10)?.0;
+    let big = find("printer latex series limit", 2_000, 10)?.1;
+    drop(find);
+    for i in 0..50 {
+        v3.insert(r(&format!("late{i}"), &format!("late{i}"), "rejects wrapper array array", 3_000, 3_000))?;
+        v4.insert(r(&format!("late{i}"), &format!("late{i}"), "rejects wrapper array array", 3_000, 3_000))?;
+    }
+    let after = search(&mut v3, &v4, "rejects wrapper array", 1_700, 10)?.0;
+    same(&before, &after, "future rows");
+    // Candidate sets at or above the floor are not padded.
+    assert!(big.candidate_records > 100 && big.background_pad == 0.0, "{big:?}");
     Ok(())
 }
