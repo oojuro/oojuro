@@ -294,6 +294,12 @@ fn concurrent_readers_and_writers_never_block_or_tear() {
     }
     let hits = json(&home, &["search", "payload", "notes", "--kind", "explicit", "-k", "50"]);
     assert_eq!(hits.as_array().unwrap().len() as u32, KEYS, "one (newest) version per key");
+    // periods and --when are reads the recorder serves too
+    let p = json(&home, &["periods", "--by", "volume", "--per", "writer", "--from", "2000-01-01", "-k", "50"]);
+    let n: u64 = p["periods"].as_array().unwrap().iter().map(|x| x["events"].as_u64().unwrap()).sum();
+    assert!(n > 0 && n <= expected, "{n} of {expected}");
+    let w = json(&home, &["range", "--when", "since 2000-01-01", "--limit", "100000"]);
+    assert_eq!(w.as_array().unwrap().len() as u64, expected);
 
     // a forget through the recorder, then stop it: direct access sees the same journal
     let f = json(&home, &["forget", "--key", "k1"]);

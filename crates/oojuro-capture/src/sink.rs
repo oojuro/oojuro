@@ -48,6 +48,7 @@ pub fn to_event<'a>(rec: &'a Rec, id: u64, agent: u32, parent: u64, args: &'a st
     EventIn {
         id,
         session: rec.session,
+        parent_session: rec.parent_session,
         agent,
         turn: rec.turn,
         seq: rec.seq,

@@ -47,6 +47,8 @@ pub struct Settings {
     pub exclude: Vec<String>,
     /// Longest accepted search query in bytes.
     pub max_query_bytes: u64,
+    /// IANA time zone for date phrases (`--when`); empty = the machine's.
+    pub timezone: String,
 }
 
 impl Default for Settings {
@@ -62,11 +64,12 @@ impl Default for Settings {
             index_thinking: true,
             exclude: Vec::new(),
             max_query_bytes: 65_536,
+            timezone: String::new(),
         }
     }
 }
 
-pub const KEYS: [&str; 10] = [
+pub const KEYS: [&str; 11] = [
     "record",
     "inject",
     "top_k",
@@ -77,6 +80,7 @@ pub const KEYS: [&str; 10] = [
     "index_thinking",
     "exclude",
     "max_query_bytes",
+    "timezone",
 ];
 
 /// The global-only switch written by `oojuro pause` / `resume`.
@@ -239,6 +243,7 @@ fn apply(r: &mut Resolved, t: &toml::Table, source: &str, project_dir: Option<&P
             "max_query_bytes" => s.max_query_bytes = v.as_integer().unwrap() as u64,
             "min_bits" => s.min_bits = number(v).unwrap(),
             "recency" => s.recency = number(v).unwrap(),
+            "timezone" => s.timezone = v.as_str().unwrap().to_string(),
             "exclude" => {
                 for p in v.as_array().unwrap() {
                     let p = p.as_str().unwrap();
@@ -288,6 +293,13 @@ pub fn check_value(key: &str, v: &toml::Value) -> Result<()> {
             Some(a) if a.iter().all(|x| x.as_str().is_some_and(|s| !s.is_empty())) => Ok(()),
             _ => Err(format!("`{key}` must be a list of path globs")),
         },
+        "timezone" => match v.as_str() {
+            Some("") => Ok(()),
+            Some(z) => jiff::tz::TimeZone::get(z)
+                .map(|_| ())
+                .map_err(|_| format!("`{key}` must be an IANA time zone name like America/New_York (or empty)")),
+            None => Err(format!("`{key}` must be a string")),
+        },
         _ => Err(format!("unknown setting `{key}` (known: {})", KEYS.join(", "))),
     };
     r.map_err(Into::into)
@@ -310,6 +322,7 @@ pub fn parse_cli_value(key: &str, raw: &str) -> Result<toml::Value> {
             toml::Value::Integer(raw.replace('_', "").parse().map_err(|_| format!("`{key}` takes an integer"))?)
         }
         "min_bits" | "recency" => toml::Value::Float(raw.parse().map_err(|_| format!("`{key}` takes a number"))?),
+        "timezone" => toml::Value::String(raw.to_string()),
         "exclude" => {
             if raw.starts_with('[') {
                 let t: toml::Table = toml::from_str(&format!("v = {raw}")).map_err(|e| format!("bad list: {e}"))?;

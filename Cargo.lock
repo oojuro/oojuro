@@ -4560,6 +4560,7 @@ version = "0.1.0"
 dependencies = [
  "aho-corasick",
  "flate2",
+ "jiff",
  "libc",
  "oojuro-capture",
  "oojuro-nine",

@@ -1,5 +1,5 @@
-//! MCP server over stdio (`oojuro mcp`): tools `remember`, `search`, `get`
-//! and `forget` (JSON-RPC 2.0, one message per line, protocol 2025-06-18
+//! MCP server over stdio (`oojuro mcp`): tools `remember`, `search`, `get`,
+//! `periods` and `forget` (JSON-RPC 2.0, one message per line, protocol 2025-06-18
 //! and earlier). Each call goes to the recorder when it serves the journal,
 //! else opens the journal for that call only.
 //!
@@ -12,8 +12,10 @@ use crate::{
     client::Oojuro,
     config::Config,
     paths::Paths,
+    periods::{By, Per, PeriodsArgs},
     timearg::{parse_duration, parse_time},
     types::{Filters, SearchArgs, Target},
+    when,
 };
 use serde_json::{Value, json};
 use std::io::{BufRead, Write};
@@ -72,6 +74,7 @@ pub fn tools(writer: &str) -> Value {
                     "from": { "type": "string", "description": "Only records at or after this time: RFC 3339, YYYY-MM-DD, or a duration ago like `7d`." },
                     "to": { "type": "string", "description": "Only records at or before this time." },
                     "as_of": { "type": "string", "description": "Search the journal as it was at this time (newest key versions as of then)." },
+                    "when": { "type": "string", "description": "Only records in this period, in plain words: `yesterday`, `last tuesday afternoon`, `since monday`, or relative to an event found by search: `before \"deploy-prod\"`, `after the first \"failed test\"`, `the day \"build broke\"`, `around @4211`. The resolved interval comes back in `when`." },
                     "excerpt_bytes": { "type": "integer", "minimum": 16, "maximum": 65536, "description": "Excerpt size (default 320)." }
                 },
                 "required": ["query"]
@@ -90,6 +93,32 @@ pub fn tools(writer: &str) -> Value {
                     "key": { "type": "string", "description": "A remembered key (newest version)." },
                     "writer": { "type": "string", "description": format!("Writer of the key (default: {writer}).") },
                     "as_of": { "type": "string", "description": "The version current at this time." }
+                }
+            },
+            "annotations": { "readOnlyHint": true, "openWorldHint": false }
+        },
+        {
+            "name": "periods",
+            "title": "Find periods of activity",
+            "description": "Find stretches of time in the journal by how the agents' activity looked, ranked, with the \
+                agent instances involved. `by`: `errors` (failed tool calls, bits of surprise against this agent's usual \
+                failure rate), `repeat` (stuck loops: the same call failing again; `include_waiting` adds polling), \
+                `unusual` (unlike this agent's last 7 days: rate, tool mix, errors, new tools, record size), `volume` \
+                (most records), or `text` (periods mentioning `query`). Periods group an agent with the subagents it \
+                spawned (`per`: task, session, writer). Each result has its time range, scores in bits, counts, tools, \
+                and sample record ids: open them with `get`, or search inside with `search` and `from`/`to`.",
+            "inputSchema": {
+                "type": "object",
+                "properties": {
+                    "by": { "type": "string", "enum": ["errors", "repeat", "unusual", "volume", "text"], "description": "Ranking (default: `text` with a query, else `volume`)." },
+                    "query": { "type": "string", "description": "Only periods whose records match this text." },
+                    "when": { "type": "string", "description": "The period to look in (default: the last 7 days): `yesterday`, `last week`, `since monday`, `after the first \"failed test\"`." },
+                    "per": { "type": "string", "enum": ["task", "session", "writer"], "description": "Group by task tree (an agent and its subagents; default), one agent instance, or the whole writer." },
+                    "window": { "type": "string", "description": "Window length: `5m` (default for errors and repeat), `1h` (otherwise), `1d`." },
+                    "writer": { "type": "string", "description": "Only this writer's records (default: every writer)." },
+                    "include_waiting": { "type": "boolean", "description": "`repeat`: count waiting/polling loops too." },
+                    "k": { "type": "integer", "minimum": 1, "maximum": 50, "description": "Periods to return (default 10)." },
+                    "samples": { "type": "integer", "minimum": 0, "maximum": 5, "description": "Sample record ids per period (default 3)." }
                 }
             },
             "annotations": { "readOnlyHint": true, "openWorldHint": false }
@@ -129,11 +158,16 @@ impl McpServer {
     }
 
     fn max_query_bytes(&self) -> usize {
+        self.settings().map(|s| s.max_query_bytes as usize).unwrap_or(65_536)
+    }
+
+    fn settings(&self) -> Option<crate::Settings> {
         let dir = std::env::current_dir().unwrap_or_default();
-        Config::discover(&self.paths.config, &dir)
-            .and_then(|c| c.resolve(Some(&self.writer)))
-            .map(|r| r.settings.max_query_bytes as usize)
-            .unwrap_or(65_536)
+        Config::discover(&self.paths.config, &dir).and_then(|c| c.resolve(Some(&self.writer))).ok().map(|r| r.settings)
+    }
+
+    fn tz(&self) -> Option<String> {
+        self.settings().map(|s| s.timezone).filter(|z| !z.is_empty())
     }
 
     /// Run one tool; the value is the tool's structured result.
@@ -165,6 +199,17 @@ impl McpServer {
                     .get("excerpt_bytes")
                     .and_then(Value::as_u64)
                     .map_or(DEFAULT_EXCERPT_BYTES, |x| x.clamp(16, 65_536) as usize);
+                let mut filters = filters;
+                let w = match s(args, "when") {
+                    Some(p) => {
+                        let scope =
+                            when::Scope { writers: filters.writers.clone(), tz: self.tz(), ..when::Scope::default() };
+                        let w = oj.when(p, &scope)?;
+                        when::narrow(&mut filters, &w);
+                        Some(w)
+                    }
+                    None => None,
+                };
                 let refs = oj.search(&SearchArgs {
                     query: query.into(),
                     k,
@@ -172,7 +217,30 @@ impl McpServer {
                     excerpt_bytes,
                     max_query_bytes: self.max_query_bytes(),
                 })?;
-                Ok(json!({ "results": refs }))
+                Ok(match w {
+                    Some(w) => json!({ "when": w, "results": refs }),
+                    None => json!({ "results": refs }),
+                })
+            }
+            "periods" => {
+                let a = PeriodsArgs {
+                    query: s(args, "query").map(str::to_string),
+                    by: s(args, "by").map(By::parse).transpose()?,
+                    per: s(args, "per").map(Per::parse).transpose()?.unwrap_or_default(),
+                    window_us: s(args, "window").map(parse_duration).transpose()?,
+                    from_us: None,
+                    to_us: None,
+                    when: s(args, "when").map(str::to_string),
+                    writers: s(args, "writer").map(|w| vec![w.to_string()]).unwrap_or_default(),
+                    k: args.get("k").and_then(Value::as_u64).unwrap_or(10).clamp(1, 50) as usize,
+                    samples: args.get("samples").and_then(Value::as_u64).unwrap_or(3).min(5) as usize,
+                    include_waiting: args.get("include_waiting").and_then(Value::as_bool).unwrap_or(false),
+                    outside_context_of: None,
+                    tz: self.tz(),
+                    min_bits: self.settings().map_or(8.0, |s| s.min_bits),
+                    max_query_bytes: self.max_query_bytes(),
+                };
+                Ok(serde_json::to_value(oj.periods(&a)?)?)
             }
             "get" => {
                 let rec = match (args.get("id").and_then(Value::as_u64), s(args, "key")) {
@@ -242,7 +310,8 @@ impl McpServer {
                     "serverInfo": { "name": "oojuro", "title": "Oojuro journal", "version": env!("CARGO_PKG_VERSION") },
                     "instructions": format!("Oojuro is this machine's journal of what agents saw, thought and did. \
                         Use `search` before re-deriving something you may have seen before, `remember` to keep a note \
-                        (a `key` makes it versioned), `get` for a whole record, `forget` to delete for good. Writer: {}.", self.writer)
+                        (a `key` makes it versioned), `get` for a whole record, `periods` to find when agents \
+                        failed, looped or worked unusually, `forget` to delete for good. Writer: {}.", self.writer)
                 }))
             }
             "ping" => ok(json!({})),
@@ -251,7 +320,7 @@ impl McpServer {
                 let Some(name) = params.get("name").and_then(Value::as_str) else {
                     return Some(err(-32602, "tools/call needs `name`".into()));
                 };
-                if !["remember", "search", "get", "forget"].contains(&name) {
+                if !["remember", "search", "get", "periods", "forget"].contains(&name) {
                     return Some(err(-32602, format!("unknown tool {name:?}")));
                 }
                 let args = params.get("arguments").cloned().unwrap_or(json!({}));

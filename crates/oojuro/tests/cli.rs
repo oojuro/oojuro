@@ -99,6 +99,22 @@ fn cli_round_trips() {
     // range / export
     let all = ok_json(h, &["range"]);
     assert_eq!(all.as_array().unwrap().len(), 4);
+    assert!(all.as_array().unwrap().iter().all(|r| r["agent_id"] == r["session"] && r.get("parent_id").is_none()));
+    // --when on range, search and export, and periods
+    assert_eq!(ok_json(h, &["range", "--when", "today"]).as_array().unwrap().len(), 4);
+    assert!(ok_json(h, &["range", "--when", "yesterday"]).as_array().unwrap().is_empty());
+    assert_eq!(ok_json(h, &["search", "zebra_parser_roundtrip", "--when", "past 2 hours"]).as_array().unwrap().len(), 1);
+    let o = oojuro(h, &["range", "--when", "after \"zebra_parser_roundtrip\""], None);
+    assert!(o.status.success() && String::from_utf8_lossy(&o.stderr).contains("anchor"), "{o:?}");
+    assert_eq!(oojuro(h, &["range", "--when", "purple elephant"], None).status.code(), Some(2));
+    let p = ok_json(h, &["periods", "--by", "volume", "--per", "writer", "--when", "today"]);
+    assert_eq!(p["periods"].as_array().unwrap().iter().map(|x| x["events"].as_u64().unwrap()).sum::<u64>(), 4);
+    let o = oojuro(h, &["periods", "--by", "errors"], None);
+    assert!(o.status.success() && String::from_utf8_lossy(&o.stdout).contains("periods by errors"), "{o:?}");
+    assert_eq!(oojuro(h, &["periods", "--by", "novelty"], None).status.code(), Some(2));
+    assert_eq!(oojuro(h, &["config", "set", "timezone", "Mars/Olympus"], None).status.code(), Some(2));
+    assert!(oojuro(h, &["config", "set", "timezone", "America/New_York"], None).status.success());
+    assert_eq!(ok_json(h, &["range", "--when", "today"]).as_array().unwrap().len(), 4);
     let ci = ok_json(h, &["range", "--writer", "agent:ci"]);
     assert_eq!(ci.as_array().unwrap().len(), 1);
     let o = oojuro(h, &["export"], None);

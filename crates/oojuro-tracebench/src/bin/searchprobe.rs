@@ -80,6 +80,7 @@ fn to_in<'a>(e: &Event<'a>, single: bool) -> EventIn<'a> {
     EventIn {
         id: e.id,
         session: e.session,
+        parent_session: 0,
         agent: if single { 0 } else { e.agent },
         turn: e.turn,
         seq: e.seq,

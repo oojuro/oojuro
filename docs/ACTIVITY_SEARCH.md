@@ -641,7 +641,7 @@ oojuro periods --by novelty --when 'after the first "failed test"' --samples 5
 {"name": "search",  "arguments": {"query": "error", "session": "9c1e…", "from": "2026-10-14T10:05:00Z", "to": "2026-10-14T10:20:00Z"}}
 ```
 
-## 6. Engine plan (not implemented)
+## 6. Engine plan (superseded, never implemented: see §11)
 
 ### 6.1 At ingest, per activity record
 
@@ -834,3 +834,260 @@ When `forget` removes records (after its existing tombstones and reclaim):
 | Anchor without first/last | Latest occurrence; the answer says which (default, not asked). |
 | Time zone | The person's local time zone from settings, else the machine's (default, not asked). |
 | First-seen files in "change vs normal" | Kept, now that baselines are split (default, not asked). |
+
+## 11. Implemented (2026-10-21)
+
+Ryan's direction after §10: "the db as simple and horizontal as possible,
+just enough information for agents to know what happened; if periods slows
+down the performance, remove such functionalities" (`docs/DESIGN.md`,
+"Principle"). So nothing of §6 was built: no per-record features at ingest,
+no rollups, no compressor state. `periods` is a pure query-time function
+over what every record already carries, in one file
+(`crates/oojuro/src/periods.rs`) that can be deleted with its request,
+command and tool (§11.8).
+
+### 11.1 Identity: agent id and parent id
+
+- **Agent id** is the existing session hash: one per transcript, so one per
+  agent instance (every main session and every subagent). Records now show
+  it as `agent_id` (the same 16 hex digits as `session`).
+- **Parent id**: the instance that spawned this one.
+  - Stored as a 12th field of the event metadata line, only when there is
+    one: every other record is byte-identical to before (TraceBench data
+    included).
+  - In memory, one entry per session (`ColStore::parents`), saved as an
+    optional trailing checkpoint section (older checkpoints load without it)
+    and dropped with the session's last record at reclaim. There is no
+    per-event column, so no existing read changes.
+- **Where knowable:**
+  - Claude Code subagents, from the path:
+    `<project>/<session>/subagents/agent-*.jsonl` names
+    `<project>/<session>.jsonl` (log tailer and hooks).
+  - Codex subagents, from `session_meta.source.subagent.thread_spawn.parent_thread_id`,
+    resolved by the capture owner to the parent rollout's session among the
+    files it tails.
+  - Proxy and appended records when the caller passes one
+    (`DirectRec.parent_session`, `NewRecord.parent_session`).
+  - Not knowable: the model API proxy (a subagent's calls carry the main
+    session), OpenTelemetry (no standard attribute).
+- **A task tree** is an agent id and its descendants, computed at query
+  time.
+- On the scratch copy (§11.7), 1,253 of 1,978 agent instances (63%) name a
+  parent: 1,192 Claude Code subagent transcripts and 61 Codex subagent
+  rollouts.
+
+### 11.2 Signals from the columns
+
+The column table holds, per record: valid time, kind, tool, status, exit
+code, text length, agent id (parent through the session map) and the call a
+result answers. `periods` reads nothing else, except the exact check of
+repeat candidates.
+
+| signal | as built | differs from the design |
+|---|---|---|
+| volume | activity records per window (no `system` context, no Oojuro tool calls or results) | echo is recognized by tool name only: a Bash-run `oojuro` command counts (the mark is in the metadata, not the columns); injected context is a `system` record anyway |
+| errors | failed tool results (the harness status, or a nonzero exit code); binomial upper-tail bits against the writer's trailing 7-day rate, per role | no output-text rules (they need text). Codex outputs now get a status at capture, from what Codex itself reports (`Script failed` / `Script completed`, `Process exited with code N`, `Exit code: N`); the field existed. API-error `system` records are not counted (no column says so) |
+| repeat | stuck loops (default): a call matching one of the instance's last 32 calls by tool and input length, whose result fails again; `--include-waiting` adds the matches that succeed (polling). Binomial bits against the trailing candidate rate | the design ranked low novelty per event; Ryan chose stuck loops only. The record dedupe hash cannot help: captured records carry their source position in their metadata, so they never dedupe and share no hash. The length rule alone is 70–80% exact in the top error and repeat windows (18% in fan-out hours: many same-length reads), so when ranking by `repeat` the candidates of the windows that can still reach the top are checked against the two calls' texts and only exact repeats count. The check stops as soon as the 3k-th checked score beats the next unchecked candidate (a checked score never exceeds its candidate score). Elsewhere `repeats_exact: false` marks candidate counts |
+| unusual | five components, each `-log2` of its empirical tail among the writer's windows of the same role in the trailing 7 days: rate, tool mix (MDL bits, exposure capped at 50), error rate, tools absent from the trailing week, bytes per record (two-sided) | tool-name mix instead of families (families need the shell command); no first-seen files (paths need text); bytes per record instead of novelty density. Tails come from Fenwick counts over quantized values (2,048 log-spaced bins) |
+| novelty | not available (§11.4) | |
+| text | with a query and no signal: the bits of its search hits per window; with a signal, a query only filters | hits below the relevance floor of §11.5 are ignored |
+
+- **Roles:** windows of top-level instances and of subagents have separate
+  baselines (Ryan's default). `--per writer` uses one baseline per writer
+  with empty slots counted as zero.
+- **Windows:** clock-aligned in the person's zone, 5 min for `errors` and
+  `repeat`, 1 h otherwise (`--window`, 1 min to 1 day).
+- **Baseline span:** errors and repeat read 7 days before the period;
+  unusual reads 14 (its baseline windows need their own 7-day baselines);
+  volume and text read none.
+- **Minimums:** `repeat` needs 2 repeats in a window, `unusual` 20 records.
+
+### 11.3 Periods: grouping, merging, results
+
+- **Grouping** (`--per`): `task` (default) groups the windows of an agent
+  instance and all instances it spawned; `session` keeps one instance;
+  `writer` sums all of a writer's instances per window.
+- **Merging:** windows are taken best first. A window joins a period of its
+  group that it touches when it scores at least half that period's best
+  window; a weaker neighbour is left out, so continuous work does not chain
+  into one long period. Otherwise it opens a period while fewer than `k`
+  exist. A fan-out of parallel subagents folds into one task period.
+- **Result** (`Periods`, JSON):
+  - the resolved `when`
+  - signal, window, baseline, period bounds, records read, elapsed ms
+  - per period:
+    - rank, task root (`agent_id`), writers, bounds, minutes, windows
+    - `score` (bits; records for volume), counts (records, calls, results,
+      errors), the per-signal bits, the unusual components, bytes
+    - top tools
+    - contributing instances with their parent ids (busiest first, at most 20)
+    - sample record ids with why each was picked (`error`, `stuck`,
+      `waiting`, `new_tool`, `first`, `hit`)
+    - a `range` command to open the period
+
+### 11.4 Novelty: dropped
+
+"New bits beyond the agent's usual" needs each candidate window's text plus
+a compressor primed with up to 8 MiB of the writer's preceding text. The
+top 10 periods by volume on the scratch copy are 24 one-hour windows
+holding 131.7 MB of text (5.5 MB per window). Novelty on demand for them
+means decoding and compressing well over 100 MB per query: hundreds of
+milliseconds against a 50 ms bar. `--by novelty` answers with this reason.
+
+### 11.5 Dates (`--when`)
+
+- **Implemented** in `crates/oojuro/src/when.rs` with the grammar of §5.4
+  and §5.5. The 43 prototype cases pass, plus daylight saving, zones, year
+  wrap, future dates and anchor picks.
+- **Time zone:** the `timezone` setting (an IANA name), else the machine's.
+- **Differences from the prototype:**
+  - A whole phrase that is a period wins before relation words (the
+    prototype read "the day before yesterday" as an anchor).
+  - A bare clock (`9am`) is today.
+  - **Relevance floor of anchors:** `max(min_bits, best / 2)`, or `best / 2`
+    when even the best hit saves less than `min_bits`. A phrase found in a
+    single record saves almost nothing in the engine (its background is then
+    that record, `docs/SEARCH_FIXES.md`), and a distinctive phrase is exactly
+    what an anchor should be.
+- **Anchors:**
+  - ids come from the ranked search without reading text, time-ordered.
+  - Occurrences: one instance, gaps under 30 minutes.
+  - `first`/`last`/`top`; the latest by default.
+  - `ambiguous` with the top 5 occurrences when no ordinal was given and they
+    fall on several days; `@id` names a record.
+  - `--outside-context-of` leaves out the caller's own context window. An MCP
+    caller cannot name its own session, so quote a distinctive phrase or use
+    `@id`.
+- **Where:**
+  - CLI `search`, `range`, `export`: the meaning is echoed on stderr.
+  - `periods`: in the result.
+  - MCP `search` and `periods`: `when` in the result.
+
+### 11.6 Erasure, restarts, deduplicated records
+
+- **Erasure:** `periods` reads live columns only, so a forgotten record
+  leaves every answer at once (its tombstone). Its session's parent link goes
+  at the reclaim that follows. Test: forget a planted loop; `repeat` no longer
+  returns it, the link is gone, and a reopened journal answers the same.
+- **Restarts and crashes:** nothing derived is stored, so they are the
+  column table's (checkpoint plus replay). The parent map rides in the
+  checkpoint and is rebuilt from the records without one. Tests: reopen from
+  a checkpoint, after a crash past it, with none, and from a checkpoint
+  written before the section existed.
+- **Deduplicated records:** every event, a deduplicated one included, has
+  its own column slot with its own valid time, and `periods` counts each
+  event at that time. The time of the row that stores the shared text (its
+  first event, `docs/SEARCH_FIXES.md`) is never used.
+
+### 11.7 Measurements
+
+Scratch copy: every transcript on this machine (1,968 files, 5.5 GB)
+imported with this build into a private store under `.scratch` (551,522
+records, 74 writers, 401 MB; deleted afterwards). One writer holds 84% of
+the records. Only counts and timings were kept; the hand check read
+records locally.
+
+**Latency** (one query, `elapsed_ms`, median of 5, bench lock held, load
+about 9.5 on 16 threads, `--when "past 30 days"`, k = 10):
+
+| scope | volume | errors | repeat (with the exact check) | unusual |
+|---|---|---|---|---|
+| the busiest writer (388k records read with the 7-day lead) | 13.8 ms | 28.0 ms | 24.1 ms | 30.0 ms |
+| every writer | 15.0 ms | 25.6 ms | 29.4 ms | 30.0 ms |
+
+- **Against the bars:** under the 50 ms bar, above the 10 ms target.
+- **With a text part** (all writers):
+  - An anchor (`--when 'after the first "migration"'`) adds 20–25 ms:
+    1,000 ranked ids, no text, 46–58 ms with the errors ranking.
+  - A text query (`periods "migration" --by errors`, 30 days) adds about
+    30 ms (up to 10,000 hits): 58–62 ms.
+  - Both are over the 50 ms bar, which was set for a column-only query.
+- **Where the time goes:**
+  - Decoding about 400 sealed column blocks (zstd plus 8 varint streams)
+    takes about 10 ms.
+  - The per-record bookkeeping (window, repeat ring) about as much.
+  - Scoring 2–3 ms.
+  - The scan reads each block once and never fills the shared column cache.
+
+**Top 10 per signal, hand-checked** (generic):
+- **repeat** (exact, stuck only): 4 periods in 30 days.
+  - 3 are stuck loops: a disk check re-run while writes kept failing, a
+    failing migration command retried, a failing edit retried.
+  - 1 is a browser wait-and-screenshot loop with some failures.
+  - The prototype's 12 waiting loops are gone by default and come back with
+    `--include-waiting`.
+- **errors:** 10/10 real failure bursts: a full disk across 4 agents,
+  failing authenticated API calls, migrations, builds and tests, failing
+  file reads. The prototype's 2/20 weak hits came from text rules, which are
+  gone.
+- **unusual:** no window is the routine "new subagent's opening read
+  burst" (13/20 in the prototype, before the coordinator/subagent baseline
+  split). The top 10 are distinct moments:
+  - a production hotfix across 8 agents
+  - a mass issue-tracker cleanup across 11 agents
+  - cloud and browser operations
+  - third-party code research
+  - credentialed API work
+- **volume:** fan-out peaks and long coordinator stretches, as in the
+  prototype. Task periods group up to 11 instances (median 4 in the top 50).
+
+**Storage:** the only new bytes are the parent field of subagent records
+(`,<parent>`, at most 21 characters before compression) and 16 B per
+spawned session in the column checkpoint.
+- **Method:** the same frozen 400 MB of transcripts (5 sessions, 271 of
+  them subagents, so nearly every record carries a parent: the worst case)
+  imported by the base build and by this one.
+- **Result:**
+  - archive +57 KB (+0.20%)
+  - column checkpoint +4.3 KB (the parents section)
+  - index identical
+  - durable bytes +0.14% (0.7 B per record)
+- On the whole journal, where 63% of the instances are subagents, it is
+  less.
+
+**Write and read paths, before (d1de288) vs after:**
+- **Setup:** TraceBench tier 1 (`base1m.tbe`), arm `oojuro`, both builds
+  without the competitor arms, one bench-lock hold per run, 3 GiB scope.
+- **Machine:** shared and very loaded during these runs. Only round 0 ran
+  at load 13; rounds 1–2 at load averages of 40–280. So each suite is also
+  given in alternating order (ABBA), where the order effect of a store just
+  deleted by the previous run cancels out.
+
+| suite | measure | before | after |
+|---|---|---|---|
+| ingest (6 ABBA pairs, load 16–18) | ops/s, median | 7,891 | 8,525 |
+| | p50 / CPU seconds per run | 1.22 ms / 5.6 s | 1.15 ms / 5.6 s |
+| turnloop (3 rounds) | turn p50 | 4.80 ms | 4.69 ms |
+| | search top-20 p50 / append p50 | 2.12 / 2.55 ms | 2.08 / 2.46 ms |
+| searchprobe, 1,000 turn-loop queries (3 rounds) | CPU p50 / p99 | 1.40 / 2.85 ms | 1.28 / 2.48 ms |
+| reads (5 runs each, 2 in reverse order) | p50: get, get_range, session | 0.367, 0.310, 0.768 ms | 0.392, 0.336, 0.871 ms |
+| | p50: time_range 1 h, filter 0–3 | 12.0; 0.74, 1.22, 0.059, 22.6 ms | 11.6; 0.70, 1.19, 0.059, 20.3 ms |
+| | p50: count 0–3 | 1.08, 1.20, 0.063, 0.72 ms | 1.15, 1.17, 0.073, 0.48 ms |
+| | p50: agg_session, agg_tools 1 d / 30 d, top_sessions, mixed 8 threads | 0.014, 1.20 / 1.65, 1.31, 0.20 ms | 0.015, 1.28 / 2.14, 1.36, 0.24 ms |
+| same store, same 20k random ids, 4 alternating runs each | get, get_range 512 B, session p50 | 8.85 µs, 6.55 µs, 663 µs | 9.10 µs, 6.50 µs, 672 µs |
+
+- **Spread:** the run-to-run spread of the reads suite is ±30–60% per
+  operation (min–max in `.scratch/bench`). No operation differs beyond it,
+  and the code under them did not change: `get`, `session`, filters,
+  counts, aggregates and scans read the same column blocks through the
+  same functions.
+- **Two cases checked further:**
+  - `agg_tools_30d` is +2% in the reverse-order pairs. Its +30% comes from
+    the rounds where the new build always ran first.
+  - The small get/session differences vanish on identical work against one
+    store (last row).
+- **Verify:** `tracebench verify` on smoke gives 1,237/1,237 for `oojuro`
+  and `oojuro:log=private`.
+
+### 11.8 Removing it
+
+- **Delete:**
+  - `crates/oojuro/src/periods.rs`
+  - `Request::Periods` (`proto.rs`)
+  - `Oojuro::periods` (`client.rs`)
+  - `periods_cmd` and its usage line (`bin/oojuro.rs`)
+  - the `periods` MCP tool (`mcp.rs`)
+  - `tests/periods.rs`
+- **Optionally:** `TraceDb::scan_agent`, `ActivityRow` and the column
+  projector.
+- **Kept:** agent and parent ids, `--when`, Codex statuses.

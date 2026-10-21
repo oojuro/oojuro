@@ -29,12 +29,14 @@ pub mod journal;
 pub mod mcp;
 pub mod otel;
 pub mod paths;
+pub mod periods;
 pub mod policy;
 pub mod proto;
 pub mod proxy_sink;
 pub mod server;
 pub mod timearg;
 pub mod types;
+pub mod when;
 
 pub use client::{Oojuro, Via};
 pub use config::{Config, Settings};

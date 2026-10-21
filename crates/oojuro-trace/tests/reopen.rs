@@ -59,6 +59,7 @@ fn events(b: &[(u64, u64, u32, u32, u8, u8, u64, i64, String)]) -> Vec<EventIn<'
         .map(|(k, e)| EventIn {
             id: e.0,
             session: e.1,
+            parent_session: 0,
             agent: e.2,
             turn: e.3,
             seq: k as u32,

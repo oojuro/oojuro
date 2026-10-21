@@ -259,6 +259,7 @@ impl Capture {
                 meta,
                 status: d.status,
                 session: d.session,
+                parent_session: d.parent_session,
                 seq: d.seq,
                 turn: d.turn,
                 call_id: std::mem::take(&mut d.call_id),
@@ -569,6 +570,19 @@ impl Capture {
     /// Commit one file chunk: ids, call links, one append per writer, then
     /// the file's new offset and context.
     fn commit(&mut self, key: &str, fst: &mut FileState, mut recs: Vec<Rec>) -> Result<()> {
+        // a Codex subagent names its parent thread; its session is the hash
+        // of that thread's rollout path, found among the files tailed
+        if fst.ctx.parent_session == 0 && !fst.ctx.parent_thread.is_empty() {
+            let thread = fst.ctx.parent_thread.as_str();
+            if let Some(p) = self.state.files.keys().find(|k| codex::is_rollout_of(k, thread)) {
+                fst.ctx.parent_session = crate::hash64(p);
+            }
+        }
+        if fst.ctx.parent_session != 0 {
+            for r in recs.iter_mut().filter(|r| r.parent_session == 0) {
+                r.parent_session = fst.ctx.parent_session;
+            }
+        }
         // the recording policy, in parse order (a result follows its call:
         // the result of a withheld call is withheld too); records already
         // stored before a restart are kept as they are

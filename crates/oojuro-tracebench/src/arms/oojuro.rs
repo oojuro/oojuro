@@ -94,6 +94,7 @@ fn to_in<'a>(e: &Event<'a>) -> EventIn<'a> {
     EventIn {
         id: e.id,
         session: e.session,
+        parent_session: 0,
         agent: e.agent,
         turn: e.turn,
         seq: e.seq,

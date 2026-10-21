@@ -4,7 +4,9 @@ use oojuro::{
     config::{self, Config},
     mcp::McpServer,
     paths::{self, Paths},
+    periods::{By, Per, PeriodsArgs},
     timearg::{parse_duration, parse_time},
+    when::{self, Scope, When},
 };
 use std::{
     io::{IsTerminal, Read, Write},
@@ -17,13 +19,16 @@ const USAGE: &str =
     "usage: oojuro [--home DIR] [--store DIR] [--socket PATH] [--config FILE] [--direct] [--json] <command>
 
   remember [--key K] [--writer W] [--at TIME] TEXT...|-    store a note (a key keeps versions; newest wins)
-  search   QUERY...|- [-k N] [--kind K]... [--key K] [--writer W]... [--from T] [--to T] [--as-of T] [--excerpt-bytes N]
+  search   QUERY...|- [-k N] [--kind K]... [--key K] [--writer W]... [--from T] [--to T] [--when PHRASE] [--as-of T] [--excerpt-bytes N]
   get      ID | --key K [--writer W] [--as-of T]           one record, exact
   history  KEY [--writer W]                                every version of a key
-  range    [FROM [TO]] [--kind K]... [--writer W]... [--key K] [--as-of T] [--limit N]
+  range    [FROM [TO]] [--kind K]... [--writer W]... [--key K] [--when PHRASE] [--as-of T] [--limit N]
+  periods  [QUERY...|-] [--by volume|errors|repeat|unusual|text] [--when PHRASE] [--per task|session|writer]
+           [--window 5m|1h|1d] [--writer W]... [-k N] [--samples N] [--include-waiting] [--from T] [--to T]
+                                                           stretches of activity ranked by how they looked
   forget   --id ID | --key K | --older-than T | --last DUR   [--writer W] [--no-proof] [--yes]
   stats                                                    what the journal holds
-  export   [--from T] [--to T] [--kind K]... [--writer W]... [--key K]   JSON lines on stdout
+  export   [--from T] [--to T] [--when PHRASE] [--kind K]... [--writer W]... [--key K]   JSON lines on stdout
   pause | resume                                           stop / restart recording
   inject   on|off [--agent W]                              injection before each turn (Claude Code hooks)
   config   get [KEY] [--agent W] | set KEY VALUE [--project | --agent W] | path
@@ -32,6 +37,9 @@ const USAGE: &str =
   hooks    print                                           the Claude Code settings entry for the hooks
 
 TIME: now, RFC 3339, YYYY-MM-DD, @unix-seconds, or a duration ago (90s, 15m, 1h, 7d).
+PHRASE (--when, in the `timezone` setting or the machine's zone): yesterday, last tuesday afternoon,
+  past 3 days, oct 14, since monday, between X and Y; anchors found by search: before \"deploy\",
+  after the first \"failed test\", the day \"build broke\", around @4211 (--tz Z, --span DUR).
 Writer: --writer, else $OOJURO_WRITER, else human:<user>.";
 
 struct Cli {
@@ -170,6 +178,43 @@ fn settings(cli: &Cli, writer: Option<&str>) -> Result<config::Resolved> {
     Config::discover(&cli.paths.config, &std::env::current_dir()?)?.resolve(writer)
 }
 
+/// The time zone for `--when`: `--tz`, else the `timezone` setting, else the machine's.
+fn tz(cli: &Cli, o: &Opts) -> Result<Option<String>> {
+    if let Some(z) = o.one("--tz") {
+        return Ok(Some(z.to_string()));
+    }
+    let z = settings(cli, None)?.settings.timezone;
+    Ok((!z.is_empty()).then_some(z))
+}
+
+/// Resolve `--when` (if given) and narrow the filters to it; the meaning
+/// is echoed on stderr.
+fn apply_when(cli: &Cli, oj: &Oojuro, o: &Opts, f: &mut Filters) -> Result<Option<When>> {
+    let Some(p) = o.one("--when") else { return Ok(None) };
+    let scope = Scope {
+        writers: f.writers.clone(),
+        outside_context_of: o.one("--outside-context-of").map(str::to_string),
+        span_us: o.one("--span").map(parse_duration).transpose()?,
+        tz: tz(cli, o)?,
+    };
+    let w = oj.when(p, &scope)?;
+    when::narrow(f, &w);
+    eprintln!("when: {}", when_line(&w));
+    Ok(Some(w))
+}
+
+fn when_line(w: &When) -> String {
+    let mut s = format!("{:?} = {} ({})", w.phrase, w.local, w.tz);
+    for a in &w.anchors {
+        s.push_str(&format!("; anchor {:?} = #{} at {} ({})", a.query, a.id, a.ts, a.note));
+    }
+    s
+}
+
+fn local_time(us: i64, tz: &jiff::tz::TimeZone, fmt: &str) -> String {
+    jiff::Timestamp::from_microsecond(us).map(|t| t.to_zoned(tz.clone()).strftime(fmt).to_string()).unwrap_or_default()
+}
+
 fn main() {
     // a hook never fails or blocks the agent: whatever happens, exit 0
     let hook = std::env::args().skip(1).find(|a| !a.starts_with('-')).is_some_and(|c| c == "hook");
@@ -208,19 +253,35 @@ fn run() -> Result<i32> {
         "search" => {
             let o = Opts::parse(
                 a,
-                &["-k", "--kind", "--key", "--writer", "--from", "--to", "--as-of", "--excerpt-bytes"],
+                &[
+                    "-k",
+                    "--kind",
+                    "--key",
+                    "--writer",
+                    "--from",
+                    "--to",
+                    "--as-of",
+                    "--excerpt-bytes",
+                    "--when",
+                    "--tz",
+                    "--span",
+                    "--outside-context-of",
+                ],
                 &[],
             )?;
             let query = text_arg(&o.rest, "query")?;
             let s = settings(&cli, o.all("--writer").first().map(String::as_str))?;
+            let oj = open(&cli);
+            let mut f = filters(&o)?;
+            apply_when(&cli, &oj, &o, &mut f)?;
             let args = SearchArgs {
                 query,
                 k: o.one("-k").map(str::parse).transpose()?.unwrap_or(DEFAULT_K),
-                filters: filters(&o)?,
+                filters: f,
                 excerpt_bytes: o.one("--excerpt-bytes").map(str::parse).transpose()?.unwrap_or(DEFAULT_EXCERPT_BYTES),
                 max_query_bytes: s.settings.max_query_bytes as usize,
             };
-            let refs = open(&cli).search(&args)?;
+            let refs = oj.search(&args)?;
             if cli.json {
                 print_json(&refs)?;
             } else if refs.is_empty() {
@@ -264,8 +325,23 @@ fn run() -> Result<i32> {
             }
         }
         "range" => {
-            let o =
-                Opts::parse(a, &["--from", "--to", "--as-of", "--kind", "--writer", "--key", "--limit"], &["--text"])?;
+            let o = Opts::parse(
+                a,
+                &[
+                    "--from",
+                    "--to",
+                    "--as-of",
+                    "--kind",
+                    "--writer",
+                    "--key",
+                    "--limit",
+                    "--when",
+                    "--tz",
+                    "--span",
+                    "--outside-context-of",
+                ],
+                &["--text"],
+            )?;
             let mut f = filters(&o)?;
             if let Some(x) = o.rest.first() {
                 f.from_us = Some(parse_time(x)?);
@@ -274,7 +350,9 @@ fn run() -> Result<i32> {
                 f.to_us = Some(parse_time(x)?);
             }
             let limit = o.one("--limit").map(str::parse).transpose()?.unwrap_or(100);
-            let v = open(&cli).range(&f, limit)?;
+            let oj = open(&cli);
+            apply_when(&cli, &oj, &o, &mut f)?;
+            let v = oj.range(&f, limit)?;
             if cli.json {
                 print_json(&v)?;
             } else {
@@ -424,11 +502,28 @@ fn run() -> Result<i32> {
             }
         }
         "export" => {
-            let o = Opts::parse(a, &["--from", "--to", "--as-of", "--kind", "--writer", "--key"], &[])?;
-            let f = filters(&o)?;
+            let o = Opts::parse(
+                a,
+                &[
+                    "--from",
+                    "--to",
+                    "--as-of",
+                    "--kind",
+                    "--writer",
+                    "--key",
+                    "--when",
+                    "--tz",
+                    "--span",
+                    "--outside-context-of",
+                ],
+                &[],
+            )?;
+            let mut f = filters(&o)?;
+            let oj = open(&cli);
+            apply_when(&cli, &oj, &o, &mut f)?;
             let out = std::io::stdout();
             let mut w = std::io::BufWriter::new(out.lock());
-            let n = open(&cli).export(&f, &mut |r| {
+            let n = oj.export(&f, &mut |r| {
                 serde_json::to_writer(&mut w, &r)?;
                 w.write_all(b"\n")?;
                 Ok(())
@@ -436,6 +531,7 @@ fn run() -> Result<i32> {
             w.flush()?;
             eprintln!("exported {n} record(s)");
         }
+        "periods" => return periods_cmd(&cli),
         "pause" | "resume" => {
             let paused = cli.cmd == "pause";
             config::set_value(&cli.paths.config, None, config::PAUSED, &toml::Value::Boolean(paused))?;
@@ -571,6 +667,131 @@ fn config_cmd(cli: &Cli) -> Result<i32> {
             }
         }
         Some(other) => return Err(format!("config get|set|path, not {other}").into()),
+    }
+    Ok(0)
+}
+
+fn periods_cmd(cli: &Cli) -> Result<i32> {
+    let o = Opts::parse(
+        &cli.args,
+        &[
+            "--by",
+            "--when",
+            "--per",
+            "--window",
+            "--writer",
+            "-k",
+            "--samples",
+            "--from",
+            "--to",
+            "--tz",
+            "--outside-context-of",
+            "--min-bits",
+        ],
+        &["--include-waiting"],
+    )?;
+    let query = if o.rest.is_empty() { None } else { Some(text_arg(&o.rest, "query")?) };
+    let s = settings(cli, o.all("--writer").first().map(String::as_str))?;
+    let tz = tz(cli, &o)?;
+    let args = PeriodsArgs {
+        query,
+        by: o.one("--by").map(By::parse).transpose()?,
+        per: o.one("--per").map(Per::parse).transpose()?.unwrap_or_default(),
+        window_us: o.one("--window").map(parse_duration).transpose()?,
+        from_us: o.time("--from")?,
+        to_us: o.time("--to")?,
+        when: o.one("--when").map(str::to_string),
+        writers: o.all("--writer"),
+        k: o.one("-k").map(str::parse).transpose()?.unwrap_or(10),
+        samples: o.one("--samples").map(str::parse).transpose()?.unwrap_or(3),
+        include_waiting: o.has("--include-waiting"),
+        outside_context_of: o.one("--outside-context-of").map(str::to_string),
+        tz: tz.clone(),
+        min_bits: o.one("--min-bits").map(str::parse).transpose()?.unwrap_or(s.settings.min_bits),
+        max_query_bytes: s.settings.max_query_bytes as usize,
+    };
+    let r = open(cli).periods(&args)?;
+    if cli.json {
+        print_json(&r)?;
+        return Ok(0);
+    }
+    let z = when::time_zone(tz.as_deref())?;
+    let by = serde_json::to_value(r.by)?.as_str().unwrap_or("").to_string();
+    let per = serde_json::to_value(r.per)?.as_str().unwrap_or("").to_string();
+    println!(
+        "periods by {by}, {} windows per {per}, {} .. {} ({:.1} ms, {} records read)",
+        r.window,
+        local_time(r.from_us, &z, "%Y-%m-%d %H:%M"),
+        local_time(r.to_us, &z, "%Y-%m-%d %H:%M %Z"),
+        r.elapsed_ms,
+        r.scanned
+    );
+    if let Some(w) = &r.when {
+        println!("when: {}", when_line(w));
+    }
+    if r.periods.is_empty() {
+        println!("no periods");
+    }
+    for p in &r.periods {
+        let unit = if p.score_unit == "bits" { "bits" } else { "records" };
+        let who = if p.agent_id.is_empty() {
+            String::new()
+        } else if per == "task" {
+            format!("  task {} ({} agent(s))", p.agent_id, p.agent_count)
+        } else {
+            format!("  agent {}", p.agent_id)
+        };
+        println!(
+            "#{}  {:.1} {unit}  {} .. {} ({:.0} min)  {}{who}",
+            p.rank,
+            p.score,
+            local_time(p.from_us, &z, "%a %Y-%m-%d %H:%M"),
+            local_time(p.to_us, &z, "%H:%M"),
+            p.minutes,
+            p.writers.join(", ")
+        );
+        let mut line = format!(
+            "    {} records, {} calls, {} errors{}, repeats {} stuck / {} waiting{}{}",
+            p.events,
+            p.calls,
+            p.errors,
+            if p.error_bits > 0.0 { format!(" ({:.1} bits)", p.error_bits) } else { String::new() },
+            p.repeats_stuck,
+            p.repeats_waiting,
+            if p.repeat_bits > 0.0 { format!(" ({:.1} bits)", p.repeat_bits) } else { String::new() },
+            if p.repeats_exact { " exact" } else { " (same tool and input length)" },
+        );
+        if p.unusual_bits > 0.0 {
+            let u = &p.unusual;
+            line.push_str(&format!(
+                ", unusual {:.1} bits (rate {:.1}, mix {:.1}, errors {:.1}, new tools {:.1}, size {:.1})",
+                p.unusual_bits, u.rate, u.mix, u.errors, u.new, u.size
+            ));
+        }
+        println!("{line}");
+        if !p.tools.is_empty() {
+            let mut t: Vec<(&String, &u64)> = p.tools.iter().collect();
+            t.sort_by(|a, b| b.1.cmp(a.1));
+            println!("    tools: {}", t.iter().map(|(k, n)| format!("{k} {n}")).collect::<Vec<_>>().join(", "));
+        }
+        if !p.samples.is_empty() {
+            println!(
+                "    samples: {}",
+                p.samples
+                    .iter()
+                    .map(|x| format!(
+                        "#{} {} {}{}",
+                        x.id,
+                        x.why,
+                        x.kind,
+                        if x.tool.is_empty() { String::new() } else { format!(" {}", x.tool) }
+                    ))
+                    .collect::<Vec<_>>()
+                    .join(", ")
+            );
+        }
+        let w = p.writers.first().map(|w| format!(" --writer {w}")).unwrap_or_default();
+        println!("    drill: oojuro range {} {}{w}   (or oojuro get ID)", p.from, p.to);
     }
     Ok(0)
 }

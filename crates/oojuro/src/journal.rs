@@ -247,6 +247,7 @@ impl Owner<'_> {
         let ev = EventIn {
             id,
             session,
+            parent_session: 0,
             agent,
             turn: 0,
             seq: version,
@@ -488,6 +489,8 @@ impl Reader {
             tool: e.tool.clone(),
             session: format!("{:016x}", e.session),
             turn: e.turn,
+            agent_id: format!("{:016x}", e.session),
+            parent_id: self.db.parent_of(e.session).map(|p| format!("{p:016x}")),
             meta,
             text: e.text.clone(),
         }
@@ -577,6 +580,40 @@ impl Reader {
     /// identifier-anchored view (`oojuro_trace::SearchHit::continued`) never
     /// move above that store's anchored hits.
     pub fn search(&self, a: &SearchArgs) -> Result<Vec<Ref>> {
+        let hits = self.search_hits(a)?;
+        let ids: Vec<u64> = hits.iter().map(|h| h.1).collect();
+        let events = self.db.get_many(&ids)?;
+        let pq = prefix(&a.query, 65_536);
+        let mut out = Vec::with_capacity(hits.len());
+        for ((bits, _), e) in hits.iter().zip(events) {
+            let Some(e) = e else { continue }; // deleted meanwhile
+            let rec = self.record(&e);
+            let (start, end) = match oojuro_nine::extract_passage(&e.text, pq, a.excerpt_bytes.max(1)) {
+                Ok(Some(s)) => (s.start, s.end),
+                _ => (0, prefix(&e.text, a.excerpt_bytes.max(1)).len()),
+            };
+            out.push(Ref {
+                id: e.id,
+                writer: rec.writer,
+                kind: rec.kind,
+                key: rec.key,
+                ts_us: e.ts_us,
+                ts: rec.ts,
+                score_bits: *bits,
+                start,
+                end,
+                len: e.text.len(),
+                excerpt: e.text[start..end].to_string(),
+                session: rec.session,
+                turn: rec.turn,
+            });
+        }
+        Ok(out)
+    }
+
+    /// [`Self::search`] without reading any text: the ranked `(bits, id)`
+    /// list (anchors of `--when` and text queries of `periods` use it).
+    pub fn search_hits(&self, a: &SearchArgs) -> Result<Vec<(f64, u64)>> {
         if a.query.trim().is_empty() {
             return Err("empty query".into());
         }

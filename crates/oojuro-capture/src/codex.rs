@@ -99,6 +99,57 @@ fn user_from(meta: &Value) -> &'static str {
     }
 }
 
+/// The thread that spawned a subagent rollout (`source.subagent.thread_spawn.parent_thread_id`).
+fn parent_thread(meta: &Value) -> &str {
+    meta.get("source")
+        .and_then(|x| x.get("subagent"))
+        .and_then(|x| x.get("thread_spawn"))
+        .map(|x| s(x, "parent_thread_id"))
+        .unwrap_or("")
+}
+
+/// The rollout file of a thread: `rollout-<time>-<thread id>.jsonl`.
+pub fn is_rollout_of(path: &str, thread: &str) -> bool {
+    let Some(stem) = Path::new(path)
+        .file_name()
+        .and_then(|n| n.to_str())
+        .and_then(|n| n.strip_prefix("rollout-"))
+        .and_then(|n| n.strip_suffix(".jsonl"))
+    else {
+        return false;
+    };
+    !thread.is_empty() && stem.strip_suffix(thread).is_some_and(|rest| rest.ends_with('-'))
+}
+
+/// Bytes of a tool output's text read for its exit status.
+const STATUS_HEAD: usize = 4096;
+
+/// The status Codex itself reports in a tool output: code mode starts with
+/// `Script failed` or `Script completed`, and shell runs print `Process
+/// exited with code N` / `Exit code: N` lines. Error when the script failed
+/// or a run exited nonzero, ok when it completed and every run exited 0,
+/// else none (no status to read).
+pub fn output_status(text: &str) -> u8 {
+    if text.starts_with("Script failed") {
+        return status::ERROR;
+    }
+    let mut end = text.len().min(STATUS_HEAD);
+    while !text.is_char_boundary(end) {
+        end -= 1;
+    }
+    let mut st = if text.starts_with("Script completed") { status::OK } else { status::NONE };
+    for line in text[..end].lines() {
+        let code = line.strip_prefix("Process exited with code ").or_else(|| line.strip_prefix("Exit code: "));
+        if let Some(code) = code.and_then(|c| c.trim().parse::<i64>().ok()) {
+            if code != 0 {
+                return status::ERROR;
+            }
+            st = status::OK;
+        }
+    }
+    st
+}
+
 /// Parse one complete line (without its newline) of a Codex rollout.
 pub fn parse_line(
     ctx: &mut FileCtx,
@@ -145,6 +196,7 @@ pub fn parse_line(
                 ctx.cwd = cwd.to_string();
                 ctx.user_from = user_from(pl).to_string();
                 ctx.inherit_below = pl.get("subagent_history_start_ordinal").and_then(Value::as_i64).unwrap_or(-1);
+                ctx.parent_thread = parent_thread(pl).to_string();
                 em.emit(ctx, ts, kind::SYSTEM, "", bi, vec![("sub", "system_prompt".into())], status::NONE, "");
             } else {
                 // the parent's meta, repeated inside a subagent rollout
@@ -254,7 +306,8 @@ fn response_item(ctx: &mut FileCtx, pl: &Value, pt: &str, ts: i64, inherited: bo
             if ctx.close_lookup(s(pl, "call_id")) {
                 marker::mark(&mut m, marker::RESULT);
             }
-            em.emit(ctx, ts, kind::TOOL_RESULT, "", &text, base(m), status::NONE, s(pl, "call_id"));
+            let st = output_status(&text);
+            em.emit(ctx, ts, kind::TOOL_RESULT, "", &text, base(m), st, s(pl, "call_id"));
         }
         "local_shell_call" | "web_search_call" | "image_generation_call" | "tool_search_call" => {
             let tool = pt.trim_end_matches("_call");
@@ -317,6 +370,8 @@ mod tests {
         assert_eq!(out[4].tool, "exec");
         assert_eq!(out[4].text, "cargo build");
         assert_eq!(out[5].call_id, "c1");
+        assert_eq!(out[5].status, status::NONE, "no status in this output");
+        assert_eq!(ctx.parent_thread, "");
         assert_eq!(out[6].meta, vec![("sub", "final_answer".to_string())]);
         assert_eq!(pc.noise.get("codex.reasoning_encrypted_only").map(|x| x.0), Some(1));
         assert_eq!(pc.noise.get("codex.event_msg/token_count").map(|x| x.0), Some(1));
@@ -340,6 +395,28 @@ mod tests {
     }
 
     #[test]
+    fn parent_threads_and_the_status_codex_reports() {
+        let lines = [
+            r#"{"timestamp":"2026-01-02T03:04:05Z","type":"session_meta","payload":{"id":"t-child","cwd":"/h/w","originator":"codex-tui","source":{"subagent":{"thread_spawn":{"parent_thread_id":"019a-parent","depth":1}}},"thread_source":"subagent","base_instructions":{"text":"sys"}}}"#,
+            r#"{"timestamp":"2026-01-02T03:04:06Z","type":"response_item","payload":{"type":"custom_tool_call","call_id":"c1","name":"exec","input":"x"}}"#,
+            r#"{"timestamp":"2026-01-02T03:04:07Z","type":"response_item","payload":{"type":"custom_tool_call_output","call_id":"c1","output":[{"type":"input_text","text":"Script completed\nWall time 0.1s"},{"type":"input_text","text":"Process exited with code 0\nok"}]}}"#,
+            r#"{"timestamp":"2026-01-02T03:04:08Z","type":"response_item","payload":{"type":"custom_tool_call_output","call_id":"c2","output":[{"type":"input_text","text":"Script completed"},{"type":"input_text","text":"Process exited with code 101\nerror[E0425]"}]}}"#,
+            r#"{"timestamp":"2026-01-02T03:04:09Z","type":"response_item","payload":{"type":"custom_tool_call_output","call_id":"c3","output":[{"type":"input_text","text":"Script failed\nTypeError"}]}}"#,
+            r#"{"timestamp":"2026-01-02T03:04:10Z","type":"response_item","payload":{"type":"function_call_output","call_id":"c4","output":"Exit code: 2\nWall time: 1s\nOutput:\nboom"}}"#,
+            r#"{"timestamp":"2026-01-02T03:04:11Z","type":"response_item","payload":{"type":"function_call_output","call_id":"c5","output":"plain text, says Exit code: 9 mid-line"}}"#,
+        ];
+        let (ctx, out, _) = run(&lines);
+        assert_eq!(ctx.parent_thread, "019a-parent");
+        let st: Vec<u8> = out.iter().filter(|r| r.kind == kind::TOOL_RESULT).map(|r| r.status).collect();
+        assert_eq!(st, [status::OK, status::ERROR, status::ERROR, status::ERROR, status::NONE]);
+        let dir = "/h/.codex/sessions/2026/01/02";
+        assert!(is_rollout_of(&format!("{dir}/rollout-2026-01-02T03-04-05-019a-parent.jsonl"), "019a-parent"));
+        assert!(!is_rollout_of(&format!("{dir}/rollout-2026-01-02T03-04-05-x019a-parent.jsonl"), "019a-parent"));
+        assert!(!is_rollout_of(&format!("{dir}/rollout-2026-01-02T03-04-05-019a-parent.jsonl"), ""));
+        assert!(!is_rollout_of(&format!("{dir}/notes-019a-parent.jsonl"), "019a-parent"));
+    }
+
+    #[test]
     fn subagent_rollouts_mark_inherited_history() {
         let lines = [
             r#"{"timestamp":"2026-01-02T03:04:05Z","type":"session_meta","payload":{"cwd":"/h/w","originator":"codex-tui","source":{"subagent":{}},"thread_source":"subagent","subagent_history_start_ordinal":3,"base_instructions":{"text":"sys"}}}"#,
@@ -350,6 +427,7 @@ mod tests {
         ];
         let (ctx, out, pc) = run(&lines);
         assert_eq!(ctx.user_from, "parent-agent");
+        assert_eq!(ctx.parent_thread, "", "this rollout names no parent thread");
         assert_eq!(out[1].meta, vec![("from", "inherited".to_string()), ("inh", "1".to_string())]);
         assert_eq!(out[2].meta, vec![("from", "parent-agent".to_string())]);
         assert_eq!(out[3].meta, vec![("from", "agent:/root".to_string())]);

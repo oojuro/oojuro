@@ -66,11 +66,31 @@ pub fn project_of(path: &Path) -> String {
     if n >= 2 { comps[n - 2].clone() } else { "unknown".into() }
 }
 
+/// The transcript of the session that spawned a subagent:
+/// `<project>/<session>/subagents/agent-<id>.jsonl` -> `<project>/<session>.jsonl`.
+pub fn parent_transcript(path: &Path) -> Option<PathBuf> {
+    let sub = path.parent()?;
+    if sub.file_name()? != "subagents" {
+        return None;
+    }
+    let session_dir = sub.parent()?;
+    let name = session_dir.file_name()?.to_str()?;
+    Some(session_dir.parent()?.join(format!("{name}.jsonl")))
+}
+
+/// The session id of the session that spawned the subagent writing
+/// `path` (0 for a top-level transcript): the hash of its transcript path,
+/// as [`new_ctx`] gives it.
+pub fn parent_session(path: &Path) -> u64 {
+    parent_transcript(path).map_or(0, |p| crate::hash64(&p.to_string_lossy()))
+}
+
 /// Context for a new Claude Code transcript.
 pub fn new_ctx(path: &Path) -> FileCtx {
     FileCtx {
         writer: format!("claude-code:{}", project_of(path)),
         session: crate::hash64(&path.to_string_lossy()),
+        parent_session: parent_session(path),
         sidechain: path.components().any(|c| c.as_os_str() == "subagents"),
         inherit_below: -1,
         results_root: Some(project_dir(path)),
@@ -568,6 +588,13 @@ mod tests {
         let (ctx, out, pc, _) = run(p, &lines);
         assert_eq!(ctx.writer, "claude-code:-h-work-demo");
         assert!(ctx.sidechain);
+        // the parent agent instance: the session whose folder holds this subagent
+        let main = "/h/.claude/projects/-h-work-demo/sess.jsonl";
+        assert_eq!(parent_transcript(Path::new(p)).unwrap(), Path::new(main));
+        assert_eq!(ctx.parent_session, crate::hash64(main));
+        assert_eq!(new_ctx(Path::new(main)).session, ctx.parent_session);
+        assert_eq!(new_ctx(Path::new(main)).parent_session, 0, "a top-level session has no parent");
+        assert!(out.iter().all(|r| r.parent_session == ctx.parent_session && r.session == ctx.session));
         assert_eq!(out[0].meta, vec![("from", "parent-agent".to_string())]);
         assert_eq!(out[1].status, status::ERROR);
         assert!(out[1].text.starts_with("boom\n[image:image/png:8B:"));

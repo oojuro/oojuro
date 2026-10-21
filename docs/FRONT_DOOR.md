@@ -15,13 +15,16 @@ model: `docs/DESIGN.md` ("Explicit use", "Settings"). Capture:
 | every version of a key | `history(writer, key)` | `oojuro history KEY` | |
 | a time window (every version, oldest first) | `range(filters, limit)` | `oojuro range [FROM [TO]]` | |
 | proven deletion | `forget(Target, proof)` | `oojuro forget --id \| --key \| --older-than \| --last` | `forget` |
+| periods of activity ranked by errors, stuck loops, unusual, volume or text (query-time) | `periods::periods(Reader, PeriodsArgs)` | `oojuro periods [QUERY] [--by B] [--when P] [--per task\|session\|writer] [--window W] [--writer W]... [-k N] [--samples N] [--include-waiting]` | `periods` |
+| what a date phrase means | `when::resolve_when` | `--when PHRASE` on `search`, `range`, `export`, `periods` | `when` on `search` and `periods` |
 | counts per writer and kind, disk | `stats()` | `oojuro stats` | |
 | everything as JSON lines | `export(filters, sink)` | `oojuro export > out.jsonl` | |
 | recording switch | | `oojuro pause` / `resume` | |
 | settings | `config::{Config, set_value}` | `oojuro inject on\|off`, `oojuro config get\|set\|path` | |
 
 Every CLI command takes `--json`. Times are `now`, RFC 3339, `YYYY-MM-DD`,
-`@unix`, or a duration ago (`1h`, `7d`). MCP: `oojuro mcp` (stdio, JSON-RPC,
+`@unix`, or a duration ago (`1h`, `7d`). `--when` takes a date phrase or an
+anchor (below). MCP: `oojuro mcp` (stdio, JSON-RPC,
 protocol 2025-06-18 and earlier).
 
 **Record.** A writer ID, a valid time (when it happened), a recorded time,
@@ -30,6 +33,14 @@ capture kinds otherwise), tool, sender, source. Search hits (`Ref`) carry
 `id, writer, kind, key, ts, score_bits, start, end, len, excerpt` with
 `text[start..end] == excerpt` (a passage around the best literal or term
 match, `--excerpt-bytes`, default 320).
+
+**Agent id and parent id.** Every agent instance (a session, or one
+subagent) has its own id: records carry `agent_id` (the same 16 hex digits
+as `session`) and `parent_id`, the instance that spawned it, when the
+capture path knows it (Claude Code subagent transcripts, Codex subagent
+rollouts, hooks; `docs/ACTIVITY_SEARCH.md` §11.1). The writer stays the
+memory owner and erasure domain. Trees of instances are computed at query
+time (`periods --per task`).
 
 **Writers.** The CLI writes as `--writer`, else `$OOJURO_WRITER`, else
 `human:<os user>`. The MCP server writes as `$OOJURO_WRITER`, else the
@@ -120,6 +131,7 @@ ranges and edits the file in place, keeping comments.
 | `record_thinking` / `index_thinking` | true / true | recorder: drop thinking / store it unindexed |
 | `exclude` | [] | recorder: path globs never recorded (below) |
 | `max_query_bytes` | 65536 | search (CLI, MCP, library callers pass it) |
+| `timezone` | "" | `--when` phrases and day windows of `periods`: an IANA name; empty = the machine's zone |
 
 The recorder resolves settings per record from its writer and the agent's
 working directory (Claude Code `cwd`, Codex `session_meta.cwd`), re-reads
@@ -135,6 +147,49 @@ cannot be read (a file that does not parse, a bad type or pattern) stop
 recording for the writers they cover and are reported once in the
 recorder's log: the policy fails closed. Withheld records take no id and are
 counted in the stats (`withheld by settings`).
+
+## periods and --when
+
+`periods` finds stretches of time by how the activity looked, as a pure
+query-time function over the record columns (time, kind, tool, status, exit
+code, text length, agent and parent ids): nothing is computed or stored at
+ingest (`docs/ACTIVITY_SEARCH.md` §11).
+
+- `--by errors`: failed tool calls, in bits of surprise against the writer's
+  last 7 days.
+- `--by repeat`: stuck loops, the same call failing again (exact, checked
+  against the calls' texts); `--include-waiting` adds polling.
+- `--by unusual`: rate, tool mix, error rate, new tools and record size
+  against the writer's last 7 days.
+- `--by volume`: most records.
+- `--by text` (or a query alone): where a query's hits are.
+
+Windows are 5 min for errors and repeat, 1 h otherwise (`--window`).
+Coordinator and subagent instances have separate baselines. Periods group a
+task tree (an instance and everything it spawned; `--per session|writer`
+for the others). Each period has its bounds, scores, counts, top tools, the
+contributing instances, sample record ids (open them with `get`), and a
+`range` command to read it. The default period is the last 7 days.
+
+```
+oojuro periods --by repeat --when yesterday
+oojuro periods "migration" --by errors --when "last week" --per session
+oojuro periods --by unusual --writer codex:proj --when "since monday" --json
+```
+
+`--when` (also on `search`, `range`, `export`) takes, in the `timezone`
+setting's zone (else the machine's):
+- date phrases: `yesterday`, `last tuesday afternoon`, `past 3 days`,
+  `oct 14`, `since monday`, `between monday and yesterday`, `7d`;
+- anchors found by searching the journal in time order: `before "deploy"`,
+  `after the first "failed test"`, `the day "build broke"`, `around @4211`,
+  `during the last "release"`. The latest occurrence is used unless
+  `first`/`top` is given, and the answer says which one, with the other
+  occurrences when they fall on several days.
+
+The resolved interval is echoed on stderr (CLI) or returned as `when` (MCP
+`search` and `periods`). MCP: tool `periods` (read-only) with `by`, `query`,
+`when`, `per`, `window`, `writer`, `include_waiting`, `k`, `samples`.
 
 ## forget
 
@@ -159,6 +214,12 @@ calls against `~/.oojuro/journal` fail with "held by another process"
 new kind in the same format; the state file is unchanged; `<store>/LOCK` is
 new).
 
+Agent parents (2026-10-21) need no migration either: an older column
+checkpoint loads (it has no parents section), records written before carry
+no parent field and stay unlinked, and new records of subagents carry one.
+Re-importing the transcripts into a fresh store links the old ones too.
+`periods` and `--when` read only what the store already holds.
+
 ## Tests (`nice -n 19 cargo test -p oojuro -p oojuro-capture -p oojuro-trace`)
 
 Synthetic data only. `oojuro`: API semantics (versions, as-of, filters,
@@ -170,7 +231,12 @@ processes: 4 reader processes (search, range, get, stats in loops) against
 an agent appending split lines and 3 processes writing 8 versions each
 through `remember`, checking every text read back exactly against what was
 written (no torn record), monotonic counts, read latency, and the final
-contents; plus record/pause/exclude/thinking honored end to end. Capture:
+contents; plus record/pause/exclude/thinking honored end to end; `periods`
+on a synthetic 10-day writer with planted episodes (each first by its own
+signal; stuck vs polling vs same-length false repeats; task trees; `when`
+and anchors; forget and reopen), the date grammar (the prototype's 43 cases,
+daylight saving, zones, year wrap, anchor picks), and `--when` / `periods`
+through the CLI and MCP. Capture:
 the policy hook (withheld records take no id; a withheld call's result is
 withheld, also after a restart), explicit records in the id space and
 crash recovery, one owner per store. Trace: delete by id, tombstone replay

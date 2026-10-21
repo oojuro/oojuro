@@ -83,14 +83,15 @@ fn mcp_initialize_list_and_call_every_tool() {
     let list = m.call("tools/list", json!({}));
     let tools = list["result"]["tools"].as_array().unwrap();
     let names: Vec<&str> = tools.iter().map(|t| t["name"].as_str().unwrap()).collect();
-    assert_eq!(names, ["remember", "search", "get", "forget"]);
+    assert_eq!(names, ["remember", "search", "get", "periods", "forget"]);
     for t in tools {
         assert!(t["description"].as_str().unwrap().len() > 80, "describe {}", t["name"]);
         assert_eq!(t["inputSchema"]["type"], "object");
     }
     assert_eq!(tools[0]["inputSchema"]["required"], json!(["text"]));
     assert_eq!(tools[1]["inputSchema"]["required"], json!(["query"]));
-    assert_eq!(tools[3]["annotations"]["destructiveHint"], true);
+    assert_eq!(tools[3]["annotations"]["readOnlyHint"], true);
+    assert_eq!(tools[4]["annotations"]["destructiveHint"], true);
 
     // remember (twice under a key), search, get
     let (e, r1) = m.tool("remember", json!({ "text": "the staging DB lives in us-east-2", "key": "staging-db" }));
@@ -115,6 +116,24 @@ fn mcp_initialize_list_and_call_every_tool() {
     assert_eq!(g["record"]["id"], r1["id"]);
     let (_, g) = m.tool("get", json!({ "id": 999 }));
     assert!(g["record"].is_null());
+
+    // periods, and `when` on search (the resolved interval comes back)
+    let (e, p) = m.tool("periods", json!({ "by": "volume", "when": "today", "per": "writer" }));
+    assert!(!e, "{p}");
+    assert_eq!(p["by"], "volume");
+    assert_eq!(p["window"], "1h");
+    assert_eq!(p["when"]["phrase"], "today");
+    let n: u64 = p["periods"].as_array().unwrap().iter().map(|x| x["events"].as_u64().unwrap()).sum();
+    assert_eq!(n, 3, "the three notes, all today");
+    let (e, msg) = m.tool("periods", json!({ "by": "novelty" }));
+    assert!(e && msg.as_str().unwrap().contains("novelty"), "{msg}");
+    let (e, found) = m.tool("search", json!({ "query": "staging DB", "when": "today" }));
+    assert!(!e && found["when"]["to_us"].as_i64().is_some(), "{found}");
+    assert_eq!(found["results"].as_array().unwrap().len(), 1);
+    let (_, found) = m.tool("search", json!({ "query": "staging DB", "when": "yesterday" }));
+    assert!(found["results"].as_array().unwrap().is_empty());
+    let (e, msg) = m.tool("search", json!({ "query": "staging DB", "when": "purple elephant" }));
+    assert!(e && msg.as_str().unwrap().contains("not a date phrase"), "{msg}");
 
     // tool errors come back as isError results
     let (e, msg) = m.tool("get", json!({}));

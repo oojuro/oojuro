@@ -5,8 +5,10 @@ use crate::{
     Result,
     journal::{self, Journal},
     paths::Paths,
+    periods::{Periods, PeriodsArgs},
     proto::{self, Request},
     types::{Filters, ForgetReport, Record, Ref, Remembered, SearchArgs, Stats, Target},
+    when::{Scope, When},
 };
 use serde::de::DeserializeOwned;
 use serde_json::Value;
@@ -192,6 +194,16 @@ impl Oojuro {
 
     pub fn forget(&self, target: &Target, proof: bool) -> Result<ForgetReport> {
         self.typed(&Request::Forget { target: target.clone(), proof })
+    }
+
+    /// Ranked periods of activity (see [`crate::periods`]).
+    pub fn periods(&self, args: &PeriodsArgs) -> Result<Periods> {
+        self.typed(&Request::Periods(args.clone()))
+    }
+
+    /// What a `--when` phrase means (anchors are searched in `scope`).
+    pub fn when(&self, phrase: &str, scope: &Scope) -> Result<When> {
+        self.typed(&Request::When { phrase: phrase.into(), scope: scope.clone(), min_bits: None })
     }
 
     pub fn count(&self, filters: &Filters) -> Result<u64> {

@@ -211,6 +211,8 @@ pub struct Rec {
     /// Session (hash of the source transcript), sequence in it, and turn
     /// (number of user inputs so far).
     pub session: u64,
+    /// The agent instance (session) that spawned this one, when known (0 = none).
+    pub parent_session: u64,
     pub seq: u32,
     pub turn: u32,
     /// Tool call id linking a call and its result (not stored as text).
@@ -240,6 +242,9 @@ pub struct DirectRec {
     pub status: u8,
     #[serde(default)]
     pub session: u64,
+    /// The agent instance that spawned this one, when the source knows it (0 = none).
+    #[serde(default, skip_serializing_if = "is_zero")]
+    pub parent_session: u64,
     #[serde(default)]
     pub seq: u32,
     #[serde(default)]
@@ -256,6 +261,10 @@ pub struct DirectRec {
     /// Working directory of the agent when known (per-project settings).
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub cwd: String,
+}
+
+fn is_zero(v: &u64) -> bool {
+    *v == 0
 }
 
 impl Rec {
@@ -310,7 +319,17 @@ impl ParseCounts {
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct FileCtx {
     pub writer: String,
+    /// The agent instance this transcript records (hash of its path).
     pub session: u64,
+    /// The agent instance that spawned it (0 = a top-level session or not
+    /// known yet): Claude Code subagents from their path, Codex subagents
+    /// from `parent_thread`.
+    #[serde(default)]
+    pub parent_session: u64,
+    /// Codex: the parent thread id a subagent rollout names (resolved to
+    /// `parent_session` by the capture owner, which knows the rollout files).
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub parent_thread: String,
     /// Records emitted from this file so far (the per-session sequence).
     pub seq: u32,
     /// User inputs seen so far (the turn counter).
@@ -454,6 +473,7 @@ impl Emitter<'_> {
             meta,
             status,
             session: ctx.session,
+            parent_session: ctx.parent_session,
             seq: ctx.seq,
             turn: ctx.turn,
             call_id: call_id.to_string(),

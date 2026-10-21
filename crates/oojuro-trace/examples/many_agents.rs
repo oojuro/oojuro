@@ -42,6 +42,7 @@ fn main() {
                 let e = EventIn {
                     id,
                     session: ag as u64 + 1,
+                    parent_session: 0,
                     agent: ag,
                     turn,
                     seq: turn,

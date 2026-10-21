@@ -24,6 +24,7 @@ fn ev<'a>(id: u64, agent: u32, session: u64, seq: u32, kind: u8, ts: i64, text: 
     EventIn {
         id,
         session,
+        parent_session: 0,
         agent,
         turn: 0,
         seq,

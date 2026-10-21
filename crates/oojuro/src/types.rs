@@ -109,6 +109,13 @@ pub struct Record {
     /// Session (16 hex digits) and turn.
     pub session: String,
     pub turn: u32,
+    /// The agent instance the record belongs to (one session or one
+    /// subagent): the same 16 hex digits as `session`.
+    #[serde(default)]
+    pub agent_id: String,
+    /// The agent instance that spawned it, when recorded.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub parent_id: Option<String>,
     /// Inferred and recorded metadata (sender, source position, ...).
     #[serde(default)]
     pub meta: serde_json::Value,

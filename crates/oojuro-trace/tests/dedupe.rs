@@ -99,6 +99,7 @@ fn events(b: &[Ev]) -> Vec<EventIn<'_>> {
         .map(|e| EventIn {
             id: e.id,
             session: e.session,
+            parent_session: 0,
             agent: e.agent,
             turn: e.turn,
             seq: e.seq,

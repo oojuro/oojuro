@@ -8,7 +8,9 @@ use crate::{
     Result,
     append::NewRecord,
     journal::{Journal, Owner, Reader},
+    periods::{self, PeriodsArgs},
     types::{Filters, SearchArgs, Target},
+    when,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
@@ -78,6 +80,16 @@ pub enum Request {
     Append {
         records: Vec<NewRecord>,
     },
+    /// Ranked periods of activity (query-time; see [`crate::periods`]).
+    Periods(PeriodsArgs),
+    /// What a `--when` phrase means: its interval, and its anchor if any.
+    When {
+        phrase: String,
+        #[serde(default)]
+        scope: when::Scope,
+        #[serde(default)]
+        min_bits: Option<f64>,
+    },
 }
 
 impl Request {
@@ -97,6 +109,14 @@ pub fn read(r: &Reader, req: &Request) -> Result<Value> {
         Request::Range { filters, limit } => serde_json::to_value(r.range(filters, *limit)?)?,
         Request::Stats => serde_json::to_value(r.stats()?)?,
         Request::Count { filters } => serde_json::to_value(r.count(filters)?)?,
+        Request::Periods(a) => serde_json::to_value(periods::periods(r, a)?)?,
+        Request::When { phrase, scope, min_bits } => serde_json::to_value(when::resolve_when(
+            r,
+            phrase,
+            scope,
+            oojuro_capture::time::now_us(),
+            min_bits.unwrap_or(8.0),
+        )?)?,
         Request::Hello
         | Request::Export { .. }
         | Request::Remember { .. }

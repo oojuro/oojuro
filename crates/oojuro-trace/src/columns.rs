@@ -163,6 +163,8 @@ pub(crate) struct ColStore {
     tool_arc: Arc<Vec<String>>,
     pub tool_ids: HashMap<String, u16>,
     pub sessions: HashMap<u64, Vec<u64>>,
+    /// The agent instance (session) that spawned each session that has one.
+    pub parents: HashMap<u64, u64>,
     /// Latest (status, exit, duration) of calls in sealed blocks revised after sealing.
     overrides: HashMap<u64, (u8, i32, i64)>,
     /// Per agent, built on first use (a search hit whose own event is gone)
@@ -205,6 +207,11 @@ fn unzz(v: u64) -> i64 {
 }
 
 const STREAMS: usize = 16;
+
+/// Checkpoint section of session parents (after the blocks; absent in
+/// checkpoints written before agent parents existed, which then load with
+/// none: no record written before them carries one).
+const PARENTS_TAG: &[u8] = b"PRNT";
 
 /// Block layout: slots in row order; deltas are against the previous slot.
 fn encode(cols: &[Col]) -> Box<[u8]> {
@@ -331,6 +338,94 @@ fn decode(bytes: &[u8], first_row: u32) -> Vec<Col> {
     out
 }
 
+/// One slot's fields for query-time analysis (see [`ColStore::scan_agent`]).
+#[derive(Clone, Copy, Default)]
+struct Proj {
+    id: u64,
+    session: u64,
+    call: u64,
+    ts_us: i64,
+    exit: i32,
+    text_len: u32,
+    tool: u16,
+    kind: u8,
+    /// status | revision << 4 | dup << 5 | holder << 6
+    flags: u8,
+}
+
+/// Decodes the streams [`Proj`] needs from sealed blocks, reusing its
+/// buffers from block to block.
+#[derive(Default)]
+struct Projector {
+    dec: Option<zstd::bulk::Decompressor<'static>>,
+    cat: Vec<u8>,
+    rows: Vec<Proj>,
+}
+
+impl Projector {
+    fn decode(&mut self, bytes: &[u8]) -> &[Proj] {
+        let size = zstd::zstd_safe::get_frame_content_size(bytes).ok().flatten().unwrap_or(1 << 20) as usize;
+        self.cat.clear();
+        self.cat.reserve(size);
+        let dec = self.dec.get_or_insert_with(|| zstd::bulk::Decompressor::new().expect("zstd context"));
+        dec.decompress_to_buffer(bytes, &mut self.cat).expect("column block");
+        let cat = &self.cat;
+        let mut p = 0;
+        let n = get(cat, &mut p) as usize;
+        let mut lens = [0usize; STREAMS];
+        for l in &mut lens {
+            *l = get(cat, &mut p) as usize;
+        }
+        let mut starts = [0usize; STREAMS];
+        for i in 0..STREAMS {
+            starts[i] = p;
+            p += lens[i];
+        }
+        self.rows.clear();
+        self.rows.resize(n, Proj::default());
+        let rows = &mut self.rows;
+        let k0 = starts[0];
+        for (k, r) in rows.iter_mut().enumerate() {
+            r.kind = cat[k0 + 2 * k];
+            r.flags = cat[k0 + 2 * k + 1];
+        }
+        let (mut q, mut v) = (starts[1], 0i64);
+        for r in rows.iter_mut() {
+            v = v.wrapping_add(unzz(get(cat, &mut q)));
+            r.id = v as u64;
+        }
+        let (mut q, mut v) = (starts[2], 0i64);
+        for r in rows.iter_mut() {
+            v = v.wrapping_add(unzz(get(cat, &mut q)));
+            r.session = v as u64;
+        }
+        let (mut q, mut v) = (starts[3], 0i64);
+        for r in rows.iter_mut() {
+            v = v.wrapping_add(unzz(get(cat, &mut q)));
+            r.ts_us = v;
+        }
+        let mut q = starts[4];
+        for r in rows.iter_mut() {
+            let x = get(cat, &mut q);
+            r.call = if x == 0 { 0 } else { (r.id as i64).wrapping_sub(unzz(x - 1)) as u64 };
+        }
+        let mut q = starts[7];
+        for r in rows.iter_mut() {
+            let x = get(cat, &mut q);
+            r.exit = if x == 0 { NO_EXIT } else { unzz(x - 1) as i32 };
+        }
+        let mut q = starts[8];
+        for r in rows.iter_mut() {
+            r.tool = get(cat, &mut q) as u16;
+        }
+        let mut q = starts[12];
+        for r in rows.iter_mut() {
+            r.text_len = get(cat, &mut q) as u32;
+        }
+        &self.rows
+    }
+}
+
 fn summarize(cols: &[Col], live: &[u64]) -> Summary {
     let mut tools: HashMap<u16, (u64, u64, i64)> = HashMap::new();
     let mut sessions: HashMap<u64, u64> = HashMap::new();
@@ -391,6 +486,7 @@ impl ColStore {
             tool_arc: Arc::new(Vec::new()),
             tool_ids: HashMap::new(),
             sessions: HashMap::new(),
+            parents: HashMap::new(),
             overrides: HashMap::new(),
             dups: Mutex::new(HashMap::new()),
             dup_slots: 0,
@@ -410,6 +506,13 @@ impl ColStore {
         self.tool_ids.insert(t.to_string(), i);
         self.tool_arc = Arc::new(self.tools.clone());
         i
+    }
+
+    /// Record that `session` was spawned by `parent` (first one wins).
+    pub fn set_parent(&mut self, session: u64, parent: u64) {
+        if parent != 0 && parent != session {
+            self.parents.entry(session).or_insert(parent);
+        }
     }
 
     /// Ids of the duplicates whose text is at `agent`'s engine row `src`.
@@ -690,6 +793,82 @@ impl ColStore {
         }
     }
 
+    /// Live events of one agent with `from <= ts < to`, in slot order, for
+    /// query-time analysis (typed fields only). A sealed block comes from
+    /// the cache when it is there; otherwise only the streams these fields
+    /// need are decoded, into buffers reused across the scan, and nothing
+    /// is added to the cache (a long scan never evicts the blocks other
+    /// reads keep warm).
+    pub fn scan_agent(&self, agent: u32, from: i64, to: i64, mut f: impl FnMut(&crate::ActivityRow)) {
+        let Some(a) = self.agents.get(&agent) else { return };
+        let plain = self.overrides.is_empty();
+        let row = |c: &Col| crate::ActivityRow {
+            id: c.id,
+            session: c.session,
+            call: c.parent,
+            ts_us: c.ts,
+            text_len: c.text_len,
+            exit_code: (c.exit != NO_EXIT).then_some(c.exit),
+            tool: c.tool,
+            kind: c.kind,
+            status: c.status,
+        };
+        let mut proj = Projector::default();
+        for (b, blk) in a.blocks.iter().enumerate() {
+            if blk.zone.max_ts < from || blk.zone.min_ts >= to {
+                continue;
+            }
+            match &blk.data {
+                Data::Hot(v) => {
+                    for c in v {
+                        if c.is_event() && c.ts >= from && c.ts < to {
+                            f(&row(c));
+                        }
+                    }
+                }
+                Data::Sealed(bytes) => {
+                    let cached = self.cache.lock().unwrap().0.get(&(agent, b)).cloned();
+                    if let Some(cols) = cached {
+                        for (k, c) in cols.iter().enumerate() {
+                            if c.kind == EMPTY || c.revision || c.holder || c.ts < from || c.ts >= to {
+                                continue;
+                            }
+                            if blk.live[k / 64] >> (k % 64) & 1 == 0 {
+                                continue;
+                            }
+                            f(&row(&if plain { *c } else { self.view(blk, k, *c) }));
+                        }
+                        continue;
+                    }
+                    for (k, r) in proj.decode(bytes).iter().enumerate() {
+                        if r.kind == EMPTY || r.flags & 0x50 != 0 || r.ts_us < from || r.ts_us >= to {
+                            continue; // empty, revision or holder slots, outside the window
+                        }
+                        if blk.live[k / 64] >> (k % 64) & 1 == 0 {
+                            continue;
+                        }
+                        let mut out = crate::ActivityRow {
+                            id: r.id,
+                            session: r.session,
+                            call: r.call,
+                            ts_us: r.ts_us,
+                            text_len: r.text_len,
+                            exit_code: (r.exit != NO_EXIT).then_some(r.exit),
+                            tool: r.tool,
+                            kind: r.kind,
+                            status: r.flags & 0x0f,
+                        };
+                        if !plain && let Some(&(st, ex, _)) = self.overrides.get(&r.id) {
+                            out.status = st;
+                            out.exit_code = (ex != NO_EXIT).then_some(ex);
+                        }
+                        f(&out);
+                    }
+                }
+            }
+        }
+    }
+
     /// Count live events matching a typed filter: blocks of other agents are
     /// skipped, whole sealed blocks inside the window answer from their
     /// (kind, status, tool) counts, the rest are decoded.
@@ -834,6 +1013,8 @@ impl ColStore {
             ids.retain(|id| !gone.contains(id));
         }
         self.sessions.retain(|_, ids| !ids.is_empty());
+        let sessions = &self.sessions;
+        self.parents.retain(|s, _| sessions.contains_key(s));
         self.reseal(agent);
     }
 
@@ -914,6 +1095,15 @@ impl ColStore {
                     out.extend_from_slice(&w.to_le_bytes());
                 }
             }
+        }
+        // optional trailing section (older checkpoints end before it)
+        out.extend_from_slice(PARENTS_TAG);
+        let mut pairs: Vec<(&u64, &u64)> = self.parents.iter().collect();
+        pairs.sort_unstable();
+        put(&mut out, pairs.len() as u64);
+        for (s, p) in pairs {
+            out.extend_from_slice(&s.to_le_bytes());
+            out.extend_from_slice(&p.to_le_bytes());
         }
         let crc = crc32fast::hash(&out);
         out.extend_from_slice(&crc.to_le_bytes());
@@ -1006,6 +1196,15 @@ impl ColStore {
                 }
             }
             c.agents.insert(agent, a);
+        }
+        if b.len() >= p + PARENTS_TAG.len() && &b[p..p + PARENTS_TAG.len()] == PARENTS_TAG {
+            p += PARENTS_TAG.len();
+            for _ in 0..get(b, &mut p) {
+                let s = u64::from_le_bytes(b[p..p + 8].try_into().unwrap());
+                let par = u64::from_le_bytes(b[p + 8..p + 16].try_into().unwrap());
+                p += 16;
+                c.parents.insert(s, par);
+            }
         }
         for ids in c.sessions.values_mut() {
             ids.sort_unstable();

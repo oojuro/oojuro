@@ -54,6 +54,11 @@ pub struct NewRecord {
     /// hashes it).
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub session: String,
+    /// Session key of the agent instance that spawned this one, hashed like
+    /// `session`. Empty: none, or (Claude Code) derived from a subagent
+    /// transcript path in `session`.
+    #[serde(default, skip_serializing_if = "String::is_empty")]
+    pub parent_session: String,
     /// Links a tool result to its call (stored as `call`).
     #[serde(default, skip_serializing_if = "String::is_empty")]
     pub call_id: String,
@@ -256,6 +261,11 @@ impl Owner<'_> {
                     _ => status::NONE,
                 },
                 session: session_id(&session_key),
+                parent_session: if r.parent_session.is_empty() {
+                    oojuro_capture::claude::parent_session(Path::new(&session_key))
+                } else {
+                    session_id(&r.parent_session)
+                },
                 call_id: r.call_id.clone(),
                 ..Rec::default()
             };
@@ -357,6 +367,7 @@ impl Owner<'_> {
                     EventIn {
                         id: ids[j],
                         session: x.rec.session,
+                        parent_session: x.rec.parent_session,
                         agent: x.agent,
                         turn: x.rec.turn,
                         seq: x.rec.seq,

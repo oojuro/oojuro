@@ -200,7 +200,11 @@ impl Archive for ZstdArchive {
 #[derive(Clone, Copy, Debug)]
 pub struct EventIn<'a> {
     pub id: u64,
+    /// The agent instance (one session or subagent transcript) the event belongs to.
     pub session: u64,
+    /// The agent instance that spawned this one (0 = none or unknown). Kept
+    /// per session ([`TraceDb::parent_of`]); stored only when nonzero.
+    pub parent_session: u64,
     pub agent: u32,
     pub turn: u32,
     pub seq: u32,
@@ -269,6 +273,23 @@ impl EventInfo {
             text_len: c.text_len,
         }
     }
+}
+
+/// A live event's typed fields for query-time analysis ([`TraceDb::scan_agent`]).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ActivityRow {
+    pub id: u64,
+    /// The agent instance (session).
+    pub session: u64,
+    /// The call a tool result answers (0 = none).
+    pub call: u64,
+    pub ts_us: i64,
+    pub text_len: u32,
+    pub exit_code: Option<i32>,
+    /// Tool id ([`TraceDb::tool_names`]).
+    pub tool: u16,
+    pub kind: u8,
+    pub status: u8,
 }
 
 /// One hit of [`TraceDb::search_where`].
@@ -343,10 +364,17 @@ use dedupe::{DupEntry, Src};
 
 fn meta_line(e: &EventIn) -> String {
     let ex = e.exit_code.map(|x| x.to_string()).unwrap_or_default();
-    format!(
+    let mut s = format!(
         "{},{},{},{},{},{},{},{},{},{},{}",
         e.session, e.turn, e.seq, e.parent, e.kind, e.status, ex, e.tokens_in, e.tokens_out, e.duration_us, e.revises
-    )
+    );
+    // the parent agent instance: a 12th field, only when there is one (so
+    // records without one are byte-identical to the 11-field format)
+    if e.parent_session != 0 {
+        use std::fmt::Write;
+        let _ = write!(s, ",{}", e.parent_session);
+    }
+    s
 }
 
 struct Parsed {
@@ -361,11 +389,12 @@ struct Parsed {
     tout: u32,
     duration: i64,
     revises: u64,
+    parent_session: u64,
 }
 
 fn parse_meta(s: &str) -> Result<Parsed> {
     let f: Vec<&str> = s.split(',').collect();
-    if f.len() != 11 {
+    if f.len() != 11 && f.len() != 12 {
         return Err("malformed event metadata".into());
     }
     Ok(Parsed {
@@ -380,6 +409,7 @@ fn parse_meta(s: &str) -> Result<Parsed> {
         tout: f[8].parse()?,
         duration: f[9].parse()?,
         revises: f[10].parse()?,
+        parent_session: if f.len() == 12 { f[11].parse()? } else { 0 },
     })
 }
 
@@ -838,6 +868,9 @@ impl TraceDb {
                 dup: false,
                 holder: false,
             });
+        if p.parent_session != 0 {
+            c.set_parent(p.session, p.parent_session);
+        }
     }
 
     /// Append one turn batch (one agent). Durable and searchable on return.
@@ -1007,6 +1040,7 @@ impl TraceDb {
                 tout: e.tokens_out,
                 duration: e.duration_us,
                 revises: e.revises,
+                parent_session: e.parent_session,
             };
             let row = first_row + k as u32;
             Self::apply_col(&mut c, e.id, agent, slot, row, row, &p, e.tool, e.text.len() as u32, e.ts_us);
@@ -1181,6 +1215,27 @@ impl TraceDb {
     }
 
     /// The engine holding one agent's store, if it exists (probes and tools).
+    /// Every live event of one agent store with `from <= ts < to`, in
+    /// append order (query-time analysis; no text is read).
+    pub fn scan_agent(&self, agent: u32, from: i64, to: i64, f: impl FnMut(&ActivityRow)) {
+        self.cols.read().unwrap().scan_agent(agent, from, to, f);
+    }
+
+    /// Tool names by tool id.
+    pub fn tool_names(&self) -> Arc<Vec<String>> {
+        self.cols.read().unwrap().tool_names()
+    }
+
+    /// The agent instance (session) that spawned `session`, when recorded.
+    pub fn parent_of(&self, session: u64) -> Option<u64> {
+        self.cols.read().unwrap().parents.get(&session).copied()
+    }
+
+    /// Every recorded (session, parent session) link.
+    pub fn session_parents(&self) -> HashMap<u64, u64> {
+        self.cols.read().unwrap().parents.clone()
+    }
+
     pub fn engine(&self, agent: u32) -> Result<Option<Arc<Nine>>> {
         if !self.parts.read().unwrap().contains_key(&agent) && !part_dir(&self.dir, agent).exists() {
             return Ok(None);

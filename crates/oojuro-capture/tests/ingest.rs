@@ -253,6 +253,7 @@ fn explicit_records_share_the_id_space_and_survive_a_crash() {
         let ev = |id: u64, kind_: u8| oojuro_trace::EventIn {
             id,
             session: 77,
+            parent_session: 0,
             agent,
             turn: 0,
             seq: 1,
@@ -390,4 +391,42 @@ fn direct_records_mark_oojuro_echo_as_stored_but_not_indexed() {
     let agent = cap.state.writers[w];
     let hits = cap.db.search(agent, "zebra", i64::MAX, 10).unwrap();
     assert_eq!(hits, vec![rep.first_id], "only the ordinary record is searchable");
+}
+
+#[test]
+fn every_agent_instance_names_its_parent() {
+    let s = Scratch::new("parents");
+    let logs = s.0.join("logs");
+    let main = logs.join(".claude/projects/-h-demo/sess-1.jsonl");
+    let sub = logs.join(".claude/projects/-h-demo/sess-1/subagents/agent-a7.jsonl");
+    append(&main, &turn(1));
+    append(&sub, &turn(2));
+    // Codex: the child rollout names its parent thread; the parent file sorts after it
+    let day = logs.join(".codex/sessions/2026/01/02");
+    let parent = day.join("rollout-2026-01-02T03-04-05-019a-parent.jsonl");
+    let child = day.join("rollout-2026-01-02T03-04-04-019b-child.jsonl");
+    let meta = |id: &str, source: &str| {
+        format!(
+            "{{\"timestamp\":\"2026-01-02T03:04:05Z\",\"type\":\"session_meta\",\"payload\":{{\"id\":\"{id}\",\"cwd\":\"/h/w\",\"originator\":\"codex-tui\",\"source\":{source},\"base_instructions\":{{\"text\":\"sys\"}}}}}}\n"
+        )
+    };
+    let msg = "{\"timestamp\":\"2026-01-02T03:04:06Z\",\"type\":\"response_item\",\"payload\":{\"type\":\"message\",\"role\":\"user\",\"content\":[{\"type\":\"input_text\",\"text\":\"do it\"}]}}\n";
+    append(&parent, &format!("{}{msg}", meta("019a-parent", "\"cli\"")));
+    append(
+        &child,
+        &format!("{}{msg}", meta("019b-child", r#"{"subagent":{"thread_spawn":{"parent_thread_id":"019a-parent","depth":1}}}"#)),
+    );
+    let store = s.0.join("store");
+    let mut cap = Capture::open(&store, opts(Duration::ZERO)).unwrap();
+    cap.poll(&[logs.clone()]).unwrap();
+    let h = |p: &Path| oojuro_capture::hash64(&p.to_string_lossy());
+    assert_eq!(cap.db.parent_of(h(&sub)), Some(h(&main)));
+    assert_eq!(cap.db.parent_of(h(&main)), None);
+    assert_eq!(cap.db.parent_of(h(&child)), Some(h(&parent)));
+    assert_eq!(cap.db.parent_of(h(&parent)), None);
+    // after a restart (the parent link is in every stored record of the instance)
+    drop(cap);
+    let cap = Capture::open(&store, opts(Duration::ZERO)).unwrap();
+    assert_eq!(cap.db.parent_of(h(&sub)), Some(h(&main)));
+    assert_eq!(cap.db.parent_of(h(&child)), Some(h(&parent)));
 }
