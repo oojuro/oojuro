@@ -244,7 +244,10 @@ anything else of ours runs, is equal to 0.5%: this change does not touch
 search). Disk size is the same to 0.01%.
 
 **Cost and risk.** A relaxed repeat's read does one more record read (its
-host's entry list; cached per call for session reads). New writes of captured
+host's entry list; cached per call for session reads) and a read of its text
+row's frame: item 4 measures what that costs on this sample (a one-hour window
+of 400 events reads about 1.7 ms longer at p50, and `query_threads` brings the
+mean back under `main`'s). New writes of captured
 records compute the split and keep the BLAKE3 they already did. Search now
 returns the earliest live copy of a text on the recorder path too (the P1
 semantics, "identical texts are one search document"); `forget` of one copy
@@ -370,3 +373,96 @@ rounds and better in one) are inside the spread of the `main` series itself
 (3.25-9.64 ms): no change is claimed in either direction, and the thread-CPU
 search probe, which does not wait for anything, shows none.
 
+
+## Item 4. Read paths we lose on
+
+`tracebench reads` on tier 1 (Oojuro / SQLite / Postgres, from `TRACK_TRACEDB`):
+single-record `get` 0.146 / 0.009 / 0.039 ms, 1-hour `time_range` 4.8 / 1.4-3.0 ms.
+
+**Where the time goes** (a throwaway build with timers, not kept; tier-1 store,
+one thread, load about 8). A cold `get` of an event, p50 100 us: column lookup
+1 us (its p90 is 96 us: the first touch of each sealed column block), store
+lookup 0.1 us, **reading the row from the archive 99 us (99%)**, decoding the
+record 0.6 us, building the event 0.2 us. A row read is the frame: read and
+CRC-check about 20 KB, decompress 64 KiB with zstd and the dictionary, check
+the BLAKE3 of the 64 KiB (13 us). `frame_probe` on a run file with no cache,
+random rows, load 5: **a whole-frame read 74-90 us, a read of only the frame's
+bytes up to the row 55-62 us, and even a read that needs one byte of the row
+55 us**: 55 us is the floor of any cold frame access (read, CRC, meta,
+decoder state), whatever is decoded after it. A repeated get of the same id is
+0.4 us (decoded-frame cache), so a cache cannot help random ids and
+already serves repeated ones. A 1-hour `time_range` of ~980 events costs
+0.31 ms (column scan) + 0.04 ms (sort) + 5.3 ms fetching: about 37 frames
+(26 events a frame), each read once; 0.6 us per event for everything that is
+not a frame read. So both reads lose to SQLite and Postgres on frame
+decompression, which they do not have (their pages are not compressed).
+
+**Changes** (`oojuro-nine`, `oojuro-trace`):
+
+- `Run::get_point`: a lone `get` / `text_range` decodes only the frame's bytes
+  up to the row and skips the frame digest (`Nine::record_at_point`); a batch
+  read keeps decoding and caching whole frames for the neighbouring rows. A
+  frame decoded in part is decoded whole by the next batch that needs it.
+- `EventOut` takes the record's text instead of cloning it.
+- Reads of many rows (`time_range`, `session`, `export`) cut the (agent, row)
+  order into contiguous runs and give them to `query_threads` threads (default
+  1: unchanged); a frame at a cut may be read by both sides.
+- The provenance of a relaxed repeat (item 2) is found by scanning its host's
+  entry list for the ids wanted, instead of decoding every entry of the list
+  (the first version of item 2 measured a p99 of 2.25 ms for a `get` on the
+  real sample, against 0.47 ms on `main`).
+
+**Measurements.** `read_probe` (3,000 random event ids, then 300 one-hour
+windows, limit 1000, on the tier-1 store `main` built; `main` and this branch
+alternating over the same ids, 8 pairs, load 4; median (min-max)):
+
+| tier-1 (no repeats) | `main` | this branch |
+|---|---:|---:|
+| cold `get` p50 ms | 0.098 (0.093-0.236) | **0.083 (0.081-0.086)** |
+| ... mean / p99 ms | 0.107 / 0.324 | 0.097 / 0.283 |
+| 1-hour `time_range` p50 / mean ms | 3.98 / 3.94 | 3.97 / 4.08 |
+
+The cold `get` is faster in 8 of 8 pairs (-15% p50, -10% mean, -13% p99); the
+`time_range` with one thread is equal (the spread of `main` alone is 3.7-4.6).
+With `query_threads` of 1 / 2 / 4 / 8 (this branch, 6 seeds, load 9) the same
+`time_range` has p50 5.10 / 3.24 / 2.49 / 2.03 ms and p99 13.4 / 7.8 / 5.9 /
+6.0 ms. The official suite (`tracebench reads`, `main` and this branch
+alternating, 4 rounds, load 3-10; the store is loaded in the same process):
+
+| `reads` suite | `main` | this branch |
+|---|---:|---:|
+| `get` p50 / mean / p99 ms | 0.184 (0.174-0.188) / 0.174 / 0.377 | 0.161 (0.160-0.250) / 0.165 / 0.410 |
+| `get_range_512` p50 ms | 0.167 (0.158-0.177) | 0.151 (0.142-0.242) |
+| `time_range_1h_1000` p50 / p99 ms | 6.12 (5.63-6.63) / 11.1 | 6.57 (5.70-7.86) / 16.0 |
+| `session` p50 ms | 0.413 (0.351-0.450) | 0.444 (0.381-0.789) |
+
+`get` and `get_range_512` are 9-12% faster in three of four rounds (the fourth
+round, at load 9.7, was slower for both); `time_range` and `session` are not
+changed by this branch with one thread, and the 6.12 vs 6.57 ms difference is
+inside `main`'s own spread. They remain 2-4 times SQLite's: that is frame
+decompression (above).
+
+**What item 2 costs to read.** The real 30-day sample store (12% of its events
+are repeats whose text lives in an earlier frame), same probe, `main`'s store
+read by `main`, this branch's store read by this branch, 6 pairs, load 4:
+
+| real sample | `main` | this branch |
+|---|---:|---:|
+| cold `get` p50 / mean / p99 ms | 0.084 / 0.115 / 0.479 | 0.070 / 0.116 / 0.669 |
+| 1-hour `time_range` (400 events) p50 / mean ms | 0.94 / 4.17 | 2.66 / 6.21 |
+| ... with `query_threads` 4 / 8: p50 / mean ms | | 2.00 / 3.56, 1.67 / 3.08 |
+
+A repeat is read from two frames, its text row's (an older one, usually not
+cached) and its host's entry list; a one-hour window holds about 48 repeats,
+so it can read up to some 48 more frames than the store without them (1.7 ms
+longer at p50, 2 ms at the mean). This is the price of storing a text once, paid at
+read time only for repeats; with `query_threads` of 4 or more the mean is back
+under `main`'s. It is the reason item 2 saves 7% of the bytes but is not free.
+
+**Not done, and why.** A larger decoded-frame cache (random ids have no
+locality; a repeated id already costs 0.4 us); smaller frames or an
+uncompressed hot tier (the ratio and the file format; the floor of 55 us per
+cold frame is the decoder and CRC setup); dropping the BLAKE3 digest on full
+frame reads (13 us of ~80, the only check of the decoded body, and a lone read
+no longer pays it); matching SQLite's 9 us (a page-cache hit on uncompressed
+data) is not reachable with compressed 64 KiB frames.
