@@ -141,3 +141,113 @@ crates/oojuro-trace crates/oojuro-tracebench` is empty), so ingest commits/s and
 p99, turn-loop p50/p99, the search probe, the retrieval evals and disk size
 cannot differ and were not re-run for this item. Single-store append: unchanged
 (above).
+
+## Item 2. Dedupe key without `src` and `rt`
+
+**Finding.** Record dedupe (`PERF_STORE` P1) compares (indexing class, tool,
+args, text). Every captured record's args carry its own source position
+(`src`) and receive time (`rt`), so on the recorder path no two records were
+ever equal: on a 30-day export of a real recorded journal (323,006 records,
+866 MB of export), **0** records deduplicated, and all of the first-copy
+bookkeeping paid for by P1 (window, entries) did nothing. (The same study on a
+60-day export found 12.3% would repeat without the two values.)
+
+**Change** (`oojuro-trace`: `dedupe.rs`, `lib.rs`, `columns.rs`).
+
+- The comparison leaves out the *values* of the top-level `src` and `rt`
+  members (replaced by `0` before hashing). Only args in the exact form
+  capture writes them take part: a `src` that is a string of digits and
+  colons, an integer `rt`, each once at the top level. Anything else
+  (no such members, other forms, duplicate members, nested ones, not JSON)
+  compares whole, exactly as before: TraceBench events and every store that
+  never had `src` / `rt` behave byte for byte as on `main`.
+- A repeat keeps its own `src` and `rt` as two more fields of its entry in the
+  host record's `B` list (`rt` delta-coded), and a read puts them back into the
+  args of the record that holds the text, so every event reads back with
+  exactly the args it was appended with (checked byte for byte by the tests
+  below). Crash recovery reads `src` through `get`, so a repeat is found by its
+  own position and is not appended twice.
+- A holder (the text row of a deleted event that live repeats still use) keeps
+  neither value of the deleted event. Reclaim carries the repeats' provenance
+  when it rewrites entry lists (erase and rewrite modes).
+- One more flag on the column slot (bit 7 of the status byte; absent = 0 in old
+  checkpoints, which stay readable).
+
+**Format.** Stores written by `main` open unchanged (their entries have no
+provenance). Entries with provenance (17 fields instead of 15) are not
+readable by older binaries; stores that never got a relaxed repeat are
+unchanged. `crates/oojuro-trace/tests/compat.rs` opens a store written by
+`main` (fixture, 140 KB), gets the answers `main` gave, and appends,
+flushes, merges, deduplicates repeats of the old texts and erases on top of
+it.
+
+**Tests.**
+`dedupe.rs` (unit): split / apply / key round trips and 13 shapes that must
+compare whole. `tests/dedupe.rs`: the existing erase/rewrite-mode gates run a
+second time with captured-style args on every record (dedupe ratio, exact
+reads of every event including its own `src` and `rt`, reopen, rebuild without
+a checkpoint, delete, reclaim, holders, last reference dying, no text left in
+any file), plus nine pairs of args forms (two that relax, seven that must compare whole), read back exactly after a reopen and a rebuild. `oojuro-capture`
+`repeated_texts_store_once_and_a_crash_still_neither_duplicates_nor_loses`:
+five turns whose tool output repeats, a crash before the state save, restart:
+all 15 records keep their own source position, 15 are skipped on re-read, only
+the new turn is stored. `crates/oojuro/tests/duplicates.rs`: four copies of one
+tool result through `Owner::append` store one text and keep four receive times;
+`forget` of the first copy hands the text to the next (search too), the proof
+holds at every step, a reopen answers the same, and when the last copy goes the
+text is in no file.
+
+**Measurement.** The real 30-day sample replayed into a fresh store with the
+recorder's options (`examples/replay_export.rs`, sequential, 8 batches per
+call), sizes after settling merges (MB; the 67.1 MB shared-log files are the
+same in both and left out):
+
+| | `main` | this branch | change |
+|---|---:|---:|---:|
+| engine records stored | 323,006 | 284,673 | -11.9% (38,333 repeats) |
+| index (`index`) | 66.5 | 61.0 | **-8.3%** |
+| originals (`archive`) | 132.2 | 123.2 | **-6.8%** |
+| column checkpoint | 2.0 | 2.3 | +0.3 |
+| total without the log | 200.7 | 186.4 | **-7.1%** |
+
+Two runs of each give the same sizes (the replay is sequential, so the result
+is deterministic). The fraction found matches the earlier study (12.3% of 60
+days). TraceBench data has no `src` / `rt`: with a deterministic load
+(`searchprobe build --load-threads 1`) the tier-1 stores of `main` and of this
+branch have byte-identical files except one agent's two last segments (merge
+timing), the 30,905 tier-1 turn-loop queries return identical ranked ids and
+score bits (`prefix_compare.py`: 30,905 identical, 0 continued, 0 other), and
+this branch reading the store `main` built answers identically too (30,905
+identical).
+
+**Guard metrics** (TraceBench `base1m`, `main` and this branch alternating, 5
+rounds each (turn loop 5), median (min-max); the machine carried 6-11 of other
+load, which dominates the tails):
+
+| metric | `main` | this branch |
+|---|---:|---:|
+| ingest, shared log (16 writers, 30,000 batches): commits/s | 11,760 (9,690-12,600) | 12,410 (7,031-12,660) |
+| ... p50 / p99 ms | 0.88 (0.86-1.02) / 1.62 (1.49-4.30) | 0.87 (0.86-1.33) / 2.05 (1.52-10.2) |
+| ... disk bytes | 100,676,881 | 100,676,881 |
+| ingest, `log=private`: commits/s | 3,674 (2,963-3,800) | 3,762 (3,441-4,078) |
+| ... p50 / p99 ms | 2.53 (2.20-2.71) / 15.96 (9.7-25.8) | 2.40 (2.08-2.80) / 9.6 (7.3-14.2) |
+| search probe, tier 1, 1,000 turn-loop queries, one thread: p50 / p99 ms (thread CPU) | 1.049 (1.013-1.151) / 1.911 (1.852-2.159) | 1.044 (1.009-1.156) / 2.006 (1.877-2.101) |
+| turn loop (16 writers): turn p50 ms | 3.90 (3.01-4.84) | 4.26 (3.59-4.62) |
+| ... turn p99 ms | 92 (11-121) | 22 (12.9-298) |
+| ... search top-20 p50 / p99 ms | 1.89 (1.73-2.07) / 5.15 (4.52-7.13) | 1.99 (1.85-2.09) / 6.12 (5.28-8.28) |
+| ... disk bytes | 350,252,923 | 350,232,032 |
+
+Every min-max range overlaps: the differences in the tails
+(ingest p99, turn p99, top-20 p99) go in both directions between rounds and
+are load, not code (the one-thread search probe, which does not run while
+anything else of ours runs, is equal to 0.5%: this change does not touch
+search). Disk size is the same to 0.01%.
+
+**Cost and risk.** A relaxed repeat's read does one more record read (its
+host's entry list; cached per call for session reads). New writes of captured
+records compute the split and keep the BLAKE3 they already did. Search now
+returns the earliest live copy of a text on the recorder path too (the P1
+semantics, "identical texts are one search document"); `forget` of one copy
+keeps the text while another copy is live (the proof counts live copies). A
+journal written after this change should not be opened by a build from before
+it once a repeat with provenance exists.
