@@ -19,11 +19,11 @@ in your own agents and products, commercial or not, is and stays free.
 
 ## Trademarks
 
-"Oojuro" and its logos are trademarks of the Oojuro project. The Apache-2.0 license grants rights to the
+"Oojuro" and its logos are trademarks of Oojuro, Inc. The Apache-2.0 license grants rights to the
 code, not to the name (see section 6 of the license). Hosted services built on this code must not be
 called "Oojuro" or imply endorsement.
 
 ## Contributing
 
-Contributions are accepted under the license of the directory they change (inbound = outbound), with a
-Developer Certificate of Origin sign-off (`git commit -s`).
+Contributions are accepted under Apache-2.0 (inbound = outbound) with a Developer Certificate of Origin
+sign-off (`git commit -s`). There is no CLA.
