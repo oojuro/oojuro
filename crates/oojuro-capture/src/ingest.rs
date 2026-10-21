@@ -402,6 +402,18 @@ impl Capture {
         }
     }
 
+    /// Save the state when records were committed and `save_every` has passed
+    /// since the last save. Records are found again after a crash by probing
+    /// the ids past the saved `next_id` (see [`Capture::open`]), so a state a
+    /// little behind the data costs nothing but a longer probe, while every
+    /// save is two flushes (the file and its directory).
+    pub fn save_if_due(&mut self) -> Result<()> {
+        if self.dirty && self.last_save.elapsed() >= self.opts.save_every {
+            self.save()?;
+        }
+        Ok(())
+    }
+
     /// Save the state when records were committed since the last save.
     pub fn save_if_dirty(&mut self) -> Result<()> {
         if self.dirty {

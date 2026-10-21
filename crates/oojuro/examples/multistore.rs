@@ -7,7 +7,7 @@
 //! parallel, or two builds) can be compared exactly.
 //!
 //! Usage: multistore --dir DIR [--stores 4] [--appends 300] [--batch 3]
-//!                   [--repeat 25] [--text 400] [--mode parallel|serial]
+//!                   [--repeat 25] [--text 400] [--writers 3] [--mode parallel|serial]
 //!                   [--threads N] [--label L] [--out FILE.jsonl]
 //!
 //! `--repeat P`: P percent of the records reuse an earlier dedupe key of
@@ -42,6 +42,8 @@ struct Work {
     batch: usize,
     repeat: u64,
     text: usize,
+    /// Writers (agent stores) per journal; a call's records spread over them.
+    writers: u64,
 }
 
 /// Record `b` of append `a` of store `s`.
@@ -57,7 +59,7 @@ fn record(w: &Work, s: usize, a: usize, b: usize) -> NewRecord {
         text.push_str(&format!("w{:x} ", x & 0xfffff));
     }
     NewRecord {
-        writer: format!("agent{}", source % 3),
+        writer: format!("agent{}", source % w.writers),
         kind: "tool_result".into(),
         ts_us: 1_800_000_000_000_000 + (a * w.batch + b) as i64 * 1000,
         text,
@@ -106,6 +108,7 @@ fn main() {
         batch: flag(&v, "--batch").map_or(3, |x| x.parse().unwrap()),
         repeat: flag(&v, "--repeat").map_or(25, |x| x.parse().unwrap()),
         text: flag(&v, "--text").map_or(400, |x| x.parse().unwrap()),
+        writers: flag(&v, "--writers").map_or(3, |x| x.parse().unwrap()),
     };
     let serial = flag(&v, "--mode").is_some_and(|m| m == "serial");
     let threads: usize = flag(&v, "--threads").map_or(stores, |x| x.parse().unwrap()).max(1);

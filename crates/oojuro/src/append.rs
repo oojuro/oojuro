@@ -393,7 +393,10 @@ impl Owner<'_> {
             start = end;
         }
         if !ready.is_empty() {
-            self.cap.save_if_dirty()?;
+            // Not a save per call: each is two flushes on top of the one that
+            // makes the batch durable, the recorder's loop saves every pass,
+            // `close` saves, and a crash costs only a longer probe at open.
+            self.cap.save_if_due()?;
         }
         let keys: Vec<(u64, u64)> =
             ready.iter().enumerate().filter_map(|(j, x)| x.dedupe.map(|h| (h, ids[j]))).collect();

@@ -97,3 +97,66 @@ fn the_cache_survives_a_reopen_and_is_per_open() {
     let mut j = Journal::open(&d.path("s")).unwrap();
     assert_eq!(j.owner().append(&r()).unwrap().deduped, 1, "a restarted owner still knows the key");
 }
+
+/// A copy of a store as it lies on disk (without the lock file).
+fn copy_store(from: &Path, to: &Path) {
+    std::fs::create_dir_all(to).unwrap();
+    for e in std::fs::read_dir(from).unwrap().flatten() {
+        let (p, t) = (e.path(), to.join(e.file_name()));
+        if e.file_name() == "LOCK" {
+            continue;
+        }
+        if p.is_dir() {
+            copy_store(&p, &t);
+        } else {
+            std::fs::copy(&p, &t).unwrap();
+        }
+    }
+}
+
+/// Each save of the capture state is two flushes (the file and its directory);
+/// an append call already pays one flush per writer store for its records. A
+/// restarted owner finds records past the saved state by probing ids, so the
+/// state is saved when `save_every` has passed, on close and for a new writer,
+/// not on every call.
+#[test]
+fn an_append_call_saves_the_capture_state_only_when_it_is_due() {
+    use std::time::Duration;
+    let next_id_on_disk = |store: &Path| -> u64 {
+        let v: serde_json::Value = serde_json::from_slice(&std::fs::read(store.join("capture-state.json")).unwrap()).unwrap();
+        v["next_id"].as_u64().unwrap()
+    };
+    let d = Scratch::new("savestate");
+    // never due within the test: the state follows only the new writer and the close
+    let mut o = oojuro::journal::store_options();
+    o.save_every = Duration::from_secs(3600);
+    let mut j = Journal::open_with(&d.path("lazy"), o).unwrap();
+    for i in 0..5 {
+        let out = j.owner().append(&[rec("w", format!("result {i}"), format!("k{i}"))]).unwrap();
+        assert_eq!(out.ids, vec![i + 1]);
+    }
+    assert_eq!(next_id_on_disk(&d.path("lazy")), 1, "no save per call (the writer was registered at id 1)");
+    // a crash now: the files as they are (no close, no drop) open with every record
+    copy_store(&d.path("lazy"), &d.path("crashed"));
+    let mut c = Journal::open(&d.path("crashed")).unwrap();
+    for id in 1..=5u64 {
+        assert_eq!(c.reader().get_id(id).unwrap().unwrap().text, format!("result {}", id - 1));
+    }
+    assert_eq!(c.owner().append(&[rec("w", "next".into(), "k7".into())]).unwrap().ids, vec![6], "ids continue");
+    assert_eq!(c.owner().append(&[rec("w", "result 3".into(), "k3".into())]).unwrap().deduped, 1, "so do the store-once keys");
+    drop(c);
+    j.close().unwrap();
+    assert_eq!(next_id_on_disk(&d.path("lazy")), 6, "close saves");
+    let mut j = Journal::open(&d.path("lazy")).unwrap();
+    assert_eq!(j.owner().append(&[rec("w", "after".into(), "k9".into())]).unwrap().ids, vec![6]);
+    drop(j);
+
+    // always due: every call saves, as before
+    let mut o = oojuro::journal::store_options();
+    o.save_every = Duration::ZERO;
+    let mut j = Journal::open_with(&d.path("eager"), o).unwrap();
+    for i in 0..3 {
+        j.owner().append(&[rec("w", format!("result {i}"), format!("k{i}"))]).unwrap();
+        assert_eq!(next_id_on_disk(&d.path("eager")), i + 2);
+    }
+}
