@@ -1,0 +1,16 @@
+{
+  "prior_native_revision": "ecd7eadfc8b211707e8f216f745f23f76d8dbd09",
+  "scope_native_revision": "6f468a26544ef18f27a7a3a64b7f5eedd41818d3",
+  "prior_binary_sha256": "A61C15C141C8B4E5443417F09D9529EE6A620E7F7BAA2923EFB6E6A9F382F0F4",
+  "scope_binary_sha256": "E19EB8AE8C2DE9FAF09D76C051D40922C77FE14FDEA75ABF975CA030B42A7CD1",
+  "common_beir_harness_sha256": "E8225797EFD50BC6BBD9CC19FE0B2E938DD181983F4F2AFAD54ED7E946FAA22F",
+  "prior_model": "dirichlet-128-v1",
+  "scope_model": "dirichlet-scope-128-v1",
+  "all_canonical_queries": 1406,
+  "unavailable_positive_pairs_retained": 5,
+  "query_text_or_individual_ranks_inspected_before_runs": false,
+  "common_harness_revision": "cca09cfc6a98046f16f33854f88fd0f5dc3975a9",
+  "all_queries_included_verified": true,
+  "all_unavailable_positives_count_as_misses_verified": true,
+  "identical_sql_audit_packets": 1406
+}

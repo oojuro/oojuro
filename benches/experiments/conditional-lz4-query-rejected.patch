@@ -1,0 +1,296 @@
+diff --git a/Cargo.lock b/Cargo.lock
+index e0b1a48..2b5d6ea 100644
+--- a/Cargo.lock
++++ b/Cargo.lock
+@@ -3385,0 +3386 @@ dependencies = [
++ "lz4_flex 0.11.6",
+diff --git a/crates/oojuro-lab/Cargo.toml b/crates/oojuro-lab/Cargo.toml
+index d8da1f8..c63d814 100644
+--- a/crates/oojuro-lab/Cargo.toml
++++ b/crates/oojuro-lab/Cargo.toml
+@@ -16,0 +17 @@ blake3.workspace = true
++lz4_flex.workspace = true
+diff --git a/crates/oojuro-lab/src/main.rs b/crates/oojuro-lab/src/main.rs
+index acf78b2..08afd3e 100644
+--- a/crates/oojuro-lab/src/main.rs
++++ b/crates/oojuro-lab/src/main.rs
+@@ -6,0 +7 @@ use std::{
++mod conditional_compression;
+diff --git a/crates/oojuro-lab/src/nine_scale.rs b/crates/oojuro-lab/src/nine_scale.rs
+index 50fb2d8..c7ef511 100644
+--- a/crates/oojuro-lab/src/nine_scale.rs
++++ b/crates/oojuro-lab/src/nine_scale.rs
+@@ -344,0 +345,2 @@ struct Pair {
++    conditional_compression: bool,
++    compression_totals: crate::conditional_compression::Totals,
+@@ -378,0 +381,2 @@ impl Pair {
++            conditional_compression: false,
++            compression_totals: Default::default(),
+@@ -392,0 +397,2 @@ impl Pair {
++            conditional_compression: false,
++            compression_totals: Default::default(),
+@@ -467 +473 @@ impl Pair {
+-        let (ids, lengths): (Vec<_>, Vec<_>) = references
++        let (mut ids, lengths): (Vec<_>, Vec<_>) = references
+@@ -470,0 +477,8 @@ impl Pair {
++        if native && self.conditional_compression {
++            ids = crate::conditional_compression::order(
++                &self.nine,
++                &c.question,
++                ids,
++                &mut self.compression_totals,
++            )?;
++        }
+@@ -1072,0 +1087,5 @@ pub(super) fn requery(args: &[String]) -> Result<()> {
++    let conditional_compression = args.iter().any(|a| a == "--conditional-compression");
++    pair.conditional_compression = conditional_compression;
++    if conditional_compression && excerpt_bytes.is_none() {
++        return Err("conditional compression screen requires excerpts".into());
++    }
+@@ -1110,0 +1130 @@ pub(super) fn requery(args: &[String]) -> Result<()> {
++    let compression_totals = serde_json::to_value(&pair.compression_totals)?;
+@@ -1123 +1143 @@ pub(super) fn requery(args: &[String]) -> Result<()> {
+-        &json!({"scope":"verified frozen-corpus requery","context_encoding":if shared_context{"exact-shared-text-v1"}else{"flat-snippets-v1"},"context_limit_unit":if shared_context{"distinct_text_blocks"}else{"source_origins"},"context_decode_validation_timed":shared_context,"retrieval_model":oojuro_nine::RETRIEVAL_MODEL,"retrieval_count_model":oojuro_nine::RETRIEVAL_COUNT_MODEL,"retrieval_normalization":oojuro_nine::RETRIEVAL_NORMALIZATION,"passage_model":oojuro_nine::PASSAGE_MODEL,"shared_query_stopwords":shared_stopwords,"sqlite_porter":sqlite_porter, "excerpt_bytes":excerpt_bytes,"sqlite_runtime":sqlite_runtime,"sqlite_native_snippet_tokens":if sqlite_native_snippet{Some(64)}else{None},"sqlite_expansion_inside_sql":sqlite_native_snippet,"sqlite_full_body_fallbacks":sqlite_full_body_fallbacks,"sqlite_max_native_snippet_bytes":SQLITE_SNIPPET_LIMIT,"sqlite_large_source_streams":sqlite_large_source_streams,"rust_declaration_query_policy":rust_queries,"sqlite_identifier_rrf":sqlite_identifiers, "native_stats_before_queries":stats, "source_archive_digest":source_digest, "cases_digest":cases_digest, "exact_record_cross_checks":cross_checks, "corpus_controls":controls, "embedding_calls":0, "llm_calls":0,
++        &json!({"scope":"verified frozen-corpus requery","conditional_compression_screen":conditional_compression,"conditional_compression_totals":compression_totals,"conditional_compression_receipt_boundary":"laboratory rerank after base engine receipt; no complete modified-engine latency claim","context_encoding":if shared_context{"exact-shared-text-v1"}else{"flat-snippets-v1"},"context_limit_unit":if shared_context{"distinct_text_blocks"}else{"source_origins"},"context_decode_validation_timed":shared_context,"retrieval_model":oojuro_nine::RETRIEVAL_MODEL,"retrieval_count_model":oojuro_nine::RETRIEVAL_COUNT_MODEL,"retrieval_normalization":oojuro_nine::RETRIEVAL_NORMALIZATION,"passage_model":oojuro_nine::PASSAGE_MODEL,"shared_query_stopwords":shared_stopwords,"sqlite_porter":sqlite_porter, "excerpt_bytes":excerpt_bytes,"sqlite_runtime":sqlite_runtime,"sqlite_native_snippet_tokens":if sqlite_native_snippet{Some(64)}else{None},"sqlite_expansion_inside_sql":sqlite_native_snippet,"sqlite_full_body_fallbacks":sqlite_full_body_fallbacks,"sqlite_max_native_snippet_bytes":SQLITE_SNIPPET_LIMIT,"sqlite_large_source_streams":sqlite_large_source_streams,"rust_declaration_query_policy":rust_queries,"sqlite_identifier_rrf":sqlite_identifiers, "native_stats_before_queries":stats, "source_archive_digest":source_digest, "cases_digest":cases_digest, "exact_record_cross_checks":cross_checks, "corpus_controls":controls, "embedding_calls":0, "llm_calls":0,
+diff --git a/crates/oojuro-lab/src/conditional_compression.rs b/crates/oojuro-lab/src/conditional_compression.rs
+new file mode 100644
+--- /dev/null
++++ b/crates/oojuro-lab/src/conditional_compression.rs
+@@ -0,0 +1,237 @@
++//! Laboratory-only conditional code ordering; no changes to engine receipts.
++use oojuro_core::Result;
++use oojuro_nine::{Nine, TextSlice};
++use serde::Serialize;
++
++const WINDOW: usize = 8192;
++const TAIL: usize = 12;
++
++#[derive(Default, Serialize)]
++pub(super) struct Totals {
++    pub queries: usize,
++    pub evaluated_candidates: usize,
++    pub dictionary_bytes: usize,
++    pub candidates_with_savings: usize,
++    pub queries_with_savings: usize,
++    pub sum_saved_bits: usize,
++}
++fn gamma(n: usize) -> usize {
++    assert!(n > 0);
++    2 * (usize::BITS - n.leading_zeros() - 1) as usize + 1
++}
++fn padded(query: &str) -> Vec<u8> {
++    let mut bytes = query.as_bytes().to_vec();
++    bytes.resize(bytes.len() + TAIL, 0);
++    bytes
++}
++fn independent_bits(input: &[u8]) -> usize {
++    8 * lz4_flex::block::compress_prepend_size(input).len()
++}
++fn code_bits(input: &[u8], independent: usize, dictionary: &[u8], location: usize) -> usize {
++    let conditional = 8 * lz4_flex::block::compress_prepend_size_with_dict(input, dictionary).len();
++    1 + independent.min(conditional + location)
++}
++
++/// Stable permutation of caller-supplied, already time-filtered candidates.
++pub(super) fn order(
++    nine: &Nine,
++    query: &str,
++    ids: Vec<String>,
++    totals: &mut Totals,
++) -> Result<Vec<String>> {
++    if ids.len() > 512 || query.len() > 65_536 {
++        return Err("conditional compression screen bounds exceeded".into());
++    }
++    let trimmed = query.trim();
++    if trimmed.is_empty()
++        || (trimmed.starts_with('"') && trimmed.ends_with('"'))
++        || trimmed.starts_with("key:")
++        || trimmed.contains('_')
++        || ids
++            .iter()
++            .any(|id| nine.record(id).is_some_and(|r| r.key == query))
++    {
++        return Ok(ids);
++    }
++    let input = padded(query);
++    let independent = independent_bits(&input);
++    let mut scored = Vec::with_capacity(ids.len());
++    let mut savings = false;
++    for (rank, id) in ids.into_iter().enumerate() {
++        let body = nine
++            .read(&id)
++            .ok_or("compression candidate source missing")?;
++        let slice = if body.len() <= WINDOW {
++            TextSlice {
++                start: 0,
++                end: body.len(),
++                text: body,
++            }
++        } else {
++            nine.passage(&id, query, WINDOW)?
++                .ok_or("compression dictionary range missing")?
++        };
++        let location = if body.len() <= WINDOW {
++            0
++        } else {
++            gamma(slice.start + 1) + gamma(slice.end - slice.start + 1)
++        };
++        let code = code_bits(&input, independent, slice.text.as_bytes(), location);
++        let saved = independent + 1 - code;
++        totals.evaluated_candidates += 1;
++        totals.dictionary_bytes += slice.text.len();
++        totals.candidates_with_savings += usize::from(saved > 0);
++        totals.sum_saved_bits += saved;
++        savings |= saved > 0;
++        scored.push((code, rank, id));
++    }
++    totals.queries += 1;
++    totals.queries_with_savings += usize::from(savings);
++    scored.sort_unstable_by(|a, b| a.0.cmp(&b.0).then_with(|| a.1.cmp(&b.1)));
++    Ok(scored.into_iter().map(|(_, _, id)| id).collect())
++}
++
++#[cfg(test)]
++mod tests {
++    use super::*;
++
++    #[test]
++    fn padded_query_codes_recover_exact_utf8_and_include_window_address() -> Result<()> {
++        for query in [
++            "",
++            "q",
++            "東京 🦀 exact query",
++            "a moderately long unique query phrase ending in zirconium",
++        ] {
++            let input = padded(query);
++            let base = lz4_flex::block::compress_prepend_size(&input);
++            assert_eq!(lz4_flex::block::decompress_size_prepended(&base)?, input);
++            for dictionary in [
++                b"".as_slice(),
++                query.as_bytes(),
++                b"irrelevant dictionary bytes",
++            ] {
++                let compressed =
++                    lz4_flex::block::compress_prepend_size_with_dict(&input, dictionary);
++                let restored =
++                    lz4_flex::block::decompress_size_prepended_with_dict(&compressed, dictionary)?;
++                assert_eq!(&restored[..restored.len() - TAIL], query.as_bytes());
++                assert!(restored[restored.len() - TAIL..].iter().all(|b| *b == 0));
++                let standalone = 8 * base.len();
++                let conditional = 8 * compressed.len();
++                assert_eq!(
++                    code_bits(&input, standalone, dictionary, 17),
++                    1 + standalone.min(conditional + 17)
++                );
++                assert_eq!(
++                    code_bits(&input, standalone, dictionary, standalone),
++                    1 + standalone
++                );
++            }
++        }
++        assert_eq!(
++            [
++                gamma(1),
++                gamma(2),
++                gamma(3),
++                gamma(4),
++                gamma(8),
++                gamma(8193)
++            ],
++            [1, 3, 3, 5, 7, 27]
++        );
++        Ok(())
++    }
++
++    #[test]
++    fn exact_dictionary_can_save_bits_and_offset_penalty_is_real() {
++        let query =
++            "zirconium quasar willow garnet cobalt raven unique consequence orbital mechanism";
++        let input = padded(query);
++        let baseline = independent_bits(&input);
++        let exact = code_bits(&input, baseline, query.as_bytes(), 0);
++        assert!(exact < baseline + 1);
++        assert!(code_bits(&input, baseline, query.as_bytes(), 60) > exact);
++        assert_eq!(code_bits(&input, baseline, b"unrelated", 0), baseline + 1);
++    }
++
++    #[test]
++    fn order_is_stable_and_only_permutes_the_eligible_pool() -> Result<()> {
++        use oojuro_core::{Engine, Query, Record};
++        let parent = std::env::temp_dir();
++        let path = parent.join(format!(
++            "nine-compression-{}-{}",
++            std::process::id(),
++            std::time::SystemTime::now()
++                .duration_since(std::time::UNIX_EPOCH)?
++                .as_nanos()
++        ));
++        let result = (|| -> Result<()> {
++            let mut db = Nine::open(&path)?;
++            let text =
++                "zirconium quasar willow garnet cobalt raven unique consequence orbital mechanism";
++            db.insert(Record::new("exact", "original", text, 1))?;
++            db.insert(Record::new("old", "revision", text, 0))?;
++            db.insert(Record::new(
++                "current",
++                "revision",
++                &format!("quasar {} zirconium", "different ".repeat(40)),
++                1,
++            ))?;
++            let mut q = Query::new(text, 2);
++            q.k = 512;
++            let ids: Vec<_> = db
++                .search_refs(&q, i64::MIN)?
++                .matches
++                .into_iter()
++                .map(|m| m.id)
++                .collect();
++            assert_eq!(ids.len(), 2);
++            assert!(!ids.iter().any(|id| id == "old"));
++            let mut totals = Totals::default();
++            let sorted = order(&db, text, ids.clone(), &mut totals)?;
++            let set = |ids: &[String]| {
++                ids.iter()
++                    .cloned()
++                    .collect::<std::collections::BTreeSet<_>>()
++            };
++            assert_eq!(set(&sorted), set(&ids));
++            assert_eq!(sorted[0], "exact");
++            assert_eq!(totals.evaluated_candidates, 2);
++            assert!(totals.candidates_with_savings > 0);
++            assert_eq!(order(&db, "q", ids.clone(), &mut Totals::default())?, ids);
++            for query in [
++                "",
++                "\"exact phrase\"",
++                "some_identifier",
++                "key:original",
++                "original",
++            ] {
++                let mut skipped = Totals::default();
++                assert_eq!(order(&db, query, ids.clone(), &mut skipped)?, ids);
++                assert_eq!(skipped.evaluated_candidates, 0);
++            }
++            db.insert(Record::new("future", "later", text, 20))?;
++            let mut late = Record::new("late", "late-arrival", text, 1);
++            late.recorded_at = 20;
++            db.insert(late)?;
++            let after: Vec<_> = db
++                .search_refs(&q, i64::MIN)?
++                .matches
++                .into_iter()
++                .map(|m| m.id)
++                .collect();
++            assert_eq!(after, ids);
++            assert_eq!(order(&db, text, after, &mut Totals::default())?, sorted);
++            assert!(order(&db, text, vec!["exact".into(); 513], &mut Totals::default()).is_err());
++            assert!(order(&db, &"q".repeat(65_537), ids, &mut Totals::default()).is_err());
++            Ok(())
++        })();
++        if let (Ok(target), Ok(parent)) = (path.canonicalize(), parent.canonicalize()) {
++            if target.parent() == Some(parent.as_path()) {
++                std::fs::remove_dir_all(target)?;
++            }
++        }
++        result
++    }
++}

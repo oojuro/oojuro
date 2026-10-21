@@ -1,0 +1,463 @@
+commit 49ccf4933e2cdc290333fd416135cad7ef6b6d8f
+Author: oojuro developers
+Date:   Tue Oct 20 16:21:29 2026 -0400
+
+    Archive option: P-frames (zstd prefix = raw body of the most-referenced I-frame)
+    
+    Roles are fixed before compression (a P-frame's reference is never a
+    P-candidate), both encodings are tried in parallel and the P-frame is kept
+    when >= 3% smaller and verified against its reference. Reads decode at most
+    one extra frame through the cache. Off by default (Options::pframes).
+
+diff --git a/crates/oojuro-store/src/bin/store-bench.rs b/crates/oojuro-store/src/bin/store-bench.rs
+index 94c7758..20d0fb5 100644
+--- a/crates/oojuro-store/src/bin/store-bench.rs
++++ b/crates/oojuro-store/src/bin/store-bench.rs
+@@ -4,7 +4,7 @@
+ //!   store-bench read  <dir> [queries]      fresh-process open time, RSS, excerpt latency
+ //!
+ //! Options come from the environment (defaults = `Options::default()`):
+-//! HOT_LEVEL, COLD_LEVEL, COLD_FRAME, DICT, DICT_AFTER, CACHE, DEDUPE, DEDUPE_WINDOW, THREADS, SYNC_BATCHES
++//! HOT_LEVEL, COLD_LEVEL, COLD_FRAME, DICT, DICT_AFTER, CACHE, DEDUPE, DEDUPE_WINDOW, THREADS, PFRAMES, SYNC_BATCHES
+ //! (leading batches appended with fdatasync; the rest load unsynced),
+ //! COMPACT (0/1 at the end), COMPACT_EVERY (raw bytes between compactions).
+ //! Synthetic clocks: valid_at = recorded_at = session * 100_000 + turn.
+@@ -32,6 +32,7 @@ fn options() -> Options {
+         dedupe_chunk: env("DEDUPE", d.dedupe_chunk),
+         dedupe_window: env("DEDUPE_WINDOW", d.dedupe_window),
+         compact_threads: env("THREADS", d.compact_threads),
++        pframes: env("PFRAMES", 0u8) == 1,
+         ..d
+     }
+ }
+diff --git a/crates/oojuro-store/src/format.rs b/crates/oojuro-store/src/format.rs
+index 83f793b..4751294 100644
+--- a/crates/oojuro-store/src/format.rs
++++ b/crates/oojuro-store/src/format.rs
+@@ -32,6 +32,10 @@ pub const CODEC_RAW: u8 = 0;
+ pub const CODEC_LZ4: u8 = 1;
+ pub const CODEC_ZSTD: u8 = 2;
+ pub const HAS_DIGEST: u8 = 0x80;
++/// Head flag: the zstd body was compressed against the raw body of an earlier
++/// frame (a P-frame); `prefix varint` = first_seq delta to that frame, which
++/// never has a prefix itself.
++pub const HAS_PREFIX: u8 = 0x40;
+ /// Record flag: text is a piece list (see module docs).
+ pub const PIECES: u8 = 0x80;
+ pub const MAX_FRAME: usize = 64 << 20;
+@@ -280,12 +284,14 @@ pub struct FrameHead {
+     pub raw_len: u32,
+     pub meta_len: u32,
+     pub digest: Option<[u8; 16]>,
++    /// P-frame: first_seq delta to the I-frame whose raw body is the zstd prefix.
++    pub prefix: Option<u64>,
+     /// Offset of the packed body inside the payload.
+     pub body_at: u32,
+ }
+ 
+ pub fn put_head(out: &mut Vec<u8>, h: &FrameHead) {
+-    out.push(h.codec | if h.digest.is_some() { HAS_DIGEST } else { 0 });
++    out.push(h.codec | if h.digest.is_some() { HAS_DIGEST } else { 0 } | if h.prefix.is_some() { HAS_PREFIX } else { 0 });
+     put_varint(out, h.dict as u64);
+     put_varint(out, h.first_seq);
+     put_varint(out, h.count as u64);
+@@ -294,6 +300,9 @@ pub fn put_head(out: &mut Vec<u8>, h: &FrameHead) {
+     if let Some(d) = h.digest {
+         out.extend_from_slice(&d);
+     }
++    if let Some(p) = h.prefix {
++        put_varint(out, p);
++    }
+ }
+ 
+ pub fn get_head(payload: &[u8]) -> Result<FrameHead> {
+@@ -314,14 +323,24 @@ pub fn get_head(payload: &[u8]) -> Result<FrameHead> {
+     } else {
+         None
+     };
++    let prefix = if flags & HAS_PREFIX != 0 {
++        let p = get_varint(payload, &mut at)?;
++        if p == 0 || p > first_seq {
++            return Err(Error::Corrupt("prefix out of range"));
++        }
++        Some(p)
++    } else {
++        None
++    };
+     Ok(FrameHead {
+-        codec: flags & !HAS_DIGEST,
++        codec: flags & !(HAS_DIGEST | HAS_PREFIX),
+         dict,
+         first_seq,
+         count: count as u32,
+         raw_len: raw_len as u32,
+         meta_len: meta_len as u32,
+         digest,
++        prefix,
+         body_at: at as u32,
+     })
+ }
+diff --git a/crates/oojuro-store/src/store.rs b/crates/oojuro-store/src/store.rs
+index 2e98009..9e77789 100644
+--- a/crates/oojuro-store/src/store.rs
++++ b/crates/oojuro-store/src/store.rs
+@@ -62,6 +62,9 @@ pub struct Options {
+     pub dedupe_window: u64,
+     /// Threads compressing compacted frames (output is identical for any value).
+     pub compact_threads: usize,
++    /// Archive option: let a compacted frame use the raw body of the frame it
++    /// references most (same compaction) as a zstd prefix when that is smaller.
++    pub pframes: bool,
+ }
+ 
+ impl Default for Options {
+@@ -78,6 +81,7 @@ impl Default for Options {
+             dedupe_chunk: 1024,
+             dedupe_window: 1 << 30,
+             compact_threads: 4,
++            pframes: false,
+         }
+     }
+ }
+@@ -129,6 +133,8 @@ pub struct CompactStats {
+     pub frames: usize,
+     /// Text bytes stored as references to earlier literal bytes.
+     pub ref_bytes: u64,
++    /// Frames compressed against an earlier frame (archive `pframes` option).
++    pub pframes: usize,
+     pub seconds: f64,
+ }
+ 
+@@ -287,6 +293,7 @@ fn pack_body(
+         raw_len: body.len() as u32,
+         meta_len: meta_len as u32,
+         digest: digest.then(|| digest16(body)),
++        prefix: None,
+         body_at: 0,
+     };
+     let data = packed.as_deref().unwrap_or(body);
+@@ -296,6 +303,44 @@ fn pack_body(
+     Ok(payload)
+ }
+ 
++/// P-frame payload: zstd against `reference` (raw body of an earlier I-frame)
++/// as prefix, no dictionary; `delta` = first_seq distance to that frame.
++#[allow(clippy::too_many_arguments)]
++fn pack_body_prefix(level: i32, first_seq: u64, count: usize, body: &[u8], meta_len: usize, delta: u64, reference: &[u8]) -> Result<Vec<u8>> {
++    let mut c = zstd_safe::CCtx::create();
++    c.set_parameter(zstd_safe::CParameter::CompressionLevel(level)).map_err(zerr)?;
++    c.set_parameter(zstd_safe::CParameter::ContentSizeFlag(false)).map_err(zerr)?;
++    c.set_parameter(zstd_safe::CParameter::DictIdFlag(false)).map_err(zerr)?;
++    c.set_parameter(zstd_safe::CParameter::Format(zstd_safe::FrameFormat::Magicless)).map_err(zerr)?;
++    c.ref_prefix(reference).map_err(zerr)?;
++    let mut z = Vec::with_capacity(zstd_safe::compress_bound(body.len()));
++    c.compress2(&mut z, body).map_err(zerr)?;
++    let head = FrameHead {
++        codec: CODEC_ZSTD,
++        dict: 0,
++        first_seq,
++        count: count as u32,
++        raw_len: body.len() as u32,
++        meta_len: meta_len as u32,
++        digest: Some(digest16(body)),
++        prefix: Some(delta),
++        body_at: 0,
++    };
++    let mut payload = Vec::with_capacity(z.len() + 48);
++    put_head(&mut payload, &head);
++    payload.extend_from_slice(&z);
++    Ok(payload)
++}
++
++fn unpack_prefix(packed: &[u8], raw_len: usize, reference: &[u8]) -> Result<Vec<u8>> {
++    let mut d = zstd_safe::DCtx::create();
++    d.set_parameter(zstd_safe::DParameter::Format(zstd_safe::FrameFormat::Magicless)).map_err(zerr)?;
++    d.ref_prefix(reference).map_err(zerr)?;
++    let mut out = Vec::with_capacity(raw_len);
++    d.decompress(&mut out, packed).map_err(zerr)?;
++    Ok(out)
++}
++
+ type ChunkTable = HashMap<u128, (u64, u32)>;
+ 
+ fn chunk_hash(b: &[u8]) -> u128 {
+@@ -746,6 +791,23 @@ impl Store {
+                 }
+                 (meta_of(&body)?, body)
+             }
++            CODEC_ZSTD if head.prefix.is_some() => {
++                // P-frame: decode the reference I-frame first (cached), then this frame.
++                let target = head.first_seq - head.prefix.unwrap();
++                let ri = self.frame_index(target)?;
++                if self.frames[ri].first_seq != target {
++                    return Err(Error::Corrupt("prefix does not name a frame"));
++                }
++                let reference = self.decoded_with(ri, None)?;
++                if reference.body.len() != self.frames[ri].raw_len as usize {
++                    return Err(Error::Corrupt("prefix frame incomplete"));
++                }
++                let body = unpack_prefix(packed, raw_len, &reference.body)?;
++                if body.len() != raw_len {
++                    return Err(Error::Corrupt("frame body length"));
++                }
++                (meta_of(&body)?, body)
++            }
+             CODEC_ZSTD => {
+                 let mut rc = self.read.lock().unwrap();
+                 let dctx = match rc.dctx.entry(head.dict) {
+@@ -1030,6 +1092,8 @@ impl Store {
+             lo: i64,
+             hi: i64,
+             first_seq: u64,
++            /// Referenced bytes per target frame first_seq (P-frame votes).
++            votes: HashMap<u64, u64>,
+         }
+         let mut planned: Vec<Planned> = Vec::new();
+         let (mut seq, mut at, mut raw_total, mut ref_bytes) = (first_seq, 0, 0u64, 0u64);
+@@ -1037,6 +1101,7 @@ impl Store {
+             // One frame: records until `cold_frame_bytes` literal bytes.
+             let mut members: Vec<(usize, Vec<Piece>, Vec<u8>)> = Vec::new();
+             let mut pending: Vec<(u128, u32)> = Vec::new();
++            let mut votes: HashMap<u64, u64> = HashMap::new();
+             let mut lit_total = 0usize;
+             while at < rows.len() && (members.is_empty() || lit_total < self.opts.cold_frame_bytes) {
+                 let text = &rows[at].3;
+@@ -1049,6 +1114,7 @@ impl Store {
+                             Some(&(f, off)) => {
+                                 pieces.push(Piece::Ref { frame_delta: seq - f, at: off, len: c.length as u32 });
+                                 ref_bytes += c.length as u64;
++                                *votes.entry(f).or_default() += c.length as u64;
+                             }
+                             None => {
+                                 pending.push((h, (lit_total + lit.len()) as u32));
+@@ -1079,13 +1145,33 @@ impl Store {
+             let (body, meta_len) = encode_records(&recs);
+             let (lo, hi) = recs.iter().fold((i64::MAX, i64::MIN), |(lo, hi), r| (lo.min(r.valid_at), hi.max(r.valid_at)));
+             raw_total += recs.iter().map(|r| r.text_len as u64).sum::<u64>();
+-            planned.push(Planned { body, meta_len, count: recs.len(), lo, hi, first_seq: seq });
++            planned.push(Planned { body, meta_len, count: recs.len(), lo, hi, first_seq: seq, votes });
+             for (h, off) in pending {
+                 table.entry(h).or_insert((seq, off));
+             }
+             seq += recs.len() as u64;
+         }
+         drop(table);
++        // P-frame roles, decided before compression: a frame may use the frame
++        // of this compaction it references most as prefix, if that frame is not
++        // itself a P-candidate and the references cover >= 5% of its body.
++        let mut prefix_of: Vec<Option<usize>> = vec![None; planned.len()];
++        if self.opts.pframes {
++            let index_of: HashMap<u64, usize> = planned.iter().enumerate().map(|(i, p)| (p.first_seq, i)).collect();
++            for i in 0..planned.len() {
++                let best = planned[i]
++                    .votes
++                    .iter()
++                    .filter_map(|(f, n)| index_of.get(f).map(|&r| (*n, r)))
++                    .filter(|&(_, r)| r < i && prefix_of[r].is_none())
++                    .max();
++                if let Some((n, r)) = best {
++                    if n * 20 >= planned[i].body.len() as u64 {
++                        prefix_of[i] = Some(r);
++                    }
++                }
++            }
++        }
+         let threads = self.opts.compact_threads.max(1).min(planned.len().max(1));
+         let level = self.opts.cold_level;
+         let dict_ref = new_dict.as_deref();
+@@ -1106,7 +1192,19 @@ impl Store {
+                         let i = next.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
+                         let Some(p) = planned.get(i) else { break };
+                         let r = (|| {
+-                            let payload = pack_body(Some(&mut cctx), dict_id, p.first_seq, p.count, &p.body, p.meta_len, true)?;
++                            let mut payload = pack_body(Some(&mut cctx), dict_id, p.first_seq, p.count, &p.body, p.meta_len, true)?;
++                            if let Some(ri) = prefix_of[i] {
++                                let reference = &planned[ri].body;
++                                let delta = p.first_seq - planned[ri].first_seq;
++                                let pp = pack_body_prefix(level, p.first_seq, p.count, &p.body, p.meta_len, delta, reference)?;
++                                if pp.len() * 100 <= payload.len() * 97 {
++                                    let head = get_head(&pp)?;
++                                    if unpack_prefix(&pp[head.body_at as usize..], p.body.len(), reference)? != p.body {
++                                        return Err(Error::Codec("compacted P-frame failed verification"));
++                                    }
++                                    return Ok(pp);
++                                }
++                            }
+                             let head = get_head(&payload)?;
+                             // Verify the frame decodes to the exact body before it is written.
+                             if head.codec == CODEC_ZSTD {
+@@ -1116,6 +1214,7 @@ impl Store {
+                                     return Err(Error::Codec("compacted frame failed verification"));
+                                 }
+                             }
++                            payload.shrink_to_fit();
+                             Ok(payload)
+                         })();
+                         *results[i].lock().unwrap() = Some(r);
+@@ -1130,8 +1229,10 @@ impl Store {
+         out.write_all(&file_head(COLD_MAGIC, seg_id, first_seq))?;
+         let mut entries = Vec::new();
+         let mut offset = FILE_HEAD as u64;
++        let mut pframes = 0;
+         for (p, r) in planned.iter().zip(results) {
+             let payload = r.into_inner().unwrap().ok_or(Error::Codec("compaction worker failed"))??;
++            pframes += usize::from(get_head(&payload)?.prefix.is_some());
+             let frame = seal_frame(&payload);
+             out.write_all(&frame)?;
+             entries.push((payload.len() as u32, p.count as u32, p.body.len() as u32, p.lo, p.hi, offset, p.first_seq));
+@@ -1192,6 +1293,7 @@ impl Store {
+             cold_bytes_after: std::fs::metadata(&path)?.len(),
+             frames: entries.len(),
+             ref_bytes,
++            pframes,
+             seconds: t.elapsed().as_secs_f64(),
+         })
+     }
+diff --git a/crates/oojuro-store/tests/store.rs b/crates/oojuro-store/tests/store.rs
+index 2a2f2d6..0e22c33 100644
+--- a/crates/oojuro-store/tests/store.rs
++++ b/crates/oojuro-store/tests/store.rs
+@@ -352,3 +352,44 @@ fn dedupe_references_roundtrip_across_segments() {
+     assert!(errors > 0);
+     let _ = std::fs::remove_dir_all(&dir);
+ }
++
++/// Near-duplicates (one edited line per copy) that exact chunk dedupe misses.
++fn near_duplicates(n: usize) -> Vec<Rec> {
++    let base: Vec<String> = (0..400).map(|i| format!("    {i:4}\tvalue_{} = compute(alpha, beta_{}, gamma)\n", i * 7 % 13, i % 11)).collect();
++    (0..n)
++        .map(|k| {
++            let mut lines = base.clone();
++            lines[(k * 37) % 400] = format!("    edit {k}: changed line\n");
++            lines[(k * 91 + 5) % 400] = format!("    another {k}\n");
++            (4u8, 1_700_000_000 + k as i64, Vec::new(), lines.concat().into_bytes())
++        })
++        .collect()
++}
++
++#[test]
++fn pframes_roundtrip_and_stay_deterministic() {
++    let recs = near_duplicates(80);
++    let o = Options { pframes: true, cold_frame_bytes: 16 << 10, ..opts() };
++    let mut images = Vec::new();
++    for n in 0..2 {
++        let dir = temp(&format!("pframes{n}"));
++        let mut s = Store::open(&dir, Options { compact_threads: [1, 3][n], ..o.clone() }).unwrap();
++        append_all(&mut s, &recs, 2);
++        let st = s.compact().unwrap();
++        assert!(st.pframes > 0, "{st:?}");
++        check_all(&s, &recs);
++        drop(s);
++        let s = Store::open(&dir, o.clone()).unwrap();
++        check_all(&s, &recs);
++        drop(s);
++        let mut files: Vec<(String, Vec<u8>)> = std::fs::read_dir(&dir)
++            .unwrap()
++            .map(|e| e.unwrap().path())
++            .map(|p| (p.file_name().unwrap().to_string_lossy().into_owned(), std::fs::read(&p).unwrap()))
++            .collect();
++        files.sort();
++        images.push(files);
++        let _ = std::fs::remove_dir_all(&dir);
++    }
++    assert_eq!(images[0], images[1]);
++}
+diff --git a/crates/oojuro-store/src/bin/store-bench.rs b/crates/oojuro-store/src/bin/store-bench.rs
+index 20d0fb5..6664af8 100644
+--- a/crates/oojuro-store/src/bin/store-bench.rs
++++ b/crates/oojuro-store/src/bin/store-bench.rs
+@@ -32,7 +32,7 @@ fn options() -> Options {
+         dedupe_chunk: env("DEDUPE", d.dedupe_chunk),
+         dedupe_window: env("DEDUPE_WINDOW", d.dedupe_window),
+         compact_threads: env("THREADS", d.compact_threads),
+-        pframes: env("PFRAMES", 0u8) == 1,
++        pframes: env("PFRAMES", 0u32),
+         ..d
+     }
+ }
+diff --git a/crates/oojuro-store/src/store.rs b/crates/oojuro-store/src/store.rs
+index 855a9b7..7000c9d 100644
+--- a/crates/oojuro-store/src/store.rs
++++ b/crates/oojuro-store/src/store.rs
+@@ -62,9 +62,10 @@ pub struct Options {
+     pub dedupe_window: u64,
+     /// Threads compressing compacted frames (output is identical for any value).
+     pub compact_threads: usize,
+-    /// Archive option: let a compacted frame use the raw body of the frame it
+-    /// references most (same compaction) as a zstd prefix when that is smaller.
+-    pub pframes: bool,
++    /// Archive option, GOP size (0 or 1 = off): every n-th compacted frame is
++    /// an I-frame; the others may use the raw body of the I-frame they
++    /// reference most (same compaction) as a zstd prefix when that is smaller.
++    pub pframes: u32,
+ }
+ 
+ impl Default for Options {
+@@ -81,7 +82,7 @@ impl Default for Options {
+             dedupe_chunk: 1024,
+             dedupe_window: 1 << 30,
+             compact_threads: 4,
+-            pframes: false,
++            pframes: 0,
+         }
+     }
+ }
+@@ -1180,24 +1181,32 @@ impl Store {
+             seq += recs.len() as u64;
+         }
+         drop(table);
+-        // P-frame roles, decided before compression: a frame may use the frame
+-        // of this compaction it references most as prefix, if that frame is not
+-        // itself a P-candidate and the references cover >= 5% of its body.
++        // P-frame roles, decided before compression (GOP style): every
++        // `pframes`-th frame of this compaction is an I-frame; any other frame
++        // may use as prefix the earlier I-frame it references most (else the
++        // latest one). The P-frame is kept only when it is smaller (below).
+         let mut prefix_of: Vec<Option<usize>> = vec![None; planned.len()];
+-        if self.opts.pframes {
++        let gop = self.opts.pframes as usize;
++        if gop > 1 {
+             let index_of: HashMap<u64, usize> = planned.iter().enumerate().map(|(i, p)| (p.first_seq, i)).collect();
++            let mut last_i = 0;
+             for i in 0..planned.len() {
+-                let best = planned[i]
+-                    .votes
+-                    .iter()
+-                    .filter_map(|(f, n)| index_of.get(f).map(|&r| (*n, r)))
+-                    .filter(|&(_, r)| r < i && prefix_of[r].is_none())
+-                    .max();
+-                if let Some((n, r)) = best {
+-                    if n * 20 >= planned[i].body.len() as u64 {
+-                        prefix_of[i] = Some(r);
++                if i % gop == 0 {
++                    last_i = i;
++                    continue;
++                }
++                let mut votes: HashMap<usize, u64> = HashMap::new();
++                for (f, n) in &planned[i].votes {
++                    if let Some(&r) = index_of.get(f) {
++                        // Votes for a P-candidate count for its reference.
++                        let root = prefix_of[r].unwrap_or(r);
++                        if root < i && root % gop == 0 {
++                            *votes.entry(root).or_default() += n;
++                        }
+                     }
+                 }
++                let best = votes.into_iter().max_by_key(|&(r, n)| (n, r)).map(|(r, _)| r);
++                prefix_of[i] = Some(best.unwrap_or(last_i));
+             }
+         }
+         let threads = self.opts.compact_threads.max(1).min(planned.len().max(1));
+diff --git a/crates/oojuro-store/tests/store.rs b/crates/oojuro-store/tests/store.rs
+index d21f7cb..0b7a848 100644
+--- a/crates/oojuro-store/tests/store.rs
++++ b/crates/oojuro-store/tests/store.rs
+@@ -369,7 +369,7 @@ fn near_duplicates(n: usize) -> Vec<Rec> {
+ #[test]
+ fn pframes_roundtrip_and_stay_deterministic() {
+     let recs = near_duplicates(80);
+-    let o = Options { pframes: true, cold_frame_bytes: 16 << 10, ..opts() };
++    let o = Options { pframes: 4, cold_frame_bytes: 16 << 10, ..opts() };
+     let mut images = Vec::new();
+     for n in 0..2 {
+         let dir = temp(&format!("pframes{n}"));

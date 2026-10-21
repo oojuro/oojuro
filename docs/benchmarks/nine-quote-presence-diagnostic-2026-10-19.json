@@ -1,0 +1,162 @@
+{
+  "scope": "offline exact reference-quote presence across returned eligible snippets",
+  "source_archive_digest": "4851adcc01420e9d9f155ad1db2d826aa26d9c4b72fa18fce0cbfec961cdb18f",
+  "cases_digest": "3589e10f522ca1329b4819a6765c9245fb00f6eaeb1358965a8342019f1cb569",
+  "runs": {
+    "nine-smoothing-restored1": {
+      "nine_k32_b16384": {
+        "pilot_history": {
+          "questions": 14,
+          "source_specific_reference_quote_instances": 28,
+          "source_specific_quotes_present": 26,
+          "distinct_reference_quote_instances": 28,
+          "distinct_quotes_anywhere_in_context": 26,
+          "questions_with_all_distinct_quotes_anywhere": 12
+        },
+        "unseen_document_question": {
+          "questions": 20,
+          "source_specific_reference_quote_instances": 20,
+          "source_specific_quotes_present": 19,
+          "distinct_reference_quote_instances": 20,
+          "distinct_quotes_anywhere_in_context": 19,
+          "questions_with_all_distinct_quotes_anywhere": 19
+        }
+      },
+      "nine_k32_b65536": {
+        "pilot_history": {
+          "questions": 14,
+          "source_specific_reference_quote_instances": 28,
+          "source_specific_quotes_present": 26,
+          "distinct_reference_quote_instances": 28,
+          "distinct_quotes_anywhere_in_context": 26,
+          "questions_with_all_distinct_quotes_anywhere": 12
+        },
+        "unseen_document_question": {
+          "questions": 20,
+          "source_specific_reference_quote_instances": 20,
+          "source_specific_quotes_present": 19,
+          "distinct_reference_quote_instances": 20,
+          "distinct_quotes_anywhere_in_context": 19,
+          "questions_with_all_distinct_quotes_anywhere": 19
+        }
+      },
+      "sqlite_fts5_k32_b16384": {
+        "pilot_history": {
+          "questions": 14,
+          "source_specific_reference_quote_instances": 28,
+          "source_specific_quotes_present": 24,
+          "distinct_reference_quote_instances": 28,
+          "distinct_quotes_anywhere_in_context": 24,
+          "questions_with_all_distinct_quotes_anywhere": 11
+        },
+        "unseen_document_question": {
+          "questions": 20,
+          "source_specific_reference_quote_instances": 20,
+          "source_specific_quotes_present": 18,
+          "distinct_reference_quote_instances": 20,
+          "distinct_quotes_anywhere_in_context": 18,
+          "questions_with_all_distinct_quotes_anywhere": 18
+        }
+      },
+      "sqlite_fts5_k32_b65536": {
+        "pilot_history": {
+          "questions": 14,
+          "source_specific_reference_quote_instances": 28,
+          "source_specific_quotes_present": 27,
+          "distinct_reference_quote_instances": 28,
+          "distinct_quotes_anywhere_in_context": 27,
+          "questions_with_all_distinct_quotes_anywhere": 13
+        },
+        "unseen_document_question": {
+          "questions": 20,
+          "source_specific_reference_quote_instances": 20,
+          "source_specific_quotes_present": 19,
+          "distinct_reference_quote_instances": 20,
+          "distinct_quotes_anywhere_in_context": 19,
+          "questions_with_all_distinct_quotes_anywhere": 19
+        }
+      }
+    },
+    "nine-sqlite-rust-reader1": {
+      "nine_k32_b16384": {
+        "pilot_history": {
+          "questions": 14,
+          "source_specific_reference_quote_instances": 28,
+          "source_specific_quotes_present": 26,
+          "distinct_reference_quote_instances": 28,
+          "distinct_quotes_anywhere_in_context": 26,
+          "questions_with_all_distinct_quotes_anywhere": 12
+        },
+        "unseen_document_question": {
+          "questions": 20,
+          "source_specific_reference_quote_instances": 20,
+          "source_specific_quotes_present": 19,
+          "distinct_reference_quote_instances": 20,
+          "distinct_quotes_anywhere_in_context": 19,
+          "questions_with_all_distinct_quotes_anywhere": 19
+        }
+      },
+      "nine_k32_b65536": {
+        "pilot_history": {
+          "questions": 14,
+          "source_specific_reference_quote_instances": 28,
+          "source_specific_quotes_present": 26,
+          "distinct_reference_quote_instances": 28,
+          "distinct_quotes_anywhere_in_context": 26,
+          "questions_with_all_distinct_quotes_anywhere": 12
+        },
+        "unseen_document_question": {
+          "questions": 20,
+          "source_specific_reference_quote_instances": 20,
+          "source_specific_quotes_present": 19,
+          "distinct_reference_quote_instances": 20,
+          "distinct_quotes_anywhere_in_context": 19,
+          "questions_with_all_distinct_quotes_anywhere": 19
+        }
+      },
+      "sqlite_fts5_k32_b16384": {
+        "pilot_history": {
+          "questions": 14,
+          "source_specific_reference_quote_instances": 28,
+          "source_specific_quotes_present": 24,
+          "distinct_reference_quote_instances": 28,
+          "distinct_quotes_anywhere_in_context": 24,
+          "questions_with_all_distinct_quotes_anywhere": 11
+        },
+        "unseen_document_question": {
+          "questions": 20,
+          "source_specific_reference_quote_instances": 20,
+          "source_specific_quotes_present": 18,
+          "distinct_reference_quote_instances": 20,
+          "distinct_quotes_anywhere_in_context": 18,
+          "questions_with_all_distinct_quotes_anywhere": 18
+        }
+      },
+      "sqlite_fts5_k32_b65536": {
+        "pilot_history": {
+          "questions": 14,
+          "source_specific_reference_quote_instances": 28,
+          "source_specific_quotes_present": 27,
+          "distinct_reference_quote_instances": 28,
+          "distinct_quotes_anywhere_in_context": 27,
+          "questions_with_all_distinct_quotes_anywhere": 13
+        },
+        "unseen_document_question": {
+          "questions": 20,
+          "source_specific_reference_quote_instances": 20,
+          "source_specific_quotes_present": 19,
+          "distinct_reference_quote_instances": 20,
+          "distinct_quotes_anywhere_in_context": 19,
+          "questions_with_all_distinct_quotes_anywhere": 19
+        }
+      }
+    }
+  },
+  "answer_accuracy": null,
+  "new_query_timings": null,
+  "limitations": [
+    "Repeated text elsewhere does not prove source-specific provenance, authority or version.",
+    "This does not change the original source/range/quote adoption gate or establish generated-answer accuracy.",
+    "Reused development contexts only; no new agent or provider calls."
+  ]
+}

@@ -1,0 +1,259 @@
+diff --git a/crates/oojuro-lab/src/nine_scale.rs b/crates/oojuro-lab/src/nine_scale.rs
+index 2441b88..85b55a5 100644
+--- a/crates/oojuro-lab/src/nine_scale.rs
++++ b/crates/oojuro-lab/src/nine_scale.rs
+@@ -152,0 +153,58 @@
++    fn enable_metadata(&mut self) -> Result<()> {
++        let (table, tokenizer) = if self.word_table == "fts_porter" {
++            (
++                "fts_metadata_porter",
++                "porter unicode61 remove_diacritics 0",
++            )
++        } else {
++            ("fts_metadata", "unicode61 remove_diacritics 0")
++        };
++        let exists: bool = self.db.query_row(
++            "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE name=?1)",
++            [table],
++            |r| r.get(0),
++        )?;
++        if !exists {
++            let tx = self.db.unchecked_transaction()?;
++            tx.execute_batch(&format!(
++                "CREATE VIRTUAL TABLE {table} USING fts5(body,provenance,tokenize='{tokenizer}')"
++            ))?;
++            {
++                let mut read = tx.prepare("SELECT rowid,body,metadata FROM sources")?;
++                let mut write = tx.prepare(&format!(
++                    "INSERT INTO {table}(rowid,body,provenance) VALUES(?1,?2,?3)"
++                ))?;
++                let mut rows = read.query([])?;
++                while let Some(row) = rows.next()? {
++                    let metadata: BTreeMap<String, String> =
++                        serde_json::from_str(row.get_ref(2)?.as_str()?)?;
++                    let provenance = metadata
++                        .values()
++                        .map(String::as_str)
++                        .collect::<Vec<_>>()
++                        .join("\n");
++                    write.execute(params![
++                        row.get::<_, i64>(0)?,
++                        row.get_ref(1)?.as_str()?,
++                        provenance
++                    ])?;
++                }
++            }
++            tx.commit()?;
++        }
++        self.word_table = table;
++        Ok(())
++    }
++    fn query_table(&self, question: &str) -> &'static str {
++        if literal(question).is_some() {
++            if self.identifiers {
++                "fts_identifiers"
++            } else if self.word_table.starts_with("fts_metadata") {
++                "fts"
++            } else {
++                self.word_table
++            }
++        } else {
++            self.word_table
++        }
++    }
+@@ -153,0 +212,3 @@
++        if self.word_table.starts_with("fts_metadata") {
++            return Err("metadata control must be rebuilt after source appends".into());
++        }
+@@ -205,5 +266,1 @@
+-        let table = if self.identifiers && literal(question).is_some() {
+-            "fts_identifiers"
+-        } else {
+-            self.word_table
+-        };
++        let table = self.query_table(question);
+@@ -231,5 +288,1 @@
+-        let table = if self.identifiers && literal(question).is_some() {
+-            "fts_identifiers"
+-        } else {
+-            self.word_table
+-        };
++        let table = self.query_table(question);
+@@ -267,5 +320,1 @@
+-        let table = if self.identifiers && literal(&c.question).is_some() {
+-            "fts_identifiers"
+-        } else {
+-            self.word_table
+-        };
++        let table = self.query_table(&c.question);
+@@ -1089,0 +1139,8 @@
++    let textual_provenance = args.iter().any(|a| a == "--textual-provenance");
++    if !textual_provenance {
++        return Err(
++            "metadata-index candidate requires matching --textual-provenance control".into(),
++        );
++    }
++    pair.sql.enable_metadata()?;
++    let sqlite_source_and_fts_bytes = pair.sql.bytes(&source)?;
+@@ -1118,1 +1175,1 @@
+-        &json!({"scope":"verified frozen-corpus requery","context_encoding":if shared_context{"exact-shared-text-v1"}else{"flat-snippets-v1"},"context_limit_unit":if shared_context{"distinct_text_blocks"}else{"source_origins"},"context_decode_validation_timed":shared_context,"retrieval_model":oojuro_nine::RETRIEVAL_MODEL,"retrieval_count_model":oojuro_nine::RETRIEVAL_COUNT_MODEL,"retrieval_normalization":oojuro_nine::RETRIEVAL_NORMALIZATION,"passage_model":oojuro_nine::PASSAGE_MODEL,"shared_query_stopwords":shared_stopwords,"sqlite_porter":sqlite_porter, "excerpt_bytes":excerpt_bytes,"sqlite_runtime":sqlite_runtime,"sqlite_native_snippet_tokens":if sqlite_native_snippet{Some(64)}else{None},"sqlite_expansion_inside_sql":sqlite_native_snippet,"sqlite_full_body_fallbacks":sqlite_full_body_fallbacks,"sqlite_max_native_snippet_bytes":SQLITE_SNIPPET_LIMIT,"sqlite_large_source_streams":sqlite_large_source_streams,"rust_declaration_query_policy":rust_queries,"sqlite_identifier_rrf":sqlite_identifiers, "native_stats_before_queries":stats, "source_archive_digest":source_digest, "cases_digest":cases_digest, "exact_record_cross_checks":cross_checks, "corpus_controls":controls, "embedding_calls":0, "llm_calls":0,
++        &json!({"scope":"verified frozen-corpus requery","textual_provenance":textual_provenance,"sqlite_source_and_fts_bytes":sqlite_source_and_fts_bytes,"context_encoding":if shared_context{"exact-shared-text-v1"}else{"flat-snippets-v1"},"context_limit_unit":if shared_context{"distinct_text_blocks"}else{"source_origins"},"context_decode_validation_timed":shared_context,"retrieval_model":oojuro_nine::RETRIEVAL_MODEL,"retrieval_count_model":oojuro_nine::RETRIEVAL_COUNT_MODEL,"retrieval_normalization":oojuro_nine::RETRIEVAL_NORMALIZATION,"passage_model":oojuro_nine::PASSAGE_MODEL,"shared_query_stopwords":shared_stopwords,"sqlite_porter":sqlite_porter, "excerpt_bytes":excerpt_bytes,"sqlite_runtime":sqlite_runtime,"sqlite_native_snippet_tokens":if sqlite_native_snippet{Some(64)}else{None},"sqlite_expansion_inside_sql":sqlite_native_snippet,"sqlite_full_body_fallbacks":sqlite_full_body_fallbacks,"sqlite_max_native_snippet_bytes":SQLITE_SNIPPET_LIMIT,"sqlite_large_source_streams":sqlite_large_source_streams,"rust_declaration_query_policy":rust_queries,"sqlite_identifier_rrf":sqlite_identifiers, "native_stats_before_queries":stats, "source_archive_digest":source_digest, "cases_digest":cases_digest, "exact_record_cross_checks":cross_checks, "corpus_controls":controls, "embedding_calls":0, "llm_calls":0,
+@@ -1547,0 +1605,74 @@
++    #[test]
++    fn metadata_control_has_matching_value_scope_and_body_only_literals() -> Result<()> {
++        let temp = std::env::temp_dir();
++        let path = temp.join(format!(
++            "nine-metadata-{}-{}",
++            std::process::id(),
++            std::time::SystemTime::now()
++                .duration_since(std::time::UNIX_EPOCH)?
++                .as_nanos()
++        ));
++        let result = (|| -> Result<()> {
++            let mut pair = Pair::open(&path)?;
++            let mut old = Record::new("old", "revision", "Exact original body.", 10);
++            old.metadata.insert(
++                "unsearchablefieldname".into(),
++                "docs/zephyr_notes.md".into(),
++            );
++            pair.put(&old, "fixture")?;
++            let mut late = Record::new("late", "revision", "Replacement body.", 20);
++            late.recorded_at = 50;
++            late.metadata
++                .insert("path".into(), "docs/meridian.md".into());
++            pair.put(&late, "fixture")?;
++            let mut future = Record::new("future", "other", "Future body.", 100);
++            future
++                .metadata
++                .insert("path".into(), "zephyr zephyr zephyr".into());
++            pair.put(&future, "fixture")?;
++            pair.sql.enable_identifiers()?;
++            for porter in [false, true] {
++                if porter {
++                    pair.sql.enable_porter()?;
++                }
++                pair.sql.enable_metadata()?;
++                for (question, at, wanted) in [
++                    ("zephyr", 30, vec!["old"]),
++                    ("\"zephyr\"", 30, vec![]),
++                    ("unsearchablefieldname", 30, vec![]),
++                    ("zephyr", 60, vec![]),
++                ] {
++                    let c = Case {
++                        id: "fixture".into(),
++                        question: question.into(),
++                        evidence: Vec::new(),
++                        at,
++                    };
++                    let native = pair.nine.search_refs(&Query::new(question, at), 0)?;
++                    let sql = pair.sql.rank(&c, 50)?;
++                    assert_eq!(
++                        native
++                            .matches
++                            .iter()
++                            .map(|m| m.id.as_str())
++                            .collect::<Vec<_>>(),
++                        wanted
++                    );
++                    assert_eq!(
++                        sql.iter().map(|(id, _)| id.as_str()).collect::<Vec<_>>(),
++                        wanted
++                    );
++                }
++            }
++            assert_eq!(pair.sql.read("old")?.text, old.text);
++            assert_eq!(pair.sql.read("old")?.metadata, old.metadata);
++            Ok(())
++        })();
++        if let (Ok(target), Ok(parent)) = (path.canonicalize(), temp.canonicalize()) {
++            if target.parent() == Some(parent.as_path()) {
++                fs::remove_dir_all(target)?;
++            }
++        }
++        result
++    }
++
+diff --git a/crates/oojuro-nine/src/lib.rs b/crates/oojuro-nine/src/lib.rs
+index 01e3bb7..34feb05 100644
+--- a/crates/oojuro-nine/src/lib.rs
++++ b/crates/oojuro-nine/src/lib.rs
+@@ -17,1 +17,1 @@
+-pub const RETRIEVAL_MODEL: &str = "dirichlet-128-v1";
++pub const RETRIEVAL_MODEL: &str = "dirichlet-128-metadata-values-v1";
+@@ -330,1 +330,4 @@
+-        for token in retrieval_terms(&r.text) {
++        for token in retrieval_terms(&r.text)
++            .into_iter()
++            .chain(r.metadata.values().flat_map(|value| tokens(value)))
++        {
+diff --git a/crates/oojuro-nine/src/tests.rs b/crates/oojuro-nine/src/tests.rs
+index 4149246..b5aa7fc 100644
+--- a/crates/oojuro-nine/src/tests.rs
++++ b/crates/oojuro-nine/src/tests.rs
+@@ -69,0 +70,66 @@
++#[test]
++fn metadata_values_are_searchable_but_literals_originals_and_both_clocks_stay_exact() -> Result<()>
++{
++    let tmp = Scratch::new();
++    let mut db = Nine::open(&tmp.0)?;
++    let mut old = r(
++        "old",
++        "revision",
++        "Exact original body without the topic word.",
++        10,
++        10,
++    );
++    old.metadata.insert(
++        "unsearchablefieldname".into(),
++        "docs/zephyr_notes.md".into(),
++    );
++    db.insert(old.clone())?;
++    let q = Query::new("zephyr", 30);
++    let before = db.search_refs(&q, 0)?;
++    assert_eq!(
++        before
++            .matches
++            .iter()
++            .map(|m| m.id.as_str())
++            .collect::<Vec<_>>(),
++        vec!["old"]
++    );
++    let mut late = r("late", "revision", "Replacement body.", 20, 50);
++    late.metadata
++        .insert("path".into(), "docs/meridian.md".into());
++    db.insert(late)?;
++    let mut future = r("future", "other", "Future body.", 100, 100);
++    future
++        .metadata
++        .insert("path".into(), "zephyr zephyr zephyr".into());
++    db.insert(future)?;
++    assert_eq!(
++        serde_json::to_vec(&db.search_refs(&q, 0)?)?,
++        serde_json::to_vec(&before)?
++    );
++    assert!(
++        db.search_refs(&Query::new("\"zephyr\"", 30), 0)?
++            .matches
++            .is_empty()
++    );
++    assert!(
++        db.search_refs(&Query::new("unsearchablefieldname", 30), 0)?
++            .matches
++            .is_empty()
++    );
++    assert!(
++        db.search_refs(&Query::new("zephyr", 60), 0)?
++            .matches
++            .is_empty()
++    );
++    assert_eq!(db.read("old"), Some(old.text.as_str()));
++    drop(db);
++    let mut db = Nine::open(&tmp.0)?;
++    assert_eq!(
++        serde_json::to_vec(&db.search_refs(&q, 0)?)?,
++        serde_json::to_vec(&before)?
++    );
++    assert_eq!(db.record("old").unwrap().metadata, old.metadata);
++    Ok(())
++}
++

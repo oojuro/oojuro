@@ -1,0 +1,74 @@
+{
+ "name": "base1m",
+ "format": "TBEV0001",
+ "events": 1318882,
+ "original_events": 1000071,
+ "status_revisions": 318811,
+ "batches": 367558,
+ "sessions": 18135,
+ "agents": 16,
+ "raw_bytes": 933712789,
+ "window_days": 30,
+ "epoch_us": 1788220800000000,
+ "nul_replaced_events": 12,
+ "by_source": {
+  "ohsft": {
+   "sessions": 491,
+   "events": 23554,
+   "bytes": 33180481
+  },
+  "hermes": {
+   "sessions": 1893,
+   "events": 7706,
+   "bytes": 17662060
+  },
+  "othink": {
+   "sessions": 4000,
+   "events": 16000,
+   "bytes": 132727441
+  },
+  "swe": {
+   "sessions": 11751,
+   "events": 952811,
+   "bytes": 748214129
+  }
+ },
+ "by_kind": {
+  "output": {
+   "events": 16326,
+   "bytes": 64495659
+  },
+  "status_revision": {
+   "events": 318811,
+   "bytes": 1928678
+  },
+  "system": {
+   "events": 18135,
+   "bytes": 67777102
+  },
+  "thinking": {
+   "events": 318989,
+   "bytes": 204646207
+  },
+  "tool_call": {
+   "events": 318811,
+   "bytes": 59565750
+  },
+  "tool_result": {
+   "events": 305852,
+   "bytes": 461165833
+  },
+  "user": {
+   "events": 21958,
+   "bytes": 74133560
+  }
+ },
+ "sha256": "49833ec7845b1878e05f01cefa82ff7ed0e9e7d45f9961b93d28e55b6bda10e5",
+ "sources": [
+  "train-00000-of-00012.parquet",
+  "train-00001-of-00012.parquet",
+  "train.parquet",
+  "func-calling.json",
+  "train-00000-of-00006.parquet"
+ ]
+}

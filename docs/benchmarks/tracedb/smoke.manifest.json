@@ -1,0 +1,59 @@
+{
+ "name": "smoke",
+ "format": "TBEV0001",
+ "events": 27482,
+ "original_events": 20043,
+ "status_revisions": 7439,
+ "batches": 8975,
+ "sessions": 416,
+ "agents": 16,
+ "raw_bytes": 28661354,
+ "window_days": 30,
+ "epoch_us": 1788220800000000,
+ "nul_replaced_events": 0,
+ "by_source": {
+  "ohsft": {
+   "sessions": 416,
+   "events": 20043,
+   "bytes": 28544744
+  }
+ },
+ "by_kind": {
+  "output": {
+   "events": 715,
+   "bytes": 716792
+  },
+  "status_revision": {
+   "events": 7439,
+   "bytes": 116610
+  },
+  "system": {
+   "events": 416,
+   "bytes": 1979328
+  },
+  "thinking": {
+   "events": 3319,
+   "bytes": 1532519
+  },
+  "tool_call": {
+   "events": 7439,
+   "bytes": 3711621
+  },
+  "tool_result": {
+   "events": 7034,
+   "bytes": 19083734
+  },
+  "user": {
+   "events": 1120,
+   "bytes": 1520750
+  }
+ },
+ "sha256": "00fcf1de914f75993ceccf02fc098f081a36a1bb029e0642733dd151536872c0",
+ "sources": [
+  "train-00000-of-00012.parquet",
+  "train-00001-of-00012.parquet",
+  "train.parquet",
+  "func-calling.json",
+  "train-00000-of-00006.parquet"
+ ]
+}

@@ -1,0 +1,166 @@
+{
+  "schema": "oojuro-split-stats-v1",
+  "set": "turnloop/swe-agent",
+  "prepared_sha256": "3106438b52feadab2bcf3c0e7ff7fb40ac8625b3969312e8cf64d4c3782089c2",
+  "split_unit": "instance_id (all trajectories of one issue on one side)",
+  "groups_on_both_sides": 0,
+  "query_rule": "turn input = previous tool result (task text at turn 0), capped at 4096 bytes as head 2048 + tail 2048",
+  "sides": {
+    "dev": {
+      "trajectories": 1910,
+      "issues": 101,
+      "all": {
+        "steps": 49299,
+        "query_bytes": {
+          "p10": 119,
+          "p25": 154,
+          "p50": 504,
+          "p75": 3104,
+          "p90": 4101,
+          "p99": 4101,
+          "mean": 1426.4
+        },
+        "input_bytes_before_cap": {
+          "p10": 119,
+          "p25": 154,
+          "p50": 504,
+          "p75": 3104,
+          "p90": 4221,
+          "p99": 5955,
+          "mean": 1540.2
+        },
+        "distinct_query_terms": {
+          "p10": 14,
+          "p25": 17,
+          "p50": 43,
+          "p75": 174,
+          "p90": 257,
+          "p99": 314,
+          "mean": 96.6
+        },
+        "share_capped": 0.1125,
+        "length_buckets_bytes": {
+          "<256": 18544,
+          "256-1k": 10739,
+          "1k-4k": 14462,
+          "4k (capped)": 5554
+        }
+      },
+      "labelled": {
+        "steps": 15206,
+        "query_bytes": {
+          "p10": 119,
+          "p25": 143,
+          "p50": 283,
+          "p75": 2410,
+          "p90": 4101,
+          "p99": 4101,
+          "mean": 1236.7
+        },
+        "input_bytes_before_cap": {
+          "p10": 119,
+          "p25": 143,
+          "p50": 283,
+          "p75": 2410,
+          "p90": 4167,
+          "p99": 5742,
+          "mean": 1343.8
+        },
+        "distinct_query_terms": {
+          "p10": 13,
+          "p25": 16,
+          "p50": 25,
+          "p75": 145,
+          "p90": 247,
+          "p99": 317,
+          "mean": 83.8
+        },
+        "share_capped": 0.1088,
+        "length_buckets_bytes": {
+          "<256": 7147,
+          "256-1k": 3039,
+          "1k-4k": 3366,
+          "4k (capped)": 1654
+        }
+      }
+    },
+    "heldout": {
+      "trajectories": 4759,
+      "issues": 206,
+      "all": {
+        "steps": 125516,
+        "query_bytes": {
+          "p10": 125,
+          "p25": 174,
+          "p50": 591,
+          "p75": 3027,
+          "p90": 4101,
+          "p99": 4101,
+          "mean": 1465.9
+        },
+        "input_bytes_before_cap": {
+          "p10": 125,
+          "p25": 174,
+          "p50": 591,
+          "p75": 3027,
+          "p90": 4238,
+          "p99": 6326,
+          "mean": 1587.0
+        },
+        "distinct_query_terms": {
+          "p10": 14,
+          "p25": 18,
+          "p50": 51,
+          "p75": 175,
+          "p90": 254,
+          "p99": 304,
+          "mean": 98.1
+        },
+        "share_capped": 0.1158,
+        "length_buckets_bytes": {
+          "<256": 42174,
+          "256-1k": 30262,
+          "1k-4k": 38443,
+          "4k (capped)": 14637
+        }
+      },
+      "labelled": {
+        "steps": 37985,
+        "query_bytes": {
+          "p10": 126,
+          "p25": 165,
+          "p50": 397,
+          "p75": 2939,
+          "p90": 4101,
+          "p99": 4101,
+          "mean": 1361.0
+        },
+        "input_bytes_before_cap": {
+          "p10": 126,
+          "p25": 165,
+          "p50": 397,
+          "p75": 2939,
+          "p90": 4311,
+          "p99": 6163,
+          "mean": 1485.2
+        },
+        "distinct_query_terms": {
+          "p10": 14,
+          "p25": 17,
+          "p50": 31,
+          "p75": 176,
+          "p90": 247,
+          "p99": 307,
+          "mean": 89.9
+        },
+        "share_capped": 0.125,
+        "length_buckets_bytes": {
+          "<256": 15287,
+          "256-1k": 8579,
+          "1k-4k": 9363,
+          "4k (capped)": 4756
+        }
+      }
+    }
+  }
+}

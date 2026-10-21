@@ -1,0 +1,1239 @@
+{
+  "schema": "oojuro-scorecard-v1",
+  "created_at": "2026-10-21T15:01:33Z",
+  "harness": {
+    "args": [
+      "<checkout>/.scratch/fix/oojuro-bench",
+      "memqa",
+      "--set",
+      "longmemeval",
+      "--split",
+      "dev",
+      "--arm",
+      "base=cmd:<checkout>/.scratch/base/oojuro-bench serve --arm nine",
+      "--arm",
+      "fix=nine",
+      "--runs",
+      "1",
+      "--work",
+      "<tmp>/sf-bench",
+      "--out",
+      "<checkout>/.scratch/bench/memqa-dev.json"
+    ],
+    "binary": "<checkout>/.scratch/fix/oojuro-bench",
+    "commit": "5ad3dad60bec"
+  },
+  "hardware": {
+    "build_profile": "release",
+    "cpu": "AMD Ryzen 7 8845HS w/ Radeon 780M Graphics",
+    "kernel": "7.0.0-34-generic",
+    "load_avg": "5.66 5.04 4.30 9/3830 3326550",
+    "logical_cpus": 16,
+    "mem_total": "29062768 kB",
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "swap_total": "8388604 kB",
+    "work_filesystem": {
+      "device": "/dev/nvme0n1p2",
+      "fstype": "ext4",
+      "mount": "/"
+    }
+  },
+  "suite": "memqa",
+  "dataset": "longmemeval",
+  "split": "dev",
+  "settings": {
+    "bench_lock": "held for the whole run",
+    "build_time_included": "per-question build reported as build_ms; not in search latency",
+    "cache": "warm: one process per run, a fresh store per question",
+    "isolation": "child process per run in a systemd --user scope, MemoryMax=3G, MemorySwapMax=0",
+    "k": 50,
+    "questions": 156,
+    "reader": "none: retrieval metrics only, no LLM",
+    "runs": 1,
+    "unit": "one record per chat turn, text = '<role>: <content>', valid_at = session date + turn index seconds"
+  },
+  "arms": [
+    {
+      "label": "base",
+      "spec": "cmd:<checkout>/.scratch/base/oojuro-bench serve --arm nine",
+      "info": {
+        "name": "nine",
+        "version": "dirichlet-scope-128-v1:scope-scaled-raw-frequency-v1:english-snowball-1.2.0-v1",
+        "commit": "5ad3dad60bec",
+        "durability": "v4: one journal write + sync_data per append_batch (group commit); query receipts buffered (synced on close)",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "search_refs(from=i64::MIN); max_context_bytes unbounded; in-engine query cache on"
+        ]
+      },
+      "gates": {},
+      "quality": {
+        "session_recall_all@10": {
+          "median": 0.876923076923077,
+          "min": 0.876923076923077,
+          "max": 0.876923076923077,
+          "n": 1,
+          "runs": [
+            0.876923076923077
+          ]
+        },
+        "session_recall_all@5": {
+          "median": 0.8588675213675211,
+          "min": 0.8588675213675211,
+          "max": 0.8588675213675211,
+          "n": 1,
+          "runs": [
+            0.8588675213675211
+          ]
+        },
+        "session_recall_any@5": {
+          "median": 0.9230769230769231,
+          "min": 0.9230769230769231,
+          "max": 0.9230769230769231,
+          "n": 1,
+          "runs": [
+            0.9230769230769231
+          ]
+        },
+        "turn_ndcg@10": {
+          "median": 0.6961992892728158,
+          "min": 0.6961992892728158,
+          "max": 0.6961992892728158,
+          "n": 1,
+          "runs": [
+            0.6961992892728158
+          ]
+        },
+        "turn_recall@10": {
+          "median": 0.8220085470085471,
+          "min": 0.8220085470085471,
+          "max": 0.8220085470085471,
+          "n": 1,
+          "runs": [
+            0.8220085470085471
+          ]
+        },
+        "turn_recall@20": {
+          "median": 0.8559829059829059,
+          "min": 0.8559829059829059,
+          "max": 0.8559829059829059,
+          "n": 1,
+          "runs": [
+            0.8559829059829059
+          ]
+        },
+        "turn_recall@50": {
+          "median": 0.8854700854700854,
+          "min": 0.8854700854700854,
+          "max": 0.8854700854700854,
+          "n": 1,
+          "runs": [
+            0.8854700854700854
+          ]
+        }
+      },
+      "storage": {
+        "raw_text_bytes": {
+          "median": 77017476.0,
+          "min": 77017476.0,
+          "max": 77017476.0,
+          "n": 1,
+          "runs": [
+            77017476.0
+          ]
+        }
+      },
+      "memory": {
+        "peak_cgroup_bytes": {
+          "median": 15671296.0,
+          "min": 15671296.0,
+          "max": 15671296.0,
+          "n": 1,
+          "runs": [
+            15671296.0
+          ]
+        }
+      },
+      "speed": {
+        "build_ms_p50": {
+          "median": 34.972107,
+          "min": 34.972107,
+          "max": 34.972107,
+          "n": 1,
+          "runs": [
+            34.972107
+          ]
+        },
+        "search_p50_us": {
+          "median": 117.0,
+          "min": 117.0,
+          "max": 117.0,
+          "n": 1,
+          "runs": [
+            117.0
+          ]
+        },
+        "search_p99_us": {
+          "median": 212.0,
+          "min": 212.0,
+          "max": 212.0,
+          "n": 1,
+          "runs": [
+            212.0
+          ]
+        }
+      },
+      "breakdown": {
+        "abstention": {
+          "session_recall_all@10": {
+            "median": 0.5,
+            "min": 0.5,
+            "max": 0.5,
+            "n": 1,
+            "runs": [
+              0.5
+            ]
+          },
+          "session_recall_all@5": {
+            "median": 0.5,
+            "min": 0.5,
+            "max": 0.5,
+            "n": 1,
+            "runs": [
+              0.5
+            ]
+          },
+          "session_recall_any@5": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_ndcg@10": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_recall@10": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_recall@20": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_recall@50": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          }
+        },
+        "knowledge-update": {
+          "session_recall_all@10": {
+            "median": 0.9761904761904762,
+            "min": 0.9761904761904762,
+            "max": 0.9761904761904762,
+            "n": 1,
+            "runs": [
+              0.9761904761904762
+            ]
+          },
+          "session_recall_all@5": {
+            "median": 0.9761904761904762,
+            "min": 0.9761904761904762,
+            "max": 0.9761904761904762,
+            "n": 1,
+            "runs": [
+              0.9761904761904762
+            ]
+          },
+          "session_recall_any@5": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_ndcg@10": {
+            "median": 0.7173789486683555,
+            "min": 0.7173789486683555,
+            "max": 0.7173789486683555,
+            "n": 1,
+            "runs": [
+              0.7173789486683555
+            ]
+          },
+          "turn_recall@10": {
+            "median": 0.9761904761904762,
+            "min": 0.9761904761904762,
+            "max": 0.9761904761904762,
+            "n": 1,
+            "runs": [
+              0.9761904761904762
+            ]
+          },
+          "turn_recall@20": {
+            "median": 0.9761904761904762,
+            "min": 0.9761904761904762,
+            "max": 0.9761904761904762,
+            "n": 1,
+            "runs": [
+              0.9761904761904762
+            ]
+          },
+          "turn_recall@50": {
+            "median": 0.9761904761904762,
+            "min": 0.9761904761904762,
+            "max": 0.9761904761904762,
+            "n": 1,
+            "runs": [
+              0.9761904761904762
+            ]
+          }
+        },
+        "multi-session": {
+          "session_recall_all@10": {
+            "median": 0.9898989898989898,
+            "min": 0.9898989898989898,
+            "max": 0.9898989898989898,
+            "n": 1,
+            "runs": [
+              0.9898989898989898
+            ]
+          },
+          "session_recall_all@5": {
+            "median": 0.9419191919191919,
+            "min": 0.9419191919191919,
+            "max": 0.9419191919191919,
+            "n": 1,
+            "runs": [
+              0.9419191919191919
+            ]
+          },
+          "session_recall_any@5": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_ndcg@10": {
+            "median": 0.6820123164200014,
+            "min": 0.6820123164200014,
+            "max": 0.6820123164200014,
+            "n": 1,
+            "runs": [
+              0.6820123164200014
+            ]
+          },
+          "turn_recall@10": {
+            "median": 0.8848484848484849,
+            "min": 0.8848484848484849,
+            "max": 0.8848484848484849,
+            "n": 1,
+            "runs": [
+              0.8848484848484849
+            ]
+          },
+          "turn_recall@20": {
+            "median": 0.9333333333333335,
+            "min": 0.9333333333333335,
+            "max": 0.9333333333333335,
+            "n": 1,
+            "runs": [
+              0.9333333333333335
+            ]
+          },
+          "turn_recall@50": {
+            "median": 0.9696969696969697,
+            "min": 0.9696969696969697,
+            "max": 0.9696969696969697,
+            "n": 1,
+            "runs": [
+              0.9696969696969697
+            ]
+          }
+        },
+        "single-session-assistant": {
+          "session_recall_all@10": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "session_recall_all@5": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "session_recall_any@5": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_ndcg@10": {
+            "median": 0.8130387639652064,
+            "min": 0.8130387639652064,
+            "max": 0.8130387639652064,
+            "n": 1,
+            "runs": [
+              0.8130387639652064
+            ]
+          },
+          "turn_recall@10": {
+            "median": 0.8636363636363636,
+            "min": 0.8636363636363636,
+            "max": 0.8636363636363636,
+            "n": 1,
+            "runs": [
+              0.8636363636363636
+            ]
+          },
+          "turn_recall@20": {
+            "median": 0.9545454545454546,
+            "min": 0.9545454545454546,
+            "max": 0.9545454545454546,
+            "n": 1,
+            "runs": [
+              0.9545454545454546
+            ]
+          },
+          "turn_recall@50": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          }
+        },
+        "single-session-preference": {
+          "session_recall_all@10": {
+            "median": 0.7777777777777778,
+            "min": 0.7777777777777778,
+            "max": 0.7777777777777778,
+            "n": 1,
+            "runs": [
+              0.7777777777777778
+            ]
+          },
+          "session_recall_all@5": {
+            "median": 0.7777777777777778,
+            "min": 0.7777777777777778,
+            "max": 0.7777777777777778,
+            "n": 1,
+            "runs": [
+              0.7777777777777778
+            ]
+          },
+          "session_recall_any@5": {
+            "median": 0.7777777777777778,
+            "min": 0.7777777777777778,
+            "max": 0.7777777777777778,
+            "n": 1,
+            "runs": [
+              0.7777777777777778
+            ]
+          },
+          "turn_ndcg@10": {
+            "median": 0.36270291586326064,
+            "min": 0.36270291586326064,
+            "max": 0.36270291586326064,
+            "n": 1,
+            "runs": [
+              0.36270291586326064
+            ]
+          },
+          "turn_recall@10": {
+            "median": 0.5555555555555556,
+            "min": 0.5555555555555556,
+            "max": 0.5555555555555556,
+            "n": 1,
+            "runs": [
+              0.5555555555555556
+            ]
+          },
+          "turn_recall@20": {
+            "median": 0.6666666666666666,
+            "min": 0.6666666666666666,
+            "max": 0.6666666666666666,
+            "n": 1,
+            "runs": [
+              0.6666666666666666
+            ]
+          },
+          "turn_recall@50": {
+            "median": 0.8333333333333334,
+            "min": 0.8333333333333334,
+            "max": 0.8333333333333334,
+            "n": 1,
+            "runs": [
+              0.8333333333333334
+            ]
+          }
+        },
+        "single-session-user": {
+          "session_recall_all@10": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "session_recall_all@5": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "session_recall_any@5": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_ndcg@10": {
+            "median": 0.9157220135497761,
+            "min": 0.9157220135497761,
+            "max": 0.9157220135497761,
+            "n": 1,
+            "runs": [
+              0.9157220135497761
+            ]
+          },
+          "turn_recall@10": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_recall@20": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_recall@50": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          }
+        },
+        "temporal-reasoning": {
+          "session_recall_all@10": {
+            "median": 0.6624113475177305,
+            "min": 0.6624113475177305,
+            "max": 0.6624113475177305,
+            "n": 1,
+            "runs": [
+              0.6624113475177305
+            ]
+          },
+          "session_recall_all@5": {
+            "median": 0.6361702127659574,
+            "min": 0.6361702127659574,
+            "max": 0.6361702127659574,
+            "n": 1,
+            "runs": [
+              0.6361702127659574
+            ]
+          },
+          "session_recall_any@5": {
+            "median": 0.7872340425531915,
+            "min": 0.7872340425531915,
+            "max": 0.7872340425531915,
+            "n": 1,
+            "runs": [
+              0.7872340425531915
+            ]
+          },
+          "turn_ndcg@10": {
+            "median": 0.5919774340641512,
+            "min": 0.5919774340641512,
+            "max": 0.5919774340641512,
+            "n": 1,
+            "runs": [
+              0.5919774340641512
+            ]
+          },
+          "turn_recall@10": {
+            "median": 0.6496453900709219,
+            "min": 0.6496453900709219,
+            "max": 0.6496453900709219,
+            "n": 1,
+            "runs": [
+              0.6496453900709219
+            ]
+          },
+          "turn_recall@20": {
+            "median": 0.6645390070921986,
+            "min": 0.6645390070921986,
+            "max": 0.6645390070921986,
+            "n": 1,
+            "runs": [
+              0.6645390070921986
+            ]
+          },
+          "turn_recall@50": {
+            "median": 0.6836879432624113,
+            "min": 0.6836879432624113,
+            "max": 0.6836879432624113,
+            "n": 1,
+            "runs": [
+              0.6836879432624113
+            ]
+          }
+        }
+      },
+      "error": null
+    },
+    {
+      "label": "fix",
+      "spec": "nine",
+      "info": {
+        "name": "nine",
+        "version": "dirichlet-scope-128-v1:scope-scaled-raw-frequency-v1:english-snowball-1.2.0-v1",
+        "commit": "5ad3dad60bec",
+        "durability": "v4: one journal write + sync_data per append_batch (group commit); query receipts buffered (synced on close)",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "search_refs(from=i64::MIN); max_context_bytes unbounded; in-engine query cache on"
+        ]
+      },
+      "gates": {},
+      "quality": {
+        "session_recall_all@10": {
+          "median": 0.876923076923077,
+          "min": 0.876923076923077,
+          "max": 0.876923076923077,
+          "n": 1,
+          "runs": [
+            0.876923076923077
+          ]
+        },
+        "session_recall_all@5": {
+          "median": 0.8588675213675211,
+          "min": 0.8588675213675211,
+          "max": 0.8588675213675211,
+          "n": 1,
+          "runs": [
+            0.8588675213675211
+          ]
+        },
+        "session_recall_any@5": {
+          "median": 0.9230769230769231,
+          "min": 0.9230769230769231,
+          "max": 0.9230769230769231,
+          "n": 1,
+          "runs": [
+            0.9230769230769231
+          ]
+        },
+        "turn_ndcg@10": {
+          "median": 0.6961992892728158,
+          "min": 0.6961992892728158,
+          "max": 0.6961992892728158,
+          "n": 1,
+          "runs": [
+            0.6961992892728158
+          ]
+        },
+        "turn_recall@10": {
+          "median": 0.8220085470085471,
+          "min": 0.8220085470085471,
+          "max": 0.8220085470085471,
+          "n": 1,
+          "runs": [
+            0.8220085470085471
+          ]
+        },
+        "turn_recall@20": {
+          "median": 0.8559829059829059,
+          "min": 0.8559829059829059,
+          "max": 0.8559829059829059,
+          "n": 1,
+          "runs": [
+            0.8559829059829059
+          ]
+        },
+        "turn_recall@50": {
+          "median": 0.8854700854700854,
+          "min": 0.8854700854700854,
+          "max": 0.8854700854700854,
+          "n": 1,
+          "runs": [
+            0.8854700854700854
+          ]
+        }
+      },
+      "storage": {
+        "raw_text_bytes": {
+          "median": 77017476.0,
+          "min": 77017476.0,
+          "max": 77017476.0,
+          "n": 1,
+          "runs": [
+            77017476.0
+          ]
+        }
+      },
+      "memory": {
+        "peak_cgroup_bytes": {
+          "median": 14086144.0,
+          "min": 14086144.0,
+          "max": 14086144.0,
+          "n": 1,
+          "runs": [
+            14086144.0
+          ]
+        }
+      },
+      "speed": {
+        "build_ms_p50": {
+          "median": 29.367078000000003,
+          "min": 29.367078000000003,
+          "max": 29.367078000000003,
+          "n": 1,
+          "runs": [
+            29.367078000000003
+          ]
+        },
+        "search_p50_us": {
+          "median": 98.0,
+          "min": 98.0,
+          "max": 98.0,
+          "n": 1,
+          "runs": [
+            98.0
+          ]
+        },
+        "search_p99_us": {
+          "median": 165.0,
+          "min": 165.0,
+          "max": 165.0,
+          "n": 1,
+          "runs": [
+            165.0
+          ]
+        }
+      },
+      "breakdown": {
+        "abstention": {
+          "session_recall_all@10": {
+            "median": 0.5,
+            "min": 0.5,
+            "max": 0.5,
+            "n": 1,
+            "runs": [
+              0.5
+            ]
+          },
+          "session_recall_all@5": {
+            "median": 0.5,
+            "min": 0.5,
+            "max": 0.5,
+            "n": 1,
+            "runs": [
+              0.5
+            ]
+          },
+          "session_recall_any@5": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_ndcg@10": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_recall@10": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_recall@20": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_recall@50": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          }
+        },
+        "knowledge-update": {
+          "session_recall_all@10": {
+            "median": 0.9761904761904762,
+            "min": 0.9761904761904762,
+            "max": 0.9761904761904762,
+            "n": 1,
+            "runs": [
+              0.9761904761904762
+            ]
+          },
+          "session_recall_all@5": {
+            "median": 0.9761904761904762,
+            "min": 0.9761904761904762,
+            "max": 0.9761904761904762,
+            "n": 1,
+            "runs": [
+              0.9761904761904762
+            ]
+          },
+          "session_recall_any@5": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_ndcg@10": {
+            "median": 0.7173789486683555,
+            "min": 0.7173789486683555,
+            "max": 0.7173789486683555,
+            "n": 1,
+            "runs": [
+              0.7173789486683555
+            ]
+          },
+          "turn_recall@10": {
+            "median": 0.9761904761904762,
+            "min": 0.9761904761904762,
+            "max": 0.9761904761904762,
+            "n": 1,
+            "runs": [
+              0.9761904761904762
+            ]
+          },
+          "turn_recall@20": {
+            "median": 0.9761904761904762,
+            "min": 0.9761904761904762,
+            "max": 0.9761904761904762,
+            "n": 1,
+            "runs": [
+              0.9761904761904762
+            ]
+          },
+          "turn_recall@50": {
+            "median": 0.9761904761904762,
+            "min": 0.9761904761904762,
+            "max": 0.9761904761904762,
+            "n": 1,
+            "runs": [
+              0.9761904761904762
+            ]
+          }
+        },
+        "multi-session": {
+          "session_recall_all@10": {
+            "median": 0.9898989898989898,
+            "min": 0.9898989898989898,
+            "max": 0.9898989898989898,
+            "n": 1,
+            "runs": [
+              0.9898989898989898
+            ]
+          },
+          "session_recall_all@5": {
+            "median": 0.9419191919191919,
+            "min": 0.9419191919191919,
+            "max": 0.9419191919191919,
+            "n": 1,
+            "runs": [
+              0.9419191919191919
+            ]
+          },
+          "session_recall_any@5": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_ndcg@10": {
+            "median": 0.6820123164200014,
+            "min": 0.6820123164200014,
+            "max": 0.6820123164200014,
+            "n": 1,
+            "runs": [
+              0.6820123164200014
+            ]
+          },
+          "turn_recall@10": {
+            "median": 0.8848484848484849,
+            "min": 0.8848484848484849,
+            "max": 0.8848484848484849,
+            "n": 1,
+            "runs": [
+              0.8848484848484849
+            ]
+          },
+          "turn_recall@20": {
+            "median": 0.9333333333333335,
+            "min": 0.9333333333333335,
+            "max": 0.9333333333333335,
+            "n": 1,
+            "runs": [
+              0.9333333333333335
+            ]
+          },
+          "turn_recall@50": {
+            "median": 0.9696969696969697,
+            "min": 0.9696969696969697,
+            "max": 0.9696969696969697,
+            "n": 1,
+            "runs": [
+              0.9696969696969697
+            ]
+          }
+        },
+        "single-session-assistant": {
+          "session_recall_all@10": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "session_recall_all@5": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "session_recall_any@5": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_ndcg@10": {
+            "median": 0.8130387639652064,
+            "min": 0.8130387639652064,
+            "max": 0.8130387639652064,
+            "n": 1,
+            "runs": [
+              0.8130387639652064
+            ]
+          },
+          "turn_recall@10": {
+            "median": 0.8636363636363636,
+            "min": 0.8636363636363636,
+            "max": 0.8636363636363636,
+            "n": 1,
+            "runs": [
+              0.8636363636363636
+            ]
+          },
+          "turn_recall@20": {
+            "median": 0.9545454545454546,
+            "min": 0.9545454545454546,
+            "max": 0.9545454545454546,
+            "n": 1,
+            "runs": [
+              0.9545454545454546
+            ]
+          },
+          "turn_recall@50": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          }
+        },
+        "single-session-preference": {
+          "session_recall_all@10": {
+            "median": 0.7777777777777778,
+            "min": 0.7777777777777778,
+            "max": 0.7777777777777778,
+            "n": 1,
+            "runs": [
+              0.7777777777777778
+            ]
+          },
+          "session_recall_all@5": {
+            "median": 0.7777777777777778,
+            "min": 0.7777777777777778,
+            "max": 0.7777777777777778,
+            "n": 1,
+            "runs": [
+              0.7777777777777778
+            ]
+          },
+          "session_recall_any@5": {
+            "median": 0.7777777777777778,
+            "min": 0.7777777777777778,
+            "max": 0.7777777777777778,
+            "n": 1,
+            "runs": [
+              0.7777777777777778
+            ]
+          },
+          "turn_ndcg@10": {
+            "median": 0.36270291586326064,
+            "min": 0.36270291586326064,
+            "max": 0.36270291586326064,
+            "n": 1,
+            "runs": [
+              0.36270291586326064
+            ]
+          },
+          "turn_recall@10": {
+            "median": 0.5555555555555556,
+            "min": 0.5555555555555556,
+            "max": 0.5555555555555556,
+            "n": 1,
+            "runs": [
+              0.5555555555555556
+            ]
+          },
+          "turn_recall@20": {
+            "median": 0.6666666666666666,
+            "min": 0.6666666666666666,
+            "max": 0.6666666666666666,
+            "n": 1,
+            "runs": [
+              0.6666666666666666
+            ]
+          },
+          "turn_recall@50": {
+            "median": 0.8333333333333334,
+            "min": 0.8333333333333334,
+            "max": 0.8333333333333334,
+            "n": 1,
+            "runs": [
+              0.8333333333333334
+            ]
+          }
+        },
+        "single-session-user": {
+          "session_recall_all@10": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "session_recall_all@5": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "session_recall_any@5": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_ndcg@10": {
+            "median": 0.9157220135497761,
+            "min": 0.9157220135497761,
+            "max": 0.9157220135497761,
+            "n": 1,
+            "runs": [
+              0.9157220135497761
+            ]
+          },
+          "turn_recall@10": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_recall@20": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          },
+          "turn_recall@50": {
+            "median": 1.0,
+            "min": 1.0,
+            "max": 1.0,
+            "n": 1,
+            "runs": [
+              1.0
+            ]
+          }
+        },
+        "temporal-reasoning": {
+          "session_recall_all@10": {
+            "median": 0.6624113475177305,
+            "min": 0.6624113475177305,
+            "max": 0.6624113475177305,
+            "n": 1,
+            "runs": [
+              0.6624113475177305
+            ]
+          },
+          "session_recall_all@5": {
+            "median": 0.6361702127659574,
+            "min": 0.6361702127659574,
+            "max": 0.6361702127659574,
+            "n": 1,
+            "runs": [
+              0.6361702127659574
+            ]
+          },
+          "session_recall_any@5": {
+            "median": 0.7872340425531915,
+            "min": 0.7872340425531915,
+            "max": 0.7872340425531915,
+            "n": 1,
+            "runs": [
+              0.7872340425531915
+            ]
+          },
+          "turn_ndcg@10": {
+            "median": 0.5919774340641512,
+            "min": 0.5919774340641512,
+            "max": 0.5919774340641512,
+            "n": 1,
+            "runs": [
+              0.5919774340641512
+            ]
+          },
+          "turn_recall@10": {
+            "median": 0.6496453900709219,
+            "min": 0.6496453900709219,
+            "max": 0.6496453900709219,
+            "n": 1,
+            "runs": [
+              0.6496453900709219
+            ]
+          },
+          "turn_recall@20": {
+            "median": 0.6645390070921986,
+            "min": 0.6645390070921986,
+            "max": 0.6645390070921986,
+            "n": 1,
+            "runs": [
+              0.6645390070921986
+            ]
+          },
+          "turn_recall@50": {
+            "median": 0.6836879432624113,
+            "min": 0.6836879432624113,
+            "max": 0.6836879432624113,
+            "n": 1,
+            "runs": [
+              0.6836879432624113
+            ]
+          }
+        }
+      },
+      "error": null
+    }
+  ],
+  "references": [],
+  "notes": [
+    "Abstention questions (no evidence turns) are excluded. Session recall maps ranked turns to their sessions in rank order."
+  ]
+}

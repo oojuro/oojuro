@@ -1,0 +1,33 @@
+{
+ "name": "swe",
+ "records": 529322,
+ "sessions": 6670,
+ "raw_bytes": 385245552,
+ "budget_bytes": 536870912,
+ "by_kind": {
+  "system": {
+   "records": 6670,
+   "bytes": 32502910
+  },
+  "user": {
+   "records": 6670,
+   "bytes": 28745942
+  },
+  "thinking": {
+   "records": 174815,
+   "bytes": 52326492
+  },
+  "tool_call": {
+   "records": 173021,
+   "bytes": 25259629
+  },
+  "tool_result": {
+   "records": 168146,
+   "bytes": 246410579
+  }
+ },
+ "rec_sha256": "82b1faf4a7b2b2ae547e3bebac3aac6e888a2a7e554d7c599c6e3a866ff86874",
+ "sources": {
+  "train-00000.parquet": "5a395e8c7bb8ddc4b8f4d268506b3a0e2cf9b5ec3922600117322fe788067a13"
+ }
+}

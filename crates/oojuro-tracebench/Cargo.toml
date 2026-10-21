@@ -1,0 +1,52 @@
+[package]
+name = "oojuro-tracebench"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "TraceBench: the agent-trace database workload (Oojuro vs Postgres, ClickHouse, SQLite, Tantivy, Lance, Meilisearch, Qdrant, Quickwit, OpenObserve, redb, fjall, RocksDB)"
+
+[features]
+default = ["arm-tantivy", "arm-redb", "arm-fjall", "arm-rocksdb"]
+phase-profile = ["oojuro-trace/phase-profile"]
+# Competitor arms (docs/TRACEBENCH_BASELINES.md). `meili`, `qdrant`,
+# `quickwit` and `openobserve` talk HTTP with std::net only and are always
+# built. `arm-lance` pulls LanceDB (Arrow + DataFusion; a long build that
+# needs `protoc`, see the docs); `arm-rocksdb` compiles RocksDB from source
+# (C++, and bindgen needs libclang, see the docs).
+arm-tantivy = ["dep:tantivy"]
+arm-redb = ["dep:redb"]
+arm-fjall = ["dep:fjall"]
+arm-rocksdb = ["dep:rocksdb"]
+arm-lance = ["dep:lancedb", "dep:lance", "dep:lance-io", "dep:object_store", "dep:arrow-array", "dep:arrow-schema",
+             "dep:tokio", "dep:futures", "dep:async-trait", "dep:url"]
+
+[dependencies]
+oojuro-trace = { path = "../oojuro-trace" }
+serde.workspace = true
+serde_json.workspace = true
+blake3.workspace = true
+memmap2 = "0.9.11"
+postgres = "0.19"
+rusqlite = { version = "0.40.2", features = ["bundled"] }
+tantivy = { version = "=0.27.0", default-features = false, features = ["mmap", "lz4-compression", "stemmer"], optional = true }
+# `remote` only because lancedb 0.40.0 does not compile without it (job.rs
+# names the remote-only `Error::Http`); the arm never talks to a server.
+lancedb = { version = "=0.40.0", default-features = false, features = ["remote"], optional = true }
+lance = { version = "=13.0.0", default-features = false, optional = true }
+lance-io = { version = "=13.0.0", default-features = false, optional = true }
+object_store = { version = "0.14.2", default-features = false, features = ["fs"], optional = true }
+arrow-array = { version = "58", optional = true }
+arrow-schema = { version = "58", optional = true }
+tokio = { version = "1", features = ["rt-multi-thread"], optional = true }
+futures = { version = "0.3", optional = true }
+async-trait = { version = "0.1", optional = true }
+url = { version = "2", optional = true }
+# embedded key-value competitor arms (src/arms/kv*.rs); latest stable as of 2026-10-21
+redb = { version = "4.4.0", optional = true }
+fjall = { version = "3.1.12", optional = true }
+rocksdb = { version = "0.25.0", optional = true, default-features = false, features = ["lz4"] }
+
+[dev-dependencies]
+zstd = { version = "0.13", default-features = false, features = ["experimental", "zdict_builder"] }
+oojuro-store = { path = "../oojuro-store" }

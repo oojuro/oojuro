@@ -1,0 +1,17 @@
+{
+ "name": "nfcorpus",
+ "records": 3633,
+ "sessions": 3633,
+ "raw_bytes": 5787895,
+ "budget_bytes": 0,
+ "by_kind": {
+  "doc": {
+   "records": 3633,
+   "bytes": 5787895
+  }
+ },
+ "rec_sha256": "7bc2ddb01afe19c74882ee1cbbb42df2fe97236783ab70ecfb0b02b7523480ab",
+ "sources": {
+  "corpus.parquet": "f2a1c0b570a5efdf23cfa36f5e573d062cc113c6e7251e22c69b323a33ea895e"
+ }
+}

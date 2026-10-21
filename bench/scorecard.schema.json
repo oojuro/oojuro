@@ -1,0 +1,76 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "oojuro-scorecard-v1",
+  "title": "Oojuro benchmark scorecard",
+  "description": "One file per suite run (beir | turnloop | memqa | gates). Section order is the comparison order: gates, quality, storage, memory, speed. Every Stat holds the per-run values and their median and spread.",
+  "type": "object",
+  "required": ["schema", "created_at", "harness", "hardware", "suite", "dataset", "split", "settings", "arms"],
+  "properties": {
+    "schema": {"const": "oojuro-scorecard-v1"},
+    "created_at": {"type": "string", "description": "UTC, RFC 3339"},
+    "harness": {"type": "object", "description": "commit (12-hex, -dirty if uncommitted), binary, args"},
+    "hardware": {"type": "object", "description": "cpu, logical_cpus, mem_total, swap_total, kernel, work_filesystem, rustc, build_profile, load_avg"},
+    "suite": {"enum": ["beir", "turnloop", "memqa", "gates"]},
+    "dataset": {"type": "string"},
+    "split": {"enum": ["dev", "heldout", "test", "all"]},
+    "settings": {
+      "type": "object",
+      "description": "Run conditions. Always: runs, isolation, bench_lock. Suites add k, cache (warm|cold + how), build_time_included, and their own sizes.",
+      "required": ["runs", "isolation", "bench_lock"]
+    },
+    "arms": {"type": "array", "items": {"$ref": "#/$defs/arm"}},
+    "references": {
+      "type": "array",
+      "description": "Published numbers for context; never produced by this run.",
+      "items": {
+        "type": "object",
+        "required": ["system", "metric", "value", "published", "source"],
+        "properties": {
+          "dataset": {"type": "string"}, "split": {"type": "string"}, "system": {"type": "string"},
+          "metric": {"type": "string"}, "value": {"type": "number"}, "uses_llm": {"type": "boolean"},
+          "published": {"const": true}, "source": {"type": "string"}
+        }
+      }
+    },
+    "notes": {"type": "array", "items": {"type": "string"}}
+  },
+  "$defs": {
+    "stat": {
+      "type": "object",
+      "required": ["median", "min", "max", "n", "runs"],
+      "properties": {
+        "median": {"type": ["number", "null"]}, "min": {"type": ["number", "null"]}, "max": {"type": ["number", "null"]},
+        "n": {"type": "integer", "description": "finite values among runs"},
+        "runs": {"type": "array", "items": {"type": ["number", "null"]}}
+      }
+    },
+    "stats": {"type": "object", "additionalProperties": {"$ref": "#/$defs/stat"}},
+    "gate": {
+      "type": "object",
+      "required": ["pass", "detail"],
+      "properties": {"pass": {"type": "boolean", "description": "true only if every run passed"}, "detail": {}}
+    },
+    "arm": {
+      "type": "object",
+      "required": ["label", "spec", "info", "gates", "quality", "storage", "memory", "speed"],
+      "properties": {
+        "label": {"type": "string"},
+        "spec": {"type": "string", "description": "nine | tantivy | sqlite | cmd:<argv>"},
+        "info": {
+          "type": "object",
+          "description": "What the arm reported in hello: name, version, commit, durability, protocol, notes",
+          "properties": {"name": {"type": "string"}, "version": {"type": "string"}, "commit": {"type": "string"},
+                         "durability": {"type": "string"}, "protocol": {"type": "string"}, "notes": {"type": "array"}}
+        },
+        "gates": {"type": "object", "additionalProperties": {"$ref": "#/$defs/gate"},
+                  "description": "byte_exact, byte_exact_after_reopen, get_range_order, as_of_visibility, no_future_leak, freshness, crash_recovery, determinism (by suite)"},
+        "quality": {"$ref": "#/$defs/stats", "description": "beir: ndcg@10 recall@10 recall@100 mrr@10; turnloop: ndcg@10 ndcg@20 recall@20 hit@20 mrr@10 freshness_self_hit@21; memqa: turn_* and session_recall_*"},
+        "storage": {"$ref": "#/$defs/stats", "description": "raw_text_bytes, disk_bytes, disk_alloc_bytes, disk_ratio (= disk_bytes / raw_text_bytes)"},
+        "memory": {"$ref": "#/$defs/stats", "description": "steady_{cgroup,anon,rss}_{bytes,ratio} after load; peak_{cgroup,rss}_{bytes,ratio} at end; ratios divide by raw_text_bytes"},
+        "speed": {"$ref": "#/$defs/stats", "description": "microseconds inside the arm (*_us) and with protocol round trip (*_roundtrip_*); build_s / prefill_s"},
+        "breakdown": {"type": "object", "additionalProperties": {"$ref": "#/$defs/stats"}, "description": "per-slice quality, e.g. memqa question type"},
+        "error": {"type": ["string", "null"]}
+      }
+    }
+  }
+}

@@ -1,0 +1,22 @@
+{
+ "hermes": {
+  "rec_sha256": "f33e0dc825b8f84ad8bf0eb52a00bc1a32c07faa499dbda079647b8ee695b8ed",
+  "how": "codecs slice <corpus>.rec 33554432 (same prefix rule as baselines nine)"
+ },
+ "ohjson": {
+  "rec_sha256": "501eea05aac4e03403d69af8659b8959f3ce9d6ea5840702a0cc78b93edffae1",
+  "how": "codecs slice <corpus>.rec 33554432 (same prefix rule as baselines nine)"
+ },
+ "ohsft": {
+  "rec_sha256": "7def83dc827b638e8182bc3d4ba04a97013f55af94dcab6111d7889b9d9d09a7",
+  "how": "codecs slice <corpus>.rec 33554432 (same prefix rule as baselines nine)"
+ },
+ "othink": {
+  "rec_sha256": "399dbc914927bd09842a037892e60560fb364740c74803820ed53ee0e0ec1220",
+  "how": "codecs slice <corpus>.rec 33554432 (same prefix rule as baselines nine)"
+ },
+ "swe": {
+  "rec_sha256": "e575b670fe93872c176377742c474ea268ff59c2f4b729ad1cada6827db6aba0",
+  "how": "codecs slice <corpus>.rec 33554432 (same prefix rule as baselines nine)"
+ }
+}

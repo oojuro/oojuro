@@ -1,0 +1,311 @@
+{
+  "arms": {
+    "memvid_cached_2": {
+      "answer_accuracy": null,
+      "citations_in_context": 23,
+      "complete_local_query_ms": {
+        "p50": 0.2575,
+        "p95": 0.7984,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 1840.857142857143,
+      "mean_reciprocal_first_reference_rank": 0.9285714285714286,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 9,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 16
+    },
+    "memvid_cached_8": {
+      "answer_accuracy": null,
+      "citations_in_context": 26,
+      "complete_local_query_ms": {
+        "p50": 0.4526,
+        "p95": 1.2341,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 5461.357142857143,
+      "mean_reciprocal_first_reference_rank": 0.9285714285714286,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 12,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 19
+    },
+    "memvid_uncached_2": {
+      "answer_accuracy": null,
+      "citations_in_context": 23,
+      "complete_local_query_ms": {
+        "p50": 5.4833,
+        "p95": 7.908200000000001,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 1840.857142857143,
+      "mean_reciprocal_first_reference_rank": 0.9285714285714286,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 9,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 16
+    },
+    "memvid_uncached_8": {
+      "answer_accuracy": null,
+      "citations_in_context": 26,
+      "complete_local_query_ms": {
+        "p50": 5.548,
+        "p95": 8.1131,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 5461.357142857143,
+      "mean_reciprocal_first_reference_rank": 0.9285714285714286,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 12,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 19
+    },
+    "nine_cached_2": {
+      "answer_accuracy": null,
+      "citations_in_context": 22,
+      "complete_local_query_ms": {
+        "p50": 0.1255,
+        "p95": 0.434,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 1521.7142857142858,
+      "mean_reciprocal_first_reference_rank": 0.8554421768707484,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 10,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 15
+    },
+    "nine_cached_8": {
+      "answer_accuracy": null,
+      "citations_in_context": 25,
+      "complete_local_query_ms": {
+        "p50": 0.1301,
+        "p95": 0.41459999999999997,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 3857.0,
+      "mean_reciprocal_first_reference_rank": 0.8554421768707484,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 11,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 18
+    },
+    "nine_uncached_2": {
+      "answer_accuracy": null,
+      "citations_in_context": 22,
+      "complete_local_query_ms": {
+        "p50": 0.2243,
+        "p95": 0.5701,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 1521.7142857142858,
+      "mean_reciprocal_first_reference_rank": 0.8554421768707484,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 10,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 15
+    },
+    "nine_uncached_8": {
+      "answer_accuracy": null,
+      "citations_in_context": 25,
+      "complete_local_query_ms": {
+        "p50": 0.2017,
+        "p95": 0.5701999999999999,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 3857.0,
+      "mean_reciprocal_first_reference_rank": 0.8554421768707484,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 11,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 18
+    },
+    "sqlite_fts5_cached_2": {
+      "answer_accuracy": null,
+      "citations_in_context": 25,
+      "complete_local_query_ms": {
+        "p50": 0.1669,
+        "p95": 0.533,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 1769.857142857143,
+      "mean_reciprocal_first_reference_rank": 0.9642857142857143,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 11,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 18
+    },
+    "sqlite_fts5_cached_8": {
+      "answer_accuracy": null,
+      "citations_in_context": 28,
+      "complete_local_query_ms": {
+        "p50": 0.1988,
+        "p95": 0.6541,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 5878.642857142857,
+      "mean_reciprocal_first_reference_rank": 0.9642857142857143,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 14,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 21
+    },
+    "sqlite_fts5_uncached_2": {
+      "answer_accuracy": null,
+      "citations_in_context": 25,
+      "complete_local_query_ms": {
+        "p50": 0.5157,
+        "p95": 1.1858000000000002,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 1769.857142857143,
+      "mean_reciprocal_first_reference_rank": 0.9642857142857143,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 11,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 18
+    },
+    "sqlite_fts5_uncached_8": {
+      "answer_accuracy": null,
+      "citations_in_context": 28,
+      "complete_local_query_ms": {
+        "p50": 0.4868,
+        "p95": 1.1751,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 5878.642857142857,
+      "mean_reciprocal_first_reference_rank": 0.9642857142857143,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 14,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 21
+    },
+    "tantivy_cached_2": {
+      "answer_accuracy": null,
+      "citations_in_context": 25,
+      "complete_local_query_ms": {
+        "p50": 0.1431,
+        "p95": 0.4813,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 1836.9285714285713,
+      "mean_reciprocal_first_reference_rank": 0.9642857142857143,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 11,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 18
+    },
+    "tantivy_cached_8": {
+      "answer_accuracy": null,
+      "citations_in_context": 28,
+      "complete_local_query_ms": {
+        "p50": 0.1549,
+        "p95": 0.5337000000000001,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 5857.928571428572,
+      "mean_reciprocal_first_reference_rank": 0.9642857142857143,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 14,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 21
+    },
+    "tantivy_uncached_2": {
+      "answer_accuracy": null,
+      "citations_in_context": 25,
+      "complete_local_query_ms": {
+        "p50": 0.3281,
+        "p95": 0.782,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 1836.9285714285713,
+      "mean_reciprocal_first_reference_rank": 0.9642857142857143,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 11,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 18
+    },
+    "tantivy_uncached_8": {
+      "answer_accuracy": null,
+      "citations_in_context": 28,
+      "complete_local_query_ms": {
+        "p50": 0.3196,
+        "p95": 0.7086,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 5857.928571428572,
+      "mean_reciprocal_first_reference_rank": 0.9642857142857143,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 14,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 21
+    }
+  },
+  "cases": 14,
+  "embedding_calls": 0,
+  "limitations": [
+    "Small retrospective corpus; evidence coverage is not answer accuracy or task success.",
+    "In-process local query timings include durable benchmark receipts and exact-source packet construction; hosted transport and authorization are excluded.",
+    "Competitor historical views are built outside timing to prevent future-state contamination of ranking statistics.",
+    "Cases run in order with arm rotation inside each case. One Memvid historical file is reopened before that case, outside timed queries; index writers are not retained for every historical view.",
+    "Memvid uses its public primary Tantivy search API with standard deterministic enrichment, no vector/model features.",
+    "Tantivy and Memvid batch index builds commit once; Nine source writes sync individually. Build times are not matched per-write latency.",
+    "All engines receive a bounded exact-query cache control. Cached results still hydrate sources and sync receipts.",
+    "No hosted Mem0, Zep, Supermemory or Supabase service has been benchmarked by this command."
+  ],
+  "measured_at_utc": "2026-10-19T04:38:48.406284600+00:00",
+  "model_calls": 0,
+  "packet_mismatches": 0,
+  "records": 51,
+  "setup": {
+    "memvid": {
+      "batch_build_ms": 2400.6041,
+      "exact_original_recovery_verified": true,
+      "historical_view_build_ms": 24365.196399999997,
+      "source_and_index_artifact_bytes": 533337
+    },
+    "tantivy": {
+      "batch_build_ms": 91.881,
+      "exact_original_recovery_verified": true,
+      "historical_view_build_ms": 803.5295,
+      "source_and_index_artifact_bytes": 46122
+    }
+  },
+  "versions": {
+    "memvid": "2.0.140 (lex only)",
+    "sqlite": "3.53.2",
+    "tantivy": "0.27.0"
+  }
+}

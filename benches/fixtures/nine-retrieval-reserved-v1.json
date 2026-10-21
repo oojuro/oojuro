@@ -1,0 +1,562 @@
+[
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-00",
+      "question": "Find the implementation of the Rust function with_dataset",
+      "evidence": [
+        {
+          "source_id": "public-85e935505399aa0f62e928b06bae8988ec001c040148fb49de906d49480fdd1b",
+          "quote": "fn with_dataset(&self, dataset: dataset::DatasetConsistencyWrapper) -> Self {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-01",
+      "question": "Find the implementation of the Rust function validate_secret_name",
+      "evidence": [
+        {
+          "source_id": "public-89bcf73737b458a34511d99561e7adb2797859d61a981a0ebe264fa7b04c0d62",
+          "quote": "pub fn validate_secret_name(name: &str) -> Result<()> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-02",
+      "question": "Find the implementation of the Rust function log_filter_term",
+      "evidence": [
+        {
+          "source_id": "public-b317a68b50aa5ed331103ccdc3b1c2453102734cf28eb602870b07d5961fff00",
+          "quote": "pub fn log_filter_term(term: &[u8]) {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-03",
+      "question": "Find the implementation of the Rust function tables_to_validate",
+      "evidence": [
+        {
+          "source_id": "public-8f7ab976d6a8812b8867874ae7129597ea4a50f6ae003ca482b729896f58fdf8",
+          "quote": "pub fn tables_to_validate<'a, C: ShapeConfig, S: ShapeCounter, F>("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-04",
+      "question": "Find the implementation of the Rust function track_database_ingress",
+      "evidence": [
+        {
+          "source_id": "public-9b6265ef7fe50123f1d8dda1499552871fda744f49f821b2f2741b22eadfcba7",
+          "quote": "pub fn track_database_ingress("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-05",
+      "question": "Find the implementation of the Rust function create_mutable_segment",
+      "evidence": [
+        {
+          "source_id": "public-964d628933c25c867d7b667287e9080c823c737d1cb93778e9170b84407f6610",
+          "quote": "pub fn create_mutable_segment("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-06",
+      "question": "Find the implementation of the Rust function ensure_supported_function_metadata",
+      "evidence": [
+        {
+          "source_id": "public-81a9bfb037c0b79f7f6e349ea9e74b67d02f9e46354d6555d9acbe3db3858407",
+          "quote": "pub(crate) fn ensure_supported_function_metadata(schema: &ArrowSchema) -> Result<()> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-07",
+      "question": "Find the implementation of the Rust function into_indexed_fields",
+      "evidence": [
+        {
+          "source_id": "public-883a002cb5c384a1d96f4da85d7118455b8caec1e5b5c5574281a6bc8489fd97",
+          "quote": "pub fn into_indexed_fields(self) -> IndexedFields {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-08",
+      "question": "Find the implementation of the Rust function secret_bindings",
+      "evidence": [
+        {
+          "source_id": "public-c89c4894531a1d7281b043f201eff974590d902b645d659218c6ab54979c6e1c",
+          "quote": "pub fn secret_bindings(&self) -> &[SecretBinding] {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-09",
+      "question": "Find the implementation of the Rust function env_var_name_not_unique",
+      "evidence": [
+        {
+          "source_id": "public-1af5e735793243adc501a7fd15a61e8cc257b83481a28d2185f5ea051c5e79a1",
+          "quote": "pub fn env_var_name_not_unique(name: Option<&EnvVarName>) -> ErrorMetadata {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-10",
+      "question": "Find the implementation of the Rust function materialized_blob_ids",
+      "evidence": [
+        {
+          "source_id": "public-b78393570153b1487e373b79d2bb87838f914c93c4922668e359133de11b44f3",
+          "quote": "fn materialized_blob_ids(schema: &LanceSchema, paths: &[String]) -> Result<HashSet<u32>> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-11",
+      "question": "Find the implementation of the Rust function singleton",
+      "evidence": [
+        {
+          "source_id": "public-38695bf3272f237c23f6a8c6535f5cc7007c8109f245f46fc2b7f84523a76788",
+          "quote": "pub fn singleton(value: BinaryKey) -> Self {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-12",
+      "question": "Find the implementation of the Rust function edge_schema",
+      "evidence": [
+        {
+          "source_id": "public-ff8076f47ff8e57a0fca16babe0295b2492fc41ded6dd05b7def50e27188d7eb",
+          "quote": "fn edge_schema() -> SchemaRef {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-13",
+      "question": "Find the implementation of the Rust function convert_polars_arrow_field_to_arrow_rs_field",
+      "evidence": [
+        {
+          "source_id": "public-8e6d3eba582b6966568513f131fabc5a8d9eaad7d4df3201d857df78ea7a569f",
+          "quote": "fn convert_polars_arrow_field_to_arrow_rs_field("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-14",
+      "question": "Find the implementation of the Rust function search_and_vector_bootstrap_timer",
+      "evidence": [
+        {
+          "source_id": "public-e047761d44991c54fcd057db518df5cfafcac8bce5e78542367a68231ebc499f",
+          "quote": "pub fn search_and_vector_bootstrap_timer() -> StatusTimer {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-15",
+      "question": "Find the implementation of the Rust function current_table_docs_synced",
+      "evidence": [
+        {
+          "source_id": "public-4702c49cde86e02ced6d1c1e3dda6c180670075062ba70ccc8c7b7beff7cc7b4",
+          "quote": "pub fn current_table_docs_synced(&self) -> u64 {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-16",
+      "question": "Find the implementation of the Rust function next_time",
+      "evidence": [
+        {
+          "source_id": "public-2276b60b3feeb2c12bf2c846e040a15039024c4b3eca45ecd7ce51c13ea752da",
+          "quote": "fn next_time(&self) -> anyhow::Result<CursorMs> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-17",
+      "question": "Find the implementation of the Rust function require_enabled_index_metadata",
+      "evidence": [
+        {
+          "source_id": "public-3a044836757a0716ca925f186347a513434851013e0d1dfacc4816d3f5f3b39f",
+          "quote": "fn require_enabled_index_metadata("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-18",
+      "question": "Find the implementation of the Rust function sanitize_uri_for_logging",
+      "evidence": [
+        {
+          "source_id": "public-908cc12e7adbd4be22dfc098b2181036cb7d6148f702ee418f9bf72dbe4acadb",
+          "quote": "fn sanitize_uri_for_logging(uri: &Uri) -> Cow<'_, str> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-19",
+      "question": "Find the implementation of the Rust function strip_position",
+      "evidence": [
+        {
+          "source_id": "public-2b9ad703b231e1378a6c9a9aaa0374f063ee08ccc191c36859ce06393a464fb3",
+          "quote": "fn strip_position(error_message: &str) -> String {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-20",
+      "question": "Find the implementation of the Rust function to_object",
+      "evidence": [
+        {
+          "source_id": "public-cb86b8c43bd7ff9968cfcf466ad8dbf5e7debcf2a68ac03e5de559ca4ae88dfc",
+          "quote": "pub fn to_object<T: Serialize>(value: T) -> anyhow::Result<ConvexObject> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-21",
+      "question": "Find the implementation of the Rust function wait_for_value",
+      "evidence": [
+        {
+          "source_id": "public-652c451f8d72c36e6d2c0e091d9ecd6ed8d8b14f8cc03c87e4fe45547638d7a5",
+          "quote": "async fn wait_for_value<Q>("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-22",
+      "question": "Find the implementation of the Rust function time_reverse_revision_pair",
+      "evidence": [
+        {
+          "source_id": "public-3e5a173803bb009e604fadbcebaf5eee61663bf322c0479829175d59fb1d5a2e",
+          "quote": "fn time_reverse_revision_pair(revision_pair: RevisionPair) -> RevisionPair {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-23",
+      "question": "Find the implementation of the Rust function principal_api_key",
+      "evidence": [
+        {
+          "source_id": "public-ba2453d418abec9aedc656a0453e470c76ed68fbca9fce92af68ffb48f86176e",
+          "quote": "pub fn principal_api_key(key: impl Into<String>) -> Result<Self> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-24",
+      "question": "Find the implementation of the Rust function fetch_blob_files_aligns_across_fragments_with_nulls_and_dups",
+      "evidence": [
+        {
+          "source_id": "public-d1ba2743a22f42ad8f3382ccaffbe2b66cde0e7aa0acba7037e840f485950a8e",
+          "quote": "async fn fetch_blob_files_aligns_across_fragments_with_nulls_and_dups() -> Result<()> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-25",
+      "question": "Find the implementation of the Rust function get_table_stats",
+      "evidence": [
+        {
+          "source_id": "public-dd59139fccb66eb919ed3639cc0b9d86c05ecab4dbabaecdadf84602df64f38b",
+          "quote": "async fn get_table_stats("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-26",
+      "question": "Find the implementation of the Rust function insert_index_chunk",
+      "evidence": [
+        {
+          "source_id": "public-c0b33c80368f2e36ca0553b733f211a1c6b507fe9b9dd0e3e6e56c1ce297c948",
+          "quote": "pub fn insert_index_chunk(chunk_size: usize, multitenant: bool) -> &'static str {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-27",
+      "question": "Find the implementation of the Rust function try_create_dir",
+      "evidence": [
+        {
+          "source_id": "public-1c0e8663c957bd4e255c828de4b5950508f1549d71aff1e74b36eece13aa4de7",
+          "quote": "fn try_create_dir(path: &str) -> core::result::Result<(), std::io::Error> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-28",
+      "question": "Find the implementation of the Rust function take_reused_context",
+      "evidence": [
+        {
+          "source_id": "public-7bd962ba808d7df643b6d1fc23cd8fbfde425c8436fcad37049e469fb78a4169",
+          "quote": "pub(crate) fn take_reused_context("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-29",
+      "question": "Find the implementation of the Rust function remove_child",
+      "evidence": [
+        {
+          "source_id": "public-6ff78f7f4d72e808b89de85922f7a6079b0ac5663db3090d6e0d5999d44cc5a1",
+          "quote": "fn remove_child(&mut self, byte: u8) {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-30",
+      "question": "Find the implementation of the Rust function uri_struct_batch",
+      "evidence": [
+        {
+          "source_id": "public-55eb3d0d77bbb109ef8602b00f98aaee3ee5d60c8e79703bfa8a177594862843",
+          "quote": "fn uri_struct_batch(id: i64, uri: &str) -> RecordBatch {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-31",
+      "question": "Find the implementation of the Rust function identity_mode",
+      "evidence": [
+        {
+          "source_id": "public-b80feb5dcc13046fab4d94e2d0eed2023a2fb784bce3dfa95551439c4d8584fe",
+          "quote": "fn identity_mode(source_id: i32) -> LsmMode {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-32",
+      "question": "Find the implementation of the Rust function log_sync_protocol_websockets_total",
+      "evidence": [
+        {
+          "source_id": "public-424ad2161c511a62cedf1ab55e3b93749dad27bd8da534de16f629711783a928",
+          "quote": "pub fn log_sync_protocol_websockets_total(partition_id: &str, delta: i8) {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-33",
+      "question": "Find the implementation of the Rust function next_value_seed",
+      "evidence": [
+        {
+          "source_id": "public-ae08ed71867cb76a2e6cb81d9a2cd41b56fc96595390f1618853373e9d6c4dc1",
+          "quote": "fn next_value_seed<T>(&mut self, seed: T) -> Result<T::Value, Error>"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-34",
+      "question": "Find the implementation of the Rust function identity_version",
+      "evidence": [
+        {
+          "source_id": "public-74a434a7e55153245d1ea0e77bdaffda91cae88e9b0c302a9adcdbce41e1b4a8",
+          "quote": "pub fn identity_version(&self) -> IdentityVersion {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-35",
+      "question": "Find the implementation of the Rust function from_text_query_usage",
+      "evidence": [
+        {
+          "source_id": "public-92ecc5a057a5e5f4f4c20c1f1a1e99671335de23ad2c1fe8ff072c8a74858a6e",
+          "quote": "fn from_text_query_usage("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-36",
+      "question": "Find the implementation of the Rust function assert_refused",
+      "evidence": [
+        {
+          "source_id": "public-1337f58ff1f4bff3edf0ebef64e9c78ab37a0288fe1e26239123ee7e8b3c5d79",
+          "quote": "fn assert_refused<T: std::fmt::Debug>(result: Result<T>, operation: &str) {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-37",
+      "question": "Find the implementation of the Rust function recognize_convex_type",
+      "evidence": [
+        {
+          "source_id": "public-a8afcd9a7004c7a8f51d2d87e7a2631fbf47c6ca6c9d80861c95ce0b1bf1c49f",
+          "quote": "fn recognize_convex_type(data_type: &FivetranDataType) -> anyhow::Result<Validator> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-38",
+      "question": "Find the implementation of the Rust function registration_request_matches_shared_canonical_golden",
+      "evidence": [
+        {
+          "source_id": "public-2abbeba4cad0736955aa00d1c456b85fc9644215e5cc733d3c07513493161285",
+          "quote": "fn registration_request_matches_shared_canonical_golden() {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "reserved_symbol_lookup",
+    "case": {
+      "id": "reserved-symbol-39",
+      "question": "Find the implementation of the Rust function aggregate",
+      "evidence": [
+        {
+          "source_id": "public-1ef6500967450d32275a9648a27bf9dfebc9a10b4d793db6338381b5ba381586",
+          "quote": "pub fn aggregate(&self) -> AggregatedFunctionUsageStats {"
+        }
+      ],
+      "at": 10
+    }
+  }
+]

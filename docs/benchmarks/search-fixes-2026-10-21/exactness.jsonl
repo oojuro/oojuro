@@ -1,0 +1,7 @@
+{"size":"0","compare":{"lines": 30905, "identical": 25950, "continued": 4955, "other": 0, "short_before": 4955, "short_after": 0, "added_results": 60107, "only_entropy_differs": 0}}
+{"size":"0-all","compare":{"lines": 30905, "identical": 25950, "continued": 4955, "other": 0, "short_before": 4955, "short_after": 0, "added_results": 60107, "only_entropy_differs": 0}}
+{"size":"1024","compare":{"lines": 200, "identical": 171, "continued": 29, "other": 0, "short_before": 29, "short_after": 0, "added_results": 296, "only_entropy_differs": 0}}
+{"size":"4096","compare":{"lines": 200, "identical": 190, "continued": 10, "other": 0, "short_before": 10, "short_after": 0, "added_results": 116, "only_entropy_differs": 0}}
+{"size":"16384","compare":{"lines": 200, "identical": 197, "continued": 3, "other": 0, "short_before": 3, "short_after": 0, "added_results": 44, "only_entropy_differs": 0}}
+{"size":"65536","compare":{"lines": 200, "identical": 200, "continued": 0, "other": 0, "short_before": 0, "short_after": 0, "added_results": 0, "only_entropy_differs": 0}}
+{"size":"262144","compare":{"lines": 200, "identical": 200, "continued": 0, "other": 0, "short_before": 0, "short_after": 0, "added_results": 0, "only_entropy_differs": 0}}

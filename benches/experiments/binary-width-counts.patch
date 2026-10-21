@@ -1,0 +1,16 @@
+diff --git a/crates/oojuro-nine/src/lib.rs b/crates/oojuro-nine/src/lib.rs
+--- a/crates/oojuro-nine/src/lib.rs
++++ b/crates/oojuro-nine/src/lib.rs
+@@ -16,0 +17 @@
++pub const RETRIEVAL_COUNT_MODEL: &str = "binary-width-frequency-v1";
+@@ -318,0 +320,3 @@
++        }
++        for count in terms.values_mut() {
++            *count = (usize::BITS - count.leading_zeros()) as usize;
+diff --git a/crates/oojuro-nine/src/tests.rs b/crates/oojuro-nine/src/tests.rs
+--- a/crates/oojuro-nine/src/tests.rs
++++ b/crates/oojuro-nine/src/tests.rs
+@@ -339,0 +340,3 @@
++                    }
++                    for count in counts.values_mut() {
++                        *count = (*count as f64).log2().floor() as usize + 1;

@@ -1,0 +1,215 @@
+{
+  "cases_digest": "35f389b36016b27948534262a59fa6f6865ced0fc186740e01d8f3cb5d6805b4",
+  "corpus_controls": {
+    "arms": {
+      "nine_k32_b16384": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 16384,
+        "groups": {
+          "reserved_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 0.4125,
+              "p95": 5.7972,
+              "samples": 120
+            },
+            "mean_context_bytes": 10886.275,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 38,
+            "pairs_in_context": 25,
+            "questions": 40,
+            "questions_with_all_evidence": 25,
+            "reference_pairs": 40,
+            "reference_quotes_in_context": 25
+          }
+        },
+        "k": 32
+      },
+      "nine_k32_b65536": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 65536,
+        "groups": {
+          "reserved_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 0.40890000000000004,
+              "p95": 6.3103,
+              "samples": 120
+            },
+            "mean_context_bytes": 24546.2,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 38,
+            "pairs_in_context": 36,
+            "questions": 40,
+            "questions_with_all_evidence": 36,
+            "reference_pairs": 40,
+            "reference_quotes_in_context": 36
+          }
+        },
+        "k": 32
+      },
+      "nine_k8_b16384": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 16384,
+        "groups": {
+          "reserved_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 0.4068,
+              "p95": 5.8718,
+              "samples": 120
+            },
+            "mean_context_bytes": 10886.275,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 38,
+            "pairs_in_context": 25,
+            "questions": 40,
+            "questions_with_all_evidence": 25,
+            "reference_pairs": 40,
+            "reference_quotes_in_context": 25
+          }
+        },
+        "k": 8
+      },
+      "nine_k8_b65536": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 65536,
+        "groups": {
+          "reserved_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 0.4062,
+              "p95": 6.1255,
+              "samples": 120
+            },
+            "mean_context_bytes": 22602.8,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 38,
+            "pairs_in_context": 36,
+            "questions": 40,
+            "questions_with_all_evidence": 36,
+            "reference_pairs": 40,
+            "reference_quotes_in_context": 36
+          }
+        },
+        "k": 8
+      },
+      "sqlite_fts5_k32_b16384": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 16384,
+        "groups": {
+          "reserved_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 53.4783,
+              "p95": 75.29429999999999,
+              "samples": 120
+            },
+            "mean_context_bytes": 16184.225,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 39,
+            "pairs_in_context": 27,
+            "questions": 40,
+            "questions_with_all_evidence": 27,
+            "reference_pairs": 40,
+            "reference_quotes_in_context": 27
+          }
+        },
+        "k": 32
+      },
+      "sqlite_fts5_k32_b65536": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 65536,
+        "groups": {
+          "reserved_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 49.6126,
+              "p95": 59.154199999999996,
+              "samples": 120
+            },
+            "mean_context_bytes": 65261.325,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 39,
+            "pairs_in_context": 37,
+            "questions": 40,
+            "questions_with_all_evidence": 37,
+            "reference_pairs": 40,
+            "reference_quotes_in_context": 37
+          }
+        },
+        "k": 32
+      },
+      "sqlite_fts5_k8_b16384": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 16384,
+        "groups": {
+          "reserved_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 51.3091,
+              "p95": 64.3228,
+              "samples": 120
+            },
+            "mean_context_bytes": 16184.225,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 39,
+            "pairs_in_context": 27,
+            "questions": 40,
+            "questions_with_all_evidence": 27,
+            "reference_pairs": 40,
+            "reference_quotes_in_context": 27
+          }
+        },
+        "k": 8
+      },
+      "sqlite_fts5_k8_b65536": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 65536,
+        "groups": {
+          "reserved_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 49.9102,
+              "p95": 64.8347,
+              "samples": 120
+            },
+            "mean_context_bytes": 62141.35,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 39,
+            "pairs_in_context": 37,
+            "questions": 40,
+            "questions_with_all_evidence": 37,
+            "reference_pairs": 40,
+            "reference_quotes_in_context": 37
+          }
+        },
+        "k": 8
+      }
+    },
+    "changed_repeat_packets": 0
+  },
+  "embedding_calls": 0,
+  "exact_record_cross_checks": 18495,
+  "limitations": [
+    "Same frozen sources and cases unless an explicit cases file is supplied; all original records are cross-checked before timing.",
+    "A source digest verifies originals were unchanged; query receipt journals append normally.",
+    "No result cache, model calls, hosting, generated-answer scores or actual model tokens. SQLite uses the same global FTS5 index and historical eligibility as the scale experiment."
+  ],
+  "llm_calls": 0,
+  "native_stats_before_queries": {
+    "archive_bytes": 67955792,
+    "cache_bytes_estimate": 0,
+    "cache_entries": 0,
+    "delta_records": 1851,
+    "indexed_postings": 4877909,
+    "learned_outcomes": 0,
+    "persisted_queries": 9948,
+    "raw_text_bytes": 149793732,
+    "records": 18495,
+    "vocabulary": 351612
+  },
+  "scope": "verified frozen-corpus requery",
+  "source_archive_digest": "4851adcc01420e9d9f155ad1db2d826aa26d9c4b72fa18fce0cbfec961cdb18f",
+  "sqlite_identifier_rrf": true
+}

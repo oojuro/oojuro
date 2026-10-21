@@ -1,0 +1,194 @@
+{
+  "scope": "frozen-window offline complementary-context screen",
+  "coefficient": 0.5,
+  "max_sources": 32,
+  "max_context_bytes": 65536,
+  "embedding_calls": 0,
+  "llm_calls": 0,
+  "arms": {
+    "nine": {
+      "large_tool": {
+        "prior_pairs": 9,
+        "ordered_pairs": 9,
+        "selected_pairs": 9,
+        "gained_pairs": 0,
+        "lost_pairs": 0,
+        "prior_bytes": 10057.333333333334,
+        "selected_bytes": 10057.333333333334,
+        "prior_complete": 9,
+        "selected_complete": 9,
+        "available_windows": 4.0,
+        "unavailable_windows": 0.0,
+        "selection_only_ms": 0.0013666657549846503
+      },
+      "pilot_history": {
+        "prior_pairs": 19,
+        "ordered_pairs": 19,
+        "selected_pairs": 19,
+        "gained_pairs": 0,
+        "lost_pairs": 0,
+        "prior_bytes": 25380.5,
+        "selected_bytes": 24919.64285714286,
+        "prior_complete": 12,
+        "selected_complete": 12,
+        "available_windows": 512.0,
+        "unavailable_windows": 0.0,
+        "selection_only_ms": 20.6675071427266
+      },
+      "public_symbol_lookup": {
+        "prior_pairs": 6,
+        "ordered_pairs": 6,
+        "selected_pairs": 6,
+        "gained_pairs": 0,
+        "lost_pairs": 0,
+        "prior_bytes": 2434.3333333333335,
+        "selected_bytes": 2434.3333333333335,
+        "prior_complete": 6,
+        "selected_complete": 6,
+        "available_windows": 1.0,
+        "unavailable_windows": 0.0,
+        "selection_only_ms": 0.014716668374603614
+      },
+      "unseen_document_question": {
+        "prior_pairs": 19,
+        "ordered_pairs": 19,
+        "selected_pairs": 19,
+        "gained_pairs": 0,
+        "lost_pairs": 0,
+        "prior_bytes": 46276.2,
+        "selected_bytes": 39184.0,
+        "prior_complete": 19,
+        "selected_complete": 19,
+        "available_windows": 512.0,
+        "unavailable_windows": 0.0,
+        "selection_only_ms": 26.20693000026222
+      },
+      "unseen_symbol_lookup": {
+        "prior_pairs": 40,
+        "ordered_pairs": 40,
+        "selected_pairs": 40,
+        "gained_pairs": 0,
+        "lost_pairs": 0,
+        "prior_bytes": 2368.975,
+        "selected_bytes": 2368.975,
+        "prior_complete": 40,
+        "selected_complete": 40,
+        "available_windows": 1.0,
+        "unavailable_windows": 0.0,
+        "selection_only_ms": 0.0027875004889210686
+      },
+      "reserved_symbol_lookup": {
+        "prior_pairs": 40,
+        "ordered_pairs": 40,
+        "selected_pairs": 40,
+        "gained_pairs": 0,
+        "lost_pairs": 0,
+        "prior_bytes": 2415.525,
+        "selected_bytes": 2415.525,
+        "prior_complete": 40,
+        "selected_complete": 40,
+        "available_windows": 1.0,
+        "unavailable_windows": 0.0,
+        "selection_only_ms": 0.00034500062611186877
+      }
+    },
+    "sqlite_fts5": {
+      "large_tool": {
+        "prior_pairs": 9,
+        "ordered_pairs": 9,
+        "selected_pairs": 9,
+        "gained_pairs": 0,
+        "lost_pairs": 0,
+        "prior_bytes": 65516.0,
+        "selected_bytes": 64999.0,
+        "prior_complete": 9,
+        "selected_complete": 9,
+        "available_windows": 439.6666666666667,
+        "unavailable_windows": 72.33333333333333,
+        "selection_only_ms": 0.006966666357281308
+      },
+      "pilot_history": {
+        "prior_pairs": 20,
+        "ordered_pairs": 20,
+        "selected_pairs": 19,
+        "gained_pairs": 0,
+        "lost_pairs": 1,
+        "prior_bytes": 65506.857142857145,
+        "selected_bytes": 65209.28571428572,
+        "prior_complete": 13,
+        "selected_complete": 12,
+        "available_windows": 445.07142857142856,
+        "unavailable_windows": 66.92857142857143,
+        "selection_only_ms": 54.648414286410635,
+        "lost_case_ordinals": [
+          12
+        ]
+      },
+      "public_symbol_lookup": {
+        "prior_pairs": 6,
+        "ordered_pairs": 6,
+        "selected_pairs": 6,
+        "gained_pairs": 0,
+        "lost_pairs": 0,
+        "prior_bytes": 2434.3333333333335,
+        "selected_bytes": 2434.3333333333335,
+        "prior_complete": 6,
+        "selected_complete": 6,
+        "available_windows": 1.0,
+        "unavailable_windows": 0.0,
+        "selection_only_ms": 0.03471666786936112
+      },
+      "unseen_document_question": {
+        "prior_pairs": 19,
+        "ordered_pairs": 18,
+        "selected_pairs": 18,
+        "gained_pairs": 0,
+        "lost_pairs": 1,
+        "prior_bytes": 65494.85,
+        "selected_bytes": 65291.8,
+        "prior_complete": 19,
+        "selected_complete": 18,
+        "available_windows": 450.15,
+        "unavailable_windows": 61.85,
+        "selection_only_ms": 57.1390800003428,
+        "lost_case_ordinals": [
+          34
+        ]
+      },
+      "unseen_symbol_lookup": {
+        "prior_pairs": 40,
+        "ordered_pairs": 40,
+        "selected_pairs": 40,
+        "gained_pairs": 0,
+        "lost_pairs": 0,
+        "prior_bytes": 2368.975,
+        "selected_bytes": 2368.975,
+        "prior_complete": 40,
+        "selected_complete": 40,
+        "available_windows": 1.0,
+        "unavailable_windows": 0.0,
+        "selection_only_ms": 0.008089999028015882
+      },
+      "reserved_symbol_lookup": {
+        "prior_pairs": 40,
+        "ordered_pairs": 40,
+        "selected_pairs": 40,
+        "gained_pairs": 0,
+        "lost_pairs": 0,
+        "prior_bytes": 2415.525,
+        "selected_bytes": 2415.525,
+        "prior_complete": 40,
+        "selected_complete": 40,
+        "available_windows": 1.0,
+        "unavailable_windows": 0.0,
+        "selection_only_ms": 0.0003875000402331352
+      }
+    }
+  },
+  "limitations": [
+    "Retrospective development fixtures; labels are used only for scoring after selection.",
+    "Frozen wide-packet windows can omit late candidates or differ in final clipping; not fresh extraction.",
+    "Timing is Python selection only, excludes original loading, token preparation for the ordered control, retrieval and receipts.",
+    "Lexical MMR and reciprocal original rank; no entropy or factual-confidence guarantee."
+  ]
+}

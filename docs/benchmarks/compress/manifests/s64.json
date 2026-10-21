@@ -1,0 +1,32 @@
+{
+ "fiqa": {
+  "rec_sha256": "0a97e5a56bb5f03fcc6e69bd1b54542edbeeec9196ced41c0c7066c30a06384b",
+  "raw_bytes": 44276480,
+  "how": "codecs slice <corpus>.rec 67108864 (append-order prefix of whole records, >= 64 MiB of text or the whole corpus)"
+ },
+ "hermes": {
+  "rec_sha256": "c02ca0adbc671f763180722e5509249e9d14ec14b323130e6c2ecdd38258e079",
+  "raw_bytes": 50736426,
+  "how": "codecs slice <corpus>.rec 67108864 (append-order prefix of whole records, >= 64 MiB of text or the whole corpus)"
+ },
+ "ohjson": {
+  "rec_sha256": "a173b766acc224d302e322e28a674bb6ddaea57f69faa043a92e2cc2b1f164cc",
+  "raw_bytes": 67108965,
+  "how": "codecs slice <corpus>.rec 67108864 (append-order prefix of whole records, >= 64 MiB of text or the whole corpus)"
+ },
+ "ohsft": {
+  "rec_sha256": "7def83dc827b638e8182bc3d4ba04a97013f55af94dcab6111d7889b9d9d09a7",
+  "raw_bytes": 31517528,
+  "how": "codecs slice <corpus>.rec 67108864 (append-order prefix of whole records, >= 64 MiB of text or the whole corpus)"
+ },
+ "othink": {
+  "rec_sha256": "8d16c6642a7da5f5f1eebe71ad86d8e270527187dae4b36d3ccfe7bdccd3cf2c",
+  "raw_bytes": 67109480,
+  "how": "codecs slice <corpus>.rec 67108864 (append-order prefix of whole records, >= 64 MiB of text or the whole corpus)"
+ },
+ "swe": {
+  "rec_sha256": "61222231ad3556822eae8d4d6274101203fbc6dd6ed17138312821e37a8727aa",
+  "raw_bytes": 67113774,
+  "how": "codecs slice <corpus>.rec 67108864 (append-order prefix of whole records, >= 64 MiB of text or the whole corpus)"
+ }
+}

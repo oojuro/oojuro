@@ -1,0 +1,93 @@
+--- a/crates/oojuro-nine/src/lib.rs
++++ b/crates/oojuro-nine/src/lib.rs
+@@ -2 +2 @@
+-//! Text retrieval uses keyword postings and conditional query code length.
++//! Text retrieval uses keyword postings and statistical information weights.
+@@ -16,2 +16 @@
+-const MU: f64 = 128.0;
+-pub const RETRIEVAL_MODEL: &str = "dirichlet-128-v1";
++pub const RETRIEVAL_MODEL: &str = "conditional-dph-v1";
+@@ -751,3 +750,2 @@
+-        // Algebraically identical to L(q|B)-L(q|d). Absent terms share the
+-        // length penalty; only nonzero postings need individual log updates.
+-        let query_count = query.values().sum::<usize>() as f64;
++        // Only present features contribute hypergeometric information weights.
++        // The historical candidate collection supplies the background frequency.
+@@ -755,3 +752,0 @@
+-        for i in &candidates {
+-            gains[*i] = -query_count * (1. + self.rows[*i].length as f64 / MU).log2();
+-        }
+@@ -759 +753,0 @@
+-            let scale = MU * background[term];
+@@ -763 +757,2 @@
+-                    gains[p.row] += *count as f64 * (1. + p.count as f64 / scale).log2();
++                    gains[p.row] += *count as f64
++                        * information_weight(p.count, self.rows[p.row].length, background[term]);
+@@ -770 +764,0 @@
+-                let conditional = baseline - gains[i];
+@@ -775 +769 @@
+-                (i, gains[i] + usefulness, conditional)
++                (i, gains[i] + usefulness)
+@@ -781 +775 @@
+-            .map(|(_, s, _)| *s)
++            .map(|(_, s)| *s)
+@@ -783,4 +777 @@
+-        let weights: Vec<_> = scored
+-            .iter()
+-            .map(|(_, s, _)| (*s - maximum).exp2())
+-            .collect();
++        let weights: Vec<_> = scored.iter().map(|(_, s)| (*s - maximum).exp2()).collect();
+@@ -788 +779 @@
+-        let compare = |a: &(usize, f64, f64), b: &(usize, f64, f64)| {
++        let compare = |a: &(usize, f64), b: &(usize, f64)| {
+@@ -804 +794,0 @@
+-        metrics.best_conditional_query_bits = scored.first().map(|(_, _, bits)| *bits);
+@@ -806 +796 @@
+-        for (i, score, _) in scored {
++        for (i, score) in scored {
+@@ -946,0 +937,10 @@
++fn information_weight(count: usize, length: usize, background: f64) -> f64 {
++    if count == 0 || count >= length {
++        return 0.;
++    }
++    let t = count as f64;
++    let f = t / length as f64;
++    (1. - f).powi(2) / (t + 1.)
++        * (t * (f / background).log2() + 0.5 * (2. * std::f64::consts::PI * t * (1. - f)).log2())
++}
++
+--- a/crates/oojuro-nine/src/tests.rs
++++ b/crates/oojuro-nine/src/tests.rs
+@@ -308 +308 @@
+-fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()> {
++fn sparse_scores_match_dense_information_weights_on_historical_views() -> Result<()> {
+@@ -380,4 +380,8 @@
+-                            let p = (counts.get(term).copied().unwrap_or(0) as f64
+-                                + MU * background[term])
+-                                / (length + MU);
+-                            *n as f64 * (p.log2() - background[term].log2())
++                            let t = counts.get(term).copied().unwrap_or(0) as f64;
++                            if t == 0. || t == length {
++                                return 0.;
++                            }
++                            let f = t / length;
++                            let information = t * (f.log2() - background[term].log2())
++                                + (2. * std::f64::consts::PI * t * (1. - f)).log2() / 2.;
++                            *n as f64 * information * (1. - f) * (1. - f) / (t + 1.)
+@@ -389,0 +394 @@
++            assert!(db.metrics().best_conditional_query_bits.is_none());
+@@ -416,0 +422,14 @@
++fn information_weight_has_finite_degenerate_limits_and_a_numeric_reference() {
++    assert_eq!(information_weight(0, 0, 0.5), 0.);
++    assert_eq!(information_weight(0, 10, 0.5), 0.);
++    assert_eq!(information_weight(10, 10, 0.5), 0.);
++    assert!((information_weight(2, 10, 0.1) - 0.7818205903557288).abs() < 1e-12);
++    for (t, n) in [(1, 2), (1, 1_000_000), (999_999, 1_000_000)] {
++        for p in [1e-100, 0.1, 1.] {
++            assert!(information_weight(t, n, p).is_finite());
++        }
++    }
++    assert!(information_weight(1, 2, 1.) < 0.);
++}
++
++#[test]

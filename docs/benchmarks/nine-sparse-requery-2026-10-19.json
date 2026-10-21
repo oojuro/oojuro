@@ -1,0 +1,1020 @@
+{
+  "cases_digest": "7e1865e8d3239ca8799e643816f9e6b8c78570677990dc722be4bc4ba29e5241",
+  "corpus_controls": {
+    "arms": {
+      "nine_k128_b1048576": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 1048576,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 7.4982,
+              "p95": 9.0476,
+              "samples": 27
+            },
+            "mean_context_bytes": 310944.6666666667,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 4.0774,
+              "p95": 8.2088,
+              "samples": 18
+            },
+            "mean_context_bytes": 330835.5,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 5,
+            "pairs_in_context": 3,
+            "questions": 6,
+            "questions_with_all_evidence": 3,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 3
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 10.589400000000001,
+              "p95": 14.665,
+              "samples": 42
+            },
+            "mean_context_bytes": 130333.71428571429,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 20,
+            "questions": 14,
+            "questions_with_all_evidence": 13,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 27
+          }
+        },
+        "k": 128
+      },
+      "nine_k128_b16384": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 16384,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 5.9416,
+              "p95": 7.0295000000000005,
+              "samples": 27
+            },
+            "mean_context_bytes": 16230.555555555555,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 3.5568,
+              "p95": 8.2848,
+              "samples": 18
+            },
+            "mean_context_bytes": 16117.833333333334,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 5,
+            "pairs_in_context": 1,
+            "questions": 6,
+            "questions_with_all_evidence": 1,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 1
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 10.093,
+              "p95": 13.6652,
+              "samples": 42
+            },
+            "mean_context_bytes": 16278.57142857143,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 19,
+            "questions": 14,
+            "questions_with_all_evidence": 12,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 26
+          }
+        },
+        "k": 128
+      },
+      "nine_k128_b65536": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 65536,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 6.1254,
+              "p95": 7.6813,
+              "samples": 27
+            },
+            "mean_context_bytes": 65518.88888888889,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 3.4144,
+              "p95": 6.8869,
+              "samples": 18
+            },
+            "mean_context_bytes": 65067.5,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 5,
+            "pairs_in_context": 2,
+            "questions": 6,
+            "questions_with_all_evidence": 2,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 2
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 10.096499999999999,
+              "p95": 12.3083,
+              "samples": 42
+            },
+            "mean_context_bytes": 65433.07142857143,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 19,
+            "questions": 14,
+            "questions_with_all_evidence": 12,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 26
+          }
+        },
+        "k": 128
+      },
+      "nine_k32_b1048576": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 1048576,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 6.7552,
+              "p95": 9.5214,
+              "samples": 27
+            },
+            "mean_context_bytes": 127199.11111111111,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 3.5046999999999997,
+              "p95": 7.934500000000001,
+              "samples": 18
+            },
+            "mean_context_bytes": 62950.833333333336,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 5,
+            "pairs_in_context": 2,
+            "questions": 6,
+            "questions_with_all_evidence": 2,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 2
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 10.223700000000001,
+              "p95": 17.1277,
+              "samples": 42
+            },
+            "mean_context_bytes": 28068.714285714286,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 19,
+            "questions": 14,
+            "questions_with_all_evidence": 12,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 26
+          }
+        },
+        "k": 32
+      },
+      "nine_k32_b16384": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 16384,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 5.984,
+              "p95": 7.815499999999999,
+              "samples": 27
+            },
+            "mean_context_bytes": 16230.555555555555,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 3.5797,
+              "p95": 6.6373999999999995,
+              "samples": 18
+            },
+            "mean_context_bytes": 16117.833333333334,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 5,
+            "pairs_in_context": 1,
+            "questions": 6,
+            "questions_with_all_evidence": 1,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 1
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 9.978900000000001,
+              "p95": 12.1142,
+              "samples": 42
+            },
+            "mean_context_bytes": 16189.42857142857,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 19,
+            "questions": 14,
+            "questions_with_all_evidence": 12,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 26
+          }
+        },
+        "k": 32
+      },
+      "nine_k32_b65536": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 65536,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 6.276000000000001,
+              "p95": 8.3833,
+              "samples": 27
+            },
+            "mean_context_bytes": 65518.88888888889,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 3.5237,
+              "p95": 7.211,
+              "samples": 18
+            },
+            "mean_context_bytes": 47449.333333333336,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 5,
+            "pairs_in_context": 2,
+            "questions": 6,
+            "questions_with_all_evidence": 2,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 2
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 10.5893,
+              "p95": 13.9428,
+              "samples": 42
+            },
+            "mean_context_bytes": 27629.714285714286,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 19,
+            "questions": 14,
+            "questions_with_all_evidence": 12,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 26
+          }
+        },
+        "k": 32
+      },
+      "nine_k8_b1048576": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 1048576,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 6.008900000000001,
+              "p95": 7.7176,
+              "samples": 27
+            },
+            "mean_context_bytes": 40455.11111111111,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 3.2914,
+              "p95": 6.279,
+              "samples": 18
+            },
+            "mean_context_bytes": 16076.833333333334,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 5,
+            "pairs_in_context": 1,
+            "questions": 6,
+            "questions_with_all_evidence": 1,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 1
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 9.7676,
+              "p95": 12.3109,
+              "samples": 42
+            },
+            "mean_context_bytes": 5560.785714285715,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 18,
+            "questions": 14,
+            "questions_with_all_evidence": 11,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 25
+          }
+        },
+        "k": 8
+      },
+      "nine_k8_b16384": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 16384,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 6.4375,
+              "p95": 8.0525,
+              "samples": 27
+            },
+            "mean_context_bytes": 16230.555555555555,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 3.7453,
+              "p95": 6.8175,
+              "samples": 18
+            },
+            "mean_context_bytes": 10060.666666666666,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 5,
+            "pairs_in_context": 1,
+            "questions": 6,
+            "questions_with_all_evidence": 1,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 1
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 9.9622,
+              "p95": 15.450000000000001,
+              "samples": 42
+            },
+            "mean_context_bytes": 5560.785714285715,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 18,
+            "questions": 14,
+            "questions_with_all_evidence": 11,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 25
+          }
+        },
+        "k": 8
+      },
+      "nine_k8_b65536": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 65536,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 6.2584,
+              "p95": 8.534699999999999,
+              "samples": 27
+            },
+            "mean_context_bytes": 40455.11111111111,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 3.2068000000000003,
+              "p95": 6.7365,
+              "samples": 18
+            },
+            "mean_context_bytes": 16076.833333333334,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 5,
+            "pairs_in_context": 1,
+            "questions": 6,
+            "questions_with_all_evidence": 1,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 1
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 9.7401,
+              "p95": 13.184700000000001,
+              "samples": 42
+            },
+            "mean_context_bytes": 5560.785714285715,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 18,
+            "questions": 14,
+            "questions_with_all_evidence": 11,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 25
+          }
+        },
+        "k": 8
+      },
+      "sqlite_fts5_k128_b1048576": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 1048576,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 50.007999999999996,
+              "p95": 65.0969,
+              "samples": 27
+            },
+            "mean_context_bytes": 1028096.0,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 52.9677,
+              "p95": 94.59660000000001,
+              "samples": 18
+            },
+            "mean_context_bytes": 966716.5,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 6,
+            "pairs_in_context": 5,
+            "questions": 6,
+            "questions_with_all_evidence": 5,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 5
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 104.3454,
+              "p95": 148.53130000000002,
+              "samples": 42
+            },
+            "mean_context_bytes": 954839.2142857143,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 20,
+            "questions": 14,
+            "questions_with_all_evidence": 13,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 27
+          }
+        },
+        "k": 128
+      },
+      "sqlite_fts5_k128_b16384": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 16384,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 38.9793,
+              "p95": 46.1798,
+              "samples": 27
+            },
+            "mean_context_bytes": 16246.222222222223,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 43.1594,
+              "p95": 54.418099999999995,
+              "samples": 18
+            },
+            "mean_context_bytes": 16219.833333333334,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 6,
+            "pairs_in_context": 2,
+            "questions": 6,
+            "questions_with_all_evidence": 2,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 2
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 92.6094,
+              "p95": 125.62190000000001,
+              "samples": 42
+            },
+            "mean_context_bytes": 16202.42857142857,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 17,
+            "questions": 14,
+            "questions_with_all_evidence": 10,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 23
+          }
+        },
+        "k": 128
+      },
+      "sqlite_fts5_k128_b65536": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 65536,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 40.0831,
+              "p95": 46.883599999999994,
+              "samples": 27
+            },
+            "mean_context_bytes": 65449.555555555555,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 44.248599999999996,
+              "p95": 64.3758,
+              "samples": 18
+            },
+            "mean_context_bytes": 65437.0,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 6,
+            "pairs_in_context": 2,
+            "questions": 6,
+            "questions_with_all_evidence": 2,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 2
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 94.6695,
+              "p95": 122.75959999999999,
+              "samples": 42
+            },
+            "mean_context_bytes": 65304.07142857143,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 18,
+            "questions": 14,
+            "questions_with_all_evidence": 11,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 24
+          }
+        },
+        "k": 128
+      },
+      "sqlite_fts5_k32_b1048576": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 1048576,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 43.9272,
+              "p95": 60.9109,
+              "samples": 27
+            },
+            "mean_context_bytes": 260152.44444444444,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 47.4424,
+              "p95": 61.358999999999995,
+              "samples": 18
+            },
+            "mean_context_bytes": 267139.8333333333,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 6,
+            "pairs_in_context": 3,
+            "questions": 6,
+            "questions_with_all_evidence": 3,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 3
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 102.9028,
+              "p95": 151.57109999999997,
+              "samples": 42
+            },
+            "mean_context_bytes": 225029.42857142858,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 19,
+            "questions": 14,
+            "questions_with_all_evidence": 12,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 26
+          }
+        },
+        "k": 32
+      },
+      "sqlite_fts5_k32_b16384": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 16384,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 39.2607,
+              "p95": 44.971900000000005,
+              "samples": 27
+            },
+            "mean_context_bytes": 16246.222222222223,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 43.0414,
+              "p95": 53.059799999999996,
+              "samples": 18
+            },
+            "mean_context_bytes": 16219.833333333334,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 6,
+            "pairs_in_context": 2,
+            "questions": 6,
+            "questions_with_all_evidence": 2,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 2
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 96.1804,
+              "p95": 120.616,
+              "samples": 42
+            },
+            "mean_context_bytes": 16202.42857142857,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 17,
+            "questions": 14,
+            "questions_with_all_evidence": 10,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 23
+          }
+        },
+        "k": 32
+      },
+      "sqlite_fts5_k32_b65536": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 65536,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 40.7367,
+              "p95": 64.797,
+              "samples": 27
+            },
+            "mean_context_bytes": 65449.555555555555,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 46.7496,
+              "p95": 71.31859999999999,
+              "samples": 18
+            },
+            "mean_context_bytes": 65437.0,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 6,
+            "pairs_in_context": 2,
+            "questions": 6,
+            "questions_with_all_evidence": 2,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 2
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 98.9773,
+              "p95": 142.4239,
+              "samples": 42
+            },
+            "mean_context_bytes": 65304.07142857143,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 18,
+            "questions": 14,
+            "questions_with_all_evidence": 11,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 24
+          }
+        },
+        "k": 32
+      },
+      "sqlite_fts5_k8_b1048576": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 1048576,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 39.2199,
+              "p95": 45.1424,
+              "samples": 27
+            },
+            "mean_context_bytes": 59278.88888888889,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 43.497,
+              "p95": 70.3088,
+              "samples": 18
+            },
+            "mean_context_bytes": 65968.83333333333,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 6,
+            "pairs_in_context": 2,
+            "questions": 6,
+            "questions_with_all_evidence": 2,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 2
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 95.55539999999999,
+              "p95": 124.8356,
+              "samples": 42
+            },
+            "mean_context_bytes": 53624.21428571428,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 16,
+            "questions": 14,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 22
+          }
+        },
+        "k": 8
+      },
+      "sqlite_fts5_k8_b16384": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 16384,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 43.4647,
+              "p95": 58.0608,
+              "samples": 27
+            },
+            "mean_context_bytes": 16246.222222222223,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 45.553799999999995,
+              "p95": 54.0666,
+              "samples": 18
+            },
+            "mean_context_bytes": 16219.833333333334,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 6,
+            "pairs_in_context": 2,
+            "questions": 6,
+            "questions_with_all_evidence": 2,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 2
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 105.191,
+              "p95": 153.4643,
+              "samples": 42
+            },
+            "mean_context_bytes": 16202.42857142857,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 17,
+            "questions": 14,
+            "questions_with_all_evidence": 10,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 23
+          }
+        },
+        "k": 8
+      },
+      "sqlite_fts5_k8_b65536": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 65536,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 41.033699999999996,
+              "p95": 59.3803,
+              "samples": 27
+            },
+            "mean_context_bytes": 57484.22222222222,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          },
+          "public_symbol_lookup": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 51.0189,
+              "p95": 62.6626,
+              "samples": 18
+            },
+            "mean_context_bytes": 63308.666666666664,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 6,
+            "pairs_in_context": 2,
+            "questions": 6,
+            "questions_with_all_evidence": 2,
+            "reference_pairs": 6,
+            "reference_quotes_in_context": 2
+          },
+          "pilot_history": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 102.7039,
+              "p95": 127.20439999999999,
+              "samples": 42
+            },
+            "mean_context_bytes": 53261.57142857143,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 21,
+            "pairs_in_context": 16,
+            "questions": 14,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 21,
+            "reference_quotes_in_context": 22
+          }
+        },
+        "k": 8
+      }
+    },
+    "changed_repeat_packets": 0
+  },
+  "embedding_calls": 0,
+  "exact_record_cross_checks": 18495,
+  "limitations": [
+    "Same frozen sources and cases unless an explicit cases file is supplied; all original records are cross-checked before timing.",
+    "A source digest verifies originals were unchanged; query receipt journals append normally.",
+    "No result cache, model calls, hosting, generated-answer scores or actual model tokens. SQLite uses the same global FTS5 index and historical eligibility as the scale experiment."
+  ],
+  "llm_calls": 0,
+  "native_stats_before_queries": {
+    "archive_bytes": 67955792,
+    "cache_bytes_estimate": 0,
+    "cache_entries": 0,
+    "delta_records": 1851,
+    "indexed_postings": 4217393,
+    "learned_outcomes": 0,
+    "persisted_queries": 3936,
+    "raw_text_bytes": 149793732,
+    "records": 18495,
+    "vocabulary": 241013
+  },
+  "scope": "verified frozen-corpus requery",
+  "source_archive_digest": "4851adcc01420e9d9f155ad1db2d826aa26d9c4b72fa18fce0cbfec961cdb18f"
+}

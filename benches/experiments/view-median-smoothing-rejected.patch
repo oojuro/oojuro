@@ -1,0 +1,159 @@
+diff --git a/crates/oojuro-lab/src/nine_scale.rs b/crates/oojuro-lab/src/nine_scale.rs
+index 2441b88..cf48bf4 100644
+--- a/crates/oojuro-lab/src/nine_scale.rs
++++ b/crates/oojuro-lab/src/nine_scale.rs
+@@ -339,0 +340 @@ struct Pair {
++    smoothing_priors: Vec<f64>,
+@@ -373,0 +375 @@ impl Pair {
++            smoothing_priors: Vec::new(),
+@@ -387,0 +390 @@ impl Pair {
++            smoothing_priors: Vec::new(),
+@@ -453,6 +456,5 @@ impl Pair {
+-            self.nine
+-                .search_refs(&q, i64::MIN)?
+-                .matches
+-                .into_iter()
+-                .map(|m| (m.id, m.bytes))
+-                .collect()
++            let found = self.nine.search_refs(&q, i64::MIN)?;
++            if let Some(mu) = self.nine.metrics().adaptive_smoothing_prior_tokens {
++                self.smoothing_priors.push(mu);
++            }
++            found.matches.into_iter().map(|m| (m.id, m.bytes)).collect()
+@@ -1105,0 +1108,7 @@ pub(super) fn requery(args: &[String]) -> Result<()> {
++    let smoothing_priors = (!pair.smoothing_priors.is_empty()).then(|| {
++        json!({
++            "all_ordinary_native_calls_including_warmup": self::stats(&pair.smoothing_priors),
++            "minimum": pair.smoothing_priors.iter().copied().fold(f64::INFINITY,f64::min),
++            "maximum": pair.smoothing_priors.iter().copied().fold(0.,f64::max)
++        })
++    });
+@@ -1118 +1127 @@ pub(super) fn requery(args: &[String]) -> Result<()> {
+-        &json!({"scope":"verified frozen-corpus requery","context_encoding":if shared_context{"exact-shared-text-v1"}else{"flat-snippets-v1"},"context_limit_unit":if shared_context{"distinct_text_blocks"}else{"source_origins"},"context_decode_validation_timed":shared_context,"retrieval_model":oojuro_nine::RETRIEVAL_MODEL,"retrieval_count_model":oojuro_nine::RETRIEVAL_COUNT_MODEL,"retrieval_normalization":oojuro_nine::RETRIEVAL_NORMALIZATION,"passage_model":oojuro_nine::PASSAGE_MODEL,"shared_query_stopwords":shared_stopwords,"sqlite_porter":sqlite_porter, "excerpt_bytes":excerpt_bytes,"sqlite_runtime":sqlite_runtime,"sqlite_native_snippet_tokens":if sqlite_native_snippet{Some(64)}else{None},"sqlite_expansion_inside_sql":sqlite_native_snippet,"sqlite_full_body_fallbacks":sqlite_full_body_fallbacks,"sqlite_max_native_snippet_bytes":SQLITE_SNIPPET_LIMIT,"sqlite_large_source_streams":sqlite_large_source_streams,"rust_declaration_query_policy":rust_queries,"sqlite_identifier_rrf":sqlite_identifiers, "native_stats_before_queries":stats, "source_archive_digest":source_digest, "cases_digest":cases_digest, "exact_record_cross_checks":cross_checks, "corpus_controls":controls, "embedding_calls":0, "llm_calls":0,
++        &json!({"scope":"verified frozen-corpus requery","native_adaptive_smoothing_priors":smoothing_priors,"context_encoding":if shared_context{"exact-shared-text-v1"}else{"flat-snippets-v1"},"context_limit_unit":if shared_context{"distinct_text_blocks"}else{"source_origins"},"context_decode_validation_timed":shared_context,"retrieval_model":oojuro_nine::RETRIEVAL_MODEL,"retrieval_count_model":oojuro_nine::RETRIEVAL_COUNT_MODEL,"retrieval_normalization":oojuro_nine::RETRIEVAL_NORMALIZATION,"passage_model":oojuro_nine::PASSAGE_MODEL,"shared_query_stopwords":shared_stopwords,"sqlite_porter":sqlite_porter, "excerpt_bytes":excerpt_bytes,"sqlite_runtime":sqlite_runtime,"sqlite_native_snippet_tokens":if sqlite_native_snippet{Some(64)}else{None},"sqlite_expansion_inside_sql":sqlite_native_snippet,"sqlite_full_body_fallbacks":sqlite_full_body_fallbacks,"sqlite_max_native_snippet_bytes":SQLITE_SNIPPET_LIMIT,"sqlite_large_source_streams":sqlite_large_source_streams,"rust_declaration_query_policy":rust_queries,"sqlite_identifier_rrf":sqlite_identifiers, "native_stats_before_queries":stats, "source_archive_digest":source_digest, "cases_digest":cases_digest, "exact_record_cross_checks":cross_checks, "corpus_controls":controls, "embedding_calls":0, "llm_calls":0,
+diff --git a/crates/oojuro-nine/src/lib.rs b/crates/oojuro-nine/src/lib.rs
+index 01e3bb7..925ac0d 100644
+--- a/crates/oojuro-nine/src/lib.rs
++++ b/crates/oojuro-nine/src/lib.rs
+@@ -17 +17 @@ const MU: f64 = 128.0;
+-pub const RETRIEVAL_MODEL: &str = "dirichlet-128-v1";
++pub const RETRIEVAL_MODEL: &str = "dirichlet-view-median-v1";
+@@ -87,0 +88 @@ pub struct TimelineMetrics {
++    pub adaptive_smoothing_prior_tokens: Option<f64>,
+@@ -752,0 +754,12 @@ impl Nine {
++        let mu = if literal.is_none()
++            && !anchored
++            && direct.is_none()
++            && !query.is_empty()
++            && !candidates.is_empty()
++        {
++            let mu = median_length(candidates.iter().map(|i| self.rows[*i].length).collect());
++            metrics.adaptive_smoothing_prior_tokens = Some(mu);
++            mu
++        } else {
++            MU
++        };
+@@ -758 +771 @@ impl Nine {
+-            gains[*i] = -query_count * (1. + self.rows[*i].length as f64 / MU).log2();
++            gains[*i] = -query_count * (1. + self.rows[*i].length as f64 / mu).log2();
+@@ -761 +774 @@ impl Nine {
+-            let scale = MU * background[term];
++            let scale = mu * background[term];
+@@ -870,0 +884,16 @@ impl Engine for Nine {
++fn median_length(mut lengths: Vec<usize>) -> f64 {
++    if lengths.is_empty() {
++        return MU;
++    }
++    let even = lengths.len() % 2 == 0;
++    let middle = lengths.len() / 2;
++    let (lower, upper, _) = lengths.select_nth_unstable(middle);
++    let upper = *upper as f64;
++    let lower = if even {
++        *lower.iter().max().unwrap() as f64
++    } else {
++        upper
++    };
++    ((lower + upper) / 2.).max(1.)
++}
++
+diff --git a/crates/oojuro-nine/src/tests.rs b/crates/oojuro-nine/src/tests.rs
+index 4149246..a7f9498 100644
+--- a/crates/oojuro-nine/src/tests.rs
++++ b/crates/oojuro-nine/src/tests.rs
+@@ -306,0 +307,62 @@ fn repeated_record_envelopes_compress_without_losing_metadata() -> Result<()> {
++#[test]
++fn smoothing_median_handles_empty_even_odd_and_zero_lengths() {
++    assert_eq!(median_length(vec![]), 128.);
++    assert_eq!(median_length(vec![7, 1, 3]), 3.);
++    assert_eq!(median_length(vec![2, 9]), 5.5);
++    assert_eq!(median_length(vec![9, 2]), 5.5);
++    assert_eq!(median_length(vec![0, 0]), 1.);
++}
++
++#[test]
++fn median_smoothing_matches_hand_scores_and_respects_historical_scope() -> Result<()> {
++    let tmp = Scratch::new();
++    let mut db = Nine::open(&tmp.0)?;
++    db.insert(r("short", "short", "quartz", 1, 1))?;
++    db.insert(r("middle", "middle", "quartz cobalt cobalt", 2, 2))?;
++    db.insert(r("long", "long", &"quartz ".repeat(7), 3, 3))?;
++    let q = Query::new("quartz", 30);
++    let before = db.search_refs(&q, 0)?;
++    assert_eq!(db.metrics().adaptive_smoothing_prior_tokens, Some(3.));
++    let background = (9. + literal_probability("quartz")) / 12.;
++    for (id, tf, length) in [("short", 1., 1.), ("middle", 1., 3.), ("long", 7., 7.)] {
++        let expected = ((tf + 3. * background) / ((length + 3.) * background)).log2();
++        let found = before.matches.iter().find(|m| m.id == id).unwrap();
++        assert!((found.score_bits - expected).abs() < 1e-10);
++    }
++    db.insert(r("late", "middle", &"quartz ".repeat(1000), 20, 60))?;
++    db.insert(r("future", "future", &"quartz ".repeat(10_000), 100, 100))?;
++    db.insert(r("unrelated", "other", &"cobalt ".repeat(10_000), 0, 0))?;
++    assert_eq!(
++        serde_json::to_vec(&db.search_refs(&q, 0)?)?,
++        serde_json::to_vec(&before)?
++    );
++    assert_eq!(db.metrics().adaptive_smoothing_prior_tokens, Some(3.));
++    let mut later = q.clone();
++    later.known_at = 60;
++    let found = db.search_refs(&later, 0)?;
++    assert_eq!(db.metrics().adaptive_smoothing_prior_tokens, Some(7.));
++    assert!(found.matches.iter().any(|m| m.id == "late"));
++    assert!(!found.matches.iter().any(|m| m.id == "middle"));
++    db.search_refs(&later, 3)?;
++    assert_eq!(db.metrics().adaptive_smoothing_prior_tokens, Some(503.5));
++    db.insert(r("symbol", "symbol", "fn repair_shadow_page() {}", 0, 0))?;
++    for text in [
++        "\"quartz\"",
++        "repair_shadow_page",
++        "key:middle",
++        "",
++        "unknownword",
++    ] {
++        db.search_refs(&Query::new(text, 30), 0)?;
++        assert!(db.metrics().adaptive_smoothing_prior_tokens.is_none());
++    }
++    drop(db);
++    let mut db = Nine::open(&tmp.0)?;
++    assert_eq!(
++        serde_json::to_vec(&db.search_refs(&q, 0)?)?,
++        serde_json::to_vec(&before)?
++    );
++    assert_eq!(db.metrics().adaptive_smoothing_prior_tokens, Some(3.));
++    Ok(())
++}
++
+@@ -359,0 +422,8 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
++            let mut lengths: Vec<usize> = eligible.iter().map(|(_, c)| c.values().sum()).collect();
++            lengths.sort_unstable();
++            let mu = if lengths.is_empty() {
++                MU
++            } else {
++                ((lengths[(lengths.len() - 1) / 2] + lengths[lengths.len() / 2]) as f64 / 2.)
++                    .max(1.)
++            };
+@@ -381,2 +451,2 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
+-                                + MU * background[term])
+-                                / (length + MU);
++                                + mu * background[term])
++                                / (length + mu);

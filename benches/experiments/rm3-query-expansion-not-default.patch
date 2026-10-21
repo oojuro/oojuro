@@ -1,0 +1,259 @@
+diff --git a/crates/oojuro-nine/src/lib.rs b/crates/oojuro-nine/src/lib.rs
+index 01e3bb7..143f3a7 100644
+--- a/crates/oojuro-nine/src/lib.rs
++++ b/crates/oojuro-nine/src/lib.rs
+@@ -17 +17 @@ const MU: f64 = 128.0;
+-pub const RETRIEVAL_MODEL: &str = "dirichlet-128-v1";
++pub const RETRIEVAL_MODEL: &str = "dirichlet-128-rm3-10-20-half-v1";
+@@ -599,0 +600,81 @@ impl Nine {
++        if q.k == 0
++            || q.text.is_empty()
++            || literal_query(&q.text).is_some()
++            || q.text.contains('_')
++            || q.text.starts_with("key:")
++            || self.versions.contains_key(&q.text)
++        {
++            return self.rank_terms(q, from, None);
++        }
++        let mut seed_query = q.clone();
++        seed_query.k = 10;
++        let (seed, seed_metrics) = self.rank_terms(&seed_query, from, None)?;
++        if seed.matches.is_empty() {
++            return Ok((seed, seed_metrics));
++        }
++        let Some(expanded) = self.feedback_query(&q.text, &seed) else {
++            let (result, mut metrics) = self.rank_terms(q, from, None)?;
++            metrics.posted_rows_visited += seed_metrics.posted_rows_visited;
++            metrics.scored_records += seed_metrics.scored_records;
++            return Ok((result, metrics));
++        };
++        let (result, mut metrics) = self.rank_terms(q, from, Some(expanded))?;
++        metrics.posted_rows_visited += seed_metrics.posted_rows_visited;
++        metrics.scored_records += seed_metrics.scored_records;
++        Ok((result, metrics))
++    }
++    fn feedback_query(&self, text: &str, seed: &Matches) -> Option<BTreeMap<String, f64>> {
++        let maximum = seed.matches.first()?.score_bits;
++        let mut feedback = BTreeMap::<String, f64>::new();
++        let stops: BTreeSet<_> = QUERY_STOP_WORDS
++            .iter()
++            .map(|w| normalize_word(w).into_owned())
++            .collect();
++        let mut total_weight = 0.;
++        for hit in &seed.matches {
++            let weight = (hit.score_bits - maximum).exp2();
++            total_weight += weight;
++            let mut counts = BTreeMap::<String, usize>::new();
++            for word in retrieval_terms(&self.rows[self.ids[&hit.id]].record.text) {
++                let word = normalize_word(&word).into_owned();
++                if word.len() >= 2
++                    && word.bytes().all(|c| c.is_ascii_alphabetic())
++                    && !stops.contains(&word)
++                {
++                    *counts.entry(word).or_default() += 1;
++                }
++            }
++            let length = counts.values().sum::<usize>();
++            if length > 0 {
++                for (word, count) in counts {
++                    *feedback.entry(word).or_default() += weight * count as f64 / length as f64;
++                }
++            }
++        }
++        if total_weight <= 0. {
++            return None;
++        }
++        let mut terms: Vec<_> = feedback.into_iter().collect();
++        terms.sort_by(|a, b| b.1.total_cmp(&a.1).then_with(|| a.0.cmp(&b.0)));
++        terms.truncate(20);
++        let mass = terms.iter().map(|(_, n)| *n).sum::<f64>();
++        if mass <= 0. {
++            return None;
++        }
++        let original = query_terms(text);
++        let n = original.values().sum::<usize>() as f64;
++        let mut query: BTreeMap<_, _> = original
++            .into_iter()
++            .map(|(w, c)| (w, 0.5 * c as f64))
++            .collect();
++        for (word, weight) in terms {
++            *query.entry(word).or_default() += 0.5 * n * weight / mass;
++        }
++        Some(query)
++    }
++    fn rank_terms(
++        &self,
++        q: &Query,
++        from: i64,
++        weighted: Option<BTreeMap<String, f64>>,
++    ) -> Result<(Matches, TimelineMetrics)> {
+@@ -602 +683,6 @@ impl Nine {
+-        let mut query = query_terms(&q.text);
++        let mut query = weighted.unwrap_or_else(|| {
++            query_terms(&q.text)
++                .into_iter()
++                .map(|(w, n)| (w, n as f64))
++                .collect()
++        });
+@@ -620 +706 @@ impl Nine {
+-                *query.entry(part).or_default() += n * count;
++                *query.entry(part).or_default() += n as f64 * count;
+@@ -755 +841 @@ impl Nine {
+-        let query_count = query.values().sum::<usize>() as f64;
++        let query_count = query.values().sum::<f64>();
+diff --git a/crates/oojuro-nine/src/tests.rs b/crates/oojuro-nine/src/tests.rs
+index 4149246..dd051a5 100644
+--- a/crates/oojuro-nine/src/tests.rs
++++ b/crates/oojuro-nine/src/tests.rs
+@@ -389 +389 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
+-            let found = db.search_refs(&q, i64::MIN)?;
++            let (found, _) = db.rank_terms(&q, i64::MIN, None)?;
+@@ -401 +401 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
+-            let short = db.search_refs(&q, i64::MIN)?;
++            let (short, _) = db.rank_terms(&q, i64::MIN, None)?;
+@@ -415,0 +416,145 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
++#[test]
++fn fractional_query_counts_match_hand_computed_dense_scores() -> Result<()> {
++    let tmp = Scratch::new();
++    let mut db = Nine::open(&tmp.0)?;
++    for (id, text) in [
++        ("a", "alpha alpha beta"),
++        ("b", "beta beta gamma"),
++        ("c", "unrelated alpha"),
++    ] {
++        db.insert(r(id, id, text, 1, 1))?;
++    }
++    let weighted = BTreeMap::from([("alpha".to_string(), 0.25), ("beta".to_string(), 0.75)]);
++    let q = Query::new("alpha beta", 5);
++    let (found, _) = db.rank_terms(&q, i64::MIN, Some(weighted))?;
++    let p_alpha = (3. + literal_probability("alpha")) / 9.;
++    let p_beta = (3. + literal_probability("beta")) / 9.;
++    let counts = [("a", 2., 1., 3.), ("b", 0., 2., 3.), ("c", 1., 0., 2.)];
++    for hit in found.matches {
++        let (_, a, b, n) = counts.iter().find(|(id, _, _, _)| *id == hit.id).unwrap();
++        let expected = 0.25 * ((a + 128. * p_alpha) / ((n + 128.) * p_alpha)).log2()
++            + 0.75 * ((b + 128. * p_beta) / ((n + 128.) * p_beta)).log2();
++        assert!((hit.score_bits - expected).abs() < 1e-10);
++    }
++    Ok(())
++}
++
++#[test]
++fn feedback_query_preserves_mass_clocks_originals_and_final_k_prefix() -> Result<()> {
++    let tmp = Scratch::new();
++    let mut db = Nine::open(&tmp.0)?;
++    db.insert(r("seed", "seed", "nebula nebula cobalt", 1, 1))?;
++    db.insert(r("related", "related", "cobalt cedar", 2, 2))?;
++    let mut q = Query::new("nebula", 5);
++    q.k = 10;
++    let (seed, _) = db.rank_terms(&q, i64::MIN, None)?;
++    let expanded = db.feedback_query(&q.text, &seed).unwrap();
++    assert!((expanded["nebula"] - 5. / 6.).abs() < 1e-12);
++    assert!((expanded["cobalt"] - 1. / 6.).abs() < 1e-12);
++    assert!((expanded.values().sum::<f64>() - 1.).abs() < 1e-12);
++    let before = db.search_refs(&q, i64::MIN)?;
++    assert!(before.matches.iter().any(|m| m.id == "related"));
++    let projection = |m: &Matches| {
++        m.matches
++            .iter()
++            .map(|m| (m.id.clone(), m.score_bits))
++            .collect::<Vec<_>>()
++    };
++    db.insert(r("future", "future", "nebula futuresecret", 10, 1))?;
++    db.insert(r("late", "seed", "nebula willow", 3, 9))?;
++    let (after_seed, _) = db.rank_terms(&q, i64::MIN, None)?;
++    assert_eq!(expanded, db.feedback_query(&q.text, &after_seed).unwrap());
++    assert_eq!(
++        projection(&before),
++        projection(&db.search_refs(&q, i64::MIN)?)
++    );
++    assert!(db.search_refs(&q, 2)?.matches.is_empty());
++    let mut known = q.clone();
++    known.known_at = 10;
++    let (new_seed, _) = db.rank_terms(&known, i64::MIN, None)?;
++    assert!(
++        db.feedback_query(&q.text, &new_seed)
++            .unwrap()
++            .contains_key("willow")
++    );
++    q.k = 1;
++    let one = db.search_refs(&q, i64::MIN)?;
++    assert_eq!(one.matches[0].id, before.matches[0].id);
++    assert_eq!(one.matches[0].score_bits, before.matches[0].score_bits);
++    assert_eq!(db.read("seed"), Some("nebula nebula cobalt"));
++    drop(db);
++    let mut db = Nine::open(&tmp.0)?;
++    q.k = 10;
++    assert_eq!(
++        projection(&before),
++        projection(&db.search_refs(&q, i64::MIN)?)
++    );
++    Ok(())
++}
++
++#[test]
++fn feedback_term_cutoff_has_deterministic_ties_and_filters_noise() -> Result<()> {
++    let tmp = Scratch::new();
++    let mut db = Nine::open(&tmp.0)?;
++    let words = "ba bb bc bd bf bg bh bi bj bk bl bm bn bo bp bq br bt bu bv bw bx bz";
++    let first = format!("needle the and 123 x {words}");
++    db.insert(r("one", "one", &first, 1, 1))?;
++    let q = Query::new("needle", 2);
++    let (seed, _) = db.rank_terms(&q, i64::MIN, None)?;
++    let expanded = db.feedback_query(&q.text, &seed).unwrap();
++    assert_eq!(expanded.len(), 21);
++    assert_eq!(expanded["needl"], 0.5);
++    assert!((expanded["ba"] - 0.025).abs() < 1e-12);
++    for absent in ["the", "and", "123", "x", "bz"] {
++        assert!(!expanded.contains_key(absent));
++    }
++    let reverse = first.split_whitespace().rev().collect::<Vec<_>>().join(" ");
++    db.insert(r("two", "one", &reverse, 2, 2))?;
++    let (seed, _) = db.rank_terms(&q, i64::MIN, None)?;
++    assert_eq!(expanded, db.feedback_query(&q.text, &seed).unwrap());
++    Ok(())
++}
++
++#[test]
++#[ignore = "requires the local public FiQA fixture; diagnostic writes aggregate counts only"]
++fn public_fiqa_feedback_seed_self_exclusion_audit() -> Result<()> {
++    let root = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("../..");
++    let output = root.join("results/nine-fiqa-feedback-seed-audit1.json");
++    assert!(!output.exists());
++    let db = Nine::open(&root.join("data/private/nine-fiqa-shared-raw1/nine"))?;
++    let labels = fs::read_to_string(root.join("data/public/fiqa/qrels/test.tsv"))?;
++    let query_ids: BTreeSet<_> = labels
++        .lines()
++        .skip(1)
++        .filter_map(|line| line.split('\t').next())
++        .collect();
++    let queries = fs::read_to_string(root.join("data/public/fiqa/queries.jsonl"))?;
++    let mut collisions = 0;
++    let mut in_seed = 0;
++    for line in queries.lines() {
++        let query: serde_json::Value = serde_json::from_str(line)?;
++        let id = query["_id"].as_str().ok_or("public query ID missing")?;
++        if !query_ids.contains(id) {
++            continue;
++        }
++        let source_id = format!("beir:{id}");
++        if !db.ids.contains_key(&source_id) {
++            continue;
++        }
++        collisions += 1;
++        let mut q = Query::new(
++            query["text"].as_str().ok_or("public query text missing")?,
++            1,
++        );
++        q.k = 10;
++        let (seed, _) = db.rank_terms(&q, i64::MIN, None)?;
++        in_seed += usize::from(seed.matches.iter().any(|m| m.id == source_id));
++    }
++    let result = serde_json::json!({"scope":"public FiQA first-pass self-ID diagnostic",
++        "test_queries":query_ids.len(),"id_collisions":collisions,"excluded_ids_in_feedback_seed":in_seed,
++        "seed_depth":10,"embedding_calls":0,"llm_calls":0});
++    fs::write(output, serde_json::to_vec_pretty(&result)?)?;
++    println!("Public query ID collisions: {collisions}; present in feedback seeds: {in_seed}.");
++    Ok(())
++}
++

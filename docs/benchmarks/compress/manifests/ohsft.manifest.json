@@ -1,0 +1,37 @@
+{
+ "name": "ohsft",
+ "records": 23554,
+ "sessions": 491,
+ "raw_bytes": 31517528,
+ "budget_bytes": 0,
+ "by_kind": {
+  "system": {
+   "records": 491,
+   "bytes": 2336178
+  },
+  "user": {
+   "records": 491,
+   "bytes": 1634016
+  },
+  "thinking": {
+   "records": 3803,
+   "bytes": 1831786
+  },
+  "tool_call": {
+   "records": 8779,
+   "bytes": 2775057
+  },
+  "tool_result": {
+   "records": 9139,
+   "bytes": 22097724
+  },
+  "answer": {
+   "records": 851,
+   "bytes": 842767
+  }
+ },
+ "rec_sha256": "7def83dc827b638e8182bc3d4ba04a97013f55af94dcab6111d7889b9d9d09a7",
+ "sources": {
+  "train.parquet": "ea4bf37de020e165c5210bedddeef523d8834a89a35a8c65fec24f76f0eae4f1"
+ }
+}

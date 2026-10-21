@@ -1,0 +1,66 @@
+{
+  "scope": "offline fixed four-ranker RRF source-rank diagnostic",
+  "models": [
+    "dirichlet-128-v1",
+    "bm25-temporal-1.2-0.75-or-dirichlet-literal-v1",
+    "conditional-dph-v1",
+    "dirichlet-view-median-v1"
+  ],
+  "source_archive_digest": "4851adcc01420e9d9f155ad1db2d826aa26d9c4b72fa18fce0cbfec961cdb18f",
+  "cases_digest": "3589e10f522ca1329b4819a6765c9245fb00f6eaeb1358965a8342019f1cb569",
+  "rank_constant": 60,
+  "ranked_lists_depth": 512,
+  "reference_source_limit": 32,
+  "groups": {
+    "large_tool": {
+      "references": 9,
+      "baseline_reference_recall_at32": 9,
+      "fused_reference_recall_at32": 9,
+      "gained": 0,
+      "lost": 0
+    },
+    "pilot_history": {
+      "references": 21,
+      "baseline_reference_recall_at32": 19,
+      "fused_reference_recall_at32": 19,
+      "gained": 0,
+      "lost": 0
+    },
+    "public_symbol_lookup": {
+      "references": 6,
+      "baseline_reference_recall_at32": 6,
+      "fused_reference_recall_at32": 6,
+      "gained": 0,
+      "lost": 0
+    },
+    "unseen_document_question": {
+      "references": 20,
+      "baseline_reference_recall_at32": 19,
+      "fused_reference_recall_at32": 19,
+      "gained": 0,
+      "lost": 0
+    },
+    "unseen_symbol_lookup": {
+      "references": 40,
+      "baseline_reference_recall_at32": 40,
+      "fused_reference_recall_at32": 40,
+      "gained": 0,
+      "lost": 0
+    },
+    "reserved_symbol_lookup": {
+      "references": 40,
+      "baseline_reference_recall_at32": 40,
+      "fused_reference_recall_at32": 40,
+      "gained": 0,
+      "lost": 0
+    }
+  },
+  "retrieval_latency_ms": null,
+  "context_completeness": null,
+  "generated_answer_accuracy": null,
+  "limitations": [
+    "Stored candidate lists only; source recall is not supporting-quote/context retention.",
+    "No runtime implementation, new query measurements, context-size or token/agent-success claim.",
+    "Development screening only; no independent gate consumed."
+  ]
+}

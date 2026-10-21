@@ -1,0 +1,79 @@
+{
+  "arms": {
+    "nine": {
+      "complete_local_query_ms": {
+        "p50": 3.0306,
+        "p95": 5.428,
+        "samples": 900
+      },
+      "quality": {
+        "all_relevant_documents_in_context": 0.7766666666666666,
+        "context_document_recall": 0.7924444444444444,
+        "evidence_bytes": 16335.333333333334,
+        "mrr_at10": 0.6178108465608465,
+        "ndcg_at10": 0.6510749710442223,
+        "recall_at10": 0.7757777777777778,
+        "recall_at32": 0.8357222222222221
+      }
+    },
+    "sqlite_fts5": {
+      "complete_local_query_ms": {
+        "p50": 28.1224,
+        "p95": 49.5998,
+        "samples": 900
+      },
+      "quality": {
+        "all_relevant_documents_in_context": 0.8066666666666666,
+        "context_document_recall": 0.8253333333333334,
+        "evidence_bytes": 16336.05,
+        "mrr_at10": 0.6513280423280423,
+        "ndcg_at10": 0.687433986851022,
+        "recall_at10": 0.8245,
+        "recall_at32": 0.8895555555555555
+      }
+    }
+  },
+  "candidate_depth": 512,
+  "changed_repeat_packets": 0,
+  "context_budget_bytes": 16384,
+  "context_limit": 32,
+  "dataset": "SciFact",
+  "dataset_file_digests": {
+    "corpus.jsonl": "b31ea992320a459f1775e129401b42624e8521c3b77111e7feea9c5b8f968910",
+    "qrels/test.tsv": "40fd0aeb9b71e6798cfe1aa187ab995b129cc48464aab60b61e4ec2b2a7b873c",
+    "queries.jsonl": "71168a3205aa58fd9e9a6ad50b85d9fdbec37e3d767f89d5041d955ea8df2e64"
+  },
+  "documents": 5183,
+  "embedding_calls": 0,
+  "exact_source_cross_checks": 5183,
+  "excerpt_bytes": 2048,
+  "limitations": [
+    "Canonical public binary relevance labels evaluate document retrieval, not claim truth, supporting sentence retention, generated answers or agent outcomes.",
+    "The original corpus is title plus newline plus abstract. Labels never enter retrieval. Queries and documents have disjoint identifiers.",
+    "Warm, single-client, in-process retrieval includes 512 ranked references, up to 32 exact snippets under 16 KiB, serialization and synced receipts. No result cache or model call.",
+    "NDCG/MRR/recall use full candidate ranks; context document recall checks source IDs and does not certify snippet evidence. Macro averages include every labeled test query."
+  ],
+  "llm_calls": 0,
+  "measured_at_utc": "2026-10-19T15:19:23.972135500+00:00",
+  "native_stats_before_queries": {
+    "archive_bytes": 6562326,
+    "cache_bytes_estimate": 0,
+    "cache_entries": 0,
+    "delta_records": 4251,
+    "indexed_postings": 633960,
+    "learned_outcomes": 0,
+    "persisted_queries": 2400,
+    "raw_text_bytes": 7778381,
+    "records": 5183,
+    "vocabulary": 35959
+  },
+  "queries": 300,
+  "relevant_pairs": 339,
+  "repeats": 3,
+  "retrieval_count_model": "binary-width-frequency-v1",
+  "scope": "independently labeled binary BEIR test retrieval",
+  "source_archive_digest": "685e78d4c4e32107216b01a31fe2f318fdeb3f07175ed406c6ef32a62d5f351b",
+  "sqlite_full_body_fallbacks": 0,
+  "sqlite_porter": true,
+  "sqlite_runtime": "3.53.2"
+}

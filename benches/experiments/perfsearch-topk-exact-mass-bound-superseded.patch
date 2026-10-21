@@ -1,0 +1,164 @@
+diff --git a/crates/oojuro-nine/src/v4.rs b/crates/oojuro-nine/src/v4.rs
+index c6d4597..49c36d6 100644
+--- a/crates/oojuro-nine/src/v4.rs
++++ b/crates/oojuro-nine/src/v4.rs
+@@ -2068,8 +2068,6 @@ struct Resume {
+ }
+ 
+ struct ChunkOut {
+-    /// Row of offset 0 for `hits` and `cand`.
+-    first_row: Row,
+     /// Candidate rows in canonical order (row order for scanned chunks).
+     rows: Vec<Row>,
+     /// (scope, length) of each candidate.
+@@ -2090,7 +2088,6 @@ impl ChunkOut {
+     /// Unscanned candidates (key addressing, time scans): no hits.
+     fn listed(candidates: Vec<Candidate>) -> Self {
+         Self {
+-            first_row: 0,
+             rows: candidates.iter().map(|c| c.row).collect(),
+             mass: candidates.iter().map(|c| (c.meta.scope, c.meta.length)).collect(),
+             cand: Vec::new(),
+@@ -2207,7 +2204,6 @@ impl ScanContext<'_> {
+         };
+         let terms = self.first_pass.len();
+         let mut out = ChunkOut {
+-            first_row: c.base + c.lo,
+             rows: Vec::new(),
+             mass: Vec::new(),
+             cand: Vec::new(),
+@@ -2786,16 +2782,16 @@ fn rank(
+     // marked in `only`), added in term order per candidate as v3 does: each
+     // chunk's runs are ordered by term and a candidate appears at most once
+     // per run, so no per-candidate sort is needed.
+-    let score_chunk = |o: &ChunkOut, gains: &mut [f64], only: Option<&[u64]>| {
++    let score_chunk = |o: &ChunkOut, gains: &mut [f64], only: Option<&[bool]>| {
+         for &(ti, a, b) in &o.runs {
+             let ti = ti as usize;
+             let scale = mu * background[ti];
+             let count = terms[ti].1 as f64;
+             for &(at, tf) in &o.hits[a as usize..b as usize] {
+-                if only.is_some_and(|only| (only[at as usize / 64] >> (at % 64)) & 1 == 0) {
++                let c = o.index(at);
++                if only.is_some_and(|only| !only[c]) {
+                     continue;
+                 }
+-                let c = o.index(at);
+                 let mass = if scope_model {
+                     let (scope, length) = o.mass[c];
+                     tf as f64 * scope as f64 / length as f64
+@@ -2817,10 +2813,11 @@ fn rank(
+         .collect();
+     // Each chunk owns its candidates' slice, so chunks score independently
+     // (on the scan's threads when it ran in parallel).
+-    let score_all = |gains: &mut [f64], only: Option<&[Vec<u64>]>| {
++    let score_all = |gains: &mut [f64], only: Option<&[bool]>| {
+         let parts = split_by(gains, &outs);
+         for_parts(threads, parts.into_iter().enumerate().collect(), |(i, g)| {
+-            score_chunk(&outs[i], g, only.map(|m| m[i].as_slice()));
++            let o = &outs[i];
++            score_chunk(o, g, only.map(|m| &m[offsets[i]..offsets[i] + o.rows.len()]));
+         });
+     };
+     let exact_all = options.routing_entropy == RoutingEntropy::All || q.k >= candidate_count;
+@@ -2829,11 +2826,10 @@ fn rank(
+     if exact_all {
+         score_all(&mut gains, None);
+     } else {
+-        // Upper bounds: tf * scope / length <= tf, and log2 replaced by a
+-        // cheap upper bound (one constant per term for tf = 1). Exact scores
+-        // for the best bounds give a k-th best score; every candidate whose
+-        // bound reaches it is scored exactly, so the top k (ids and score
+-        // bits) equal exhaustive scoring.
++        // Upper bounds: the same terms with log2 replaced by a cheap upper
++        // bound, then exact scores for the best bounds; every candidate whose
++        // bound reaches the k-th best exact score is scored exactly, so the
++        // top k (ids and score bits) equal exhaustive scoring.
+         let mut bound = gains.clone();
+         {
+             let parts = split_by(&mut bound, &outs);
+@@ -2843,13 +2839,15 @@ fn rank(
+                     let ti = ti as usize;
+                     let scale = mu * background[ti];
+                     let count = terms[ti].1 as f64;
+-                    let once = count * log2_upper(1. + 1. / scale);
+                     for &(at, tf) in &o.hits[a as usize..b as usize] {
+-                        u[o.index(at)] += if tf == 1 {
+-                            once
++                        let c = o.index(at);
++                        let mass = if scope_model {
++                            let (scope, length) = o.mass[c];
++                            tf as f64 * scope as f64 / length as f64
+                         } else {
+-                            count * log2_upper(1. + tf as f64 / scale)
++                            tf as f64
+                         };
++                        u[c] += count * log2_upper(1. + mass / scale);
+                     }
+                 }
+             });
+@@ -2857,45 +2855,32 @@ fn rank(
+         for (u, row) in bound.iter_mut().zip(outs.iter().flat_map(|o| &o.rows)) {
+             *u += bonus(row);
+         }
+-        // Candidate c as a bit at its row offset in its chunk (listed
+-        // chunks have no hits: their gains are already exact).
+-        let empty = || outs.iter().map(|o| vec![0u64; o.cand.len()]).collect::<Vec<_>>();
+-        let mark = |marks: &mut Vec<Vec<u64>>, c: usize| {
+-            let i = offsets.partition_point(|start| *start <= c) - 1;
+-            if outs[i].cand.is_empty() {
+-                return;
+-            }
+-            let at = (outs[i].rows[c - offsets[i]] - outs[i].first_row) as usize;
+-            marks[i][at / 64] |= 1 << (at % 64);
+-        };
+         let mut chosen = vec![false; candidate_count];
+-        let mut seed = empty();
+         for c in best_indices(&bound, (2 * q.k).max(64)) {
+             chosen[c] = true;
+-            mark(&mut seed, c);
+         }
+-        score_all(&mut gains, Some(&seed));
+-        let mut seeded: Vec<f64> = outs
+-            .iter()
+-            .flat_map(|o| &o.rows)
+-            .enumerate()
+-            .filter(|(c, _)| chosen[*c])
+-            .map(|(c, row)| gains[c] + bonus(row))
++        score_all(&mut gains, Some(&chosen));
++        let rows: Vec<Row> = outs.iter().flat_map(|o| o.rows.iter().copied()).collect();
++        let mut seeded: Vec<f64> = (0..candidate_count)
++            .filter(|c| chosen[*c])
++            .map(|c| gains[c] + bonus(&rows[c]))
+             .collect();
+         seeded.sort_unstable_by(|a, b| b.total_cmp(a));
+         let theta = seeded[q.k - 1];
+         let reach = theta - 1e-9 * (1.0 + theta.abs());
+-        let mut more = empty();
++        let mut more = vec![false; candidate_count];
+         let mut extra = 0;
+         for c in 0..candidate_count {
+             if !chosen[c] && !(bound[c] < reach) {
+-                chosen[c] = true;
+-                mark(&mut more, c);
++                more[c] = true;
+                 extra += 1;
+             }
+         }
+         if extra > 0 {
+             score_all(&mut gains, Some(&more));
++            for c in 0..candidate_count {
++                chosen[c] |= more[c];
++            }
+         }
+         exact = Some(chosen);
+     }
+@@ -2905,7 +2890,7 @@ fn rank(
+     // Scores of exactly scored candidates; pruned ones rank below the k-th
+     // best and are left out.
+     let rows: Vec<Row> = outs.iter().flat_map(|o| o.rows.iter().copied()).collect();
+-    let keep = |c: usize| exact.as_ref().is_none_or(|e: &Vec<bool>| e[c]);
++    let keep = |c: usize| exact.as_ref().is_none_or(|e| e[c]);
+     let scored_ix: Vec<usize> = (0..candidate_count).filter(|c| keep(*c)).collect();
+     let scores: Vec<f64> = scored_ix.iter().map(|c| gains[*c] + bonus(&rows[*c])).collect();
+     metrics.scored_records = scores.len();

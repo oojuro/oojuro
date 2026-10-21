@@ -1,0 +1,92 @@
+{
+  "cases_digest": "764c36234d96756ac1f19c8158727abd83c5cd528248b4db26f45111e0548d6b",
+  "corpus_controls": {
+    "arms": {
+      "nine_k2_b16384": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 16384,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 71.2008,
+              "p95": 86.438,
+              "samples": 27
+            },
+            "mean_context_bytes": 2501.0,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "pairs_with_all_reference_quotes": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          }
+        },
+        "k": 2
+      },
+      "sqlite_fts5_k2_b16384": {
+        "candidate_depth": 512,
+        "context_budget_bytes": 16384,
+        "groups": {
+          "large_tool": {
+            "answer_accuracy": null,
+            "complete_local_query_ms": {
+              "p50": 178.9579,
+              "p95": 229.95940000000002,
+              "samples": 27
+            },
+            "mean_context_bytes": 4167.666666666667,
+            "model_input_tokens": null,
+            "pairs_in_candidate_pool": 9,
+            "pairs_in_context": 9,
+            "pairs_with_all_reference_quotes": 9,
+            "questions": 9,
+            "questions_with_all_evidence": 9,
+            "reference_pairs": 9,
+            "reference_quotes_in_context": 9
+          }
+        },
+        "k": 2
+      }
+    },
+    "changed_repeat_packets": 0
+  },
+  "embedding_calls": 0,
+  "exact_record_cross_checks": 4,
+  "excerpt_bytes": 2048,
+  "limitations": [
+    "Same frozen sources and cases unless an explicit cases file is supplied; all original records are cross-checked before timing.",
+    "A source digest verifies originals were unchanged; query receipt journals append normally.",
+    "No result cache, model calls, hosting, generated-answer scores or actual model tokens. SQLite uses the same global FTS5 index and historical eligibility as the scale experiment."
+  ],
+  "llm_calls": 0,
+  "native_stats_before_queries": {
+    "archive_bytes": 11940960,
+    "cache_bytes_estimate": 0,
+    "cache_entries": 0,
+    "delta_records": 1,
+    "indexed_postings": 251715,
+    "learned_outcomes": 0,
+    "persisted_queries": 252,
+    "raw_text_bytes": 33554632,
+    "records": 4,
+    "vocabulary": 84419
+  },
+  "passage_model": "literal-first-snowball-backoff-v1",
+  "retrieval_count_model": "raw-frequency-v1",
+  "retrieval_normalization": "english-snowball-1.2.0-v1",
+  "rust_declaration_query_policy": false,
+  "scope": "verified frozen-corpus requery",
+  "shared_query_stopwords": true,
+  "source_archive_digest": "bcfdac5dddbb48a1a0f330926b775a9b404a779f1084b27532eb7f47f84b625f",
+  "sqlite_expansion_inside_sql": true,
+  "sqlite_full_body_fallbacks": 0,
+  "sqlite_identifier_rrf": true,
+  "sqlite_large_source_streams": 60,
+  "sqlite_max_native_snippet_bytes": 1048576,
+  "sqlite_native_snippet_tokens": 64,
+  "sqlite_porter": true,
+  "sqlite_runtime": "3.53.2"
+}

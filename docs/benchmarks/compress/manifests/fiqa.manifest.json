@@ -1,0 +1,17 @@
+{
+ "name": "fiqa",
+ "records": 57600,
+ "sessions": 57638,
+ "raw_bytes": 44276480,
+ "budget_bytes": 0,
+ "by_kind": {
+  "doc": {
+   "records": 57600,
+   "bytes": 44276480
+  }
+ },
+ "rec_sha256": "0a97e5a56bb5f03fcc6e69bd1b54542edbeeec9196ced41c0c7066c30a06384b",
+ "sources": {
+  "corpus.parquet": "b36bb07dab3bfad488190818828e749a52faf5ba391c1d51dac8b06064576f99"
+ }
+}

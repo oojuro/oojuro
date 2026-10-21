@@ -3,7 +3,8 @@
 The journal for AI agents: an embedded database that records everything an agent sees, thinks and does,
 losslessly compressed, and lets it search its own history in milliseconds. No LLM inside the database.
 
-**Status:** pre-release. Code lands here when the v1 architecture is approved.
+**Status:** pre-release. The engine, the recorder and CLI, and the benchmark harnesses are published here; the v1
+architecture is still being finalized, so formats and interfaces may change.
 
 ## License
 
@@ -27,3 +28,31 @@ called "Oojuro" or imply endorsement.
 
 Contributions are accepted under Apache-2.0 (inbound = outbound) with a Developer Certificate of Origin
 sign-off (`git commit -s`). There is no CLA.
+
+## Build and test
+
+You need a recent stable Rust toolchain (edition 2024) and a C compiler. Linux is the first-class platform.
+
+```bash
+cargo build --release -p oojuro        # builds the `oojuro` CLI and the `oojurod` recorder
+cargo test --workspace                 # all unit and integration tests
+cargo clippy --workspace --all-targets
+```
+
+The workspace crates:
+
+| Crate | What it is |
+|---|---|
+| `oojuro` | the front door: library, `oojuro` CLI, `oojurod` daemon, MCP server |
+| `oojuro-capture` | attach-and-record ingestion of agent logs, with secret redaction |
+| `oojuro-proxy` | recording proxy for Anthropic and OpenAI-compatible model APIs |
+| `oojuro-trace` | the agent-trace store: events, columns, compressed originals, search |
+| `oojuro-store` | append-only compressed store for agent text |
+| `oojuro-nine` | the text engine: compressed timeline with code-length search |
+| `oojuro-core` | shared types and persistence primitives |
+| `oojuro-bench`, `oojuro-tracebench` | benchmark harnesses (public datasets, competitor engines) |
+
+Start with [docs/DESIGN.md](docs/DESIGN.md), then [docs/FRONT_DOOR.md](docs/FRONT_DOOR.md) and
+[docs/CAPTURE.md](docs/CAPTURE.md). The benchmark methodology and results are in
+[docs/TRACEBENCH.md](docs/TRACEBENCH.md), [docs/BENCH_HARNESS.md](docs/BENCH_HARNESS.md) and
+[docs/benchmarks/](docs/benchmarks/). See [CONTRIBUTING.md](CONTRIBUTING.md) to contribute.

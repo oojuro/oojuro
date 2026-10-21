@@ -1,0 +1,136 @@
+diff --git a/crates/oojuro-nine/src/lib.rs b/crates/oojuro-nine/src/lib.rs
+index 01e3bb7..17996cb 100644
+--- a/crates/oojuro-nine/src/lib.rs
++++ b/crates/oojuro-nine/src/lib.rs
+@@ -17 +17 @@ const MU: f64 = 128.0;
+-pub const RETRIEVAL_MODEL: &str = "dirichlet-128-v1";
++pub const RETRIEVAL_MODEL: &str = "dirichlet-128-full-query-score-v1";
+@@ -623 +622,0 @@ impl Nine {
+-        metrics.query_terms = query.len();
+@@ -728,0 +728,20 @@ impl Nine {
++        } else if direct.is_none() {
++            // Candidate support stays lexical; restore discarded query information
++            // only after the historically eligible view has been established.
++            for (term, count) in query_function_terms(&q.text) {
++                *query.entry(term.clone()).or_default() += count;
++                if !collection.contains_key(&term) {
++                    let mut total = 0;
++                    if let Some(ps) = self.postings.get(&term) {
++                        for p in ps {
++                            metrics.posted_rows_visited += 1;
++                            if eligible[p.row] == 2 {
++                                total += p.count;
++                            }
++                        }
++                    }
++                    if total > 0 {
++                        collection.insert(term, total);
++                    }
++                }
++            }
+@@ -729,0 +749 @@ impl Nine {
++        metrics.query_terms = query.len();
+@@ -929,3 +949,2 @@ fn query_terms(text: &str) -> BTreeMap<String, usize> {
+-fn query_words(text: &str) -> BTreeMap<String, usize> {
+-    let all: Vec<_> = text
+-        .split(|c: char| !c.is_alphanumeric() && c != '_')
++fn raw_query_words(text: &str) -> impl Iterator<Item = String> + '_ {
++    text.split(|c: char| !c.is_alphanumeric() && c != '_')
+@@ -934 +953,18 @@ fn query_words(text: &str) -> BTreeMap<String, usize> {
+-        .collect();
++}
++
++fn query_function_terms(text: &str) -> BTreeMap<String, usize> {
++    let all: Vec<_> = raw_query_words(text).collect();
++    let mut terms = BTreeMap::new();
++    if all.iter().any(|w| !QUERY_STOP_WORDS.contains(&w.as_str())) {
++        for word in all
++            .iter()
++            .filter(|w| QUERY_STOP_WORDS.contains(&w.as_str()))
++        {
++            *terms.entry(normalize_word(word).into_owned()).or_default() += 1;
++        }
++    }
++    terms
++}
++
++fn query_words(text: &str) -> BTreeMap<String, usize> {
++    let all: Vec<_> = raw_query_words(text).collect();
+diff --git a/crates/oojuro-nine/src/tests.rs b/crates/oojuro-nine/src/tests.rs
+index 4149246..c743c39 100644
+--- a/crates/oojuro-nine/src/tests.rs
++++ b/crates/oojuro-nine/src/tests.rs
+@@ -313 +313 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
+-        "files",
++        "files", "the", "we", "did",
+@@ -333,0 +334,3 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
++            "what did we file the running files",
++            "the the",
++            "the unknownword",
+@@ -338 +341,7 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
+-            let mut query = query_terms(text);
++            let support = query_terms(text);
++            // Independently parse the scoring words. Candidate support still uses
++            // the content-word policy, including its all-stopword fallback.
++            let mut query = BTreeMap::<String, usize>::new();
++            for word in text.split_whitespace() {
++                *query.entry(normalize_word(word).into_owned()).or_default() += 1;
++            }
+@@ -353 +362 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
+-                .filter(|(_, counts)| query.keys().any(|term| counts.contains_key(term)))
++                .filter(|(_, counts)| support.keys().any(|term| counts.contains_key(term)))
+@@ -415,0 +425,54 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
++#[test]
++fn full_query_scoring_preserves_candidate_support_and_historical_counts() -> Result<()> {
++    let tmp = Scratch::new();
++    let mut db = Nine::open(&tmp.0)?;
++    db.insert(r("z-useful", "useful", "the quartz", 1, 1))?;
++    db.insert(r("a-other", "other", "quartz cobalt", 1, 1))?;
++    db.insert(r("function-only", "function-only", "the the the", 1, 1))?;
++    let q = Query::new("the quartz", 5);
++    let first = db.search_refs(&q, i64::MIN)?;
++    assert_eq!(first.matches.len(), 2);
++    assert_eq!(first.matches[0].id, "z-useful");
++    // Only the two content-matching records enter C: length 4, the=1, quartz=2.
++    let p_the = (1. + literal_probability("the")) / 5.;
++    let p_quartz = (2. + literal_probability("quartz")) / 5.;
++    let expected = ((1. + 128. * p_the) / (130. * p_the)).log2()
++        + ((1. + 128. * p_quartz) / (130. * p_quartz)).log2();
++    assert!((first.matches[0].score_bits - expected).abs() < 1e-10);
++    let projection = |m: &Matches| {
++        m.matches
++            .iter()
++            .map(|m| (m.id.clone(), m.score_bits))
++            .collect::<Vec<_>>()
++    };
++    let before = projection(&first);
++    db.insert(r("unrelated", "unrelated", &"the ".repeat(20_000), 1, 1))?;
++    db.insert(r("future", "future", "the quartz quartz", 9, 1))?;
++    db.insert(r("late-known", "useful", "quartz revised", 3, 9))?;
++    assert_eq!(projection(&db.search_refs(&q, i64::MIN)?), before);
++    let mut revised = q.clone();
++    revised.known_at = 10;
++    let updated = db.search_refs(&revised, i64::MIN)?;
++    assert!(!updated.matches.iter().any(|m| m.id == "z-useful"));
++    assert!(updated.matches.iter().any(|m| m.id == "late-known"));
++    assert!(db.search_refs(&q, 2)?.matches.is_empty());
++    assert!(
++        db.search_refs(&Query::new("the unknownword", 5), i64::MIN)?
++            .matches
++            .is_empty()
++    );
++    // The existing all-stopword fallback must not count these words twice.
++    let once = db.search_refs(&Query::new("the", 5), i64::MIN)?;
++    let twice = db.search_refs(&Query::new("the the", 5), i64::MIN)?;
++    assert_eq!(once.matches.len(), twice.matches.len());
++    for (a, b) in once.matches.iter().zip(&twice.matches) {
++        assert_eq!(a.id, b.id);
++        assert!((2. * a.score_bits - b.score_bits).abs() < 1e-10);
++    }
++    drop(db);
++    let mut db = Nine::open(&tmp.0)?;
++    assert_eq!(projection(&db.search_refs(&q, i64::MIN)?), before);
++    assert_eq!(db.read("z-useful"), Some("the quartz"));
++    Ok(())
++}
++

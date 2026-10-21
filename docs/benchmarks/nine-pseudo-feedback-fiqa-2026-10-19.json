@@ -1,0 +1,92 @@
+{
+  "answer_accuracy": null,
+  "arms": {
+    "nine": {
+      "complete_local_query_ms": {
+        "p50": 57.2077,
+        "p95": 99.5935,
+        "samples": 1944
+      },
+      "quality": {
+        "all_relevant_documents_in_context": 0.20833333333333334,
+        "context_document_recall": 0.3432660446549335,
+        "evidence_bytes": 16289.567901234568,
+        "mrr_at10": 0.2868576082696453,
+        "ndcg_at10": 0.23484721092887526,
+        "recall_at10": 0.29062666585814734,
+        "recall_at32": 0.4157096333022257
+      }
+    },
+    "sqlite_fts5": {
+      "complete_local_query_ms": {
+        "p50": 48.6903,
+        "p95": 102.7849,
+        "samples": 1944
+      },
+      "quality": {
+        "all_relevant_documents_in_context": 0.21141975308641975,
+        "context_document_recall": 0.36176329671700047,
+        "evidence_bytes": 16307.851851851852,
+        "mrr_at10": 0.3119886586321771,
+        "ndcg_at10": 0.2544692253257697,
+        "recall_at10": 0.31465854104743,
+        "recall_at32": 0.44144761274390887
+      }
+    }
+  },
+  "candidate_depth": 512,
+  "changed_repeat_packets": 0,
+  "context_budget_bytes": 16384,
+  "context_decode_validation_timed": false,
+  "context_encoding": "flat-snippets-v1",
+  "context_limit": 32,
+  "context_limit_unit": "source_origins",
+  "dataset": "FiQA",
+  "dataset_file_digests": {
+    "corpus.jsonl": "403663c35677564298799a565d4462822afe8891bf6a1b06e9125d5cedc5abed",
+    "qrels/test.tsv": "67caa431820526b87bf41704caa511d6258191bee1ed13179fb845c4225e7d8a",
+    "queries.jsonl": "7cb0863f3f0fd9406f22b1e19fcc4fcf93b07fdbc51d1ee9743eba413e6cf4e2"
+  },
+  "documents": 57638,
+  "embedding_calls": 0,
+  "exact_source_cross_checks": 57638,
+  "excerpt_bytes": 2048,
+  "ignore_identical_ids": true,
+  "limitations": [
+    "Canonical public binary relevance labels evaluate document retrieval, not claim truth, supporting sentence retention, generated answers or agent outcomes.",
+    "The original corpus is title plus newline plus document text. Labels never enter retrieval. A document whose raw ID equals the query ID is excluded before context selection, following BEIR's default evaluation policy.",
+    "Warm, single-client, in-process retrieval includes 512 ranked references, up to 32 exact snippets under 16 KiB, serialization and synced receipts. No result cache or model call.",
+    "NDCG/MRR/recall use full candidate ranks; context document recall checks source IDs and does not certify snippet evidence. Macro averages include every labeled test query."
+  ],
+  "llm_calls": 0,
+  "measured_at_utc": "2026-10-19T21:14:20.200564100+00:00",
+  "model_input_tokens": null,
+  "native_stats_before_queries": {
+    "archive_bytes": 46982245,
+    "cache_bytes_estimate": 0,
+    "cache_entries": 0,
+    "delta_records": 50049,
+    "indexed_postings": 4670336,
+    "learned_outcomes": 0,
+    "persisted_queries": 5184,
+    "raw_text_bytes": 44334118,
+    "records": 57638,
+    "vocabulary": 60502
+  },
+  "passage_model": "literal-first-snowball-backoff-v1",
+  "queries": 648,
+  "query_document_id_collisions": 55,
+  "relevant_pairs": 1706,
+  "repeats": 3,
+  "retrieval_count_model": "raw-frequency-v1",
+  "retrieval_model": "dirichlet-128-rm3-10-20-half-v1",
+  "retrieval_normalization": "english-snowball-1.2.0-v1",
+  "scope": "independently labeled binary BEIR test retrieval",
+  "shared_query_stopwords": true,
+  "source_archive_digest": "acbeaa9aed625907c9ab7fac8a4c0e4c97c7d125764ac49e4a5f3adaf66c45c9",
+  "sqlite_full_body_fallbacks": 0,
+  "sqlite_large_source_streams": 0,
+  "sqlite_max_native_snippet_bytes": 1048576,
+  "sqlite_porter": true,
+  "sqlite_runtime": "3.53.2"
+}

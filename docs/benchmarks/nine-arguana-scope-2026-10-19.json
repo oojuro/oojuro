@@ -1,0 +1,97 @@
+{
+  "answer_accuracy": null,
+  "arms": {
+    "nine": {
+      "complete_local_query_ms": {
+        "p50": 12.5849,
+        "p95": 19.1539,
+        "samples": 4218
+      },
+      "quality": {
+        "all_relevant_documents_in_context": 0.8776671408250356,
+        "context_document_recall": 0.8776671408250356,
+        "evidence_bytes": 16272.364864864865,
+        "mrr_at10": 0.45849815981394937,
+        "ndcg_at10": 0.5452774638094136,
+        "recall_at10": 0.8207681365576103,
+        "recall_at32": 0.9260312944523471
+      }
+    },
+    "sqlite_fts5": {
+      "complete_local_query_ms": {
+        "p50": 83.5781,
+        "p95": 162.32930000000002,
+        "samples": 4218
+      },
+      "quality": {
+        "all_relevant_documents_in_context": 0.7304409672830725,
+        "context_document_recall": 0.7304409672830725,
+        "evidence_bytes": 16332.965149359887,
+        "mrr_at10": 0.3482585969428071,
+        "ndcg_at10": 0.4344721164997909,
+        "recall_at10": 0.7126600284495022,
+        "recall_at32": 0.8577524893314367
+      }
+    }
+  },
+  "candidate_depth": 512,
+  "changed_repeat_packets": 0,
+  "context_budget_bytes": 16384,
+  "context_decode_validation_timed": false,
+  "context_encoding": "flat-snippets-v1",
+  "context_limit": 32,
+  "context_limit_unit": "source_origins",
+  "dataset": "ArguAna",
+  "dataset_file_digests": {
+    "corpus.jsonl": "4af5a8bb81aeb51fe2d68c1c8be8b5ae3f63c6c06ca14f1b3cbd03b65adb185a",
+    "qrels/test.tsv": "b7bfac3ac46acb0af1f0c74f77e7b92395ae85c89810c658306c0a7a26a13935",
+    "queries.jsonl": "c8bc813e004b47a4a52be098631483fc2098fbc793ca7d1ff87f580fd583bca4"
+  },
+  "documents": 8674,
+  "embedding_calls": 0,
+  "exact_source_cross_checks": 8674,
+  "excerpt_bytes": 2048,
+  "ignore_identical_ids": true,
+  "limitations": [
+    "Canonical public binary relevance labels evaluate document retrieval, not claim truth, supporting sentence retention, generated answers or agent outcomes.",
+    "Unavailable positive qrels fail closed by default. When explicitly allowed, no labels or queries are removed: unavailable positives remain in every metric denominator and cannot be retrieved.",
+    "The original corpus is title plus newline plus document text. Labels never enter retrieval. A document whose raw ID equals the query ID is excluded before context selection, following BEIR's default evaluation policy.",
+    "Warm, single-client, in-process retrieval includes 512 ranked references, up to 32 exact snippets under 16 KiB, serialization and synced receipts. No result cache or model call.",
+    "NDCG/MRR/recall use full candidate ranks; context document recall checks source IDs and does not certify snippet evidence. Macro averages include every labeled test query."
+  ],
+  "llm_calls": 0,
+  "measured_at_utc": "2026-10-19T23:40:18.734243100+00:00",
+  "model_input_tokens": null,
+  "native_stats_before_queries": {
+    "archive_bytes": 9080537,
+    "cache_bytes_estimate": 0,
+    "cache_entries": 0,
+    "delta_records": 7566,
+    "indexed_postings": 886115,
+    "learned_outcomes": 0,
+    "persisted_queries": 5624,
+    "raw_text_bytes": 8990733,
+    "records": 8674,
+    "vocabulary": 22783
+  },
+  "passage_model": "literal-first-snowball-backoff-v1",
+  "queries": 1406,
+  "queries_with_unavailable_relevance": 5,
+  "query_document_id_collisions": 1298,
+  "relevant_pairs": 1406,
+  "repeats": 3,
+  "retrieval_count_model": "scope-scaled-raw-frequency-v1",
+  "retrieval_model": "dirichlet-scope-128-v1",
+  "retrieval_normalization": "english-snowball-1.2.0-v1",
+  "scope": "independently labeled binary BEIR test retrieval",
+  "shared_query_stopwords": true,
+  "source_archive_digest": "0eb0468711dcd294ce99fd960cfdf1f7c484790d94717171016e828ff728d86f",
+  "sqlite_full_body_fallbacks": 0,
+  "sqlite_large_source_streams": 0,
+  "sqlite_max_native_snippet_bytes": 1048576,
+  "sqlite_porter": true,
+  "sqlite_runtime": "3.53.2",
+  "unavailable_qrels_included": true,
+  "unavailable_relevant_documents": 5,
+  "unavailable_relevant_pairs": 5
+}

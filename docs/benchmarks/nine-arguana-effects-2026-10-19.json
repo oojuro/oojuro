@@ -1,0 +1,135 @@
+{
+  "dataset": "ArguAna",
+  "queries": 1406,
+  "new_native_vs_old_native": {
+    "all_relevant_documents_in_context": {
+      "mean_before": 0.8549075391180654,
+      "mean_after": 0.8776671408250356,
+      "mean_delta": 0.02275960170697013,
+      "queries_higher": 47,
+      "queries_equal": 1344,
+      "queries_lower": 15
+    },
+    "context_document_recall": {
+      "mean_before": 0.8549075391180654,
+      "mean_after": 0.8776671408250356,
+      "mean_delta": 0.02275960170697013,
+      "queries_higher": 47,
+      "queries_equal": 1344,
+      "queries_lower": 15
+    },
+    "evidence_bytes": {
+      "mean_before": 16144.068990042675,
+      "mean_after": 16272.364864864865,
+      "mean_delta": 128.2958748221906,
+      "queries_higher": 681,
+      "queries_equal": 323,
+      "queries_lower": 402
+    },
+    "mrr_at10": {
+      "mean_before": 0.4618367427577954,
+      "mean_after": 0.4584981598139493,
+      "mean_delta": -0.0033385829438461016,
+      "queries_higher": 210,
+      "queries_equal": 961,
+      "queries_lower": 235
+    },
+    "ndcg_at10": {
+      "mean_before": 0.5419223993259,
+      "mean_after": 0.5452774638094141,
+      "mean_delta": 0.0033550644835141055,
+      "queries_higher": 210,
+      "queries_equal": 961,
+      "queries_lower": 235,
+      "paired_query_bootstrap_95_percentile_interval": [
+        -0.0038868507851867505,
+        0.01061264817171808
+      ]
+    },
+    "recall_at10": {
+      "mean_before": 0.7951635846372689,
+      "mean_after": 0.8207681365576103,
+      "mean_delta": 0.025604551920341393,
+      "queries_higher": 59,
+      "queries_equal": 1324,
+      "queries_lower": 23
+    },
+    "recall_at32": {
+      "mean_before": 0.8826458036984353,
+      "mean_after": 0.9260312944523471,
+      "mean_delta": 0.04338549075391181,
+      "queries_higher": 62,
+      "queries_equal": 1343,
+      "queries_lower": 1
+    }
+  },
+  "new_native_vs_sql": {
+    "all_relevant_documents_in_context": {
+      "mean_before": 0.7304409672830725,
+      "mean_after": 0.8776671408250356,
+      "mean_delta": 0.14722617354196302,
+      "queries_higher": 236,
+      "queries_equal": 1141,
+      "queries_lower": 29
+    },
+    "context_document_recall": {
+      "mean_before": 0.7304409672830725,
+      "mean_after": 0.8776671408250356,
+      "mean_delta": 0.14722617354196302,
+      "queries_higher": 236,
+      "queries_equal": 1141,
+      "queries_lower": 29
+    },
+    "evidence_bytes": {
+      "mean_before": 16332.965149359887,
+      "mean_after": 16272.364864864865,
+      "mean_delta": -60.600284495021334,
+      "queries_higher": 352,
+      "queries_equal": 305,
+      "queries_lower": 749
+    },
+    "mrr_at10": {
+      "mean_before": 0.3482585969428075,
+      "mean_after": 0.4584981598139493,
+      "mean_delta": 0.11023956287114181,
+      "queries_higher": 614,
+      "queries_equal": 600,
+      "queries_lower": 192
+    },
+    "ndcg_at10": {
+      "mean_before": 0.43447211649979106,
+      "mean_after": 0.5452774638094141,
+      "mean_delta": 0.11080534730962315,
+      "queries_higher": 614,
+      "queries_equal": 600,
+      "queries_lower": 192,
+      "paired_query_bootstrap_95_percentile_interval": [
+        0.09663442873965755,
+        0.12527970294087876
+      ]
+    },
+    "recall_at10": {
+      "mean_before": 0.7126600284495022,
+      "mean_after": 0.8207681365576103,
+      "mean_delta": 0.10810810810810811,
+      "queries_higher": 206,
+      "queries_equal": 1146,
+      "queries_lower": 54
+    },
+    "recall_at32": {
+      "mean_before": 0.8577524893314367,
+      "mean_after": 0.9260312944523471,
+      "mean_delta": 0.06827880512091039,
+      "queries_higher": 129,
+      "queries_equal": 1244,
+      "queries_lower": 33
+    }
+  },
+  "bootstrap_seed": 20261019,
+  "bootstrap_repetitions": 5000,
+  "limitations": [
+    "Inputs must first pass the independent binary rank/source-ID auditor.",
+    "Intervals resample paired queries from already inspected data; related queries and shared documents can violate independence.",
+    "Higher evidence bytes mean additional bytes, not higher quality. Neither bytes nor relevance labels score model tokens, supporting sentences, answers or agent outcomes."
+  ]
+}

@@ -1,0 +1,10 @@
+--- a/crates/oojuro-nine/src/lib.rs
++++ b/crates/oojuro-nine/src/lib.rs
+@@ -19 +19 @@
+-pub const PASSAGE_MODEL: &str = "literal-first-snowball-backoff-v1";
++pub const PASSAGE_MODEL: &str = "normalized-snowball-only-v1";
+--- a/crates/oojuro-nine/src/passage.rs
++++ b/crates/oojuro-nine/src/passage.rs
+@@ -20 +20 @@
+-    extract(text, query, max_bytes, false)
++    extract(text, query, max_bytes, true)

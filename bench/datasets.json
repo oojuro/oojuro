@@ -1,0 +1,180 @@
+{
+  "schema": "oojuro-bench-datasets-v1",
+  "cache_root_default": "~/.cache/oojuro-data",
+  "note": "Pinned sources. sha256 is checked on every fetch; a mismatch is fatal. Dataset text never enters git.",
+  "datasets": {
+    "beir-scifact": {
+      "kind": "beir",
+      "license": "CC BY-NC 2.0 (original SciFact); BeIR mirror card declares CC BY-SA 4.0",
+      "license_class": "research",
+      "files": [
+        {
+          "url": "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/scifact.zip",
+          "path": "scifact.zip",
+          "md5_published": "5f7d1de60b170fc8027bb7898e2efca1",
+          "extract": "zip",
+          "sha256": "536e14446a0ba56ed1398ab1055f39fe852686ecad24a6306c80c490fa8e0165",
+          "size": 2816079
+        }
+      ]
+    },
+    "beir-fiqa": {
+      "kind": "beir",
+      "license": "BeIR mirror card declares CC BY-SA 4.0",
+      "license_class": "research",
+      "files": [
+        {
+          "url": "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/fiqa.zip",
+          "path": "fiqa.zip",
+          "md5_published": "17918ed23cd04fb15047f73e6c3bd9d9",
+          "extract": "zip",
+          "sha256": "32c7df99ed21252fdfb2cf3f5673502a8d245ee0c44c4a133570d92ce2b3ad02",
+          "size": 17948027
+        }
+      ]
+    },
+    "beir-arguana": {
+      "kind": "beir",
+      "license": "BeIR mirror card declares CC BY-SA 4.0",
+      "license_class": "research",
+      "files": [
+        {
+          "url": "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/arguana.zip",
+          "path": "arguana.zip",
+          "md5_published": "8ad3e3c2a5867cdced806d6503f29b99",
+          "extract": "zip",
+          "sha256": "cfdf79adce27a401b3cd3ea267903134dbfab2c6afeb95d7fe5724a00bf7557b",
+          "size": 3773617
+        }
+      ]
+    },
+    "beir-scidocs": {
+      "kind": "beir",
+      "license": "GPL-3.0 (original SciDocs); BeIR mirror card declares CC BY-SA 4.0",
+      "license_class": "research",
+      "files": [
+        {
+          "url": "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/scidocs.zip",
+          "path": "scidocs.zip",
+          "md5_published": "38121350fc3a4d2f48850f6aff52e4a9",
+          "extract": "zip",
+          "sha256": "96640201687767c9b1fcc5af7a80b90fb325b37fa25329c2586c25edcfa17ef1",
+          "size": 142471588
+        }
+      ]
+    },
+    "beir-nfcorpus": {
+      "kind": "beir",
+      "license": "BeIR mirror card declares CC BY-SA 4.0",
+      "license_class": "research",
+      "files": [
+        {
+          "url": "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/nfcorpus.zip",
+          "path": "nfcorpus.zip",
+          "md5_published": "a89dba18a62ef92f7d323ec890a0d38d",
+          "extract": "zip",
+          "sha256": "efe5be03f8c5b86a5870102d0599d227c8c6e2484328e68c6522560385671b0b",
+          "size": 2448432
+        }
+      ]
+    },
+    "longmemeval": {
+      "kind": "memqa",
+      "license": "MIT",
+      "license_class": "permissive",
+      "source": "huggingface.co/datasets/xiaowu0162/longmemeval-cleaned@98d7416c24c778c2fee6e6f3006e7a073259d48f",
+      "files": [
+        {
+          "url": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/98d7416c24c778c2fee6e6f3006e7a073259d48f/longmemeval_s_cleaned.json",
+          "path": "longmemeval_s_cleaned.json",
+          "sha256": "d6f21ea9d60a0d56f34a05b609c79c88a451d2ae03597821ea3d5a9678c3a442",
+          "size": 277383467
+        },
+        {
+          "url": "https://huggingface.co/datasets/xiaowu0162/longmemeval-cleaned/resolve/98d7416c24c778c2fee6e6f3006e7a073259d48f/longmemeval_oracle.json",
+          "path": "longmemeval_oracle.json",
+          "sha256": "821a2034d219ab45846873dd14c14f12cfe7776e73527a483f9dac095d38620c",
+          "size": 15388478
+        }
+      ]
+    },
+    "locomo": {
+      "kind": "memqa",
+      "license": "CC BY-NC 4.0",
+      "license_class": "non-commercial",
+      "opt_in": true,
+      "source": "github.com/snap-research/locomo@3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376",
+      "files": [
+        {
+          "url": "https://raw.githubusercontent.com/snap-research/locomo/3eb6f2c585f5e1699204e3c3bdf7adc5c28cb376/data/locomo10.json",
+          "path": "locomo10.json",
+          "size": 2805274
+        }
+      ]
+    },
+    "swe-agent": {
+      "kind": "trajectory",
+      "license": "CC BY 4.0",
+      "license_class": "permissive",
+      "source": "huggingface.co/datasets/nebius/SWE-agent-trajectories@68195a1450865274106246d0d0296a1d6807b88e",
+      "files": [
+        {
+          "url": "https://huggingface.co/datasets/nebius/SWE-agent-trajectories/resolve/68195a1450865274106246d0d0296a1d6807b88e/data/train-00000-of-00012.parquet",
+          "path": "train-00000-of-00012.parquet",
+          "sha256": "5a395e8c7bb8ddc4b8f4d268506b3a0e2cf9b5ec3922600117322fe788067a13",
+          "size": 89182938
+        },
+        {
+          "url": "https://huggingface.co/datasets/nebius/SWE-agent-trajectories/resolve/68195a1450865274106246d0d0296a1d6807b88e/data/train-00001-of-00012.parquet",
+          "path": "train-00001-of-00012.parquet",
+          "sha256": "fca106cce0f09891c2fadc032fb304da9ae5a7c31d2a39eb7ec70a7bdd4a9882",
+          "size": 94796688,
+          "optional": true
+        }
+      ]
+    },
+    "hermes-fc": {
+      "kind": "function-calling",
+      "license": "Apache-2.0",
+      "license_class": "permissive",
+      "source": "huggingface.co/datasets/NousResearch/hermes-function-calling-v1@dae3e1d28cfbcf4b915c04ea1e072030529b4bda",
+      "note": "Chosen over Salesforce/xlam-function-calling-60k, which is gated (needs an HF account to accept terms).",
+      "files": [
+        {
+          "url": "https://huggingface.co/datasets/NousResearch/hermes-function-calling-v1/resolve/dae3e1d28cfbcf4b915c04ea1e072030529b4bda/func-calling.json",
+          "path": "func-calling.json",
+          "sha256": "769478035a886678d525d057ea66e3fd1e247f43e35c8d6d7cc866e080b6742b",
+          "size": 20554130
+        }
+      ]
+    },
+    "openthoughts": {
+      "kind": "reasoning",
+      "license": "Apache-2.0",
+      "license_class": "permissive",
+      "source": "huggingface.co/datasets/open-thoughts/OpenThoughts-114k@bd093c3994fd54d2390985b66988ddf282a55eb6",
+      "files": [
+        {
+          "url": "https://huggingface.co/datasets/open-thoughts/OpenThoughts-114k/resolve/bd093c3994fd54d2390985b66988ddf282a55eb6/data/train-00000-of-00006.parquet",
+          "path": "train-00000-of-00006.parquet",
+          "sha256": "11c37cde12bed21dff55e71ebeea3fa1616cf86432575926992129087bf75848",
+          "size": 250112845
+        }
+      ]
+    },
+    "openhands-sft": {
+      "kind": "trajectory",
+      "license": "MIT",
+      "license_class": "permissive",
+      "source": "huggingface.co/datasets/SWE-Gym/OpenHands-SFT-Trajectories@4aaa5a4a4b5861f4799d2336908760c190ac3b17",
+      "files": [
+        {
+          "url": "https://huggingface.co/datasets/SWE-Gym/OpenHands-SFT-Trajectories/resolve/4aaa5a4a4b5861f4799d2336908760c190ac3b17/data/train.success.oss-00000-of-00001.parquet",
+          "path": "train.parquet",
+          "sha256": "ea4bf37de020e165c5210bedddeef523d8834a89a35a8c65fec24f76f0eae4f1",
+          "size": 10379409
+        }
+      ]
+    }
+  }
+}

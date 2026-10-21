@@ -1,0 +1,204 @@
+--- a/crates/oojuro-nine/src/lib.rs
++++ b/crates/oojuro-nine/src/lib.rs
+@@ -17 +17 @@
+-pub const RETRIEVAL_MODEL: &str = "dirichlet-128-v1";
++pub const RETRIEVAL_MODEL: &str = "dirichlet-128-words-and-pairs-v1";
+@@ -46,0 +47 @@
++    pair_length: usize,
+@@ -80,0 +82 @@
++    pub pair_terms: usize,
+@@ -94,0 +97,2 @@
++    pub pair_vocabulary: usize,
++    pub pair_indexed_postings: usize,
+@@ -132,0 +137 @@
++    pairs: HashMap<String, Vec<Posting>>,
+@@ -165,0 +171 @@
++            pairs: HashMap::new(),
+@@ -308,0 +315,2 @@
++            pair_vocabulary: self.pairs.len(),
++            pair_indexed_postings: self.pairs.values().map(Vec::len).sum(),
+@@ -344,0 +353,8 @@
++        }
++        let pairs = pair_terms(&r.text);
++        let pair_length = pairs.values().sum();
++        for (term, count) in pairs {
++            self.pairs
++                .entry(term)
++                .or_default()
++                .push(Posting { row, count });
+@@ -357,0 +374 @@
++            pair_length,
+@@ -766,0 +784,37 @@
++        let mut baseline = baseline;
++        if direct.is_none() && literal.is_none() && !q.text.contains('_') {
++            let mut pairs: BTreeMap<_, _> = pair_terms(&q.text).into_iter().collect();
++            let mut counts = HashMap::new();
++            for term in pairs.keys() {
++                if let Some(ps) = self.pairs.get(term) {
++                    for p in ps {
++                        metrics.posted_rows_visited += 1;
++                        if eligible[p.row] == 2 {
++                            *counts.entry(term.clone()).or_insert(0usize) += p.count;
++                        }
++                    }
++                }
++            }
++            pairs.retain(|term, _| counts.contains_key(term));
++            metrics.pair_terms = pairs.len();
++            let total = candidates
++                .iter()
++                .map(|i| self.rows[*i].pair_length)
++                .sum::<usize>() as f64;
++            let amount = pairs.values().sum::<usize>() as f64;
++            for i in &candidates {
++                gains[*i] -= amount * (1. + self.rows[*i].pair_length as f64 / MU).log2();
++            }
++            for (term, count) in pairs {
++                let p = (counts[&term] as f64 + literal_probability(&term)) / (total + 1.);
++                baseline -= count as f64 * p.log2();
++                for posted in &self.pairs[&term] {
++                    metrics.posted_rows_visited += 1;
++                    if eligible[posted.row] == 2 {
++                        gains[posted.row] +=
++                            count as f64 * (1. + posted.count as f64 / (MU * p)).log2();
++                    }
++                }
++            }
++        }
++        metrics.background_query_bits = baseline;
+@@ -880,0 +935,26 @@
++fn pair_terms(text: &str) -> HashMap<String, usize> {
++    let mut pairs = HashMap::new();
++    let mut previous = None;
++    let mut forms = HashMap::new();
++    for raw in text
++        .split(|c: char| !c.is_alphanumeric() && c != '_')
++        .filter(|s| s.chars().any(char::is_alphanumeric))
++    {
++        let form = || {
++            let word = raw.to_lowercase();
++            (!QUERY_STOP_WORDS.contains(&word.as_str())).then(|| normalize_word(&word).into_owned())
++        };
++        let word = if forms.len() < 4096 || forms.contains_key(raw) {
++            forms.entry(raw).or_insert_with(form).clone()
++        } else {
++            form()
++        };
++        let Some(word) = word else { continue };
++        if let Some(prior) = previous.as_ref() {
++            *pairs.entry(format!("{prior}\0{word}")).or_default() += 1;
++        }
++        previous = Some(word);
++    }
++    pairs
++}
++
+--- a/crates/oojuro-nine/src/tests.rs
++++ b/crates/oojuro-nine/src/tests.rs
+@@ -373 +373 @@
+-            let dense: HashMap<_, _> = eligible
++            let mut dense: HashMap<_, _> = eligible
+@@ -388,0 +389,35 @@
++            let pairs: HashMap<_, _> = eligible
++                .iter()
++                .map(|(i, _)| (*i, reference_pairs(&db.rows[*i].record.text)))
++                .collect();
++            let mut pair_query = reference_pairs(text);
++            pair_query.retain(|term, _| pairs.values().any(|c| c.contains_key(term)));
++            let total_pairs = pairs
++                .values()
++                .map(|c| c.values().sum::<usize>())
++                .sum::<usize>() as f64;
++            let pair_background: BTreeMap<_, _> = pair_query
++                .keys()
++                .map(|term| {
++                    let count = pairs
++                        .values()
++                        .map(|c| c.get(term).copied().unwrap_or(0))
++                        .sum::<usize>();
++                    (
++                        term,
++                        (count as f64 + literal_probability(term)) / (total_pairs + 1.),
++                    )
++                })
++                .collect();
++            for (i, counts) in &pairs {
++                let length = counts.values().sum::<usize>() as f64;
++                *dense.get_mut(&db.rows[*i].record.id).unwrap() += pair_query
++                    .iter()
++                    .map(|(term, n)| {
++                        let p = (counts.get(term).copied().unwrap_or(0) as f64
++                            + MU * pair_background[term])
++                            / (length + MU);
++                        *n as f64 * (p.log2() - pair_background[term].log2())
++                    })
++                    .sum::<f64>();
++            }
+@@ -389,0 +425 @@
++            assert_eq!(db.metrics().pair_terms, pair_query.len());
+@@ -415,0 +452,65 @@
++fn reference_pairs(text: &str) -> HashMap<String, usize> {
++    let words: Vec<_> = text
++        .split(|c: char| !c.is_alphanumeric() && c != '_')
++        .filter(|s| s.chars().any(char::is_alphanumeric))
++        .map(str::to_lowercase)
++        .filter(|s| !QUERY_STOP_WORDS.contains(&s.as_str()))
++        .map(|s| normalize_word(&s).into_owned())
++        .collect();
++    let mut counts = HashMap::new();
++    for (a, b) in words.iter().zip(words.iter().skip(1)) {
++        *counts.entry(format!("{a}\0{b}")).or_default() += 1;
++    }
++    counts
++}
++
++#[test]
++fn ordered_pairs_disambiguate_equal_word_counts_without_future_or_revision_leaks() -> Result<()> {
++    let tmp = Scratch::new();
++    let mut db = Nine::open(&tmp.0)?;
++    db.insert(r("ordered", "first", "red green blue", 1, 1))?;
++    db.insert(r("reverse", "second", "red blue green", 2, 2))?;
++    let selected = db.find("red green", 0, 3, 10)?;
++    assert_eq!(selected.matches[0].id, "ordered");
++    assert_eq!(db.metrics().pair_terms, 1);
++    let expected_difference =
++        (1. + 1. / (MU * ((1. + literal_probability("red\0green")) / 5.)) as f64).log2();
++    assert!(
++        (selected.matches[0].score_bits - selected.matches[1].score_bits - expected_difference)
++            .abs()
++            < 1e-12
++    );
++    assert_eq!(db.find("red blue", 0, 3, 10)?.matches[0].id, "reverse");
++    let before = db.find("green red", 0, 3, 10)?;
++    assert_eq!(db.metrics().pair_terms, 0);
++    db.insert(r("future", "future", "green red fresh", 30, 30))?;
++    let after = db.find("green red", 0, 3, 10)?;
++    assert_eq!(serde_json::to_vec(&before)?, serde_json::to_vec(&after)?);
++    assert_eq!(db.metrics().pair_terms, 0);
++    db.insert(r("revised", "second", "red green blue", 2, 5))?;
++    assert_eq!(db.find("red green", 0, 3, 10)?.matches[0].id, "ordered");
++    let updated = db.find("red green", 0, 6, 10)?;
++    assert_eq!(updated.matches[0].id, "revised");
++    assert!(!updated.matches.iter().any(|m| m.id == "reverse"));
++    db.find("\"red green\"", 0, 6, 10)?;
++    assert_eq!(db.metrics().pair_terms, 0);
++    assert!(db.stats()?.pair_vocabulary > 0);
++    drop(db);
++    let mut db = Nine::open(&tmp.0)?;
++    assert_eq!(db.find("red green", 0, 3, 10)?.matches[0].id, "ordered");
++    assert_eq!(db.read("ordered").unwrap(), "red green blue");
++    Ok(())
++}
++
++#[test]
++fn ordered_pair_cache_overflow_preserves_counts_and_normalized_forms() {
++    let mut text = (0..4201)
++        .map(|i| format!("word{i}"))
++        .collect::<Vec<_>>()
++        .join(" ");
++    text.push_str(" workers are running Workers are running");
++    let pairs = pair_terms(&text);
++    assert_eq!(pairs.get("worker\0run"), Some(&2));
++    assert_eq!(pairs, reference_pairs(&text));
++}
++

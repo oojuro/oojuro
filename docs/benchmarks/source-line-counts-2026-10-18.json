@@ -1,0 +1,139 @@
+{
+  "tool": "cloc 2.11",
+  "sources": [
+    {
+      "repository": "https://github.com/redis/redis",
+      "scope": "src C/H, excluding test/tests/unit directories",
+      "snapshot": "c4706ba71a74b2840d565f61e9983a9cf7d3565e",
+      "counts": {
+        "header": {
+          "cloc_url": "github.com/AlDanial/cloc",
+          "cloc_version": "2.11",
+          "elapsed_seconds": 12.4841539859772,
+          "n_files": 226,
+          "n_lines": 216695,
+          "files_per_second": 18.1029487664006,
+          "lines_per_second": 17357.6039067928,
+          "report_file": "work/redis-core-loc.json"
+        },
+        "C": {
+          "nFiles": 140,
+          "blank": 21875,
+          "comment": 43491,
+          "code": 134253
+        },
+        "C/C++ Header": {
+          "nFiles": 86,
+          "blank": 1672,
+          "comment": 4444,
+          "code": 10960
+        },
+        "SUM": {
+          "blank": 23547,
+          "comment": 47935,
+          "code": 145213,
+          "nFiles": 226
+        }
+      },
+      "name": "Redis"
+    },
+    {
+      "repository": "https://github.com/postgres/postgres",
+      "scope": "src C/H, excluding test/tests/unit directories",
+      "snapshot": "3138f248cd3de43dd0f96760fc666152ea8a5c37",
+      "counts": {
+        "header": {
+          "cloc_url": "github.com/AlDanial/cloc",
+          "cloc_version": "2.11",
+          "elapsed_seconds": 68.6485078334808,
+          "n_files": 2199,
+          "n_lines": 1639818,
+          "files_per_second": 32.0327428723442,
+          "lines_per_second": 23887.1615968357,
+          "report_file": "work/postgres-core-loc.json"
+        },
+        "C": {
+          "nFiles": 1230,
+          "blank": 172176,
+          "comment": 387100,
+          "code": 879976
+        },
+        "C/C++ Header": {
+          "nFiles": 969,
+          "blank": 19417,
+          "comment": 66182,
+          "code": 114967
+        },
+        "SUM": {
+          "blank": 191593,
+          "comment": 453282,
+          "code": 994943,
+          "nFiles": 2199
+        }
+      },
+      "name": "PostgreSQL"
+    },
+    {
+      "repository": "internal revision (not published)",
+      "scope": "crates/oojuro-nine/src/lib.rs only; shared runtime and adapters excluded",
+      "snapshot": "f387d8ad0763615a20ffc961712f5243c4ec7118",
+      "counts": {
+        "header": {
+          "cloc_url": "github.com/AlDanial/cloc",
+          "cloc_version": "2.11",
+          "elapsed_seconds": 0.0821049213409424,
+          "n_files": 1,
+          "n_lines": 1774,
+          "files_per_second": 12.1795378847935,
+          "lines_per_second": 21606.5002076237,
+          "report_file": "work/nine-core-loc.json"
+        },
+        "Rust": {
+          "nFiles": 1,
+          "blank": 63,
+          "comment": 44,
+          "code": 1667
+        },
+        "SUM": {
+          "blank": 63,
+          "comment": 44,
+          "code": 1667,
+          "nFiles": 1
+        }
+      },
+      "name": "Nine current core"
+    },
+    {
+      "repository": "internal revision (not published)",
+      "scope": "crates/oojuro-nine/src/tests.rs only",
+      "snapshot": "f387d8ad0763615a20ffc961712f5243c4ec7118",
+      "counts": {
+        "header": {
+          "cloc_url": "github.com/AlDanial/cloc",
+          "cloc_version": "2.11",
+          "elapsed_seconds": 0.109368801116943,
+          "n_files": 1,
+          "n_lines": 957,
+          "files_per_second": 9.1433753482471,
+          "lines_per_second": 8750.21020827248,
+          "report_file": "work/nine-test-loc.json"
+        },
+        "Rust": {
+          "nFiles": 1,
+          "blank": 20,
+          "comment": 1,
+          "code": 936
+        },
+        "SUM": {
+          "blank": 20,
+          "comment": 1,
+          "code": 936,
+          "nFiles": 1
+        }
+      },
+      "name": "Nine current tests"
+    }
+  ],
+  "measured_date": "2026-10-18",
+  "metric": "code lines, excluding comments and blank lines; scope-specific, not whole repositories"
+}

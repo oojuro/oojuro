@@ -1,0 +1,29 @@
+[package]
+name = "oojuro-proxy"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Oojuro v1 recording model-API proxy: forwards Anthropic and OpenAI-compatible calls unchanged and journals what the agent saw and produced"
+
+[dependencies]
+oojuro-capture = { path = "../oojuro-capture" }
+serde.workspace = true
+serde_json = { workspace = true, features = ["raw_value"] }
+blake3.workspace = true
+bytes = "1"
+http = "1"
+http-body = "1"
+http-body-util = "0.1"
+hyper = { version = "1", features = ["http1", "server", "client"] }
+hyper-util = { version = "0.1", features = ["tokio", "client-legacy", "http1"] }
+hyper-rustls = { version = "0.27", default-features = false, features = ["http1", "ring", "tls12", "webpki-roots"] }
+rustls = { version = "0.23", default-features = false, features = ["ring", "std", "tls12"] }
+tokio = { version = "1", features = ["rt-multi-thread", "net", "time", "sync", "macros"] }
+pin-project-lite = "0.2"
+flate2 = "1"
+brotli-decompressor = "5"
+zstd = { version = "0.13", default-features = false }
+
+[dev-dependencies]
+tokio = { version = "1", features = ["rt-multi-thread", "net", "time", "sync", "macros", "io-util"] }

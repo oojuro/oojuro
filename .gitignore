@@ -1,0 +1,26 @@
+# build output
+/target/
+
+# local data, caches and results (datasets are fetched, never committed)
+/data/
+/models/
+/results/
+/bench-results/
+/.scratch/
+/.scratch-results/
+*.tmp
+
+# secrets
+.env
+.env.*
+!.env.example
+
+# python
+__pycache__/
+*.pyc
+*.egg-info/
+
+# editors and OS
+.idea/
+.vscode/
+.DS_Store

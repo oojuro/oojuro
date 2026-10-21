@@ -1,0 +1,21 @@
+[package]
+name = "oojuro-bench"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Shared benchmark harness: engine arms, BEIR, turn-loop replay, memory QA, gates, scorecards"
+
+[features]
+default = ["tantivy-arm", "sqlite-arm"]
+tantivy-arm = ["dep:tantivy"]
+sqlite-arm = ["dep:rusqlite"]
+
+[dependencies]
+oojuro-core.workspace = true
+oojuro-nine = { path = "../oojuro-nine" }
+serde.workspace = true
+serde_json.workspace = true
+blake3.workspace = true
+tantivy = { version = "=0.27.0", default-features = false, features = ["mmap", "lz4-compression", "stemmer"], optional = true }
+rusqlite = { version = "0.40.2", features = ["bundled"], optional = true }

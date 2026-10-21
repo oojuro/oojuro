@@ -1,0 +1,219 @@
+--- a/crates/oojuro-nine/src/lib.rs
++++ b/crates/oojuro-nine/src/lib.rs
+@@ -2 +2 @@
+-//! Text retrieval uses keyword postings and conditional query code length.
++//! Text retrieval uses word postings and time-correct statistical relevance.
+@@ -17 +17 @@
+-pub const RETRIEVAL_MODEL: &str = "dirichlet-128-v1";
++pub const RETRIEVAL_MODEL: &str = "bm25-temporal-1.2-0.75-or-dirichlet-literal-v1";
+@@ -80,0 +81,2 @@
++    pub bm25_documents: usize,
++    pub bm25_average_length: f64,
+@@ -367,0 +370,3 @@
++        self.visible_version(versions, q) == Some(row)
++    }
++    fn visible_version(&self, versions: &[usize], q: &Query) -> Option<usize> {
+@@ -373 +378 @@
+-            .is_some_and(|i| *i == row)
++            .copied()
+@@ -652,0 +658 @@
++        let mut document_frequency = HashMap::<String, usize>::new();
+@@ -679,0 +686 @@
++                            *document_frequency.entry(term.clone()).or_default() += 1;
+@@ -751,2 +758,18 @@
+-        // Algebraically identical to L(q|B)-L(q|d). Absent terms share the
+-        // length penalty; only nonzero postings need individual log updates.
++        let bm25 = direct.is_none() && !anchored && literal.is_none() && !query.is_empty();
++        let corpus = if bm25 {
++            self.versions
++                .values()
++                .filter_map(|v| self.visible_version(v, q))
++                .filter(|i| self.rows[*i].record.valid_at >= from)
++                .fold((0usize, 0usize), |(n, len), i| {
++                    (n + 1, len + self.rows[i].length)
++                })
++        } else {
++            (0, 0)
++        };
++        if bm25 {
++            metrics.bm25_documents = corpus.0;
++            metrics.bm25_average_length = corpus.1 as f64 / corpus.0 as f64;
++        }
++        // Literal/key paths retain their conditional query-code gain.
++        // Ordinary words use BM25 against the complete historical view.
+@@ -756 +779,3 @@
+-            gains[*i] = -query_count * (1. + self.rows[*i].length as f64 / MU).log2();
++            if !bm25 {
++                gains[*i] = -query_count * (1. + self.rows[*i].length as f64 / MU).log2();
++            }
+@@ -759,0 +785,11 @@
++            let idf = if bm25 {
++                let df = document_frequency[term] as f64;
++                let value = ((corpus.0 as f64 - df + 0.5) / (df + 0.5)).log2();
++                if value > 0. {
++                    value
++                } else {
++                    1e-6 / std::f64::consts::LN_2
++                }
++            } else {
++                0.
++            };
+@@ -763 +799,10 @@
+-                    gains[p.row] += *count as f64 * (1. + p.count as f64 / scale).log2();
++                    gains[p.row] += if bm25 {
++                        let t = p.count as f64;
++                        idf * t * 2.2
++                            / (t + 1.2
++                                * (0.25
++                                    + 0.75 * self.rows[p.row].length as f64
++                                        / metrics.bm25_average_length))
++                    } else {
++                        *count as f64 * (1. + p.count as f64 / scale).log2()
++                    };
+@@ -804 +849,3 @@
+-        metrics.best_conditional_query_bits = scored.first().map(|(_, _, bits)| *bits);
++        metrics.best_conditional_query_bits = (!bm25)
++            .then(|| scored.first().map(|(_, _, bits)| *bits))
++            .flatten();
+@@ -861 +908 @@
+-            notes:vec!["Local keyword postings + conditional query code length; no embeddings or LLM.".into(),
++            notes:vec!["Local keyword postings and temporal lexical scoring; no embeddings or LLM.".into(),
+--- a/crates/oojuro-nine/src/tests.rs
++++ b/crates/oojuro-nine/src/tests.rs
+@@ -308 +308 @@
+-fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()> {
++fn sparse_scores_match_dense_temporal_bm25_on_historical_views() -> Result<()> {
+@@ -327,0 +328,2 @@
++    db.insert(r("silent", "silent", "unrelated unrelated unrelated", 1, 1))?;
++    db.insert(r("silent-late", "silent", "different later text", 10, 20))?;
+@@ -339 +341 @@
+-            let eligible: Vec<_> = db
++            let view: Vec<_> = db
+@@ -352,0 +355,9 @@
++                .collect();
++            let documents = view.len() as f64;
++            let average = view
++                .iter()
++                .map(|(_, c)| c.values().sum::<usize>())
++                .sum::<usize>() as f64
++                / documents;
++            let eligible: Vec<_> = view
++                .iter()
+@@ -353,0 +365 @@
++                .cloned()
+@@ -356,5 +368 @@
+-            let total: usize = eligible
+-                .iter()
+-                .map(|(_, c)| c.values().sum::<usize>())
+-                .sum();
+-            let background: BTreeMap<_, _> = query
++            let idf: BTreeMap<_, _> = query
+@@ -365,2 +373,3 @@
+-                        .map(|(_, c)| c.get(term).copied().unwrap_or(0))
+-                        .sum::<usize>();
++                        .filter(|(_, c)| c.contains_key(term))
++                        .count() as f64;
++                    let odds = ((documents - count + 0.5) / (count + 0.5)).ln();
+@@ -369 +378 @@
+-                        (count as f64 + literal_probability(term)) / (total as f64 + 1.),
++                        if odds > 0. { odds } else { 1e-6 } / std::f64::consts::LN_2,
+@@ -378,6 +387,4 @@
+-                        .iter()
+-                        .map(|(term, n)| {
+-                            let p = (counts.get(term).copied().unwrap_or(0) as f64
+-                                + MU * background[term])
+-                                / (length + MU);
+-                            *n as f64 * (p.log2() - background[term].log2())
++                        .keys()
++                        .map(|term| {
++                            let t = counts.get(term).copied().unwrap_or(0) as f64;
++                            idf[term] * 2.2 * t / (t + 1.2 * (1. - 0.75 + 0.75 * length / average))
+@@ -389,0 +397,3 @@
++            assert_eq!(db.metrics().bm25_documents, view.len());
++            assert_eq!(db.metrics().bm25_average_length, average);
++            assert!(db.metrics().best_conditional_query_bits.is_none());
+@@ -562,0 +573,34 @@
++    assert_eq!(db.metrics().bm25_documents, 0);
++    assert!(db.metrics().best_conditional_query_bits.is_some());
++    Ok(())
++}
++
++#[test]
++fn bm25_statistics_include_nonmatches_and_exclude_future_and_superseded_sources() -> Result<()> {
++    let tmp = Scratch::new();
++    let mut db = Nine::open(&tmp.0)?;
++    db.insert(r("early", "state", "alpha alpha beta", 1, 1))?;
++    db.insert(r("other", "other", "alpha beta beta beta", 1, 1))?;
++    db.insert(r("noise", "noise", "omega omega", 1, 1))?;
++    let before = db.find("alpha", 0, 3, 10)?;
++    assert_eq!(db.metrics().bm25_documents, 3);
++    assert_eq!(db.metrics().bm25_average_length, 3.);
++    db.insert(r("future", "future", "alpha future future", 30, 30))?;
++    db.insert(r("revised", "state", "alpha beta omega omega omega", 2, 5))?;
++    let after = db.find("alpha", 0, 3, 10)?;
++    assert_eq!(serde_json::to_vec(&before)?, serde_json::to_vec(&after)?);
++    assert_eq!(db.metrics().bm25_documents, 3);
++    let current = db.find("alpha", 0, 6, 10)?;
++    assert!(
++        !current
++            .matches
++            .iter()
++            .any(|m| m.id == "early" || m.id == "future")
++    );
++    assert_eq!(db.metrics().bm25_documents, 3);
++    assert_eq!(db.metrics().bm25_average_length, 11. / 3.);
++    assert_eq!(db.find("alpha", 2, 6, 10)?.matches[0].id, "revised");
++    assert_eq!(db.metrics().bm25_documents, 1);
++    db.find("key:state", 0, 6, 10)?;
++    assert_eq!(db.metrics().bm25_documents, 0);
++    assert!(db.metrics().best_conditional_query_bits.is_some());
+--- a/crates/oojuro-lab/src/nine_scale.rs
++++ b/crates/oojuro-lab/src/nine_scale.rs
+@@ -1463,0 +1464,47 @@
++
++    #[test]
++    fn native_bm25_matches_sqlite_scores_for_identical_word_features() -> Result<()> {
++        let temp = std::env::temp_dir();
++        let path = temp.join(format!(
++            "nine-bm25-parity-{}-{}",
++            std::process::id(),
++            std::time::SystemTime::now()
++                .duration_since(std::time::UNIX_EPOCH)?
++                .as_nanos()
++        ));
++        let result = (|| -> Result<()> {
++            let mut pair = Pair::open(&path)?;
++            for (id, body) in [
++                ("a", "alpha beta"),
++                ("b", "alpha alpha beta beta gamma"),
++                ("c", "gamma delta"),
++                ("d", "epsilon epsilon"),
++                ("e", "zeta eta theta"),
++            ] {
++                pair.put(&Record::new(id, id, body, 1), "fixture")?;
++            }
++            for question in ["alpha", "beta alpha", "alpha alpha beta"] {
++                let mut q = Query::new(question, 2);
++                q.k = 10;
++                let native = pair.nine.search_refs(&q, i64::MIN)?;
++                let mut stmt = pair.sql.db.prepare("SELECT s.id,-bm25(fts) FROM fts JOIN sources s ON s.rowid=fts.rowid WHERE fts MATCH ?1 ORDER BY bm25(fts),s.id")?;
++                let sql = stmt
++                    .query_map([expression(question, true)], |r| {
++                        Ok((r.get::<_, String>(0)?, r.get::<_, f64>(1)?))
++                    })?
++                    .collect::<rusqlite::Result<Vec<_>>>()?;
++                assert_eq!(native.matches.len(), sql.len());
++                for (hit, (id, nats)) in native.matches.iter().zip(sql) {
++                    assert_eq!(hit.id, id);
++                    assert!((hit.score_bits * std::f64::consts::LN_2 - nats).abs() < 1e-12);
++                }
++            }
++            Ok(())
++        })();
++        if let (Ok(target), Ok(parent)) = (path.canonicalize(), temp.canonicalize()) {
++            if target.parent() == Some(parent.as_path()) {
++                fs::remove_dir_all(target)?;
++            }
++        }
++        result
++    }

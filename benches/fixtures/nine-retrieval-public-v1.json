@@ -1,0 +1,842 @@
+[
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-00",
+      "question": "In self-hosted Convex, where are uploaded files kept before enabling object storage?",
+      "evidence": [
+        {
+          "source_id": "public-920e6f168e7167e66ad7bd3cfc9be095f305f9f7f5e018542ed7f4ea98620965",
+          "quote": "By default, the backend stores file data on the filesystem within the docker\r\ncontainer."
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-01",
+      "question": "Which configuration variable makes Convex object storage use a Cloudflare R2 endpoint?",
+      "evidence": [
+        {
+          "source_id": "public-920e6f168e7167e66ad7bd3cfc9be095f305f9f7f5e018542ed7f4ea98620965",
+          "quote": "`S3_ENDPOINT_URL`"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-02",
+      "question": "How should Convex data be moved when changing between filesystem storage and S3?",
+      "evidence": [
+        {
+          "source_id": "public-920e6f168e7167e66ad7bd3cfc9be095f305f9f7f5e018542ed7f4ea98620965",
+          "quote": "you'll need to run a snapshot export and import to migrate your data."
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-03",
+      "question": "Which SQL engine does the default self-hosted Convex Docker image use?",
+      "evidence": [
+        {
+          "source_id": "public-bd391a26b44d519758b62e4468ed430589371b874fc4d3426c775f9b96c70fa3",
+          "quote": "By\r\ndefault, the docker image uses SQLite."
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-04",
+      "question": "Why should the Convex backend run near its SQL persistence service?",
+      "evidence": [
+        {
+          "source_id": "public-bd391a26b44d519758b62e4468ed430589371b874fc4d3426c775f9b96c70fa3",
+          "quote": "Any additional latency between backend and database\r\nwill negatively impact query performance."
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-05",
+      "question": "What transformation does Convex apply to an instance name to derive its SQL database name?",
+      "evidence": [
+        {
+          "source_id": "public-bd391a26b44d519758b62e4468ed430589371b874fc4d3426c775f9b96c70fa3",
+          "quote": "instance name (replacing `-` with `_`)."
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-06",
+      "question": "Which environment setting gives self-hosted Convex its PostgreSQL endpoint?",
+      "evidence": [
+        {
+          "source_id": "public-bd391a26b44d519758b62e4468ed430589371b874fc4d3426c775f9b96c70fa3",
+          "quote": "`POSTGRES_URL` environment variable"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-07",
+      "question": "Does clearing application data from self-hosted Convex also delete schema and functions?",
+      "evidence": [
+        {
+          "source_id": "public-da0f5fc749292245b231209912c1ff0105b02c4a7ee17dac9220f57478b86cac",
+          "quote": "it leaves your schema and functions in place."
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-08",
+      "question": "Which empty import source should Windows users use to clear Convex tables?",
+      "evidence": [
+        {
+          "source_id": "public-da0f5fc749292245b231209912c1ff0105b02c4a7ee17dac9220f57478b86cac",
+          "quote": "On Windows (PowerShell), `/dev/null` does not exist, so use an empty file\r\nyou create instead."
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-09",
+      "question": "When upgrading Convex by export and import, why must the final backup happen after traffic stops?",
+      "evidence": [
+        {
+          "source_id": "public-eaedeb63db978e4389aba897f1e0c3fb1a3c893da8a56a8ebbf4f7d2bfffcca8",
+          "quote": "the final export is\r\ndone after load is stopped from your instance, since exports are taken at a\r\nsnapshot in time."
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-10",
+      "question": "Which Convex upgrade procedure can avoid downtime?",
+      "evidence": [
+        {
+          "source_id": "public-eaedeb63db978e4389aba897f1e0c3fb1a3c893da8a56a8ebbf4f7d2bfffcca8",
+          "quote": "If you want to avoid downtime, you can upgrade in-place."
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-11",
+      "question": "How do I redact personally identifying client logs in self-hosted Convex?",
+      "evidence": [
+        {
+          "source_id": "public-74ab776491a3d8a55c441dd5eed81248b2fef96fd9ba8978f895c3befa03a593",
+          "quote": "`REDACT_LOGS_TO_CLIENT`"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-12",
+      "question": "Which setting opts out of the anonymous usage beacon in Convex?",
+      "evidence": [
+        {
+          "source_id": "public-74ab776491a3d8a55c441dd5eed81248b2fef96fd9ba8978f895c3befa03a593",
+          "quote": "`DISABLE_BEACON`"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-13",
+      "question": "Which three services must be deployed to self-host Convex?",
+      "evidence": [
+        {
+          "source_id": "public-86b27d992da3866b2273e4f5bf803725c7aaa5c334149e88ba718c513389699e",
+          "quote": "1. The Convex backend\r\n2. The Convex dashboard\r\n3. Your frontend app"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-14",
+      "question": "Does a self-hosted Convex backend serve the frontend website itself?",
+      "evidence": [
+        {
+          "source_id": "public-86b27d992da3866b2273e4f5bf803725c7aaa5c334149e88ba718c513389699e",
+          "quote": "doesn't host\r\nyour actual web app."
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-15",
+      "question": "Which build flag compiles TLS directly into Redis?",
+      "evidence": [
+        {
+          "source_id": "public-c3c5504a47593d334309008c346b0cd46053e4022ed95e185f739f27ea751b95",
+          "quote": "To build TLS support as Redis built-in:\r\nRun `make BUILD_TLS=yes`."
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-16",
+      "question": "Can Redis sentinel run with TLS provided only by a loadable module?",
+      "evidence": [
+        {
+          "source_id": "public-c3c5504a47593d334309008c346b0cd46053e4022ed95e185f739f27ea751b95",
+          "quote": "sentinel mode does not support TLS module."
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-17",
+      "question": "What does a Redis TLS client need to present under the default client authentication policy?",
+      "evidence": [
+        {
+          "source_id": "public-c3c5504a47593d334309008c346b0cd46053e4022ed95e185f739f27ea751b95",
+          "quote": "clients on a TLS port must present one that verifies against the configured CA"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-18",
+      "question": "Which columnar format underlies LanceDB?",
+      "evidence": [
+        {
+          "source_id": "public-6e687e689a98f8ea53ca49e5c18c7108fc94fae2915588988a5fb8f939b41142",
+          "quote": "built on top of the Lance columnar format."
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_document_question",
+    "case": {
+      "id": "public-doc-19",
+      "question": "How can a Rust application statically link LanceDB's lzma dependency?",
+      "evidence": [
+        {
+          "source_id": "public-ec1eb34e0b2972bd4aaa4534c13bdc400253f86af78bfc45081d51cdca24c9ed",
+          "quote": "`static` feature"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-00",
+      "question": "Find the implementation of the Rust function view_description_body",
+      "evidence": [
+        {
+          "source_id": "public-ea2e4fd079c7e47cb9541c77a1faaea53d0dc9d66dfa57cdff1048281f74f574",
+          "quote": "fn view_description_body(name: &str, namespace: &[&str], query: &str) -> String {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-01",
+      "question": "Find the implementation of the Rust function result_json",
+      "evidence": [
+        {
+          "source_id": "public-f3adf4cb320603d1e4196dcb5893bc13bcd718a485fbbdcf4631da801858f293",
+          "quote": "pub fn result_json(&self) -> Option<String> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-02",
+      "question": "Find the implementation of the Rust function sort_by_column",
+      "evidence": [
+        {
+          "source_id": "public-9d29ddc61981d1369eedc5cf19ac747a592c7740cb0e949f62adedee4a025a39",
+          "quote": "async fn sort_by_column("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-03",
+      "question": "Find the implementation of the Rust function record_search",
+      "evidence": [
+        {
+          "source_id": "public-fbe0863a120897d63659eb817d484b3f0004c5b845daadef20a7930369040b22",
+          "quote": "pub fn record_search(&mut self, index_name: TabletIndexName, search_reads: SearchQueryReads) {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-04",
+      "question": "Find the implementation of the Rust function num_calls",
+      "evidence": [
+        {
+          "source_id": "public-7befea8f16c8667ce87082fb3cfd864feeda03c07644c6cf8bb21a314bad9120",
+          "quote": "pub fn num_calls(&self) -> u64 {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-05",
+      "question": "Find the implementation of the Rust function get_value_mut",
+      "evidence": [
+        {
+          "source_id": "public-c40cc0a2c69752597d9766ff89f5e23ef0e93f15c67389a841d0b392b7b784d1",
+          "quote": "fn get_value_mut(&mut self) -> &mut Option<V> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-06",
+      "question": "Find the implementation of the Rust function take_subscriptions",
+      "evidence": [
+        {
+          "source_id": "public-e05f6ac45f2f72135e399a59f4389901b3ea5e34c28491641daa02c74cc6f31b",
+          "quote": "pub fn take_subscriptions(&mut self) -> BTreeMap<QueryId, Arc<dyn SubscriptionTrait>> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-07",
+      "question": "Find the implementation of the Rust function write_single_file",
+      "evidence": [
+        {
+          "source_id": "public-a38282903e004a1dbf476a85be337164dffca705b78a3d58521026a0802e97c1",
+          "quote": "async fn write_single_file<R: AsyncBufRead + Unpin, W: AsyncWrite + Unpin>("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-08",
+      "question": "Find the implementation of the Rust function get_headers_internal",
+      "evidence": [
+        {
+          "source_id": "public-1c4c232ce85ad4f2610c241616606f9c3b9f6b14f01cd10d66a198a1a7beec06",
+          "quote": "fn get_headers_internal(&self) -> Result<HashMap<String, String>, String> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-09",
+      "question": "Find the implementation of the Rust function into_read_set",
+      "evidence": [
+        {
+          "source_id": "public-bdf87f0f2f2fa2c106c2c9d9a69fdab8057af0c41d7c1eec3b85995928d71e1d",
+          "quote": "pub fn into_read_set(self) -> ReadSet {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-10",
+      "question": "Find the implementation of the Rust function capabilities",
+      "evidence": [
+        {
+          "source_id": "public-bcb7fac300c4f1e3cfb2b58c7d034848cd48ce07aa13d00e36257a7d0054bc83",
+          "quote": "async fn capabilities("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-11",
+      "question": "Find the implementation of the Rust function process_log_entry",
+      "evidence": [
+        {
+          "source_id": "public-f4dfd12f3ffd8d25fc99a1bd92650d19de17bd142a5aee53ccc3c66d5df2a71e",
+          "quote": "fn process_log_entry("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-12",
+      "question": "Find the implementation of the Rust function decrypt_gcm",
+      "evidence": [
+        {
+          "source_id": "public-bfd0bd698000ce737ec0ec3097137d56df8f831f847ee4aef0047bf9e26c1e43",
+          "quote": "pub fn decrypt_gcm("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-13",
+      "question": "Find the implementation of the Rust function has_custom_host_object",
+      "evidence": [
+        {
+          "source_id": "public-0bb9561a7a6a1ad0ad6892adc39d8990965a8b2567a3b791c53218bd3e66b47c",
+          "quote": "fn has_custom_host_object(&self, _isolate: &v8::Isolate) -> bool {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-14",
+      "question": "Find the implementation of the Rust function file_based_exports",
+      "evidence": [
+        {
+          "source_id": "public-fc4b763ff2bf44f4615136d1f8f5bb99e796f747ad8a4b3c4d82b6a400814f74",
+          "quote": "pub fn file_based_exports<'a>("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-15",
+      "question": "Find the implementation of the Rust function insert_child_component",
+      "evidence": [
+        {
+          "source_id": "public-bc2c42bcc7ecbcd7a2fefe74b55fe43aad66b5fea3b1f446d45ee30b81b5a2ee",
+          "quote": "fn insert_child_component("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-16",
+      "question": "Find the implementation of the Rust function orders_by_split_id",
+      "evidence": [
+        {
+          "source_id": "public-ec5d05f6ed7c470911dd727c57feaf595001632440a010399bf02ab253228c92",
+          "quote": "pub fn orders_by_split_id(&self) -> bool {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-17",
+      "question": "Find the implementation of the Rust function listing_page",
+      "evidence": [
+        {
+          "source_id": "public-e71b73adbc74bae94e23018cfc4e2432627f8642a0ae6cd866f4170c0d9bd676",
+          "quote": "fn listing_page(names: &[&str], token: Option<&str>) -> ListTablesResponse {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-18",
+      "question": "Find the implementation of the Rust function error_with_backtrace",
+      "evidence": [
+        {
+          "source_id": "public-c09a02aabd70b234bc75f37324ec65fc26cde86efc6fb415a8a3a5a0bd68b6e5",
+          "quote": "pub fn error_with_backtrace(msg: String, err: anyhow::Error) -> anyhow::Error {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-19",
+      "question": "Find the implementation of the Rust function remove_label",
+      "evidence": [
+        {
+          "source_id": "public-1c4ed4554c0e26852b6402b092177391eca7f39b087aeceefa105ea193e88a6f",
+          "quote": "pub fn remove_label(&mut self, label: StaticMetricLabel) {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-20",
+      "question": "Find the implementation of the Rust function trim_ascii",
+      "evidence": [
+        {
+          "source_id": "public-90e18ec7eff71c68f62c1ed997bdd0f1a2a6e7fa01f7d22f6c84f18487d044e4",
+          "quote": "fn trim_ascii(mut bytes: &[u8]) -> &[u8] {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-21",
+      "question": "Find the implementation of the Rust function syscall_timer",
+      "evidence": [
+        {
+          "source_id": "public-3b4855de1181616ee8122ac4709ef0116054ea78aff4d28fed433478108deae7",
+          "quote": "pub fn syscall_timer(op_name: &str) -> StatusTimer {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-22",
+      "question": "Find the implementation of the Rust function new_dedicated",
+      "evidence": [
+        {
+          "source_id": "public-8eb9aa5c65e7da9ede06158d19179b4bf886a150573d1f3ef4e0b8f3012b2da7",
+          "quote": "pub fn new_dedicated(object_store: Arc<ObjectStore>, path: Path, size: u64) -> Self {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-23",
+      "question": "Find the implementation of the Rust function read_page_from_query",
+      "evidence": [
+        {
+          "source_id": "public-91c4b14f2e39a50557e5dc6ea5c986ccaf9d9466a098e5808310ad13c9c4bc4e",
+          "quote": "async fn read_page_from_query<RT: Runtime>("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-24",
+      "question": "Find the implementation of the Rust function validate_public_verification_key",
+      "evidence": [
+        {
+          "source_id": "public-b88e5103aa8d5fee5a78a32c15b19ef5343ed37c4de38629d28694a4d634cb29",
+          "quote": "fn validate_public_verification_key(key: &JWK<Empty>) -> anyhow::Result<&str> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-25",
+      "question": "Find the implementation of the Rust function check_mutable",
+      "evidence": [
+        {
+          "source_id": "public-25332cc34a85b4463e2c9020dbb7deca9bea50c94da57bf0aaf3a852145d2cbc",
+          "quote": "async fn check_mutable(&self) -> Result<()> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-26",
+      "question": "Find the implementation of the Rust function by_id_index_metadata",
+      "evidence": [
+        {
+          "source_id": "public-053473e21934a269c46b5d7f069f019f792c113ae52d76708218bcac5ce90b26",
+          "quote": "pub async fn by_id_index_metadata("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-27",
+      "question": "Find the implementation of the Rust function new_reserved",
+      "evidence": [
+        {
+          "source_id": "public-9609043c5533ba524f4ae863fdb82a28611f7ecefb6c9752949f62d8cd40e8a3",
+          "quote": "pub fn new_reserved(table: T, descriptor: IndexDescriptor) -> anyhow::Result<Self> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-28",
+      "question": "Find the implementation of the Rust function create_workos_membership",
+      "evidence": [
+        {
+          "source_id": "public-10f44d2aee648dae52354de31a26dee4333c47db13660f3b3d262dda267f4e1a",
+          "quote": "pub async fn create_workos_membership<F, E>("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-29",
+      "question": "Find the implementation of the Rust function add_filter_conditions_matches",
+      "evidence": [
+        {
+          "source_id": "public-0bb710f87795a00a13a9deca19d5ca12894e5ee8ea81b6e2ae0350e97d15234b",
+          "quote": "fn add_filter_conditions_matches("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-30",
+      "question": "Find the implementation of the Rust function lance_schema",
+      "evidence": [
+        {
+          "source_id": "public-b80feb5dcc13046fab4d94e2d0eed2023a2fb784bce3dfa95551439c4d8584fe",
+          "quote": "fn lance_schema(batch: &RecordBatch) -> LanceSchema {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-31",
+      "question": "Find the implementation of the Rust function begin_nested",
+      "evidence": [
+        {
+          "source_id": "public-d79507b76bf7f03db4d8e1b0ff3d70b7194c6066badee82332cc7a8ebdafa1ab",
+          "quote": "pub fn begin_nested(&mut self) -> NestedWriteToken {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-32",
+      "question": "Find the implementation of the Rust function stamp_bindings",
+      "evidence": [
+        {
+          "source_id": "public-42af1070be9c76dc7890a522222132c3c5e52ef93f94d0ef427e0f18f9c15cc4",
+          "quote": "async fn stamp_bindings(table: &Table, bindings: &[FunctionBinding]) {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-33",
+      "question": "Find the implementation of the Rust function remove_empty_string_optional_entries",
+      "evidence": [
+        {
+          "source_id": "public-822c93f01c68f39631c15f8ca3ba0f4521becb9e18542c2d82b70830fcaffff4",
+          "quote": "fn remove_empty_string_optional_entries("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-34",
+      "question": "Find the implementation of the Rust function parameters",
+      "evidence": [
+        {
+          "source_id": "public-d0d430ec2d31696eafbe54b9fde5dc01b674e67ea62c953e1ca69359a3aa7186",
+          "quote": "pub fn parameters(mut self, parameters: RecordBatch) -> Self {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-35",
+      "question": "Find the implementation of the Rust function explain_table_query_plan",
+      "evidence": [
+        {
+          "source_id": "public-dd59139fccb66eb919ed3639cc0b9d86c05ecab4dbabaecdadf84602df64f38b",
+          "quote": "async fn explain_table_query_plan("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-36",
+      "question": "Find the implementation of the Rust function new_live_text_flusher",
+      "evidence": [
+        {
+          "source_id": "public-4ba38bdc809560317002d64e01098c27024d352d189ff0e0bfde027c48bf0eeb",
+          "quote": "pub fn new_live_text_flusher(&self) -> TextIndexFlusher<TestRuntime> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-37",
+      "question": "Find the implementation of the Rust function start_nested_udf",
+      "evidence": [
+        {
+          "source_id": "public-fdefea7b8f63767acd115481991681da9f0cb908c7c1ba8c44fd28f455b01b38",
+          "quote": "pub fn start_nested_udf("
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-38",
+      "question": "Find the implementation of the Rust function cache_metric_labels",
+      "evidence": [
+        {
+          "source_id": "public-3bd128a3a804f74b67710ffaa3333d18e96b3107e4be90e446d04215367b62b4",
+          "quote": "fn cache_metric_labels<'a>(table_name: &'a str) -> Vec<MetricLabel<'a>> {"
+        }
+      ],
+      "at": 10
+    }
+  },
+  {
+    "group": "unseen_symbol_lookup",
+    "case": {
+      "id": "public-symbol-39",
+      "question": "Find the implementation of the Rust function group_name",
+      "evidence": [
+        {
+          "source_id": "public-ba2453d418abec9aedc656a0453e470c76ed68fbca9fce92af68ffb48f86176e",
+          "quote": "pub fn group_name(name: impl Into<String>) -> Result<Self> {"
+        }
+      ],
+      "at": 10
+    }
+  }
+]

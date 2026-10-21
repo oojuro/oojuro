@@ -1,0 +1,600 @@
+diff --git a/crates/oojuro-lab/src/nine_scale.rs b/crates/oojuro-lab/src/nine_scale.rs
+index 50fb2d8..b54e8c1 100644
+--- a/crates/oojuro-lab/src/nine_scale.rs
++++ b/crates/oojuro-lab/src/nine_scale.rs
+@@ -157,0 +158,69 @@ impl Sql {
++    fn enable_metadata(&mut self) -> Result<()> {
++        let (table, tokenizer) = if self.word_table == "fts_porter" {
++            (
++                "fts_metadata_porter",
++                "porter unicode61 remove_diacritics 0",
++            )
++        } else {
++            ("fts_metadata", "unicode61 remove_diacritics 0")
++        };
++        let exists: bool = self.db.query_row(
++            "SELECT EXISTS(SELECT 1 FROM sqlite_master WHERE name=?1)",
++            [table],
++            |r| r.get(0),
++        )?;
++        if !exists {
++            let tx = self.db.unchecked_transaction()?;
++            tx.execute_batch(&format!(
++                "CREATE VIRTUAL TABLE {table} USING fts5(body,provenance,tokenize='{tokenizer}')"
++            ))?;
++            {
++                let mut read = tx.prepare("SELECT rowid,body,metadata FROM sources")?;
++                let mut write = tx.prepare(&format!(
++                    "INSERT INTO {table}(rowid,body,provenance) VALUES(?1,?2,?3)"
++                ))?;
++                let mut rows = read.query([])?;
++                while let Some(row) = rows.next()? {
++                    let metadata: BTreeMap<String, String> =
++                        serde_json::from_str(row.get_ref(2)?.as_str()?)?;
++                    let provenance = metadata
++                        .values()
++                        .map(String::as_str)
++                        .collect::<Vec<_>>()
++                        .join("\n");
++                    write.execute(params![
++                        row.get::<_, i64>(0)?,
++                        row.get_ref(1)?.as_str()?,
++                        provenance
++                    ])?;
++                }
++            }
++            tx.commit()?;
++        }
++        let count: i64 = self
++            .db
++            .query_row(&format!("SELECT count(*) FROM {table}"), [], |r| r.get(0))?;
++        let originals: i64 = self
++            .db
++            .query_row("SELECT count(*) FROM sources", [], |r| r.get(0))?;
++        if count != originals {
++            return Err("stale metadata snapshot".into());
++        }
++        self.word_table = table;
++        Ok(())
++    }
++    fn query_table(&self, question: &str) -> &'static str {
++        if literal(question).is_some() {
++            if self.identifiers {
++                "fts_identifiers"
++            } else if self.word_table == "fts_metadata_porter" {
++                "fts_porter"
++            } else if self.word_table == "fts_metadata" {
++                "fts"
++            } else {
++                self.word_table
++            }
++        } else {
++            self.word_table
++        }
++    }
+@@ -158,0 +228,3 @@ impl Sql {
++        if self.word_table.starts_with("fts_metadata") {
++            return Err("metadata snapshot must be rebuilt after source appends".into());
++        }
+@@ -210,5 +282 @@ impl Sql {
+-        let table = if self.identifiers && literal(question).is_some() {
+-            "fts_identifiers"
+-        } else {
+-            self.word_table
+-        };
++        let table = self.query_table(question);
+@@ -236,5 +304 @@ impl Sql {
+-        let table = if self.identifiers && literal(question).is_some() {
+-            "fts_identifiers"
+-        } else {
+-            self.word_table
+-        };
++        let table = self.query_table(question);
+@@ -272,5 +336 @@ impl Sql {
+-        let table = if self.identifiers && literal(&c.question).is_some() {
+-            "fts_identifiers"
+-        } else {
+-            self.word_table
+-        };
++        let table = self.query_table(&c.question);
+@@ -317,0 +378,5 @@ impl Sql {
++        let score = if table.starts_with("fts_metadata") {
++            format!("bm25({table},2.0,1.0)")
++        } else {
++            format!("bm25({table})")
++        };
+@@ -321 +386 @@ impl Sql {
+-             AND (n.valid_at,n.known_at,n.rowid)>(s.valid_at,s.known_at,s.rowid)) ORDER BY bm25({table}),s.id LIMIT ?3");
++             AND (n.valid_at,n.known_at,n.rowid)>(s.valid_at,s.known_at,s.rowid)) ORDER BY {score},s.id LIMIT ?3");
+@@ -1094,0 +1160,5 @@ pub(super) fn requery(args: &[String]) -> Result<()> {
++    let textual_provenance = args.iter().any(|a| a == "--textual-provenance");
++    if textual_provenance {
++        pair.sql.enable_metadata()?;
++    }
++    let sqlite_source_and_fts_bytes = fs::metadata(source.join("sources.sqlite"))?.len();
+@@ -1123 +1193 @@ pub(super) fn requery(args: &[String]) -> Result<()> {
+-        &json!({"scope":"verified frozen-corpus requery","context_encoding":if shared_context{"exact-shared-text-v1"}else{"flat-snippets-v1"},"context_limit_unit":if shared_context{"distinct_text_blocks"}else{"source_origins"},"context_decode_validation_timed":shared_context,"retrieval_model":oojuro_nine::RETRIEVAL_MODEL,"retrieval_count_model":oojuro_nine::RETRIEVAL_COUNT_MODEL,"retrieval_normalization":oojuro_nine::RETRIEVAL_NORMALIZATION,"passage_model":oojuro_nine::PASSAGE_MODEL,"shared_query_stopwords":shared_stopwords,"sqlite_porter":sqlite_porter, "excerpt_bytes":excerpt_bytes,"sqlite_runtime":sqlite_runtime,"sqlite_native_snippet_tokens":if sqlite_native_snippet{Some(64)}else{None},"sqlite_expansion_inside_sql":sqlite_native_snippet,"sqlite_full_body_fallbacks":sqlite_full_body_fallbacks,"sqlite_max_native_snippet_bytes":SQLITE_SNIPPET_LIMIT,"sqlite_large_source_streams":sqlite_large_source_streams,"rust_declaration_query_policy":rust_queries,"sqlite_identifier_rrf":sqlite_identifiers, "native_stats_before_queries":stats, "source_archive_digest":source_digest, "cases_digest":cases_digest, "exact_record_cross_checks":cross_checks, "corpus_controls":controls, "embedding_calls":0, "llm_calls":0,
++        &json!({"scope":"verified frozen-corpus requery","sqlite_textual_provenance":textual_provenance,"sqlite_metadata_field_weights":if textual_provenance{Some([2,1])}else{None},"sqlite_source_and_fts_bytes":sqlite_source_and_fts_bytes,"context_encoding":if shared_context{"exact-shared-text-v1"}else{"flat-snippets-v1"},"context_limit_unit":if shared_context{"distinct_text_blocks"}else{"source_origins"},"context_decode_validation_timed":shared_context,"retrieval_model":oojuro_nine::RETRIEVAL_MODEL,"retrieval_count_model":oojuro_nine::RETRIEVAL_COUNT_MODEL,"retrieval_normalization":oojuro_nine::RETRIEVAL_NORMALIZATION,"passage_model":oojuro_nine::PASSAGE_MODEL,"shared_query_stopwords":shared_stopwords,"sqlite_porter":sqlite_porter, "excerpt_bytes":excerpt_bytes,"sqlite_runtime":sqlite_runtime,"sqlite_native_snippet_tokens":if sqlite_native_snippet{Some(64)}else{None},"sqlite_expansion_inside_sql":sqlite_native_snippet,"sqlite_full_body_fallbacks":sqlite_full_body_fallbacks,"sqlite_max_native_snippet_bytes":SQLITE_SNIPPET_LIMIT,"sqlite_large_source_streams":sqlite_large_source_streams,"rust_declaration_query_policy":rust_queries,"sqlite_identifier_rrf":sqlite_identifiers, "native_stats_before_queries":stats, "source_archive_digest":source_digest, "cases_digest":cases_digest, "exact_record_cross_checks":cross_checks, "corpus_controls":controls, "embedding_calls":0, "llm_calls":0,
+@@ -1414,0 +1485,64 @@ mod tests {
++    fn weighted_metadata_control_preserves_body_literals_and_snapshot_sources() -> Result<()> {
++        let path = std::env::temp_dir().join(format!(
++            "nine-field-sql-{}-{}",
++            std::process::id(),
++            std::time::SystemTime::now()
++                .duration_since(std::time::UNIX_EPOCH)?
++                .as_nanos()
++        ));
++        {
++            let mut pair = Pair::open(&path)?;
++            for (id, body, meta) in [
++                ("body", "quartz", "other"),
++                ("meta", "other", "quartz"),
++                ("tag", "neutral", "tagonly"),
++            ] {
++                let mut row = Record::new(id, id, body, 1);
++                row.metadata.insert("provenance".into(), meta.into());
++                pair.put(&row, "fixture")?;
++            }
++            pair.sql.enable_identifiers()?;
++            pair.sql.enable_metadata()?;
++            let case = |text: &str| Case {
++                id: "probe".into(),
++                question: text.into(),
++                at: 2,
++                evidence: Vec::new(),
++            };
++            let both = pair.sql.rank(&case("quartz"), 10)?;
++            assert_eq!(both[0].0, "body");
++            assert_eq!(both.len(), 2);
++            assert_eq!(
++                pair.sql
++                    .rank(&case("\"quartz\""), 10)?
++                    .iter()
++                    .map(|(id, _)| id.as_str())
++                    .collect::<Vec<_>>(),
++                vec!["body"]
++            );
++            assert!(pair.sql.rank(&case("\"tagonly\""), 10)?.is_empty());
++            assert_eq!(pair.sql.rank(&case("tagonly"), 10)?[0].0, "tag");
++            let (record, snippet) = pair.sql.read_native_snippet("tag", "tagonly")?;
++            assert_eq!(record.text, "neutral");
++            if let Some(text) = snippet {
++                assert!(record.text.contains(&text));
++            }
++            assert!(
++                pair.sql
++                    .insert(&Record::new("later", "later", "quartz", 3))
++                    .is_err()
++            );
++            assert_eq!(
++                pair.sql
++                    .db
++                    .query_row("SELECT count(*) FROM sources", [], |r| r.get::<_, i64>(0))?,
++                3
++            );
++        }
++        let target = path.canonicalize()?;
++        let parent = std::env::temp_dir().canonicalize()?;
++        assert_eq!(target.parent(), Some(parent.as_path()));
++        fs::remove_dir_all(target)?;
++        Ok(())
++    }
++    #[test]
+diff --git a/crates/oojuro-nine/src/lib.rs b/crates/oojuro-nine/src/lib.rs
+index 01e3bb7..60185e2 100644
+--- a/crates/oojuro-nine/src/lib.rs
++++ b/crates/oojuro-nine/src/lib.rs
+@@ -17 +17 @@ const MU: f64 = 128.0;
+-pub const RETRIEVAL_MODEL: &str = "dirichlet-128-v1";
++pub const RETRIEVAL_MODEL: &str = "dirichlet-128-field-mixture-2-1-v1";
+@@ -48,0 +49 @@ struct Row {
++    metadata_length: usize,
+@@ -87,0 +89,2 @@ pub struct TimelineMetrics {
++    #[serde(default)]
++    pub provenance_records: usize,
+@@ -100,0 +104,4 @@ pub struct TimelineStats {
++    #[serde(default)]
++    pub metadata_vocabulary: usize,
++    #[serde(default)]
++    pub metadata_postings: usize,
+@@ -134,0 +142 @@ pub struct Nine {
++    metadata_postings: HashMap<String, Vec<Posting>>,
+@@ -167,0 +176 @@ impl Nine {
++            metadata_postings: HashMap::new(),
+@@ -314,0 +324,2 @@ impl Nine {
++            metadata_vocabulary: self.metadata_postings.len(),
++            metadata_postings: self.metadata_postings.values().map(Vec::len).sum(),
+@@ -347,0 +359,15 @@ impl Nine {
++        let mut metadata = HashMap::<String, usize>::new();
++        for value in r.metadata.values() {
++            for term in tokens(value) {
++                *metadata
++                    .entry(normalize_word(&term).into_owned())
++                    .or_default() += 1;
++            }
++        }
++        let metadata_length = metadata.values().sum();
++        for (term, count) in metadata {
++            self.metadata_postings
++                .entry(term)
++                .or_default()
++                .push(Posting { row, count });
++        }
+@@ -359,0 +386 @@ impl Nine {
++            metadata_length,
+@@ -730,4 +757 @@ impl Nine {
+-        // Only the query-addressed historical view supplies this background model;
+-        // unrelated or future records cannot perturb its probabilities.
+-        query.retain(|term, _| collection.contains_key(term));
+-        let total = candidates
++        let mut total = candidates
+@@ -736,0 +761,31 @@ impl Nine {
++        let mut provenance = HashMap::<String, usize>::new();
++        if !anchored && literal.is_none() && direct.is_none() && !q.text.is_empty() {
++            for term in query.keys() {
++                if let Some(ps) = self.metadata_postings.get(term) {
++                    for p in ps {
++                        metrics.posted_rows_visited += 1;
++                        if eligible[p.row] == 0 {
++                            eligible[p.row] = if self.rows[p.row].record.valid_at >= from
++                                && self.latest(p.row, q)
++                            {
++                                candidates.push(p.row);
++                                2
++                            } else {
++                                1
++                            };
++                        }
++                        if eligible[p.row] >= 2 {
++                            if eligible[p.row] == 2 {
++                                eligible[p.row] = 3;
++                                metrics.provenance_records += 1;
++                                total += self.rows[p.row].metadata_length as f64;
++                            }
++                            *provenance.entry(term.clone()).or_default() += p.count;
++                        }
++                    }
++                }
++            }
++        }
++        // Body and provenance keep separate eligible field views and lengths.
++        // With no eligible provenance match, the prior sparse model is exact.
++        query.retain(|term, _| collection.contains_key(term) || provenance.contains_key(term));
+@@ -740 +795,3 @@ impl Nine {
+-                let count = collection[term] as f64;
++                let count = (collection.get(term).copied().unwrap_or(0)
++                    + provenance.get(term).copied().unwrap_or(0))
++                    as f64;
+@@ -757,9 +814,49 @@ impl Nine {
+-        for i in &candidates {
+-            gains[*i] = -query_count * (1. + self.rows[*i].length as f64 / MU).log2();
+-        }
+-        for (term, count) in &query {
+-            let scale = MU * background[term];
+-            for p in &self.postings[term] {
+-                metrics.posted_rows_visited += 1;
+-                if eligible[p.row] == 2 {
+-                    gains[p.row] += *count as f64 * (1. + p.count as f64 / scale).log2();
++        if provenance.is_empty() {
++            for i in &candidates {
++                gains[*i] = -query_count * (1. + self.rows[*i].length as f64 / MU).log2();
++            }
++            for (term, count) in &query {
++                let scale = MU * background[term];
++                for p in &self.postings[term] {
++                    metrics.posted_rows_visited += 1;
++                    if eligible[p.row] == 2 {
++                        gains[p.row] += *count as f64 * (1. + p.count as f64 / scale).log2();
++                    }
++                }
++            }
++        } else {
++            let mut factors = vec![[0.; 3]; self.rows.len()];
++            for i in &candidates {
++                let row = &self.rows[*i];
++                let (body, meta) = if row.metadata_length == 0 {
++                    (1. / (row.length as f64 + MU), 0.)
++                } else {
++                    (
++                        (2. / 3.) / (row.length as f64 + MU),
++                        (1. / 3.) / (row.metadata_length as f64 + MU),
++                    )
++                };
++                let escape = MU * (body + meta);
++                factors[*i] = [body, meta, escape];
++                gains[*i] = query_count * escape.log2();
++            }
++            let mut mass = vec![0.; self.rows.len()];
++            let mut touched = Vec::new();
++            for (term, count) in &query {
++                for (postings, field) in [(&self.postings, 0), (&self.metadata_postings, 1)] {
++                    if let Some(ps) = postings.get(term) {
++                        for p in ps {
++                            metrics.posted_rows_visited += 1;
++                            if eligible[p.row] >= 2 {
++                                if mass[p.row] == 0. {
++                                    touched.push(p.row);
++                                }
++                                mass[p.row] += factors[p.row][field] * p.count as f64;
++                            }
++                        }
++                    }
++                }
++                for i in touched.drain(..) {
++                    gains[i] +=
++                        *count as f64 * (1. + mass[i] / (background[term] * factors[i][2])).log2();
++                    mass[i] = 0.;
+diff --git a/crates/oojuro-nine/src/tests.rs b/crates/oojuro-nine/src/tests.rs
+index 4149246..42be597 100644
+--- a/crates/oojuro-nine/src/tests.rs
++++ b/crates/oojuro-nine/src/tests.rs
+@@ -415,0 +416,269 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
++#[test]
++fn field_mixture_matches_hand_probabilities_and_preserves_originals() -> Result<()> {
++    let tmp = Scratch::new();
++    let mut db = Nine::open(&tmp.0)?;
++    let mut a = r("a", "a", "alpha alpha beta", 1, 1);
++    a.metadata.insert("provenance".into(), "beta gamma".into());
++    let b = r("b", "b", "beta beta gamma", 1, 1);
++    let mut c = r("c", "c", "delta", 1, 1);
++    c.metadata.insert("provenance".into(), "alpha alpha".into());
++    let originals = [a, b, c];
++    for row in &originals {
++        db.insert(row.clone())?;
++    }
++    let q = Query::new("alpha beta", 2);
++    let found = db.search_refs(&q, i64::MIN)?;
++    assert_eq!(found.matches.len(), 3);
++    assert_eq!(db.metrics().provenance_records, 2);
++    let ba = (4. + literal_probability("alpha")) / 11.;
++    let bb = (4. + literal_probability("beta")) / 11.;
++    let dense = [
++        ("a", [2., 1.], 3., [0., 1.], 2.),
++        ("b", [0., 2.], 3., [0., 0.], 0.),
++        ("c", [0., 0.], 1., [2., 0.], 2.),
++    ];
++    for hit in &found.matches {
++        let (_, body, nb, meta, nm) = dense.iter().find(|(id, ..)| *id == hit.id).unwrap();
++        let mut expected = 0.;
++        for j in 0..2 {
++            let bg = [ba, bb][j];
++            let pb = (body[j] + 128. * bg) / (nb + 128.);
++            let p = if *nm > 0. {
++                (2. * pb + (meta[j] + 128. * bg) / (nm + 128.)) / 3.
++            } else {
++                pb
++            };
++            expected += (p / bg).log2();
++        }
++        assert!((expected - hit.score_bits).abs() < 1e-10);
++    }
++    assert_eq!(db.stats()?.metadata_postings, 3);
++    let fallback = db.find("delta", i64::MIN, 2, 10)?;
++    let bg = (1. + literal_probability("delta")) / 2.;
++    let expected = ((1. + 128. * bg) / (129. * bg)).log2();
++    assert_eq!(db.metrics().provenance_records, 0);
++    assert!((fallback.matches[0].score_bits - expected).abs() < 1e-10);
++    assert!(db.find("provenance", i64::MIN, 2, 10)?.matches.is_empty());
++    let projection = |m: &Matches| {
++        m.matches
++            .iter()
++            .map(|m| (m.id.clone(), m.score_bits))
++            .collect::<Vec<_>>()
++    };
++    let before = projection(&found);
++    drop(db);
++    let mut db = Nine::open(&tmp.0)?;
++    assert_eq!(projection(&db.search_refs(&q, i64::MIN)?), before);
++    for original in originals {
++        assert_eq!(
++            serde_json::to_vec(db.record(&original.id).unwrap())?,
++            serde_json::to_vec(&original)?
++        );
++    }
++    Ok(())
++}
++
++#[test]
++fn field_mixture_sparse_scores_match_independent_dense_historical_views() -> Result<()> {
++    let tmp = Scratch::new();
++    let mut db = Nine::open(&tmp.0)?;
++    let words = [
++        "alpha", "beta", "gamma", "delta", "running", "runs", "file", "files", "theta",
++    ];
++    for i in 0..120 {
++        let body = (0..(13 + i % 43))
++            .map(|j| words[(i + j * (1 + i % 3)) % words.len()])
++            .collect::<Vec<_>>()
++            .join(" ");
++        let mut row = r(
++            &format!("mixed-{i}"),
++            &format!("key-{}", i % 60),
++            &body,
++            (i / 10) as i64,
++            (i / 10 + i % 3) as i64,
++        );
++        if i % 4 != 0 {
++            row.metadata.insert(
++                "provenance".into(),
++                format!(
++                    "quartz {}",
++                    (0..(5 + i % 12))
++                        .map(|j| words[(2 * i + j) % words.len()])
++                        .collect::<Vec<_>>()
++                        .join(" ")
++                ),
++            );
++        }
++        db.insert(row)?;
++    }
++    for at in [3, 8, 20] {
++        for from in [i64::MIN, 2] {
++            for text in [
++                "alpha beta",
++                "beta beta gamma",
++                "quartz files",
++                "running files",
++                "unknownword alpha",
++            ] {
++                let mut q = Query::new(text, at);
++                q.known_at = at - 1;
++                q.k = 250;
++                let mut query = query_terms(text);
++                let mut rows = Vec::new();
++                for (i, row) in db
++                    .rows
++                    .iter()
++                    .enumerate()
++                    .filter(|(i, row)| row.record.valid_at >= from && db.latest(*i, &q))
++                {
++                    let mut body = BTreeMap::<String, usize>::new();
++                    let mut meta = BTreeMap::<String, usize>::new();
++                    for w in retrieval_terms(&row.record.text) {
++                        *body.entry(normalize_word(&w).into_owned()).or_default() += 1;
++                    }
++                    for w in row.record.metadata.values().flat_map(|v| tokens(v)) {
++                        *meta.entry(normalize_word(&w).into_owned()).or_default() += 1;
++                    }
++                    let bm = query.keys().any(|w| body.contains_key(w));
++                    let mm = query.keys().any(|w| meta.contains_key(w));
++                    rows.push((i, body, meta, bm, mm));
++                }
++                let total = rows
++                    .iter()
++                    .map(|(_, b, m, bm, mm)| {
++                        usize::from(*bm) * b.values().sum::<usize>()
++                            + usize::from(*mm) * m.values().sum::<usize>()
++                    })
++                    .sum::<usize>();
++                let cf: BTreeMap<_, _> = query
++                    .keys()
++                    .map(|w| {
++                        (
++                            w.clone(),
++                            rows.iter()
++                                .map(|(_, b, m, bm, mm)| {
++                                    usize::from(*bm) * b.get(w).copied().unwrap_or(0)
++                                        + usize::from(*mm) * m.get(w).copied().unwrap_or(0)
++                                })
++                                .sum::<usize>(),
++                        )
++                    })
++                    .collect();
++                query.retain(|w, _| cf[w] > 0);
++                let fielded = rows.iter().any(|(_, _, _, _, mm)| *mm);
++                let mut dense = HashMap::new();
++                for (i, b, m, bm, mm) in &rows {
++                    if !bm && !mm {
++                        continue;
++                    }
++                    let nb = b.values().sum::<usize>() as f64;
++                    let nm = m.values().sum::<usize>() as f64;
++                    let mut score = 0.;
++                    for (w, n) in &query {
++                        let bg = (cf[w] as f64 + literal_probability(w)) / (total as f64 + 1.);
++                        let pb = (b.get(w).copied().unwrap_or(0) as f64 + 128. * bg) / (nb + 128.);
++                        let pm = (m.get(w).copied().unwrap_or(0) as f64 + 128. * bg) / (nm + 128.);
++                        let p = if fielded && nm > 0. {
++                            (2. * pb + pm) / 3.
++                        } else {
++                            pb
++                        };
++                        score += *n as f64 * (p / bg).log2();
++                    }
++                    dense.insert(db.rows[*i].record.id.clone(), score);
++                }
++                let found = db.search_refs(&q, from)?;
++                assert_eq!(found.matches.len(), dense.len());
++                for hit in &found.matches {
++                    assert!((hit.score_bits - dense[&hit.id]).abs() < 1e-10);
++                }
++                assert!(
++                    found
++                        .matches
++                        .windows(2)
++                        .all(|v| v[0].score_bits + 1e-10 >= v[1].score_bits)
++                );
++                q.k = 3;
++                assert_eq!(
++                    db.search_refs(&q, from)?
++                        .matches
++                        .iter()
++                        .map(|m| &m.id)
++                        .collect::<Vec<_>>(),
++                    found
++                        .matches
++                        .iter()
++                        .take(3)
++                        .map(|m| &m.id)
++                        .collect::<Vec<_>>()
++                );
++            }
++        }
++    }
++    Ok(())
++}
++
++#[test]
++fn metadata_matches_obey_clocks_ranges_literals_anchors_and_finite_scores() -> Result<()> {
++    let tmp = Scratch::new();
++    let mut db = Nine::open(&tmp.0)?;
++    let mut old = r("meta-old", "meta-key", "stable original evidence", 1, 1);
++    old.metadata
++        .insert("provenance".into(), "quartz repair_shadow_page".into());
++    db.insert(old.clone())?;
++    db.insert(r("anchor", "anchor", "fn repair_shadow_page() {}", 1, 1))?;
++    let q = Query::new("quartz", 3);
++    let first = db.search_refs(&q, i64::MIN)?;
++    assert_eq!(first.matches[0].id, "meta-old");
++    db.search_refs(&q, i64::MIN)?;
++    assert!(db.metrics().cache_hit);
++    assert!(db.find("\"quartz\"", i64::MIN, 3, 10)?.matches.is_empty());
++    assert_eq!(
++        db.find("repair_shadow_page", i64::MIN, 3, 10)?
++            .matches
++            .iter()
++            .map(|m| m.id.as_str())
++            .collect::<Vec<_>>(),
++        vec!["anchor"]
++    );
++    let mut future = r("future", "future", "future original", 9, 1);
++    future
++        .metadata
++        .insert("provenance".into(), "quartz quartz".into());
++    db.insert(future)?;
++    let mut late = r("late", "meta-key", "revised original", 2, 8);
++    late.metadata.insert("provenance".into(), "cobalt".into());
++    db.insert(late)?;
++    let mut unrelated = r("unrelated", "unrelated", "unrelated body", 2, 2);
++    unrelated
++        .metadata
++        .insert("provenance".into(), "cobalt".into());
++    db.insert(unrelated)?;
++    let after = db.search_refs(&q, i64::MIN)?;
++    assert_eq!(first.matches[0].id, after.matches[0].id);
++    assert_eq!(first.matches[0].score_bits, after.matches[0].score_bits);
++    assert!(!db.metrics().cache_hit);
++    assert!(db.search_refs(&q, 2)?.matches.is_empty());
++    let mut known = q.clone();
++    known.known_at = 8;
++    assert!(db.search_refs(&known, i64::MIN)?.matches.is_empty());
++    let long = "q".repeat(2000);
++    let mut long_row = r("long-meta", "long-meta", "ordinary original", 2, 2);
++    long_row.metadata.insert("provenance".into(), long.clone());
++    db.insert(long_row)?;
++    let found = db.find(&long, i64::MIN, 3, 10)?;
++    assert_eq!(found.matches[0].id, "long-meta");
++    assert!(found.matches.iter().all(|m| m.score_bits.is_finite()));
++    assert_eq!(
++        serde_json::to_vec(db.record("meta-old").unwrap())?,
++        serde_json::to_vec(&old)?
++    );
++    drop(db);
++    let mut db = Nine::open(&tmp.0)?;
++    assert_eq!(
++        db.search_refs(&q, i64::MIN)?.matches[0].score_bits,
++        first.matches[0].score_bits
++    );
++    Ok(())
++}
++

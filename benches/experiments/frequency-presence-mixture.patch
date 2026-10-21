@@ -1,0 +1,169 @@
+diff --git a/crates/oojuro-nine/src/lib.rs b/crates/oojuro-nine/src/lib.rs
+index dc4a00a..1f0e9ab 100644
+--- a/crates/oojuro-nine/src/lib.rs
++++ b/crates/oojuro-nine/src/lib.rs
+@@ -603,6 +603,7 @@ impl Nine {
+             eligible[i] == 2
+         };
+         let mut collection = HashMap::<String, usize>::new();
++        let mut documents = HashMap::<String, usize>::new();
+         if let Some(key) = direct {
+             if let Some(v) = self.versions.get(key) {
+                 for i in v {
+@@ -620,6 +621,7 @@ impl Nine {
+                         metrics.posted_rows_visited += 1;
+                         if consider(p.row) {
+                             *collection.entry(term.clone()).or_default() += p.count;
++                            *documents.entry(term.clone()).or_default() += 1;
+                         }
+                     }
+                 }
+@@ -652,12 +654,14 @@ impl Nine {
+             // Surrounding words refine the literal-addressed view; they cannot
+             // replace a recognized identifier with unrelated candidate sources.
+             collection.clear();
++            documents.clear();
+             for term in query.keys() {
+                 if let Some(ps) = self.postings.get(term) {
+                     for p in ps {
+                         metrics.posted_rows_visited += 1;
+                         if eligible[p.row] == 2 {
+                             *collection.entry(term.clone()).or_default() += p.count;
++                            *documents.entry(term.clone()).or_default() += 1;
+                         }
+                     }
+                 }
+@@ -690,27 +694,38 @@ impl Nine {
+         // length penalty; only nonzero postings need individual log updates.
+         let query_count = query.values().sum::<usize>() as f64;
+         let mut gains = vec![0.; self.rows.len()];
++        // A one-observation Bernoulli model complements token frequency with
++        // term presence. Both models see exactly the same historical sources.
++        let mut presence = vec![-query_count; self.rows.len()];
+         for i in &candidates {
+             gains[*i] = -query_count * (1. + self.rows[*i].length as f64 / MU).log2();
+         }
+         for (term, count) in &query {
+             let scale = MU * background[term];
++            let presence_gain =
++                *count as f64 * (1. + candidates.len() as f64 / documents[term] as f64).log2();
+             for p in &self.postings[term] {
+                 metrics.posted_rows_visited += 1;
+                 if eligible[p.row] == 2 {
+                     gains[p.row] += *count as f64 * (1. + p.count as f64 / scale).log2();
++                    presence[p.row] += presence_gain;
+                 }
+             }
+         }
++        let mixed = mixture_scores(
++            &candidates.iter().map(|i| gains[*i]).collect::<Vec<_>>(),
++            &candidates.iter().map(|i| presence[*i]).collect::<Vec<_>>(),
++        );
+         let mut scored: Vec<_> = candidates
+             .into_iter()
+-            .map(|i| {
++            .zip(mixed)
++            .map(|(i, mixed)| {
+                 let conditional = baseline - gains[i];
+                 let (positive, negative) = learned.get(&i).copied().unwrap_or_default();
+                 let usefulness = ((positive + 1) as f64 / (negative + 1) as f64)
+                     .log2()
+                     .clamp(-8.0, 8.0);
+-                (i, gains[i] + usefulness, conditional)
++                (i, mixed + usefulness, conditional)
+             })
+             .collect();
+         metrics.scored_records = scored.len();
+@@ -763,6 +778,30 @@ impl Nine {
+     }
+ }
+
++/// Equal-weight mixture over candidate-address probabilities. Its
++/// code length pays for two alternatives rather than selecting a favorable one.
++fn mixture_scores(frequency: &[f64], presence: &[f64]) -> Vec<f64> {
++    if frequency.is_empty() {
++        return Vec::new();
++    }
++    let log_sum = |values: &[f64]| {
++        let max = values.iter().copied().fold(f64::NEG_INFINITY, f64::max);
++        max + values.iter().map(|s| (*s - max).exp2()).sum::<f64>().log2()
++    };
++    let zf = log_sum(frequency);
++    let zp = log_sum(presence);
++    let uniform = (frequency.len() as f64).log2();
++    frequency
++        .iter()
++        .zip(presence)
++        .map(|(f, p)| {
++            let (f, p) = (*f - zf, *p - zp);
++            let max = f.max(p);
++            uniform + max + ((f - max).exp2() + (p - max).exp2()).log2() - 1.
++        })
++        .collect()
++}
++
+ impl Engine for Nine {
+     fn name(&self) -> &'static str {
+         "nine"
+diff --git a/crates/oojuro-nine/src/tests.rs b/crates/oojuro-nine/src/tests.rs
+index 13c3c97..26b5659 100644
+--- a/crates/oojuro-nine/src/tests.rs
++++ b/crates/oojuro-nine/src/tests.rs
+@@ -305,7 +305,7 @@ fn repeated_record_envelopes_compress_without_losing_metadata() -> Result<()> {
+ }
+
+ #[test]
+-fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()> {
++fn sparse_scores_match_dense_two_model_mixture_on_historical_views() -> Result<()> {
+     let tmp = Scratch::new();
+     let mut db = Nine::open(&tmp.0)?;
+     let words = ["alpha", "beta", "gamma", "delta", "epsilon", "zeta", "eta"];
+@@ -373,13 +373,29 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
+                             *n as f64 * (p.log2() - background[term].log2())
+                         })
+                         .sum::<f64>();
+-                    (db.rows[*i].record.id.clone(), score)
++                    let presence = query
++                        .iter()
++                        .map(|(term, n)| {
++                            let p = eligible
++                                .iter()
++                                .filter(|(_, c)| c.contains_key(term))
++                                .count() as f64
++                                / eligible.len() as f64;
++                            let observed = f64::from(counts.contains_key(term));
++                            *n as f64 * ((observed + p) / (2. * p)).log2()
++                        })
++                        .sum::<f64>();
++                    (db.rows[*i].record.id.clone(), (score, presence))
+                 })
+                 .collect();
+             let found = db.search_refs(&q, i64::MIN)?;
+             assert_eq!(found.matches.len(), dense.len());
++            let zf = dense.values().map(|(f, _)| f.exp2()).sum::<f64>();
++            let zp = dense.values().map(|(_, p)| p.exp2()).sum::<f64>();
+             for m in &found.matches {
+-                assert!((m.score_bits - dense[m.id.as_str()]).abs() < 1e-10);
++                let (f, p) = dense[m.id.as_str()];
++                let expected = (dense.len() as f64 * (f.exp2() / zf + p.exp2() / zp) / 2.).log2();
++                assert!((m.score_bits - expected).abs() < 1e-10);
+             }
+             assert!(
+                 found
+@@ -403,6 +419,16 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
+     Ok(())
+ }
+
++#[test]
++fn mixture_probabilities_normalize_with_extreme_component_scores() {
++    let score = mixture_scores(&[-10000., 0., -10000.], &[0., -10000., -10000.]);
++    assert!(score.iter().all(|x| x.is_finite()));
++    assert!((score.iter().map(|x| x.exp2() / 3.).sum::<f64>() - 1.).abs() < 1e-12);
++    assert_eq!(score[0], score[1]);
++    assert_eq!(mixture_scores(&[10000.], &[-10000.]), vec![0.]);
++    assert!(mixture_scores(&[], &[]).is_empty());
++}
++
+ #[test]
+ fn exact_identifiers_keep_components_and_respect_historical_revisions() -> Result<()> {
+     let tmp = Scratch::new();

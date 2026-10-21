@@ -1,0 +1,24 @@
+[package]
+name = "oojuro-trace"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Agent-trace store: typed events, columns, compressed originals, code-length search"
+
+[features]
+phase-profile = ["oojuro-nine/phase-profile"]
+
+[dependencies]
+oojuro-core.workspace = true
+oojuro-nine = { path = "../oojuro-nine" }
+oojuro-store = { path = "../oojuro-store" }
+serde.workspace = true
+serde_json.workspace = true
+blake3.workspace = true
+crc32fast.workspace = true
+aho-corasick = "1"
+zstd = { version = "0.13", default-features = false, features = ["experimental", "zdict_builder"] }
+
+[dev-dependencies]
+memmap2 = "0.9.11"

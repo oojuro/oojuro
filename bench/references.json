@@ -1,0 +1,206 @@
+{
+  "schema": "oojuro-references-v1",
+  "note": "Published numbers, never run here. Rows are attached to scorecards of the same dataset. Memory-QA rows (BM25, full-context, Mem0, Zep, Letta on LongMemEval/LoCoMo) are pending verification; they report LLM-judged answer accuracy, not retrieval recall.",
+  "rows": [
+    {
+      "dataset": "beir-scifact",
+      "split": "test",
+      "system": "Anserini BM25 flat",
+      "metric": "ndcg@10",
+      "value": 0.6789,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-scifact.flat.md"
+    },
+    {
+      "dataset": "beir-scifact",
+      "split": "test",
+      "system": "Anserini BM25 flat",
+      "metric": "recall@100",
+      "value": 0.9253,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-scifact.flat.md"
+    },
+    {
+      "dataset": "beir-scifact",
+      "split": "test",
+      "system": "Anserini BM25 multifield",
+      "metric": "ndcg@10",
+      "value": 0.6647,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-scifact.multifield.md"
+    },
+    {
+      "dataset": "beir-scifact",
+      "split": "test",
+      "system": "Anserini BM25 multifield",
+      "metric": "recall@100",
+      "value": 0.9076,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-scifact.multifield.md"
+    },
+    {
+      "dataset": "beir-arguana",
+      "split": "test",
+      "system": "Anserini BM25 flat",
+      "metric": "ndcg@10",
+      "value": 0.397,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-arguana.flat.md"
+    },
+    {
+      "dataset": "beir-arguana",
+      "split": "test",
+      "system": "Anserini BM25 flat",
+      "metric": "recall@100",
+      "value": 0.9324,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-arguana.flat.md"
+    },
+    {
+      "dataset": "beir-arguana",
+      "split": "test",
+      "system": "Anserini BM25 multifield",
+      "metric": "ndcg@10",
+      "value": 0.4142,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-arguana.multifield.md"
+    },
+    {
+      "dataset": "beir-arguana",
+      "split": "test",
+      "system": "Anserini BM25 multifield",
+      "metric": "recall@100",
+      "value": 0.9431,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-arguana.multifield.md"
+    },
+    {
+      "dataset": "beir-fiqa",
+      "split": "test",
+      "system": "Anserini BM25 flat",
+      "metric": "ndcg@10",
+      "value": 0.2361,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-fiqa.flat.md"
+    },
+    {
+      "dataset": "beir-fiqa",
+      "split": "test",
+      "system": "Anserini BM25 flat",
+      "metric": "recall@100",
+      "value": 0.5395,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-fiqa.flat.md"
+    },
+    {
+      "dataset": "beir-fiqa",
+      "split": "test",
+      "system": "Anserini BM25 multifield",
+      "metric": "ndcg@10",
+      "value": 0.2361,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-fiqa.multifield.md"
+    },
+    {
+      "dataset": "beir-fiqa",
+      "split": "test",
+      "system": "Anserini BM25 multifield",
+      "metric": "recall@100",
+      "value": 0.5395,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-fiqa.multifield.md"
+    },
+    {
+      "dataset": "beir-nfcorpus",
+      "split": "test",
+      "system": "Anserini BM25 flat",
+      "metric": "ndcg@10",
+      "value": 0.3218,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-nfcorpus.flat.md"
+    },
+    {
+      "dataset": "beir-nfcorpus",
+      "split": "test",
+      "system": "Anserini BM25 flat",
+      "metric": "recall@100",
+      "value": 0.2457,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-nfcorpus.flat.md"
+    },
+    {
+      "dataset": "beir-nfcorpus",
+      "split": "test",
+      "system": "Anserini BM25 multifield",
+      "metric": "ndcg@10",
+      "value": 0.3254,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-nfcorpus.multifield.md"
+    },
+    {
+      "dataset": "beir-nfcorpus",
+      "split": "test",
+      "system": "Anserini BM25 multifield",
+      "metric": "recall@100",
+      "value": 0.25,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-nfcorpus.multifield.md"
+    },
+    {
+      "dataset": "beir-scidocs",
+      "split": "test",
+      "system": "Anserini BM25 flat",
+      "metric": "ndcg@10",
+      "value": 0.149,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-scidocs.flat.md"
+    },
+    {
+      "dataset": "beir-scidocs",
+      "split": "test",
+      "system": "Anserini BM25 flat",
+      "metric": "recall@100",
+      "value": 0.3477,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-scidocs.flat.md"
+    },
+    {
+      "dataset": "beir-scidocs",
+      "split": "test",
+      "system": "Anserini BM25 multifield",
+      "metric": "ndcg@10",
+      "value": 0.1581,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-scidocs.multifield.md"
+    },
+    {
+      "dataset": "beir-scidocs",
+      "split": "test",
+      "system": "Anserini BM25 multifield",
+      "metric": "recall@100",
+      "value": 0.3561,
+      "uses_llm": false,
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-scidocs.multifield.md"
+    }
+  ]
+}

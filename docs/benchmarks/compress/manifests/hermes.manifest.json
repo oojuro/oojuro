@@ -1,0 +1,37 @@
+{
+ "name": "hermes",
+ "records": 64758,
+ "sessions": 11578,
+ "raw_bytes": 50736426,
+ "budget_bytes": 0,
+ "by_kind": {
+  "system": {
+   "records": 11578,
+   "bytes": 14111685
+  },
+  "user": {
+   "records": 18909,
+   "bytes": 25636194
+  },
+  "tool_call": {
+   "records": 10526,
+   "bytes": 2276305
+  },
+  "tool_result": {
+   "records": 7860,
+   "bytes": 2682620
+  },
+  "answer": {
+   "records": 15885,
+   "bytes": 6029622
+  }
+ },
+ "rec_sha256": "c02ca0adbc671f763180722e5509249e9d14ec14b323130e6c2ecdd38258e079",
+ "sources": {
+  "func-calling-singleturn.json": "fb2df9fe3f295dfd65b223c2dbf04d6b90006357d737f8f8927749f0bea09527",
+  "func-calling.json": "769478035a886678d525d057ea66e3fd1e247f43e35c8d6d7cc866e080b6742b",
+  "glaive-function-calling-5k.json": "b98eb3f160359f27ad15018e974ce6db444f566eb5be4aa9e4aa690b34d50832",
+  "json-mode-agentic.json": "7343a1ce0b3c1e894978fc15bb79c695a925f835c91a81786bf59e7379eb5da2",
+  "json-mode-singleturn.json": "c07b20b7e88afc9cde0cf8c92e50ad150861ba2e35f4c82eb85999aba7182f4a"
+ }
+}

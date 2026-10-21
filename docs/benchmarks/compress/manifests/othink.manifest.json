@@ -1,0 +1,29 @@
+{
+ "name": "othink",
+ "records": 33272,
+ "sessions": 8318,
+ "raw_bytes": 268438273,
+ "budget_bytes": 268435456,
+ "by_kind": {
+  "system": {
+   "records": 8318,
+   "bytes": 10913216
+  },
+  "user": {
+   "records": 8318,
+   "bytes": 14318143
+  },
+  "thinking": {
+   "records": 8318,
+   "bytes": 218792076
+  },
+  "answer": {
+   "records": 8318,
+   "bytes": 24414838
+  }
+ },
+ "rec_sha256": "44f8d305da457aa4ff6b53ba733040ab27c1cd82ccabb670aa73a3bcca46fb47",
+ "sources": {
+  "train-00000.parquet": "11c37cde12bed21dff55e71ebeea3fa1616cf86432575926992129087bf75848"
+ }
+}

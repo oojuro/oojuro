@@ -1,0 +1,443 @@
+{
+  "answer_accuracy": null,
+  "arms": {
+    "nine_k32_b16384": {
+      "groups": {
+        "large_tool": {
+          "codec_encode_ms": {
+            "p50": 0.039,
+            "p95": 0.0477,
+            "samples": 27
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.081,
+            "p95": 0.13210000000000002,
+            "samples": 27
+          },
+          "mean_distinct_texts": 3.3333333333333335,
+          "mean_encoded_bytes": 8492.666666666666,
+          "mean_flat_bytes": 10057.333333333334,
+          "mean_origins": 4.0,
+          "packets": 9
+        },
+        "public_symbol_lookup": {
+          "codec_encode_ms": {
+            "p50": 0.007700000000000001,
+            "p95": 0.0106,
+            "samples": 18
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.0166,
+            "p95": 0.051,
+            "samples": 18
+          },
+          "mean_distinct_texts": 1.0,
+          "mean_encoded_bytes": 2434.3333333333335,
+          "mean_flat_bytes": 2434.3333333333335,
+          "mean_origins": 1.0,
+          "packets": 6
+        },
+        "reserved_symbol_lookup": {
+          "codec_encode_ms": {
+            "p50": 0.0072,
+            "p95": 0.0089,
+            "samples": 120
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.015099999999999999,
+            "p95": 0.0183,
+            "samples": 120
+          },
+          "mean_distinct_texts": 1.0,
+          "mean_encoded_bytes": 2415.525,
+          "mean_flat_bytes": 2415.525,
+          "mean_origins": 1.0,
+          "packets": 40
+        },
+        "pilot_history": {
+          "codec_encode_ms": {
+            "p50": 0.079,
+            "p95": 0.1837,
+            "samples": 42
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.13119999999999998,
+            "p95": 0.2118,
+            "samples": 42
+          },
+          "mean_distinct_texts": 18.857142857142858,
+          "mean_encoded_bytes": 14935.214285714286,
+          "mean_flat_bytes": 16345.642857142857,
+          "mean_origins": 22.5,
+          "packets": 14
+        },
+        "unseen_document_question": {
+          "codec_encode_ms": {
+            "p50": 0.06559999999999999,
+            "p95": 0.5553,
+            "samples": 60
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.10179999999999999,
+            "p95": 0.4101,
+            "samples": 60
+          },
+          "mean_distinct_texts": 10.25,
+          "mean_encoded_bytes": 15795.3,
+          "mean_flat_bytes": 16293.2,
+          "mean_origins": 11.05,
+          "packets": 20
+        },
+        "unseen_symbol_lookup": {
+          "codec_encode_ms": {
+            "p50": 0.0070999999999999995,
+            "p95": 0.0078,
+            "samples": 120
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.0144,
+            "p95": 0.0174,
+            "samples": 120
+          },
+          "mean_distinct_texts": 1.0,
+          "mean_encoded_bytes": 2368.975,
+          "mean_flat_bytes": 2368.975,
+          "mean_origins": 1.0,
+          "packets": 40
+        }
+      }
+    },
+    "nine_k32_b65536": {
+      "groups": {
+        "large_tool": {
+          "codec_encode_ms": {
+            "p50": 0.04,
+            "p95": 0.2632,
+            "samples": 27
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.0751,
+            "p95": 0.27599999999999997,
+            "samples": 27
+          },
+          "mean_distinct_texts": 3.3333333333333335,
+          "mean_encoded_bytes": 8492.666666666666,
+          "mean_flat_bytes": 10057.333333333334,
+          "mean_origins": 4.0,
+          "packets": 9
+        },
+        "public_symbol_lookup": {
+          "codec_encode_ms": {
+            "p50": 0.0070999999999999995,
+            "p95": 0.0236,
+            "samples": 18
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.0152,
+            "p95": 0.0174,
+            "samples": 18
+          },
+          "mean_distinct_texts": 1.0,
+          "mean_encoded_bytes": 2434.3333333333335,
+          "mean_flat_bytes": 2434.3333333333335,
+          "mean_origins": 1.0,
+          "packets": 6
+        },
+        "reserved_symbol_lookup": {
+          "codec_encode_ms": {
+            "p50": 0.0074,
+            "p95": 0.0132,
+            "samples": 120
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.0155,
+            "p95": 0.0917,
+            "samples": 120
+          },
+          "mean_distinct_texts": 1.0,
+          "mean_encoded_bytes": 2415.525,
+          "mean_flat_bytes": 2415.525,
+          "mean_origins": 1.0,
+          "packets": 40
+        },
+        "pilot_history": {
+          "codec_encode_ms": {
+            "p50": 0.1278,
+            "p95": 0.2387,
+            "samples": 42
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.2242,
+            "p95": 1.3937000000000002,
+            "samples": 42
+          },
+          "mean_distinct_texts": 27.142857142857142,
+          "mean_encoded_bytes": 22956.785714285714,
+          "mean_flat_bytes": 25380.5,
+          "mean_origins": 32.0,
+          "packets": 14
+        },
+        "unseen_document_question": {
+          "codec_encode_ms": {
+            "p50": 0.2335,
+            "p95": 0.671,
+            "samples": 60
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.37139999999999995,
+            "p95": 1.1208,
+            "samples": 60
+          },
+          "mean_distinct_texts": 29.4,
+          "mean_encoded_bytes": 43972.15,
+          "mean_flat_bytes": 46276.2,
+          "mean_origins": 32.0,
+          "packets": 20
+        },
+        "unseen_symbol_lookup": {
+          "codec_encode_ms": {
+            "p50": 0.0074,
+            "p95": 0.0103,
+            "samples": 120
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.0152,
+            "p95": 0.0294,
+            "samples": 120
+          },
+          "mean_distinct_texts": 1.0,
+          "mean_encoded_bytes": 2368.975,
+          "mean_flat_bytes": 2368.975,
+          "mean_origins": 1.0,
+          "packets": 40
+        }
+      }
+    },
+    "sqlite_fts5_k32_b16384": {
+      "groups": {
+        "large_tool": {
+          "codec_encode_ms": {
+            "p50": 0.0684,
+            "p95": 0.07629999999999999,
+            "samples": 27
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.1196,
+            "p95": 0.196,
+            "samples": 27
+          },
+          "mean_distinct_texts": 7.333333333333333,
+          "mean_encoded_bytes": 16360.0,
+          "mean_flat_bytes": 16360.0,
+          "mean_origins": 7.333333333333333,
+          "packets": 9
+        },
+        "public_symbol_lookup": {
+          "codec_encode_ms": {
+            "p50": 0.007,
+            "p95": 0.0283,
+            "samples": 18
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.0147,
+            "p95": 0.0165,
+            "samples": 18
+          },
+          "mean_distinct_texts": 1.0,
+          "mean_encoded_bytes": 2431.1666666666665,
+          "mean_flat_bytes": 2431.1666666666665,
+          "mean_origins": 1.0,
+          "packets": 6
+        },
+        "reserved_symbol_lookup": {
+          "codec_encode_ms": {
+            "p50": 0.007,
+            "p95": 0.008,
+            "samples": 120
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.0143,
+            "p95": 0.0167,
+            "samples": 120
+          },
+          "mean_distinct_texts": 1.0,
+          "mean_encoded_bytes": 2416.825,
+          "mean_flat_bytes": 2416.825,
+          "mean_origins": 1.0,
+          "packets": 40
+        },
+        "pilot_history": {
+          "codec_encode_ms": {
+            "p50": 0.0625,
+            "p95": 0.0702,
+            "samples": 42
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.0965,
+            "p95": 0.1275,
+            "samples": 42
+          },
+          "mean_distinct_texts": 8.071428571428571,
+          "mean_encoded_bytes": 15272.07142857143,
+          "mean_flat_bytes": 16341.0,
+          "mean_origins": 8.571428571428571,
+          "packets": 14
+        },
+        "unseen_document_question": {
+          "codec_encode_ms": {
+            "p50": 0.0637,
+            "p95": 0.0798,
+            "samples": 60
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.1023,
+            "p95": 1.0289,
+            "samples": 60
+          },
+          "mean_distinct_texts": 7.6,
+          "mean_encoded_bytes": 15919.95,
+          "mean_flat_bytes": 16354.45,
+          "mean_origins": 7.8,
+          "packets": 20
+        },
+        "unseen_symbol_lookup": {
+          "codec_encode_ms": {
+            "p50": 0.0068000000000000005,
+            "p95": 0.0086,
+            "samples": 120
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.014,
+            "p95": 0.018000000000000002,
+            "samples": 120
+          },
+          "mean_distinct_texts": 1.0,
+          "mean_encoded_bytes": 2367.95,
+          "mean_flat_bytes": 2367.95,
+          "mean_origins": 1.0,
+          "packets": 40
+        }
+      }
+    },
+    "sqlite_fts5_k32_b65536": {
+      "groups": {
+        "large_tool": {
+          "codec_encode_ms": {
+            "p50": 0.2963,
+            "p95": 1.3734000000000002,
+            "samples": 27
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.4865,
+            "p95": 1.5222,
+            "samples": 27
+          },
+          "mean_distinct_texts": 28.666666666666668,
+          "mean_encoded_bytes": 65514.666666666664,
+          "mean_flat_bytes": 65514.666666666664,
+          "mean_origins": 28.666666666666668,
+          "packets": 9
+        },
+        "public_symbol_lookup": {
+          "codec_encode_ms": {
+            "p50": 0.0069,
+            "p95": 0.0163,
+            "samples": 18
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.015400000000000002,
+            "p95": 0.0306,
+            "samples": 18
+          },
+          "mean_distinct_texts": 1.0,
+          "mean_encoded_bytes": 2431.1666666666665,
+          "mean_flat_bytes": 2431.1666666666665,
+          "mean_origins": 1.0,
+          "packets": 6
+        },
+        "reserved_symbol_lookup": {
+          "codec_encode_ms": {
+            "p50": 0.0072,
+            "p95": 0.0231,
+            "samples": 120
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.0152,
+            "p95": 0.0391,
+            "samples": 120
+          },
+          "mean_distinct_texts": 1.0,
+          "mean_encoded_bytes": 2416.825,
+          "mean_flat_bytes": 2416.825,
+          "mean_origins": 1.0,
+          "packets": 40
+        },
+        "pilot_history": {
+          "codec_encode_ms": {
+            "p50": 0.3004,
+            "p95": 0.5984,
+            "samples": 42
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.4961,
+            "p95": 0.8172999999999999,
+            "samples": 42
+          },
+          "mean_distinct_texts": 27.785714285714285,
+          "mean_encoded_bytes": 60979.42857142857,
+          "mean_flat_bytes": 65433.28571428572,
+          "mean_origins": 29.928571428571427,
+          "packets": 14
+        },
+        "unseen_document_question": {
+          "codec_encode_ms": {
+            "p50": 0.2887,
+            "p95": 0.5222,
+            "samples": 60
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.45,
+            "p95": 1.2386000000000001,
+            "samples": 60
+          },
+          "mean_distinct_texts": 27.2,
+          "mean_encoded_bytes": 62202.55,
+          "mean_flat_bytes": 65496.95,
+          "mean_origins": 28.8,
+          "packets": 20
+        },
+        "unseen_symbol_lookup": {
+          "codec_encode_ms": {
+            "p50": 0.0070999999999999995,
+            "p95": 0.0076,
+            "samples": 120
+          },
+          "decode_and_verify_ms": {
+            "p50": 0.0146,
+            "p95": 0.0166,
+            "samples": 120
+          },
+          "mean_distinct_texts": 1.0,
+          "mean_encoded_bytes": 2367.95,
+          "mean_flat_bytes": 2367.95,
+          "mean_origins": 1.0,
+          "packets": 40
+        }
+      }
+    }
+  },
+  "context_encoding": "exact-shared-text-v1",
+  "embedding_calls": 0,
+  "limitations": [
+    "Codec-only timings exclude retrieval/source replay and are not end-to-end query latency.",
+    "Every origin, original range, timestamp, flag and source order is restored; aliases add provenance, not new semantic facts.",
+    "Selection, supporting quotes and ranked candidates are unchanged. Bytes are measured; LLM tokens and agent outcomes are unmeasured."
+  ],
+  "llm_calls": 0,
+  "model_input_tokens": null,
+  "repeats": 3,
+  "retrieval_latency_ms": null,
+  "scope": "lossless encoding of unchanged selected context",
+  "source_archive_digest": "4851adcc01420e9d9f155ad1db2d826aa26d9c4b72fa18fce0cbfec961cdb18f",
+  "timed_roundtrips": 1548
+}

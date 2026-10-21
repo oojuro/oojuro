@@ -1,0 +1,44 @@
+{"header" : {
+  "cloc_url"           : "github.com/AlDanial/cloc",
+  "cloc_version"       : "2.11",
+  "elapsed_seconds"    : 0.078078031539917,
+  "n_files"            : 6,
+  "n_lines"            : 2940,
+  "files_per_second"   : 76.8461996500582,
+  "lines_per_second"   : 37654.6378285285,
+  "report_file"        : "../../work/nine-scope-code-count.json"},
+"crates/oojuro-nine/src/lib.rs" :{
+  "blank": 14,
+  "comment": 31,
+  "code": 944,
+  "language": "Rust"},
+"crates/oojuro-nine/src/tests.rs" :{
+  "blank": 17,
+  "comment": 0,
+  "code": 749,
+  "language": "Rust"},
+"crates/oojuro-core/src/lib.rs" :{
+  "blank": 8,
+  "comment": 10,
+  "code": 519,
+  "language": "Rust"},
+"crates/oojuro-nine/src/passage.rs" :{
+  "blank": 7,
+  "comment": 5,
+  "code": 279,
+  "language": "Rust"},
+"crates/oojuro-nine/src/context.rs" :{
+  "blank": 9,
+  "comment": 6,
+  "code": 182,
+  "language": "Rust"},
+"crates/oojuro-nine/src/context_tests.rs" :{
+  "blank": 7,
+  "comment": 0,
+  "code": 153,
+  "language": "Rust"},
+"SUM": {
+  "blank": 62,
+  "comment": 52,
+  "code": 2826,
+  "nFiles": 6} }

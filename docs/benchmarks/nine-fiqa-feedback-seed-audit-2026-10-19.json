@@ -1,0 +1,9 @@
+{
+  "embedding_calls": 0,
+  "excluded_ids_in_feedback_seed": 0,
+  "id_collisions": 55,
+  "llm_calls": 0,
+  "scope": "public FiQA first-pass self-ID diagnostic",
+  "seed_depth": 10,
+  "test_queries": 648
+}

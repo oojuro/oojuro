@@ -1,0 +1,186 @@
+{
+  "architecture": "x86_64",
+  "arms": {
+    "nine_cached_2": {
+      "answer_accuracy": null,
+      "citations_in_context": 22,
+      "complete_local_query_ms": {
+        "mean": 0.11682166666666659,
+        "p50": 0.0871,
+        "p95": 0.2977,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 1521.7142857142858,
+      "mean_reciprocal_first_reference_rank": 0.8554421768707484,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 10,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 15
+    },
+    "nine_cached_8": {
+      "answer_accuracy": null,
+      "citations_in_context": 25,
+      "complete_local_query_ms": {
+        "mean": 0.1319178571428571,
+        "p50": 0.0989,
+        "p95": 0.3211,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 3857.0,
+      "mean_reciprocal_first_reference_rank": 0.8554421768707484,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 11,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 18
+    },
+    "nine_uncached_2": {
+      "answer_accuracy": null,
+      "citations_in_context": 22,
+      "complete_local_query_ms": {
+        "mean": 0.16321333333333346,
+        "p50": 0.13349999999999998,
+        "p95": 0.3614,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 1521.7142857142858,
+      "mean_reciprocal_first_reference_rank": 0.8554421768707484,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 10,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 15
+    },
+    "nine_uncached_8": {
+      "answer_accuracy": null,
+      "citations_in_context": 25,
+      "complete_local_query_ms": {
+        "mean": 0.17782499999999993,
+        "p50": 0.1438,
+        "p95": 0.4,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 3857.0,
+      "mean_reciprocal_first_reference_rank": 0.8554421768707484,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 11,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 18
+    },
+    "sqlite_fts5_cached_2": {
+      "answer_accuracy": null,
+      "citations_in_context": 25,
+      "complete_local_query_ms": {
+        "mean": 0.1533266666666668,
+        "p50": 0.1187,
+        "p95": 0.3266,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 1769.857142857143,
+      "mean_reciprocal_first_reference_rank": 0.9642857142857143,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 11,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 18
+    },
+    "sqlite_fts5_cached_8": {
+      "answer_accuracy": null,
+      "citations_in_context": 28,
+      "complete_local_query_ms": {
+        "mean": 0.19159119047619064,
+        "p50": 0.14679999999999999,
+        "p95": 0.3749,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 5878.642857142857,
+      "mean_reciprocal_first_reference_rank": 0.9642857142857143,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 14,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 21
+    },
+    "sqlite_fts5_uncached_2": {
+      "answer_accuracy": null,
+      "citations_in_context": 25,
+      "complete_local_query_ms": {
+        "mean": 0.3594335714285717,
+        "p50": 0.3081,
+        "p95": 0.7253000000000001,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 1769.857142857143,
+      "mean_reciprocal_first_reference_rank": 0.9642857142857143,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 11,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 18
+    },
+    "sqlite_fts5_uncached_8": {
+      "answer_accuracy": null,
+      "citations_in_context": 28,
+      "complete_local_query_ms": {
+        "mean": 0.375585476190476,
+        "p50": 0.3292,
+        "p95": 0.6803,
+        "samples": 420
+      },
+      "mean_context_utf8_bytes": 5878.642857142857,
+      "mean_reciprocal_first_reference_rank": 0.9642857142857143,
+      "measured_llm_input_tokens": null,
+      "questions": 14,
+      "questions_with_all_citations": 14,
+      "reference_citations": 28,
+      "reference_sources": 21,
+      "sources_in_context": 21
+    }
+  },
+  "cases": 14,
+  "embedding_calls": 0,
+  "exact_original_recovery_verified": true,
+  "limitations": [
+    "Retrospective frozen pilot; reference citation coverage is not answer accuracy or agent task success.",
+    "Complete local query includes text processing, retrieval, durable receipt, source hydration and serialized evidence. Hosted network/auth and startup are excluded.",
+    "Both engines have optional exact-query caches; uncached means result-cache miss, not cold OS/disk pages.",
+    "SQLite FTS5 historical views are prebuilt in memory outside timing; all original source fetches and query receipts use the durable SQLite store.",
+    "Nine rebuilds its resident text/postings index on open; SQLite disk size includes its persistent FTS5 index. Storage sizes are not equivalent total-residency measurements.",
+    "No LLM was invoked; context bytes are measured, model token usage and generated answer accuracy are unmeasured.",
+    "No task outcomes are learned in this comparison; repeated-mistake prevention requires separately verified agent executions."
+  ],
+  "measured_at_utc": "2026-10-19T03:44:21.427457200+00:00",
+  "model_calls": 0,
+  "nine_ingest_ms": 20.2881,
+  "nine_native_archive": {
+    "archive_bytes": 44400,
+    "cache_bytes_estimate": 0,
+    "cache_entries": 0,
+    "delta_records": 38,
+    "indexed_postings": 2898,
+    "learned_outcomes": 0,
+    "persisted_queries": 0,
+    "raw_text_bytes": 24583,
+    "records": 51,
+    "vocabulary": 1116
+  },
+  "nine_reopen_ms": 15.2303,
+  "os": "windows",
+  "packet_mismatches": 0,
+  "records": 51,
+  "repeats": 30,
+  "serialized_input_record_bytes": 47484,
+  "sqlite_ingest_ms": 20.023,
+  "sqlite_sources_plus_fts5_bytes": 106496,
+  "sqlite_version": "3.53.2",
+  "version": "nine-local-v2"
+}

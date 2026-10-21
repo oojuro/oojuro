@@ -1,0 +1,135 @@
+{
+  "dataset": "SciFact",
+  "queries": 300,
+  "new_native_vs_old_native": {
+    "all_relevant_documents_in_context": {
+      "mean_before": 0.7933333333333333,
+      "mean_after": 0.8133333333333334,
+      "mean_delta": 0.02,
+      "queries_higher": 7,
+      "queries_equal": 292,
+      "queries_lower": 1
+    },
+    "context_document_recall": {
+      "mean_before": 0.8101111111111111,
+      "mean_after": 0.8311666666666666,
+      "mean_delta": 0.021055555555555553,
+      "queries_higher": 10,
+      "queries_equal": 288,
+      "queries_lower": 2
+    },
+    "evidence_bytes": {
+      "mean_before": 16336.726666666667,
+      "mean_after": 16335.81,
+      "mean_delta": -0.9166666666666666,
+      "queries_higher": 100,
+      "queries_equal": 113,
+      "queries_lower": 87
+    },
+    "mrr_at10": {
+      "mean_before": 0.6467314814814815,
+      "mean_after": 0.660079365079365,
+      "mean_delta": 0.013347883597883596,
+      "queries_higher": 33,
+      "queries_equal": 253,
+      "queries_lower": 14
+    },
+    "ndcg_at10": {
+      "mean_before": 0.6789420381438622,
+      "mean_after": 0.6973558580248367,
+      "mean_delta": 0.018413819880974385,
+      "queries_higher": 40,
+      "queries_equal": 243,
+      "queries_lower": 17,
+      "paired_query_bootstrap_95_percentile_interval": [
+        0.006999544583040795,
+        0.030226719394579663
+      ]
+    },
+    "recall_at10": {
+      "mean_before": 0.8009444444444445,
+      "mean_after": 0.8303333333333334,
+      "mean_delta": 0.029388888888888888,
+      "queries_higher": 13,
+      "queries_equal": 285,
+      "queries_lower": 2
+    },
+    "recall_at32": {
+      "mean_before": 0.8722222222222222,
+      "mean_after": 0.883888888888889,
+      "mean_delta": 0.011666666666666667,
+      "queries_higher": 4,
+      "queries_equal": 296,
+      "queries_lower": 0
+    }
+  },
+  "new_native_vs_sql": {
+    "all_relevant_documents_in_context": {
+      "mean_before": 0.8066666666666666,
+      "mean_after": 0.8133333333333334,
+      "mean_delta": 0.006666666666666667,
+      "queries_higher": 8,
+      "queries_equal": 286,
+      "queries_lower": 6
+    },
+    "context_document_recall": {
+      "mean_before": 0.8253333333333334,
+      "mean_after": 0.8311666666666666,
+      "mean_delta": 0.005833333333333334,
+      "queries_higher": 9,
+      "queries_equal": 285,
+      "queries_lower": 6
+    },
+    "evidence_bytes": {
+      "mean_before": 16336.15,
+      "mean_after": 16335.81,
+      "mean_delta": -0.34,
+      "queries_higher": 91,
+      "queries_equal": 88,
+      "queries_lower": 121
+    },
+    "mrr_at10": {
+      "mean_before": 0.6515462962962962,
+      "mean_after": 0.660079365079365,
+      "mean_delta": 0.008533068783068783,
+      "queries_higher": 41,
+      "queries_equal": 233,
+      "queries_lower": 26
+    },
+    "ndcg_at10": {
+      "mean_before": 0.6876460407313457,
+      "mean_after": 0.6973558580248367,
+      "mean_delta": 0.00970981729349089,
+      "queries_higher": 43,
+      "queries_equal": 229,
+      "queries_lower": 28,
+      "paired_query_bootstrap_95_percentile_interval": [
+        -0.005958982589939813,
+        0.025076169062864404
+      ]
+    },
+    "recall_at10": {
+      "mean_before": 0.8245,
+      "mean_after": 0.8303333333333334,
+      "mean_delta": 0.005833333333333334,
+      "queries_higher": 9,
+      "queries_equal": 285,
+      "queries_lower": 6
+    },
+    "recall_at32": {
+      "mean_before": 0.892888888888889,
+      "mean_after": 0.883888888888889,
+      "mean_delta": -0.009000000000000001,
+      "queries_higher": 2,
+      "queries_equal": 293,
+      "queries_lower": 5
+    }
+  },
+  "bootstrap_seed": 20261019,
+  "bootstrap_repetitions": 5000,
+  "limitations": [
+    "Inputs must first pass the independent binary rank/source-ID auditor.",
+    "Intervals resample paired queries from already inspected data; related queries and shared documents can violate independence.",
+    "Higher evidence bytes mean additional bytes, not higher quality. Neither bytes nor relevance labels score model tokens, supporting sentences, answers or agent outcomes."
+  ]
+}

@@ -1,0 +1,23 @@
+[package]
+name = "oojuro-nine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[features]
+# Phase timers and work counters on the query path (docs/PERF_SEARCH.md).
+phase-profile = []
+# Benchmarks only: OOJURO_NINE_SIMULATED_SYNC_US sleeps after each journal
+# sync (models device flush latency on tmpfs; see examples/shared_log_bench).
+simulated-sync = []
+
+[dependencies]
+oojuro-core.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+lz4_flex.workspace = true
+blake3.workspace = true
+crc32fast.workspace = true
+memmap2 = "0.9.11"
+rust-stemmers = "=1.2.0"

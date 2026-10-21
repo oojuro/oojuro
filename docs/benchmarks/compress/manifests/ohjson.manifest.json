@@ -1,0 +1,36 @@
+{
+ "name": "ohjson",
+ "records": 371691,
+ "sessions": 2120,
+ "raw_bytes": 536987414,
+ "budget_bytes": 536870912,
+ "by_kind": {
+  "system": {
+   "records": 4240,
+   "bytes": 55291720
+  },
+  "user": {
+   "records": 2120,
+   "bytes": 11198323
+  },
+  "thinking": {
+   "records": 96487,
+   "bytes": 23767172
+  },
+  "tool_call": {
+   "records": 135476,
+   "bytes": 107690476
+  },
+  "tool_result": {
+   "records": 133363,
+   "bytes": 339017435
+  },
+  "answer": {
+   "records": 5,
+   "bytes": 22288
+  }
+ },
+ "rec_sha256": "d765e4a5da1623cfb5971f3dda3f11fa6e824ee2637d5a4be7d5f25038ac410a",
+ "sources": {},
+ "source_url": "https://huggingface.co/datasets/nebius/SWE-rebench-openhands-trajectories/resolve/main/trajectories.parquet"
+}

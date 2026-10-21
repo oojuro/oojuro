@@ -1,0 +1,106 @@
+diff --git a/crates/oojuro-nine/src/lib.rs b/crates/oojuro-nine/src/lib.rs
+index 01e3bb7..041d675 100644
+--- a/crates/oojuro-nine/src/lib.rs
++++ b/crates/oojuro-nine/src/lib.rs
+@@ -17 +17 @@ const MU: f64 = 128.0;
+-pub const RETRIEVAL_MODEL: &str = "dirichlet-128-v1";
++pub const RETRIEVAL_MODEL: &str = "two-stage-128-half-ordinary-v1";
+@@ -87,0 +88 @@ pub struct TimelineMetrics {
++    pub background_interpolation_weight: Option<f64>,
+@@ -752,0 +754,10 @@ impl Nine {
++        let two_stage = literal.is_none() && !anchored && direct.is_none() && !query.is_empty();
++        metrics.background_interpolation_weight = two_stage.then_some(0.5);
++        // (P_Dirichlet128 + PB)/2 is Dirichlet with mu_d = len(d) + 256.
++        let prior = |i: usize| {
++            if two_stage {
++                2. * MU + self.rows[i].length as f64
++            } else {
++                MU
++            }
++        };
+@@ -758 +769 @@ impl Nine {
+-            gains[*i] = -query_count * (1. + self.rows[*i].length as f64 / MU).log2();
++            gains[*i] = -query_count * (1. + self.rows[*i].length as f64 / prior(*i)).log2();
+@@ -761 +771,0 @@ impl Nine {
+-            let scale = MU * background[term];
+@@ -764,0 +775 @@ impl Nine {
++                    let scale = prior(p.row) * background[term];
+diff --git a/crates/oojuro-nine/src/tests.rs b/crates/oojuro-nine/src/tests.rs
+index 4149246..0fb6500 100644
+--- a/crates/oojuro-nine/src/tests.rs
++++ b/crates/oojuro-nine/src/tests.rs
+@@ -306,0 +307,67 @@ fn repeated_record_envelopes_compress_without_losing_metadata() -> Result<()> {
++#[test]
++fn two_stage_scores_match_a_hand_computed_mixture_and_historical_scope() -> Result<()> {
++    let tmp = Scratch::new();
++    let mut db = Nine::open(&tmp.0)?;
++    db.insert(r("short", "short", "quartz", 1, 1))?;
++    db.insert(r("middle", "middle", "quartz cobalt cobalt", 2, 2))?;
++    db.insert(r("long", "long", &"quartz ".repeat(7), 3, 3))?;
++    let q = Query::new("quartz", 30);
++    let before = db.search_refs(&q, 0)?;
++    assert_eq!(db.metrics().background_interpolation_weight, Some(0.5));
++    let background = (9. + literal_probability("quartz")) / 12.;
++    for (id, tf, length) in [("short", 1., 1.), ("middle", 1., 3.), ("long", 7., 7.)] {
++        let first_stage = (tf + 128. * background) / (length + 128.);
++        let expected = ((first_stage + background) / (2. * background)).log2();
++        let found = before.matches.iter().find(|m| m.id == id).unwrap();
++        assert!((found.score_bits - expected).abs() < 1e-10);
++    }
++    db.insert(r("late", "middle", &"quartz ".repeat(1000), 20, 60))?;
++    db.insert(r("future", "future", &"quartz ".repeat(10_000), 100, 100))?;
++    db.insert(r("unrelated", "other", &"cobalt ".repeat(10_000), 0, 0))?;
++    assert_eq!(
++        serde_json::to_vec(&db.search_refs(&q, 0)?)?,
++        serde_json::to_vec(&before)?
++    );
++    let mut later = q.clone();
++    later.known_at = 60;
++    let found = db.search_refs(&later, 0)?;
++    assert!(found.matches.iter().any(|m| m.id == "late"));
++    assert!(!found.matches.iter().any(|m| m.id == "middle"));
++    let range = db.search_refs(&later, 3)?;
++    assert_eq!(range.matches.len(), 2);
++    assert!(!range.matches.iter().any(|m| m.id == "short"));
++    drop(db);
++    let mut db = Nine::open(&tmp.0)?;
++    assert_eq!(
++        serde_json::to_vec(&db.search_refs(&q, 0)?)?,
++        serde_json::to_vec(&before)?
++    );
++    Ok(())
++}
++
++#[test]
++fn two_stage_control_keeps_literal_identifier_key_empty_and_unknown_paths() -> Result<()> {
++    let tmp = Scratch::new();
++    let mut db = Nine::open(&tmp.0)?;
++    db.insert(r(
++        "source",
++        "source",
++        "fn repair_shadow_page() { quartz(); }",
++        1,
++        1,
++    ))?;
++    for text in [
++        "\"quartz\"",
++        "repair_shadow_page",
++        "key:source",
++        "",
++        "unknownword",
++    ] {
++        db.search_refs(&Query::new(text, 30), 0)?;
++        assert!(db.metrics().background_interpolation_weight.is_none());
++    }
++    db.search_refs(&Query::new("quartz", 30), 0)?;
++    assert_eq!(db.metrics().background_interpolation_weight, Some(0.5));
++    Ok(())
++}
++
+@@ -376,0 +444 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
++                    let mu = length + 2. * MU;
+@@ -381,2 +449,2 @@ fn sparse_scores_match_dense_query_likelihood_on_historical_views() -> Result<()
+-                                + MU * background[term])
+-                                / (length + MU);
++                                + mu * background[term])
++                                / (length + mu);
