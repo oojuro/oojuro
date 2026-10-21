@@ -13,13 +13,13 @@ tools.
 
 **Pledge:** the code in this repository will never be relicensed. What is open stays Apache-2.0.
 
-How Oojuro, Inc. makes money: the hosted Oojuro Cloud (durable journals for sandboxed agents, team journals,
+How oojuro, Inc. makes money: the hosted Oojuro Cloud (durable journals for sandboxed agents, team journals,
 compliance archive) is a separate proprietary service and is not part of this repository. Embedding Oojuro
 in your own agents and products, commercial or not, is and stays free.
 
 ## Trademarks
 
-"Oojuro" and its logos are trademarks of Oojuro, Inc. The Apache-2.0 license grants rights to the
+"Oojuro" and its logos are trademarks of oojuro, Inc. The Apache-2.0 license grants rights to the
 code, not to the name (see section 6 of the license). Hosted services built on this code must not be
 called "Oojuro" or imply endorsement.
 
