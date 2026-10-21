@@ -480,6 +480,9 @@ pub struct Options {
     pub starter_dict: bool,
     /// Longest accepted search query in bytes.
     pub max_query_bytes: usize,
+    /// Most distinct words one search uses (0: all, the default); a longer
+    /// query keeps its rarest words. See `oojuro_nine::Options::max_query_terms`.
+    pub max_query_terms: usize,
     /// Score every candidate exactly for the routing entropy (the engine
     /// default). Off here: search returns ids only, so the entropy covers
     /// the top k and only candidates that can reach the top k are scored
@@ -510,6 +513,7 @@ impl Default for Options {
             dedupe_window: 1 << 18,
             starter_dict: true,
             max_query_bytes: 65_536,
+            max_query_terms: 0,
             exact_entropy: false,
         }
     }
@@ -709,6 +713,7 @@ impl TraceDb {
             deferred_sync: self.opts.deferred_sync,
             background_merges: !self.opts.shared_merges,
             max_query_bytes: self.opts.max_query_bytes,
+            max_query_terms: self.opts.max_query_terms,
             routing_entropy: if self.opts.exact_entropy { RoutingEntropy::All } else { RoutingEntropy::TopK },
             ..NineOptions::default()
         }

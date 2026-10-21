@@ -12,6 +12,8 @@
 //! boundary): the turn's first event, then the same agent's earlier events,
 //! newest first, joined by newlines (an agent's recent context as the query).
 //!
+//! `run --max-terms N` bounds a search to the N rarest words of its query
+//! (`Options::max_query_terms`; 0: all words).
 //! `run --max-df F` times the query-side simulation of an index that stops
 //! terms whose df exceeds F of the agent store's indexed rows (df read from
 //! the store's segment dictionaries; the same word rule as the bench arm
@@ -117,8 +119,8 @@ fn with_dedupe(mut o: Options, dedupe: bool) -> Options {
     o
 }
 
-fn opts_threads(maxq: usize, threads: usize, exact_entropy: bool) -> Options {
-    Options { query_threads: threads, exact_entropy, ..opts(maxq) }
+fn opts_threads(maxq: usize, threads: usize, exact_entropy: bool, max_terms: usize) -> Options {
+    Options { query_threads: threads, exact_entropy, max_query_terms: max_terms, ..opts(maxq) }
 }
 
 fn build(v: &[String]) -> Result<()> {
@@ -442,11 +444,12 @@ fn run(v: &[String]) -> Result<()> {
     }
     let qbytes: usize = qs.iter().map(|q| q.text.len()).sum();
     let qthreads: usize = flag(v, "--qthreads").map_or(Ok(1), |s| s.parse())?;
+    let max_terms: usize = flag(v, "--max-terms").map_or(Ok(0), |s| s.parse())?;
     // --entropy all: score every candidate (the engine default); topk: the
     // TraceDb default (same ids and scores, entropy of the top k).
     let exact_entropy = flag(v, "--entropy").as_deref() == Some("all");
     let dedupe = info["dedupe"].as_bool().unwrap_or(true);
-    let db = TraceDb::open(&dir, with_dedupe(opts_threads(size.max(65_536), qthreads, exact_entropy), dedupe))?;
+    let db = TraceDb::open(&dir, with_dedupe(opts_threads(size.max(65_536), qthreads, exact_entropy, max_terms), dedupe))?;
     // Engine rows (events plus status revisions) per store.
     let mut rows = Vec::new();
     for agent in 0..16u32 {

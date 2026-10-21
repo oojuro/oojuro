@@ -1542,3 +1542,76 @@ fn a_small_candidate_set_is_scored_against_a_padded_background() -> Result<()> {
     assert!(big.candidate_records > 100 && big.background_pad == 0.0, "{big:?}");
     Ok(())
 }
+
+#[test]
+fn a_bound_on_query_terms_keeps_the_rarest_words_and_leaves_shorter_queries_alone() -> Result<()> {
+    let dir = Scratch::new();
+    {
+        let v4 = Nine::open_with(&dir.0, small(1_500))?;
+        // one key per record: a word's document frequency is then its postings
+        for chunk in workload(71, 500).chunks(9) {
+            let chunk: Vec<Record> = chunk
+                .iter()
+                .map(|r| {
+                    let mut r = r.clone();
+                    r.key = r.id.clone();
+                    r
+                })
+                .collect();
+            v4.insert_batch(chunk)?;
+        }
+        v4.compact_all()?;
+        for chunk in workload(72, 40).chunks(8) {
+            let chunk: Vec<Record> = chunk
+                .iter()
+                .map(|r| {
+                    let mut r = r.clone();
+                    r.id = format!("late-{}", r.id);
+                    r.key = r.id.clone();
+                    r
+                })
+                .collect();
+            v4.insert_batch(chunk)?;
+        }
+    }
+    // one store open at a time (the directory is locked)
+    let ask = |max: usize, text: &str, k: usize| -> Result<(Matches, TimelineMetrics)> {
+        let db = Nine::open_with(&dir.0, Options { max_query_terms: max, ..small(1_500) })?;
+        let mut q = Query::new(text, 1_000);
+        q.known_at = 1_000;
+        q.k = k;
+        Ok((db.search_refs(&q, i64::MIN)?, db.metrics()))
+    };
+    let words = ["alpha", "beta", "gamma", "delta", "shadow", "page", "error", "fn", "zzabsent", "qqabsent"];
+    // document frequency of each word: the matches of the word alone
+    let mut df: Vec<(u64, &str)> = Vec::new();
+    for w in words {
+        df.push((ask(0, w, 1000)?.0.matches.len() as u64, w));
+    }
+    assert!(df.iter().any(|(n, _)| *n > 0) && df.iter().any(|(n, w)| *n == 0 && w.ends_with("absent")));
+    let full = words.join(" ");
+    let (want_all, me) = ask(0, &full, 20)?;
+    // a bound at or above the number of words is no bound
+    for max in [words.len(), 50] {
+        let (got, mg) = ask(max, &full, 20)?;
+        same(&got, &want_all, &format!("bound {max}"));
+        assert_eq!(mg.query_terms, me.query_terms);
+    }
+    // a bound below it: the rarest present words and the absent ones remain
+    let mut present: Vec<(u64, &str)> = df.iter().copied().filter(|(n, _)| *n > 0).collect();
+    present.sort_unstable();
+    for max in [1usize, 2, 4, 6] {
+        let mut kept: Vec<&str> = df.iter().filter(|(n, _)| *n == 0).map(|(_, w)| *w).collect();
+        kept.extend(present.iter().take(max).map(|(_, w)| *w));
+        let (got, mg) = ask(max, &full, 20)?;
+        let (want, mw) = ask(0, &kept.join(" "), 20)?;
+        same(&got, &want, &format!("bound {max}"));
+        assert_eq!((mg.query_terms, mg.candidate_records), (mw.query_terms, mw.candidate_records), "bound {max}");
+        assert_eq!(mg.query_terms, kept.len());
+        assert!(mg.candidate_records <= me.candidate_records);
+    }
+    // a quoted phrase is not cut
+    let phrase = format!("\"{}\"", words[..4].join(" "));
+    same(&ask(1, &phrase, 20)?.0, &ask(0, &phrase, 20)?.0, "phrase");
+    Ok(())
+}

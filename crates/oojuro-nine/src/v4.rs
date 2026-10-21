@@ -88,6 +88,13 @@ pub struct Options {
     pub shared_log: Option<LogBinding>,
     /// Longest accepted query text in bytes (a setting, not a format limit).
     pub max_query_bytes: usize,
+    /// Most distinct query words searched (0: no bound, the default). A longer
+    /// query keeps its `max_query_terms` rarest words that occur in the store,
+    /// by document frequency, and ranks as if it held only those and the words
+    /// that occur nowhere: a ranking decision, not an exact optimisation (the
+    /// common words are most of a long query's postings). Not applied to
+    /// quoted phrases.
+    pub max_query_terms: usize,
     /// What `routing_entropy_bits` covers. `All` (default) scores every
     /// candidate exactly; `TopK` reports the entropy of the returned
     /// results only, which lets search score exactly just the candidates
@@ -131,6 +138,7 @@ impl Default for Options {
             background_merges: true,
             shared_log: None,
             max_query_bytes: 65_536,
+            max_query_terms: 0,
             routing_entropy: RoutingEntropy::All,
         }
     }
@@ -2912,6 +2920,36 @@ fn rank_continued(
     Ok((result, metrics, rows))
 }
 
+/// Keep the `max` rarest words of `query` that occur in the store (document
+/// frequency over all segments, ties by word); words that occur nowhere stay,
+/// they cost no postings. See [`Options::max_query_terms`].
+fn bound_terms(st: &State, query: &mut BTreeMap<String, usize>, max: usize) {
+    let mut names: Vec<&str> = query.keys().map(String::as_str).collect();
+    names.sort_unstable();
+    let mut df = vec![0u64; names.len()];
+    for s in &st.segments {
+        for (i, info) in s.terms_sorted(&names).into_iter().enumerate() {
+            if let Some(info) = info {
+                df[i] += u64::from(info.df);
+            }
+        }
+    }
+    for (i, t) in names.iter().enumerate() {
+        if let Some(list) = st.fresh.postings.get(*t) {
+            df[i] += list.len() as u64;
+        }
+    }
+    let mut present: Vec<usize> = (0..names.len()).filter(|i| df[*i] > 0).collect();
+    if present.len() <= max {
+        return;
+    }
+    present.sort_unstable_by_key(|i| (df[*i], *i));
+    let drop: Vec<String> = present[max..].iter().map(|i| names[*i].to_string()).collect();
+    for t in drop {
+        query.remove(&t);
+    }
+}
+
 /// One ranking of `q`; with `split`, every identifier is read as its
 /// component words (as when the view holds no occurrence of it). Also
 /// returns whether the ranking was anchored (and so may be continued).
@@ -2963,6 +3001,9 @@ fn rank(
         for (part, n) in query_terms(&term.replace('_', " ")) {
             *query.entry(part).or_default() += n * count;
         }
+    }
+    if options.max_query_terms > 0 && query.len() > options.max_query_terms && literal.is_none() {
+        bound_terms(st, &mut query, options.max_query_terms);
     }
     metrics.query_terms = query.len();
     crate::profile::lap(&mut lap, crate::profile::BACKOFF);

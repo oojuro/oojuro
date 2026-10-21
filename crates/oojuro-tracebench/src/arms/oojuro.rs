@@ -17,7 +17,8 @@
 //! store, default dedupe), `window=N` (distinct texts remembered per agent),
 //! `starter=on|off` (flush runs and heavy runs under 4 MiB use the shipped
 //! starter dictionary, default on),
-//! `maxq=65536` (longest accepted search query in bytes),
+//! `maxq=65536` (longest accepted search query in bytes), `maxterms=0` (most
+//! distinct words one search uses; 0: all),
 //! `exact_entropy=on` (score every candidate for the routing entropy, the
 //! engine default; off: entropy of the top k, same ids).
 use super::Params;
@@ -48,6 +49,7 @@ pub fn open(work: &Path, p: &Params) -> Result<Box<dyn TraceStore>> {
         shared_merges: p.flag("shared_merges", true),
         column_cache_bytes: p.num::<usize>("colcache_mb", 128) << 20,
         max_query_bytes: p.num("maxq", 65_536),
+        max_query_terms: p.num("maxterms", 0),
         exact_entropy: p.flag("exact_entropy", false),
         shared_log: match p.get("log") {
             Some("private") => false,
