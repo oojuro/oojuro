@@ -26,6 +26,8 @@ pub struct Options {
     pub out: PathBuf,
     pub run_file: Option<PathBuf>,
     pub limit_queries: Option<usize>,
+    /// Arm settings (`--config key=value`), as for the turn loop.
+    pub config: BTreeMap<String, String>,
 }
 
 #[derive(Deserialize)]
@@ -138,7 +140,7 @@ pub fn run(ctx: &Ctx, o: &Options) -> Result<Scorecard> {
         let mut error = None;
         for run in 0..ctx.runs {
             let outcome = (|| -> Result<()> {
-                let mut s = ctx.session(spec, run, "beir")?;
+                let mut s = ctx.session_with(spec, run, "beir", &o.config)?;
                 info = s.info.clone();
                 let started = Instant::now();
                 for chunk in data.docs.chunks(o.batch) {

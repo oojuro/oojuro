@@ -5,7 +5,8 @@
 //! group commit (one sync). `--config` keys map to engine options:
 //! `thinking=store` (thinking records stored exactly but not indexed),
 //! `background=candidates|view`, `mu=F`, `receipts=buffered|durable|off`,
-//! `threads=N` (query threads), `merge_fanout=N`, `flush_mb=N`.
+//! `threads=N` (query threads), `merge_fanout=N`, `flush_mb=N`,
+//! `max_terms=N` (most distinct words one query uses; 0: all).
 use super::COMMIT;
 use crate::{Arm, ArmInfo, Doc, Hit, Result, SearchReq, protocol::PROTOCOL};
 use oojuro_core::{Query, Record};
@@ -61,6 +62,7 @@ fn options(config: &BTreeMap<String, String>) -> Result<Options> {
                 }
             }
             "threads" => o.query_threads = v.parse()?,
+            "max_terms" => o.max_query_terms = v.parse()?,
             "merge_fanout" => o.merge_fanout = v.parse()?,
             "flush_mb" => o.flush_text_bytes = v.parse::<usize>()? << 20,
             _ => {}

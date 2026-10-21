@@ -8,7 +8,7 @@ use std::{collections::BTreeMap, path::PathBuf};
 
 const USAGE: &str = "usage: oojuro-bench <command> [flags]
   serve    --arm nine|tantivy|sqlite            JSON-lines arm server on stdin/stdout
-  beir     --dataset beir-scifact [--split dev|heldout|test] [--k 100]
+  beir     --dataset beir-scifact [--split dev|heldout|test] [--k 100] [--config key=value]...
   turnloop --set swe-agent [--split dev] [--trajectories 50] [--background 20000] [--k 20]
            [--thinking index|drop] [--config key=value]... [--pool 200 --dump-pools FILE]
   memqa    --set longmemeval [--split dev] [--k 50] [--limit N] [--dump-pools FILE]
@@ -118,6 +118,11 @@ fn main() -> Result<()> {
             let ctx = ctx(&a, "beir")?;
             let dataset = a.get("dataset").ok_or("beir needs --dataset, e.g. beir-scifact")?.to_string();
             let split = a.get("split").unwrap_or("dev").to_string();
+            let mut config = BTreeMap::new();
+            for kv in a.all("config") {
+                let (k, v) = kv.split_once('=').ok_or("--config wants key=value")?;
+                config.insert(k.to_string(), v.to_string());
+            }
             let o = beir::Options {
                 out: out(&a, "beir", &dataset, &split),
                 dataset,
@@ -127,6 +132,7 @@ fn main() -> Result<()> {
                 arms: arm_specs(&a)?,
                 run_file: a.get("run-file").map(PathBuf::from),
                 limit_queries: a.get("limit-queries").map(str::parse).transpose()?,
+                config,
             };
             summarize(&beir::run(&ctx, &o)?, &o.out);
             Ok(())
