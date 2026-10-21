@@ -266,6 +266,49 @@ impl Rows {
     }
 }
 
+/// Reads (scope, length) of rows visited in ascending order: a block's
+/// header is parsed once however many of its rows are asked for.
+pub(crate) struct MassCursor<'a> {
+    rows: &'a Rows,
+    buf: &'a [u8],
+    block: usize,
+    lw: u32,
+    lmin: u32,
+    sw: u32,
+    smin: u32,
+    lbit: usize,
+    sbit: usize,
+}
+
+impl Rows {
+    pub fn mass_cursor<'a>(&'a self, buf: &'a [u8]) -> MassCursor<'a> {
+        MassCursor { rows: self, buf, block: usize::MAX, lw: 0, lmin: 0, sw: 0, smin: 0, lbit: 0, sbit: 0 }
+    }
+}
+
+impl MassCursor<'_> {
+    /// (scope, length) of row `i`.
+    #[inline]
+    pub fn get(&mut self, i: usize) -> (u32, u32) {
+        let b = i / BLOCK;
+        if b != self.block {
+            let (blk, _) = self.rows.block(self.buf, i);
+            let h = blk.at;
+            (self.lw, self.lmin) = (u32::from(self.buf[h + 1]), u32_at(self.buf, h + 2));
+            (self.sw, self.smin) = (u32::from(self.buf[h + 6]), u32_at(self.buf, h + 7));
+            let data = h + header_len(blk.same);
+            self.lbit = data * 8;
+            self.sbit = (data + bytes_of(blk.k, self.lw)) * 8;
+            self.block = b;
+        }
+        let j = i % BLOCK;
+        (
+            self.smin + get_bits(self.buf, self.sbit + j * self.sw as usize, self.sw) as u32,
+            self.lmin + get_bits(self.buf, self.lbit + j * self.lw as usize, self.lw) as u32,
+        )
+    }
+}
+
 /// Encodes a stream of rows into blocks; `finish` returns the offset table.
 #[derive(Default)]
 pub(crate) struct Encoder {
@@ -339,10 +382,25 @@ mod tests {
         let end = buf.len();
         buf.extend_from_slice(&[0xCD; 21]);
         let r = Rows::new(&buf, start, end, rows.len()).unwrap();
+        let mut cur = r.mass_cursor(&buf);
         for (i, m) in rows.iter().enumerate() {
+            assert_eq!(cur.get(i), (m.scope, m.length), "cursor, row {i}");
             assert_eq!(r.meta(&buf, i), *m, "row {i}");
             assert_eq!(r.scope_length(&buf, i), (m.scope, m.length), "row {i}");
             assert_eq!(r.valid_at(&buf, i), m.valid_at, "row {i}");
+        }
+    }
+
+    #[test]
+    fn the_mass_cursor_follows_any_order_of_rows() {
+        let mut s = 9u64;
+        let rows = random_rows(&mut s, 1000, 0);
+        let sec = section(&rows);
+        let r = Rows::new(&sec, 0, sec.len(), rows.len()).unwrap();
+        let mut cur = r.mass_cursor(&sec);
+        for _ in 0..5000 {
+            let i = (rng(&mut s) % 1000) as usize;
+            assert_eq!(cur.get(i), (rows[i].scope, rows[i].length));
         }
     }
 

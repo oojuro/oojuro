@@ -626,6 +626,14 @@ impl DiskSegment {
         (u32_at(&self.map, at + 20), u32_at(&self.map, at + 16))
     }
 
+    /// Reads (scope, length) of rows asked for in ascending order.
+    pub fn mass_reader(&self) -> MassReader<'_> {
+        match &self.packed {
+            Some(p) => MassReader::Packed(p.mass_cursor(&self.map)),
+            None => MassReader::Plain(self),
+        }
+    }
+
     /// valid_at of one row, without decoding the rest of its metadata.
     #[inline]
     pub fn valid_at(&self, local: u32) -> i64 {
@@ -979,6 +987,23 @@ impl DiskSegment {
             })?;
         }
         Ok(())
+    }
+}
+
+/// (scope, length) of the rows of one segment, read in ascending order
+/// (a version 3 segment parses each block's header once).
+pub(crate) enum MassReader<'a> {
+    Packed(rows::MassCursor<'a>),
+    Plain(&'a DiskSegment),
+}
+
+impl MassReader<'_> {
+    #[inline]
+    pub fn get(&mut self, local: u32) -> (u32, u32) {
+        match self {
+            MassReader::Packed(c) => c.get(local as usize),
+            MassReader::Plain(s) => s.scope_length(local),
+        }
     }
 }
 

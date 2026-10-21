@@ -2824,6 +2824,7 @@ impl ScanContext<'_> {
             // Canonical candidate order (by row): walk the candidate bits,
             // reading (scope, length) in row order.
             let mut count = 0u32;
+            let mut mass = c.disk.map(DiskSegment::mass_reader);
             out.rank.reserve_exact(sc.cand.len());
             for (w, word) in sc.cand.iter().enumerate() {
                 out.rank.push(count);
@@ -2833,8 +2834,8 @@ impl ScanContext<'_> {
                     let local = lo + (w * 64) as u32 + bits.trailing_zeros();
                     bits &= bits - 1;
                     out.rows.push(c.base + local);
-                    out.mass.push(match c.disk {
-                        Some(s) => s.scope_length(local),
+                    out.mass.push(match mass.as_mut() {
+                        Some(m) => m.get(local),
                         None => {
                             let m = &st.fresh.meta[local as usize];
                             (m.scope, m.length)
