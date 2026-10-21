@@ -677,35 +677,8 @@ impl Reader {
             // anchoring see only that window); `keep` applies the rest.
             lists.push(self.db.search_where(agent, &a.query, from, to, a.k, &mut keep)?);
         }
-        let hits = merge_lists(&lists, a.k);
-        let ids: Vec<u64> = hits.iter().map(|h| h.id).collect();
-        let events = self.db.get_many(&ids)?;
-        let pq = prefix(&a.query, 65_536);
-        let mut out = Vec::with_capacity(hits.len());
-        for (SearchHit { bits, .. }, e) in hits.iter().zip(events) {
-            let Some(e) = e else { continue }; // deleted meanwhile
-            let rec = self.record(&e);
-            let (start, end) = match oojuro_nine::extract_passage(&e.text, pq, a.excerpt_bytes.max(1)) {
-                Ok(Some(s)) => (s.start, s.end),
-                _ => (0, prefix(&e.text, a.excerpt_bytes.max(1)).len()),
-            };
-            out.push(Ref {
-                id: e.id,
-                writer: rec.writer,
-                kind: rec.kind,
-                key: rec.key,
-                ts_us: e.ts_us,
-                ts: rec.ts,
-                score_bits: *bits,
-                start,
-                end,
-                len: e.text.len(),
-                excerpt: e.text[start..end].to_string(),
-                session: rec.session,
-                turn: rec.turn,
-            });
-        }
-        Ok(out)
+        // the stores' lists merged in the engine's order (`SearchHit::rank_cmp`)
+        Ok(merge_lists(&lists, a.k).into_iter().map(|h| (h.bits, h.id)).collect())
     }
 
     /// A record by id (any writer).

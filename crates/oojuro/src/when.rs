@@ -214,11 +214,10 @@ fn month_day(t: &str, c: &Clock) -> Option<Date> {
         && let Some(mon) = month_of(&m[2])
     {
         (mon, m[1].parse().ok()?, m.get(3).and_then(|y| y.as_str().parse().ok()))
-    } else if let Some(m) = SLASH.captures(t) {
+    } else {
+        let m = SLASH.captures(t)?;
         // month/day (US order), as documented
         (m[1].parse().ok()?, m[2].parse().ok()?, m.get(3).and_then(|y| y.as_str().parse().ok()))
-    } else {
-        return None;
     };
     let y = year.unwrap_or(c.today().year());
     let d = Date::new(y, mon, day).ok()?;

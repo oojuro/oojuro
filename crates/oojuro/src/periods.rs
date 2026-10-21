@@ -431,7 +431,7 @@ impl Tails {
         let mut i = quant(x) + 1;
         while i <= QBINS {
             self.tree[i] = (self.tree[i] as i64 + d as i64) as u32;
-            i += i & i.wrapping_neg();
+            i += 1 << i.trailing_zeros(); // the lowest set bit (i >= 1)
         }
         self.n = (self.n as i64 + d as i64) as usize;
     }
@@ -441,7 +441,7 @@ impl Tails {
         let mut s = 0usize;
         while i > 0 {
             s += self.tree[i] as usize;
-            i -= i & i.wrapping_neg();
+            i &= i - 1; // clear the lowest set bit
         }
         s
     }
@@ -454,7 +454,7 @@ impl Tails {
         let mut s = 0usize;
         while i > 0 {
             s += self.tree[i] as usize;
-            i -= i & i.wrapping_neg();
+            i &= i - 1; // clear the lowest set bit
         }
         s
     }
@@ -1118,8 +1118,8 @@ fn score_writer(cells: &mut [Cell], by: By, include_waiting: bool, window: i64, 
                 base[c.sub as usize].raw.insert(x, r);
             }
         }
-        for x in i..j {
-            let c = cells[x].clone();
+        for (x, c) in cells.iter().enumerate().take(j).skip(i) {
+            let c = c.clone();
             let b = &mut base[c.sub as usize];
             b.change(&c, rep(&c), 1);
             if let Some(raw) = b.raw.get(&x).copied() {

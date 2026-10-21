@@ -1,7 +1,10 @@
 # Activity search: finding moments by date and by how the activity looked
 
-Status: design and measurements only (2026-10-21). No engine code yet; review is pending
-before any is written. Prototypes: `scripts/activity/` (Python,
+Status: implemented (2026-10-21) as a pure query-time function over the
+record columns, following the design principle "the db as simple and
+horizontal as possible": §11 says what was built, what differs from this
+design and what it measured. The ingest-time engine plan of §6 is superseded
+and was never written. Prototypes: `scripts/activity/` (Python,
 streaming, run with `python3 -I`). Every number below was measured locally on
 a developer's live journal, read-only through the running recorder (`oojuro export
 --from 30d`, `oojuro range`, `oojuro search`). Only aggregate numbers and
@@ -837,7 +840,7 @@ When `forget` removes records (after its existing tombstones and reclaim):
 
 ## 11. Implemented (2026-10-21)
 
-Ryan's direction after §10: "the db as simple and horizontal as possible,
+The design principle after §10: "the db as simple and horizontal as possible,
 just enough information for agents to know what happened; if periods slows
 down the performance, remove such functionalities" (`docs/DESIGN.md`,
 "Principle"). So nothing of §6 was built: no per-record features at ingest,
@@ -887,13 +890,13 @@ repeat candidates.
 |---|---|---|
 | volume | activity records per window (no `system` context, no Oojuro tool calls or results) | echo is recognized by tool name only: a Bash-run `oojuro` command counts (the mark is in the metadata, not the columns); injected context is a `system` record anyway |
 | errors | failed tool results (the harness status, or a nonzero exit code); binomial upper-tail bits against the writer's trailing 7-day rate, per role | no output-text rules (they need text). Codex outputs now get a status at capture, from what Codex itself reports (`Script failed` / `Script completed`, `Process exited with code N`, `Exit code: N`); the field existed. API-error `system` records are not counted (no column says so) |
-| repeat | stuck loops (default): a call matching one of the instance's last 32 calls by tool and input length, whose result fails again; `--include-waiting` adds the matches that succeed (polling). Binomial bits against the trailing candidate rate | the design ranked low novelty per event; Ryan chose stuck loops only. The record dedupe hash cannot help: captured records carry their source position in their metadata, so they never dedupe and share no hash. The length rule alone is 70–80% exact in the top error and repeat windows (18% in fan-out hours: many same-length reads), so when ranking by `repeat` the candidates of the windows that can still reach the top are checked against the two calls' texts and only exact repeats count. The check stops as soon as the 3k-th checked score beats the next unchecked candidate (a checked score never exceeds its candidate score). Elsewhere `repeats_exact: false` marks candidate counts |
+| repeat | stuck loops (default): a call matching one of the instance's last 32 calls by tool and input length, whose result fails again; `--include-waiting` adds the matches that succeed (polling). Binomial bits against the trailing candidate rate | the design ranked low novelty per event; stuck loops only was chosen. The record dedupe hash cannot help: captured records carry their source position in their metadata, so they never dedupe and share no hash. The length rule alone is 70–80% exact in the top error and repeat windows (18% in fan-out hours: many same-length reads), so when ranking by `repeat` the candidates of the windows that can still reach the top are checked against the two calls' texts and only exact repeats count. The check stops as soon as the 3k-th checked score beats the next unchecked candidate (a checked score never exceeds its candidate score). Elsewhere `repeats_exact: false` marks candidate counts |
 | unusual | five components, each `-log2` of its empirical tail among the writer's windows of the same role in the trailing 7 days: rate, tool mix (MDL bits, exposure capped at 50), error rate, tools absent from the trailing week, bytes per record (two-sided) | tool-name mix instead of families (families need the shell command); no first-seen files (paths need text); bytes per record instead of novelty density. Tails come from Fenwick counts over quantized values (2,048 log-spaced bins) |
 | novelty | not available (§11.4) | |
 | text | with a query and no signal: the bits of its search hits per window; with a signal, a query only filters | hits below the relevance floor of §11.5 are ignored |
 
 - **Roles:** windows of top-level instances and of subagents have separate
-  baselines (Ryan's default). `--per writer` uses one baseline per writer
+  baselines (the default). `--per writer` uses one baseline per writer
   with empty slots counted as zero.
 - **Windows:** clock-aligned in the person's zone, 5 min for `errors` and
   `repeat`, 1 h otherwise (`--window`, 1 min to 1 day).
@@ -1023,7 +1026,7 @@ about 9.5 on 16 threads, `--when "past 30 days"`, k = 10):
 - **unusual:** no window is the routine "new subagent's opening read
   burst" (13/20 in the prototype, before the coordinator/subagent baseline
   split). The top 10 are distinct moments:
-  - a production hotfix across 8 agents
+  - a hotfix across 8 agents
   - a mass issue-tracker cleanup across 11 agents
   - cloud and browser operations
   - third-party code research

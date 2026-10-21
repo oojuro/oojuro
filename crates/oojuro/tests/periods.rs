@@ -41,6 +41,7 @@ struct Gen {
 }
 
 impl Gen {
+    #[allow(clippy::too_many_arguments)]
     fn rec(&mut self, kind: &str, session: &str, ts: i64, tool: &str, text: String, call: &str, status: &str) {
         self.recs.push(NewRecord {
             writer: W.into(),
@@ -74,7 +75,7 @@ fn ordinary(g: &mut Gen, session: &str, t: i64, calls: usize, fail_every: usize,
     for i in 0..calls {
         let tool = TOOLS[(seed as usize + i) % TOOLS.len()];
         let input = format!("{{\"command\":\"step {seed} {i} {}\"}}", "x".repeat((seed as usize * 7 + i * 13) % 50));
-        let ok = fail_every == 0 || (i + seed as usize) % fail_every != 0;
+        let ok = fail_every == 0 || !(i + seed as usize).is_multiple_of(fail_every);
         g.call(session, t + 2_000_000 + i as i64 * 90_000_000, tool, input, ok);
     }
     g.rec("assistant", session, t + calls as i64 * 90_000_000 + 3_000_000, "", format!("done with {seed}"), "", "");

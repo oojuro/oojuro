@@ -418,7 +418,7 @@ fn every_agent_instance_names_its_parent() {
     );
     let store = s.0.join("store");
     let mut cap = Capture::open(&store, opts(Duration::ZERO)).unwrap();
-    cap.poll(&[logs.clone()]).unwrap();
+    cap.poll(std::slice::from_ref(&logs)).unwrap();
     let h = |p: &Path| oojuro_capture::hash64(&p.to_string_lossy());
     assert_eq!(cap.db.parent_of(h(&sub)), Some(h(&main)));
     assert_eq!(cap.db.parent_of(h(&main)), None);
