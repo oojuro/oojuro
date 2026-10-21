@@ -545,3 +545,69 @@ here can say which.
 Setting it to 256 is the recommended choice: no measured quality change on any
 labelled set, 8x faster at 64 KB, 3x at 16 KB, unchanged below 256 words; the
 choice of default is the reviewer's.
+
+## Item 6. fsync audit
+
+An AWS flush costs about 2.7 ms, so any flush beyond the one that makes a
+batch durable is expensive. `strace -f -c -e trace=fsync,fdatasync` counts, on
+the ingest suite of `tracebench` (smoke, 16 writers, 8,975 batches, both log
+modes; the counts equal the engine's own `journal_syncs`):
+
+| arm | `fdatasync` | `fsync` | batches | syncs per batch |
+|---|---:|---:|---:|---:|
+| `oojuro` (shared log), `main` / this branch | 1,224 / 1,217 | 123 / 123 | 8,975 | 0.14 (one per round of many batches) |
+| `oojuro:log=private`, `main` / this branch | 8,555 / 8,646 | 144 / 144 | 8,975 | 0.96 |
+
+So the engine already issues at most one flush per batch in both modes (the
+`fsync`s are store creation, segment flushes and checkpoints, 123-144 in the
+whole run, none per batch); on `base1m` (30,000 batches) the counters read
+4.9-5.1k rounds shared and 28.5k syncs private. Nothing to fix there.
+
+**The extra flush is above the engine.** `Owner::append` (hooks, OpenTelemetry,
+anything that appends through the journal) saved the capture state after
+every call: write a temporary file, `fsync` it, rename, `fsync` the directory:
+two flushes per call. `multistore` under `strace` (100 calls, one store):
+
+| writers a call touches | `main`: `fsync` + `fdatasync` | this branch |
+|---|---:|---:|
+| 1 | 217 + 100 = **3.2 per call** | 21 + 100 = **1.2 per call** |
+| 3 (2.3 stores a call on average) | 236 + 230 = **4.7 per call** | 40 + 230 = **2.7 per call** |
+
+(the remaining `fsync`s are the creation of the store.) What is left is one
+`fdatasync` per writer store a call touches. The state does not need a save per
+call: a restarted owner probes the ids past the saved `next_id` and finds the
+records (`Capture::open`; the capture tests crash after appends and before a
+save for tailed, explicit and direct records, and `stores.rs` copies a store
+whose state is five calls behind and opens the copy: all five records are
+there, the ids continue and the store-once keys still deduplicate), the
+recorder's loop
+saves every pass, `close` and `drop` save, and a new writer is saved at once
+(its number is cited by records). `Capture::save_if_due` saves when records were
+committed and `save_every` (2 s) has passed since the last save.
+`crates/oojuro/tests/stores.rs` checks both sides: with a long interval the
+file follows only the new writer and the close, with a zero interval every call
+saves.
+
+**Measurement** (`multistore`: serial calls, 3-record batches, NVMe, load 5,
+7 alternating runs, median (min-max); the digest of every result is identical):
+
+| | `main` | this branch |
+|---|---:|---:|
+| 1 store, 1 writer: calls/s | 281 (247-283) | **955 (936-969)** |
+| ... p50 / p99 ms | 2.95 / 9.7 | 0.49 / 1.44 |
+| 1 store, 3 writers: calls/s | 220 (199-221) | **650 (645-653)** |
+| ... p50 / p99 ms | 3.83 / 12.1 | 1.05 / 2.05 |
+| 4 stores on 4 threads: calls/s | 210 (199-221) | **1,300 (1,292-1,302)** (serial: 488) |
+| 16 stores on 16 threads: calls/s | 245 (138-257) | **875 (274-1,250)** (serial: 241) |
+
+Together with item 1 a process serving 16 projects goes from 199-245 calls/s
+(and a 400 ms p99) to 875-984 calls/s; a single project's append call is 3.4
+times as fast with one writer.
+
+**Not done.** Committing the batches of one call that touch several writers
+with one flush (threads into the shared log's group commit) would take 2.7 to
+about 1.2 flushes per call. It was not built: the capture state's recovery
+assumes that the committed ids form a dense prefix (it probes `next_id`
+upward until the first id that is missing), and committing the writer stores
+of a call concurrently would let a crash leave a later id durable and an
+earlier one lost.
