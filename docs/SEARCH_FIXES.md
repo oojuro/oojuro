@@ -1,9 +1,11 @@
-# Search fixes F1 and F2 (outcome eval, 2026-10-21)
+# Search fixes F1-F4 (outcome eval, 2026-10-21)
 
 Two search bugs found by the outcome eval ("Product findings"), fixed on a
-branch of the v1 line (base `5b9f72f`). Both reproduce on a copy of the eval's per-task store for
-sympy-23413 (14,031-record public sympy writer), queried with the issue text
-of an earlier task, `-k 100`.
+branch of the v1 line (base `5b9f72f`), plus two follow-ups from this work's
+own findings: F3, small candidate sets scored near 0 bits, and F4, one tie
+rule (sections below). Both bugs reproduce on a copy of the eval's per-task
+store for sympy-23413 (14,031-record public sympy writer), queried with the
+issue text of an earlier task, `-k 100`.
 
 | query (store: sympy-23413 task store) | before | after |
 |---|---:|---:|
@@ -100,7 +102,8 @@ the engine returns fewer than asked (it has no more). There is no cap, and
   ranking (and only `exact` at k=1).
 
 Suites: `oojuro` 45, `oojuro-capture` 29, `oojuro-proxy` 22 (1 ignored),
-`oojuro-trace` 11 (1 ignored), `oojuro-nine` 88, all passing. The 88
+`oojuro-trace` 11 (1 ignored), `oojuro-nine` 88, all passing (after F3 and
+F4: `oojuro` 47 and `oojuro-nine` 89; the others unchanged). The 88
 include the randomized v4-vs-v3 oracle, TopK-vs-exhaustive and
 version-1-segment tests, which now exercise the continuation.
 `tracebench verify` on smoke: 1,237/1,237

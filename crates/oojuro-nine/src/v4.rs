@@ -3258,7 +3258,7 @@ fn rank(
             .collect();
         let mut counts = st.view_term_counts(&names, q, from, scope_model).into_iter();
         let view: Vec<u64> = (0..terms.len()).map(|i| if retained[i] { counts.next().unwrap_or(0) } else { 0 }).collect();
-        (view_total > 0).then(|| (floor - total, view, view_total as f64))
+        (view_total > 0).then_some((floor - total, view, view_total as f64))
     } else {
         None
     };

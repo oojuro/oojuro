@@ -464,7 +464,7 @@ fn sparse_scope_scores_match_dense_query_likelihood_on_historical_views() -> Res
                 .collect();
             let view_total = view.iter().map(HashMap::len).sum::<usize>() as f64;
             let floor = crate::BACKGROUND_FLOOR_RECORDS * MU;
-            let pad = (!eligible.is_empty() && (total as f64) < floor).then(|| floor - total as f64);
+            let pad = (!eligible.is_empty() && (total as f64) < floor).then_some(floor - total as f64);
             let background: BTreeMap<_, _> = query
                 .keys()
                 .map(|term| {
