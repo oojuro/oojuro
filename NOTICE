@@ -2,3 +2,13 @@ Oojuro
 Copyright 2026 oojuro, Inc.
 
 This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+Third-party content in the starter dictionary (crates/oojuro-store/dict):
+- Contains substrings of "SWE-agent trajectories" by Nebius
+  (https://huggingface.co/datasets/nebius/SWE-agent-trajectories), licensed
+  under CC BY 4.0 (https://creativecommons.org/licenses/by/4.0/).
+  Changes: selected text was used to train a compression dictionary.
+- Also trained on SWE-Gym/OpenHands-SFT-Trajectories (MIT),
+  NousResearch/hermes-function-calling-v1 (Apache-2.0) and
+  open-thoughts/OpenThoughts-114k (Apache-2.0).
+See crates/oojuro-store/dict/README.md for details.
