@@ -34,8 +34,23 @@ struct Ev {
     revises: u64,
     ts: i64,
     tool: String,
+    /// The args as appended (with a captured record's own `src` and `rt`).
     args: String,
+    /// The args before provenance was added (what a re-send repeats).
+    base: String,
     text: String,
+}
+
+/// Args the way capture writes them: every record has its own source
+/// position and receive time, so no two records have equal args.
+fn captured_args(base: &str, id: u64, session: u64) -> String {
+    let rt = 1_800_000_000_000_000i64 + id as i64 * 7;
+    let src = format!("{}:{}:{}", session % 3, id * 10, id % 2);
+    if base.is_empty() {
+        format!("{{\"rt\":{rt},\"src\":\"{src}\"}}")
+    } else {
+        format!("{{\"a\":{base},\"rt\":{rt},\"src\":\"{src}\"}}")
+    }
 }
 
 const SHARED: &str = "sharedfile77x";
@@ -44,7 +59,7 @@ const SHARED: &str = "sharedfile77x";
 /// its session (proxy capture), then appends a tool result (status
 /// revision of the previous call), thinking and a call. Sessions 3 and 5
 /// (agent 1) both read the same file (text with `SHARED`), session 3 first.
-fn batches(n: u64, turns: u32) -> Vec<Vec<Ev>> {
+fn batches(n: u64, turns: u32, captured: bool) -> Vec<Vec<Ev>> {
     let mut out = Vec::new();
     let mut id = 0u64;
     let mut prior: HashMap<u64, Vec<Ev>> = HashMap::new();
@@ -58,12 +73,13 @@ fn batches(n: u64, turns: u32) -> Vec<Vec<Ev>> {
             let mut push = |b: &mut Vec<Ev>, kind: u8, status: u8, revises: u64, tool: &str, args: &str, text: String| {
                 id += 1;
                 let q = seq.entry(s).or_default();
-                b.push(Ev { id, session: s, agent, turn: t, seq: *q, kind, status, revises, ts, tool: tool.into(), args: args.into(), text });
+                let full = if captured { captured_args(args, id, s) } else { args.to_string() };
+                b.push(Ev { id, session: s, agent, turn: t, seq: *q, kind, status, revises, ts, tool: tool.into(), args: full, base: args.into(), text });
                 *q += 1;
                 id
             };
             for p in prior.get(&s).cloned().unwrap_or_default() {
-                push(&mut b, p.kind, 0, 0, &p.tool, &p.args, p.text.clone());
+                push(&mut b, p.kind, 0, 0, &p.tool, &p.base, p.text.clone());
             }
             let mut fresh = Vec::new();
             if t == 0 {
@@ -181,11 +197,11 @@ fn opts(erase: bool) -> Options {
     Options { flush_text_bytes: 64 << 10, merge_fanout: 4, erase_segments: erase, shared_log: erase, ..Options::default() }
 }
 
-fn run(erase: bool) {
-    let tmp = Scratch::new(if erase { "erase" } else { "rewrite" });
+fn run(erase: bool, captured: bool) {
+    let tmp = Scratch::new(&format!("{}-{}", if erase { "erase" } else { "rewrite" }, if captured { "captured" } else { "plain" }));
     let dir = tmp.0.join("db");
     let sessions = 12;
-    let data = batches(sessions, 14);
+    let data = batches(sessions, 14, captured);
     let max_id = data.iter().flatten().map(|e| e.id).max().unwrap();
     let events_n = data.iter().flatten().filter(|e| e.revises == 0).count();
     let half = data.len() / 2;
@@ -257,7 +273,7 @@ fn run(erase: bool) {
         let db = TraceDb::open(&dir, opts(erase)).unwrap();
         assert_eq!(snapshot(&db, sessions, max_id), last);
         // dedupe keeps working after a rebuild; new appends stay exact
-        let more = batches(sessions, 15);
+        let more = batches(sessions, 15, captured);
         let extra: Vec<Vec<Ev>> = more[data.len()..].iter().filter(|b| !gone(&b[0])).cloned().collect();
         for b in &extra {
             db.append(&events(b)).unwrap();
@@ -268,10 +284,121 @@ fn run(erase: bool) {
 
 #[test]
 fn dedupe_erase_mode() {
-    run(true);
+    run(true, false);
 }
 
 #[test]
 fn dedupe_rewrite_mode() {
-    run(false);
+    run(false, false);
+}
+
+/// Captured records (own `src` and `rt` in every record's args) dedupe all the
+/// same, and every event still reads back with its own args, through reopen,
+/// deletes, reclaim (holders, rewritten entry lists) and a rebuild.
+#[test]
+fn captured_dedupe_erase_mode() {
+    run(true, true);
+}
+
+#[test]
+fn captured_dedupe_rewrite_mode() {
+    run(false, true);
+}
+
+fn one<'a>(id: u64, args: &'a str, text: &'a str) -> EventIn<'a> {
+    EventIn {
+        id,
+        session: 1,
+        parent_session: 0,
+        agent: 0,
+        turn: 0,
+        seq: id as u32,
+        parent: 0,
+        revises: 0,
+        kind: 5,
+        status: 0,
+        exit_code: None,
+        tokens_in: 0,
+        tokens_out: 0,
+        ts_us: 1_000_000 + id as i64,
+        duration_us: 0,
+        tool: "bash",
+        args,
+        text,
+        indexed: true,
+    }
+}
+
+/// Only provenance in the exact form capture writes it (a `src` of digits and
+/// colons, an integer `rt`, each once at the top level) is left out of the
+/// comparison; anything else compares whole. Every event reads back with the
+/// args it was appended with.
+#[test]
+fn provenance_outside_capture_form_compares_whole() {
+    let tmp = Scratch::new("forms");
+    let dir = tmp.0.join("db");
+    // (args of the first copy, args of the second, the second dedupes)
+    let cases: [(&str, &str, bool); 9] = [
+        (r#"{"rt":1,"src":"1:2:0"}"#, r#"{"rt":2,"src":"1:3:1"}"#, true),
+        (r#"{"from":"human","rt":1,"src":"1:2:0"}"#, r#"{"from":"agent","rt":2,"src":"1:3:1"}"#, false),
+        (r#"{"rt":1.5,"src":"1:2:0"}"#, r#"{"rt":2.5,"src":"1:2:0"}"#, false),
+        (r#"{"rt":01,"src":"1:2:0"}"#, r#"{"rt":02,"src":"1:2:0"}"#, false),
+        (r#"{"rt":1,"src":"a\"b"}"#, r#"{"rt":2,"src":"a\"c"}"#, false),
+        (r#"{"rt":1,"rt":2}"#, r#"{"rt":3,"rt":4}"#, false),
+        (r#"{"src":"1:2:0","a":{"src":"z"}}"#, r#"{"src":"1:3:0","a":{"src":"z"}}"#, true),
+        (r#"{"src":"1:2:0","a":{"src":"z"}}"#, r#"{"src":"1:3:0","a":{"src":"y"}}"#, false),
+        (r#"[1,2]"#, r#"[1,3]"#, false),
+    ];
+    {
+        let db = TraceDb::open(&dir, opts(true)).unwrap();
+        let mut id = 0;
+        for (i, (a, b, _)) in cases.iter().enumerate() {
+            let text = format!("form {i} result text with enough words to be a record");
+            id += 1;
+            db.append(&[one(id, a, &text)]).unwrap();
+            id += 1;
+            db.append(&[one(id, b, &text)]).unwrap();
+        }
+        // a third copy in the same batch as the second, and a repeat of the second
+        for (i, (a, b, dedupes)) in cases.iter().enumerate() {
+            let text = format!("form {i} result text with enough words to be a record");
+            let (x, y) = (id + 1, id + 2);
+            id += 2;
+            db.append(&[one(x, b, &text), one(y, a, &text)]).unwrap();
+            assert!(*dedupes || a != b, "case {i}");
+        }
+        // text records, plus a text-less bundle record for every batch of repeats only
+        let texts: usize = cases.iter().map(|(_, _, d)| if *d { 1 } else { 2 }).sum();
+        let bundles = cases.len() + cases.iter().filter(|c| c.2).count();
+        assert_eq!(db.stored_records(), texts + bundles, "stored records ({texts} texts)");
+        check_forms(&db, &cases);
+        db.flush().unwrap();
+    }
+    // reopen (checkpoint + replay) and rebuild answer the same
+    {
+        let db = TraceDb::open(&dir, opts(true)).unwrap();
+        check_forms(&db, &cases);
+    }
+    std::fs::remove_file(dir.join("cols.ckpt")).unwrap();
+    {
+        let db = TraceDb::open(&dir, opts(true)).unwrap();
+        check_forms(&db, &cases);
+    }
+}
+
+fn check_forms(db: &TraceDb, cases: &[(&str, &str, bool)]) {
+    let mut id = 0u64;
+    for (a, b, _) in cases {
+        for want in [a, b] {
+            id += 1;
+            assert_eq!(db.get(id).unwrap().unwrap().args, **want, "event {id}");
+        }
+    }
+    // the second round: (b, a) pairs
+    let mut id = cases.len() as u64 * 2;
+    for (a, b, _) in cases {
+        assert_eq!(db.get(id + 1).unwrap().unwrap().args, **b, "event {}", id + 1);
+        assert_eq!(db.get(id + 2).unwrap().unwrap().args, **a, "event {}", id + 2);
+        id += 2;
+    }
 }

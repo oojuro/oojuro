@@ -811,13 +811,19 @@ impl TraceDb {
             revision: false,
             dup: true,
             holder: false,
+            rel: e.own.is_some(),
         });
     }
 
     /// A duplicate's entry as written (`src` relative to `host` when the
     /// source is at or after it).
-    fn dup_entry(c: &Col, tools: &[String]) -> DupEntry {
-        DupEntry {
+    fn dup_entry(c: &Col, tools: &[String], owns: &HashMap<u64, dedupe::Own>) -> Result<DupEntry> {
+        let own = if c.rel {
+            Some(owns.get(&c.id).cloned().ok_or("relaxed duplicate without its provenance")?)
+        } else {
+            None
+        };
+        Ok(DupEntry {
             id: c.id,
             src: if c.src >= c.host { Src::Local(c.src - c.host) } else { Src::Row(c.src) },
             session: c.session,
@@ -833,7 +839,43 @@ impl TraceDb {
             duration: c.duration,
             text_len: c.text_len,
             tool: tools[c.tool as usize].clone(),
+            own,
+        })
+    }
+
+    /// The `src` / `rt` of each relaxed duplicate listed in a host record's
+    /// `B` entries, by event id.
+    fn owns(host: &Record) -> Result<HashMap<u64, dedupe::Own>> {
+        let mut m = HashMap::new();
+        if let Some(b) = host.metadata.get("B") {
+            for e in dedupe::decode(b).ok_or("malformed duplicate entries")? {
+                if let Some(o) = e.own {
+                    m.insert(e.id, o);
+                }
+            }
         }
+        Ok(m)
+    }
+
+    /// The args an event reads back with: those of the record holding its
+    /// text, with its own `src` / `rt` for a relaxed duplicate (`hosts`
+    /// caches the provenance lists read so far).
+    fn args_of(
+        nine: &Nine,
+        c: &Col,
+        rec: &Record,
+        hosts: &mut HashMap<u32, HashMap<u64, dedupe::Own>>,
+    ) -> Result<String> {
+        let a = rec.metadata.get("a").cloned().unwrap_or_default();
+        if !c.rel {
+            return Ok(a);
+        }
+        let owns = match hosts.entry(c.host) {
+            std::collections::hash_map::Entry::Occupied(e) => e.into_mut(),
+            std::collections::hash_map::Entry::Vacant(v) => v.insert(Self::owns(&nine.record_at(c.host)?)?),
+        };
+        let own = owns.get(&c.id).ok_or("relaxed duplicate without its provenance")?;
+        Ok(dedupe::apply(&a, own).ok_or("duplicate args do not match their text row")?)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -867,6 +909,7 @@ impl TraceDb {
                 revision: false,
                 dup: false,
                 holder: false,
+                rel: false,
             });
         if p.parent_session != 0 {
             c.set_parent(p.session, p.parent_session);
@@ -922,24 +965,26 @@ impl TraceDb {
         // Split the batch into stored records and duplicates of stored text.
         let mut stored: Vec<usize> = Vec::with_capacity(batch.len());
         let mut keys: Vec<Option<dedupe::Key>> = Vec::with_capacity(batch.len());
-        let mut dups: Vec<(usize, Src)> = Vec::new();
+        let mut dups: Vec<(usize, Src, Option<dedupe::Own>)> = Vec::new();
         if self.opts.dedupe_records {
             // hash outside the lock
-            let hashed: Vec<Option<dedupe::Key>> =
-                batch.iter().map(|e| dedupe_class(e).map(|idx| dedupe::key(idx, e.tool, e.args, e.text))).collect();
+            let hashed: Vec<Option<(dedupe::Key, Option<dedupe::Own>)>> = batch
+                .iter()
+                .map(|e| dedupe_class(e).map(|idx| dedupe::key_own(idx, e.tool, e.args, e.text)))
+                .collect();
             let mut seen = self.seen.lock().unwrap();
             let window = seen.entry(agent).or_default();
             let mut local: dedupe::KeyMap<u32> = dedupe::KeyMap::default();
             for (i, h) in hashed.into_iter().enumerate() {
-                let Some(k) = h else {
+                let Some((k, own)) = h else {
                     stored.push(i);
                     keys.push(None);
                     continue;
                 };
                 if let Some(r) = window.get(k, self.opts.dedupe_window) {
-                    dups.push((i, Src::Row(r)));
+                    dups.push((i, Src::Row(r), own));
                 } else if let Some(&j) = local.get(&k) {
-                    dups.push((i, Src::Local(j)));
+                    dups.push((i, Src::Local(j), own));
                 } else {
                     local.insert(k, stored.len() as u32);
                     stored.push(i);
@@ -973,8 +1018,8 @@ impl TraceDb {
             })
             .collect();
         let entries: Vec<DupEntry> = dups
-            .iter()
-            .map(|&(i, src)| {
+            .into_iter()
+            .map(|(i, src, own)| {
                 let e = &batch[i];
                 DupEntry {
                     id: e.id,
@@ -992,6 +1037,7 @@ impl TraceDb {
                     duration: e.duration_us,
                     text_len: e.text.len() as u32,
                     tool: e.tool.to_string(),
+                    own,
                 }
             })
             .collect();
@@ -1108,7 +1154,7 @@ impl TraceDb {
         self.cols.read().unwrap().bytes()
     }
 
-    fn out(id: u64, c: &Col, rec: &Record, tools: &[String]) -> EventOut {
+    fn out(id: u64, c: &Col, rec: &Record, tools: &[String], args: String) -> EventOut {
         EventOut {
             id,
             session: c.session,
@@ -1124,7 +1170,7 @@ impl TraceDb {
             ts_us: c.ts,
             duration_us: c.duration,
             tool: tools[c.tool as usize].clone(),
-            args: rec.metadata.get("a").cloned().unwrap_or_default(),
+            args,
             text: rec.text.clone(),
         }
     }
@@ -1135,9 +1181,11 @@ impl TraceDb {
 
     pub fn get(&self, id: u64) -> Result<Option<EventOut>> {
         let Some(c) = self.col(id) else { return Ok(None) };
-        let rec = self.part(c.agent)?.record_at(c.src)?;
+        let nine = self.part(c.agent)?;
+        let rec = nine.record_at(c.src)?;
         let tools = self.cols.read().unwrap().tool_names();
-        Ok(Some(Self::out(id, &c, &rec, &tools)))
+        let args = Self::args_of(&nine, &c, &rec, &mut HashMap::new())?;
+        Ok(Some(Self::out(id, &c, &rec, &tools, args)))
     }
 
     pub fn text_range(&self, id: u64, start: usize, end: usize) -> Result<Option<Vec<u8>>> {
@@ -1156,13 +1204,17 @@ impl TraceDb {
         order.sort_by_key(|&i| (ids[i].1.agent, ids[i].1.src));
         let mut out: Vec<Option<EventOut>> = vec![None; ids.len()];
         let mut nine: Option<(u32, Arc<Nine>)> = None;
+        let mut hosts: HashMap<u32, HashMap<u64, dedupe::Own>> = HashMap::new();
         for i in order {
             let (id, c) = &ids[i];
             if nine.as_ref().is_none_or(|(a, _)| *a != c.agent) {
                 nine = Some((c.agent, self.part(c.agent)?));
+                hosts.clear();
             }
-            let rec = nine.as_ref().unwrap().1.record_at(c.src)?;
-            out[i] = Some(Self::out(*id, c, &rec, &tools));
+            let n = &nine.as_ref().unwrap().1;
+            let rec = n.record_at(c.src)?;
+            let args = Self::args_of(n, c, &rec, &mut hosts)?;
+            out[i] = Some(Self::out(*id, c, &rec, &tools, args));
         }
         Ok(out.into_iter().map(|x| x.expect("fetched")).collect())
     }
@@ -1683,8 +1735,13 @@ impl TraceDb {
             let mut live_hosted: Vec<&Col> = hosted.get(&r).into_iter().flatten().copied().filter(|x| alive[&x.id]).collect();
             live_hosted.sort_by_key(|x| x.id);
             let changed = hosted.get(&r).is_some_and(|v| v.iter().any(|x| !alive[&x.id]));
-            let b = (!live_hosted.is_empty())
-                .then(|| dedupe::encode(&live_hosted.iter().map(|x| Self::dup_entry(x, &tools)).collect::<Vec<_>>()));
+            let owns = if live_hosted.iter().any(|x| x.rel) { Self::owns(&nine.record_at(r)?)? } else { HashMap::new() };
+            let b = if live_hosted.is_empty() {
+                None
+            } else {
+                let es = live_hosted.iter().map(|x| Self::dup_entry(x, &tools, &owns)).collect::<Result<Vec<_>>>()?;
+                Some(dedupe::encode(&es))
+            };
             if o.is_some_and(|x| alive[&x.id]) {
                 if changed {
                     let mut m = nine.record_at(r)?.metadata;
@@ -1703,7 +1760,9 @@ impl TraceDb {
                 m.insert("h".to_string(), o.kind.to_string());
                 for k in ["t", "a"] {
                     if let Some(v) = rec.metadata.get(k) {
-                        m.insert(k.to_string(), v.clone());
+                        // the deleted event's own `src` and `rt` go with it
+                        let v = if k == "a" { dedupe::anonymous(v) } else { v.clone() };
+                        m.insert(k.to_string(), v);
                     }
                 }
                 if let Some(b) = b {
@@ -1769,7 +1828,8 @@ impl TraceDb {
                         m.insert("h".to_string(), x.kind.to_string());
                         for k in ["t", "a"] {
                             if let Some(v) = r.metadata.get(k) {
-                                m.insert(k.to_string(), v.clone());
+                                let v = if k == "a" { dedupe::anonymous(v) } else { v.clone() };
+                                m.insert(k.to_string(), v);
                             }
                         }
                         r.metadata = m;
@@ -1789,15 +1849,17 @@ impl TraceDb {
                     }
                 }
             }
+            let mut owns: HashMap<u32, HashMap<u64, dedupe::Own>> = HashMap::new();
             for chunk in dups.chunks(4096) {
-                let entries: Vec<DupEntry> = chunk
-                    .iter()
-                    .map(|x| {
-                        let mut e = Self::dup_entry(x, &tools);
-                        e.src = Src::Row(new_row[&x.src]);
-                        e
-                    })
-                    .collect();
+                let mut entries: Vec<DupEntry> = Vec::with_capacity(chunk.len());
+                for x in chunk {
+                    if x.rel && !owns.contains_key(&x.host) {
+                        owns.insert(x.host, Self::owns(&old.record_at(x.host)?)?);
+                    }
+                    let mut e = Self::dup_entry(x, &tools, owns.get(&x.host).unwrap_or(&HashMap::new()))?;
+                    e.src = Src::Row(new_row[&x.src]);
+                    entries.push(e);
+                }
                 let id = format!("b{}", entries[0].id);
                 let mut r = Record::new(&id, &id, "", entries[0].ts);
                 r.metadata.insert("B".to_string(), dedupe::encode(&entries));

@@ -61,6 +61,9 @@ pub(crate) struct Col {
     /// Not an event: the record at `src` keeps a deleted event's text for
     /// live duplicates of it (`id` = the record's id, `kind` = its kind).
     pub holder: bool,
+    /// A duplicate whose args differ from its text row's only in `src` and
+    /// `rt`: its own are in its entry of the host's `B` list.
+    pub rel: bool,
 }
 
 impl Col {
@@ -87,6 +90,7 @@ impl Col {
         revision: false,
         dup: false,
         holder: false,
+        rel: false,
     };
     pub fn is_event(&self) -> bool {
         self.kind != EMPTY && self.live && !self.revision && !self.holder
@@ -219,7 +223,7 @@ fn encode(cols: &[Col]) -> Box<[u8]> {
     let (mut pts, mut pses, mut pid, mut psrc, mut phost) = (0i64, 0i64, 0i64, 0i64, 0i64);
     for c in cols {
         s[0].push(c.kind);
-        s[0].push(c.status | (c.revision as u8) << 4 | (c.dup as u8) << 5 | (c.holder as u8) << 6);
+        s[0].push(c.status | (c.revision as u8) << 4 | (c.dup as u8) << 5 | (c.holder as u8) << 6 | (c.rel as u8) << 7);
         put(&mut s[1], zz((c.id as i64).wrapping_sub(pid)));
         pid = c.id as i64;
         put(&mut s[2], zz((c.session as i64).wrapping_sub(pses)));
@@ -278,6 +282,7 @@ fn decode(bytes: &[u8], first_row: u32) -> Vec<Col> {
         c.revision = st & 0x10 != 0;
         c.dup = st & 0x20 != 0;
         c.holder = st & 0x40 != 0;
+        c.rel = st & 0x80 != 0;
         c.live = true;
     }
     let (mut q, mut v) = (starts[1], 0i64);
@@ -986,6 +991,7 @@ impl ColStore {
             if holders.contains(&c.id) {
                 c.holder = true;
                 c.dup = false;
+                c.rel = false;
                 c.live = true;
             }
             self.dup_slots += c.dup as usize;
@@ -1247,6 +1253,7 @@ mod tests {
             revision: i % 11 == 0,
             dup: i % 7 == 0 && i % 11 != 0,
             holder: i % 13 == 0 && i % 7 != 0 && i % 11 != 0,
+            rel: i.is_multiple_of(35) && !i.is_multiple_of(11),
         }
     }
 

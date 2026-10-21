@@ -430,3 +430,61 @@ fn every_agent_instance_names_its_parent() {
     assert_eq!(cap.db.parent_of(h(&sub)), Some(h(&main)));
     assert_eq!(cap.db.parent_of(h(&child)), Some(h(&parent)));
 }
+
+/// A tool result with the same output every turn: repeats of one text whose
+/// records differ only in their own source position and receive time.
+fn same_result(i: u32) -> String {
+    format!(
+        "{{\"type\":\"user\",\"timestamp\":\"2026-01-02T03:06:{:02}Z\",\"message\":{{\"role\":\"user\",\"content\":[{{\"type\":\"tool_result\",\"tool_use_id\":\"toolu_{i}\",\"content\":\"the very same tool output, turn after turn\",\"is_error\":false}}]}}}}\n",
+        i % 60
+    )
+}
+
+fn same_turn(i: u32) -> String {
+    format!("{}{}{}", user(i), call(i), same_result(i))
+}
+
+#[test]
+fn repeated_texts_store_once_and_a_crash_still_neither_duplicates_nor_loses() {
+    let s = Scratch::new("dupcrash");
+    let file = s.0.join("logs/.claude/projects/-h-demo/sess-1.jsonl");
+    let store = s.0.join("store");
+    let dirs = vec![s.0.join("logs")];
+    append(&file, &(1..=5).map(same_turn).collect::<String>());
+    let mut srcs = Vec::new();
+    {
+        // never saves after commits: the state on disk still says offset 0
+        let mut cap = Capture::open(&store, opts(Duration::from_secs(3600))).unwrap();
+        cap.poll(&dirs).unwrap();
+        assert_eq!(cap.db.len(), 15);
+        assert!(cap.stats.commits > 1, "small batches: several commits");
+        assert!(cap.db.stored_records() < 15, "the repeated output is stored once ({} records)", cap.db.stored_records());
+        for id in 1..=15u64 {
+            let e = cap.db.get(id).unwrap().unwrap();
+            // a repeat reads back with its own source position, not its twin's
+            srcs.push(oojuro_capture::sink::parse_src(&e.args).unwrap_or_else(|| panic!("record {id} lost its source position: {}", e.args)));
+            if e.kind == kind::TOOL_RESULT {
+                assert_eq!(e.text, "the very same tool output, turn after turn");
+            }
+        }
+        let mut all = srcs.clone();
+        all.sort_unstable();
+        all.dedup();
+        assert_eq!(all.len(), 15, "every record has its own source position");
+        // dropped here without a final save = a crash after the appends
+    }
+    let saved = oojuro_capture::state::State::load(&store).unwrap();
+    assert_eq!((saved.files.values().next().unwrap().offset, saved.next_id), (0, 1));
+    append(&file, &same_turn(6));
+    let mut cap = Capture::open(&store, opts(Duration::ZERO)).unwrap();
+    assert_eq!(cap.stats.recovered, 15);
+    cap.poll(&dirs).unwrap();
+    assert_eq!(cap.stats.skipped_existing, 15, "every stored record, repeats included, is found by its position");
+    assert_eq!(cap.stats.records, 3, "only the new turn");
+    assert_eq!(cap.db.len(), 18);
+    for id in 1..=15u64 {
+        let e = cap.db.get(id).unwrap().unwrap();
+        assert_eq!(oojuro_capture::sink::parse_src(&e.args).unwrap(), srcs[id as usize - 1], "record {id} after the restart");
+    }
+    cap.finish().unwrap();
+}
