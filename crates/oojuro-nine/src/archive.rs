@@ -45,6 +45,13 @@ pub trait Run: Send + Sync {
     fn file_bytes(&self) -> u64;
     /// Exact bytes of row `i`.
     fn get(&self, i: u64) -> Result<Vec<u8>>;
+    /// Exact bytes of row `i` for a point read: a run whose rows share
+    /// compressed frames may decode only as much of the frame as this row
+    /// needs (the next read of the same frame then decodes again), where
+    /// [`Run::get`] decodes and caches the whole frame for its neighbours.
+    fn get_point(&self, i: u64) -> Result<Vec<u8>> {
+        self.get(i)
+    }
     /// Visit rows `start..end` in order.
     fn scan(&self, start: u64, end: u64, visit: &mut dyn FnMut(u64, &[u8]) -> Result<()>)
     -> Result<()>;

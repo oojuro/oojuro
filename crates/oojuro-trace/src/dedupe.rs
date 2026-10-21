@@ -172,6 +172,35 @@ pub(crate) fn encode(entries: &[DupEntry]) -> String {
     s
 }
 
+/// The provenance of the entries of the list `s` whose event id satisfies
+/// `wanted` (`count` ids), keyed by id; reads only each entry's id and
+/// provenance fields and stops once `count` are found, so one lookup in a
+/// list of thousands of repeats costs a scan, not a decode.
+pub(crate) fn owns_of(s: &str, wanted: &dyn Fn(u64) -> bool, count: usize) -> Option<HashMap<u64, Own>> {
+    let mut out = HashMap::new();
+    let (mut id, mut rt) = (0i64, 0i64);
+    if s.is_empty() || count == 0 {
+        return Some(out);
+    }
+    for part in s.split(';') {
+        let mut f = part.split(',');
+        id += unzz(f.next()?.parse().ok()?);
+        // fields 1..=14 are not needed; 15 is the src, 16 the rt delta
+        let (Some(src), Some(rt_d)) = (f.nth(14), f.next()) else { continue };
+        if !rt_d.is_empty() {
+            rt = rt.wrapping_add(unzz(rt_d.parse().ok()?));
+        }
+        if wanted(id as u64) {
+            let own = Own { src: if src.is_empty() { None } else { Some(unescape(src)?) }, rt: (!rt_d.is_empty()).then_some(rt) };
+            out.insert(id as u64, own);
+            if out.len() == count {
+                break;
+            }
+        }
+    }
+    Some(out)
+}
+
 pub(crate) fn decode(s: &str) -> Option<Vec<DupEntry>> {
     let (mut id, mut session, mut seq, mut ts, mut row, mut rt) = (0i64, 0i64, 0i64, 0i64, 0i64, 0i64);
     let mut tool = String::new();
@@ -532,6 +561,49 @@ mod tests {
         assert_eq!(decode(&s).unwrap(), v);
         assert_eq!(decode("").unwrap(), Vec::new());
         assert!(decode("1,2,3").is_none());
+    }
+
+    #[test]
+    fn owns_of_reads_what_decode_reads() {
+        let mut v = Vec::new();
+        for i in 0..200u64 {
+            v.push(DupEntry {
+                id: 5000 + i * 7 + (i % 3),
+                src: Src::Row((i * 13 % 90) as u32),
+                session: 3 + i / 50,
+                turn: (i % 9) as u32,
+                seq: i as u32,
+                parent: 0,
+                kind: 5,
+                status: 0,
+                exit: crate::columns::NO_EXIT,
+                tin: 0,
+                tout: 0,
+                ts: 1_790_000_000_000_000 + i as i64 * 31,
+                duration: 0,
+                text_len: 100 + i as u32,
+                tool: ["", "bash", "a,b;c%d"][(i % 3) as usize].to_string(),
+                own: match i % 5 {
+                    0 => None,
+                    1 => Some(Own { src: Some(format!("{}:{}:{}", i % 3, i * 977, i % 2)), rt: Some(1_800_000_000_000_000 + (i as i64 % 4) * 3) }),
+                    2 => Some(Own { src: None, rt: Some(i as i64 - 100) }),
+                    3 => Some(Own { src: Some(String::new()), rt: None }),
+                    _ => Some(Own { src: Some("9:9:9".into()), rt: Some(7) }),
+                },
+            });
+        }
+        let s = encode(&v);
+        let all: HashMap<u64, Own> = decode(&s).unwrap().into_iter().filter_map(|e| e.own.map(|o| (e.id, o))).collect();
+        assert_eq!(owns_of(&s, &|_| true, usize::MAX).unwrap(), all);
+        // a subset, with and without early exit; ids that carry no provenance are never returned
+        let want: std::collections::HashSet<u64> = v.iter().step_by(11).map(|e| e.id).collect();
+        let got = owns_of(&s, &|id| want.contains(&id), want.len()).unwrap();
+        for id in &want {
+            assert_eq!(got.get(id), all.get(id), "{id}");
+        }
+        assert!(got.keys().all(|id| want.contains(id)));
+        assert_eq!(owns_of("", &|_| true, 3).unwrap(), HashMap::new());
+        assert!(owns_of("1,2,3", &|_| true, 1).unwrap().is_empty());
     }
 
     #[test]

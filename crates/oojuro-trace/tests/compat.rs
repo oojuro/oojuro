@@ -351,3 +351,44 @@ fn new_segments_and_duplicates_join_a_store_main_wrote() {
         }
     }
 }
+
+/// A read of many rows may be spread over `query_threads` threads; the rows
+/// come back in the same order with the same contents, and a point read
+/// answers like the same row in a batch.
+#[test]
+fn multi_row_reads_do_not_depend_on_the_number_of_threads() {
+    let s = Scratch::new("threads");
+    copy_dir(&fixture_dir(), &s.0);
+    let read = |threads: usize| {
+        let db = TraceDb::open(&s.0.join("db"), Options { query_threads: threads, ..opts(64) }).unwrap();
+        let batch = || {
+            let mut out = String::new();
+            for (from, to, limit) in [(i64::MIN / 2, i64::MAX / 2, 1000), (1_790_000_100_000_000, 1_790_000_400_000_000, 100), (1_790_000_000_000_000, 1_790_000_900_000_000, 700)] {
+                out += &format!("{:?}\n", db.time_range(from, to, limit).unwrap());
+            }
+            for session in 1..=18 {
+                out += &format!("{:?}\n", db.session(session).unwrap());
+            }
+            out
+        };
+        let first = batch();
+        let mut out = first.clone();
+        // lone reads decode less of a frame but return the same rows
+        for id in 1..=max_id() {
+            let one = db.get(id).unwrap();
+            if let Some(e) = &one {
+                assert_eq!(db.text_range(id, 0, usize::MAX).unwrap().unwrap(), e.text.as_bytes());
+            }
+            out += &format!("{one:?}\n");
+        }
+        // frames the lone reads decoded in part are decoded whole for a batch
+        assert_eq!(batch(), first);
+        out
+    };
+    let one = read(1);
+    for threads in [2, 3, 8] {
+        assert_eq!(read(threads), one, "{threads} threads");
+    }
+    // the same lone reads against a cold cache and after a batch read of the frame
+    assert_eq!(read(1), one);
+}

@@ -83,6 +83,17 @@ impl ZstdArchive {
     }
 }
 
+/// Provenance of the relaxed duplicates a read needs: the ids wanted per host
+/// record (known up front for a batch read) and what has been read so far.
+#[derive(Default)]
+struct Hosts {
+    wanted: HashMap<(u32, u32), std::collections::HashSet<u64>>,
+    found: HashMap<(u32, u32), HashMap<u64, dedupe::Own>>,
+}
+
+/// Fewest rows per thread worth a thread in a multi-row read.
+const FETCH_RUN_MIN: usize = 64;
+
 /// Return freed heap to the OS (glibc keeps per-arena slack after the large
 /// alloc/free cycles of segment flushes and merges; measured 63% of RSS on
 /// a loaded smoke store).
@@ -131,6 +142,11 @@ impl Run for ZRun {
             })
             .map_err(store_err)?;
         out.ok_or_else(|| "row outside the run".into())
+    }
+    fn get_point(&self, i: u64) -> oojuro_core::Result<Vec<u8>> {
+        // only the frame's bytes up to this row: a lone read of a frame costs
+        // about half of decoding it whole, and skips its digest
+        self.0.get(i).map_err(store_err)
     }
     fn scan(
         &self,
@@ -424,6 +440,7 @@ pub struct Options {
     /// Per-agent fresh segment size before it is flushed to an archive run.
     pub flush_text_bytes: usize,
     pub merge_fanout: usize,
+    /// Threads one search, or one read of many rows, may use.
     pub query_threads: usize,
     /// Seal column blocks (zstd, ~6-7 B/event) instead of keeping them plain (64 B/event).
     pub seal_columns: bool,
@@ -858,23 +875,24 @@ impl TraceDb {
     }
 
     /// The args an event reads back with: those of the record holding its
-    /// text, with its own `src` / `rt` for a relaxed duplicate (`hosts`
-    /// caches the provenance lists read so far).
-    fn args_of(
-        nine: &Nine,
-        c: &Col,
-        rec: &Record,
-        hosts: &mut HashMap<u32, HashMap<u64, dedupe::Own>>,
-    ) -> Result<String> {
+    /// text, with its own `src` / `rt` for a relaxed duplicate, found in the
+    /// entry list of its host record (`hosts` remembers what was read).
+    fn args_of(nine: &Nine, c: &Col, rec: &Record, hosts: &mut Hosts, point: bool) -> Result<String> {
         let a = rec.metadata.get("a").cloned().unwrap_or_default();
         if !c.rel {
             return Ok(a);
         }
-        let owns = match hosts.entry(c.host) {
-            std::collections::hash_map::Entry::Occupied(e) => e.into_mut(),
-            std::collections::hash_map::Entry::Vacant(v) => v.insert(Self::owns(&nine.record_at(c.host)?)?),
-        };
-        let own = owns.get(&c.id).ok_or("relaxed duplicate without its provenance")?;
+        let key = (c.agent, c.host);
+        if !hosts.found.contains_key(&key) {
+            let host = if point { nine.record_at_point(c.host)? } else { nine.record_at(c.host)? };
+            let b = host.metadata.get("B").map(String::as_str).unwrap_or("");
+            let owns = match hosts.wanted.get(&key) {
+                Some(w) => dedupe::owns_of(b, &|id| w.contains(&id), w.len()),
+                None => dedupe::owns_of(b, &|id| id == c.id, 1),
+            };
+            hosts.found.insert(key, owns.ok_or("malformed duplicate entries")?);
+        }
+        let own = hosts.found[&key].get(&c.id).ok_or("relaxed duplicate without its provenance")?;
         Ok(dedupe::apply(&a, own).ok_or("duplicate args do not match their text row")?)
     }
 
@@ -1154,7 +1172,7 @@ impl TraceDb {
         self.cols.read().unwrap().bytes()
     }
 
-    fn out(id: u64, c: &Col, rec: &Record, tools: &[String], args: String) -> EventOut {
+    fn out(id: u64, c: &Col, rec: Record, tools: &[String], args: String) -> EventOut {
         EventOut {
             id,
             session: c.session,
@@ -1171,7 +1189,7 @@ impl TraceDb {
             duration_us: c.duration,
             tool: tools[c.tool as usize].clone(),
             args,
-            text: rec.text.clone(),
+            text: rec.text,
         }
     }
 
@@ -1182,15 +1200,15 @@ impl TraceDb {
     pub fn get(&self, id: u64) -> Result<Option<EventOut>> {
         let Some(c) = self.col(id) else { return Ok(None) };
         let nine = self.part(c.agent)?;
-        let rec = nine.record_at(c.src)?;
+        let rec = nine.record_at_point(c.src)?;
         let tools = self.cols.read().unwrap().tool_names();
-        let args = Self::args_of(&nine, &c, &rec, &mut HashMap::new())?;
-        Ok(Some(Self::out(id, &c, &rec, &tools, args)))
+        let args = Self::args_of(&nine, &c, &rec, &mut Hosts::default(), true)?;
+        Ok(Some(Self::out(id, &c, rec, &tools, args)))
     }
 
     pub fn text_range(&self, id: u64, start: usize, end: usize) -> Result<Option<Vec<u8>>> {
         let Some(c) = self.col(id) else { return Ok(None) };
-        let rec = self.part(c.agent)?.record_at(c.src)?;
+        let rec = self.part(c.agent)?.record_at_point(c.src)?;
         let t = rec.text.as_bytes();
         let e = end.min(t.len());
         Ok(Some(t[start.min(e)..e].to_vec()))
@@ -1202,19 +1220,47 @@ impl TraceDb {
         let tools = self.cols.read().unwrap().tool_names();
         let mut order: Vec<usize> = (0..ids.len()).collect();
         order.sort_by_key(|&i| (ids[i].1.agent, ids[i].1.src));
-        let mut out: Vec<Option<EventOut>> = vec![None; ids.len()];
-        let mut nine: Option<(u32, Arc<Nine>)> = None;
-        let mut hosts: HashMap<u32, HashMap<u64, dedupe::Own>> = HashMap::new();
-        for i in order {
-            let (id, c) = &ids[i];
-            if nine.as_ref().is_none_or(|(a, _)| *a != c.agent) {
-                nine = Some((c.agent, self.part(c.agent)?));
-                hosts.clear();
+        // Every frame costs a read and a decompression (about 0.1 ms) however
+        // few of its rows are wanted, so a long read is cut into contiguous
+        // runs of the (agent, row) order and the runs go to `query_threads`
+        // threads. A frame at a cut is decoded by both sides (the decoded
+        // frame is shared, so usually once).
+        let threads = self.opts.query_threads.max(1).min(order.len() / FETCH_RUN_MIN);
+        let read = |run: &[usize]| -> Result<Vec<(usize, EventOut)>> {
+            let mut got = Vec::with_capacity(run.len());
+            let mut nine: Option<(u32, Arc<Nine>)> = None;
+            let mut hosts = Hosts::default();
+            for &i in run {
+                if ids[i].1.rel {
+                    hosts.wanted.entry((ids[i].1.agent, ids[i].1.host)).or_default().insert(ids[i].0);
+                }
             }
-            let n = &nine.as_ref().unwrap().1;
-            let rec = n.record_at(c.src)?;
-            let args = Self::args_of(n, c, &rec, &mut hosts)?;
-            out[i] = Some(Self::out(*id, c, &rec, &tools, args));
+            for &i in run {
+                let (id, c) = &ids[i];
+                if nine.as_ref().is_none_or(|(a, _)| *a != c.agent) {
+                    nine = Some((c.agent, self.part(c.agent)?));
+                }
+                let n = &nine.as_ref().unwrap().1;
+                let rec = n.record_at(c.src)?;
+                let args = Self::args_of(n, c, &rec, &mut hosts, false)?;
+                got.push((i, Self::out(*id, c, rec, &tools, args)));
+            }
+            Ok(got)
+        };
+        let parts: Vec<Result<Vec<(usize, EventOut)>>> = if threads <= 1 {
+            vec![read(&order)]
+        } else {
+            let size = order.len().div_ceil(threads);
+            std::thread::scope(|s| {
+                let hs: Vec<_> = order.chunks(size).map(|run| s.spawn(|| read(run))).collect();
+                hs.into_iter().map(|h| h.join().unwrap_or_else(|_| Err("fetch worker panicked".into()))).collect()
+            })
+        };
+        let mut out: Vec<Option<EventOut>> = vec![None; ids.len()];
+        for part in parts {
+            for (i, e) in part? {
+                out[i] = Some(e);
+            }
         }
         Ok(out.into_iter().map(|x| x.expect("fetched")).collect())
     }

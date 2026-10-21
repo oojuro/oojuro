@@ -598,13 +598,20 @@ impl State {
     }
 
     fn record(&self, row: Row) -> Result<Cow<'_, Record>> {
+        self.record_with(row, false)
+    }
+
+    /// The record at `row`; `point`: a lone read, which may decode only
+    /// the part of its archive frame that it needs ([`Run::get_point`]).
+    fn record_with(&self, row: Row, point: bool) -> Result<Cow<'_, Record>> {
         if row >= self.fresh.start {
             return Ok(Cow::Borrowed(
                 &self.fresh.records[(row - self.fresh.start) as usize],
             ));
         }
         let s = self.segment_of(row).ok_or("row outside committed history")?;
-        let bytes = s.archive.get(u64::from(row - s.start))?;
+        let local = u64::from(row - s.start);
+        let bytes = if point { s.archive.get_point(local)? } else { s.archive.get(local)? };
         Ok(Cow::Owned(decode_record(&bytes, u64::from(row))?))
     }
 
@@ -1344,6 +1351,17 @@ impl Nine {
             return err("row outside committed history");
         }
         Ok(st.record(row)?.into_owned())
+    }
+
+    /// [`Nine::record_at`] for a lone read: the archive may decode only
+    /// the part of the row's frame that it needs. Use [`Nine::record_at`]
+    /// when neighbouring rows are read next (they share the decoded frame).
+    pub fn record_at_point(&self, row: u32) -> Result<Record> {
+        let st = self.read_state()?;
+        if row >= st.end() {
+            return err("row outside committed history");
+        }
+        Ok(st.record_with(row, true)?.into_owned())
     }
 
     fn submit_rows(&self, items: Vec<Incoming>) -> Result<(Vec<String>, Row)> {
