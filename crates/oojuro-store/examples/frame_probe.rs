@@ -42,6 +42,13 @@ fn main() {
     let get = time(&|i| {
         r.get(i).unwrap();
     });
+    let scan = time(&|i| {
+        r.scan(i, i + 1, &mut |_, b| {
+            std::hint::black_box(b.len());
+            Ok(())
+        })
+        .unwrap();
+    });
     let buf = vec![7u8; 64 << 10];
     let t = Instant::now();
     for _ in 0..2000 {
@@ -51,7 +58,7 @@ fn main() {
     println!(
         "{}",
         serde_json::json!({"run": path, "rows_in_run": n, "raw_bytes": r.raw_bytes(), "file_bytes": r.file_bytes(),
-            "us_per_read": {"first_byte": head, "whole_row_range": range, "get": get}, "blake3_64KiB_us": b3,
+            "us_per_read": {"first_byte": head, "whole_row_range": range, "get_point": get, "scan_whole_frame": scan}, "blake3_64KiB_us": b3,
             "loadavg": std::fs::read_to_string("/proc/loadavg").unwrap_or_default().trim()})
     );
 }
