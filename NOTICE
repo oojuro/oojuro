@@ -1,9 +1,4 @@
 Oojuro
 Copyright 2026 Oojuro, Inc.
 
-Unless a directory contains its own LICENSE file, the code in this repository is licensed under the
-Functional Source License, Version 1.1, ALv2 Future License (FSL-1.1-ALv2; see LICENSE.md). Each
-version becomes available under the Apache License, Version 2.0 on the second anniversary of its release.
-
-Client code (SDKs, CLI and MCP client libraries) lives in directories that carry their own Apache-2.0
-LICENSE file (see LICENSE-APACHE-2.0).
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).

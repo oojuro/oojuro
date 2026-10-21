@@ -7,16 +7,15 @@ losslessly compressed, and lets it search its own history in milliseconds. No LL
 
 ## License
 
-This license split is fixed and will not be changed.
+Everything in this repository is licensed under the **Apache License 2.0** (see `LICENSE` and `NOTICE`).
+That covers the engine, the recorder and daemon (`oojurod`), the file format, the SDKs, the CLI and the MCP
+tools.
 
-| Part | License |
-|---|---|
-| Engine, daemon (`oojurod`), server: everything not marked otherwise | [FSL-1.1-ALv2](LICENSE.md). Free for any use except offering a competing commercial service. Each release becomes Apache-2.0 two years after it ships |
-| Client SDKs, CLI and MCP client libraries (directories with their own `LICENSE`) | [Apache-2.0](LICENSE-APACHE-2.0) |
+**Pledge:** the code in this repository will never be relicensed. What is open stays Apache-2.0.
 
-Embedding Oojuro in your own agents and products, commercial or not, is permitted. Offering Oojuro (or a
-substitute built from it) as a competing hosted service is not, until each release converts to Apache-2.0.
-This is the same model Sentry uses.
+How Oojuro, Inc. makes money: the hosted Oojuro Cloud (durable journals for sandboxed agents, team journals,
+compliance archive) is a separate proprietary service and is not part of this repository. Embedding Oojuro
+in your own agents and products, commercial or not, is and stays free.
 
 ## Trademarks
 
