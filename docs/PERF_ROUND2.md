@@ -177,7 +177,7 @@ bookkeeping paid for by P1 (window, entries) did nothing. (The same study on a
 provenance). Entries with provenance (17 fields instead of 15) are not
 readable by older binaries; stores that never got a relaxed repeat are
 unchanged. `crates/oojuro-trace/tests/compat.rs` opens a store written by
-`main` (fixture, 140 KB), gets the answers `main` gave, and appends,
+`main` (fixture, 160 KB), gets the answers `main` gave, and appends,
 flushes, merges, deduplicates repeats of the old texts and erases on top of
 it.
 
@@ -251,3 +251,122 @@ semantics, "identical texts are one search document"); `forget` of one copy
 keeps the text while another copy is live (the proof counts live copies). A
 journal written after this change should not be opened by a build from before
 it once a repeat with provenance exists.
+
+## Item 3. Leaner fixed index tables
+
+**Finding** (`TRACK_COMPRESS` index study). A segment kept 84 bytes of fixed
+tables per row: 40 B of row metadata, a 20 B id entry, a 20 B key entry and a
+4 B time-order entry. After item 2 on the real sample they are 39% of the
+index (59% on TraceBench tier 1).
+
+**Change** (`oojuro-nine`: `rows.rs`, `segment.rs`, `merge.rs`, `v4.rs`).
+Segment version 3:
+
+- **rows**: the same seven fields packed per block of 128 rows as frames of
+  reference (block minimum + each row's difference in the fewest bits that
+  fit; the first 8 id bytes drop the trailing zero bits that every row of the
+  block shares). About 10 bytes a row; reading one field of one row is a few
+  shifts, and `scope_length` (read for every candidate of a query) touches two
+  fields. `recorded_at` is stored only in blocks where it differs from
+  `valid_at`.
+- **keys**: only the entries whose key is not the row's own id. Almost every
+  event's key is its id, so the id table answers for it: `rows_with_key(fp)` is
+  the id rows of `fp` that are not exceptions, plus the exception entries of
+  `fp`; the sorted stream a merge reads is rebuilt from the same two sources.
+  The writer takes the id and key tables together (`fingerprints`) and finds the
+  exceptions with one merge-join of the two sorted streams.
+- **time order**: not written. The first reader that needs it (a range read)
+  sorts it out of `valid_at` once per segment and keeps it; a merge no longer
+  builds it at all.
+- Version 1 and 2 segments still open, merge (into version 3) and erase; a
+  file's CRC and its row-offset table are checked at open.
+
+**Tests.** `rows.rs`: round trips over 35 value shapes (extremes of every field,
+all-equal blocks, descending, 128-row and short blocks) at 10 sizes, the size
+of ascending decimal ids with equal clocks (under 9 B a row), damaged offset
+tables refused. `segment.rs`: the same synthetic rows, id and key tables written
+as version 1 and as version 3 answer identically for every row field,
+`rows_with_id`, `rows_with_key` (every id and key present, and absent ones),
+the id and key entry streams, the time order and `time_lower_bound`, with
+0-33% key exceptions (versions of a key, a key equal to another row's id, keys
+of their own); and a file smaller in every case. The writer refuses a table
+that misses or repeats a row. `oojuro-trace/tests/compat.rs`: the version 2
+store written by `main` opens, answers as it did, and merges with version 3
+segments (and a store this build writes gives the same 48 digests).
+
+**Measurement.**
+
+| tier-1 store (899,987 events, 16 agent stores, deterministic load) | `main` | this branch | change |
+|---|---:|---:|---:|
+| index files (`*.idx`) | 112,437,344 | 77,050,253 | **-31.5%** |
+| originals (`*.src`), column checkpoint | 138,239,464; 12,553,999 | same | 0 |
+| whole store directory | 263,238,320 | 227,851,234 | -13.4% |
+
+The real 30-day sample (item 2 is in both numbers; MB after settling):
+
+| | `main` | item 2 | item 3 |
+|---|---:|---:|---:|
+| index | 66.5 | 61.0 | **46.0** |
+| total without the shared log | 200.7 | 186.4 | 171.5 |
+
+On the real sample item 3 alone takes the index down 24.6% (item 2 + 3 together
+30.8% below `main`); on TraceBench tier 1, where 36% of the rows are status
+revisions and all events are in one clock, -31.5%. The bar was -30% of the
+index: **met on TraceBench, missed on the real sample by about five points.**
+What is left of the fixed tables there is the id table (12% of the new index,
+20 B a row of 128-bit fingerprints). It cannot go without changing what Nine
+promises: duplicate ids are refused at insert, version groups are rebuilt from
+key fingerprints alone at open, and both need a lookup by fingerprint in every
+older segment; fingerprints cut to 96 bits would save only 2.4% more and would
+weaken the exactness of key lookups, so they were not taken. (The study's
+"drop `cf`" is not available either: the padded background of anchored queries
+reads it.)
+
+Search is exactly the same. The 30,905 tier-1 turn-loop queries return identical
+ranked ids and score bits (a) from this branch reading the store `main` built
+(version 2 segments), and (b) from the store this branch built against the one
+`main` built (deterministic load): 30,905 identical, 0 continued, 0 other. The
+retrieval evals (`oojuro-bench`, nine arm, dev splits, one run each) are equal
+in every metric:
+
+| eval | nDCG@10 (main = this branch) | other | store bytes main -> this branch |
+|---|---:|---|---:|
+| SciFact | 0.6767 | recall@100 0.8935 | 7,875,482 -> same (no segment written) |
+| NFCorpus | 0.2925 | recall@100 0.2431 | 5,860,639 -> same |
+| FiQA | 0.2879 | recall@100 0.5809 | 39,790,074 -> 36,969,070 |
+| LongMemEval | turn nDCG@10 0.6969 | turn recall@20 0.8560 | - |
+| agent-trace turn loop (50 trajectories) | 0.2607 | recall@20 0.5343 | 18,373,131 -> same |
+
+**Search latency and the guard metrics** (`main` and this branch alternating,
+5 rounds, turn loop 3; median (min-max); the load average was 18-22 during
+this series, so wall-clock tails say nothing and the one-thread probe is
+reported in thread CPU time):
+
+| metric | `main` | this branch |
+|---|---:|---:|
+| search probe, 200 B turn-loop queries: CPU p50 / p99 ms | 1.892 (1.816-1.922) / 3.35 (3.18-3.44) | 1.887 (1.878-1.928) / 3.40 (3.31-3.46) |
+| ... 4 KB queries | 4.73 (3.17-4.78) / 11.5 (7.7-11.7) | 4.71 (3.23-4.91) / 11.6 (7.8-11.9) |
+| ... 64 KB queries | 9.29 (9.17-9.41) / 13.1 (12.0-14.7) | 9.23 (9.14-9.91) / 12.7 (12.0-14.3) |
+| ingest, shared log: commits/s | 11,730 (10,520-12,180) | 11,120 (5,189-11,370) |
+| ingest, `log=private`: commits/s | 2,928 (2,775-3,483) | 3,359 (1,003-3,795) |
+| turn loop: turn p50 / p99 ms | 3.62 (3.25-9.64) / 12.4 (9.8-65) | 3.82 (3.25-4.13) / 14.0 (11.5-14.5) |
+| ... search top-20 p50 / p99 ms | 2.02 (1.85-2.48) / 5.8 (4.8-26) | 2.07 (1.77-2.09) / 6.3 (4.7-7.1) |
+| turn-loop store, bytes on disk | 350,225,310 | 313,168,868 (-10.6%) |
+
+The search probe is equal at all three query sizes (differences under 1.5%, inside
+the spread of the rounds). The first version of this change read (scope, length)
+of each candidate by parsing the candidate's block header again, and measured
++2.9% at 200 B (1.244 vs 1.209 ms CPU p50, ranges just touching): the scan
+reads those two fields for every candidate in row order, so it now keeps the
+current block's parameters (`MassCursor`) and parses a header once per block.
+Ingest never reaches a segment in the 30,000-batch run (its store is only
+journal: the disk size is identical to the byte), so the format cannot change
+it; the first series above had `main` ahead in four of five rounds by 1-11%,
+which an extra alternation of 8 rounds of `main`, item 2 and this branch under a
+load of about 25 explains as run-to-run spread: medians 8,640 (828-11,350),
+8,594 (1,183-11,760) and 8,782 (848-12,050) commits/s, p50 1.12, 1.02 and
+1.08 ms. The turn-loop differences (+5% turn p50; this branch worse in two
+rounds and better in one) are inside the spread of the `main` series itself
+(3.25-9.64 ms): no change is claimed in either direction, and the thread-CPU
+search probe, which does not wait for anything, shows none.
+
