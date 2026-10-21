@@ -17,6 +17,7 @@
 | [TRACEBENCH](TRACEBENCH.md) | the agent-trace database workload and how to run it |
 | [TRACEBENCH_BASELINES](TRACEBENCH_BASELINES.md) | how Postgres, ClickHouse, SQLite and every competitor arm are configured, and the results |
 | [BENCH_HARNESS](BENCH_HARNESS.md) | `oojuro-bench`: BEIR, turn-loop replay, memory QA and correctness gates |
+| [PERF_ROUND2](PERF_ROUND2.md) | perf round 2: per-store cache, dedupe key, lean index, read paths, long queries, fsync audit |
 | [PERF_SEARCH](PERF_SEARCH.md) | search latency at scale |
 | [PERF_STORE](PERF_STORE.md) | the compressed store: dictionaries, tiers, compaction |
 | [SEARCH_FIXES](SEARCH_FIXES.md) | two search bugs found by an outcome evaluation, their fixes and the measurements |
