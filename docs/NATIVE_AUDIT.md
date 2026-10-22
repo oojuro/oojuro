@@ -30,6 +30,8 @@ it must begin at genesis. A floor alone proves no rewind behind that checkpoint,
 after it. Obtaining the current witness from the same untrusted/restored bundle defeats this
 protection. Authority unavailability must be handled fail-closed by the production owner.
 
+A checkpoint scope identifies the audited project/log. An event scope identifies its target
+writer/read scope and may differ; the authenticated producer owns that authorization mapping.
 Native `AuditExport::verify` recomputes every event and signed checkpoint from genesis,
 checks every checkpoint against the actual event prefix, and refuses uncheckpointed tails.
 Export encode/decode is bounded to 100,000 entries/checkpoints and 16 MiB. Unknown fields,
