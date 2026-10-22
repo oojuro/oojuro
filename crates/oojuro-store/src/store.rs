@@ -21,6 +21,7 @@
 //! zstd frames are written magicless, without content size or dictionary id
 //! (the frame head already carries both), so small per-turn frames stay small.
 
+mod bounded;
 use crate::crypto::FrameCipher;
 use crate::format::*;
 use crate::pack::{PackOpts, Packer, Row, new_cctx, pack_body};
@@ -532,31 +533,33 @@ impl Store {
     fn load_hot(&mut self, id: u64, last: bool) -> Result<()> {
         let path = hot_path(&self.dir, id);
         let f = OpenOptions::new().read(true).write(true).open(&path)?;
-        let data = std::fs::read(&path)?;
-        let first_seq = check_head(&data, HOT_MAGIC, id)?;
+        let size = f.metadata()?.len();
+        let mut header = [0; FILE_HEAD];
+        let head_len = size.min(FILE_HEAD as u64) as usize;
+        f.read_exact_at(&mut header[..head_len], 0)?;
+        let first_seq = check_head(&header[..head_len], HOT_MAGIC, id)?;
         if first_seq != self.next_seq {
             return Err(Error::Corrupt("hot log sequence gap"));
         }
-        let mut at = FILE_HEAD;
-        while at < data.len() {
-            match Self::frame_at(&data, at) {
-                Some(len) => {
-                    let payload = &data[at + 8..at + 8 + len];
-                    let head = get_head(payload)?;
+        let mut at = FILE_HEAD as u64;
+        while at < size {
+            match bounded::payload(&f, size, at)? {
+                Some(payload) => {
+                    let head = get_head(&payload)?;
                     if head.first_seq != self.next_seq {
                         return Err(Error::Corrupt("hot frame sequence gap"));
                     }
-                    let (meta, _) = reader::decode_payload(&*self, payload, &head, None)?;
+                    let (meta, _) = reader::decode_payload(&*self, &payload, &head, None)?;
                     let (lo, hi) = meta.records.iter().fold((i64::MAX, i64::MIN), |(lo, hi), r| (lo.min(r.valid_at), hi.max(r.valid_at)));
                     let text: u64 = meta.records.iter().map(|r| r.text_len as u64).sum();
-                    self.push_frame(id, at as u64, len as u32, &head, lo, hi, text);
-                    at += 8 + len;
+                    self.push_frame(id, at, payload.len() as u32, &head, lo, hi, text);
+                    at += 8 + payload.len() as u64;
                 }
                 None => {
-                    if !last || Self::any_frame_after(&data, at + 1) {
+                    if !last || bounded::any_after(&f, size, at + 1)? {
                         return Err(Error::Corrupt("hot log checksum mismatch before its tail"));
                     }
-                    f.set_len(at as u64)?;
+                    f.set_len(at)?;
                     f.sync_all()?;
                     break;
                 }
@@ -565,21 +568,6 @@ impl Store {
         self.files.insert(id, f);
         self.hot_files.push(id);
         Ok(())
-    }
-
-    /// Length of a valid frame starting at `at`, if any.
-    fn frame_at(data: &[u8], at: usize) -> Option<usize> {
-        let len = u32::from_le_bytes(data.get(at..at + 4)?.try_into().ok()?) as usize;
-        let want = u32::from_le_bytes(data.get(at + 4..at + 8)?.try_into().ok()?);
-        if len == 0 || len > MAX_FRAME + 64 {
-            return None;
-        }
-        let payload = data.get(at + 8..at + 8 + len)?;
-        (frame_crc(payload) == want).then_some(len)
-    }
-
-    fn any_frame_after(data: &[u8], from: usize) -> bool {
-        (from..data.len().saturating_sub(8)).any(|i| Self::frame_at(data, i).is_some())
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -703,18 +691,21 @@ impl Store {
     /// Train the first dictionary from the hot data appended so far. New hot
     /// frames use it; older frames keep decoding without one.
     fn train_hot_dict(&mut self) -> Result<()> {
-        let mut texts = Vec::new();
+        let mut samples = bounded::Training::new();
+        let mut raw = 0u64;
         for i in 0..self.frames.len() {
             if self.frames[i].cold {
                 continue;
             }
             let d = reader::decoded(self, i, usize::MAX)?;
             for r in 0..d.meta.records.len() {
-                texts.push(d.body[d.meta.text_start[r] as usize..d.meta.text_start[r + 1] as usize].to_vec());
+                let text = &d.body[d.meta.text_start[r] as usize..d.meta.text_start[r + 1] as usize];
+                raw = raw.saturating_add(text.len() as u64);
+                samples.push(text);
             }
         }
-        let size = dict_size(&self.opts, texts.iter().map(|t| t.len() as u64).sum());
-        let Some(dict) = train_dict(&texts, size) else { return Ok(()) };
+        let size = dict_size(&self.opts, raw);
+        let Some(dict) = samples.finish(size) else { return Ok(()) };
         let id = self.next_dict;
         self.next_dict += 1;
         self.publish_dict(id, dict, self.raw_text)?;
@@ -1103,19 +1094,14 @@ impl CompactionJob {
         let mut new_dict = None;
         if self.retrain {
             let size = dict_size(&self.opts, hot_raw);
-            // Every `step`-th record, about 100x the dictionary size in total.
-            let step = (records * size as u64 * 100).checked_div(hot_raw.max(1)).map_or(1, |per| (records / per.max(1)).max(1));
-            let (mut texts, mut n) = (Vec::new(), 0u64);
+            let mut samples = bounded::Training::new();
             for f in &self.hot {
                 let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx, self.opts.cipher.as_deref(), self.opts.require_sealed)?;
                 for r in 0..meta.records.len() {
-                    if n % step == 0 {
-                        texts.push(body[meta.text_start[r] as usize..meta.text_start[r + 1] as usize].to_vec());
-                    }
-                    n += 1;
+                    samples.push(&body[meta.text_start[r] as usize..meta.text_start[r + 1] as usize]);
                 }
             }
-            new_dict = train_dict(&texts, size);
+            new_dict = samples.finish(size);
         }
         let (dict_id, dict_bytes): (u32, Option<Vec<u8>>) = match (&new_dict, self.reuse) {
             (Some(d), _) => (self.new_dict_id, Some(d.clone())),
@@ -1207,26 +1193,10 @@ fn dict_size(opts: &Options, raw: u64) -> usize {
     ((raw / opts.dict_scale.max(1)) as usize).clamp(16 << 10, opts.dict_bytes.max(16 << 10))
 }
 
-/// Train a zstd dictionary on a deterministic sample of `texts`
-/// (about 100x the dictionary size). None when there is too little data.
+/// Train from a deterministic bounded priority sample; exact compression bytes can
+/// change across versions, while the persisted dictionary/frame formats remain unchanged.
 pub fn train_dict(texts: &[Vec<u8>], dict_bytes: usize) -> Option<Vec<u8>> {
-    let total: usize = texts.iter().map(|t| t.len()).sum();
-    let usable = texts.iter().filter(|t| t.len() >= 8).count();
-    if total < dict_bytes * 8 || usable < 16 {
-        return None;
-    }
-    let (mut samples, mut sizes) = (Vec::new(), Vec::new());
-    let mut rng = crate::util::Rng::new(0x0dd5_eed5);
-    let budget = (dict_bytes * 100).min(total);
-    let mut tries = 0;
-    while samples.len() < budget && tries < texts.len() * 4 {
-        tries += 1;
-        let t = &texts[rng.below(texts.len())];
-        let s = &t[..t.len().min(128 << 10)];
-        if s.len() >= 8 {
-            samples.extend_from_slice(s);
-            sizes.push(s.len());
-        }
-    }
-    zstd::dict::from_continuous(&samples, &sizes, dict_bytes).ok()
+    let mut samples = bounded::Training::new();
+    for text in texts { samples.push(text); }
+    samples.finish(dict_bytes)
 }
