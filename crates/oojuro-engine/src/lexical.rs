@@ -365,6 +365,13 @@ impl Index {
         let terms: Vec<_> = query.iter().map(|(term, n)| (term, *n)).collect();
         let eligible = |row| {
             self.visible(row, q, view)
+                // Record-only correction: a nonword literal has no postings
+                // and scans text, but must still honor initial eligibility.
+                // Empty timelines and actual-key reads retain stored-only rows.
+                && (view.is_none()
+                    || direct.is_some()
+                    || q.text.is_empty()
+                    || self.documents[row].event.indexed)
                 && literal.is_none_or(|phrase| {
                     phrase_start(&self.documents[row].event.text, phrase).is_some()
                 })
