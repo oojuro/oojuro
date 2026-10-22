@@ -231,6 +231,9 @@ function safeError(error, committing) {
     "response_too_large",
     "truncated_response",
     "truncated_export",
+    "search_pending",
+    "search_completed",
+    "search_failed",
   ];
   const code =
     error instanceof OojuroError && known.includes(error.code) ? error.code : "transport";
@@ -388,6 +391,10 @@ export class PreparedCommit {
     return "PreparedCommit {}";
   }
 }
+export class PreparedSearch extends PreparedCommit {
+  toJSON() { return { type: "PreparedSearch" }; }
+  [inspect]() { return "PreparedSearch {}"; }
+}
 export class OojuroClient {
   #base;
   #token;
@@ -446,7 +453,7 @@ export class OojuroClient {
   [inspect]() {
     return "OojuroClient {}";
   }
-  async #request(method, path, body, { min = 0, signal } = {}) {
+  async #request(method, path, body, { min = 0, signal, searchStatus = false } = {}) {
     abort(signal);
     const response = await this.#fetch(this.#base + path, {
       method,
@@ -465,6 +472,17 @@ export class OojuroClient {
     if (!Number.isInteger(response.status) || response.status < 100 || response.status > 599)
       fail();
     if (response.status !== 200) {
+      if (searchStatus && response.status === 409) {
+        try {
+          contentType(response, "application/json");
+          const value = parse(new TextDecoder("utf-8", { fatal: true }).decode(await bytes(response, 4096, signal)));
+          const code = value?.error?.code;
+          if (["search_pending", "search_completed", "search_failed"].includes(code))
+            throw new OojuroError(code, { status: 409, outcome: "unknown" });
+        } catch (error) {
+          if (error instanceof OojuroError && ["search_pending", "search_completed", "search_failed"].includes(error.code)) throw error;
+        }
+      }
       await cancel(response.body);
       throw new OojuroError("http", {
         status: response.status,
@@ -563,36 +581,43 @@ export class OojuroClient {
       input,
     );
   }
-  search(query, k, input) {
+  prepareSearch(input) {
     try {
-      string(query, 4096, true);
-      if (!query.trim() || !Number.isSafeInteger(k) || k < 1 || k > 100) fail();
-    } catch {
-      return Promise.reject(new OojuroError("invalid_request"));
-    }
-    return this.#read(
-      "search",
-      (value) => {
-        if (!Array.isArray(value) || value.length > k) fail();
-        for (const hit of value) {
-          keys(hit, [
-            "id",
-            "writer",
-            "writer_name",
-            "memory_name",
-            "score_bits",
-            "excerpt",
-            "trace",
-          ]);
-          const { score_bits, excerpt, ...row } = hit;
-          record(row);
-          string(excerpt);
-          if (typeof score_bits !== "number" || !Number.isFinite(score_bits)) fail();
-        }
-      },
-      input,
-      JSON.stringify({ query, k }),
-    );
+      const body = encode({ request_id: input.requestId, query: input.query, k: input.k });
+      const value = parse(body);
+      keys(value, ["request_id", "query", "k"]);
+      string(value.request_id, 1024, true);
+      string(value.query, 4096, true);
+      if (!value.query.trim() || !Number.isSafeInteger(value.k) || value.k < 1 || value.k > 100 || encoder.encode(body).length > this.#requestLimit) fail();
+      const minimum = options(input).min;
+      return new PreparedSearch(async (signal) => {
+        try {
+          const result = await this.#request("POST", "search", body, { min: minimum, signal, searchStatus: true });
+          contentType(result.response, "application/json");
+          const json = parse(new TextDecoder("utf-8", { fatal: true }).decode(await bytes(result.response, this.#responseLimit, signal)));
+          keys(json, ["watermark", "value"]);
+          mark(json.watermark, result.generation);
+          if (!Array.isArray(json.value) || json.value.length > value.k) fail();
+          for (const hit of json.value) {
+            keys(hit, ["id", "writer", "writer_name", "memory_name", "score_bits", "continued", "excerpt_start", "excerpt_end", "excerpt", "trace"]);
+            const { score_bits, excerpt, continued, excerpt_start, excerpt_end, ...row } = hit;
+            record(row); string(excerpt);
+            integer(hit, "excerpt_start"); integer(hit, "excerpt_end");
+            const text = encoder.encode(row.trace.text);
+            if (typeof score_bits !== "number" || !Number.isFinite(score_bits) || typeof continued !== "boolean" || excerpt_start > excerpt_end || excerpt_end > text.length) fail();
+            let exact;
+            try { exact = new TextDecoder("utf-8", { fatal: true }).decode(text.subarray(excerpt_start, excerpt_end)); }
+            catch { fail(); }
+            if (exact !== excerpt) fail();
+          }
+          return json;
+        } catch (error) { throw safeError(error, true); }
+      });
+    } catch { fail("invalid_request"); }
+  }
+  search(input, options) {
+    try { return this.prepareSearch(input).send(options); }
+    catch { return Promise.reject(new OojuroError("invalid_request")); }
   }
   async blob(writer, name, input) {
     try {
@@ -607,10 +632,10 @@ export class OojuroClient {
         config,
       );
       contentType(result.response, "application/octet-stream");
-      return {
-        generation: result.generation,
-        bytes: await bytes(result.response, Math.min(2 * MiB, this.#responseLimit), config.signal),
-      };
+      const data = await bytes(result.response, Math.min(2 * MiB, this.#responseLimit), config.signal);
+      const revision = result.response.headers.get("x-oojuro-blob-revision");
+      if (revision !== null) id(revision);
+      return { generation: result.generation, bytes: data, ...(revision === null ? {} : { revision }) };
     } catch (error) {
       throw safeError(error, false);
     }

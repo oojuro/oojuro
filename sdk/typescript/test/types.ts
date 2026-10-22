@@ -48,3 +48,5 @@ reportedTrace("x", { parent: 1n });
 // @ts-expect-error Prepared commits can only be created by the validated client path.
 new PreparedCommit(() => {});
 void authority;
+
+new OojuroClient({baseUrl:"http://localhost",project:"1".repeat(64),token:"ojv2_"+"A".repeat(43)}).prepareSearch({requestId:"explicit-search",query:"words",k:1,minGeneration:0}).send();

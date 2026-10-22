@@ -335,16 +335,16 @@ test("record detail validates identity; search and authorization preserve the ac
     if (url.endsWith("/access"))
       return envelope({ admin: false, read: [W], write: [], retry: [W] });
     if (url.endsWith("/search")) {
-      assert.deepEqual(JSON.parse(init.body), { query: "hello", k: 2 });
-      return envelope([{ ...row(), score_bits: 2.75, excerpt: "hello" }]);
+      assert.deepEqual(JSON.parse(init.body), { request_id: "search-original", query: "hello", k: 2 });
+      return envelope([{ ...row(), score_bits: 2.75, continued: false, excerpt_start: 0, excerpt_end: 5, excerpt: "hello" }]);
     }
     return envelope(row());
   });
   assert.equal((await sdk.access()).value.admin, false);
   assert.equal((await sdk.record(R)).value.id, R);
-  assert.equal((await sdk.search("hello", 2)).value[0].score_bits, 2.75);
+  assert.equal((await sdk.search({ requestId: "search-original", query: "hello", k: 2 })).value[0].score_bits, 2.75);
   await assert.rejects(sdk.record(B), (error) => safe(error, "invalid_response"));
-  await assert.rejects(sdk.search("", 2), (error) => safe(error, "invalid_request"));
+  await assert.rejects(sdk.search({ requestId: "search-original", query: "", k: 2 }), (error) => safe(error, "invalid_request"));
 });
 
 test("blob names are encoded, writer lifetimes are opaque, and binary bytes are returned exactly", async () => {
@@ -531,4 +531,32 @@ test("untrusted transport error objects and caller getters cannot smuggle raw st
       }),
     (error) => safe(error, "invalid_request"),
   );
+});
+
+test("prepared metered search freezes ID, query and minimum and exposes safe status-only outcomes", async () => {
+  const sent=[];let calls=0;
+  const sdk=client(async (_url,init)=>{sent.push(init);calls++;
+    if(calls===1)throw new Error(TOKEN+PRIVATE);
+    return new Response(JSON.stringify({error:{code:"search_completed",message:TOKEN+PRIVATE}}),{status:409,headers:{"content-type":"application/json"}});
+  });
+  const intent={requestId:"original-metered-search",query:"hello",k:2,minGeneration:6};
+  const prepared=sdk.prepareSearch(intent);intent.requestId="changed";intent.query="changed";intent.minGeneration=9;
+  await assert.rejects(prepared.send(),e=>safe(e,"transport","unknown"));assert.equal(calls,1);
+  await assert.rejects(prepared.send(),e=>safe(e,"search_completed","unknown"));assert.equal(calls,2);
+  assert.equal(sent[0].body,sent[1].body);assert.equal(sent[1].headers["x-oojuro-min-generation"],"6");
+  assert.equal(JSON.parse(sent[0].body).request_id,"original-metered-search");
+  assert.ok(!inspect(prepared).includes("hello"));assert.ok(!JSON.stringify(prepared).includes("hello"));
+});
+test("metered search validates native continuation and exact UTF8 excerpt ranges", async()=>{
+  const hit={...row(),score_bits:3.25,continued:true,excerpt_start:6,excerpt_end:10,excerpt:"🦉"};
+  const intent={requestId:"range-search",query:"hello",k:1};
+  const valid=await client(async()=>envelope([hit])).search(intent);assert.equal(valid.value[0].continued,true);
+  for(const change of [{excerpt_start:7},{excerpt_end:9},{continued:1},{excerpt:"wrong"}])
+    await assert.rejects(client(async()=>envelope([{...hit,...change}])).search(intent),e=>safe(e,"invalid_response","unknown"));
+  assert.throws(()=>client(async()=>envelope([])).prepareSearch({query:"hello",k:1}),e=>safe(e,"invalid_request"));
+});
+test("blob current CAS revision is validated without inventing one for old replies",async()=>{
+  const sdk=client(async()=>streaming(stream([new Uint8Array([0,255])]),"application/octet-stream",{"x-oojuro-blob-revision":R}));
+  assert.equal((await sdk.blob(W,"file")).revision,R);
+  await assert.rejects(client(async()=>streaming(stream([new Uint8Array([0])]),"application/octet-stream",{"x-oojuro-blob-revision":"invalid"})).blob(W,"file"),e=>safe(e,"invalid_response"));
 });

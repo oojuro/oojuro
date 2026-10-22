@@ -105,6 +105,9 @@ export interface TraceRecord {
 export interface SearchHit extends TraceRecord {
   score_bits: number;
   excerpt: string;
+  continued: boolean;
+  excerpt_start: WireInteger;
+  excerpt_end: WireInteger;
 }
 export interface ReadOptions {
   minGeneration?: WireInteger;
@@ -135,18 +138,31 @@ export function reportedTrace(
   text: string,
   fields?: Partial<Omit<Trace, "text" | "format">>,
 ): Trace;
+export interface SearchInput {
+  requestId: string;
+  query: string;
+  k: number;
+  /** Frozen with the original intent; changing it is a different search. */
+  minGeneration?: WireInteger;
+}
+export class PreparedSearch {
+  private constructor();
+  /** Exactly one attempt. Status-only retries never execute or return earlier result bytes. */
+  send(options?: { signal?: AbortSignal }): Promise<Read<SearchHit[]>>;
+}
 export class OojuroClient {
   constructor(options: ClientOptions);
   prepareCommit(input: CommitInput): PreparedCommit;
   access(options?: ReadOptions): Promise<Read<AuthorizationGrant>>;
   records(options?: ReadOptions): Promise<Read<TraceRecord[]>>;
   record(id: OpaqueId, options?: ReadOptions): Promise<Read<TraceRecord>>;
-  search(query: string, k: number, options?: ReadOptions): Promise<Read<SearchHit[]>>;
+  prepareSearch(input: SearchInput): PreparedSearch;
+  search(input: SearchInput, options?: { signal?: AbortSignal }): Promise<Read<SearchHit[]>>;
   blob(
     writer: OpaqueId,
     name: string,
     options?: ReadOptions,
-  ): Promise<{ generation: WireInteger; bytes: Uint8Array }>;
+  ): Promise<{ generation: WireInteger; bytes: Uint8Array; revision?: OpaqueId }>;
   /** All-or-nothing bounded JSONL consumption: results exist only after clean, validated EOF. */
   exportRecords(
     options?: ReadOptions,

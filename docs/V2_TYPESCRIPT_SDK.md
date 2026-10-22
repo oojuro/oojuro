@@ -114,3 +114,13 @@ ambiguous writes, exact retries, body and schema failures, request scope/identit
 bounds, Unicode splits, revoked/truncated exports, abort and error/object privacy. They do not
 constitute an actual server/client composition, live AWS test, production grant proof, host/AZ
 failure drill, complete foundation SDK conformance, or commercial readiness acceptance.
+
+## Metered current search and conditional Blob reads
+
+The current metered HTTP contract requires an explicit caller-owned search ID. The previous `search(query,k)` call shape is refused; there is no implicit ID or automatic retry. Use `client.prepareSearch({requestId, query, k, minGeneration}).send({signal})` to freeze the exact body AND minimum-generation fingerprint before attempting transport. `client.search(input,{signal})` makes one such attempt. Persist original intent outside the in-memory object if it must survive process loss.
+
+Every attempted search without a fully validated result remains outcome `unknown`. Retrying the same intent can return static `search_pending`, `search_completed` or `search_failed` codes at HTTP409. These status-only receipts do not execute again or replay earlier result bytes; starting another execution requires an explicit new caller ID. Queries and server/provider error messages are never copied into error output or object inspection. Search hits preserve native continuation plus exact checked UTF-8 excerpt start/end ranges. These checks do not turn reported agent/source IDs into verified causal facts.
+
+Blob GET optionally returns the authenticated `x-oojuro-blob-revision` as `revision`; it is the current ciphertext object revision used by expected-CAS operations, not a project generation or trace logical ID. Missing headers from older prototype replies never cause an invented revision. Invalid revisions fail closed. An authorized writer can read this revision and explicitly select a conditional update or deletion without possessing the original uploader's ACK. Browser trace-review membership alone still does not authorize bearer Blob endpoints.
+
+Current SDK regression gate:55 tests (22base/metered +20file +13selected-deletion) and all three strict TypeScript declaration checks pass. Invalid UTF-8 excerpt offsets reproduced a typed-error classification failure before correction; validated output rejects the offsets. Actual metered HTTP +Node file/restart integration remains a separate joined candidate gate.
