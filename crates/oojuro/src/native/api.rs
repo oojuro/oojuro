@@ -190,6 +190,7 @@ pub(super) enum Owner {
 }
 impl Owner {
     pub fn open(root: &Path, namespace: Namespace) -> Result<Self, Error> {
+        config::check_private_path(root)?;
         match namespace {
             Namespace::Record => {
                 let (config, key) = records::load(root)?;

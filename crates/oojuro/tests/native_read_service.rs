@@ -553,3 +553,49 @@ fn private_socket_refusal_bounds_busy_and_absolute_partial_request_deadline() {
     assert_eq!(f.value("record-v2", json!({"op":"stats"}))["records"], 0);
     drop(server);
 }
+
+#[test]
+fn startup_root_intermediate_symlink_is_refused_before_authority_open() {
+    for namespace in ["record-v2", "capture-v1"] {
+        let f = Fixture::new();
+        if namespace == "record-v2" {
+            f.record();
+        } else {
+            f.capture();
+        }
+        let before = snapshot(&f.root.join("journal"));
+        let alias = f.parent.join("alias");
+        symlink(&f.parent, &alias).unwrap();
+        let indirect = alias.join("root");
+        let mut child = Command::new(BIN)
+            .args(["serve", "--root"])
+            .arg(&indirect)
+            .args([
+                "--socket",
+                f.socket.to_str().unwrap(),
+                "--namespace",
+                namespace,
+            ])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()
+            .unwrap();
+        let deadline = Instant::now() + Duration::from_secs(2);
+        while child.try_wait().unwrap().is_none() && !f.socket.exists() && Instant::now() < deadline
+        {
+            thread::sleep(Duration::from_millis(10));
+        }
+        let served = f.socket.exists();
+        if child.try_wait().unwrap().is_none() {
+            let _ = child.kill();
+        }
+        let status = child.wait().unwrap();
+        assert!(
+            !served,
+            "untrusted intermediate root alias reached authority startup"
+        );
+        assert!(!status.success());
+        assert!(!f.socket.exists());
+        assert_eq!(snapshot(&f.root.join("journal")), before);
+    }
+}

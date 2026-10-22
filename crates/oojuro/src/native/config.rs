@@ -137,3 +137,34 @@ pub(super) fn setup_files(root: &Path, files: &[(&str, &[u8])]) -> Result<()> {
     }
     Ok(())
 }
+
+/// New opt-in native reader paths only; existing command loader semantics remain unchanged.
+pub(super) fn trusted_ancestor(owner: u32, mode: u32, current: u32) -> bool {
+    (owner == 0 || owner == current) && (mode & 0o022 == 0 || (owner == 0 && mode & 0o1000 != 0))
+}
+pub(super) fn check_private_path(root: &Path) -> Result<()> {
+    use std::path::Component;
+    if !root.is_absolute()
+        || root
+            .components()
+            .any(|c| matches!(c, Component::ParentDir | Component::CurDir))
+    {
+        return Err(Error::Permissions);
+    }
+    let mut current = std::path::PathBuf::new();
+    for part in root.components() {
+        current.push(part);
+        let metadata = fs::symlink_metadata(&current).map_err(|_| Error::Permissions)?;
+        if !metadata.is_dir()
+            || metadata.file_type().is_symlink()
+            || !trusted_ancestor(metadata.uid(), metadata.mode(), unsafe { libc::geteuid() })
+        {
+            return Err(Error::Permissions);
+        }
+    }
+    // Do not silently accept a different resolved root or weaken final permissions.
+    if fs::canonicalize(root).map_err(|_| Error::Permissions)? != root {
+        return Err(Error::Permissions);
+    }
+    check_root(root)
+}

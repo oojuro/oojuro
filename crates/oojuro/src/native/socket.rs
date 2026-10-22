@@ -81,9 +81,6 @@ fn peer(stream: &UnixStream) -> bool {
             && cred.uid == uid()
     }
 }
-fn trusted_ancestor(owner: u32, mode: u32, current: u32) -> bool {
-    (owner == 0 || owner == current) && (mode & 0o022 == 0 || (owner == 0 && mode & 0o1000 != 0))
-}
 fn path_check(path: &Path) -> Result<(), Failure> {
     if !path.is_absolute()
         || path.as_os_str().as_bytes().len() > 103
@@ -95,22 +92,7 @@ fn path_check(path: &Path) -> Result<(), Failure> {
         return Err("invalid_socket_path");
     }
     let parent = path.parent().ok_or("invalid_socket_path")?;
-    let mut current = std::path::PathBuf::new();
-    for part in parent.components() {
-        current.push(part);
-        let m = fs::symlink_metadata(&current).map_err(|_| "private_socket_parent_required")?;
-        if !m.is_dir() || m.file_type().is_symlink() {
-            return Err("private_socket_parent_required");
-        }
-        // Public ancestors may be root-owned sticky directories; the final parent must be private.
-        if !trusted_ancestor(m.uid(), m.mode(), uid()) {
-            return Err("private_socket_parent_required");
-        }
-    }
-    let m = fs::symlink_metadata(parent).map_err(|_| "private_socket_parent_required")?;
-    if m.uid() != uid() || m.mode() & 0o777 != 0o700 {
-        return Err("private_socket_parent_required");
-    }
+    super::config::check_private_path(parent).map_err(|_| "private_socket_parent_required")?;
     Ok(())
 }
 fn wait(stream: &UnixStream, event: i16, deadline: Instant) -> Result<(), Failure> {
@@ -146,7 +128,7 @@ fn read_line(stream: &mut UnixStream, limit: usize, deadline: Instant) -> Result
             Ok(0) => return Err("incomplete_request"),
             Ok(n) => {
                 let end = buf[..n].iter().position(|b| *b == b'\n');
-                let take = end.map_or(n, |i| i);
+                let take = end.unwrap_or(n);
                 if out.len().checked_add(take).is_none_or(|v| v > limit) {
                     return Err("frame_bound");
                 }
@@ -373,17 +355,16 @@ pub(super) fn call(path: &Path, namespace: Namespace, envelope: Value) -> Result
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     #[test]
     fn ancestor_policy_refuses_foreign_owner_even_without_public_write_permission() {
-        assert!(!trusted_ancestor(1001, 0o755, 1000));
-        assert!(!trusted_ancestor(1001, 0o700, 1000));
-        assert!(!trusted_ancestor(1001, 0o1777, 1000));
-        assert!(trusted_ancestor(1000, 0o700, 1000));
-        assert!(trusted_ancestor(1000, 0o755, 1000));
-        assert!(trusted_ancestor(0, 0o755, 1000));
-        assert!(trusted_ancestor(0, 0o1777, 1000));
-        assert!(!trusted_ancestor(0, 0o777, 1000));
-        assert!(!trusted_ancestor(1000, 0o777, 1000));
+        assert!(!super::super::config::trusted_ancestor(1001, 0o755, 1000));
+        assert!(!super::super::config::trusted_ancestor(1001, 0o700, 1000));
+        assert!(!super::super::config::trusted_ancestor(1001, 0o1777, 1000));
+        assert!(super::super::config::trusted_ancestor(1000, 0o700, 1000));
+        assert!(super::super::config::trusted_ancestor(1000, 0o755, 1000));
+        assert!(super::super::config::trusted_ancestor(0, 0o755, 1000));
+        assert!(super::super::config::trusted_ancestor(0, 0o1777, 1000));
+        assert!(!super::super::config::trusted_ancestor(0, 0o777, 1000));
+        assert!(!super::super::config::trusted_ancestor(1000, 0o777, 1000));
     }
 }
