@@ -290,7 +290,7 @@ fn actual_dictionary_inventory_cow_is_immutable_and_bounded() {
             match i {
                 Inventory::Pack(_) => packs += 1,
                 Inventory::Dictionary(x) => {
-                    assert_eq!(x, d);
+                    assert_eq!(x, &d);
                     dicts += 1
                 }
             }
@@ -302,5 +302,55 @@ fn actual_dictionary_inventory_cow_is_immutable_and_bounded() {
     let mut bad = d;
     bad.token = [93; 32];
     assert!(e.insert_dictionary(&bad).is_err());
+    assert!(e.finish().is_err());
+}
+
+#[test]
+fn candidate_cannot_introduce_pack_or_dictionary_from_other_birth_even_valid_ancestor() {
+    let f = F::new();
+    let c = f.contexts();
+    let roots = Roots::empty(&c).unwrap();
+    f.a.generation.store(2, Ordering::Relaxed);
+    let c = f.contexts();
+    let mut e = Editor::new(c.clone(), roots.clone()).unwrap();
+    let mut s = Stage::new(
+        &f.root.join("data"),
+        birth(1),
+        Reservation {
+            file_id: 1,
+            first_physical_seq: 0,
+        },
+        f.cipher.clone(),
+        Options::default(),
+    )
+    .unwrap();
+    s.push(
+        &[NewRecord {
+            kind: 1,
+            valid_at: 1,
+            recorded_at: 1,
+            key: b"",
+            attrs: b"",
+            text: b"old prepared candidate",
+        }],
+        &mut |l| {
+            e.insert_frame(&l)
+                .map_err(|_| oojuro_store::Error::Invalid("fixture"))
+        },
+    )
+    .unwrap();
+    let p = s.finish().unwrap();
+    assert!(e.insert_pack(&p).is_err());
+    assert!(e.finish().is_err());
+    let d = oojuro_store::managed_pack::stage_dictionary(
+        &f.root.join("data"),
+        birth(1),
+        7,
+        b"old prepared dictionary",
+        &f.cipher,
+    )
+    .unwrap();
+    let mut e = Editor::new(c, roots).unwrap();
+    assert!(e.insert_dictionary(&d).is_err());
     assert!(e.finish().is_err());
 }
