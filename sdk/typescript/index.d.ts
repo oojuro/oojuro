@@ -136,6 +136,10 @@ export interface ClientOptions {
   /** May lower defaults, never exceed 8 MiB request or 10 MiB response. */
   maxRequestBytes?: number;
   maxResponseBytes?: number;
+  /** Opt-in framed methods use independent budgets; at most 16 MiB + 64 KiB + 4.
+   * These do not increase JSON request/response limits. */
+  maxFramedRequestBytes?: number;
+  maxFramedResponseBytes?: number;
 }
 export class OojuroError extends Error {
   readonly code: string;
@@ -259,6 +263,22 @@ export interface JournalPage {
   records: JournalRecord[];
   next: string | null;
 }
+export interface JournalDescriptor {
+  id: OpaqueId;
+  record: Omit<JournalRecord["record"], "text">;
+  text_bytes: WireInteger;
+  generation: WireInteger;
+}
+export interface JournalDescriptorsPage {
+  watermark: Watermark;
+  records: JournalDescriptor[];
+  /** Bound to metadata projection; cannot resume a full page cursor. */
+  next: string | null;
+}
+export interface JournalFramedReadInput {
+  expectedRoot: JournalRoot;
+  id: OpaqueId;
+}
 export interface JournalStats {
   records: WireInteger;
   text_bytes: WireInteger;
@@ -293,10 +313,21 @@ export class OojuroClient {
   /** Encoded Journal POSTs are capped at 1 MiB, or the lower configured request limit.
    * Native 16 MiB text support does not imply equivalent HTTP capacity. */
   prepareJournalRecord(input: JournalRecordInput): PreparedJournalWrite;
+  /** Explicit binary framing: bounded metadata plus exact UTF8 text, no JSON text expansion. */
+  prepareJournalRecordFramed(input: JournalRecordInput): PreparedJournalWrite;
+  /** No invented watermark: the frame has an actual generation header and one native record. */
+  journalRecordFramed(
+    input: JournalFramedReadInput,
+    options?: ReadOptions,
+  ): Promise<{ generation: WireInteger; value: JournalRecord }>;
   prepareJournalDelete(input: JournalDeleteInput): PreparedJournalWrite;
   /** Tombstones existing key versions; does not forbid future key reuse. */
   prepareJournalForget(input: JournalForgetInput): PreparedJournalWrite;
   journalPage(input: JournalPageInput, options?: ReadOptions): Promise<Read<JournalPage>>;
+  journalDescriptorsPage(
+    input: JournalPageInput,
+    options?: ReadOptions,
+  ): Promise<Read<JournalDescriptorsPage>>;
   journalStats(input: JournalViewInput, options?: ReadOptions): Promise<Read<JournalStats>>;
   prepareJournalPeriods(input: JournalPeriodsInput): PreparedJournalPeriods;
   prepareCommit(input: CommitInput): PreparedCommit;

@@ -1,0 +1,80 @@
+{
+  "cases": [
+    {
+      "method": "POST",
+      "operation": "appendFramed",
+      "path": "/v2/projects/52f48447a9a029ee5f3a45e0b6b98d655ee9f9e6b17caad8019361daca1b242a/journal/records/framed",
+      "request_body_base64": "AAACKnsiYWRhcHRlciI6ImludGVudGlvbmFsLXNkayIsImNvbnNlbnQiOiJpbnRlbnRpb25hbC11c2VyLWZpbGUiLCJleHBlY3RlZF9yb290Ijp7Im1pbmltdW1fcmVhZGVyIjoxLCJuYW1lc3BhY2UiOiJkOTBmZDQwMDc0Mjg1ZWRlMTA3YWQyZjU1NzI1NDc4MzNiOTk1NGEwYjVlMzMyNTQxNTM3OTY2OTlhNjExM2Y4IiwicHJvamVjdCI6IjUyZjQ4NDQ3YTlhMDI5ZWU1ZjNhNDVlMGI2Yjk4ZDY1NWVlOWY5ZTZiMTdjYWFkODAxOTM2MWRhY2ExYjI0MmEiLCJzY2hlbWEiOjF9LCJpbnB1dCI6eyJhZ2VudF9pZCI6InJlcG9ydGVkLWFnZW50IiwiYXR0cnMiOnt9LCJleGl0IjpudWxsLCJpbmRleGVkIjpmYWxzZSwia2V5IjpudWxsLCJraW5kIjoiZXhwbGljaXQiLCJwYXJlbnRfaWQiOm51bGwsInN0YXR1cyI6bnVsbCwidG9vbCI6bnVsbCwidmFsaWRfYXQiOjQyfSwicmVxdWVzdF9pZCI6ImZyYW1lZC1vcmlnaW5hbCIsInRleHRfbGVuZ3RoIjoyMSwid3JpdGVyIjoiOWZhNDgzZDU3ZGFlYjFlZDJlN2RhYTUyNGVjYmFhMjk4NTBiZGFjYWNlNzEyOWFkY2IwODcwZGIzZWIyYjU4NiJ9ZXhhY3QAIFVuaWNvZGUgzrHwn5mC",
+      "request_headers": {
+        "content-length": "579",
+        "content-type": "application/vnd.oojuro.record.v1"
+      },
+      "response_body_base64": "eyJvdXRjb21lIjp7ImJsb2JfcmV2aXNpb25zIjp7fSwiZGVzdHJ1Y3Rpb24iOm51bGwsImdlbmVyYXRpb24iOjQsImtleSI6bnVsbCwicmVjb3JkX2lkcyI6eyIwIjoiOWQzNWNhNDQ1NGM4NDU4MmFiYjU0OWU3ZTIxOWQxYjEyZDFmYjY5M2NmODdmYjNlNWM5OGZjZWY3YjlhYTgwYyJ9LCJ1c2FnZSI6eyJjb21taXR0ZWRfYXRfdXMiOjE3OTI2NzEzNDgyMjA2NjcsImludGVudF9maW5nZXJwcmludCI6ImZmNzM3NzYxNjI1M2VkMGY4Mzc5NzY3MjcxYWY2OGU1ZTJmNDhiYjM5ZGNlMjFkNmViZjM3YjlmZWU3YmNkZDkiLCJrZXB0X2J5dGVzIjoyMSwicmVjb3JkZWRfYnl0ZXMiOjIxLCJyZXF1ZXN0X3RhZyI6IjVkNDYxYWVmZGYxNzI1MjYwMWQwMDBkOTYxYzAzMTQxY2YxZjRhNmE5YmRjNmFmMjkzNmNhY2YzNjczNTZmN2UiLCJzY29wZV90YWciOiI1MDQwNTAwZDJlMzM2Y2RmYTY1ZGIxYzIxODcyMDk5NjEwMzIzMGRmNDY5ZGExN2RhNDk0OTc0ZDA2OTExNTgxIn0sIndyaXRlciI6bnVsbH19",
+      "response_headers": {
+        "cache-control": "no-store",
+        "content-length": "507",
+        "content-type": "application/json",
+        "date": "Thu, 22 Oct 2026 12:15:48 GMT",
+        "referrer-policy": "no-referrer",
+        "x-content-type-options": "nosniff",
+        "x-oojuro-generation": "4"
+      },
+      "status": 200
+    },
+    {
+      "method": "GET",
+      "operation": "getFramed",
+      "path": "/v2/projects/52f48447a9a029ee5f3a45e0b6b98d655ee9f9e6b17caad8019361daca1b242a/journal/records/9d35ca4454c84582abb549e7e219d1b12d1fb693cf87fb3e5c98fcef7b9aa80c/framed",
+      "request_body_base64": "",
+      "request_headers": {
+        "accept": "application/vnd.oojuro.record.v1",
+        "x-oojuro-journal-root": "eyJzY2hlbWEiOjEsIm1pbmltdW1fcmVhZGVyIjoxLCJwcm9qZWN0IjoiNTJmNDg0NDdhOWEwMjllZTVmM2E0NWUwYjZiOThkNjU1ZWU5ZjllNmIxN2NhYWQ4MDE5MzYxZGFjYTFiMjQyYSIsIm5hbWVzcGFjZSI6ImQ5MGZkNDAwNzQyODVlZGUxMDdhZDJmNTU3MjU0NzgzM2I5OTU0YTBiNWUzMzI1NDE1Mzc5NjY5OWE2MTEzZjgifQ"
+      },
+      "response_body_base64": "AAABonsiaWQiOiI5ZDM1Y2E0NDU0Yzg0NTgyYWJiNTQ5ZTdlMjE5ZDFiMTJkMWZiNjkzY2Y4N2ZiM2U1Yzk4ZmNlZjdiOWFhODBjIiwicmVjb3JkIjp7ImFkYXB0ZXIiOiJpbnRlbnRpb25hbC1zZGsiLCJhZ2VudF9pZCI6InJlcG9ydGVkLWFnZW50IiwiYXR0cnMiOnt9LCJleGl0IjpudWxsLCJpZCI6MSwiaW5kZXhlZCI6ZmFsc2UsImtleSI6bnVsbCwia2luZCI6ImV4cGxpY2l0IiwicGFyZW50X2lkIjpudWxsLCJyZWNvcmRlZF9hdCI6MTc5MjY3MTM0ODIyMDY2Nywic2NoZW1hIjoxLCJzdGF0dXMiOm51bGwsInRvb2wiOm51bGwsInZhbGlkX2F0Ijo0Miwid3JpdGVyIjoiOWZhNDgzZDU3ZGFlYjFlZDJlN2RhYTUyNGVjYmFhMjk4NTBiZGFjYWNlNzEyOWFkY2IwODcwZGIzZWIyYjU4NiJ9LCJzY2hlbWEiOjEsInRleHRfbGVuZ3RoIjoyMX1leGFjdAAgVW5pY29kZSDOsfCfmYI=",
+      "response_headers": {
+        "cache-control": "no-store",
+        "content-type": "application/vnd.oojuro.record.v1",
+        "date": "Thu, 22 Oct 2026 12:15:48 GMT",
+        "referrer-policy": "no-referrer",
+        "transfer-encoding": "chunked",
+        "x-content-type-options": "nosniff",
+        "x-oojuro-generation": "4"
+      },
+      "status": 200
+    }
+  ],
+  "metadata": {
+    "adapter": "intentional-sdk",
+    "consent": "intentional-user-file",
+    "expected_root": {
+      "minimum_reader": 1,
+      "namespace": "d90fd40074285ede107ad2f5572547833b9954a0b5e33254153796699a6113f8",
+      "project": "52f48447a9a029ee5f3a45e0b6b98d655ee9f9e6b17caad8019361daca1b242a",
+      "schema": 1
+    },
+    "input": {
+      "agent_id": "reported-agent",
+      "attrs": {},
+      "exit": null,
+      "indexed": false,
+      "key": null,
+      "kind": "explicit",
+      "parent_id": null,
+      "status": null,
+      "tool": null,
+      "valid_at": 42
+    },
+    "request_id": "framed-original",
+    "text_length": 21,
+    "writer": "9fa483d57daeb1ed2e7daa524ecbaa29850bdacace7129adcb0870db3eb2b586"
+  },
+  "root": {
+    "minimum_reader": 1,
+    "namespace": "d90fd40074285ede107ad2f5572547833b9954a0b5e33254153796699a6113f8",
+    "project": "52f48447a9a029ee5f3a45e0b6b98d655ee9f9e6b17caad8019361daca1b242a",
+    "schema": 1
+  },
+  "schema": 1,
+  "source": "actual Rust loopback framed journal responses",
+  "text_base64": "ZXhhY3QAIFVuaWNvZGUgzrHwn5mC"
+}

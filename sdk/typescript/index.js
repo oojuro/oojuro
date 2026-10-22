@@ -4,6 +4,10 @@ const opaquePattern = /^[0-9a-f]{64}$/;
 const sources = new WeakMap();
 const inspect = Symbol.for("nodejs.util.inspect.custom");
 const MiB = 1024 * 1024;
+const recordMedia = "application/vnd.oojuro.record.v1";
+const recordMetadataLimit = 64 * 1024;
+const recordTextLimit = 16 * MiB;
+const recordWireLimit = 4 + recordMetadataLimit + recordTextLimit;
 
 export class OojuroError extends Error {
   constructor(code, { status, outcome = "none" } = {}) {
@@ -435,6 +439,95 @@ function journalRecord(value) {
   sources.set(input, sources.get(row));
   nativeInput(input);
 }
+
+function nativeRecordMetadata(row) {
+  const fields = nativeFields.filter((key) => key !== "text");
+  keys(row, ["schema", "id", "writer", "adapter", "recorded_at", ...fields]);
+  integer(row, "schema", 1, 1);
+  integer(row, "id", 1);
+  id(row.writer);
+  label(row.adapter, 256);
+  integer(row, "recorded_at", -Number.MAX_SAFE_INTEGER);
+  const input = Object.fromEntries(fields.map((key) => [key, row[key]]));
+  input.text = "";
+  sources.set(input, sources.get(row));
+  nativeInput(input);
+}
+function journalDescriptor(value) {
+  keys(value, ["id", "record", "text_bytes", "generation"]);
+  id(value.id);
+  nativeRecordMetadata(value.record);
+  integer(value, "text_bytes", 0, recordTextLimit);
+  integer(value, "generation", 1);
+}
+function ownFields(value, fields) {
+  if (!object(value) || ![null, Object.prototype].includes(Object.getPrototypeOf(value))) fail();
+  const names = Reflect.ownKeys(value);
+  if (names.length !== fields.length || names.some((key) => !fields.includes(key))) fail();
+  const result = Object.create(null);
+  for (const key of fields) {
+    const descriptor = Object.getOwnPropertyDescriptor(value, key);
+    if (!descriptor?.enumerable || !Object.hasOwn(descriptor, "value")) fail();
+    Object.defineProperty(result, key, {
+      value: descriptor.value,
+      enumerable: true,
+      writable: true,
+      configurable: true,
+    });
+  }
+  return result;
+}
+function utf8Length(text, maximum) {
+  if (typeof text !== "string" || text.length > maximum) fail();
+  let length = 0;
+  for (let i = 0; i < text.length; i++) {
+    const c = text.charCodeAt(i);
+    if (c < 128) length++;
+    else if (c < 2048) length += 2;
+    else if (c >= 0xd800 && c <= 0xdbff) {
+      const next = text.charCodeAt(++i);
+      if (!(next >= 0xdc00 && next <= 0xdfff)) fail();
+      length += 4;
+    } else if (c >= 0xdc00 && c <= 0xdfff) fail();
+    else length += 3;
+    if (length > maximum) fail();
+  }
+  return length;
+}
+function frameMetadata(text) {
+  // JSON.parse alone discards duplicate object keys. Bound and reject them before
+  // the existing source-lexeme parser, including escaped aliases such as "\u0069d".
+  const stack = [];
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (c === "{" || c === "[") {
+      if (stack.length >= 40) fail();
+      stack.push(c === "{" ? new Set() : null);
+    } else if (c === "}" || c === "]") stack.pop();
+    else if (c === '"') {
+      const start = i++;
+      for (; i < text.length; i++) {
+        if (text[i] === "\\") i++;
+        else if (text[i] === '"') break;
+      }
+      if (i >= text.length) fail();
+      let next = i + 1;
+      while (/\s/u.test(text[next] ?? "") && next < text.length) next++;
+      if (text[next] === ":") {
+        const keys = stack.at(-1);
+        const key = JSON.parse(text.slice(start, i + 1));
+        if (!keys || keys.has(key)) fail();
+        keys.add(key);
+      }
+    }
+  }
+  return parse(text);
+}
+function base64url(bytes) {
+  let binary = "";
+  for (const byte of bytes) binary += String.fromCharCode(byte);
+  return btoa(binary).replaceAll("+", "-").replaceAll("/", "_").replace(/=+$/, "");
+}
 function journalStats(value) {
   keys(value, ["records", "text_bytes", "kinds", "first_valid_at", "last_valid_at"]);
   integer(value, "records");
@@ -649,6 +742,8 @@ export class OojuroClient {
   #fetch;
   #requestLimit;
   #responseLimit;
+  #framedRequestLimit;
+  #framedResponseLimit;
   constructor(configuration) {
     try {
       const {
@@ -658,6 +753,8 @@ export class OojuroClient {
         fetch: transport = globalThis.fetch,
         maxRequestBytes = 8 * MiB,
         maxResponseBytes = 10 * MiB,
+        maxFramedRequestBytes = recordWireLimit,
+        maxFramedResponseBytes = recordWireLimit,
       } = configuration;
       const url = new URL(baseUrl);
       const local =
@@ -684,6 +781,8 @@ export class OojuroClient {
       for (const [value, max] of [
         [maxRequestBytes, 8 * MiB],
         [maxResponseBytes, 10 * MiB],
+        [maxFramedRequestBytes, recordWireLimit],
+        [maxFramedResponseBytes, recordWireLimit],
       ])
         if (!Number.isSafeInteger(value) || value < 1 || value > max) fail();
       this.#project = project;
@@ -692,6 +791,8 @@ export class OojuroClient {
       this.#fetch = transport;
       this.#requestLimit = maxRequestBytes;
       this.#responseLimit = maxResponseBytes;
+      this.#framedRequestLimit = maxFramedRequestBytes;
+      this.#framedResponseLimit = maxFramedResponseBytes;
     } catch {
       fail("invalid_configuration");
     }
@@ -702,14 +803,19 @@ export class OojuroClient {
   [inspect]() {
     return "OojuroClient {}";
   }
-  async #request(method, path, body, { min = 0, signal, searchStatus = false } = {}) {
+  async #request(method, path, body, { min = 0, signal, searchStatus = false, frame } = {}) {
     abort(signal);
+    if (frame && !((method === "POST" && path === "journal/records/framed") ||
+        (method === "GET" && /^journal\/records\/[0-9a-f]{64}\/framed$/.test(path)))) fail("invalid_request");
     const response = await this.#fetch(this.#base + path, {
       method,
       headers: {
         authorization: `Bearer ${this.#token}`,
         "x-oojuro-min-generation": String(min),
-        ...(body === undefined ? {} : { "content-type": "application/json" }),
+        ...(frame ? (method === "POST" ? {
+          "content-type": recordMedia, "content-length": String(body.byteLength), "content-encoding": "identity",
+        } : {accept: recordMedia, "x-oojuro-journal-root": frame.root}) :
+          body === undefined ? {} : { "content-type": "application/json" }),
       },
       ...(body === undefined ? {} : { body }),
       signal,
@@ -844,6 +950,129 @@ export class OojuroClient {
       fail("invalid_request");
     }
   }
+
+  prepareJournalRecordFramed(input) {
+    try {
+      const original = ownFields(input, [
+        "requestId",
+        "consent",
+        "expectedRoot",
+        "writer",
+        "adapter",
+        "input",
+      ]);
+      const fields = ownFields(original.input, nativeFields);
+      const text = fields.text;
+      const textLength = utf8Length(text, recordTextLimit);
+      delete fields.text;
+      const metadata = journalSnapshot(
+        {
+          request_id: original.requestId,
+          consent: original.consent,
+          expected_root: original.expectedRoot,
+          writer: original.writer,
+          adapter: original.adapter,
+          input: fields,
+          text_length: textLength,
+        },
+        recordMetadataLimit,
+      );
+      string(metadata.request_id, 1024, true);
+      journalRoot(metadata.expected_root, this.#project);
+      id(metadata.writer);
+      label(metadata.adapter, 256);
+      if (metadata.consent !== "intentional-user-file") fail();
+      nativeInput({ ...metadata.input, text: "" });
+      const meta = encoder.encode(encode(metadata));
+      if (
+        meta.length > recordMetadataLimit ||
+        4 + meta.length + textLength > this.#framedRequestLimit
+      )
+        fail();
+      const frame = new Uint8Array(4 + meta.length + textLength);
+      new DataView(frame.buffer).setUint32(0, meta.length, false);
+      frame.set(meta, 4);
+      const written = encoder.encodeInto(text, frame.subarray(4 + meta.length));
+      if (written.read !== text.length || written.written !== textLength) fail();
+      return new PreparedJournalWrite(async (signal) => {
+        try {
+          abort(signal);
+          // Give each transport attempt its own bytes; mutation cannot alter the original retry.
+          const result = await this.#request("POST", "journal/records/framed", frame.slice(), {
+            signal,
+            frame: {},
+          });
+          contentType(result.response, "application/json");
+          const json = parse(
+            new TextDecoder("utf-8", { fatal: true }).decode(
+              await bytes(result.response, this.#responseLimit, signal),
+            ),
+          );
+          keys(json, ["outcome"]);
+          outcome(json.outcome, result.generation, [{ kind: "Record" }]);
+          return json.outcome;
+        } catch (error) {
+          throw safeError(error, true);
+        }
+      });
+    } catch {
+      fail("invalid_request");
+    }
+  }
+  async journalRecordFramed(input, readOptions) {
+    let root, config;
+    try {
+      input = journalSnapshot(input, 2048);
+      keys(input, ["expectedRoot", "id"]);
+      journalRoot(input.expectedRoot, this.#project);
+      id(input.id);
+      root = encoder.encode(encode(input.expectedRoot));
+      if (root.length > 1024) fail();
+      config = options(readOptions);
+    } catch {
+      fail("invalid_request");
+    }
+    try {
+      const result = await this.#request(
+        "GET",
+        "journal/records/" + input.id + "/framed",
+        undefined,
+        { ...config, frame: { root: base64url(root) } },
+      );
+      if (
+        result.response.headers.get("content-type") !== recordMedia ||
+        ![null, "identity"].includes(result.response.headers.get("content-encoding"))
+      ) {
+        await cancel(result.response.body);
+        fail();
+      }
+      const wire = await bytes(result.response, this.#framedResponseLimit, config.signal);
+      let value;
+      try {
+        if (wire.length < 4) fail();
+        const n = new DataView(wire.buffer, wire.byteOffset, wire.byteLength).getUint32(0, false);
+        if (n === 0 || n > recordMetadataLimit || n > wire.length - 4) fail();
+        const metadata = frameMetadata(
+          new TextDecoder("utf-8", { fatal: true }).decode(wire.subarray(4, 4 + n)),
+        );
+        keys(metadata, ["schema", "text_length", "id", "record"]);
+        integer(metadata, "schema", 1, 1);
+        integer(metadata, "text_length", 0, recordTextLimit);
+        id(metadata.id);
+        nativeRecordMetadata(metadata.record);
+        if (metadata.id !== input.id || metadata.text_length !== wire.length - 4 - n) fail();
+        const text = new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(
+          wire.subarray(4 + n),
+        );
+        value = { id: metadata.id, record: { ...metadata.record, text } };
+      } catch {
+        fail();
+      }
+      return { generation: result.generation, value };
+    } catch (error) {
+      throw safeError(error, false);
+    }
+  }
   prepareJournalRecord(input) {
     try {
       input = journalSnapshot(input, Math.min(MiB, this.#requestLimit));
@@ -898,6 +1127,12 @@ export class OojuroClient {
     }
   }
   journalPage(input, readOptions) {
+    return this.#journalPage(input, readOptions, false);
+  }
+  journalDescriptorsPage(input, readOptions) {
+    return this.#journalPage(input, readOptions, true);
+  }
+  #journalPage(input, readOptions, descriptors) {
     try {
       input = journalSnapshot(input, Math.min(MiB, this.#requestLimit));
       const { body, value } = this.#journalBody({
@@ -913,7 +1148,7 @@ export class OojuroClient {
       integer(value, "max_records", 1, 1000);
       integer(value, "max_bytes", 1024, 10 * MiB - 1024);
       return this.#read(
-        "journal/page",
+        descriptors ? "journal/descriptors" : "journal/page",
         (page, current) => {
           keys(page, ["watermark", "records", "next"]);
           mark(page.watermark, page.watermark?.generation);
@@ -927,7 +1162,11 @@ export class OojuroClient {
             fail();
           const seen = new Set();
           for (const row of page.records) {
-            journalRecord(row);
+            if (descriptors) {
+            journalDescriptor(row);
+            if (row.generation > page.watermark.generation ||
+                (value.query.generation !== null && row.generation > value.query.generation)) fail();
+          } else journalRecord(row);
             if (
               seen.has(row.id) ||
               (value.query.writer !== null && row.record.writer !== value.query.writer) ||
