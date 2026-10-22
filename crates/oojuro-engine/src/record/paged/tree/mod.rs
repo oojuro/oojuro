@@ -697,11 +697,44 @@ pub(in crate::record) fn visit_pages(
     }
     Ok(())
 }
+pub(in crate::record) fn visit_ancestor_pages(
+    ctx: Context<'_>,
+    root: &Root,
+    mut visit: impl FnMut(&Reference) -> Result<()>,
+) -> Result<()> {
+    validate_ancestor_root(&ctx, root)?;
+    let binding = ctx.check()?;
+    let mut pending = Vec::new();
+    if let Some(r) = &root.node {
+        pending.push(r.clone());
+    }
+    while let Some(r) = pending.pop() {
+        if ctx.check()? != binding {
+            return Err(Error::Conflict);
+        }
+        let node = load(&ctx, &r)?;
+        visit(&r)?;
+        if let Node::Branch(children) = node {
+            pending.extend(children.into_iter().rev());
+            if pending.len() > usize::from(MAX_DEPTH) * MAX_CHILDREN + 1 {
+                return Err(Error::Bounds);
+            }
+        }
+    }
+    if ctx.check()? != binding {
+        return Err(Error::Conflict);
+    }
+    Ok(())
+}
 pub(in crate::record) fn get(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
     let mut c = Cursor::seek(ctx, root, key)?;
     Ok(c.next()?.filter(|e| e.key == key).map(|e| e.value))
 }
-pub(in crate::record) fn get_ancestor(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
+pub(in crate::record) fn get_ancestor(
+    ctx: Context<'_>,
+    root: &Root,
+    key: &[u8],
+) -> Result<Option<Vec<u8>>> {
     let mut c = Cursor::seek_ancestor(ctx, root, key)?;
     Ok(c.next()?.filter(|e| e.key == key).map(|e| e.value))
 }
@@ -716,6 +749,40 @@ pub(in crate::record) fn validate_ancestor_root(ctx: &Context<'_>, root: &Root) 
     ctx.authority
         .validate_birth(&root.binding, ctx.sort_of.unwrap_or(ctx.purpose), ctx.class)
 }
+/// Greatest key <= requested key, with independently validated ancestor roots.
+pub(in crate::record) fn floor_ancestor(
+    ctx: Context<'_>,
+    root: &Root,
+    key: &[u8],
+) -> Result<Option<Entry>> {
+    validate_ancestor_root(&ctx, root)?;
+    let binding = ctx.check()?;
+    let Some(mut reference) = root.node.clone() else {
+        return Ok(None);
+    };
+    loop {
+        if root.fresh.is_some_and(|g| g != reference.generation) {
+            return Err(Error::Authority);
+        }
+        match load(&ctx, &reference)? {
+            Node::Leaf(rows) => {
+                let at = rows.partition_point(|r| r.key.as_slice() <= key);
+                let out = at.checked_sub(1).map(|n| rows[n].clone());
+                if ctx.check()? != binding {
+                    return Err(Error::Conflict);
+                }
+                return Ok(out);
+            }
+            Node::Branch(children) => {
+                let at = children.partition_point(|r| r.first.as_slice() <= key);
+                let Some(n) = at.checked_sub(1) else {
+                    return Ok(None);
+                };
+                reference = children[n].clone();
+            }
+        }
+    }
+}
 pub(in crate::record) struct Editor<'a> {
     pack: Pack<'a>,
     root: Root,
@@ -727,6 +794,61 @@ impl<'a> Editor<'a> {
             pack: Pack::new(ctx)?,
             root,
         })
+    }
+    /// Lookup includes this editor's bounded unpublished COW pages.
+    pub fn lookup(&self, key: &[u8]) -> Result<Option<Vec<u8>>> {
+        let binding = self.pack.ctx.check()?;
+        let Some(mut r) = self.root.node.clone() else {
+            return Ok(None);
+        };
+        let out = loop {
+            match self.pack.load(&r)? {
+                Node::Leaf(rows) => {
+                    break rows
+                        .binary_search_by(|e| e.key.as_slice().cmp(key))
+                        .ok()
+                        .map(|n| rows[n].value.clone());
+                }
+                Node::Branch(rows) => {
+                    let n = rows.partition_point(|r| r.last.as_slice() < key);
+                    let Some(next) = rows.get(n) else { break None };
+                    r = next.clone();
+                }
+            }
+        };
+        if self.pack.ctx.check()? != binding {
+            return Err(Error::Conflict);
+        }
+        Ok(out)
+    }
+    pub fn lookup_floor(&self, key: &[u8]) -> Result<Option<Entry>> {
+        let binding = self.pack.ctx.check()?;
+        let mut next = self.root.node.clone();
+        let out = loop {
+            let Some(r) = next else { break None };
+            match self.pack.load(&r)? {
+                Node::Leaf(rows) => {
+                    let at = rows.partition_point(|r| r.key.as_slice() <= key);
+                    break at.checked_sub(1).map(|n| rows[n].clone());
+                }
+                Node::Branch(rows) => {
+                    let at = rows.partition_point(|r| r.first.as_slice() <= key);
+                    next = at.checked_sub(1).map(|n| rows[n].clone());
+                }
+            }
+        };
+        if self.pack.ctx.check()? != binding {
+            return Err(Error::Conflict);
+        }
+        Ok(out)
+    }
+    /// Immutable inventories cannot replace a file/frame/dictionary identity.
+    pub fn insert_immutable(&mut self, entry: Entry) -> Result<()> {
+        match self.lookup(&entry.key)? {
+            Some(v) if v == entry.value => Ok(()),
+            Some(_) => Err(Error::Conflict),
+            None => self.insert(entry),
+        }
     }
     pub fn insert(&mut self, entry: Entry) -> Result<()> {
         Entry::new(entry.key.clone(), entry.value.clone())?;

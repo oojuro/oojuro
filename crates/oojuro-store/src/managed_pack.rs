@@ -2,7 +2,11 @@
 //!
 //! These references are candidates until the independently retained managed
 //! control commits their exact inventory. This module never returns a commit ACK.
+mod codec;
+mod reader;
 use crate::{Error, Result};
+pub use codec::{Options, Stage, stage_dictionary};
+pub use reader::{CacheUsage, Catalog, Reader};
 
 pub const FORMAT: u32 = 1;
 pub const MAX_PACK_BYTES: u64 = 64 << 20;
@@ -379,3 +383,6 @@ mod types_tests {
         assert!(bad.validate().is_err());
     }
 }
+
+#[cfg(test)]
+mod tests;
