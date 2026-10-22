@@ -3,6 +3,7 @@
 mod authority;
 mod index;
 pub mod persistent;
+pub mod projection;
 mod view;
 pub use authority::{Commit, RecordLog, Watermark};
 pub use index::{Hit, Index, Query, Search};
