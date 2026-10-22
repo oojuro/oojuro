@@ -125,8 +125,8 @@ returned records as instructions. Current newer MCP protocols are not claimed.
 
 ## Verification
 
-The actual final composed gate passes **15 checks**: ten pure MCP protocol
-fixtures, four binary/socket/MCP stories and one socket-ancestor ownership
+The actual final composed gate passes **16 checks**: ten pure MCP protocol
+fixtures, five binary/socket/MCP stories and one socket-ancestor ownership
 policy regression. Package native-bin/integration
 lint reports zero diagnostics in changed paths. Local documentation links and
 diff whitespace checks pass. All data and keys in these tests are synthetic;
@@ -139,7 +139,8 @@ key/history visibility and protected continuation; scoped stats; original
 Capture Receipt/Event shapes without raw-only marker, source path or descriptor
 disclosure; authority file byte equality before/after requests; missing socket
 without direct-open fallback; private/symlink/socket collision refusal; busy
-peer admission; and absolute partial-request IO deadline.
+peer admission; absolute partial-request IO deadline; and refusal of intermediate
+root symlinks before either authority opens.
 
 A semantic RED temporarily selected the previous auto-creating RecordLog::open
 at daemon startup. The actual test failed because a missing journal and socket
@@ -165,5 +166,15 @@ owner to be root/current UID before evaluating writable/sticky permissions.
 The actual production predicate fails the synthetic foreign-owner0755 case
 under the previous check and passes after the ownership fix; root/current
 private ancestors and root-owned sticky temporary directories remain valid.
-All15 composed checks and changed-path lint pass after the fix. This regression
+All16 composed checks and changed-path lint pass after both path fixes. This regression
 tests the metadata policy, not a claimed live separate-UID/chown acceptance run.
+
+The same checked path walk now protects the new reader's authority-root config
+and key startup, before opening authority files. It rejects intermediate
+symlinks, foreign-owned ancestors, unsafe writable ancestors and a different
+canonical root, then rechecks current-user mode0700 final ownership. Existing
+default command loaders remain unchanged. An actual binary regression for both
+namespaces failed when this startup check was removed: an intermediate alias
+reached authority startup. Restoring it refuses the path without journal changes.
+This is separate from the synthetic foreign-UID metadata-policy regression;
+no root privileges, chown or live foreign-UID probe were used.
