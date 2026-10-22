@@ -16,9 +16,13 @@ Pipeline; scope/time/filter come from the authentic view, not caller claims.
 The managed view shares the ordinary key-winner kernel. All versions participate
 in time/winner selection before lower-time, filter or indexed exclusion, so a
 newer stored-only or filtered winner never revives an older matching version.
-The private lexical projection includes stored-only winners for existing empty
-timeline and direct-key semantics. Plugins and table builders receive only the
-public indexed eligible original slice. Empty genuine views retain the enrolled
+The private lexical index retains all surviving original versions, and logical
+key lookup uses genuine latest time-visible winners before lower-time or filter
+exclusion. An excluded real key therefore prevents an implicit-key query from
+falling back to unrelated visible content. The effective scoring/hydration mask
+still uses the selected view, including stored-only winners for existing empty
+timeline and direct-key semantics. Hidden index/locator rows never enter plugin
+context or table builds; those receive only the public indexed eligible slice. Empty genuine views retain the enrolled
 scope even when there is no first row from which to infer an identity.
 
 Both direct and managed wrappers call the same post-visibility RAM hook/scoring
@@ -85,8 +89,8 @@ keys, prove freed-block absence or make old ciphertext backups undecryptable.
 
 ## Verification
 
-Actual synthetic managed pipeline/table coverage passes all seven new cases.
-The final focused gate passes **15 ranking checks** (seven managed and eight
+Actual synthetic managed pipeline/table coverage passes all eight new cases.
+The final focused gate passes **16 ranking checks** (eight managed and eight
 direct), with zero diagnostics in changed paths under package lib/tests lint.
 The prior warm composed gate also passed eight pure ranker conformance checks
 and 21 shared lexical checks (two pre-existing lexical ignores).
@@ -100,7 +104,7 @@ passed in the focused suite. No lifecycle implementation was weakened.
 The stale-loaded regression has a semantic RED/GREEN: temporarily removing
 the exact managed binding/stamp validation let the retained pre-append table
 be accepted rather than skipped; the assertion failed without a compile error.
-Restoring validation passed the same case and all 15 ranking checks. Another
+Restoring validation passed the same case and all 15 ranking checks at that checkpoint. Another
 actual joined case modifies the retained witness during callback one and proves
 callback two is never invoked and final output is refused.
 
@@ -116,3 +120,15 @@ The final source preserves the original direct disabled branch without cloning
 all visible log records. There is no full cumulative candidate, managed CLI,
 paged rank integration, large-corpus/scale, quality adoption or live deployment
 verdict in this slice.
+
+
+Independent review found an implicit-key lookup parity edge after the first
+freeze. Its actual RED compared a real direct reader returning no hits with the
+managed reader incorrectly returning a visible text record when the real key
+winner was filtered out. The authentic view now provides full original lexical
+documents and pre-filter latest key winners; the wrapper uses both without
+giving hidden rows to plugins. Agent-filter and lower-time exclusions now pass
+against the independent direct baseline. Final follow-up: all 16 ranking and
+21 lexical checks pass, with zero diagnostics in changed paths. This correction
+requires the corresponding authentic-view capability follow-up; it is not a
+claimed key reconstructed from caller data.

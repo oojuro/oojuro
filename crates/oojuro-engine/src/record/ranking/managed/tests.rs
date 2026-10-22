@@ -571,3 +571,67 @@ fn managed_expansion_and_candidates_receive_only_current_indexed_originals_and_s
     })
     .unwrap();
 }
+
+#[test]
+fn managed_implicit_key_never_falls_back_to_visible_content_when_key_winner_is_filtered() {
+    let f = Fixture::new();
+    let mut log = f.log();
+    let mut hidden = input("nonmatching key payload", 1, Some("hiddenkey"), true);
+    hidden.agent_id = "hidden-agent".into();
+    let rows = vec![hidden, input("hiddenkey visible content", 2, None, true)];
+    let ack = log.append("seed", &rows).unwrap();
+    let mut direct = RecordLog::open_clock(
+        &f.root.join("direct"),
+        &[74; 32],
+        identity(),
+        Arc::new(move || Ok(ack.commit.recorded_at[0])),
+    )
+    .unwrap();
+    direct.append("seed", &rows).unwrap();
+    let index = Index::rebuild(&direct).unwrap();
+    for (cuts, filter) in [
+        (
+            AsOf::default(),
+            Filter {
+                agent_id: Some("reported-source".into()),
+                ..Filter::default()
+            },
+        ),
+        (
+            AsOf {
+                from: 2,
+                ..AsOf::default()
+            },
+            Filter::default(),
+        ),
+    ] {
+        let expected = index
+            .search(
+                &direct,
+                &Query {
+                    scope: scope(),
+                    as_of: cuts,
+                    text: "hiddenkey",
+                    k: 10,
+                    filter: filter.clone(),
+                    max_bytes: 1 << 20,
+                },
+            )
+            .unwrap();
+        assert!(expected.hits.is_empty());
+        log.with_rank_view(scope(), cuts, filter, |view| {
+            let actual = view.search_ranked("hiddenkey", 10, 1 << 20, &Pipeline::default())?;
+            assert_eq!(
+                actual.hits.iter().map(|h| h.record.id).collect::<Vec<_>>(),
+                expected
+                    .hits
+                    .iter()
+                    .map(|h| h.record.id)
+                    .collect::<Vec<_>>()
+            );
+            assert_eq!(view.records().len(), 1);
+            Ok(())
+        })
+        .unwrap();
+    }
+}
