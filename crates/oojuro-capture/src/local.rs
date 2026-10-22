@@ -21,13 +21,18 @@ use std::{io::Read, path::Path};
 mod claude_adapter;
 #[path = "local_pi.rs"]
 mod pi_adapter;
+#[path = "local_temporal.rs"]
+mod temporal_adapter;
+pub use temporal_adapter::{Stream, StreamPosition, StreamReceipt};
 #[derive(Clone, Copy)]
 enum Adapter {
     Codex,
     ClaudeCode,
     Pi,
+    Temporal,
 }
 const ADAPTER: &str = "codex-buffer-1/redact-escaped-1/context-1";
+const TEMPORAL_ADAPTER: &str = "temporal-stream-v1/raw-policy-1/context-1";
 const PI_ADAPTER: &str = "pi-session-v3/raw-policy-1/redact-escaped-1/context-1";
 const CLAUDE_ADAPTER: &str = "claude-buffer-1/no-sidefiles-1/redact-escaped-1/context-1";
 #[derive(Clone)]
@@ -151,6 +156,15 @@ impl LocalCapture {
     ) -> Result<Self> {
         Self::open_adapter(dir, key, options, policy, Adapter::Pi)
     }
+    /// Explicit Temporal byte stream; file capture is forbidden in this lane.
+    pub fn open_temporal(
+        dir: &Path,
+        key: &[u8; 32],
+        options: Options,
+        policy: Box<dyn Policy>,
+    ) -> Result<Self> {
+        Self::open_adapter(dir, key, options, policy, Adapter::Temporal)
+    }
     fn open_adapter(
         dir: &Path,
         key: &[u8; 32],
@@ -175,6 +189,7 @@ impl LocalCapture {
                 Adapter::Codex => ADAPTER,
                 Adapter::ClaudeCode => CLAUDE_ADAPTER,
                 Adapter::Pi => PI_ADAPTER,
+                Adapter::Temporal => TEMPORAL_ADAPTER,
             }
             .into(),
         };
@@ -197,6 +212,9 @@ impl LocalCapture {
     pub fn rebuild(&mut self) -> Result<()> {
         self.projection = None;
         self.applied = 0;
+        if matches!(self.format, Adapter::Temporal) {
+            temporal_adapter::validate_log(&self.log, &self.options.writer)?;
+        }
         for source in self.log.sources() {
             decode_context(self.log.initial_context(source).map_err(authority)?)?;
             decode_context(&self.log.progress(source).map_err(authority)?.context)?;
@@ -266,6 +284,9 @@ impl LocalCapture {
         retain_raw: impl FnMut(&Path) -> bool,
     ) -> Result<Option<Report>> {
         self.ready()?;
+        if matches!(self.format, Adapter::Temporal) {
+            return Err(Error::Invalid("temporal stream is not a file adapter"));
+        }
         let Some(mut opened) = open_authorized_file(path, retain_raw).map_err(authority)? else {
             return Ok(None);
         };
@@ -274,6 +295,7 @@ impl LocalCapture {
             Adapter::Codex => codex::new_ctx(path),
             Adapter::ClaudeCode => claude_adapter::new_ctx(path),
             Adapter::Pi => pi_adapter::new_ctx(path),
+            Adapter::Temporal => unreachable!(),
         })?;
         self.log
             .register(source, &opened.descriptor, &initial)
@@ -300,35 +322,7 @@ impl LocalCapture {
             opened.file.read_exact(&mut buffer[..n]).map_err(storage)?;
             let batch = self.plan(source, path, &buffer[..n])?;
             let outcome = self.log.commit(batch).map_err(authority)?;
-            #[cfg(test)]
-            if std::env::var("OOJURO_LOCAL_TEST_CRASH").as_deref() == Ok("after-authority") {
-                unsafe {
-                    libc::raise(libc::SIGKILL);
-                }
-                unreachable!();
-            }
-            #[cfg(test)]
-            if self.fail_projection {
-                self.projection = None;
-                return Err(Error::CommittedUnavailable(outcome));
-            }
-            let projected = self
-                .projection
-                .as_mut()
-                .ok_or(Error::Unavailable)
-                .and_then(|index| index.refresh(&self.log).map_err(|_| Error::Unavailable));
-            if projected.is_err() {
-                self.projection = None;
-                return Err(Error::CommittedUnavailable(outcome));
-            }
-            self.applied = self.log.batches().map_err(authority)?.len();
-            #[cfg(test)]
-            if std::env::var("OOJURO_LOCAL_TEST_CRASH").as_deref() == Ok("after-projection") {
-                unsafe {
-                    libc::raise(libc::SIGKILL);
-                }
-                unreachable!();
-            }
+            self.finish_append(outcome)?;
             offset += n as u64;
         }
         if opened.file.metadata().map_err(storage)?.len() < opened.observed_length {
@@ -337,6 +331,38 @@ impl LocalCapture {
             ));
         }
         self.report(source).map(Some)
+    }
+    fn finish_append(&mut self, outcome: Outcome) -> Result<()> {
+        #[cfg(test)]
+        if std::env::var("OOJURO_LOCAL_TEST_CRASH").as_deref() == Ok("after-authority") {
+            unsafe {
+                libc::raise(libc::SIGKILL);
+            }
+            unreachable!();
+        }
+        #[cfg(test)]
+        if self.fail_projection {
+            self.projection = None;
+            return Err(Error::CommittedUnavailable(outcome));
+        }
+        let projected = self
+            .projection
+            .as_mut()
+            .ok_or(Error::Unavailable)
+            .and_then(|index| index.refresh(&self.log).map_err(|_| Error::Unavailable));
+        if projected.is_err() {
+            self.projection = None;
+            return Err(Error::CommittedUnavailable(outcome));
+        }
+        self.applied = self.log.batches().map_err(authority)?.len();
+        #[cfg(test)]
+        if std::env::var("OOJURO_LOCAL_TEST_CRASH").as_deref() == Ok("after-projection") {
+            unsafe {
+                libc::raise(libc::SIGKILL);
+            }
+            unreachable!();
+        }
+        Ok(())
     }
     pub fn report(&self, source: Source) -> Result<Report> {
         self.ready()?;
@@ -416,7 +442,17 @@ impl LocalCapture {
             let bad = pc.bad_lines;
             let blank = line.iter().all(u8::is_ascii_whitespace);
             if !blank {
-                if matches!(self.format, Adapter::Pi) {
+                if matches!(self.format, Adapter::Temporal) {
+                    temporal_adapter::parse_line(
+                        &mut context,
+                        line,
+                        from,
+                        &self.redactor,
+                        &mut rc,
+                        &mut pc,
+                        &mut recs,
+                    )?;
+                } else if matches!(self.format, Adapter::Pi) {
                     pi_adapter::parse_line(
                         &mut context,
                         line,
@@ -430,12 +466,12 @@ impl LocalCapture {
                     match self.format {
                         Adapter::Codex => check_call_state(&context, line)?,
                         Adapter::ClaudeCode => claude_adapter::check_call_state(&context, line)?,
-                        Adapter::Pi => unreachable!(),
+                        Adapter::Pi | Adapter::Temporal => unreachable!(),
                     }
                     let parse = match self.format {
                         Adapter::Codex => codex::parse_line,
                         Adapter::ClaudeCode => claude::parse_line,
-                        Adapter::Pi => unreachable!(),
+                        Adapter::Pi | Adapter::Temporal => unreachable!(),
                     };
                     parse(
                         &mut context,
@@ -738,3 +774,7 @@ mod claude_tests;
 #[cfg(test)]
 #[path = "local_pi_tests.rs"]
 mod pi_tests;
+
+#[cfg(test)]
+#[path = "local_temporal_tests.rs"]
+mod temporal_tests;
