@@ -20,10 +20,12 @@ original lexical order and score bit patterns are preserved exactly.
 A missing table, returned error, exhausted work budget or invalid output skips that
 stage. The budget limits declared work units and input dimensions. Work units must
 be documented and charged by trusted ranker code. This **does not enforce wall-time,
-memory, network isolation or panic containment**; an in-process trait cannot stop an
+memory, network isolation, panic or process-abort containment**; an in-process trait cannot stop an
 uncooperative implementation. Rankers must return errors instead of panicking.
 Purity and determinism remain implementation requirements, demonstrated for synthetic
 fixtures by conformance tests rather than guaranteed for arbitrary implementations.
+Table identities are metadata only: the caller must bind each ranker to the correct
+writer-owned table and prevent another writer's table from being loaded.
 The receipt records ranker and table versions; view/query identity and persisted
 replay provenance are responsibilities of the future engine integration.
 
