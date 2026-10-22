@@ -523,3 +523,52 @@ test("actual Rust framed HTTP bodies and headers pass without converting text in
     }
   }
 });
+
+test("framed collector owns each delivered chunk before next pull and never retains borrowed parts", async () => {
+  const expected = readFrame(PRIVATE),
+    source = expected.slice();
+  let offset = 0,
+    prior;
+  const body = new ReadableStream(
+    {
+      pull(controller) {
+        if (prior) prior.fill(0);
+        if (offset === source.length) {
+          controller.close();
+          return;
+        }
+        // Small view over an unrelated large backing buffer must be copied immediately.
+        const backing = new Uint8Array(64 * 1024);
+        const view = backing.subarray(100, 101);
+        view[0] = source[offset++];
+        prior = view;
+        controller.enqueue(view);
+      },
+    },
+    { highWaterMark: 0 },
+  );
+  const result = await sdk(async () => response(body, MEDIA)).journalRecordFramed({
+    expectedRoot: root(),
+    id: I,
+  });
+  assert.equal(result.value.record.text, PRIVATE);
+});
+test("framed collector refuses empty and SharedArrayBuffer chunks before a completed result", async () => {
+  for (const chunk of [new Uint8Array(), new Uint8Array(new SharedArrayBuffer(1))]) {
+    let calls = 0;
+    const body = new ReadableStream(
+      {
+        pull(controller) {
+          calls++;
+          controller.enqueue(chunk);
+        },
+      },
+      { highWaterMark: 0 },
+    );
+    await assert.rejects(
+      sdk(async () => response(body, MEDIA)).journalRecordFramed({ expectedRoot: root(), id: I }),
+      safe("invalid_response"),
+    );
+    assert.equal(calls, 1);
+  }
+});

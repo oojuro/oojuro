@@ -614,7 +614,7 @@ function contentType(response, expected) {
     fail();
   }
 }
-async function* chunks(response, limit, signal) {
+async function* chunks(response, limit, signal, ownedTarget) {
   const declared = response.headers.get("content-length");
   if (
     declared &&
@@ -634,7 +634,7 @@ async function* chunks(response, limit, signal) {
   try {
     while (true) {
       abort(signal);
-      const part = await reader.read();
+      let part = await reader.read();
       abort(signal);
       if (part.done) {
         if (declared !== null && bytes !== Number(declared)) fail("truncated_response");
@@ -643,7 +643,14 @@ async function* chunks(response, limit, signal) {
       }
       if (!(part.value instanceof Uint8Array) || (bytes += part.value.length) > limit)
         fail("response_too_large");
-      yield part.value;
+      if (ownedTarget) {
+        if (!part.value.length || (typeof SharedArrayBuffer !== "undefined" &&
+            part.value.buffer instanceof SharedArrayBuffer)) fail();
+        ownedTarget.set(part.value, bytes - part.value.length);
+        // Do not retain the borrowed view/backing buffer across the generator yield.
+        part = null;
+        yield bytes;
+      } else yield part.value;
     }
   } finally {
     signal?.removeEventListener("abort", stop);
@@ -651,7 +658,13 @@ async function* chunks(response, limit, signal) {
     reader.releaseLock();
   }
 }
-async function bytes(response, limit, signal) {
+async function bytes(response, limit, signal, ownImmediately = false) {
+  if (ownImmediately) {
+    const answer = new Uint8Array(limit);
+    let total = 0;
+    for await (const length of chunks(response, limit, signal, answer)) total = length;
+    return answer.subarray(0, total);
+  }
   const parts = [];
   let total = 0;
   for await (const part of chunks(response, limit, signal)) {
@@ -1046,7 +1059,7 @@ export class OojuroClient {
         await cancel(result.response.body);
         fail();
       }
-      const wire = await bytes(result.response, this.#framedResponseLimit, config.signal);
+      const wire = await bytes(result.response, this.#framedResponseLimit, config.signal, true);
       let value;
       try {
         if (wire.length < 4) fail();

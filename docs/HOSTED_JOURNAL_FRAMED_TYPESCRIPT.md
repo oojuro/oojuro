@@ -42,6 +42,10 @@ exact text. The client checks media/identity encoding, lengths, duplicate metada
 keys including escaped aliases, safe integer source lexemes, native metadata,
 requested opaque ID and full UTF8. BOM text is preserved. No result is returned
 before clean bounded EOF; truncation/abort/refusal returns no partial record.
+Framed responses copy each delivered chunk immediately into one owned contiguous
+buffer bounded by maxFramedResponseBytes. No borrowed parts list accumulates;
+zero-length and SharedArrayBuffer chunks refuse. Legacy JSON collectors are
+unchanged by this opt-in path.
 
 ## Separate budgets and limits
 
