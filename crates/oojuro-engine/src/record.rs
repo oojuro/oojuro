@@ -208,3 +208,6 @@ fn json<T: Serialize + ?Sized>(value: &T, limit: usize) -> Result<Vec<u8>> {
     }
     Ok(out.bytes)
 }
+
+/// Explicit opt-in retained-control lifecycle namespace; no implicit v2 conversion.
+pub mod managed;
