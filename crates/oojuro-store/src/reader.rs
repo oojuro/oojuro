@@ -37,6 +37,9 @@ pub(crate) trait Frames {
     fn cipher(&self) -> Option<&crate::crypto::FrameCipher> {
         None
     }
+    fn require_sealed(&self) -> bool {
+        false
+    }
 }
 
 pub(crate) struct Decoded {
@@ -136,6 +139,9 @@ fn meta_of(head: &FrameHead, body: &[u8]) -> Result<Meta> {
 /// Decode the meta section, then body bytes up to `need(&meta)` (all when
 /// `need` is None or asks for more). Returns (meta, body prefix).
 pub(crate) fn decode_payload<F: Frames + ?Sized>(fs: &F, payload: &[u8], head: &FrameHead, need: Option<&dyn Fn(&Meta) -> usize>) -> Result<(Meta, Vec<u8>)> {
+    if fs.require_sealed() && !head.encrypted {
+        return Err(Error::Crypto("plaintext frame in strict sealed store"));
+    }
     let opened;
     let packed: &[u8] = if head.encrypted {
         let c = fs.cipher().ok_or(Error::KeyRequired)?;
@@ -329,9 +335,13 @@ pub(crate) fn read_frame_body(
     dicts: &BTreeMap<u32, Vec<u8>>,
     dctx: &mut HashMap<u32, zstd_safe::DCtx<'static>>,
     cipher: Option<&crate::crypto::FrameCipher>,
+    require_sealed: bool,
 ) -> Result<(Meta, Vec<u8>)> {
     let payload = read_payload(file, f)?;
     let head = check_head(f, &payload)?;
+    if require_sealed && !head.encrypted {
+        return Err(Error::Crypto("plaintext frame in strict sealed store"));
+    }
     let opened;
     let packed: &[u8] = if head.encrypted {
         opened = cipher.ok_or(Error::KeyRequired)?.open_frame(&payload[..head.body_at as usize], &payload[head.body_at as usize..])?;

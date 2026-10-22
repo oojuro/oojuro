@@ -282,3 +282,45 @@ fn sealed_empty_bodies_and_truncation_are_checked() {
         assert!(cipher.open_dict(b"same head", &dict[..len]).is_err());
     }
 }
+
+#[test]
+fn strict_sealing_refuses_plaintext_legacy_upgrade_without_mutating_it() {
+    let dir=temp("strict-legacy");
+    { let mut s=Store::open(&dir,opts(None)).unwrap();append(&mut s,&records(1,9),0); }
+    let before: Vec<_>=all_files(&dir).into_iter().map(|p|{let b=std::fs::read(&p).unwrap();(p,b)}).collect();
+    let strict=Options { require_sealed:true,..opts(Some(Arc::new(FrameCipher::new(&random_key())))) };
+    assert!(matches!(Store::open(&dir,strict),Err(Error::Crypto(_))));
+    assert!(!dir.join("ENCRYPTED").exists());
+    for (p,b) in before { assert_eq!(std::fs::read(p).unwrap(),b); }
+}
+
+#[test]
+fn strict_sealing_refuses_plaintext_frame_downgrade_without_truncation() {
+    let plain=temp("strict-donor");let sealed=temp("strict-recipient");let cipher=Arc::new(FrameCipher::new(&random_key()));
+    { let mut s=Store::open(&plain,opts(None)).unwrap();append(&mut s,&records(1,9),0); }
+    { let mut s=Store::open(&sealed,opts(Some(cipher.clone()))).unwrap();append(&mut s,&records(1,9),0); }
+    let path=sealed.join("hot-00000001.ojl");
+    let downgraded=std::fs::read(plain.join("hot-00000001.ojl")).unwrap();std::fs::write(&path,&downgraded).unwrap();
+    let strict=Options { require_sealed:true,..opts(Some(cipher)) };
+    assert!(matches!(Store::open(&sealed,strict),Err(Error::Crypto(_))));
+    assert_eq!(std::fs::read(path).unwrap(),downgraded);
+}
+
+#[test]
+fn strict_sealing_requires_a_key_before_creating_a_store() {
+    let dir=temp("strict-key");
+    assert!(matches!(Store::open(&dir,Options { require_sealed:true,..Options::default() }),Err(Error::KeyRequired)));
+    assert!(!dir.exists());
+}
+
+#[test]
+fn strict_sealing_refuses_plaintext_cold_frame_downgrade() {
+    let plain=temp("strict-cold-donor");let sealed=temp("strict-cold-recipient");let cipher=Arc::new(FrameCipher::new(&random_key()));
+    { let mut s=Store::open(&plain,opts(None)).unwrap();append(&mut s,&records(2,9),0);s.compact().unwrap(); }
+    { let mut s=Store::open(&sealed,opts(Some(cipher.clone()))).unwrap();append(&mut s,&records(2,9),0);s.compact().unwrap(); }
+    let donor=all_files(&plain).into_iter().find(|p|p.extension().is_some_and(|e|e=="ojc")).unwrap();
+    let path=sealed.join(donor.file_name().unwrap());std::fs::copy(donor,&path).unwrap();
+    let strict=Options { require_sealed:true,..opts(Some(cipher)) };
+    let s=Store::open(&sealed,strict).unwrap();
+    assert!(matches!(s.get(0),Err(Error::Crypto(_))));
+}

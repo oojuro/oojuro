@@ -1,0 +1,10 @@
+[package]
+name = "oojuro-engine"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Oojuro foundation: sealed byte-exact local raw journal."
+
+[dependencies]
+oojuro-store = { path = "../oojuro-store" }
