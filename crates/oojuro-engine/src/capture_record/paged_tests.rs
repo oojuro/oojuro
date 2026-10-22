@@ -1,7 +1,7 @@
 use super::*;
 use crate::record::{
     Versions,
-    managed::paged::{ManagedPagedLog, PruneLimits, ReadLimits},
+    managed::{ManagedPagedLog, PruneLimits, ReadLimits},
 };
 impl Fixture {
     fn paged_control(&self) -> Arc<RetainedControl> {

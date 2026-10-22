@@ -6,8 +6,8 @@ use oojuro_engine::{
     record::{
         self, Input,
         managed::{
-            self, ControlAuditPage, FileWitness, ManagedLog, RetainedControl, Selection,
-            paged::ManagedPagedLog,
+            self, ControlAuditPage, FileWitness, ManagedLog, ManagedPagedLog, RetainedControl,
+            Selection,
         },
     },
 };

@@ -6,7 +6,7 @@ use super::{
 };
 use oojuro_engine::{
     capture_record as bridge,
-    record::managed::{Binding, paged::ManagedPagedLog},
+    record::managed::{Binding, ManagedPagedLog},
 };
 use serde::Serialize;
 use std::path::Path;
