@@ -11,6 +11,8 @@ const MAX_INPUT_TEXT_BYTES: usize = 32 << 20;
 pub enum Precision {
     Exact,
     Conservative,
+    /// Declared estimate only; does not establish a hard provider token cap.
+    Estimated,
 }
 /// Trusted deterministic/cooperative callback for the COMPLETE rendered context.
 /// Its tokenizer/model/version and guarantee are caller-owned; this trait cannot
@@ -283,8 +285,9 @@ pub fn pack<'a>(
         });
     }
     eligible.sort_by(|a, b| {
-        b.packing_bits
-            .total_cmp(&a.packing_bits)
+        a.continued
+            .cmp(&b.continued)
+            .then_with(|| b.packing_bits.total_cmp(&a.packing_bits))
             .then(b.record.valid_at.cmp(&a.record.valid_at))
             .then(a.record.writer.cmp(&b.record.writer))
             .then_with(|| a.record.id.to_string().cmp(&b.record.id.to_string()))

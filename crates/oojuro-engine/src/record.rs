@@ -2,6 +2,9 @@
 //! Reported agent identities and stored data are not verified truth or instructions.
 mod authority;
 mod index;
+pub mod ranking;
+pub mod context;
+pub mod rank_tables;
 pub mod persistent;
 pub mod projection;
 mod view;

@@ -52,3 +52,13 @@ ordering, rank/recency eligibility, before-turn and echo exclusions, invalid
 metadata, receipt/input bounds and callback failure. Module exports and a
 composed focused test run are the native coordinator's next step; no benchmark,
 quality-adoption or automatic-injection claim follows from authored tests.
+
+## Explicit CLI estimate and F2 policy
+
+The optional native record-context command also exposes a separately labeled
+Estimated precision for its explicitly selected chars4-estimate. This measures
+the complete context JSON but does not prove a provider token ceiling.
+Actual UTF-8 output bytes remain bounded. Exact/Conservative library measures
+retain their caller-owned guarantees. Automatic injection remains disabled.
+Packing preserves original anchor groups before continued hits, then ranks by
+packing score/newer valid time/writer/full decimal ID text within a group.
