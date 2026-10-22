@@ -4,11 +4,10 @@ use crate::capture_log::Identity;
 use crate::record::authority::{self, Batch, Unsigned};
 use oojuro_store::{Options, Store, crypto::FrameCipher};
 use std::{
-    cell::RefCell,
     collections::{BTreeSet, BinaryHeap, VecDeque},
     fs,
     path::Path,
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 const CURSOR_AAD: &[u8] = b"oojuro/record-paged/cursor/v1\0";
 const MAX_CURSOR: usize = 16 << 10;
@@ -49,8 +48,9 @@ pub struct Reader {
     tip: Ref,
     sequence: u64,
     disk: Option<directory::Directory>,
-    births: RefCell<VecDeque<Vec<u8>>>,
-    winners: RefCell<VecDeque<Winner>>,
+    births: Mutex<VecDeque<Vec<u8>>>,
+    winners: Mutex<VecDeque<Winner>>,
+    pages: super::tree::PageCache,
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -135,6 +135,7 @@ impl Reader {
             digest: *blake3::hash(&header).as_bytes(),
             request: [0; 32],
         };
+        let pages = super::tree::PageCache::new(cipher.clone());
         Ok((
             Self {
                 store,
@@ -148,8 +149,9 @@ impl Reader {
                 tip: genesis,
                 sequence: 0,
                 disk: None,
-                births: RefCell::new(VecDeque::new()),
-                winners: RefCell::new(VecDeque::new()),
+                births: Mutex::new(VecDeque::new()),
+                winners: Mutex::new(VecDeque::new()),
+                pages,
             },
             bytes,
         ))
@@ -420,17 +422,23 @@ impl Reader {
     pub(super) fn winner(&self, s: &Snapshot, key: &str) -> Result<Option<u64>> {
         let end = self.snapshot(s)?;
         if let Some(disk) = &self.disk {
-            if let Some(cached) = self.winners.borrow().iter().find(|w| {
-                w.sequence == s.watermark.sequence
-                    && w.valid == s.as_of.valid_at
-                    && w.known == s.as_of.known_at
-                    && w.key == key
-            }) {
+            if let Some(cached) = self
+                .winners
+                .lock()
+                .map_err(|_| Error::Unavailable)?
+                .iter()
+                .find(|w| {
+                    w.sequence == s.watermark.sequence
+                        && w.valid == s.as_of.valid_at
+                        && w.known == s.as_of.known_at
+                        && w.key == key
+                })
+            {
                 return Ok(cached.id);
             }
             let id = disk.winner(self, s, key)?;
             if key.len() <= 1024 {
-                let mut cache = self.winners.borrow_mut();
+                let mut cache = self.winners.lock().map_err(|_| Error::Unavailable)?;
                 cache.push_back(Winner {
                     sequence: s.watermark.sequence,
                     valid: s.as_of.valid_at,

@@ -68,6 +68,7 @@ impl Fixture {
             identity: [92; 32],
             class: KeyClass::Data,
             sort_of: None,
+            cache: None,
         }
     }
 }
@@ -221,4 +222,30 @@ fn codec_rejects_truncation_overflow_padding_and_unbounded_ref_claims() {
     let mut r = root.node.unwrap();
     r.bytes = u32::MAX;
     assert!(check_ref(&r).is_err());
+}
+
+#[test]
+fn bounded_page_cache_cannot_reuse_plaintext_under_a_different_cipher() {
+    let f = Fixture::new();
+    let cipher = Arc::new(FrameCipher::new(&[93; 32]));
+    let cache = PageCache::new(cipher.clone());
+    let mut ctx = f.ctx();
+    ctx.cipher = &cipher;
+    ctx.cache = Some(&cache);
+    let mut b = Builder::new(ctx.clone()).unwrap();
+    for i in 0u64..6000 {
+        b.push(Entry::new(i.to_be_bytes().to_vec(), vec![i as u8; 1024]).unwrap())
+            .unwrap();
+    }
+    let root = b.finish().unwrap();
+    let mut c = Cursor::seek(ctx.clone(), &root, &[]).unwrap();
+    for _ in 0..6000 {
+        assert!(c.next().unwrap().is_some());
+    }
+    assert!(cache.accounted_bytes().unwrap() <= 4 << 20);
+    assert!(cache.accounted_bytes().unwrap() > 0);
+    let other = FrameCipher::new(&[94; 32]);
+    let mut wrong = ctx;
+    wrong.cipher = &other;
+    assert!(get(wrong, &root, &0u64.to_be_bytes()).is_err());
 }

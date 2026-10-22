@@ -10,6 +10,7 @@ use std::{
     io::{Read, Write},
     os::unix::fs::{FileExt, OpenOptionsExt, PermissionsExt},
     path::{Path, PathBuf},
+    sync::{Arc, Mutex},
 };
 pub(super) const PAGE_BYTES: usize = 64 << 10;
 const PACK_BYTES: u64 = 64 << 20;
@@ -60,6 +61,7 @@ pub(super) struct Context<'a> {
     pub identity: [u8; 32],
     pub class: KeyClass,
     pub sort_of: Option<Purpose>,
+    pub cache: Option<&'a PageCache>,
 }
 impl<'a> Context<'a> {
     pub fn check(&self) -> Result<Vec<u8>> {
@@ -88,6 +90,93 @@ impl<'a> Context<'a> {
         ctx.sort_of = Some(self.purpose);
         ctx.purpose = Purpose::Sort;
         Ok(ctx)
+    }
+}
+/// Bounded decoded metadata cache bound to one owned immutable cipher instance.
+/// A new key/cipher object cannot reuse entries even if caller metadata is copied.
+pub(super) struct PageCache {
+    cipher: Arc<FrameCipher>,
+    state: Mutex<CacheState>,
+}
+struct CacheState {
+    entries: VecDeque<([u8; 32], Node, usize)>,
+    bytes: usize,
+}
+impl PageCache {
+    pub fn new(cipher: Arc<FrameCipher>) -> Self {
+        Self {
+            cipher,
+            state: Mutex::new(CacheState {
+                entries: VecDeque::new(),
+                bytes: 0,
+            }),
+        }
+    }
+    fn key(ctx: &Context<'_>, r: &Reference) -> Result<[u8; 32]> {
+        let mut h = blake3::Hasher::new();
+        h.update(&aad(ctx, r)?);
+        h.update(&r.digest);
+        Ok(*h.finalize().as_bytes())
+    }
+    fn get(&self, ctx: &Context<'_>, r: &Reference) -> Result<Option<Node>> {
+        if !std::ptr::eq(self.cipher.as_ref(), ctx.cipher) {
+            return Ok(None);
+        }
+        let key = Self::key(ctx, r)?;
+        let mut state = self.state.lock().map_err(|_| Error::Unavailable)?;
+        if let Some(at) = state.entries.iter().position(|(k, _, _)| *k == key) {
+            let entry = state.entries.remove(at).unwrap();
+            let node = entry.1.clone();
+            state.entries.push_back(entry);
+            return Ok(Some(node));
+        }
+        Ok(None)
+    }
+    fn put(&self, ctx: &Context<'_>, r: &Reference, node: &Node) -> Result<()> {
+        if !std::ptr::eq(self.cipher.as_ref(), ctx.cipher) {
+            return Ok(());
+        }
+        let bytes = node_accounted(node)?;
+        if bytes > 4 << 20 {
+            return Ok(());
+        }
+        let key = Self::key(ctx, r)?;
+        let mut state = self.state.lock().map_err(|_| Error::Unavailable)?;
+        if let Some(at) = state.entries.iter().position(|(k, _, _)| *k == key) {
+            let old = state.entries.remove(at).unwrap();
+            state.bytes -= old.2;
+        }
+        state.bytes = state.bytes.checked_add(bytes).ok_or(Error::Bounds)?;
+        state.entries.push_back((key, node.clone(), bytes));
+        while state.bytes > 4 << 20 {
+            let old = state.entries.pop_front().unwrap();
+            state.bytes -= old.2;
+        }
+        Ok(())
+    }
+    pub fn accounted_bytes(&self) -> Result<usize> {
+        Ok(self.state.lock().map_err(|_| Error::Unavailable)?.bytes)
+    }
+}
+fn node_accounted(node: &Node) -> Result<usize> {
+    match node {
+        Node::Leaf(rows) => {
+            rows.iter()
+                .try_fold(rows.capacity() * std::mem::size_of::<Entry>(), |n, e| {
+                    n.checked_add(e.key.capacity())
+                        .and_then(|n| n.checked_add(e.value.capacity()))
+                        .ok_or(Error::Bounds)
+                })
+        }
+        Node::Branch(rows) => rows.iter().try_fold(
+            rows.capacity() * std::mem::size_of::<Reference>(),
+            |n, r| {
+                n.checked_add(r.birth.capacity())
+                    .and_then(|n| n.checked_add(r.first.capacity()))
+                    .and_then(|n| n.checked_add(r.last.capacity()))
+                    .ok_or(Error::Bounds)
+            },
+        ),
     }
 }
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -351,6 +440,11 @@ fn load(ctx: &Context<'_>, r: &Reference) -> Result<Node> {
     check_ref(r)?;
     ctx.authority
         .validate_birth(&r.birth, ctx.sort_of.unwrap_or(ctx.purpose), ctx.class)?;
+    if let Some(cache) = ctx.cache
+        && let Some(node) = cache.get(ctx, r)?
+    {
+        return Ok(node);
+    }
     let file = OpenOptions::new()
         .read(true)
         .custom_flags(libc::O_NOFOLLOW)
@@ -381,6 +475,9 @@ fn load(ctx: &Context<'_>, r: &Reference) -> Result<Node> {
     let (first, last, count) = node_bounds(&node)?;
     if first != r.first || last != r.last || count != r.count {
         return Err(Error::Authority);
+    }
+    if let Some(cache) = ctx.cache {
+        cache.put(ctx, r, &node)?;
     }
     Ok(node)
 }
