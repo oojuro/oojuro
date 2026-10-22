@@ -1,12 +1,13 @@
+mod directory;
 use super::*;
 use crate::capture_log::Identity;
 use crate::record::authority::{self, Batch, Unsigned};
 use oojuro_store::{Options, Store, crypto::FrameCipher};
 use std::{
-    collections::{BTreeSet, BinaryHeap},
+    collections::{BTreeSet, BinaryHeap, VecDeque},
     fs,
     path::Path,
-    sync::Arc,
+    sync::{Arc, Mutex},
 };
 const CURSOR_AAD: &[u8] = b"oojuro/record-paged/cursor/v1\0";
 const MAX_CURSOR: usize = 16 << 10;
@@ -19,11 +20,20 @@ impl Drop for Intent {
         std::sync::atomic::compiler_fence(std::sync::atomic::Ordering::SeqCst);
     }
 }
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Ref {
     records: u64,
     last_at: Option<i64>,
     digest: [u8; 32],
     request: [u8; 32],
+}
+struct Winner {
+    sequence: u64,
+    valid: i64,
+    known: i64,
+    key: String,
+    id: Option<u64>,
 }
 /// Owning/recovering Store reader, not a filesystem read-only open. No data writes/ACK API.
 pub struct Reader {
@@ -34,6 +44,13 @@ pub struct Reader {
     origin: [u8; 32],
     identity_tag: [u8; 32],
     refs: Vec<Ref>,
+    genesis: Ref,
+    tip: Ref,
+    sequence: u64,
+    disk: Option<directory::Directory>,
+    births: Mutex<VecDeque<Vec<u8>>>,
+    winners: Mutex<VecDeque<Winner>>,
+    pages: super::tree::PageCache,
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -66,12 +83,7 @@ struct Cursor {
     after: (i64, i64, u64),
 }
 impl Reader {
-    pub fn open(
-        dir: &Path,
-        key: &[u8; 32],
-        identity: Identity,
-        minimum: Option<&Watermark>,
-    ) -> Result<Self> {
+    fn base(dir: &Path, key: &[u8; 32], identity: Identity) -> Result<(Self, usize)> {
         if !name(&identity.writer, 256)
             || identity.agent == 0
             || identity.first_id == 0
@@ -117,21 +129,40 @@ impl Reader {
         let intent = Intent(blake3::derive_key("oojuro direct record intent v1", key));
         let identity_tag = *blake3::keyed_hash(&intent.0, &header).as_bytes();
         let bytes = header.len();
-        let mut reader = Self {
-            store,
-            cipher,
-            intent,
-            identity,
-            origin,
-            identity_tag,
-            refs: vec![Ref {
-                records: 0,
-                last_at: None,
-                digest: *blake3::hash(&header).as_bytes(),
-                request: [0; 32],
-            }],
+        let genesis = Ref {
+            records: 0,
+            last_at: None,
+            digest: *blake3::hash(&header).as_bytes(),
+            request: [0; 32],
         };
-        let mut total = bytes;
+        let pages = super::tree::PageCache::new(cipher.clone());
+        Ok((
+            Self {
+                store,
+                cipher,
+                intent,
+                identity,
+                origin,
+                identity_tag,
+                refs: vec![genesis.clone()],
+                genesis: genesis.clone(),
+                tip: genesis,
+                sequence: 0,
+                disk: None,
+                births: Mutex::new(VecDeque::new()),
+                winners: Mutex::new(VecDeque::new()),
+                pages,
+            },
+            bytes,
+        ))
+    }
+    pub fn open(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        minimum: Option<&Watermark>,
+    ) -> Result<Self> {
+        let (mut reader, mut total) = Self::base(dir, key, identity)?;
         let mut requests = BTreeSet::new();
         for sequence in 1..reader.store.len() {
             let encoded = reader.store.get(sequence).map_err(|_| Error::Unavailable)?;
@@ -139,17 +170,19 @@ impl Reader {
             if total > MAX_STATE_BYTES {
                 return Err(Error::Bounds);
             }
-            let (batch, digest) = reader.verify(sequence, &encoded)?;
+            let (batch, digest) = reader.verify_after(sequence, &encoded, &reader.tip)?;
             if !requests.insert(batch.request) {
                 return Err(Error::Authority);
             }
-            let previous = reader.refs.last().ok_or(Error::Authority)?;
-            reader.refs.push(Ref {
-                records: previous.records + batch.assigned.len() as u64,
+            let next = Ref {
+                records: reader.tip.records + batch.assigned.len() as u64,
                 last_at: batch.assigned.last().map(|r| r.recorded_at),
                 digest,
                 request: batch.request,
-            });
+            };
+            reader.refs.push(next.clone());
+            reader.tip = next;
+            reader.sequence = sequence;
         }
         if let Some(w) = minimum {
             reader.validate(w)?;
@@ -172,14 +205,19 @@ impl Reader {
         Ok(out)
     }
     fn verify(&self, sequence: u64, encoded: &[u8]) -> Result<(Batch, [u8; 32])> {
+        let previous = self.reference(sequence.checked_sub(1).ok_or(Error::Authority)?)?;
+        self.verify_after(sequence, encoded, &previous)
+    }
+    fn verify_after(
+        &self,
+        sequence: u64,
+        encoded: &[u8],
+        previous: &Ref,
+    ) -> Result<(Batch, [u8; 32])> {
         if encoded.len() > MAX_BATCH_BYTES {
             return Err(Error::Bounds);
         }
         let batch: Batch = serde_json::from_slice(encoded).map_err(|_| Error::Authority)?;
-        let previous = self
-            .refs
-            .get(sequence.checked_sub(1).ok_or(Error::Authority)? as usize)
-            .ok_or(Error::Authority)?;
         if batch.schema != 2
             || batch.assigned.is_empty()
             || batch.assigned.len() > 1000
@@ -232,7 +270,7 @@ impl Reader {
             .get(sequence as u64)
             .map_err(|_| Error::Unavailable)?;
         let (batch, digest) = self.verify(sequence as u64, &encoded)?;
-        let expected = self.refs.get(sequence).ok_or(Error::Authority)?;
+        let expected = self.reference(sequence as u64)?;
         if expected.digest != digest || expected.request != batch.request {
             return Err(Error::Authority);
         }
@@ -260,13 +298,12 @@ impl Reader {
         Ok(())
     }
     pub fn watermark(&self) -> Result<Watermark> {
-        let sequence = self.refs.len() - 1;
-        let r = &self.refs[sequence];
+        let r = &self.tip;
         let mut w = Watermark {
             schema: 1,
             origin: self.origin,
             identity: self.identity_tag,
-            sequence: sequence as u64,
+            sequence: self.sequence,
             records: r.records,
             commitment: vec![],
         };
@@ -274,10 +311,7 @@ impl Reader {
         Ok(w)
     }
     pub(super) fn validate(&self, w: &Watermark) -> Result<usize> {
-        let r = self
-            .refs
-            .get(usize::try_from(w.sequence).map_err(|_| Error::Authority)?)
-            .ok_or(Error::Authority)?;
+        let r = self.reference(w.sequence)?;
         self.check(w, w.sequence, r.records, r.digest)?;
         usize::try_from(r.records).map_err(|_| Error::Bounds)
     }
@@ -294,14 +328,20 @@ impl Reader {
             return Err(Error::Bounds);
         }
         let tag = self.tag("request", request)?;
-        if let Some(sequence) = self
-            .refs
-            .iter()
-            .enumerate()
-            .skip(1)
-            .find_map(|(i, r)| (r.request == tag).then_some(i))
-        {
-            let b = self.batch(sequence)?;
+        let sequence = if let Some(disk) = &self.disk {
+            disk.request(self, &tag)?
+        } else {
+            self.refs
+                .iter()
+                .enumerate()
+                .skip(1)
+                .find_map(|(i, r)| (r.request == tag).then_some(i as u64))
+        };
+        if let Some(sequence) = sequence {
+            let b = self.batch(usize::try_from(sequence).map_err(|_| Error::Bounds)?)?;
+            if b.request != tag {
+                return Err(Error::Authority);
+            }
             return Ok(Some(Commit {
                 ids: b.assigned.iter().map(|r| r.id).collect(),
                 recorded_at: b.assigned.iter().map(|r| r.recorded_at).collect(),
@@ -338,16 +378,16 @@ impl Reader {
         if start > end || end > count {
             return Err(Error::Bounds);
         }
-        let mut sequence = self
-            .refs
-            .partition_point(|r| r.records <= start as u64)
-            .max(1);
-        while sequence <= w.sequence as usize && sequence < self.refs.len() {
-            let before = self.refs[sequence - 1].records as usize;
+        if start == end {
+            return Ok(());
+        }
+        let (mut sequence, _) = self.locate(start)?;
+        while sequence <= w.sequence && sequence <= self.sequence {
+            let before = self.reference(sequence - 1)?.records as usize;
             if before >= end {
                 break;
             }
-            let batch = self.batch(sequence)?;
+            let batch = self.batch(usize::try_from(sequence).map_err(|_| Error::Bounds)?)?;
             for (offset, row) in batch.assigned.iter().enumerate() {
                 let at = before + offset;
                 if at >= end {
@@ -370,15 +410,50 @@ impl Reader {
         else {
             return Ok(None);
         };
-        let sequence = self.refs.partition_point(|r| r.records <= at as u64);
-        let batch = self.batch(sequence)?;
-        let offset = at - self.refs[sequence - 1].records as usize;
-        Ok(Some(
-            batch.assigned.get(offset).ok_or(Error::Authority)?.clone(),
-        ))
+        let (sequence, offset) = self.locate(at)?;
+        let batch = self.batch(usize::try_from(sequence).map_err(|_| Error::Bounds)?)?;
+        let row = batch.assigned.get(offset).ok_or(Error::Authority)?;
+        if row.id != id {
+            return Err(Error::Authority);
+        }
+        Ok(Some(row.clone()))
     }
+
     pub(super) fn winner(&self, s: &Snapshot, key: &str) -> Result<Option<u64>> {
         let end = self.snapshot(s)?;
+        if let Some(disk) = &self.disk {
+            if let Some(cached) = self
+                .winners
+                .lock()
+                .map_err(|_| Error::Unavailable)?
+                .iter()
+                .find(|w| {
+                    w.sequence == s.watermark.sequence
+                        && w.valid == s.as_of.valid_at
+                        && w.known == s.as_of.known_at
+                        && w.key == key
+                })
+            {
+                return Ok(cached.id);
+            }
+            let id = disk.winner(self, s, key)?;
+            if key.len() <= 1024 {
+                let mut cache = self.winners.lock().map_err(|_| Error::Unavailable)?;
+                cache.push_back(Winner {
+                    sequence: s.watermark.sequence,
+                    valid: s.as_of.valid_at,
+                    known: s.as_of.known_at,
+                    key: key.into(),
+                    id,
+                });
+                while cache.len() > 128
+                    || cache.iter().map(|w| w.key.len() + 64).sum::<usize>() > 64 << 10
+                {
+                    cache.pop_front();
+                }
+            }
+            return Ok(id);
+        }
         let mut winner = None;
         self.scan(&s.watermark, 0, end, |r| {
             if r.input.key.as_deref() == Some(key)

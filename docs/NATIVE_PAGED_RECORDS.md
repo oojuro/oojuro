@@ -23,6 +23,10 @@ serialized state and existing segment/manifest caps. No migration occurs.
 A bigger EC2 instance does not remove these population/frame-count allocations.
 No numbers here are an RSS measurement or a performance result.
 
+For the subsequent opt-in disk metadata/tree implementation, see
+[NATIVE_RECORD_TREES.md](NATIVE_RECORD_TREES.md). The allocation descriptions
+below describe this first slice and its original default APIs.
+
 ## New owning reader
 
 `record::paged::Reader::open(existing_dir,key,identity,minimum_watermark)` opens
