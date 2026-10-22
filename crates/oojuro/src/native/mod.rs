@@ -1,6 +1,7 @@
 //! Explicit native command composition; existing recorder/socket/MCP paths are independent.
 mod config;
 mod policy;
+mod records;
 use config::{Config, Harness};
 use oojuro_capture::{
     ingest::Policy,
@@ -36,6 +37,8 @@ pub enum Error {
     Receipt,
     Cache,
     Capture(&'static str),
+    RecordConsent,
+    Record(oojuro_engine::record::Error),
 }
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
@@ -53,6 +56,21 @@ impl std::fmt::Display for Error {
             Self::Receipt => "receipt_refused",
             Self::Cache => "cache_unavailable",
             Self::Capture(reason) => return write!(f, "capture_refused: {reason}"),
+            Self::RecordConsent => "explicit_unredacted_record_consent_required",
+            Self::Record(reason) => {
+                return write!(
+                    f,
+                    "record_refused: {}",
+                    match reason {
+                        oojuro_engine::record::Error::Invalid => "invalid",
+                        oojuro_engine::record::Error::Bounds => "bounds",
+                        oojuro_engine::record::Error::Scope => "scope",
+                        oojuro_engine::record::Error::Authority => "authority",
+                        oojuro_engine::record::Error::Conflict => "conflict",
+                        oojuro_engine::record::Error::Unavailable => "unavailable",
+                    }
+                );
+            }
         };
         f.write_str(code)
     }
@@ -86,7 +104,10 @@ impl Arguments {
             {
                 return Err(Error::Usage);
             }
-            if matches!(flag.as_str(), "--allow-raw-source" | "--allow-raw-export") {
+            if matches!(
+                flag.as_str(),
+                "--allow-raw-source" | "--allow-raw-export" | "--allow-unredacted-records"
+            ) {
                 parsed.flags.insert(flag);
                 continue;
             }
@@ -199,12 +220,15 @@ pub fn run() -> Result<i32> {
     if matches!(args.command.as_str(), "help" | "--help") {
         args.only(&[], &[])?;
         emit(
-            &json!({"platform":"linux","commands":["setup","capture","search","get","timeline","stats","export","restore-raw","cache-merge"],"required":"--root DIR","raw_capture":"--allow-raw-source","raw_export":"--allow-raw-export"}),
+            &json!({"platform":"linux","commands":["setup","capture","search","get","timeline","stats","export","restore-raw","cache-merge","record-setup","record-append","record-get","record-history","record-range","record-export","record-continue","record-search"],"required":"--root DIR","raw_capture":"--allow-raw-source","raw_export":"--allow-raw-export"}),
             4096,
         )?;
         return Ok(0);
     }
     let root = std::path::absolute(args.required("--root")?).map_err(|_| Error::Io)?;
+    if args.command.starts_with("record-") {
+        return records::run(&root, &args);
+    }
     if args.command == "setup" {
         args.only(
             &["--harness", "--writer", "--agent", "--first-id", "--policy"],
