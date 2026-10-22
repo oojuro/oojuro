@@ -390,9 +390,12 @@ fn paged_file_dictionary_and_decoder_resources_evict_with_fixed_bounds() {
                 recorded_at: id as i64,
                 key: b"",
                 attrs: b"",
-                text: b"synthetic different dictionary context payload",
+                text: &b"synthetic different dictionary context payload ".repeat(100),
             }])
             .unwrap();
+        let frame = source.frames.last().unwrap();
+        let payload = reader::read_payload(&source.files[&frame.file], &frame.loc()).unwrap();
+        assert_eq!(get_head(&payload).unwrap().codec, CODEC_ZSTD);
     }
     drop(source);
     let reader = PagedStore::open(&f.source(), opts, &f.cache()).unwrap();
