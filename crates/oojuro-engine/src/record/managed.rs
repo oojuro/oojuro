@@ -10,6 +10,7 @@ use std::{
     sync::Arc,
 };
 mod control;
+mod paged;
 mod rank_view;
 use crate::audit::{RetainedFloor, SignedCheckpoint};
 use control::State;
@@ -147,6 +148,9 @@ impl ManagedLog {
         control: Arc<RetainedControl>,
         fresh: bool,
     ) -> Result<Self> {
+        if control.lock()?.is_paged() {
+            return Err(Error::Scope);
+        }
         if !name(&identity.writer, 256)
             || identity.agent == 0
             || identity.first_id == 0
@@ -867,6 +871,7 @@ fn stage(
         live_records: snapshot.rows.len() as u64,
         live_bytes: record_bytes(&snapshot.rows)?,
         audit: None,
+        paged: None,
     };
     let checked = read_snapshot(directory, &state, cipher)?;
     if json(&checked, MAX_STATE_BYTES)? != bytes {
