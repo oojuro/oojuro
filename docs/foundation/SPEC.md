@@ -1,11 +1,13 @@
 # Oojuro engine specification (review draft 0.2, 2026-10-22)
 
 Status: **draft for the owner's review; no launch or migration approval.** This specifies a proposed foundation.
-The standalone ranker seam and sealing prototype are review work, not a replacement engine. The old engine (`oojuro/oojuro` at `3a17d1d`, called "the oracle" below) is the working reference
+The sealed raw journal and explicit file adapter are implemented review slices; the complete consolidated engine and hosted
+primary-store contract remain unfinished. See REVIEW.md for current code and verification. The old engine (`oojuro/oojuro` at `3a17d1d`, called "the oracle" below) is the working reference
 implementation and the source of every measured number quoted here.
 
 How to read it. Statements marked **[exists]** describe behaviour the oracle already has and the new engine must keep.
-Statements marked **[new]** are design decisions made in this document and are not built anywhere yet. **[open]** marks a
+Statements marked **[new]** describe the proposed contract rather than an acceptance claim; some now have bounded review
+implementations listed in REVIEW.md, while the complete gates remain unfinished. **[open]** marks a
 decision still to be taken (section 17). Numbers carry their source; none is a promise about the new engine until section 14
 is passed.
 
