@@ -128,9 +128,21 @@ pub struct ReceiptView {
     watermark: Watermark,
     range: Range,
     next: u64,
+    framing: crate::capture_log::Framing,
 }
 impl ReceiptView {
     pub fn open(log: &CaptureLog, scope: Scope<'_>, range: Range) -> Result<Self> {
+        Self::open_framed(log, scope, range, crate::capture_log::Framing::Lines)
+    }
+    pub(crate) fn open_framed(
+        log: &CaptureLog,
+        scope: Scope<'_>,
+        range: Range,
+        framing: crate::capture_log::Framing,
+    ) -> Result<Self> {
+        if log.framing() != framing {
+            return Err(Error::Scope);
+        }
         check_scope(log, scope)?;
         if range.start > range.end {
             return Err(Error::Bounds);
@@ -151,9 +163,28 @@ impl ReceiptView {
             watermark,
             range,
             next: range.start,
+            framing,
         })
     }
     pub fn resume(log: &CaptureLog, scope: Scope<'_>, range: Range, cursor: &str) -> Result<Self> {
+        Self::resume_framed(
+            log,
+            scope,
+            range,
+            cursor,
+            crate::capture_log::Framing::Lines,
+        )
+    }
+    pub(crate) fn resume_framed(
+        log: &CaptureLog,
+        scope: Scope<'_>,
+        range: Range,
+        cursor: &str,
+        framing: crate::capture_log::Framing,
+    ) -> Result<Self> {
+        if log.framing() != framing {
+            return Err(Error::Scope);
+        }
         check_scope(log, scope)?;
         let c = decode(log, cursor)?;
         if c.writer != scope.writer || c.agent != scope.agent || c.range != range {
@@ -163,6 +194,7 @@ impl ReceiptView {
             watermark: c.watermark,
             range,
             next: c.next,
+            framing,
         };
         view.validate(log)?;
         if c.next < range.start
@@ -177,7 +209,10 @@ impl ReceiptView {
         &self.watermark
     }
     fn validate(&self, log: &CaptureLog) -> Result<()> {
-        if self.watermark.format != 1 || self.range.start > self.range.end {
+        if self.watermark.format != 1
+            || self.range.start > self.range.end
+            || self.framing != log.framing()
+        {
             return Err(Error::Authority);
         }
         let prefix = log
@@ -337,7 +372,7 @@ impl ReceiptView {
     }
 }
 fn check_scope(log: &CaptureLog, scope: Scope<'_>) -> Result<()> {
-    log.batches().map_err(|_| Error::Unavailable)?;
+    log.normalized_batches().map_err(|_| Error::Unavailable)?;
     if log.identity().writer != scope.writer || log.identity().agent != scope.agent {
         return Err(Error::Scope);
     }
@@ -398,7 +433,7 @@ enum Borrowed<'a> {
     NoOutput(&'a LineKind),
 }
 fn count(log: &CaptureLog, batches: usize) -> Result<u64> {
-    log.batches()
+    log.normalized_batches()
         .map_err(|_| Error::Unavailable)?
         .get(..batches)
         .ok_or(Error::Authority)?
@@ -413,7 +448,7 @@ type Visitor<'a> = dyn FnMut(u64, usize, &crate::capture_log::Line, Option<usize
     + 'a;
 fn walk(log: &CaptureLog, batches: usize, f: &mut Visitor<'_>) -> Result<()> {
     let all = log
-        .batches()
+        .normalized_batches()
         .map_err(|_| Error::Unavailable)?
         .get(..batches)
         .ok_or(Error::Authority)?;
@@ -453,7 +488,7 @@ fn receipt(
     output: Borrowed<'_>,
 ) -> Result<Receipt> {
     let b: &ParsedBatch = log
-        .batches()
+        .normalized_batches()
         .map_err(|_| Error::Unavailable)?
         .get(batch)
         .ok_or(Error::Authority)?;

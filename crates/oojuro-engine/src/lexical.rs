@@ -97,7 +97,7 @@ impl Index {
         {
             return Err(Error::Authority);
         }
-        let batches = log.batches().map_err(|_| Error::Unavailable)?;
+        let batches = log.normalized_batches().map_err(|_| Error::Unavailable)?;
         if self.applied > batches.len() {
             return Err(Error::Authority);
         }

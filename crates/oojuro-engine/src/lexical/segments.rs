@@ -404,7 +404,7 @@ fn load(
     {
         return Err(Error::Authority);
     }
-    let batches = log.batches().map_err(|_| Error::Unavailable)?;
+    let batches = log.normalized_batches().map_err(|_| Error::Unavailable)?;
     if m.prefix.batches > batches.len() {
         return Err(Error::Authority);
     }

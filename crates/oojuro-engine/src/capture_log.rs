@@ -4,12 +4,22 @@
 pub use crate::raw::MAX_BLOCK_BYTES;
 /// Explicit direct-record namespace; never opens or converts a v1 capture log.
 pub use crate::record::RecordLog;
+pub mod messages;
 
 use oojuro_store::{Error, NewRecord, Options, Result, Store, crypto::FrameCipher};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, path::Path, sync::Arc};
 
 const FORMAT: &[u8] = b"oojuro-capture-1\n";
+/// Authenticated raw coverage contract. Existing line roots never accept messages.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+pub enum Framing {
+    #[serde(rename = "lines_v1")]
+    Lines,
+    #[serde(rename = "messages_v1")]
+    Messages,
+}
+
 pub const MAX_LINE_BYTES: usize = 1 << 20;
 pub const MAX_CONTEXT_BYTES: usize = 128 << 10;
 pub const MAX_BATCH_BYTES: usize = 8 << 20;
@@ -159,9 +169,20 @@ pub struct CaptureLog {
     next_id: u64,
     metadata_bytes: usize,
     failed: bool,
+    framing: Framing,
+    message_meta: Vec<messages::Meta>,
 }
 impl CaptureLog {
     pub fn open(dir: &Path, key: &[u8; 32], identity: Identity) -> Result<Self> {
+        Self::open_framed(dir, key, identity, Framing::Lines, true)
+    }
+    fn open_framed(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        framing: Framing,
+        initialize: bool,
+    ) -> Result<Self> {
         if identity.writer.is_empty()
             || identity.writer.len() > 256
             || identity.agent == 0
@@ -180,13 +201,17 @@ impl CaptureLog {
         }
         if dir.is_dir()
             && !dir.join("MANIFEST").exists()
-            && std::fs::read_dir(dir)?.next().is_some()
+            && (framing == Framing::Lines && std::fs::read_dir(dir)?.next().is_some()
+                || framing == Framing::Messages && !messages::only_marker(dir)?)
         {
             return Err(Error::Invalid(
                 "capture authority requires a dedicated directory",
             ));
         }
-        let cipher = Arc::new(FrameCipher::new(key));
+        let cipher = Arc::new(match framing {
+            Framing::Lines => FrameCipher::new(key),
+            Framing::Messages => messages::cipher(key, &identity)?,
+        });
         let store = Store::open(
             dir,
             Options {
@@ -210,21 +235,32 @@ impl CaptureLog {
             ids: BTreeMap::new(),
             metadata_bytes: 0,
             failed: false,
+            framing,
+            message_meta: Vec::new(),
         };
-        let mut header = FORMAT.to_vec();
+        let mut header = match framing {
+            Framing::Lines => FORMAT,
+            Framing::Messages => messages::FORMAT,
+        }
+        .to_vec();
         header.extend(
             serde_json::to_vec(&log.identity).map_err(|_| Error::Invalid("capture identity"))?,
         );
         if log.store.is_empty() {
+            if !initialize {
+                return Err(Error::Corrupt("missing enrolled capture header"));
+            }
             log.write(&header)?;
         } else if log.store.get(0)? != header {
             return Err(Error::Corrupt("capture format or identity mismatch"));
         }
         // Stable source namespace, not fresh-store enrollment or a cache incarnation.
         // Same key/header/generation means SAME source; changed input must conflict.
-        let mut binding = b"oojuro/capture/ingest-binding/lines-v1\0".to_vec();
-        binding.extend_from_slice(&header);
-        log.ingest_binding = *blake3::keyed_hash(key, &binding).as_bytes();
+        if framing == Framing::Lines {
+            let mut binding = b"oojuro/capture/ingest-binding/lines-v1\0".to_vec();
+            binding.extend_from_slice(&header);
+            log.ingest_binding = *blake3::keyed_hash(key, &binding).as_bytes();
+        }
         log.add_prefix(0, &header)?;
         for seq in 1..log.store.len() {
             let bytes = log.store.get(seq)?;
@@ -236,6 +272,9 @@ impl CaptureLog {
     /// Engine-private typed Capture1 identity; no key getter or public plaintext hash.
     pub(crate) fn ingest_binding(&self) -> Result<[u8; 32]> {
         self.healthy()?;
+        if self.framing != Framing::Lines {
+            return Err(Error::Invalid("message ingest bridge is unsupported"));
+        }
         Ok(self.ingest_binding)
     }
     pub(crate) fn cache_cipher(&self) -> Arc<FrameCipher> {
@@ -311,7 +350,18 @@ impl CaptureLog {
     pub fn next_id(&self) -> u64 {
         self.next_id
     }
+    pub fn framing(&self) -> Framing {
+        self.framing
+    }
     pub fn batches(&self) -> Result<&[ParsedBatch]> {
+        if self.framing != Framing::Lines {
+            return Err(Error::Invalid(
+                "message receipts require MessageReceiptView",
+            ));
+        }
+        self.normalized_batches()
+    }
+    pub(crate) fn normalized_batches(&self) -> Result<&[ParsedBatch]> {
         self.healthy()?;
         Ok(&self.batches)
     }
@@ -415,6 +465,9 @@ impl CaptureLog {
     /// Native authority commit: one bounded sealed Store frame; no cache side effects.
     pub fn commit(&mut self, batch: Batch) -> Result<Outcome> {
         self.healthy()?;
+        if self.framing != Framing::Lines {
+            return Err(Error::Invalid("message commit required"));
+        }
         let meta = serde_json::to_vec(&batch.parsed)
             .map_err(|_| Error::Invalid("capture batch encoding"))?;
         if meta.len() > MAX_BATCH_BYTES {
@@ -470,6 +523,14 @@ impl CaptureLog {
         {
             return Err(Error::Invalid("capture progress or policy receipt"));
         }
+        if self.framing == Framing::Messages
+            && (s.raw_end != s.parsed_end
+                || p.outcome.parsed_end != end
+                || p.policy.lines.is_empty()
+                || p.policy.lines.len() > messages::MAX_UNITS)
+        {
+            return Err(Error::Invalid("message coverage or progress"));
+        }
         let processed = p.outcome.parsed_end - s.parsed_end;
         if processed > (MAX_LINE_BYTES + MAX_BLOCK_BYTES) as u64 {
             return Err(Error::Invalid("parse work bound"));
@@ -482,13 +543,18 @@ impl CaptureLog {
         let mut next = self.next_id;
         for line in &p.policy.lines {
             if line.start != at
-                || line.end <= at
+                || (if self.framing == Framing::Lines {
+                    line.end <= at
+                } else {
+                    line.end < at || (line.end == at && !line.emissions.is_empty())
+                })
                 || line.end > p.outcome.parsed_end
                 || line.end - at > MAX_LINE_BYTES as u64
-                || input[(line.end - s.parsed_end - 1) as usize] != b'\n'
-                || input
-                    [(line.start - s.parsed_end) as usize..(line.end - s.parsed_end - 1) as usize]
-                    .contains(&b'\n')
+                || (self.framing == Framing::Lines
+                    && (input[(line.end - s.parsed_end - 1) as usize] != b'\n'
+                        || input[(line.start - s.parsed_end) as usize
+                            ..(line.end - s.parsed_end - 1) as usize]
+                            .contains(&b'\n')))
                 || (!matches!(line.kind, LineKind::Parsed) && !line.emissions.is_empty())
             {
                 return Err(Error::Invalid("capture line receipt coverage"));
@@ -523,7 +589,7 @@ impl CaptureLog {
             }
             at = line.end;
         }
-        if input[processed as usize..].contains(&b'\n')
+        if (self.framing == Framing::Lines && input[processed as usize..].contains(&b'\n'))
             || at != p.outcome.parsed_end
             || events.next().is_some()
             || p.outcome.stored != p.events.len() as u64
@@ -538,7 +604,8 @@ impl CaptureLog {
         self.metadata_end(encoded_len)?;
         Ok(())
     }
-    fn replay(&mut self, seq: u64, bytes: &[u8]) -> Result<()> {
+    fn replay(&mut self, seq: u64, original: &[u8]) -> Result<()> {
+        let bytes = original;
         match bytes.first() {
             Some(1) => {
                 let metadata_end = self
@@ -568,13 +635,29 @@ impl CaptureLog {
                 );
                 self.metadata_bytes = metadata_end;
             }
-            Some(2) if bytes.len() >= 5 => {
+            Some(tag @ (2 | 3)) if bytes.len() >= 5 => {
+                if (*tag == 2) != (self.framing == Framing::Lines) {
+                    return Err(Error::Corrupt("capture framing carrier mismatch"));
+                }
                 let len = u32::from_le_bytes(bytes[1..5].try_into().unwrap()) as usize;
                 if len > MAX_BATCH_BYTES || 5 + len > bytes.len() {
                     return Err(Error::Corrupt("capture batch length"));
                 }
-                let p: ParsedBatch = serde_json::from_slice(&bytes[5..5 + len])
-                    .map_err(|_| Error::Corrupt("missing capture policy/context/output"))?;
+                let message = if self.framing == Framing::Messages {
+                    let value: messages::ParsedMessage = serde_json::from_slice(&bytes[5..5 + len])
+                        .map_err(|_| Error::Corrupt("missing message policy/context/output"))?;
+                    self.validate_request(&value, &bytes[5 + len..])
+                        .map_err(|_| Error::Corrupt("message original intent or sequence"))?;
+                    Some(value)
+                } else {
+                    None
+                };
+                let p: ParsedBatch = if let Some(message) = &message {
+                    message.normalized()
+                } else {
+                    serde_json::from_slice(&bytes[5..5 + len])
+                        .map_err(|_| Error::Corrupt("missing capture policy/context/output"))?
+                };
                 let raw = &bytes[5 + len..];
                 self.validate(&p, raw, len)
                     .map_err(|_| Error::Corrupt("capture receipt validation"))?;
@@ -597,10 +680,14 @@ impl CaptureLog {
                 self.metadata_bytes += len;
                 self.next_id = p.outcome.next_id;
                 self.batches.push(p);
+                if let Some(message) = message {
+                    self.message_meta
+                        .push(messages::Meta::new(&message, self.batches.len() - 1));
+                }
             }
             _ => return Err(Error::Corrupt("unknown capture authority record")),
         }
-        self.add_prefix(seq, bytes)
+        self.add_prefix(seq, original)
     }
     pub fn compact(&mut self) -> Result<()> {
         self.healthy()?;
