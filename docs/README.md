@@ -10,6 +10,12 @@
 | [SHARED_LOG](SHARED_LOG.md) | the shared write log and the measurements behind making it the default |
 | [ACTIVITY_SEARCH](ACTIVITY_SEARCH.md) | design and measurements for finding moments by date and by how the activity looked (no engine code yet) |
 
+## Foundation review (proposed)
+
+[Specification](foundation/SPEC.md), [schematic](foundation/schematic.svg), and
+[Soft Axiom/AWS review gates](foundation/REVIEW.md) describe the next foundation.
+They distinguish implemented reference behavior, separately reviewed prototypes, and remaining launch/migration gates.
+
 ## Benchmarks and performance
 
 | Document | What it covers |
