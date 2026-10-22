@@ -62,12 +62,14 @@ fn tip(bundle: &AuditExport) -> RetainedFloor {
 fn signed_content_free_export_roundtrip_and_witness() {
     let (_, verifier, bundle) = fixture();
     let floor = bundle.checkpoints[0].floor().unwrap();
-    bundle.verify(&verifier, tip(&bundle), Some(floor)).unwrap();
+    bundle
+        .verify(&verifier, [2; 32], tip(&bundle), Some(floor))
+        .unwrap();
     let bytes = bundle.encode().unwrap();
     let decoded = AuditExport::decode(&bytes).unwrap();
     assert_eq!(decoded, bundle);
     decoded
-        .verify(&verifier, tip(&bundle), Some(floor))
+        .verify(&verifier, [2; 32], tip(&bundle), Some(floor))
         .unwrap();
     assert!(
         std::str::from_utf8(&bytes)
@@ -115,7 +117,7 @@ fn sender_public_key_cannot_replace_pinned_trust_or_scope() {
         *cp = attacker.sign(cp.body.clone()).unwrap();
     }
     assert_eq!(
-        forged.verify(&verifier, tip(&forged), None),
+        forged.verify(&verifier, [2; 32], tip(&forged), None),
         Err(Error::Scope)
     );
     assert_eq!(
@@ -138,7 +140,7 @@ fn trusted_current_detects_suffix_truncation_and_floor_detects_alternate_longer_
     shortened.entries.pop();
     shortened.checkpoints.pop();
     assert_eq!(
-        shortened.verify(&verifier, tip(&bundle), None),
+        shortened.verify(&verifier, [2; 32], tip(&bundle), None),
         Err(Error::Witness)
     );
     // An honest signature is still not proof of the independently witnessed branch.
@@ -156,10 +158,11 @@ fn trusted_current_detects_suffix_truncation_and_floor_detects_alternate_longer_
             fork.entries[1].digest().unwrap(),
         ))
         .unwrap();
-    fork.verify(&verifier, tip(&fork), None).unwrap();
+    fork.verify(&verifier, [2; 32], tip(&fork), None).unwrap();
     assert_eq!(
         fork.verify(
             &verifier,
+            [2; 32],
             tip(&fork),
             Some(bundle.checkpoints[0].floor().unwrap())
         ),
@@ -174,7 +177,7 @@ fn trusted_current_detects_suffix_truncation_and_floor_detects_alternate_longer_
     );
     fork.entries.push(extra);
     assert_eq!(
-        fork.verify(&verifier, tip(&fork), Some(tip(&bundle))),
+        fork.verify(&verifier, [2; 32], tip(&fork), Some(tip(&bundle))),
         Err(Error::Witness)
     );
 }
@@ -195,17 +198,17 @@ fn every_event_and_checkpoint_link_is_verified_without_sampling() {
             7 => bad.entries[0].event.kind = EventKind::LiveRewriteVerified,
             _ => bad.entries[1].previous[0] ^= 1,
         }
-        assert!(bad.verify(&verifier, trusted, None).is_err());
+        assert!(bad.verify(&verifier, [2; 32], trusted, None).is_err());
     }
     let mut missing = bundle.clone();
     missing.entries.remove(0);
-    assert!(missing.verify(&verifier, trusted, None).is_err());
+    assert!(missing.verify(&verifier, [2; 32], trusted, None).is_err());
     let mut duplicate = bundle.clone();
     duplicate.entries.push(duplicate.entries[1].clone());
-    assert!(duplicate.verify(&verifier, trusted, None).is_err());
+    assert!(duplicate.verify(&verifier, [2; 32], trusted, None).is_err());
     let mut skipped = bundle.clone();
     skipped.checkpoints.remove(0);
-    assert!(skipped.verify(&verifier, trusted, None).is_err());
+    assert!(skipped.verify(&verifier, [2; 32], trusted, None).is_err());
 }
 #[test]
 fn authentic_but_incorrect_head_or_count_or_domain_is_refused() {
@@ -213,17 +216,21 @@ fn authentic_but_incorrect_head_or_count_or_domain_is_refused() {
     bundle.checkpoints[1].body.head = [77; 32];
     bundle.checkpoints[1] = signer.sign(bundle.checkpoints[1].body.clone()).unwrap();
     assert_eq!(
-        bundle.verify(&verifier, tip(&bundle), None),
+        bundle.verify(&verifier, [2; 32], tip(&bundle), None),
         Err(Error::Chain)
     );
     let (signer, verifier, mut bundle) = fixture();
     bundle.checkpoints[1].body.events = u64::MAX;
     bundle.checkpoints[1] = signer.sign(bundle.checkpoints[1].body.clone()).unwrap();
-    assert!(bundle.verify(&verifier, tip(&bundle), None).is_err());
+    assert!(
+        bundle
+            .verify(&verifier, [2; 32], tip(&bundle), None)
+            .is_err()
+    );
     let (_, verifier, mut bundle) = fixture();
     bundle.entries[1].event.kind = EventKind::PayloadExport;
     assert_eq!(
-        bundle.verify(&verifier, tip(&bundle), None),
+        bundle.verify(&verifier, [2; 32], tip(&bundle), None),
         Err(Error::Chain)
     );
 }
@@ -288,8 +295,20 @@ fn uncheckpointed_tail_and_reordered_checkpoints_are_refused() {
     bundle
         .entries
         .push(event(3, bundle.entries[1].digest().unwrap()));
-    assert_eq!(bundle.verify(&verifier, trusted, None), Err(Error::Chain));
+    assert_eq!(
+        bundle.verify(&verifier, [2; 32], trusted, None),
+        Err(Error::Chain)
+    );
     bundle.entries.pop();
     bundle.checkpoints.reverse();
-    assert!(bundle.verify(&verifier, trusted, None).is_err());
+    assert!(bundle.verify(&verifier, [2; 32], trusted, None).is_err());
+}
+
+#[test]
+fn native_export_requires_explicit_expected_project_even_with_valid_current_witness() {
+    let (_, verifier, bundle) = fixture();
+    assert_eq!(
+        bundle.verify(&verifier, [99; 32], tip(&bundle), None),
+        Err(Error::Scope)
+    );
 }

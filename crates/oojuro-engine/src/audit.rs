@@ -294,10 +294,12 @@ impl AuditExport {
     pub fn verify(
         &self,
         verifier: &Verifier,
+        expected_scope: [u8; 32],
         trusted_current: RetainedFloor,
         retained_floor: Option<RetainedFloor>,
     ) -> Result<()> {
         if self.schema != 1
+            || self.scope != expected_scope
             || self.authority != verifier.authority
             || self.domain != verifier.domain
             || self.public_key != verifier.public_key
