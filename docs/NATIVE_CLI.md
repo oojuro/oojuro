@@ -35,6 +35,8 @@ trusted; this is not a hostile-filesystem sandbox or a hosted authorization serv
 The key and policy remain sensitive local files, protected by owner permissions;
 this is not key wrapping, OS keychain, backup management or cryptographic erasure.
 
+For Pi session v3 use --harness pi and writer pi:<source parent directory name>;
+[the Pi adapter contract](NATIVE_PI_CAPTURE.md) lists retained history and policy limits.
 For Codex use `--harness codex` with its actual project writer; for Claude use
 `claude-code` and its project writer. Writer/agent/first-ID metadata bind the
 existing native identity exactly. The optional `--first-id` defaults to 1.

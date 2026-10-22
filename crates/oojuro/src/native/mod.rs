@@ -188,6 +188,7 @@ fn open(
         Harness::ClaudeCode => {
             LocalCapture::open_claude(&root.join(config::JOURNAL), key, options, policy)
         }
+        Harness::Pi => LocalCapture::open_pi(&root.join(config::JOURNAL), key, options, policy),
     };
     result.map_err(|_| Error::Authority)
 }
@@ -237,6 +238,7 @@ pub fn run() -> Result<i32> {
         let harness = match args.required("--harness")? {
             "codex" => Harness::Codex,
             "claude-code" => Harness::ClaudeCode,
+            "pi" => Harness::Pi,
             _ => return Err(Error::Usage),
         };
         let config = Config {

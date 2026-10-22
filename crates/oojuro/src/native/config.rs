@@ -17,6 +17,7 @@ pub(super) const JOURNAL: &str = "journal";
 pub(super) enum Harness {
     Codex,
     ClaudeCode,
+    Pi,
 }
 
 #[derive(Serialize, Deserialize)]

@@ -36,10 +36,10 @@ impl Fixture {
         fs::create_dir(&parent).unwrap();
         fs::set_permissions(&parent, fs::Permissions::from_mode(0o700)).unwrap();
         let home = parent.join("native");
-        let source = parent.join(if harness == "codex" {
-            ".codex/rollout-synthetic.jsonl"
-        } else {
-            ".claude/projects/-synthetic/session.jsonl"
+        let source = parent.join(match harness {
+            "codex" => ".codex/rollout-synthetic.jsonl",
+            "pi" => ".pi/agent/sessions/--synthetic--/session.jsonl",
+            _ => ".claude/projects/-synthetic/session.jsonl",
         });
         fs::create_dir_all(source.parent().unwrap()).unwrap();
         let policy = parent.join("explicit-policy.json");
@@ -67,10 +67,10 @@ impl Fixture {
                 "--harness",
                 self.harness,
                 "--writer",
-                if self.harness == "codex" {
-                    "codex:-synthetic"
-                } else {
-                    "claude-code:-synthetic"
+                match self.harness {
+                    "codex" => "codex:-synthetic",
+                    "pi" => "pi:--synthetic--",
+                    _ => "claude-code:-synthetic",
                 },
                 "--agent",
                 "7",
@@ -92,14 +92,20 @@ impl Fixture {
         )
     }
     fn message(&self, text: &str) -> Vec<u8> {
-        line(if self.harness == "codex" {
+        line(if self.harness == "pi" {
+            json!({"type":"message","id":format!("entry-{}",text.len()),"parentId":null,"timestamp":"2026-01-02T03:04:06Z","message":{"role":"user","content":text}})
+        } else if self.harness == "codex" {
             json!({"type":"response_item","timestamp":"2026-01-02T03:04:06Z","payload":{"type":"message","role":"assistant","content":[{"type":"output_text","text":text}]}})
         } else {
             json!({"type":"user","timestamp":"2026-01-02T03:04:06Z","origin":{"kind":"human"},"message":{"content":text}})
         })
     }
     fn initial(&self, text: &str) -> Vec<u8> {
-        let mut bytes = if self.harness == "codex" {
+        let mut bytes = if self.harness == "pi" {
+            line(
+                json!({"type":"session","version":3,"id":"synthetic-pi","cwd":"/synthetic","timestamp":"2026-01-02T03:04:06Z"}),
+            )
+        } else if self.harness == "codex" {
             line(
                 json!({"type":"session_meta","payload":{"cwd":"/synthetic","originator":"codex_cli_rs","base_instructions":{"text":""}}}),
             )
@@ -153,8 +159,8 @@ fn refused(output: Output, code: &str) {
 }
 
 #[test]
-fn actual_codex_and_claude_setup_capture_reopen_search_receipt_export_and_exact_raw_restore() {
-    for harness in ["codex", "claude-code"] {
+fn actual_codex_claude_pi_setup_capture_reopen_search_receipt_export_and_exact_raw_restore() {
+    for harness in ["codex", "claude-code", "pi"] {
         let f = Fixture::new(harness);
         assert_eq!(ok(f.setup())["status"], "initialized");
         assert_eq!(
