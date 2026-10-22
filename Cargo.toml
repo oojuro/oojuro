@@ -1,11 +1,13 @@
 [workspace]
 members = [
+    "crates/oojuro-engine",
     "crates/oojuro",
     "crates/oojuro-bench",
     "crates/oojuro-capture",
     "crates/oojuro-core",
     "crates/oojuro-nine",
     "crates/oojuro-proxy",
+    "crates/oojuro-rank",
     "crates/oojuro-store",
     "crates/oojuro-trace",
     "crates/oojuro-tracebench",

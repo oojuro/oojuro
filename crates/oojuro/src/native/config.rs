@@ -1,0 +1,219 @@
+use super::{Error, Result};
+use serde::{Deserialize, Serialize};
+use std::{
+    fs::{self, File, OpenOptions},
+    io::{Read, Write},
+    os::unix::fs::{DirBuilderExt, MetadataExt, OpenOptionsExt, PermissionsExt},
+    path::Path,
+};
+
+const CONFIG: &str = "native.json";
+pub(super) const POLICY: &str = "policy.json";
+const KEY: &str = "key";
+pub(super) const JOURNAL: &str = "journal";
+
+#[derive(Clone, Copy, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub(super) enum Harness {
+    Codex,
+    ClaudeCode,
+    Pi,
+    Temporal,
+}
+
+#[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct Config {
+    pub version: u32,
+    pub harness: Harness,
+    pub writer: String,
+    pub agent: u32,
+    pub first_id: u64,
+}
+impl Config {
+    pub fn check(&self) -> Result<()> {
+        if self.version != 1
+            || self.writer.is_empty()
+            || self.writer.len() > 256
+            || self.writer.chars().any(char::is_control)
+            || self.agent == 0
+            || self.first_id == 0
+        {
+            return Err(Error::Config);
+        }
+        Ok(())
+    }
+}
+
+fn private(metadata: &fs::Metadata, mode: u32) -> Result<()> {
+    if metadata.uid() != unsafe { libc::geteuid() } || metadata.permissions().mode() & 0o777 != mode
+    {
+        return Err(Error::Permissions);
+    }
+    Ok(())
+}
+pub(super) fn check_root(root: &Path) -> Result<()> {
+    let metadata = fs::symlink_metadata(root).map_err(|_| Error::Io)?;
+    if !metadata.is_dir() {
+        return Err(Error::Permissions);
+    }
+    private(&metadata, 0o700)
+}
+pub(super) fn read_private(path: &Path, limit: usize) -> Result<Vec<u8>> {
+    let file = OpenOptions::new()
+        .read(true)
+        .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
+        .open(path)
+        .map_err(|_| Error::Io)?;
+    let metadata = file.metadata().map_err(|_| Error::Io)?;
+    if !metadata.is_file() {
+        return Err(Error::Permissions);
+    }
+    private(&metadata, 0o600)?;
+    if metadata.len() > limit as u64 {
+        return Err(Error::Bounds);
+    }
+    let mut bytes = Vec::new();
+    file.take(limit as u64 + 1)
+        .read_to_end(&mut bytes)
+        .map_err(|_| Error::Io)?;
+    if bytes.len() > limit {
+        return Err(Error::Bounds);
+    }
+    Ok(bytes)
+}
+pub(super) fn write_new(path: &Path, bytes: &[u8]) -> Result<()> {
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(path)
+        .map_err(|_| Error::Io)?;
+    file.write_all(bytes)
+        .and_then(|_| file.sync_all())
+        .map_err(|_| Error::Io)
+}
+pub(super) fn sync_dir(path: &Path) -> Result<()> {
+    File::open(path)
+        .and_then(|file| file.sync_all())
+        .map_err(|_| Error::Io)
+}
+pub(super) fn load(root: &Path) -> Result<(Config, [u8; 32])> {
+    check_root(root)?;
+    let config: Config = serde_json::from_slice(&read_private(&root.join(CONFIG), 4096)?)
+        .map_err(|_| Error::Config)?;
+    config.check()?;
+    Ok((config, load_key(root)?))
+}
+pub(super) fn load_key(root: &Path) -> Result<[u8; 32]> {
+    check_root(root)?;
+    read_private(&root.join(KEY), 32)?
+        .try_into()
+        .map_err(|_| Error::Key)
+}
+pub(super) fn setup(root: &Path, config: &Config, policy: &[u8]) -> Result<()> {
+    config.check()?;
+    let bytes = serde_json::to_vec(config).map_err(|_| Error::Config)?;
+    setup_files(root, &[(CONFIG, &bytes), (POLICY, policy)])
+}
+/// Only static, trusted metadata names are passed by the two explicit setup lanes.
+pub(super) fn setup_files(root: &Path, files: &[(&str, &[u8])]) -> Result<()> {
+    fs::DirBuilder::new()
+        .mode(0o700)
+        .create(root)
+        .map_err(|_| Error::Io)?;
+    let mut key = [0u8; 32];
+    File::open("/dev/urandom")
+        .and_then(|mut file| file.read_exact(&mut key))
+        .map_err(|_| Error::Key)?;
+    write_new(&root.join(KEY), &key)?;
+    for (name, bytes) in files {
+        write_new(&root.join(name), bytes)?;
+    }
+    sync_dir(root)?;
+    if let Some(parent) = root.parent() {
+        sync_dir(parent)?;
+    }
+    Ok(())
+}
+
+/// New opt-in native reader paths only; existing command loader semantics remain unchanged.
+pub(super) fn trusted_ancestor(owner: u32, mode: u32, current: u32) -> bool {
+    (owner == 0 || owner == current) && (mode & 0o022 == 0 || (owner == 0 && mode & 0o1000 != 0))
+}
+pub(super) fn check_private_path(root: &Path) -> Result<()> {
+    use std::path::Component;
+    if !root.is_absolute()
+        || root
+            .components()
+            .any(|c| matches!(c, Component::ParentDir | Component::CurDir))
+    {
+        return Err(Error::Permissions);
+    }
+    let mut current = std::path::PathBuf::new();
+    for part in root.components() {
+        current.push(part);
+        let metadata = fs::symlink_metadata(&current).map_err(|_| Error::Permissions)?;
+        if !metadata.is_dir()
+            || metadata.file_type().is_symlink()
+            || !trusted_ancestor(metadata.uid(), metadata.mode(), unsafe { libc::geteuid() })
+        {
+            return Err(Error::Permissions);
+        }
+    }
+    // Do not silently accept a different resolved root or weaken final permissions.
+    if fs::canonicalize(root).map_err(|_| Error::Permissions)? != root {
+        return Err(Error::Permissions);
+    }
+    check_root(root)
+}
+
+/// Metadata-only preflight after the caller checks its protected authority root.
+/// Existing setup may create a journal directory mode0755 INSIDE that mode0700 root.
+pub(super) fn existing_store(directory: &Path) -> Result<()> {
+    let metadata = fs::symlink_metadata(directory).map_err(|_| Error::Authority)?;
+    if !metadata.is_dir()
+        || metadata.file_type().is_symlink()
+        || metadata.uid() != unsafe { libc::geteuid() }
+        || metadata.mode() & 0o022 != 0
+        || fs::canonicalize(directory).map_err(|_| Error::Authority)? != directory
+    {
+        return Err(Error::Authority);
+    }
+    let regular = |path: &Path, empty: bool| -> Result<()> {
+        let file = OpenOptions::new()
+            .read(true)
+            .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
+            .open(path)
+            .map_err(|_| Error::Authority)?;
+        let m = file.metadata().map_err(|_| Error::Authority)?;
+        if !m.is_file()
+            || m.uid() != unsafe { libc::geteuid() }
+            || m.mode() & 0o022 != 0
+            || (!empty && m.len() == 0)
+        {
+            return Err(Error::Authority);
+        }
+        Ok(())
+    };
+    for (name, empty) in [("MANIFEST", false), ("ENCRYPTED", false), ("LOCK", true)] {
+        regular(&directory.join(name), empty)?;
+    }
+    let mut payload = false;
+    for entry in fs::read_dir(directory).map_err(|_| Error::Authority)? {
+        let entry = entry.map_err(|_| Error::Authority)?;
+        let name = entry.file_name();
+        let name = name.to_str().ok_or(Error::Authority)?;
+        if (name.starts_with("hot-") && name.ends_with(".ojl"))
+            || (name.starts_with("cold-") && name.ends_with(".ojc"))
+        {
+            regular(&entry.path(), false)?;
+            payload = true;
+        }
+    }
+    if !payload {
+        return Err(Error::Authority);
+    }
+    Ok(())
+}

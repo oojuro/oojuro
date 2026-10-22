@@ -1,0 +1,184 @@
+/** Current experimental prefix-v2 API; not the proposed foundation launch SDK. */
+export type OpaqueId = string;
+/** All wire integer fields use the exact JS safe-integer subset; larger u64/i64 are refused. */
+export type WireInteger = number;
+export type Json =
+  | null
+  | boolean
+  | number
+  | string
+  | readonly Json[]
+  | { readonly [key: string]: Json };
+export type TraceKind =
+  | "system"
+  | "user_input"
+  | "assistant"
+  | "thinking"
+  | "tool_call"
+  | "tool_result"
+  | "explicit";
+/** Caller-reported provenance. These fields never authorize access or verify a causal graph. */
+export interface ReportedProvenance {
+  agent_id: string;
+  parent_id: string;
+  source: string;
+  session: string;
+  parent_session: string;
+  tool: string;
+}
+/** Reference metadata only. No source bytes or parser context are loaded or uploaded. */
+export interface RawRef {
+  source_generation: string;
+  start: WireInteger;
+  end: WireInteger;
+  emission: WireInteger;
+}
+export interface Trace extends ReportedProvenance {
+  format: 2;
+  text: string;
+  kind: TraceKind;
+  turn: WireInteger;
+  sequence: WireInteger;
+  parent: WireInteger;
+  revises: WireInteger;
+  valid_us: WireInteger;
+  recorded_us: WireInteger;
+  duration_us: WireInteger;
+  arguments: Json;
+  status: string;
+  exit_code: number | null;
+  tokens_in: WireInteger;
+  tokens_out: WireInteger;
+  indexed: boolean;
+  metadata: Readonly<Record<string, string>>;
+  raw: RawRef | null;
+}
+export type Mutation =
+  | { kind: "Record"; writer: OpaqueId; trace: Trace }
+  | { kind: "Memory"; writer: OpaqueId; name: string; trace: Trace }
+  | {
+      kind: "Blob";
+      writer: OpaqueId;
+      name: string;
+      expected: OpaqueId | null;
+      bytes: readonly number[];
+    }
+  | { kind: "DeleteRecord"; id: OpaqueId }
+  | { kind: "DeleteMemory"; writer: OpaqueId; name: string }
+  | { kind: "DeleteBlob"; writer: OpaqueId; name: string; expected: OpaqueId };
+export interface CommitInput {
+  requestId: string;
+  scope: OpaqueId;
+  mutations: readonly Mutation[];
+}
+/** Server-assigned committed usage observation; never a client-supplied admission/grant.
+ * Tags are required for every data mutation supported by this client. */
+export interface UsageFact {
+  request_tag: OpaqueId;
+  intent_fingerprint: OpaqueId;
+  scope_tag: OpaqueId;
+  /** Logical server observation time, not provider CAS wall-clock evidence. */
+  committed_at_us: WireInteger;
+  /** Newly recorded bytes in this commit. */
+  recorded_bytes: WireInteger;
+  /** Authoritative total retained bytes after this commit; may exceed recorded_bytes. */
+  kept_bytes: WireInteger;
+}
+export interface Outcome {
+  generation: WireInteger;
+  record_ids: Readonly<Record<string, OpaqueId>>;
+  blob_revisions: Readonly<Record<string, OpaqueId>>;
+  writer: null;
+  key: null;
+  destruction: null;
+  usage: UsageFact;
+}
+export interface Watermark {
+  generation: WireInteger;
+  epoch: WireInteger;
+  transaction: { id: OpaqueId; digest: OpaqueId };
+}
+export interface Read<T> {
+  watermark: Watermark;
+  value: T;
+}
+/** Independently server-authorized grant, separate from caller-reported Trace metadata. */
+export interface AuthorizationGrant {
+  admin: boolean;
+  read: readonly OpaqueId[];
+  write: readonly OpaqueId[];
+  retry: readonly OpaqueId[];
+}
+export interface TraceRecord {
+  id: OpaqueId;
+  writer: OpaqueId;
+  writer_name: string;
+  memory_name: string | null;
+  trace: Trace;
+}
+export interface SearchHit extends TraceRecord {
+  score_bits: number;
+  excerpt: string;
+  continued: boolean;
+  excerpt_start: WireInteger;
+  excerpt_end: WireInteger;
+}
+export interface ReadOptions {
+  minGeneration?: WireInteger;
+  signal?: AbortSignal;
+}
+export interface ClientOptions {
+  /** HTTPS origin, or explicit loopback HTTP for local development; no credentials/path/query/hash. */
+  baseUrl: string;
+  project: OpaqueId;
+  token: string;
+  fetch?: typeof globalThis.fetch;
+  /** May lower defaults, never exceed 8 MiB request or 10 MiB response. */
+  maxRequestBytes?: number;
+  maxResponseBytes?: number;
+}
+export class OojuroError extends Error {
+  readonly code: string;
+  readonly status?: number;
+  /** Every commit attempt lacking a validated ACK remains unknown, including a rejected retry. */
+  readonly outcome: "none" | "unknown";
+}
+export class PreparedCommit {
+  private constructor();
+  /** Exactly one attempt; no automatic retry and no new identity allocation. */
+  send(options?: { signal?: AbortSignal }): Promise<Outcome>;
+}
+export function reportedTrace(
+  text: string,
+  fields?: Partial<Omit<Trace, "text" | "format">>,
+): Trace;
+export interface SearchInput {
+  requestId: string;
+  query: string;
+  k: number;
+  /** Frozen with the original intent; changing it is a different search. */
+  minGeneration?: WireInteger;
+}
+export class PreparedSearch {
+  private constructor();
+  /** Exactly one attempt. Status-only retries never execute or return earlier result bytes. */
+  send(options?: { signal?: AbortSignal }): Promise<Read<SearchHit[]>>;
+}
+export class OojuroClient {
+  constructor(options: ClientOptions);
+  prepareCommit(input: CommitInput): PreparedCommit;
+  access(options?: ReadOptions): Promise<Read<AuthorizationGrant>>;
+  records(options?: ReadOptions): Promise<Read<TraceRecord[]>>;
+  record(id: OpaqueId, options?: ReadOptions): Promise<Read<TraceRecord>>;
+  prepareSearch(input: SearchInput): PreparedSearch;
+  search(input: SearchInput, options?: { signal?: AbortSignal }): Promise<Read<SearchHit[]>>;
+  blob(
+    writer: OpaqueId,
+    name: string,
+    options?: ReadOptions,
+  ): Promise<{ generation: WireInteger; bytes: Uint8Array; revision?: OpaqueId }>;
+  /** All-or-nothing bounded JSONL consumption: results exist only after clean, validated EOF. */
+  exportRecords(
+    options?: ReadOptions,
+  ): Promise<{ generation: WireInteger; records: TraceRecord[] }>;
+}

@@ -115,7 +115,7 @@ pub fn write_run(path: &Path, rows: &mut dyn Iterator<Item = Vec<u8>>, opts: &Ru
     let mut first: Vec<Vec<u8>> = Vec::new();
     let mut buffered = 0usize;
     if opts.dict_bytes > 0 {
-        while let Some(r) = rows.next() {
+        for r in &mut *rows {
             if r.len() > MAX_FRAME {
                 return Err(Error::Invalid("row exceeds the 64 MiB frame limit"));
             }
@@ -145,7 +145,7 @@ pub fn write_run(path: &Path, rows: &mut dyn Iterator<Item = Vec<u8>>, opts: &Ru
         entries.push((p.payload.len() as u32, p.count, p.raw_len));
         Ok(())
     };
-    let pack = PackOpts { level: opts.level, frame_bytes: opts.frame_bytes, dedupe_chunk: opts.dedupe_chunk, threads: opts.threads };
+    let pack = PackOpts { level: opts.level, frame_bytes: opts.frame_bytes, dedupe_chunk: opts.dedupe_chunk, threads: opts.threads, cipher: None };
     let mut packer = Packer::new(pack, 0, dict_id, dict.as_deref().or(shared.map(|d| &d.bytes[..])));
     packer.shared = shared.cloned();
     for r in first.into_iter().chain(rows) {
@@ -198,22 +198,22 @@ pub struct RunReader {
 }
 
 impl Frames for RunReader {
-    fn loc(&self, i: usize) -> Loc {
-        self.frames[i]
+    fn loc(&self, i: usize) -> Result<Loc> {
+        self.frames.get(i).copied().ok_or(Error::NotFound)
     }
     fn frame_index(&self, seq: u64) -> Result<usize> {
         let i = self.frames.partition_point(|f| f.first_seq + f.count as u64 <= seq);
         if i < self.frames.len() && self.frames[i].first_seq <= seq { Ok(i) } else { Err(Error::NotFound) }
     }
-    fn file(&self, _: u64) -> &File {
-        &self.file
+    fn file(&self, _: u64) -> Result<crate::reader::FileLease<'_>> {
+        Ok(crate::reader::FileLease::Borrowed(&self.file))
     }
-    fn dict(&self, id: u32) -> Option<&[u8]> {
-        match id {
+    fn dict(&self, id: u32) -> Result<Option<crate::reader::DictLease<'_>>> {
+        Ok(match id {
             1 => self.dict.as_deref(),
             2 => self.shared.as_ref().map(|d| &d.bytes[..]),
             _ => None,
-        }
+        }.map(crate::reader::DictLease::Borrowed))
     }
     fn ddict(&self, id: u32) -> Option<&'static zstd::zstd_safe::DDict<'static>> {
         (id == 2).then(|| self.shared.as_ref().map(|d| d.ddict)).flatten()

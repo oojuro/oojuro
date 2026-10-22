@@ -14,7 +14,13 @@ path = "src/bin/oojuro.rs"
 name = "oojurod"
 path = "src/bin/oojurod.rs"
 
+[[bin]]
+name = "oojuro-native"
+path = "src/bin/oojuro-native.rs"
+
 [dependencies]
+oojuro-engine = { path = "../oojuro-engine" }
+blake3.workspace = true
 oojuro-capture = { path = "../oojuro-capture" }
 oojuro-proxy = { path = "../oojuro-proxy" }
 oojuro-trace = { path = "../oojuro-trace" }
@@ -26,6 +32,7 @@ regex = "1"
 jiff = "0.2"
 aho-corasick = "1"
 libc = "0.2"
+ring = "0.17"
 prost = { version = "0.14", default-features = false, features = ["derive", "std"] }
 flate2 = "1"
 
