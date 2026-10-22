@@ -4678,6 +4678,7 @@ dependencies = [
  "libc",
  "oojuro-core",
  "oojuro-nine",
+ "oojuro-rank",
  "oojuro-store",
  "oojuro-trace",
  "ring",

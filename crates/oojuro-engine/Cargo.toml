@@ -7,6 +7,7 @@ repository.workspace = true
 description = "Oojuro foundation: sealed raw/parsed authority and native lexical retrieval."
 
 [dependencies]
+oojuro-rank = { path = "../oojuro-rank" }
 oojuro-store = { path = "../oojuro-store" }
 serde.workspace = true
 serde_json.workspace = true

@@ -47,6 +47,16 @@ pub struct WorkBudget {
 }
 
 impl WorkBudget {
+    pub fn new(units: usize) -> Self {
+        Self {
+            remaining: units,
+            exhausted: false,
+        }
+    }
+    pub fn exhausted(&self) -> bool {
+        self.exhausted
+    }
+
     pub fn charge(&mut self, units: usize) -> Result<(), Skip> {
         if let Some(remaining) = self.remaining.checked_sub(units) {
             self.remaining = remaining;
@@ -58,7 +68,50 @@ impl WorkBudget {
     }
 }
 
+/// A currently visible original row. Identifiers, text and metadata remain untrusted data.
+pub struct Visible<'a> {
+    pub id: &'a str,
+    pub writer: &'a str,
+    pub time: i64,
+    pub text: &'a str,
+}
+/// Read-only writer/view-bound data supplied by the engine, never a provider handle.
+pub struct Context<'a> {
+    pub visible: &'a [Visible<'a>],
+    pub table: &'a [u8],
+}
+pub struct Expansion {
+    pub text: String,
+    pub repetitions: NonZeroU32,
+}
 pub trait Ranker: Send + Sync {
+    fn expand(
+        &self,
+        _query: &[Term<'_>],
+        _cx: &Context<'_>,
+        _work: &mut WorkBudget,
+    ) -> Result<Vec<Expansion>, Skip> {
+        Ok(vec![])
+    }
+    fn candidates(
+        &self,
+        _query: &[Term<'_>],
+        _cx: &Context<'_>,
+        _limit: usize,
+        _work: &mut WorkBudget,
+    ) -> Result<Vec<String>, Skip> {
+        Ok(vec![])
+    }
+    fn rescore_context(
+        &self,
+        query: &[Term<'_>],
+        candidates: &[Candidate<'_>],
+        _cx: &Context<'_>,
+        work: &mut WorkBudget,
+    ) -> Result<Vec<f64>, Skip> {
+        self.rescore(query, candidates, work)
+    }
+
     /// Changing the implementation or table contents must change its version.
     fn identity(&self) -> Identity<'_>;
     /// Declared worst-case work for this query and bounded candidate slice.
@@ -184,13 +237,23 @@ pub fn rescore<'a>(
         let identity = stage.ranker.identity();
         let mut receipt = Receipt {
             weight: stage.weight,
-            id: identity.id.into(),
-            version: identity.version.into(),
-            table_version: identity.table_version.map(Into::into),
+            id: identity.id.chars().take(128).collect(),
+            version: identity.version.chars().take(128).collect(),
+            table_version: identity
+                .table_version
+                .map(|v| v.chars().take(128).collect()),
             skipped: None,
         };
         let deltas = (|| {
-            if identity.id.is_empty()
+            if identity.id.len() > 128
+                || identity.version.len() > 128
+                || identity.table_version.is_some_and(|v| v.len() > 128)
+                || identity
+                    .id
+                    .chars()
+                    .chain(identity.version.chars())
+                    .any(char::is_control)
+                || identity.id.is_empty()
                 || identity.version.is_empty()
                 || identity.table_version == Some("")
             {

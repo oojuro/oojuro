@@ -3,6 +3,9 @@
 mod authority;
 mod index;
 pub mod paged;
+pub mod ranking;
+pub mod context;
+pub mod rank_tables;
 pub mod persistent;
 pub mod projection;
 mod view;
