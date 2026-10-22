@@ -573,18 +573,27 @@ function safeError(error, committing) {
       "search_completed",
       "search_failed",
     ];
-    const code =
-      error instanceof OojuroError && known.includes(error.code) ? error.code : "transport";
-    return new OojuroError(code, {
-      status:
-        error instanceof OojuroError &&
-        Number.isInteger(error.status) &&
-        error.status >= 100 &&
-        error.status <= 599
-          ? error.status
-          : undefined,
-      outcome: committing ? "unknown" : "none",
-    });
+    let code = "transport",
+      status;
+    if (error instanceof OojuroError) {
+      const codeDescriptor = Object.getOwnPropertyDescriptor(error, "code");
+      const statusDescriptor = Object.getOwnPropertyDescriptor(error, "status");
+      const rawCode =
+        codeDescriptor && Object.hasOwn(codeDescriptor, "value") ? codeDescriptor.value : undefined;
+      const rawStatus =
+        statusDescriptor && Object.hasOwn(statusDescriptor, "value")
+          ? statusDescriptor.value
+          : undefined;
+      if (typeof rawCode === "string" && known.includes(rawCode)) code = rawCode;
+      if (
+        typeof rawStatus === "number" &&
+        Number.isInteger(rawStatus) &&
+        rawStatus >= 100 &&
+        rawStatus <= 599
+      )
+        status = rawStatus;
+    }
+    return new OojuroError(code, { status, outcome: committing ? "unknown" : "none" });
   } catch {
     return new OojuroError("transport", { outcome: committing ? "unknown" : "none" });
   }

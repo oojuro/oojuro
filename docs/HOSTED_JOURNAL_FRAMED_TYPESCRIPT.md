@@ -67,11 +67,12 @@ Focused Node fixtures cover full 16 MiB worst JSON escaping, mutated transport
 buffers and recreated retries, exact empty/BOM/Unicode text, own-data preflight,
 malformed/truncated/unsafe/duplicate frames, lower budgets, abort and original
 JSON limits. The descriptor case consumes the actual Rust HTTP fixture from the
-preceding JSON milestone. Final evidence: 12 framed/discovery cases and 71 preceding SDK cases pass with
+preceding JSON milestone. Final evidence: 13 framed/discovery cases and 71 preceding SDK cases pass with
 strict cached TypeScript. The actual small-frame Rust HTTP fixture retains
 request/response bytes and headers, plus framed-to-JSON identical-receipt and
 changed-input conflict controls. Separate server-owned focused tests passed full
 16 MiB POST/GET and the unread-body deadline; aggregate server lifecycle gates
 remain separate. Source-before-fix borrowed-chunk mutation and cross-realm shared
 buffer controls fail, then pass after correction. A hostile error-code/status
-getter also remains inside fixed private-safe errors. No live provider, AWS, or production acceptance claim.
+getter also remains inside fixed private-safe errors: normalization reads only
+own-data descriptors and never invokes error accessors. No live provider, AWS, or production acceptance claim.

@@ -639,3 +639,30 @@ test("hostile SDK-error code/status getters cannot escape private-safe read/writ
     );
   }
 });
+
+test("stateful SDK-error accessors cannot substitute private code or status after validation", async () => {
+  for (const field of ["code", "status"]) {
+    let reads = 0;
+    const hostile = new OojuroError("http", { status: 503 });
+    Object.defineProperty(hostile, field, {
+      get() {
+        reads++;
+        return field === "code" ? (reads === 1 ? "http" : PRIVATE) : reads < 4 ? 503 : PRIVATE;
+      },
+    });
+    const client = sdk(async () => {
+      throw hostile;
+    });
+    await assert.rejects(client.journalRecordFramed({ expectedRoot: root(), id: I }), (error) => {
+      assert.ok(error instanceof OojuroError);
+      for (const text of [error.message, inspect(error), JSON.stringify(error)])
+        assert.ok(!text.includes(PRIVATE));
+      return true;
+    });
+    assert.equal(
+      reads,
+      0,
+      "normalization must inspect data descriptors without invoking accessors",
+    );
+  }
+});
