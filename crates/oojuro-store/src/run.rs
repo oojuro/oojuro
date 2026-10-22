@@ -115,7 +115,7 @@ pub fn write_run(path: &Path, rows: &mut dyn Iterator<Item = Vec<u8>>, opts: &Ru
     let mut first: Vec<Vec<u8>> = Vec::new();
     let mut buffered = 0usize;
     if opts.dict_bytes > 0 {
-        while let Some(r) = rows.next() {
+        for r in &mut *rows {
             if r.len() > MAX_FRAME {
                 return Err(Error::Invalid("row exceeds the 64 MiB frame limit"));
             }
