@@ -81,6 +81,9 @@ fn peer(stream: &UnixStream) -> bool {
             && cred.uid == uid()
     }
 }
+fn trusted_ancestor(owner: u32, mode: u32, current: u32) -> bool {
+    (owner == 0 || owner == current) && (mode & 0o022 == 0 || (owner == 0 && mode & 0o1000 != 0))
+}
 fn path_check(path: &Path) -> Result<(), Failure> {
     if !path.is_absolute()
         || path.as_os_str().as_bytes().len() > 103
@@ -100,7 +103,7 @@ fn path_check(path: &Path) -> Result<(), Failure> {
             return Err("private_socket_parent_required");
         }
         // Public ancestors may be root-owned sticky directories; the final parent must be private.
-        if m.mode() & 0o022 != 0 && !(m.uid() == 0 && m.mode() & 0o1000 != 0) {
+        if !trusted_ancestor(m.uid(), m.mode(), uid()) {
             return Err("private_socket_parent_required");
         }
     }
@@ -365,5 +368,22 @@ pub(super) fn call(path: &Path, namespace: Namespace, envelope: Value) -> Result
         (true, Some(result), None) => Ok(result),
         (false, None, Some(_)) => Err("read_refused"),
         _ => Err("invalid_response"),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn ancestor_policy_refuses_foreign_owner_even_without_public_write_permission() {
+        assert!(!trusted_ancestor(1001, 0o755, 1000));
+        assert!(!trusted_ancestor(1001, 0o700, 1000));
+        assert!(!trusted_ancestor(1001, 0o1777, 1000));
+        assert!(trusted_ancestor(1000, 0o700, 1000));
+        assert!(trusted_ancestor(1000, 0o755, 1000));
+        assert!(trusted_ancestor(0, 0o755, 1000));
+        assert!(trusted_ancestor(0, 0o1777, 1000));
+        assert!(!trusted_ancestor(0, 0o777, 1000));
+        assert!(!trusted_ancestor(1000, 0o777, 1000));
     }
 }
