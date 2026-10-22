@@ -4,7 +4,7 @@ use crate::{
     capture_log::{CachePrefix, CaptureLog, Decision, Event, Identity},
     record::{
         self, AsOf, Filter, Input, Kind, Scope, Status,
-        managed::{AppendResult, Binding, ManagedLog, paged::ManagedPagedLog},
+        managed::{AppendResult, Binding, ManagedLog, ManagedPagedLog},
     },
 };
 use serde::{Deserialize, Serialize};
