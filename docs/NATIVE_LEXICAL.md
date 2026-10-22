@@ -94,3 +94,5 @@ all adapters or ranker integration is claimed. Full TraceBench/30,905-turn-loop 
 external retrieval corpora, size/ingest/latency, 10M/100M, power loss and host/AZ
 acceptance remain separate specification gates. No real logs, provider calls,
 training, migration, default runtime selection, merge or deployment occurred.
+
+The separate opt-in persisted derived slice is documented in [NATIVE_SEGMENTS.md](NATIVE_SEGMENTS.md). Its bounds and unfinished disk/scale gates remain explicit.

@@ -826,6 +826,30 @@ impl Store {
         Ok(())
     }
 
+    /// Read-only ciphertext incarnation fingerprint for disposable derived caches.
+    /// Requires a healthy, strictly sealed nonempty store. Compaction may change
+    /// it, deliberately invalidating caches; it is not a durable authority ID.
+    pub fn sealed_origin_digest(&self) -> Result<[u8; 32]> {
+        if self.poisoned || !self.opts.require_sealed || self.opts.cipher.is_none() {
+            return Err(Error::Invalid("sealed origin requires healthy sealed store"));
+        }
+        let frame = self.frames.first().ok_or(Error::Invalid("empty sealed store"))?;
+        let mut hash = blake3::Hasher::new();
+        hash.update(b"oojuro/sealed-origin/v1\0");
+        let file = self.files.get(&frame.file).ok_or(Error::Corrupt("origin file"))?;
+        let mut at = frame.offset;
+        let mut left = u64::from(frame.payload_len) + 8;
+        let mut buffer = [0u8; 8192];
+        while left != 0 {
+            let n = left.min(buffer.len() as u64) as usize;
+            file.read_exact_at(&mut buffer[..n], at)?;
+            hash.update(&buffer[..n]);
+            at += n as u64;
+            left -= n as u64;
+        }
+        Ok(*hash.finalize().as_bytes())
+    }
+
     pub fn len(&self) -> u64 {
         self.next_seq
     }

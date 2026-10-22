@@ -1,9 +1,11 @@
 //! Native bounded in-memory lexical port. CaptureLog is its sole authority.
 //! Arithmetic and query semantics come from nine text.rs/segment.rs/v4.rs and
-//! trace's EventIn mapping. There is no oracle runtime, disk cache or second WAL.
-//! Disk segments, merge, retention/erasure, learned outcomes and launch scale are
+//! trace's EventIn mapping. There is no oracle runtime or second WAL.
+//! The opt-in `segments` module adds a bounded disposable disk cache.
+//! Retention/erasure, learned outcomes and launch scale are
 //! deliberately outside this slice. Each index is bound to one open writer log.
 mod args;
+pub mod segments;
 mod text;
 use crate::capture_log::{CaptureLog, Event, ParsedBatch};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
@@ -103,6 +105,10 @@ impl Index {
         self.applied
     }
     fn apply(&mut self, batch: &ParsedBatch) -> Result<()> {
+        self.apply_mode(batch, true)
+    }
+    // Cache hydration shares the exact canonical host/dedupe policy, without tokenization.
+    fn apply_mode(&mut self, batch: &ParsedBatch, tokenize: bool) -> Result<()> {
         for event in &batch.events {
             if event.agent != self.agent || event.revises != 0 {
                 return Err(Error::Authority);
@@ -123,7 +129,7 @@ impl Index {
                 }
                 continue;
             }
-            let terms = if indexed {
+            let terms = if indexed && tokenize {
                 analyze(&event.text)?
             } else {
                 vec![]
@@ -455,7 +461,11 @@ impl Index {
         (result, anchored && literal.is_none())
     }
 }
+#[cfg(test)]
+thread_local! { static ANALYSES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
 fn analyze(text: &str) -> Result<Vec<(String, u32)>> {
+    #[cfg(test)]
+    ANALYSES.with(|n| n.set(n.get() + 1));
     let mut raw = HashMap::<String, usize>::new();
     for token in retrieval_terms(text) {
         *raw.entry(token).or_default() += 1;

@@ -134,8 +134,19 @@ pub struct Progress {
     pub tail_policy: Option<String>,
     pub context: Vec<u8>,
 }
+/// Checked committed record prefix, including header, registrations, raw bytes
+/// and exact authorized parsed receipts. Not an independent durable authority.
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(crate) struct CachePrefix {
+    pub records: u64,
+    pub batches: usize,
+    pub digest: [u8; 32],
+}
 pub struct CaptureLog {
     store: Store,
+    cipher: Arc<FrameCipher>,
+    prefixes: Vec<CachePrefix>,
     instance: u64,
     identity: Identity,
     sources: BTreeMap<Source, SourceState>,
@@ -171,10 +182,11 @@ impl CaptureLog {
                 "capture authority requires a dedicated directory",
             ));
         }
+        let cipher = Arc::new(FrameCipher::new(key));
         let store = Store::open(
             dir,
             Options {
-                cipher: Some(Arc::new(FrameCipher::new(key))),
+                cipher: Some(cipher.clone()),
                 require_sealed: true,
                 sync: true,
                 compact_threads: 1,
@@ -183,6 +195,8 @@ impl CaptureLog {
         )?;
         let mut log = Self {
             store,
+            cipher,
+            prefixes: Vec::new(),
             instance: next_instance()?,
             next_id: identity.first_id,
             identity,
@@ -201,12 +215,58 @@ impl CaptureLog {
         } else if log.store.get(0)? != header {
             return Err(Error::Corrupt("capture format or identity mismatch"));
         }
+        log.add_prefix(0, &header)?;
         for seq in 1..log.store.len() {
             let bytes = log.store.get(seq)?;
             log.replay(seq, &bytes)?;
         }
         std::fs::File::open(parent)?.sync_all()?;
         Ok(log)
+    }
+    pub(crate) fn cache_cipher(&self) -> Arc<FrameCipher> {
+        self.cipher.clone()
+    }
+    pub(crate) fn cache_origin(&self) -> Result<[u8; 32]> {
+        self.healthy()?;
+        self.store.sealed_origin_digest()
+    }
+    pub(crate) fn cache_prefix(&self, records: u64) -> Result<CachePrefix> {
+        self.healthy()?;
+        self.prefixes
+            .get(
+                records
+                    .checked_sub(1)
+                    .ok_or(Error::Invalid("empty capture prefix"))? as usize,
+            )
+            .cloned()
+            .ok_or(Error::Invalid("capture prefix beyond authority"))
+    }
+    pub(crate) fn cache_tip(&self) -> Result<CachePrefix> {
+        self.healthy()?;
+        if self.prefixes.len() as u64 != self.store.len() {
+            return Err(Error::Corrupt("capture prefix coverage"));
+        }
+        self.prefixes
+            .last()
+            .cloned()
+            .ok_or(Error::Corrupt("capture prefix missing"))
+    }
+    fn add_prefix(&mut self, seq: u64, bytes: &[u8]) -> Result<()> {
+        if seq != self.prefixes.len() as u64 {
+            return Err(Error::Corrupt("capture prefix sequence"));
+        }
+        let mut h = blake3::Hasher::new();
+        h.update(b"oojuro/capture-prefix/v1\0");
+        h.update(&self.prefixes.last().map_or([0; 32], |p| p.digest));
+        h.update(&seq.to_le_bytes());
+        h.update(&(bytes.len() as u64).to_le_bytes());
+        h.update(bytes);
+        self.prefixes.push(CachePrefix {
+            records: seq + 1,
+            batches: self.batches.len(),
+            digest: *h.finalize().as_bytes(),
+        });
+        Ok(())
     }
     fn healthy(&self) -> Result<()> {
         if self.failed {
@@ -520,7 +580,7 @@ impl CaptureLog {
             }
             _ => return Err(Error::Corrupt("unknown capture authority record")),
         }
-        Ok(())
+        self.add_prefix(seq, bytes)
     }
     pub fn compact(&mut self) -> Result<()> {
         self.healthy()?;
