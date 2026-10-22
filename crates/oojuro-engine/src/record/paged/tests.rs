@@ -719,3 +719,89 @@ fn paged_sigkill_new_cache_publication_preserves_original_ack_and_query() {
         );
     }
 }
+
+#[test]
+fn future_rows_change_literal_df_but_old_snapshot_keeps_native_bits_and_identifiers() {
+    let f = Fixture::new();
+    let mut log = f.log();
+    log.append(
+        "old",
+        &[
+            row("alpha beta foo_bar", Some("memory"), 10),
+            row("alpha alpha", None, 11),
+            row("foo and bar continuation", None, 12),
+        ],
+    )
+    .unwrap();
+    let old_native = View::open(&log, scope(), AsOf::default()).unwrap();
+    let texts = [
+        "alpha",
+        "foo_bar",
+        "\"alpha beta\"",
+        "\"beta\"",
+        "key:memory",
+        "foo",
+    ];
+    let native = super::super::Index::rebuild(&log).unwrap();
+    let before: Vec<_> = texts
+        .iter()
+        .map(|t| {
+            signature(
+                native
+                    .search_view(&log, &old_native, &query(t, AsOf::default()))
+                    .unwrap(),
+            )
+        })
+        .collect();
+    drop(native);
+    drop(log);
+    let reader = f.reader(None);
+    let old_paged = reader.view(scope(), AsOf::default()).unwrap();
+    let mut cache = f.index(&reader);
+    drop(reader);
+    let mut log = f.log();
+    let mut future = (0..60)
+        .map(|i| row("beta beta future", None, 100 + i))
+        .collect::<Vec<_>>();
+    future.push(row("memory future foo_bar beta", Some("memory"), 200));
+    log.append("future", &future).unwrap();
+    let native = super::super::Index::rebuild(&log).unwrap();
+    let after: Vec<_> = texts
+        .iter()
+        .map(|t| {
+            signature(
+                native
+                    .search_view(&log, &old_native, &query(t, AsOf::default()))
+                    .unwrap(),
+            )
+        })
+        .collect();
+    assert_eq!(before, after);
+    drop(native);
+    drop(log);
+    let reader = f.reader(None);
+    cache.refresh(&reader).unwrap();
+    for (i, text) in texts.iter().enumerate() {
+        assert_eq!(
+            signature(
+                cache
+                    .search_view(&reader, &old_paged, &query(text, AsOf::default()))
+                    .unwrap()
+            ),
+            after[i],
+            "before merge {text}"
+        );
+    }
+    cache.merge(&reader).unwrap();
+    for (i, text) in texts.iter().enumerate() {
+        assert_eq!(
+            signature(
+                cache
+                    .search_view(&reader, &old_paged, &query(text, AsOf::default()))
+                    .unwrap()
+            ),
+            after[i],
+            "after merge {text}"
+        );
+    }
+}

@@ -91,6 +91,14 @@ continuation. Direct actual-key reads keep their original zero lexical score,
 and stored-only punctuation/literal queries keep the eligibility guard. Visibility
 and known-time/key winner selection happen BEFORE candidates and background
 statistics. There is no approximate per-segment top-k or post-top-k filtering.
+For historical snapshots, literal rarest-term selection deliberately uses DF
+from the whole current manifest, exactly as the existing native Index does even
+when passed an old View. This is only a candidate-scan optimization: snapshot
+visibility, identifier occurrence and F3 background statistics remain restricted
+to the historical prefix. A regression appends rows that flip the rarest term,
+adds a later key version and identifier occurrences, then compares exact native
+old-View IDs/bits/continuation before and after paged refresh/merge.
+
 The separate externally supplied opaque-ID projection is untouched by this
 Record2/u64 storage path; no conversion or reassignment of those IDs is implied.
 
