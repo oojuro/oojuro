@@ -5,6 +5,7 @@
 //! Retention/erasure, learned outcomes and launch scale are
 //! deliberately outside this slice. Each index is bound to one open writer log.
 mod args;
+pub(crate) mod record_cache;
 pub mod segments;
 mod text;
 use crate::capture_log::{CaptureLog, Event, ParsedBatch};
@@ -111,6 +112,14 @@ impl Index {
         owner: u32,
         rows: impl Iterator<Item = (u64, i64, &'a str, bool)>,
     ) -> Result<Self> {
+        Self::record_rows_mode(writer, owner, rows, true)
+    }
+    pub(crate) fn record_rows_mode<'a>(
+        writer: &str,
+        owner: u32,
+        rows: impl Iterator<Item = (u64, i64, &'a str, bool)>,
+        tokenize: bool,
+    ) -> Result<Self> {
         let mut index = Self {
             writer: writer.into(),
             agent: owner,
@@ -121,8 +130,22 @@ impl Index {
             postings: BTreeMap::new(),
             seen: HashMap::new(),
         };
+        index.append_record_rows(rows, tokenize)?;
+        Ok(index)
+    }
+    pub(crate) fn append_record_rows<'a>(
+        &mut self,
+        rows: impl Iterator<Item = (u64, i64, &'a str, bool)>,
+        tokenize: bool,
+    ) -> Result<()> {
+        if self.authority != 0 || self.failed {
+            return Err(Error::Authority);
+        }
         for (id, valid_at, text, indexed) in rows {
-            let terms = if indexed && !text.is_empty() {
+            if self.documents.last().is_some_and(|old| old.event.id >= id) {
+                return Err(Error::Authority);
+            }
+            let terms = if tokenize && indexed && !text.is_empty() {
                 analyze(text)?
             } else {
                 vec![]
@@ -130,9 +153,9 @@ impl Index {
             let length = u32::try_from(terms.iter().map(|(_, n)| u64::from(*n)).sum::<u64>())
                 .map_err(|_| Error::Invalid)?;
             let scope = u32::try_from(terms.len()).map_err(|_| Error::Invalid)?;
-            let row = index.documents.len();
+            let row = self.documents.len();
             for (term, tf) in terms {
-                index.postings.entry(term).or_default().push((row, tf));
+                self.postings.entry(term).or_default().push((row, tf));
             }
             // Internal lexical carrier only. Never a fabricated capture receipt:
             // no harness identity/policy/provenance is exported from this path.
@@ -140,7 +163,7 @@ impl Index {
                 id,
                 session: 0,
                 parent_session: 0,
-                agent: owner,
+                agent: self.agent,
                 turn: 0,
                 seq: 0,
                 parent: 0,
@@ -160,14 +183,14 @@ impl Index {
                 line_end: 0,
                 emission: 0,
             };
-            index.documents.push(Document {
+            self.documents.push(Document {
                 event,
                 length,
                 scope,
                 normalized_args: String::new(),
             });
         }
-        Ok(index)
+        Ok(())
     }
     pub fn applied_batches(&self) -> usize {
         self.applied
@@ -625,3 +648,8 @@ fn best_indices(values: &[f64], m: usize) -> Vec<usize> {
 #[cfg(test)]
 #[path = "lexical/tests.rs"]
 mod tests;
+
+#[cfg(test)]
+pub(crate) fn analysis_count() -> usize {
+    ANALYSES.with(|n| n.get())
+}

@@ -1,7 +1,7 @@
 //! Explicit opt-in, encrypted and disposable native lexical segments.
 //! CaptureLog alone commits data. Cache failure never changes an authority ACK.
 //! Bounded RAM merge, not the SPEC's external-memory multi-gigabyte engine.
-mod codec;
+pub(crate) mod codec;
 use super::{Error, Hit, Index, Query, Result};
 use crate::capture_log::{CachePrefix, CaptureLog, MAX_EVENTS};
 use oojuro_store::crypto::{FrameCipher, SEAL_OVERHEAD, random_key};
