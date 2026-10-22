@@ -4680,6 +4680,7 @@ dependencies = [
  "oojuro-nine",
  "oojuro-store",
  "oojuro-trace",
+ "ring",
  "rust-stemmers",
  "serde",
  "serde_json",

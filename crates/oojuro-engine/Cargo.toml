@@ -12,6 +12,7 @@ serde.workspace = true
 serde_json.workspace = true
 blake3.workspace = true
 rust-stemmers = "=1.2.0"
+ring = "=0.17.14"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
