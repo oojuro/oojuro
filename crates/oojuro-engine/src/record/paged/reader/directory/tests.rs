@@ -205,7 +205,7 @@ fn disk_cow_extend_preserves_birth_proofs_snapshot_winners_and_compacts_old_pack
         149
     );
     assert!(reader.get_key(&old, "memory", 10000).unwrap().is_none());
-    assert!(!reader.births.borrow().is_empty());
+    assert!(!reader.births.lock().unwrap().is_empty());
     assert!(packed(&f.root.join("directory")) <= initial + 4);
     let before = reader.receipt("tail").unwrap();
     reader.compact_directory().unwrap();

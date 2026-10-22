@@ -71,6 +71,9 @@ impl Reader {
         self.disk = Some(disk);
         result
     }
+    pub fn metadata_cache_accounted_bytes(&self) -> Result<usize> {
+        self.pages.accounted_bytes()
+    }
     pub fn uses_disk_directory(&self) -> bool {
         self.disk.is_some()
     }
@@ -87,6 +90,7 @@ impl Reader {
             identity: self.identity_tag,
             class: KeyClass::Data,
             sort_of: None,
+            cache: Some(&self.pages),
         }
     }
     fn binding_at(&self, sequence: u64, r: &Ref) -> Vec<u8> {
@@ -204,14 +208,20 @@ impl Authority for Reader {
         if birth == self.current()?.as_slice() {
             return Ok(());
         }
-        if self.births.borrow().iter().any(|b| b == birth) {
+        if self
+            .births
+            .lock()
+            .map_err(|_| Error::Unavailable)?
+            .iter()
+            .any(|b| b == birth)
+        {
             return Ok(());
         }
         let scalar = self.scalar_at(sequence)?;
         if scalar.records != records || scalar.digest != digest {
             return Err(Error::Authority);
         }
-        let mut cache = self.births.borrow_mut();
+        let mut cache = self.births.lock().map_err(|_| Error::Unavailable)?;
         cache.push_back(birth.to_vec());
         while cache.len() > 64 {
             cache.pop_front();
