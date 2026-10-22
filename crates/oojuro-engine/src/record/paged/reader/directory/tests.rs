@@ -333,8 +333,10 @@ fn source_duplicate_receipt_is_rejected_without_a_request_set_or_index_fallback(
         watermark: w,
     };
     let bytes = json(&b, MAX_BATCH_BYTES).unwrap();
-    reader
-        .store
+    let Source::Legacy(store) = &mut reader.store else {
+        panic!("corruption fixture requires legacy source");
+    };
+    store
         .append(&[oojuro_store::NewRecord {
             kind: 7,
             valid_at: 0,

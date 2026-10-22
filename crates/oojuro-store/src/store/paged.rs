@@ -154,8 +154,14 @@ impl PagedStore {
             .open(&temp)?;
         file.write_all(&sealed)?;
         file.sync_all()?;
+        #[cfg(test)]
+        test_phase("RootTemp");
         std::fs::rename(temp, derived.join(ROOT))?;
+        #[cfg(test)]
+        test_phase("RootPublished");
         File::open(derived)?.sync_all()?;
+        #[cfg(test)]
+        test_phase("RootDurable");
         let store = Self {
             directory: derived.into(),
             resources,
@@ -682,3 +688,14 @@ fn prepare_directory(path: &Path) -> Result<()> {
 }
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+fn test_phase(phase: &str) {
+    if std::env::var("OOJURO_PAGED_STORE_CRASH_PHASE").as_deref() == Ok(phase) {
+        println!("PAGED_STORE_BOUNDARY_READY");
+        std::io::stdout().flush().unwrap();
+        loop {
+            std::thread::park();
+        }
+    }
+}
