@@ -676,3 +676,66 @@ fn metadata_output_bound_refuses_progress_and_smaller_chunk_retry_loses_no_blank
     c.restore_raw(SOURCE, &mut raw, true).unwrap();
     assert_eq!(raw, bytes);
 }
+
+#[test]
+fn incomplete_raw_line_cannot_be_reinterpreted_by_relaxing_its_policy_identity() {
+    let f = Fixture::new();
+    let mut tail = reasoning("PENDINGTHOUGHTMARKER battery");
+    tail.pop();
+    fs::write(&f.file, [meta(), tail].concat()).unwrap();
+    let mut original = f.options();
+    original.policy_id = "strict-snapshot-v1".into();
+    let mut c = LocalCapture::open(
+        &f.root.join("authority"),
+        &KEY,
+        &f.ram,
+        original.clone(),
+        Box::new(Mode::Strict),
+    )
+    .unwrap();
+    let before = c.capture_file(SOURCE, &f.file, |_| true).unwrap().unwrap();
+    assert!(before.raw_end > before.parsed_end);
+    drop(c);
+    f.append(b"\n");
+    let mut relaxed = f.options();
+    relaxed.policy_id = "relaxed-snapshot-v2".into();
+    let mut c = LocalCapture::open(
+        &f.root.join("authority"),
+        &KEY,
+        &f.ram,
+        relaxed.clone(),
+        Box::new(Mode::Allow),
+    )
+    .unwrap();
+    assert!(matches!(
+        c.capture_file(SOURCE, &f.file, |_| true),
+        Err(Error::Invalid(_))
+    ));
+    assert_eq!(c.report(SOURCE).unwrap(), before);
+    drop(c);
+    let mut c = LocalCapture::open(
+        &f.root.join("authority"),
+        &KEY,
+        &f.ram,
+        original,
+        Box::new(Mode::Strict),
+    )
+    .unwrap();
+    let done = c.capture_file(SOURCE, &f.file, |_| true).unwrap().unwrap();
+    assert!(done.event_ids.is_empty());
+    assert_eq!(done.raw_end, done.parsed_end);
+    drop(c);
+    let c = LocalCapture::open(
+        &f.root.join("authority"),
+        &KEY,
+        &f.ram,
+        relaxed,
+        Box::new(Mode::Allow),
+    )
+    .unwrap();
+    assert!(
+        c.search("PENDINGTHOUGHTMARKER", 0, i64::MAX, 10)
+            .unwrap()
+            .is_empty()
+    );
+}

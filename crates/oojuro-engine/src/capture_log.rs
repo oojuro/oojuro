@@ -119,6 +119,7 @@ struct SourceState {
     raw_end: u64,
     parsed_end: u64,
     file_no: u32,
+    tail_policy: Option<String>,
     blocks: Vec<Block>,
 }
 #[derive(Clone)]
@@ -126,6 +127,7 @@ pub struct Progress {
     pub raw_end: u64,
     pub parsed_end: u64,
     pub file_no: u32,
+    pub tail_policy: Option<String>,
     pub context: Vec<u8>,
 }
 pub struct CaptureLog {
@@ -242,6 +244,7 @@ impl CaptureLog {
             raw_end: s.raw_end,
             parsed_end: s.parsed_end,
             file_no: s.file_no,
+            tail_policy: s.tail_policy.clone(),
             context: s.context.clone(),
         })
     }
@@ -348,6 +351,9 @@ impl CaptureLog {
             || p.outcome.parsed_end < s.parsed_end
             || p.outcome.parsed_end > end
             || end - p.outcome.parsed_end > MAX_LINE_BYTES as u64
+            || s.tail_policy
+                .as_ref()
+                .is_some_and(|id| id != &p.policy.policy_id)
             || p.policy.policy_id.is_empty()
             || p.policy.policy_id.len() > 128
             || p.policy.raw_authorization.is_empty()
@@ -449,6 +455,7 @@ impl CaptureLog {
                         parsed_end: 0,
                         file_no: u32::try_from(self.sources.len() + 1)
                             .map_err(|_| Error::Corrupt("source ordinal exhaustion"))?,
+                        tail_policy: None,
                         blocks: Vec::new(),
                     },
                 );
@@ -474,6 +481,7 @@ impl CaptureLog {
                 }
                 s.raw_end = p.outcome.raw_end;
                 s.parsed_end = p.outcome.parsed_end;
+                s.tail_policy = (s.raw_end > s.parsed_end).then(|| p.policy.policy_id.clone());
                 s.context = p.context.clone();
                 for (e, event) in p.events.iter().enumerate() {
                     self.ids.insert(event.id, (self.batches.len(), e));

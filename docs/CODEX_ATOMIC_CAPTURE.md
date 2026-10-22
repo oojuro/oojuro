@@ -61,7 +61,11 @@ shared-human authorization service.
 Default rebuild reads only the committed authorized parsed receipts. It never
 reparses raw with current defaults or reconstructs decisions from EventOut,
 legacy export or reclaim. Changing the current policy affects only newly consumed
-lines. Previously withheld thought/tool records stay withheld; stored-only text
+complete lines. Policy IDs must identify immutable caller-supplied policy snapshots;
+the caller must change the ID when its policy semantics change. An incomplete raw
+line is bound to the policy identity under which it began: changing that identity
+refuses further capture until the original policy finishes it or an explicit
+reprocess facility is implemented. Previously withheld thought/tool records stay withheld; stored-only text
 stays unindexed. A result of a withheld call remains withheld after restart even
 if current policy permits it. Missing policy/context/output receipts or a different
 format, key, writer/allocator binding or adapter revision fails closed.

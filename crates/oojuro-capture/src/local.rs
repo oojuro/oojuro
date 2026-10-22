@@ -338,6 +338,7 @@ impl LocalCapture {
         if !retain_raw {
             return Err(Error::Invalid("raw export withheld"));
         }
+        self.ready()?;
         let end = self.log.progress(source).map_err(authority)?.raw_end;
         let mut at = 0;
         while at < end {
@@ -350,6 +351,15 @@ impl LocalCapture {
     }
     fn plan(&mut self, source: Source, path: &Path, raw: &[u8]) -> Result<Batch> {
         let old = self.log.progress(source).map_err(authority)?;
+        if old
+            .tail_policy
+            .as_ref()
+            .is_some_and(|id| id != &self.options.policy_id)
+        {
+            return Err(Error::Invalid(
+                "incomplete line requires its original policy identity",
+            ));
+        }
         let mut context = decode_context(&old.context)?;
         let mut input = self
             .log
