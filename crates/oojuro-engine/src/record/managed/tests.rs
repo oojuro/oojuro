@@ -28,7 +28,7 @@ impl Fixture {
         write_new(&root.join("test-only-signing.pk8"), &pkcs8).unwrap();
         Self { root, pkcs8 }
     }
-    fn signer(&self) -> Signer {
+    pub(super) fn signer(&self) -> Signer {
         Signer::from_pkcs8(AUTHORITY, Domain::NativeLifecycle, &self.pkcs8).unwrap()
     }
     pub(super) fn control(&self) -> Arc<RetainedControl> {

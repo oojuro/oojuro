@@ -6,6 +6,8 @@ use crate::audit::{
     Signer, Verifier,
 };
 use std::sync::{Mutex, MutexGuard};
+mod read;
+pub use read::{ControlAuditEntry, ControlAuditPage, ControlStatus};
 const CONTROL_AAD: &[u8] = b"oojuro/managed/control/v1\0";
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]

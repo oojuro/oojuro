@@ -13,7 +13,10 @@ mod control;
 mod rank_view;
 use crate::audit::{RetainedFloor, SignedCheckpoint};
 use control::State;
-pub use control::{FileWitness, LifecycleReceipt, ReceiptDetails, RetainedControl, Status};
+pub use control::{
+    ControlAuditEntry, ControlAuditPage, ControlStatus, FileWitness, LifecycleReceipt,
+    ReceiptDetails, RetainedControl, Status,
+};
 pub use rank_view::ManagedRankView;
 const FORMAT: &[u8] = b"oojuro-managed-record-3\n";
 const ENROLLMENT_AAD: &[u8] = b"oojuro/managed/data-root-enrollment/v1\0";
