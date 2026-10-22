@@ -15,6 +15,7 @@ const PAYLOAD: usize = 2 << 20;
 const REGISTRY: usize = 16 << 20;
 const TABLES: usize = 8;
 const FILE: &str = "RANK_TABLE";
+pub mod managed;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Binding {
@@ -56,11 +57,20 @@ pub struct Loaded {
     pub(super) version: String,
     pub(super) table_version: String,
     pub(super) content_version: String,
-    pub(super) binding: Binding,
-    pub(super) prefix: Watermark,
-    pub(super) as_of: AsOf,
-    pub(super) filter: Filter,
+    snapshot: Snapshot,
     pub(super) payload: Vec<u8>,
+}
+enum Snapshot {
+    Direct {
+        binding: Binding,
+        prefix: Watermark,
+        as_of: AsOf,
+        filter: Filter,
+    },
+    Managed {
+        binding: super::managed::Binding,
+        stamp: [u8; 32],
+    },
 }
 pub struct Source<'a> {
     pub id: u64,
@@ -166,11 +176,11 @@ fn lock(dir: &Path, create: bool) -> Result<File> {
     }
     Ok(file)
 }
-fn read(log: &RecordLog, guard: &dyn LifecycleGuard, b: &Binding) -> Result<Registry> {
+fn read_sealed(dir: &Path) -> Result<Vec<u8>> {
     let file = OpenOptions::new()
         .read(true)
         .custom_flags(libc::O_NOFOLLOW)
-        .open(guard.directory().join(FILE))
+        .open(dir.join(FILE))
         .map_err(|_| Error::Unavailable)?;
     let meta = file.metadata().map_err(|_| Error::Unavailable)?;
     if !meta.is_file() || meta.len() > REGISTRY as u64 + 128 {
@@ -183,6 +193,10 @@ fn read(log: &RecordLog, guard: &dyn LifecycleGuard, b: &Binding) -> Result<Regi
     if sealed.len() > REGISTRY + 128 {
         return Err(Error::Bounds);
     }
+    Ok(sealed)
+}
+fn read(log: &RecordLog, guard: &dyn LifecycleGuard, b: &Binding) -> Result<Registry> {
+    let sealed = read_sealed(guard.directory())?;
     let tip = log.tip()?;
     let plain = log.unseal(&aad(tip.origin, tip.identity, b)?, &sealed)?;
     let r: Registry = serde_json::from_slice(&plain).map_err(|_| Error::Invalid)?;
@@ -231,10 +245,8 @@ fn reap(dir: &Path) -> Result<()> {
     }
     sync(dir)
 }
-fn publish(log: &RecordLog, guard: &dyn LifecycleGuard, b: &Binding, r: &Registry) -> Result<()> {
-    unchanged(log, guard, b)?;
-    let plain = json(r, REGISTRY)?;
-    let sealed = log.seal(&aad(r.origin, r.identity, b)?, &plain);
+fn publish_sealed(dir: &Path, sealed: &[u8], check: impl Fn() -> Result<()>) -> Result<()> {
+    check()?;
     let name = format!(
         "tmp-{}.bin",
         oojuro_store::crypto::random_key()
@@ -242,7 +254,7 @@ fn publish(log: &RecordLog, guard: &dyn LifecycleGuard, b: &Binding, r: &Registr
             .map(|b| format!("{b:02x}"))
             .collect::<String>()
     );
-    let path = guard.directory().join(name);
+    let path = dir.join(name);
     let mut file = OpenOptions::new()
         .write(true)
         .create_new(true)
@@ -250,14 +262,20 @@ fn publish(log: &RecordLog, guard: &dyn LifecycleGuard, b: &Binding, r: &Registr
         .custom_flags(libc::O_NOFOLLOW)
         .open(&path)
         .map_err(|_| Error::Unavailable)?;
-    file.write_all(&sealed)
+    file.write_all(sealed)
         .and_then(|_| file.sync_all())
         .map_err(|_| Error::Unavailable)?;
+    check()?;
+    fs::rename(&path, dir.join(FILE)).map_err(|_| Error::Unavailable)?;
+    sync(dir)?;
+    check()?;
+    reap(dir)
+}
+fn publish(log: &RecordLog, guard: &dyn LifecycleGuard, b: &Binding, r: &Registry) -> Result<()> {
     unchanged(log, guard, b)?;
-    fs::rename(&path, guard.directory().join(FILE)).map_err(|_| Error::Unavailable)?;
-    sync(guard.directory())?;
-    unchanged(log, guard, b)?;
-    reap(guard.directory())
+    let plain = json(r, REGISTRY)?;
+    let sealed = log.seal(&aad(r.origin, r.identity, b)?, &plain);
+    publish_sealed(guard.directory(), &sealed, || unchanged(log, guard, b))
 }
 /// Explicit background/caller build; never invoked by search or append.
 pub struct Build<'a> {
@@ -371,10 +389,12 @@ pub fn load(
         version: e.version,
         table_version: e.table_version,
         content_version: e.content_version,
-        binding: b,
-        prefix: e.prefix,
-        as_of: e.as_of,
-        filter: e.filter,
+        snapshot: Snapshot::Direct {
+            binding: b,
+            prefix: e.prefix,
+            as_of: e.as_of,
+            filter: e.filter,
+        },
         payload: e.payload,
     })
 }
@@ -385,12 +405,21 @@ pub(super) fn validate_loaded(
     guard: &dyn LifecycleGuard,
     t: &Loaded,
 ) -> Result<()> {
-    unchanged(log, guard, &t.binding)?;
-    log.validate(&t.prefix)?;
+    let Snapshot::Direct {
+        binding,
+        prefix,
+        as_of,
+        filter: saved_filter,
+    } = &t.snapshot
+    else {
+        return Err(Error::Authority);
+    };
+    unchanged(log, guard, binding)?;
+    log.validate(prefix)?;
     log.validate(view.watermark())?;
-    if !prefix_eq(&t.prefix, view.watermark())
-        || t.as_of != view.as_of()
-        || !filter_eq(&t.filter, filter)?
+    if !prefix_eq(prefix, view.watermark())
+        || *as_of != view.as_of()
+        || !filter_eq(saved_filter, filter)?
     {
         return Err(Error::Authority);
     }
@@ -398,10 +427,8 @@ pub(super) fn validate_loaded(
 }
 /// Deletes only registered disposable files, under the current owning guard.
 /// Managed retired-generation cleanup additionally retires the enclosing owner directory.
-pub fn remove_all(log: &RecordLog, guard: &dyn LifecycleGuard) -> Result<()> {
-    let b = binding(log, guard)?;
-    let _lock = lock(guard.directory(), false)?;
-    for entry in fs::read_dir(guard.directory()).map_err(|_| Error::Unavailable)? {
+fn remove_registered(dir: &Path) -> Result<()> {
+    for entry in fs::read_dir(dir).map_err(|_| Error::Unavailable)? {
         let e = entry.map_err(|_| Error::Unavailable)?;
         let name = e.file_name();
         let name = name.to_str().ok_or(Error::Invalid)?;
@@ -412,6 +439,12 @@ pub fn remove_all(log: &RecordLog, guard: &dyn LifecycleGuard) -> Result<()> {
             fs::remove_file(e.path()).map_err(|_| Error::Unavailable)?;
         }
     }
-    sync(guard.directory())?;
+    sync(dir)?;
+    Ok(())
+}
+pub fn remove_all(log: &RecordLog, guard: &dyn LifecycleGuard) -> Result<()> {
+    let b = binding(log, guard)?;
+    let _lock = lock(guard.directory(), false)?;
+    remove_registered(guard.directory())?;
     unchanged(log, guard, &b)
 }
