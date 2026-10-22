@@ -210,6 +210,7 @@ pub(super) fn serve(
 #[derive(Clone, Copy)]
 enum Field {
     Text(usize),
+    Query,
     Unsigned(u64, u64),
     Time,
     Choice(&'static [&'static str]),
@@ -217,6 +218,7 @@ enum Field {
 impl Field {
     fn schema(self) -> Value {
         match self {
+            Self::Query => json!({"type":"string","maxLength":INPUT_BYTES}),
             Self::Text(max) => json!({"type":"string","minLength":1,"maxLength":max}),
             Self::Unsigned(min, max) => json!({"type":"integer","minimum":min,"maximum":max}),
             Self::Time => json!({"type":"integer","minimum":i64::MIN,"maximum":i64::MAX}),
@@ -225,6 +227,9 @@ impl Field {
     }
     fn valid(self, value: &Value) -> bool {
         match self {
+            Self::Query => value
+                .as_str()
+                .is_some_and(|s| s.len() <= INPUT_BYTES && !s.contains('\0')),
             Self::Text(max) => value
                 .as_str()
                 .is_some_and(|s| !s.is_empty() && s.len() <= max && !s.contains('\0')),
@@ -264,7 +269,7 @@ fn definitions(namespace: &str, name: &str) -> Option<Vec<(&'static str, Field)>
         fields.extend(timecuts);
         match name {
             "search" => {
-                fields.extend([("query", Text(INPUT_BYTES)), ("k", Unsigned(1, 1000))]);
+                fields.extend([("query", Query), ("k", Unsigned(1, 1000))]);
                 fields.extend(filters);
             }
             "get" => fields.extend([("id", Unsigned(1, u64::MAX)), ("key", Text(1024))]),
@@ -281,7 +286,7 @@ fn definitions(namespace: &str, name: &str) -> Option<Vec<(&'static str, Field)>
     } else {
         match name {
             "search" => fields.extend([
-                ("query", Text(INPUT_BYTES)),
+                ("query", Query),
                 ("k", Unsigned(1, 1000)),
                 ("from_us", Time),
                 ("to_us", Time),
