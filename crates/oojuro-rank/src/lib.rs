@@ -4,7 +4,7 @@
 //! Rankers see only that bounded slice and cannot insert rows. Implementations are trusted,
 //! deterministic, in-process code: the cooperative work budget is not a sandbox or timeout.
 
-use std::{collections::HashSet, num::NonZeroU32};
+use std::{collections::BTreeSet, num::NonZeroU32};
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Candidate<'a> {
@@ -156,7 +156,7 @@ pub fn rescore<'a>(
     {
         return Err(InputError::Limit);
     }
-    let mut ids = HashSet::with_capacity(lexical.len());
+    let mut ids = BTreeSet::new();
     for candidate in lexical {
         if candidate.writer != writer {
             return Err(InputError::WrongWriter);
