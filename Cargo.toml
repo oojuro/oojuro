@@ -7,6 +7,7 @@ members = [
     "crates/oojuro-core",
     "crates/oojuro-nine",
     "crates/oojuro-proxy",
+    "crates/oojuro-rank",
     "crates/oojuro-store",
     "crates/oojuro-trace",
     "crates/oojuro-tracebench",

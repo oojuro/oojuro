@@ -4726,6 +4726,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "oojuro-rank"
+version = "0.1.0"
+
+[[package]]
 name = "oojuro-store"
 version = "0.1.0"
 dependencies = [
