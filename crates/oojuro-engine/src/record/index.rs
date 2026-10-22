@@ -117,7 +117,7 @@ impl Index {
                     record: rows
                         .get(&h.id)
                         .ok_or(Error::Authority)?
-                        .record(query.scope.writer),
+                        .record(query.scope.writer, &identity.adapter),
                     bits: h.bits,
                     continued: h.continued,
                     row: h.row,

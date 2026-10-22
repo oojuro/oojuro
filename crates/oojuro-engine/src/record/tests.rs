@@ -1066,3 +1066,23 @@ fn record_time_stored_only_never_reenters_content_phrase_or_identifier_anchor() 
         9
     );
 }
+
+#[test]
+fn record_time_outputs_keep_header_bound_adapter_through_reopen() {
+    let f=Fixture::new();let mut log=f.clock(100);
+    let mut row=input("battery provenance",Some("key"),20);
+    row.attrs.insert("adapter".into(),serde_json::json!("reported-override"));
+    let ack=log.append("adapter-original",&[row]).unwrap();drop(log);
+    let log=f.clock(100);let v=view(&log);let expected=identity().adapter;
+    assert_eq!(v.get_id(&log,ack.ids[0],4096).unwrap().unwrap().adapter,expected);
+    assert_eq!(v.get_key(&log,"key",4096).unwrap().unwrap().adapter,expected);
+    assert_eq!(v.history(&log,"key",Limits::default()).unwrap().records[0].adapter,expected);
+    let index=Index::rebuild(&log).unwrap();let found=index.search(&log,&query("battery",AsOf::default())).unwrap();
+    assert_eq!(found.hits[0].record.adapter,expected);
+    assert_eq!(found.hits[0].record.attrs["adapter"],serde_json::json!("reported-override"));
+    let exported=v.export(&log,Versions::All,Filter::default(),Limits::default()).unwrap();
+    let parsed:serde_json::Value=serde_json::from_slice(&exported).unwrap();
+    assert_eq!(parsed["records"][0]["adapter"],serde_json::json!(expected));
+    drop(log);let mut changed=identity();changed.adapter="different-bound-source".into();
+    assert!(RecordLog::open(&f.root.join("authority"),&KEY,changed).is_err());
+}

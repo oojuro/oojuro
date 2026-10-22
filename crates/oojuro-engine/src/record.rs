@@ -54,6 +54,8 @@ pub struct Record {
     pub schema: u32,
     pub id: u64,
     pub writer: String,
+    /// Header-bound caller-configured source label, not independent harness attestation.
+    pub adapter: String,
     pub agent_id: String,
     pub parent_id: Option<String>,
     pub valid_at: i64,
@@ -86,12 +88,13 @@ pub(crate) struct Assigned {
     input: Input,
 }
 impl Assigned {
-    pub(crate) fn record(&self, writer: &str) -> Record {
+    pub(crate) fn record(&self, writer: &str, adapter: &str) -> Record {
         let v = &self.input;
         Record {
             schema: 1,
             id: self.id,
             writer: writer.into(),
+            adapter: adapter.into(),
             agent_id: v.agent_id.clone(),
             parent_id: v.parent_id.clone(),
             valid_at: v.valid_at,

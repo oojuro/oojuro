@@ -145,7 +145,7 @@ impl View {
         let row = log.records[..end]
             .iter()
             .find(|r| r.id == id && self.time(r) && self.lower(r))
-            .map(|r| r.record(&self.context.writer));
+            .map(|r| r.record(&self.context.writer, &log.identity().adapter));
         sized(&row, bytes)?;
         Ok(row)
     }
@@ -156,7 +156,7 @@ impl View {
         let row = rows
             .into_iter()
             .find(|r| r.input.key.as_deref() == Some(key) && self.lower(r))
-            .map(|r| r.record(&self.context.writer));
+            .map(|r| r.record(&self.context.writer, &log.identity().adapter));
         sized(&row, bytes)?;
         Ok(row)
     }
@@ -286,7 +286,7 @@ impl View {
         let stop = rows.len().min(start + limits.entries);
         let mut sizes = vec![0usize];
         for row in &rows[start..stop] {
-            let length = json(&row.record(&self.context.writer), MAX_OUTPUT_BYTES)?.len();
+            let length = json(&row.record(&self.context.writer, &log.identity().adapter), MAX_OUTPUT_BYTES)?.len();
             sizes.push(
                 sizes
                     .last()
@@ -329,7 +329,7 @@ impl View {
             watermark: self.context.watermark.clone(),
             records: rows[start..end]
                 .iter()
-                .map(|r| r.record(&self.context.writer))
+                .map(|r| r.record(&self.context.writer, &log.identity().adapter))
                 .collect(),
             next,
         };

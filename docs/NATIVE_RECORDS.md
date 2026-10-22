@@ -42,3 +42,13 @@ The new Record index is **memory-only**, fully rebuilt on refresh/reopen, with n
 Synthetic tests execute actual Store append -> fsynced commit -> process SIGKILL immediately before live replay/ACK and after ACK -> reopen -> exact retry -> original get/history/as-of/export/search. Separate regressions exercise malformed but sealed envelopes, original intent conflict, clock/ID overflow, clock rollback, failed projection, same-origin rollback with a known later watermark, foreign scope/fork/cursor, output budgets, sealed-at-rest contents and unchanged v1 namespaces. Dev-only direct Nine Record differentials compare IDs/order/f64 bits/time/continuation across key versions, independent known time, backdated writes, duplicate text, long decimal ties, 1200 candidates and low/high background mass.
 
 These tests prove bounded local process-crash/replay behavior and the stated synthetic differential cases. They do not prove power-loss durability, multi-host/AZ replication, AWS operations, cross-machine floating-point equality, provider erasure, authorization or semantic retrieval quality. No runtime/normal dependency on Nine, Trace or the old fixture Record was added.
+
+## Adapter provenance in composed output
+
+Every returned Record includes the adapter label from the immutable namespace
+identity, including get/history/range/export and lexical hits. A similarly named
+caller attribute cannot override it. Reopen with a different header identity is
+refused. This is a committed caller-configured source label, not independent proof
+that a particular harness/parser generated the record or that reported agent and
+parent identities are true. The direct namespace still has no implicit harness
+raw migration. A composed regression checks this through append/reopen/all reads.
