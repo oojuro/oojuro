@@ -21,7 +21,7 @@ use std::{
     sync::atomic::{AtomicU64, Ordering},
 };
 
-const ADAPTER: &str = "codex-buffer-1/redact-escaped-1";
+const ADAPTER: &str = "codex-buffer-1/redact-escaped-1/context-1";
 #[derive(Clone)]
 pub struct Options {
     pub writer: String,
@@ -170,6 +170,7 @@ impl LocalCapture {
         self.projection = None;
         self.applied = 0;
         for source in self.log.sources() {
+            decode_context(self.log.initial_context(source).map_err(authority)?)?;
             decode_context(&self.log.progress(source).map_err(authority)?.context)?;
         }
         verify_tmpfs(&self.ram_root)?;
@@ -179,6 +180,7 @@ impl LocalCapture {
             .map_err(storage)?;
         projection.db = Some(db);
         for batch in self.log.batches().map_err(authority)? {
+            decode_context(&batch.context)?;
             project(projection.db.as_ref().unwrap(), batch)?;
         }
         self.applied = self.log.batches().map_err(authority)?.len();
@@ -237,7 +239,7 @@ impl LocalCapture {
             return Ok(None);
         };
         self.policy.refresh();
-        let initial = serde_json::to_vec(&codex::new_ctx(path)).map_err(storage)?;
+        let initial = encode_context(&codex::new_ctx(path))?;
         self.log
             .register(source, &opened.descriptor, &initial)
             .map_err(authority)?;
@@ -389,6 +391,7 @@ impl LocalCapture {
             let bad = pc.bad_lines;
             let blank = line.iter().all(u8::is_ascii_whitespace);
             if !blank {
+                check_lookup_capacity(&context, line)?;
                 codex::parse_line(
                     &mut context,
                     line,
@@ -426,7 +429,7 @@ impl LocalCapture {
                     }
                     Decision::Withhold(_) => 0,
                 };
-                let parent = links(&mut context, &mut rec, id);
+                let parent = links(&mut context, &mut rec, id)?;
                 match decision {
                     Decision::Store { indexed } => {
                         let args = sink::args_json(&rec, old.file_no, recorded);
@@ -468,7 +471,7 @@ impl LocalCapture {
             stored: events.len() as u64,
             next_id,
         };
-        let context = serde_json::to_vec(&context).map_err(storage)?;
+        let context = encode_context(&context)?;
         Ok(Batch {
             raw: raw.to_vec(),
             parsed: ParsedBatch {
@@ -487,18 +490,108 @@ impl LocalCapture {
         })
     }
 }
+// Local receipts deliberately do not use FileCtx's legacy serde defaults or skipped fields.
+// Every member is required, including empty policy/link state, on every sealed receipt.
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(deny_unknown_fields)]
+struct ResumeContext {
+    version: u32,
+    writer: String,
+    session: u64,
+    parent_session: u64,
+    parent_thread: String,
+    seq: u32,
+    turn: u32,
+    last_ts: i64,
+    cwd: String,
+    sidechain: bool,
+    user_from: String,
+    inherit_below: i64,
+    metas: u32,
+    calls: Vec<(String, String, u64)>,
+    lookups: Vec<String>,
+}
+fn encode_context(c: &FileCtx) -> Result<Vec<u8>> {
+    serde_json::to_vec(&ResumeContext {
+        version: 1,
+        writer: c.writer.clone(),
+        session: c.session,
+        parent_session: c.parent_session,
+        parent_thread: c.parent_thread.clone(),
+        seq: c.seq,
+        turn: c.turn,
+        last_ts: c.last_ts,
+        cwd: c.cwd.clone(),
+        sidechain: c.sidechain,
+        user_from: c.user_from.clone(),
+        inherit_below: c.inherit_below,
+        metas: c.metas,
+        calls: c.calls.clone(),
+        lookups: c.lookups.clone(),
+    })
+    .map_err(storage)
+}
 fn decode_context(bytes: &[u8]) -> Result<FileCtx> {
-    let context: FileCtx = serde_json::from_slice(bytes).map_err(|_| Error::Corrupt)?;
-    if context.calls.len() > FileCtx::MAX_OPEN_CALLS
-        || context.lookups.len() > FileCtx::MAX_OPEN_CALLS
+    let c: ResumeContext = serde_json::from_slice(bytes).map_err(|_| Error::Corrupt)?;
+    if c.version != 1
+        || c.calls.len() > FileCtx::MAX_OPEN_CALLS
+        || c.lookups.len() > FileCtx::MAX_OPEN_CALLS
     {
         return Err(Error::Corrupt);
     }
-    Ok(context)
+    Ok(FileCtx {
+        writer: c.writer,
+        session: c.session,
+        parent_session: c.parent_session,
+        parent_thread: c.parent_thread,
+        seq: c.seq,
+        turn: c.turn,
+        last_ts: c.last_ts,
+        cwd: c.cwd,
+        sidechain: c.sidechain,
+        user_from: c.user_from,
+        inherit_below: c.inherit_below,
+        metas: c.metas,
+        calls: c.calls,
+        lookups: c.lookups,
+        results_root: None,
+    })
 }
-fn links(context: &mut FileCtx, rec: &mut Rec, id: u64) -> u64 {
-    match rec.kind {
+// The legacy parser opens lookup markers before emitting a Rec (an empty body may
+// emit none). At the bound refuse any new tool call before that parser mutation.
+// Results/noise remain consumable, allowing outstanding markers to close normally.
+fn check_lookup_capacity(context: &FileCtx, line: &[u8]) -> Result<()> {
+    if context.lookups.len() < FileCtx::MAX_OPEN_CALLS {
+        return Ok(());
+    }
+    let Ok(v) = serde_json::from_slice::<serde_json::Value>(line) else {
+        return Ok(());
+    };
+    let p = &v["payload"];
+    if v["type"].as_str() == Some("response_item")
+        && matches!(
+            p["type"].as_str(),
+            Some(
+                "function_call"
+                    | "custom_tool_call"
+                    | "local_shell_call"
+                    | "web_search_call"
+                    | "image_generation_call"
+                    | "tool_search_call"
+            )
+        )
+        && p["call_id"].as_str().is_some_and(|id| !id.is_empty())
+    {
+        return Err(Error::Invalid("outstanding lookup capacity"));
+    }
+    Ok(())
+}
+fn links(context: &mut FileCtx, rec: &mut Rec, id: u64) -> Result<u64> {
+    Ok(match rec.kind {
         kind::TOOL_CALL => {
+            if !rec.call_id.is_empty() && context.calls.len() >= FileCtx::MAX_OPEN_CALLS {
+                return Err(Error::Invalid("outstanding call capacity"));
+            }
             context.open_call(&rec.call_id, &rec.tool, id);
             0
         }
@@ -513,8 +606,9 @@ fn links(context: &mut FileCtx, rec: &mut Rec, id: u64) -> u64 {
             }
         }
         _ => 0,
-    }
+    })
 }
+
 fn owned(
     rec: &Rec,
     id: u64,

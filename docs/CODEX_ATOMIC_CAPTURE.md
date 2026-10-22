@@ -18,7 +18,7 @@ one Store append/frame containing all of:
   index eligibility, parent session, revisions, tool links, times and original IDs.
 - Per-line source-generation/byte-span/emission receipts, including explicit
   stored/indexed or withheld outcomes and the policy/raw-authorization identifiers.
-- Post-parser FileCtx, next event ID and the committed outcome, all sealed with
+- Versioned complete post-parser context, next event ID and the committed outcome, all sealed with
   the same caller-supplied key. There is no authoritative plaintext cursor sidecar.
 
 Raw progress covers all retained bytes. Parsed progress covers complete processed
@@ -68,7 +68,9 @@ refuses further capture until the original policy finishes it or an explicit
 reprocess facility is implemented. Previously withheld thought/tool records stay withheld; stored-only text
 stays unindexed. A result of a withheld call remains withheld after restart even
 if current policy permits it. Missing policy/context/output receipts or a different
-format, key, writer/allocator binding or adapter revision fails closed.
+format, key, writer/allocator binding or adapter revision fails closed. The local
+context schema requires every field and rejects unknown fields on source registration
+and every historical batch, independently of legacy FileCtx serde defaults.
 
 Reinterpreting old raw under a new policy/parser is a separate explicitly
 authorized operation and is not implemented here. Claude's parser can read
@@ -99,7 +101,13 @@ remains necessary. No raw bytes, parser context or encryption keys enter that ca
 ## Bounds and remaining gates
 
 Per append: at most 256 KiB new raw, 1 MiB per complete/partial line, 128 KiB sealed
-context and 8 MiB serialized parsed receipt. The current projection limits are
+context and 8 MiB serialized parsed receipt. At most 64 unresolved calls and 64
+unresolved Oojuro lookup markers are retained. A new call that could evict unresolved
+state refuses the candidate batch before commit, including empty-body lookup calls
+that emit no parsed record. Matched completions retire state, so this does not bound
+the total calls in a session. No raw/cursor/allocator progress is acknowledged for
+the refused batch; original suffix bytes remain available for an explicit decision.
+The current projection limits are
 100,000 stored events and 128 MiB parsed text. Source/descriptor bounds also apply.
 A limit error does not advance that batch or discard its provenance. Earlier
 blocks may already be committed; original files and remaining suffixes stay intact.

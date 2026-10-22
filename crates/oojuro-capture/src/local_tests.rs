@@ -82,6 +82,7 @@ impl Policy for Mode {
         }
         Decision::Store {
             indexed: kind::indexed(rec.kind)
+                && !rec.meta.iter().any(|(key, _)| *key == crate::marker::META)
                 && !(matches!(self, Self::Strict) && rec.text.contains("STOREONLYMARKER")),
         }
     }
@@ -735,6 +736,252 @@ fn incomplete_raw_line_cannot_be_reinterpreted_by_relaxing_its_policy_identity()
     .unwrap();
     assert!(
         c.search("PENDINGTHOUGHTMARKER", 0, i64::MAX, 10)
+            .unwrap()
+            .is_empty()
+    );
+}
+
+// A valid sealed native frame can still have invalid opaque adapter state. Native
+// storage intentionally cannot interpret it; the local adapter must reject replay.
+fn commit_context(c: &mut LocalCapture, context: Vec<u8>) {
+    let p = c.log.progress(SOURCE).unwrap();
+    c.log
+        .commit(Batch {
+            raw: vec![],
+            parsed: ParsedBatch {
+                source: SOURCE,
+                raw_start: p.raw_end,
+                parsed_before: p.parsed_end,
+                outcome: Outcome {
+                    raw_end: p.raw_end,
+                    parsed_end: p.parsed_end,
+                    first_id: None,
+                    stored: 0,
+                    next_id: c.log.next_id(),
+                },
+                policy: PolicyReceipt {
+                    policy_id: c.options.policy_id.clone(),
+                    raw_authorization: c.options.raw_authorization.clone(),
+                    lines: vec![],
+                },
+                context,
+                events: vec![],
+            },
+        })
+        .unwrap();
+}
+#[test]
+fn versioned_context_requires_complete_call_policy_state_in_every_sealed_receipt() {
+    for field in [
+        "calls",
+        "lookups",
+        "metas",
+        "version",
+        "parent_thread",
+        "unexpected",
+    ] {
+        for hide_with_later_valid_receipt in [false, true] {
+            let f = Fixture::new();
+            fs::write(
+                &f.file,
+                [meta(), call("blocked_tool", "denied", "BLOCKED")].concat(),
+            )
+            .unwrap();
+            let mut c = f.open(Mode::Strict);
+            c.capture_file(SOURCE, &f.file, |_| true).unwrap();
+            let good = c.log.progress(SOURCE).unwrap().context;
+            let mut bad: Value = serde_json::from_slice(&good).unwrap();
+            if field == "unexpected" {
+                bad.as_object_mut()
+                    .unwrap()
+                    .insert(field.into(), json!(true));
+            } else {
+                assert!(bad.as_object_mut().unwrap().remove(field).is_some());
+            }
+            commit_context(&mut c, serde_json::to_vec(&bad).unwrap());
+            if hide_with_later_valid_receipt {
+                commit_context(&mut c, good);
+            }
+            drop(c);
+            let reopened = LocalCapture::open(
+                &f.root.join("authority"),
+                &KEY,
+                &f.ram,
+                f.options(),
+                Box::new(Mode::Allow),
+            );
+            assert!(matches!(reopened, Err(Error::Corrupt)), "field={field}");
+        }
+    }
+    let f = Fixture::new();
+    let mut c = f.open(Mode::Allow);
+    c.log
+        .register(SOURCE, b"synthetic", br#"{"version":1}"#)
+        .unwrap();
+    commit_context(&mut c, encode_context(&codex::new_ctx(&f.file)).unwrap());
+    assert!(matches!(c.rebuild(), Err(Error::Corrupt)));
+    assert!(matches!(c.get(1), Err(Error::Unavailable)));
+}
+#[test]
+fn unresolved_call_overflow_keeps_denial_prefix_and_allocator_across_restart() {
+    let f = Fixture::new();
+    let mut bytes = [meta(), call("blocked_tool", "C0", "DENIED")].concat();
+    for n in 1..64 {
+        bytes.extend(call("shell", &format!("C{n}"), "ordinary"));
+    }
+    fs::write(&f.file, &bytes).unwrap();
+    let mut c = f.open(Mode::Strict);
+    let report = c.capture_file(SOURCE, &f.file, |_| true).unwrap().unwrap();
+    let before = c.log.progress(SOURCE).unwrap();
+    assert_eq!(c.log.next_id(), 64);
+    assert_eq!(decode_context(&before.context).unwrap().calls.len(), 64);
+    f.append(&call("shell", "C64", "overflow"));
+    assert!(matches!(
+        c.capture_file(SOURCE, &f.file, |_| true),
+        Err(Error::Invalid(_))
+    ));
+    assert_eq!(c.report(SOURCE).unwrap(), report);
+    assert_eq!(c.log.progress(SOURCE).unwrap().context, before.context);
+    assert_eq!(c.log.read_raw(SOURCE, 0, bytes.len()).unwrap(), bytes);
+    assert_eq!(c.log.next_id(), 64);
+    drop(c);
+    let mut options = f.options();
+    options.policy_id = "relaxed-v2".into();
+    let mut c = LocalCapture::open(
+        &f.root.join("authority"),
+        &KEY,
+        &f.ram,
+        options,
+        Box::new(Mode::Allow),
+    )
+    .unwrap();
+    assert!(matches!(
+        c.capture_file(SOURCE, &f.file, |_| true),
+        Err(Error::Invalid(_))
+    ));
+    assert_eq!(c.report(SOURCE).unwrap(), report);
+    // The unacknowledged suffix is still in the original file. Replace only that
+    // suffix; every acknowledged byte remains identical and revalidates.
+    OpenOptions::new()
+        .write(true)
+        .open(&f.file)
+        .unwrap()
+        .set_len(before.raw_end)
+        .unwrap();
+    f.append(
+        &[
+            result("C0", "DENIEDRESULTMARKER"),
+            message("after-capacity"),
+        ]
+        .concat(),
+    );
+    c.capture_file(SOURCE, &f.file, |_| true).unwrap();
+    assert!(
+        c.search("DENIEDRESULTMARKER", 0, i64::MAX, 10)
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(c.log.next_id(), 65);
+    assert_eq!(c.get(64).unwrap().unwrap().0.text, "after-capacity");
+    assert_eq!(
+        decode_context(&c.log.progress(SOURCE).unwrap().context)
+            .unwrap()
+            .calls
+            .len(),
+        63
+    );
+}
+#[test]
+fn empty_body_lookup_overflow_is_refused_before_parser_eviction_and_reopens() {
+    let f = Fixture::new();
+    let mut bytes = meta();
+    for n in 0..64 {
+        bytes.extend(call("mcp__oojuro__search", &format!("L{n}"), ""));
+    }
+    fs::write(&f.file, &bytes).unwrap();
+    let mut c = f.open(Mode::Allow);
+    let report = c.capture_file(SOURCE, &f.file, |_| true).unwrap().unwrap();
+    assert!(report.event_ids.is_empty());
+    let before = c.log.progress(SOURCE).unwrap();
+    let context = decode_context(&before.context).unwrap();
+    assert!(context.calls.is_empty());
+    assert_eq!(context.lookups.len(), 64);
+    f.append(&call("mcp__oojuro__search", "L64", ""));
+    assert!(matches!(
+        c.capture_file(SOURCE, &f.file, |_| true),
+        Err(Error::Invalid(_))
+    ));
+    assert_eq!(c.log.progress(SOURCE).unwrap().context, before.context);
+    assert_eq!(c.report(SOURCE).unwrap(), report);
+    assert_eq!(c.log.next_id(), 1);
+    assert_eq!(c.log.read_raw(SOURCE, 0, bytes.len()).unwrap(), bytes);
+    drop(c);
+    let mut c = f.open(Mode::Allow);
+    assert!(matches!(
+        c.capture_file(SOURCE, &f.file, |_| true),
+        Err(Error::Invalid(_))
+    ));
+    assert_eq!(c.report(SOURCE).unwrap(), report);
+    OpenOptions::new()
+        .write(true)
+        .open(&f.file)
+        .unwrap()
+        .set_len(before.raw_end)
+        .unwrap();
+    f.append(&result("L0", "LOOKUPRESULTMARKER"));
+    c.capture_file(SOURCE, &f.file, |_| true).unwrap();
+    assert_eq!(c.log.next_id(), 2);
+    assert!(!c.log.event(1).unwrap().unwrap().1.indexed);
+    assert!(
+        c.search("LOOKUPRESULTMARKER", 0, i64::MAX, 10)
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(
+        decode_context(&c.log.progress(SOURCE).unwrap().context)
+            .unwrap()
+            .lookups
+            .len(),
+        63
+    );
+}
+#[test]
+fn more_than_64_sequential_completed_calls_and_lookups_do_not_exhaust_context() {
+    let f = Fixture::new();
+    let mut bytes = meta();
+    for n in 0..80 {
+        let id = format!("C{n}");
+        bytes.extend(call("shell", &id, "ordinary"));
+        bytes.extend(result(&id, "ordinary completion"));
+        let id = format!("L{n}");
+        bytes.extend(call("mcp__oojuro__search", &id, ""));
+        bytes.extend(result(&id, "UNINDEXEDECHOMARKER"));
+    }
+    fs::write(&f.file, &bytes).unwrap();
+    let mut c = f.open(Mode::Allow);
+    assert_eq!(
+        c.capture_file(SOURCE, &f.file, |_| true)
+            .unwrap()
+            .unwrap()
+            .event_ids
+            .len(),
+        240
+    );
+    let ctx = decode_context(&c.log.progress(SOURCE).unwrap().context).unwrap();
+    assert!(ctx.calls.is_empty());
+    assert!(ctx.lookups.is_empty());
+    drop(c);
+    let mut c = f.open(Mode::Allow);
+    assert_eq!(
+        c.capture_file(SOURCE, &f.file, |_| true)
+            .unwrap()
+            .unwrap()
+            .event_ids
+            .len(),
+        240
+    );
+    assert!(
+        c.search("UNINDEXEDECHOMARKER", 0, i64::MAX, 10)
             .unwrap()
             .is_empty()
     );

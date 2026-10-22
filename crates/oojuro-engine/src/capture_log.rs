@@ -50,6 +50,7 @@ pub struct Event {
     pub emission: u32,
 }
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub enum Decision {
     Stored { id: u64, indexed: bool },
     Withheld { reason: String },
@@ -114,6 +115,7 @@ struct Block {
     at: usize,
 }
 struct SourceState {
+    initial_context: Vec<u8>,
     descriptor: Vec<u8>,
     context: Vec<u8>,
     raw_end: u64,
@@ -236,6 +238,15 @@ impl CaptureLog {
     }
     pub fn sources(&self) -> impl Iterator<Item = Source> + '_ {
         self.sources.keys().copied()
+    }
+    /// Original opaque adapter receipt, retained for strict adapter replay validation.
+    pub fn initial_context(&self, source: Source) -> Result<&[u8]> {
+        self.healthy()?;
+        Ok(&self
+            .sources
+            .get(&source)
+            .ok_or(Error::NotFound)?
+            .initial_context)
     }
     pub fn progress(&self, source: Source) -> Result<Progress> {
         self.healthy()?;
@@ -449,6 +460,7 @@ impl CaptureLog {
                 self.sources.insert(
                     r.source,
                     SourceState {
+                        initial_context: r.context.clone(),
                         descriptor: r.descriptor,
                         context: r.context,
                         raw_end: 0,
@@ -649,5 +661,30 @@ mod tests {
         b.parsed.outcome.next_id = 10;
         assert!(log.commit(b).is_err());
         assert_eq!(log.progress(SOURCE).unwrap().raw_end, 0);
+    }
+    #[test]
+    fn capture_authority_rejects_unknown_stored_and_withheld_decision_fields() {
+        for decision in [
+            serde_json::json!({"Stored":{"id":9,"indexed":false,"extension":true}}),
+            serde_json::json!({"Withheld":{"reason":"synthetic","extension":true}}),
+        ] {
+            let t = Temp::new();
+            let mut log = open(&t.0);
+            log.register(SOURCE, b"synthetic", br#"{"seq":0}"#).unwrap();
+            let b = batch();
+            let mut value = serde_json::to_value(&b.parsed).unwrap();
+            value["policy"]["lines"][0]["emissions"][0] = decision;
+            let encoded = serde_json::to_vec(&value).unwrap();
+            let mut bytes = vec![2];
+            bytes.extend_from_slice(&(encoded.len() as u32).to_le_bytes());
+            bytes.extend(encoded);
+            bytes.extend(b.raw);
+            log.write(&bytes).unwrap();
+            drop(log);
+            assert!(matches!(
+                CaptureLog::open(&t.0, &KEY, identity()),
+                Err(Error::Corrupt(_))
+            ));
+        }
     }
 }
