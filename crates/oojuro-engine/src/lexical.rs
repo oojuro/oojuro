@@ -6,6 +6,7 @@
 //! deliberately outside this slice. Each index is bound to one open writer log.
 mod args;
 pub(crate) mod passage;
+pub(crate) mod paged;
 pub(crate) mod record_cache;
 pub mod segments;
 mod text;
