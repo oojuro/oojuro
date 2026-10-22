@@ -493,3 +493,93 @@ fn directory_sigkill_pack_and_root_boundaries_never_lose_the_original_ack() {
         );
     }
 }
+
+#[test]
+fn actual_paged_store_to_record_trees_and_postings_keeps_original_bits_receipts_and_snapshot() {
+    let f = Fixture::new();
+    let mut log = f.log();
+    let ack = log
+        .append("original", &[row("alpha beta foo_bar", Some("chosen"), 1)])
+        .unwrap();
+    for i in 0..180 {
+        let mut r = row(
+            if i % 2 == 0 {
+                "alpha gamma"
+            } else {
+                "beta delta"
+            },
+            None,
+            i + 2,
+        );
+        if i % 7 == 0 {
+            r.indexed = false;
+        }
+        log.append(&format!("r-{i}"), &[r]).unwrap();
+    }
+    let min = log.tip().unwrap();
+    let native = MemoryIndex::rebuild(&log).unwrap();
+    let expected = signature(
+        native
+            .search(&log, &query("alpha", AsOf::default()))
+            .unwrap(),
+    );
+    drop(native);
+    drop(log);
+    let reader = Reader::open_disk_store(
+        &f.root.join("authority"),
+        &KEY,
+        identity(),
+        &f.root.join("store-metadata"),
+        &f.root.join("directory"),
+        Some(&min),
+    )
+    .unwrap();
+    assert!(reader.uses_paged_store() && reader.uses_disk_directory());
+    assert_eq!(reader.locator_count(), 0);
+    assert_eq!(reader.receipt("original").unwrap(), Some(ack.clone()));
+    let snapshot = reader.view(scope(), AsOf::default()).unwrap();
+    let index = PagedIndex::open_disk(&reader, &f.root.join("index")).unwrap();
+    assert_eq!(index.retained_reference_count(), 0);
+    assert_eq!(
+        signature(
+            index
+                .search(&reader, &query("alpha", AsOf::default()))
+                .unwrap()
+        ),
+        expected
+    );
+    drop(index);
+    drop(reader);
+    let mut log = f.log();
+    log.append("tail", &[row("alpha future foo_bar", Some("chosen"), 500)])
+        .unwrap();
+    drop(log);
+    let reader = Reader::open_disk_store(
+        &f.root.join("authority"),
+        &KEY,
+        identity(),
+        &f.root.join("store-metadata"),
+        &f.root.join("directory"),
+        Some(&min),
+    )
+    .unwrap();
+    let mut index = PagedIndex::open_disk(&reader, &f.root.join("index")).unwrap();
+    assert_eq!(
+        signature(
+            index
+                .search_view(&reader, &snapshot, &query("alpha", AsOf::default()))
+                .unwrap()
+        ),
+        expected
+    );
+    assert_eq!(reader.receipt("original").unwrap(), Some(ack));
+    index.merge(&reader).unwrap();
+    assert_eq!(
+        signature(
+            index
+                .search_view(&reader, &snapshot, &query("alpha", AsOf::default()))
+                .unwrap()
+        ),
+        expected
+    );
+}
