@@ -48,5 +48,8 @@ every-backup erasure claim follows from this adapter.
 Focused tests exercise real managed append/prune/denial, original-ID/time projection,
 winner-before-filter behavior, purpose/time/filter/generation binding, read-only
 directory access and explicit-builder cache retirement. Four focused managed adapter tests and package strict lib+tests lint passed.
-A full engine gate remains required because the existing View winner kernel was
-extracted without changing its selection semantics.
+The complete engine suite on runtime 322207c passed 110 tests with five existing/
+subprocess helpers ignored; strict package lib+tests lint and diff checks passed.
+This includes the shared View winner-kernel extraction and all corrected managed
+prune/enrollment cases from the current parent. Evidence remains local synthetic
+filesystem proof, not live provider or permanent erasure acceptance.
