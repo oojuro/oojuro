@@ -7,7 +7,9 @@ use crate::audit::{
 };
 use std::sync::{Mutex, MutexGuard};
 mod read;
+pub(super) mod tail;
 pub use read::{ControlAuditEntry, ControlAuditPage, ControlStatus};
+use tail::Journal;
 const CONTROL_AAD: &[u8] = b"oojuro/managed/control/v1\0";
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -39,6 +41,8 @@ pub(super) struct State {
     pub live_records: u64,
     pub live_bytes: u64,
     pub audit: Option<AuditEvent>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub paged: Option<super::paged::schema::Anchor>,
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -188,6 +192,9 @@ fn receipt_details(state: &State) -> ReceiptDetails {
     if state.audit.is_none() {
         return ReceiptDetails::default();
     }
+    if let Some(paged) = &state.paged {
+        return paged.details.clone();
+    }
     match &state.prune {
         Some(proof) => ReceiptDetails {
             record_ids: Some(proof.record_ids),
@@ -252,7 +259,7 @@ pub struct RetainedControl {
     inner: Mutex<Inner>,
 }
 pub(super) struct Inner {
-    store: Store,
+    store: Journal,
     cipher: Arc<FrameCipher>,
     signer: Signer,
     authority: [u8; 32],
@@ -265,6 +272,123 @@ pub(super) struct Inner {
     pub hook: Option<Arc<dyn Fn() + Send + Sync>>,
 }
 impl RetainedControl {
+    /// Fresh explicit bounded control layout; no snapshot conversion or new publish root.
+    pub fn create_paged(
+        directory: &Path,
+        key: &[u8; 32],
+        signer: Signer,
+        authority: [u8; 32],
+        witness: FileWitness,
+        identity: [u8; 32],
+    ) -> Result<Self> {
+        if witness.current()?.is_some() {
+            return Err(Error::Authority);
+        }
+        directory_create(directory)?;
+        let directory = directory.canonicalize().map_err(io)?;
+        if overlaps(&directory, &witness.directory) {
+            return Err(Error::Invalid);
+        }
+        let cipher = Arc::new(FrameCipher::new(key));
+        let mut store = Journal::create_paged(&directory, cipher.clone(), &witness.directory)?;
+        let mut state = State {
+            origin: oojuro_store::crypto::random_key(),
+            identity,
+            generation: 0,
+            physical: [0; 32],
+            logical: [0; 32],
+            status: Status::Active,
+            pruned: false,
+            prune: None,
+            live_records: 0,
+            live_bytes: 0,
+            audit: None,
+            paged: None,
+        };
+        let root = super::paged::checkpoint::genesis(
+            &directory,
+            &cipher,
+            &witness.directory,
+            state.origin,
+            identity,
+        )?;
+        let anchor = root.stage(&directory, &cipher)?;
+        state.physical = anchor.ciphertext_digest;
+        state.paged = Some(anchor);
+        let checkpoint = persist(&mut store, &cipher, &signer, authority, &state, None)?;
+        witness.advance(None, checkpoint.floor().map_err(audit_error)?)?;
+        let witness_directory = witness.directory.clone();
+        let value = Self {
+            directory,
+            witness_directory,
+            inner: Mutex::new(Inner {
+                store,
+                cipher,
+                signer,
+                authority,
+                witness,
+                state,
+                checkpoint,
+                failed: false,
+                prunes: BTreeMap::new(),
+                #[cfg(test)]
+                hook: None,
+            }),
+        };
+        drop(value.lock()?);
+        Ok(value)
+    }
+    /// Direct CURRENT-object/root open. Historical audit verification is separate.
+    pub fn open_paged(
+        directory: &Path,
+        key: &[u8; 32],
+        signer: Signer,
+        authority: [u8; 32],
+        witness: FileWitness,
+        identity: [u8; 32],
+    ) -> Result<Self> {
+        let meta = fs::symlink_metadata(directory).map_err(io)?;
+        if !meta.is_dir() || meta.file_type().is_symlink() {
+            return Err(Error::Authority);
+        }
+        let directory = directory.canonicalize().map_err(io)?;
+        if overlaps(&directory, &witness.directory) {
+            return Err(Error::Invalid);
+        }
+        let current = witness.current()?.ok_or(Error::Authority)?;
+        let cipher = Arc::new(FrameCipher::new(key));
+        let store = Journal::open_paged(
+            &directory,
+            cipher.clone(),
+            current,
+            signer.public_key(),
+            authority,
+            identity,
+            &witness.directory,
+        )?;
+        let state = store.verified()?.state().clone();
+        let checkpoint = store.verified()?.checkpoint().clone();
+        let witness_directory = witness.directory.clone();
+        let value = Self {
+            directory,
+            witness_directory,
+            inner: Mutex::new(Inner {
+                store,
+                cipher,
+                signer,
+                authority,
+                witness,
+                state,
+                checkpoint,
+                failed: false,
+                prunes: BTreeMap::new(),
+                #[cfg(test)]
+                hook: None,
+            }),
+        };
+        drop(value.lock()?);
+        Ok(value)
+    }
     /// Signing key, control key, control directory and witness are independent of data.
     /// Existing control requires its retained witness; missing witness never bootstraps it.
     pub fn open(
@@ -281,7 +405,7 @@ impl RetainedControl {
             return Err(Error::Invalid);
         }
         let cipher = Arc::new(FrameCipher::new(key));
-        let mut store = open_store(&directory, cipher.clone())?;
+        let mut store = Journal::snapshot(&directory, cipher.clone())?;
         let public = signer.public_key();
         let mut state = None;
         let mut checkpoint: Option<SignedCheckpoint> = None;
@@ -374,6 +498,7 @@ impl RetainedControl {
                 live_records: 0,
                 live_bytes: 0,
                 audit: None,
+                paged: None,
             };
             let initial_checkpoint =
                 persist(&mut store, &cipher, &signer, authority, &state, None)?;
@@ -453,6 +578,15 @@ impl RetainedControl {
     }
 }
 impl Inner {
+    pub(super) fn is_paged(&self) -> bool {
+        self.store.is_paged()
+    }
+    pub(super) fn paged_verified(&self) -> Result<&tail::Verified> {
+        self.store.verified()
+    }
+    pub(super) fn control_cipher(&self) -> &FrameCipher {
+        &self.cipher
+    }
     pub(super) fn recheck(&self) -> Result<()> {
         self.current()
     }
@@ -491,6 +625,25 @@ impl Inner {
             after,
         })
     }
+    pub(super) fn receipt_at(&self, sequence: u64) -> Result<LifecycleReceipt> {
+        self.current()?;
+        if sequence == 0 || sequence > self.checkpoint.body.sequence {
+            return Err(Error::Bounds);
+        }
+        let bytes = self.store.get(sequence - 1)?;
+        let envelope: Envelope = serde_json::from_slice(&bytes).map_err(|_| Error::Authority)?;
+        let receipt = public_receipt(&envelope).ok_or(Error::Authority)?;
+        receipt.verify(
+            &Verifier::new(
+                self.authority,
+                Domain::NativeLifecycle,
+                self.signer.public_key(),
+            ),
+            self.state.identity,
+        )?;
+        self.current()?;
+        Ok(receipt)
+    }
     pub fn receipt(&self) -> Result<LifecycleReceipt> {
         let bytes = self
             .store
@@ -505,10 +658,30 @@ impl Inner {
         {
             return Err(Error::Authority);
         }
+        self.store.check_current_root()?;
         Ok(())
     }
-    pub fn advance(&mut self, state: State) -> Result<SignedCheckpoint> {
+    pub fn advance(&mut self, mut state: State) -> Result<SignedCheckpoint> {
         self.current()?;
+        if self.store.is_paged() {
+            let verified = self.store.verified()?;
+            if state.paged == self.state.paged {
+                super::paged::checkpoint::advance_root(
+                    &self.store.directory()?,
+                    &self.cipher,
+                    verified,
+                    &mut state,
+                )?;
+            } else {
+                super::paged::checkpoint::check_prepared(
+                    &self.store.directory()?,
+                    &self.cipher,
+                    verified,
+                    &state,
+                )?;
+            }
+            self.current()?;
+        }
         validate_transition(&self.state, &state)?;
         self.failed = true;
         let checkpoint = persist(
@@ -553,6 +726,9 @@ fn validate_transition(previous: &State, next: &State) -> Result<()> {
         .prune
         .as_ref()
         .is_some_and(|proof| proof.generation != next.generation)
+        || previous.paged.is_some() != next.paged.is_some()
+        || (previous.paged.is_some()
+            && next.generation != previous.generation.checked_add(1).ok_or(Error::Bounds)?)
         || previous.origin != next.origin
         || previous.identity != next.identity
         || next.generation < previous.generation
@@ -565,7 +741,7 @@ fn validate_transition(previous: &State, next: &State) -> Result<()> {
     Ok(())
 }
 fn persist(
-    store: &mut Store,
+    store: &mut Journal,
     cipher: &FrameCipher,
     signer: &Signer,
     authority: [u8; 32],
@@ -610,7 +786,7 @@ fn persist(
         },
         32 << 10,
     )?;
-    if store.append(&[carrier(&envelope)]).map_err(io)? != sequence {
+    if store.append(&envelope, &checkpoint, state, signer.public_key())? != sequence {
         return Err(Error::Authority);
     }
     Ok(checkpoint)

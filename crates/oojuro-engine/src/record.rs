@@ -1,13 +1,13 @@
 //! Explicit flat-record namespace. Harness CaptureLog/receipts remain a separate unchanged format.
 //! Reported agent identities and stored data are not verified truth or instructions.
 mod authority;
+pub mod context;
 mod index;
 pub mod paged;
-pub mod ranking;
-pub mod context;
-pub mod rank_tables;
 pub mod persistent;
 pub mod projection;
+pub mod rank_tables;
+pub mod ranking;
 mod view;
 pub use authority::{Commit, RecordLog, Watermark};
 pub use index::{Hit, Index, Query, Search};
@@ -216,7 +216,3 @@ fn json<T: Serialize + ?Sized>(value: &T, limit: usize) -> Result<Vec<u8>> {
 
 /// Explicit opt-in retained-control lifecycle namespace; no implicit v2 conversion.
 pub mod managed;
-
-#[cfg(test)]
-#[path = "record/managed/paged/physical.rs"]
-mod physical_kernel_tests;

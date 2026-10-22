@@ -10,12 +10,19 @@ use std::{
     sync::Arc,
 };
 mod control;
+mod id_stream;
+mod paged;
 mod rank_view;
 use crate::audit::{RetainedFloor, SignedCheckpoint};
 use control::State;
 pub use control::{
     ControlAuditEntry, ControlAuditPage, ControlStatus, FileWitness, LifecycleReceipt,
     ReceiptDetails, RetainedControl, Status,
+};
+pub use id_stream::RecordIdsVerifier;
+pub use paged::{
+    DeniedCleanup, ManagedPagedLog, PagedPruneReport, PagedRecords, PruneLimits, PrunedIds,
+    ReadLimits,
 };
 pub use rank_view::ManagedRankView;
 const FORMAT: &[u8] = b"oojuro-managed-record-3\n";
@@ -147,6 +154,9 @@ impl ManagedLog {
         control: Arc<RetainedControl>,
         fresh: bool,
     ) -> Result<Self> {
+        if control.lock()?.is_paged() {
+            return Err(Error::Scope);
+        }
         if !name(&identity.writer, 256)
             || identity.agent == 0
             || identity.first_id == 0
@@ -867,6 +877,7 @@ fn stage(
         live_records: snapshot.rows.len() as u64,
         live_bytes: record_bytes(&snapshot.rows)?,
         audit: None,
+        paged: None,
     };
     let checked = read_snapshot(directory, &state, cipher)?;
     if json(&checked, MAX_STATE_BYTES)? != bytes {
