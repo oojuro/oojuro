@@ -4614,10 +4614,12 @@ name = "oojuro"
 version = "0.1.0"
 dependencies = [
  "aho-corasick",
+ "blake3",
  "flate2",
  "jiff",
  "libc",
  "oojuro-capture",
+ "oojuro-engine",
  "oojuro-nine",
  "oojuro-proxy",
  "oojuro-trace",
