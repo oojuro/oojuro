@@ -1,0 +1,306 @@
+use super::*;
+use oojuro_store::{
+    NewRecord,
+    crypto::FrameCipher,
+    managed_pack::{Birth, FORMAT, Options, Reservation, Stage},
+};
+use std::{
+    path::PathBuf,
+    sync::{
+        Arc,
+        atomic::{AtomicU64, Ordering},
+    },
+};
+const KEY: [u8; 32] = [191; 32];
+struct A {
+    generation: AtomicU64,
+}
+fn birth(n: u64) -> Birth {
+    Birth {
+        format: FORMAT,
+        stable_origin: [1; 32],
+        identity: [2; 32],
+        epoch: [(n + 10) as u8; 32],
+        generation: n,
+        predecessor_logical: [3; 32],
+        parent_checkpoint: [(n + 20) as u8; 32],
+        key_version: [4; 32],
+    }
+}
+impl tree::Authority for A {
+    fn current(&self) -> Result<Vec<u8>> {
+        let n = self.generation.load(Ordering::Relaxed);
+        if n == 999 {
+            return Err(Error::Unavailable);
+        }
+        birth(n).encode().map_err(|_| Error::Authority)
+    }
+    fn validate_birth(&self, b: &[u8], _: Purpose, class: KeyClass) -> Result<()> {
+        let v = Birth::decode(b).map_err(|_| Error::Authority)?;
+        if class != KeyClass::Data
+            || v != birth(v.generation)
+            || v.generation > self.generation.load(Ordering::Relaxed)
+        {
+            return Err(Error::Authority);
+        }
+        Ok(())
+    }
+}
+struct F {
+    root: PathBuf,
+    frame: PathBuf,
+    file: PathBuf,
+    dictionary: PathBuf,
+    cipher: Arc<FrameCipher>,
+    a: A,
+}
+impl F {
+    fn new() -> Self {
+        static N: AtomicU64 = AtomicU64::new(0);
+        let root = std::env::temp_dir().join(format!(
+            "oojuro-physical-tree-{}-{}",
+            std::process::id(),
+            N.fetch_add(1, Ordering::Relaxed)
+        ));
+        std::fs::create_dir(&root).unwrap();
+        for n in ["data", "frame", "file", "dictionary"] {
+            std::fs::create_dir(root.join(n)).unwrap();
+        }
+        Self {
+            frame: root.join("frame"),
+            file: root.join("file"),
+            dictionary: root.join("dictionary"),
+            root,
+            cipher: Arc::new(FrameCipher::new(&KEY)),
+            a: A {
+                generation: AtomicU64::new(1),
+            },
+        }
+    }
+    fn contexts(&self) -> Contexts<'_> {
+        let context = |purpose, identity, directory| Context {
+            directory,
+            cipher: &self.cipher,
+            authority: &self.a,
+            purpose,
+            identity: [identity; 32],
+            class: KeyClass::Data,
+            sort_of: None,
+            cache: None,
+        };
+        Contexts {
+            frame: context(Purpose::Frame, 11, &self.frame),
+            file: context(Purpose::File, 12, &self.file),
+            dictionary: context(Purpose::Dictionary, 13, &self.dictionary),
+        }
+    }
+    fn append(&self, e: &mut Editor<'_>, id: u64, seq: u64, n: u64) -> PackRef {
+        let mut s = Stage::new(
+            &self.root.join("data"),
+            birth(n),
+            Reservation {
+                file_id: id,
+                first_physical_seq: seq,
+            },
+            self.cipher.clone(),
+            Options::default(),
+        )
+        .unwrap();
+        let row = NewRecord {
+            kind: 3,
+            valid_at: seq as i64,
+            recorded_at: 1000 + seq as i64,
+            key: b"original logical key",
+            attrs: b"original provenance",
+            text: b"actual immutable frame and original contents",
+        };
+        s.push(&[row], &mut |l| {
+            e.insert_frame(&l)
+                .map_err(|_| oojuro_store::Error::Invalid("tree frame stage"))
+        })
+        .unwrap();
+        let p = s.finish().unwrap();
+        e.insert_pack(&p).unwrap();
+        p
+    }
+}
+impl Drop for F {
+    fn drop(&mut self) {
+        let _ = std::fs::remove_dir_all(&self.root);
+    }
+}
+#[test]
+fn real_pack_cow_tail_reopen_floor_lookup_and_full_inventory_without_replay() {
+    let f = F::new();
+    let c = f.contexts();
+    let roots = Roots::empty(&c).unwrap();
+    let mut e = Editor::new(c.clone(), roots).unwrap();
+    for id in 1..=140 {
+        f.append(&mut e, id, id * 2, 1);
+    }
+    let old = e.finish().unwrap();
+    assert_eq!(old.frame.count, 140);
+    assert_eq!(old.file.count, 140);
+    assert_eq!(old.locate(&c, 278).unwrap().first_physical_seq, 278);
+    assert!(old.locate(&c, 279).is_err());
+    let old_head = old.file.node.as_ref().unwrap().clone();
+    let mut page_count = 0;
+    old.metadata_pages(&c, &mut |_, _| {
+        page_count += 1;
+        Ok(())
+    })
+    .unwrap();
+    assert!(page_count > 3);
+    let bytes = serde_json::to_vec(&old).unwrap();
+    let reopened: Roots = serde_json::from_slice(&bytes).unwrap();
+    let mut inventory = 0;
+    reopened
+        .inventory(&c, &mut |i| {
+            match i {
+                Inventory::Pack(p) => {
+                    assert_eq!(p.file_id, p.first_physical_seq / 2);
+                    inventory += 1
+                }
+                Inventory::Dictionary(_) => panic!("unexpected dictionary"),
+            };
+            Ok(())
+        })
+        .unwrap();
+    assert_eq!(inventory, 140);
+    f.a.generation.store(2, Ordering::Relaxed);
+    let c = f.contexts();
+    let mut e = Editor::new(c.clone(), reopened).unwrap();
+    f.append(&mut e, 141, 282, 2);
+    f.append(&mut e, 142, 284, 2);
+    let next = e.finish().unwrap();
+    assert_eq!(next.frame.count, 142);
+    assert_eq!(next.locate(&c, 2).unwrap().first_physical_seq, 2);
+    assert_eq!(next.locate(&c, 284).unwrap().file_id, 142);
+    let mut old_births = 0;
+    next.metadata_pages(&c, &mut |_, r| {
+        if r.birth == birth(1).encode().unwrap() {
+            old_births += 1;
+        }
+        Ok(())
+    })
+    .unwrap();
+    assert!(
+        old_births > 0,
+        "COW must retain untouched authenticated pages"
+    );
+    assert!(old.file.node.as_ref().unwrap().digest == old_head.digest);
+    assert_ne!(next.file.node.as_ref().unwrap().digest, old_head.digest);
+    // Healthy old pages are ancestors; a forged same-generation birth is not.
+    let mut fork = next.clone();
+    fork.file.binding = birth(2).encode().unwrap();
+    fork.file.binding[70] ^= 1;
+    assert!(fork.pack(&c, 1).is_err());
+    f.a.generation.store(999, Ordering::Relaxed);
+    assert!(next.locate(&c, 2).is_err());
+}
+#[test]
+fn missing_pack_coverage_replacement_and_wrong_root_classes_refuse_candidates() {
+    let f = F::new();
+    let c = f.contexts();
+    let roots = Roots::empty(&c).unwrap();
+    let mut e = Editor::new(c.clone(), roots).unwrap();
+    let p = f.append(&mut e, 1, 0, 1);
+    let roots = e.finish().unwrap();
+    let mut e = Editor::new(c.clone(), roots.clone()).unwrap();
+    assert!(e.insert_pack(&p).is_err());
+    assert!(e.finish().is_err());
+    let mut e = Editor::new(c.clone(), roots.clone()).unwrap();
+    let l = Locator {
+        file_id: 2,
+        frame_ordinal: 0,
+        first_physical_seq: 1,
+        count: 1,
+        offset: 304,
+        payload_len: 60,
+        raw_len: 12,
+        dictionary_id: 0,
+        valid_lo: 1,
+        valid_hi: 1,
+    };
+    e.insert_frame(&l).unwrap();
+    assert!(e.finish().is_err(), "unpaired locator cannot finish");
+    let mut wrong = c.clone();
+    wrong.file.class = KeyClass::RetainedControl;
+    assert!(Roots::empty(&wrong).is_err());
+    let mut wrong = c.clone();
+    wrong.file.identity = wrong.frame.identity;
+    assert!(Roots::empty(&wrong).is_err());
+    let mut wrong = roots;
+    std::mem::swap(&mut wrong.file, &mut wrong.frame);
+    assert!(wrong.locate(&c, 0).is_err());
+}
+
+#[test]
+fn actual_dictionary_inventory_cow_is_immutable_and_bounded() {
+    use oojuro_store::managed_pack::stage_dictionary;
+    let f = F::new();
+    let c = f.contexts();
+    let roots = Roots::empty(&c).unwrap();
+    let mut e = Editor::new(c.clone(), roots).unwrap();
+    let d = stage_dictionary(
+        &f.root.join("data"),
+        birth(1),
+        7,
+        b"actual dictionary contents for managed reuse",
+        &f.cipher,
+    )
+    .unwrap();
+    e.insert_dictionary(&d).unwrap();
+    let mut s = Stage::with_dictionary(
+        &f.root.join("data"),
+        birth(1),
+        Reservation {
+            file_id: 1,
+            first_physical_seq: 0,
+        },
+        f.cipher.clone(),
+        Options::default(),
+        Some(d.clone()),
+    )
+    .unwrap();
+    let text = b"actual dictionary contents for managed reuse".repeat(200);
+    s.push(
+        &[NewRecord {
+            kind: 1,
+            valid_at: 1,
+            recorded_at: 2,
+            key: b"",
+            attrs: b"",
+            text: &text,
+        }],
+        &mut |l| {
+            e.insert_frame(&l)
+                .map_err(|_| oojuro_store::Error::Invalid("tree fixture"))
+        },
+    )
+    .unwrap();
+    let p = s.finish().unwrap();
+    e.insert_pack(&p).unwrap();
+    let roots = e.finish().unwrap();
+    assert_eq!(roots.dictionary(&c, 7).unwrap(), Some(d.clone()));
+    let mut packs = 0;
+    let mut dicts = 0;
+    roots
+        .inventory(&c, &mut |i| {
+            match i {
+                Inventory::Pack(_) => packs += 1,
+                Inventory::Dictionary(x) => {
+                    assert_eq!(x, d);
+                    dicts += 1
+                }
+            }
+            Ok(())
+        })
+        .unwrap();
+    assert_eq!((packs, dicts), (1, 1));
+    let mut e = Editor::new(c, roots).unwrap();
+    let mut bad = d;
+    bad.token = [93; 32];
+    assert!(e.insert_dictionary(&bad).is_err());
+    assert!(e.finish().is_err());
+}
