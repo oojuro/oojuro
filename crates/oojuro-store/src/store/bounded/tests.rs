@@ -217,6 +217,7 @@ fn streamed_hot_training_reopen_and_compaction_preserve_sealed_original_fields()
     }
     for item in std::fs::read_dir(&t.0).unwrap() {
         let b = std::fs::read(item.unwrap().path()).unwrap();
-        assert!(!b.windows(26).any(|p| p == b"synthetic bounded recovery "));
+        let marker = b"synthetic bounded recovery ";
+        assert!(!b.windows(marker.len()).any(|p| p == marker));
     }
 }
