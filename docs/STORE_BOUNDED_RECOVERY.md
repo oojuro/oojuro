@@ -1,0 +1,31 @@
+# Store recovery and training workspace bounds
+
+This is the first mandatory Store capacity slice after native Record disk directories. It preserves existing Store wire formats, options, original records/IDs/times/attrs/keys, source ACK semantics and reader APIs. It does not make all Store metadata bounded or implement the complete foundation SPEC scale engine.
+
+## Changes
+
+Hot replay previously read an entire hot file into a Vec. It now reads a fixed file header and one CRC-framed payload at a time through positional reads with a fixed64 KiB lookahead window to amortize small-frame IO. The existing maximum is unchanged: payload <=64 MiB +64 bytes. AEAD, frame-head/sequence and decoded metadata verification still precede publishing a frame locator. A valid CRC but invalid AEAD/header is corruption, not a repairable tail.
+
+On an invalid frame in the last hot file, recovery retains the existing exact byte-by-byte rule: if any later CRC-valid frame exists, refuse midstream corruption; otherwise truncate to the original last verified boundary and sync it. Later-frame detection uses 64 KiB header/CRC chunks instead of a whole-file allocation. A CRC candidate spanning chunks is still detected. Adversarial candidate lengths may cause repeated positional IO; this patch bounds workspace, not worst-case recovery CPU or IO. Non-last damaged hot files always refuse.
+
+Initial and compaction dictionary training now feed the same deterministic content-independent priority reservoir directly from decoded frames. Eligible record prefixes (at most8 KiB each) are packed into8 KiB training byte blocks before priority selection. This lets many short valid records contribute the real required sample bytes. At most2048 selected blocks are retained (16 MiB payload plus descriptors), plus one8 KiB pending block; the pending tail participates in the consuming finish operation. Training constructs one <=16 MiB contiguous sample while consuming selected entries, so selected plus contiguous payload workspace is bounded by32 MiB, plus existing frame/decompression/zstd state, descriptors and output dictionary. Too little usable sample or an impossible requested training size yields no dictionary. The reservoir considers all eligible byte blocks, not only a chronological prefix. Public train_dict also delegates to it.
+
+Dictionary selection/compression bytes can differ from older binaries; durable dictionary/frame decoding formats are unchanged and original data is lossless. This is not a compression ratio or training-quality improvement claim.
+
+## Remaining assigned code
+
+Store still keeps its FrameRef Vec, file handle HashMap, dictionary bytes/maps, manifest lists and compaction snapshots/chunk tables. Cold-index open still reads that entire index. Failed initial training now schedules the next attempt at a geometric hot-byte floor, with zero/overflow handling, rather than retrying on every append. Compaction recomputes the remaining hot-byte base and retry floor. A failed attempt still re-reads hot frames and reopening resets this nonpersistent scheduler; it is not a persistent training/checkpoint protocol. The next opt-in disk frame/file/dictionary reader must remove these retained populations before any larger-limit or10M/100M acceptance. The old writer/default RecordLog still retains its own source population. No limit was raised here.
+
+## Verification
+
+Four focused synthetic regressions passed (5.17 s compile,4.78 s runtime): differential old/new later-frame criteria at chunk boundaries and malformed lengths/CRCs, bounded/deterministic distributed sampling, and actual sealed append/reopen/compaction preserving all original fields and disk confidentiality. Independent review caught a valid short-record failure: sampling only2048 individual32-byte records could never reach the minimum dictionary sample and repeatedly rescanned all history. The byte-block reservoir plus geometric failed-attempt scheduler fixes it. Six final focused tests passed (0.61 s compile,4.79 s runtime), including actual8192short records that train,2000unusable records with bounded attempts, compaction retry-floor reset/overflow and buffered-reader parity. The original all-Store180 s run reached all encrypted/run/non-tail tests but timed out during its preexisting exhaustive every-cut case; it is not reported as a full pass. The final every-cut regression and strict lint gates are recorded separately after completion.
+
+No provider, AWS, Notion, customer data, package installation, merge or deployment. Heavy verification uses an isolated target and shared flock outside actual bounded steps.
+
+Final non-exhaustive suite passed: seven library tests,13encrypted,5run and11non-tailStore tests (36total, zero failures); the exhaustive cut test is separately sharded over all residue classes with default unsharded behavior preserved. Strict lint first exposed one preexisting iterator-loop style diagnostic in run.rs; its one-line equivalent for-loop correction is included.
+
+All eight disjoint exhaustive shards passed: residues0-6 each131cases and residue7 has130cases, summing exactly1047 original byte cuts. Every offset satisfies exactly one `(cut-before)%8` residue; default0/1 still runs every cut. Each shard runtime was23.54-23.80 s; aggregate test execution189.36 s explains why an unsharded180 s bound is insufficient for this existing fixture. No case was sampled or omitted. Final strict Store lib/tests lint passed after the mechanical correction (0.51 s), and again after the test-only measurement addition (0.25 s).
+
+An ignored, explicitly invoked LOCAL matched CRC-only warm-file scan processed50x1,040,000 bytes/100,000 frames: old whole-file scanner127.803 ms,64 KiB window130.852 ms (about2.4% overhead in this one debug-build run). It excludes AEAD/decode and measures neither the full old recovery test nor provider/large-store throughput. The structural memory change is a fixed lookahead plus one existing bounded frame rather than a whole hot-file buffer. No performance superiority claim follows.
+
+Independent source re-review of the byte-block/backoff/window fix found no new P1/P2 and confirmed persisted formats/write+sync ordering unchanged. It did not rerun tests. Remaining FrameRef/file/dictionary populations are still explicitly next-stage code.
