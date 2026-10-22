@@ -494,6 +494,7 @@ fn search_inner(
     let normalized = terms(&query)?;
     let mut touched = false;
     for (stage, table, position) in rescoring {
+        rank_tables::validate_loaded(log, view, &q.filter, guard, table)?;
         if window == 0 {
             receipt.stages[position].skipped = reason("empty_window");
             continue;
