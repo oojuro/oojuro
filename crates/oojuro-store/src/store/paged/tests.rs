@@ -394,7 +394,11 @@ fn paged_file_dictionary_and_decoder_resources_evict_with_fixed_bounds() {
             }])
             .unwrap();
         let frame = source.frames.last().unwrap();
-        let payload = reader::read_payload(&source.files[&frame.file], &frame.loc()).unwrap();
+        let file = &source.files[&frame.file];
+        let payload = bounded::HotReader::new(file, file.metadata().unwrap().len())
+            .payload(frame.offset)
+            .unwrap()
+            .unwrap();
         assert_eq!(get_head(&payload).unwrap().codec, CODEC_ZSTD);
     }
     drop(source);
