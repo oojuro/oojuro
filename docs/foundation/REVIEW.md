@@ -85,7 +85,7 @@ or billable infrastructure choice has been made by this review.
 
 AWS documents [EBS attachment within the same AZ](https://docs.aws.amazon.com/ebs/latest/userguide/ebs-attaching-volume.html).
 [S3 Standard stores across at least three AZs within a region](https://docs.aws.amazon.com/AmazonS3/latest/userguide/DataDurability.html);
-One Zone classes have a different failure boundary. These are service properties, not proof of the application's recovery behavior.
+One Zone classes have a different failure boundary. The current [S3 FAQ](https://aws.amazon.com/s3/faqs/) says S3 verifies correct redundant storage across devices before returning a successful upload. Its current wording does not explicitly promise waiting for all three AZs before acknowledgement in the same terms as Temporal Cloud. Treat the current documented S3 Standard durability/AZ-loss design as a provider foundation; stronger equivalence requires confirmation plus application acceptance. These service properties do not prove the application's recovery behavior.
 
 The hourly schedule is not a hard one-hour maximum loss bound: failed backups can make the last successful recovery point older.
 A shorter asynchronous schedule still has a nonzero loss window. If the owner requires no acknowledged-data loss on volume/AZ failure,
