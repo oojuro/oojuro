@@ -31,8 +31,7 @@ impl RetainedControl {
         let expected = root.enrollment_digest.ok_or(Error::Authority)?;
         let enrollment = read_regular(&directory.join("ENROLLMENT"), 8192)?;
         if *blake3::hash(&enrollment).as_bytes() != expected
-            || read_regular(&directory.join("MANAGED_FORMAT"), 128)?
-                != b"oojuro-managed-record-paged-3\n"
+            || read_regular(&directory.join("MANAGED_FORMAT"), 128)? != driver::marker(root.format)?
         {
             return Err(Error::Authority);
         }
@@ -43,7 +42,7 @@ impl RetainedControl {
                 || *blake3::hash(&read_regular(&directory.join("ENROLLMENT"), 8192)?).as_bytes()
                     != expected
                 || read_regular(&directory.join("MANAGED_FORMAT"), 128)?
-                    != b"oojuro-managed-record-paged-3\n"
+                    != driver::marker(root.format)?
             {
                 return Err(Error::Authority);
             }

@@ -44,6 +44,7 @@ impl Verified {
         Ok(old.state)
     }
     pub(in crate::record::managed) fn assert_current(&self) -> Result<()> {
+        self.state.validate_layout()?;
         let bytes = read_regular(&self.witness_directory.join("CURRENT"), 4096)?;
         let actual: RetainedFloor = serde_json::from_slice(&bytes).map_err(|_| Error::Authority)?;
         if actual != self.checkpoint.floor().map_err(audit_error)? {
@@ -108,6 +109,7 @@ fn decode(
     );
     let plain = cipher.open_dict(&aad, &envelope.sealed).map_err(io)?;
     let state: State = serde_json::from_slice(&plain).map_err(|_| Error::Authority)?;
+    state.validate_layout()?;
     if state.identity != identity
         || state.audit != envelope.event
         || state.generation.checked_add(1) != Some(expected.sequence)
@@ -238,6 +240,7 @@ impl Journal {
         state: &State,
         public_key: [u8; 32],
     ) -> Result<u64> {
+        state.validate_layout()?;
         let ordinal = self.len();
         match self {
             Self::Snapshot(store) => {

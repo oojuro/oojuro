@@ -4,8 +4,16 @@ const ROOT_AAD: &[u8] = b"oojuro/managed/paged/control-root/v1\0";
 pub(in crate::record::managed) const ROOT_BYTES: usize = 64 << 10;
 #[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
+pub(in crate::record::managed) struct Layout {
+    pub storage_layout: u32,
+    pub minimum_reader: u32,
+}
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub(in crate::record::managed) struct Anchor {
     pub format: u32,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub layout: Option<Layout>,
     pub birth: Vec<u8>,
     pub generation: u64,
     pub key_version: [u8; 32],
@@ -15,7 +23,18 @@ pub(in crate::record::managed) struct Anchor {
     pub details: control::ReceiptDetails,
 }
 impl Anchor {
+    pub fn layout(&self) -> Result<u32> {
+        match &self.layout {
+            None => Ok(1),
+            Some(Layout {
+                storage_layout: 2,
+                minimum_reader: 2,
+            }) => Ok(2),
+            _ => Err(Error::Authority),
+        }
+    }
     pub fn validate(&self, origin: [u8; 32], identity: [u8; 32], generation: u64) -> Result<Birth> {
+        self.layout()?;
         let birth = Birth::decode(&self.birth).map_err(io)?;
         if self.format != 1
             || self.generation != generation
@@ -187,7 +206,7 @@ impl CommitRoot {
     }
     pub fn validate(&self, anchor: &Anchor, state: &control::State) -> Result<Birth> {
         let birth = anchor.validate(state.origin, state.identity, state.generation)?;
-        if self.format != 1
+        if self.format != anchor.layout()?
             || self.intent == [0; 32]
             || anchor.details != self.receipt_details()
             || self.birth != anchor.birth
@@ -252,13 +271,19 @@ impl CommitRoot {
         if let Some(data) = &self.data
             && (data.record.count != self.live_records
                 || data.key_version.count > self.live_records
-                || data.segment.count > self.live_records)
+                || (self.format == 1 && data.segment.count > self.live_records))
         {
             return Err(Error::Authority);
         }
         if let Some(physical) = &self.physical
             && (physical.format != 1
-                || physical.file.count > self.live_records
+                || (self.format == 1 && physical.file.count > self.live_records)
+                || (self.format == 2
+                    && (physical.file.count > physical.frame.count
+                        || self
+                            .data
+                            .as_ref()
+                            .is_some_and(|d| d.segment.count != physical.file.count)))
                 || (physical.file.count == 0) != (self.live_records == 0)
                 || physical.frame.count > self.next_physical)
         {
@@ -272,6 +297,14 @@ impl CommitRoot {
         let plain = json(self, ROOT_BYTES - oojuro_store::crypto::SEAL_OVERHEAD)?;
         let mut anchor = Anchor {
             format: 1,
+            layout: match self.format {
+                1 => None,
+                2 => Some(Layout {
+                    storage_layout: 2,
+                    minimum_reader: 2,
+                }),
+                _ => return Err(Error::Authority),
+            },
             birth: self.birth.clone(),
             generation: birth.generation,
             key_version: birth.key_version,

@@ -1,10 +1,17 @@
 //! Incremental typed append: one bounded input window, COW roots, one retained publish.
 use super::*;
-use oojuro_store::managed_pack::{Reader, Reservation, Stage as PackStage};
+use oojuro_store::managed_pack::Reader;
 use schema::RootName as N;
 use source::{Paths, Source};
 const FORMAT: &[u8] = b"oojuro-managed-record-paged-3\n";
-const CHUNK: usize = 4 << 20;
+pub(super) fn marker(layout: u32) -> Result<&'static [u8]> {
+    match layout {
+        1 => Ok(FORMAT),
+        2 => Ok(b"oojuro-managed-record-paged-stream-3\n"),
+        _ => Err(Error::Authority),
+    }
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct RowRef {
@@ -50,6 +57,7 @@ pub struct ManagedPagedLog {
     pub(super) identity: Identity,
     pub(super) control: Arc<RetainedControl>,
     enrollment_digest: [u8; 32],
+    layout: u32,
     #[cfg(test)]
     pub(super) hook: Option<Arc<dyn Fn(Phase) + Send + Sync>>,
 }
@@ -60,7 +68,7 @@ impl ManagedPagedLog {
         identity: Identity,
         control: Arc<RetainedControl>,
     ) -> Result<Self> {
-        Self::open_mode(directory, key, identity, control, true)
+        Self::open_mode(directory, key, identity, control, true, 1)
     }
     pub fn open(
         directory: &Path,
@@ -68,7 +76,23 @@ impl ManagedPagedLog {
         identity: Identity,
         control: Arc<RetainedControl>,
     ) -> Result<Self> {
-        Self::open_mode(directory, key, identity, control, false)
+        Self::open_mode(directory, key, identity, control, false, 1)
+    }
+    pub fn create_streaming(
+        directory: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        control: Arc<RetainedControl>,
+    ) -> Result<Self> {
+        Self::open_mode(directory, key, identity, control, true, 2)
+    }
+    pub fn open_streaming(
+        directory: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        control: Arc<RetainedControl>,
+    ) -> Result<Self> {
+        Self::open_mode(directory, key, identity, control, false, 2)
     }
     fn open_mode(
         directory: &Path,
@@ -76,6 +100,7 @@ impl ManagedPagedLog {
         identity: Identity,
         control: Arc<RetainedControl>,
         fresh: bool,
+        layout: u32,
     ) -> Result<Self> {
         if !name(&identity.writer, 256)
             || identity.agent == 0
@@ -84,7 +109,18 @@ impl ManagedPagedLog {
         {
             return Err(Error::Invalid);
         }
+        marker(layout)?;
         let mut owner = control.lock()?;
+        if owner
+            .state
+            .paged
+            .as_ref()
+            .ok_or(Error::Authority)?
+            .layout()?
+            != layout
+        {
+            return Err(Error::Authority);
+        }
         if !owner.is_paged()
             || owner.state.status != Status::Active
             || owner.state.identity != identity_binding(key, &identity)?
@@ -122,14 +158,14 @@ impl ManagedPagedLog {
         let lock = owner_lock(&directory)?;
         let expected = owner.enrollment();
         let enrollment = if fresh {
-            write_new(&directory.join("MANAGED_FORMAT"), FORMAT)?;
+            write_new(&directory.join("MANAGED_FORMAT"), marker(layout)?)?;
             let e = cipher.seal_dict(ENROLLMENT_AAD, &json(&expected, 4096)?);
             write_new(&directory.join("ENROLLMENT"), &e)?;
             sync_dir(&directory)?;
             sync_dir(directory.parent().ok_or(Error::Invalid)?)?;
             e
         } else {
-            if read_regular(&directory.join("MANAGED_FORMAT"), 128)? != FORMAT {
+            if read_regular(&directory.join("MANAGED_FORMAT"), 128)? != marker(layout)? {
                 return Err(Error::Authority);
             }
             let e = read_regular(&directory.join("ENROLLMENT"), 8192)?;
@@ -148,6 +184,7 @@ impl ManagedPagedLog {
             identity,
             control: control.clone(),
             enrollment_digest: *blake3::hash(&enrollment).as_bytes(),
+            layout,
             #[cfg(test)]
             hook: None,
         };
@@ -218,7 +255,14 @@ impl ManagedPagedLog {
         if owner.state.status != Status::Active
             || *blake3::hash(&read_regular(&self.directory.join("ENROLLMENT"), 8192)?).as_bytes()
                 != self.enrollment_digest
-            || read_regular(&self.directory.join("MANAGED_FORMAT"), 128)? != FORMAT
+            || read_regular(&self.directory.join("MANAGED_FORMAT"), 128)? != marker(self.layout)?
+            || owner
+                .state
+                .paged
+                .as_ref()
+                .ok_or(Error::Authority)?
+                .layout()?
+                != self.layout
         {
             return Err(Error::Authority);
         }
@@ -350,7 +394,6 @@ impl ManagedPagedLog {
         for i in inputs {
             i.validate()?;
         }
-        let encoded = json(inputs, MAX_BATCH_BYTES)?;
         let control = self.control.clone();
         let mut owner = control.lock()?;
         self.current(&owner)?;
@@ -363,8 +406,7 @@ impl ManagedPagedLog {
             return Err(Error::Unavailable);
         }
         let tag = commitment(&root.intent, &("append-request-v3", request))?;
-        let fingerprint = *blake3::keyed_hash(&root.intent, &encoded).as_bytes();
-        drop(encoded);
+        let fingerprint = codec::fingerprint(&root.intent, inputs, root.format)?;
         let source = self.source(&owner, &root)?;
         if let Some(bytes) = source.lookup(N::Request, &root.control.request, &tag)? {
             let receipt: Receipt = serde_json::from_slice(&bytes).map_err(|_| Error::Authority)?;
@@ -427,70 +469,44 @@ impl ManagedPagedLog {
             paths.ctx(N::Segment, &self.cipher, &data_stage, owner.state.identity),
             data.segment.clone(),
         )?;
-        let mut pack = PackStage::new(
-            &data_directory.join("packs"),
-            data_birth,
-            Reservation {
-                file_id: root.next_file,
-                first_physical_seq: root.next_physical,
+        let mut packs = codec::Packs::new(
+            codec::PackConfig {
+                directory: data_directory.join("packs"),
+                birth: data_birth,
+                cipher: self.cipher.clone(),
+                layout: root.format,
+                file: root.next_file,
+                seq: root.next_physical,
+                row_packs: false,
             },
-            self.cipher.clone(),
-            oojuro_store::managed_pack::Options::default(),
-        )
-        .map_err(io)?;
+            &mut physical,
+            &mut segments,
+        );
         let first_id = root.next_id;
         let first_at = match root.last_at {
             Some(at) => at.checked_add(1).ok_or(Error::Bounds)?.max(now()?),
             None => now()?,
         };
-        let mut physical_seq = root.next_physical;
         let mut bytes_added = 0u64;
         for (i, input) in inputs.iter().enumerate() {
-            let row = Assigned {
-                id: first_id.checked_add(i as u64).ok_or(Error::Bounds)?,
-                recorded_at: first_at.checked_add(i as i64).ok_or(Error::Bounds)?,
-                input: input.clone(),
-            };
-            let bytes = json(&row, MAX_BATCH_BYTES)?;
-            let reference = RowRef {
-                first: physical_seq,
-                chunks: bytes.len().div_ceil(CHUNK) as u32,
-                bytes: bytes.len() as u32,
-            };
-            for chunk in bytes.chunks(CHUNK) {
-                pack.push(&[carrier(chunk)], &mut |l| {
-                    physical.insert_frame(&l).map_err(|_| {
-                        oojuro_store::Error::Corrupt("managed locator insertion failed")
-                    })
-                })
-                .map_err(io)?;
-                physical_seq = physical_seq.checked_add(1).ok_or(Error::Bounds)?;
-            }
+            let id = first_id.checked_add(i as u64).ok_or(Error::Bounds)?;
+            let at = first_at.checked_add(i as i64).ok_or(Error::Bounds)?;
+            let reference = packs.row(id, at, input)?;
             records.insert_immutable(tree::Entry::new(
-                row.id.to_be_bytes().to_vec(),
+                id.to_be_bytes().to_vec(),
                 json(&reference, 1024)?,
             )?)?;
             if let Some(key) = &input.key {
                 let mut k = commitment(&root.intent, &("key-v3", key))?.to_vec();
                 k.extend((input.valid_at as u64 ^ (1 << 63)).to_be_bytes());
-                k.extend(row.id.to_be_bytes());
-                keys.insert_immutable(tree::Entry::new(k, row.id.to_be_bytes().to_vec())?)?;
+                k.extend(id.to_be_bytes());
+                keys.insert_immutable(tree::Entry::new(k, id.to_be_bytes().to_vec())?)?;
             }
             bytes_added = bytes_added
-                .checked_add(bytes.len() as u64)
+                .checked_add(u64::from(reference.bytes))
                 .ok_or(Error::Bounds)?;
         }
-        let pack = pack.finish().map_err(io)?;
-        if pack.record_count != physical_seq - root.next_physical
-            || pack.first_physical_seq != root.next_physical
-        {
-            return Err(Error::Authority);
-        }
-        physical.insert_pack(&pack)?;
-        segments.insert_immutable(tree::Entry::new(
-            first_id.to_be_bytes().to_vec(),
-            pack.file_id.to_be_bytes().to_vec(),
-        )?)?;
+        let (next_file, physical_seq) = packs.finish()?;
         data.record = records.finish()?;
         data.key_version = keys.finish()?;
         data.segment = segments.finish()?;
@@ -504,7 +520,7 @@ impl ManagedPagedLog {
                 .ok_or(Error::Bounds)?,
         );
         root.next_physical = physical_seq;
-        root.next_file = root.next_file.checked_add(1).ok_or(Error::Bounds)?;
+        root.next_file = next_file;
         root.append_sequence = root.append_sequence.checked_add(1).ok_or(Error::Bounds)?;
         let receipt_tag = commitment(
             &root.intent,
@@ -644,37 +660,15 @@ pub(super) fn read_assigned(
         4 << 20,
     )
     .map_err(io)?;
-    decode_row(&reader, &r, id)
+    decode_row(&reader, &r, id, source.root.format)
 }
 pub(super) fn decode_row<C: oojuro_store::managed_pack::Catalog>(
     reader: &Reader<C>,
     r: &RowRef,
     id: u64,
+    layout: u32,
 ) -> Result<Option<Assigned>> {
-    if r.bytes == 0
-        || r.bytes as usize > MAX_BATCH_BYTES
-        || r.chunks == 0
-        || r.chunks as usize != (r.bytes as usize).div_ceil(CHUNK)
-    {
-        return Err(Error::Authority);
-    }
-    let mut bytes = Vec::with_capacity(r.bytes as usize);
-    for i in 0..r.chunks {
-        let chunk = reader
-            .get(r.first.checked_add(u64::from(i)).ok_or(Error::Bounds)?)
-            .map_err(io)?;
-        let expected = CHUNK.min(r.bytes as usize - bytes.len());
-        if chunk.len() != expected {
-            return Err(Error::Authority);
-        }
-        bytes.extend(chunk);
-    }
-    let row: Assigned = serde_json::from_slice(&bytes).map_err(|_| Error::Authority)?;
-    if row.id != id {
-        return Err(Error::Authority);
-    }
-    row.input.validate()?;
-    Ok(Some(row))
+    codec::decode(reader, r, id, layout)
 }
 
 // Not exported: this capability can only verify an exact candidate tail under the
@@ -795,14 +789,15 @@ fn verify_tail(
             enrollment_digest: log.enrollment_digest,
         };
         let reader = Reader::new(&namespace.join("packs"), &candidate, 4 << 20).map_err(io)?;
-        let row = decode_row(&reader, &r, id)?.ok_or(Error::Authority)?;
+        let row = decode_row(&reader, &r, id, root.format)?.ok_or(Error::Authority)?;
         let expected_at = root
             .last_at
             .ok_or(Error::Authority)?
             .checked_sub((inputs.len() - 1 - i) as i64)
             .ok_or(Error::Bounds)?;
         if row.recorded_at != expected_at
-            || json(&row.input, MAX_BATCH_BYTES)? != json(input, MAX_BATCH_BYTES)?
+            || codec::digest(&row.input, &root.intent, root.format)?
+                != codec::digest(input, &root.intent, root.format)?
         {
             return Err(Error::Authority);
         }
@@ -846,7 +841,7 @@ pub(super) fn candidate_row(
         enrollment_digest: log.enrollment_digest,
     };
     let reader = Reader::new(&namespace.join("packs"), &candidate, 4 << 20).map_err(io)?;
-    decode_row(&reader, &r, id)?.ok_or(Error::Authority)
+    decode_row(&reader, &r, id, root.format)?.ok_or(Error::Authority)
 }
 
 pub(super) fn create_namespace(path: &Path) -> Result<()> {
