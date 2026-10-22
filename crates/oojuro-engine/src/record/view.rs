@@ -34,7 +34,8 @@ pub struct Filter {
     pub agent_id: Option<String>,
 }
 impl Filter {
-    pub(super) fn validate(&self) -> Result<()> {
+    /// Pure filter bounds; selection and authorization remain caller duties.
+    pub fn validate(&self) -> Result<()> {
         if self.tool.as_ref().is_some_and(|v| !name(v, 1024))
             || self.agent_id.as_ref().is_some_and(|v| !name(v, 256))
         {

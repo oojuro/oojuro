@@ -37,7 +37,7 @@ pub enum Status {
     Ok,
     Error,
 }
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct Input {
     pub agent_id: String,
@@ -120,7 +120,8 @@ fn name(s: &str, max: usize) -> bool {
     !s.is_empty() && s.len() <= max && !s.chars().any(char::is_control)
 }
 impl Input {
-    fn validate(&self) -> Result<()> {
+    /// Pure schema and work-bound validation. Authorization and redaction remain caller duties.
+    pub fn validate(&self) -> Result<()> {
         if !name(&self.agent_id, 256)
             || self.parent_id.as_ref().is_some_and(|s| !name(s, 256))
             || self.tool.as_ref().is_some_and(|s| !name(s, 1024))
