@@ -44,6 +44,14 @@ impl RawJournal {
     /// Open with strict sealing and per-append fsync. The key is supplied, never stored.
     /// This is local durability, not replication or a host/AZ survival guarantee.
     pub fn open(dir: &Path, key: &[u8; 32]) -> Result<Self> {
+        Self::open_with_parent_sync(dir, key, |parent| std::fs::File::open(parent)?.sync_all())
+    }
+
+    fn open_with_parent_sync(
+        dir: &Path,
+        key: &[u8; 32],
+        sync_parent: impl FnOnce(&Path) -> std::io::Result<()>,
+    ) -> Result<Self> {
         let parent = dir
             .parent()
             .filter(|p| !p.as_os_str().is_empty())
@@ -78,8 +86,6 @@ impl RawJournal {
         };
         if journal.store.is_empty() {
             journal.commit(FORMAT)?;
-            // The directory name, not just its contents, must survive successful creation.
-            std::fs::File::open(parent)?.sync_all()?;
         } else if journal.store.get(0)? != FORMAT {
             return Err(Error::Corrupt("not an Oojuro raw journal"));
         }
@@ -87,6 +93,9 @@ impl RawJournal {
             let bytes = journal.store.get(seq)?;
             journal.replay(seq, &bytes)?;
         }
+        // Retry even after FORMAT committed on an earlier open whose parent sync failed.
+        // No caller can append/ACK until the directory entry itself is durably linked.
+        sync_parent(parent)?;
         Ok(journal)
     }
 
@@ -310,6 +319,34 @@ mod tests {
     }
     const A: SourceId = SourceId([1; 16]);
     const B: SourceId = SourceId([2; 16]);
+
+    #[test]
+    fn reopen_retries_parent_sync_after_format_committed_but_sync_failed() {
+        let dir = Temp::new();
+        assert!(
+            RawJournal::open_with_parent_sync(&dir.0, &key(), |_| {
+                Err(std::io::Error::other(
+                    "synthetic transient directory sync failure",
+                ))
+            })
+            .is_err()
+        );
+        assert!(dir.0.join("MANIFEST").exists());
+        let mut retried = false;
+        let mut j = RawJournal::open_with_parent_sync(&dir.0, &key(), |parent| {
+            retried = true;
+            std::fs::File::open(parent)?.sync_all()
+        })
+        .unwrap();
+        assert!(retried);
+        j.register(A, b"synthetic source").unwrap();
+        j.append(A, 0, b"durable after retry").unwrap();
+        drop(j);
+        let j = RawJournal::open(&dir.0, &key()).unwrap();
+        let mut restored = Vec::new();
+        j.restore(A, &mut restored).unwrap();
+        assert_eq!(restored, b"durable after retry");
+    }
 
     #[test]
     fn arbitrary_bytes_replay_resume_compact_and_restore() {
