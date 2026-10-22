@@ -4,7 +4,7 @@ use crate::{
     capture_log::{CachePrefix, CaptureLog, Decision, Event, Identity},
     record::{
         self, AsOf, Filter, Input, Kind, Scope, Status,
-        managed::{Binding, ManagedLog},
+        managed::{AppendResult, Binding, ManagedLog, paged::ManagedPagedLog},
     },
 };
 use serde::{Deserialize, Serialize};
@@ -84,19 +84,37 @@ struct Progress {
 fn source<T>(r: oojuro_store::Result<T>) -> Result<T> {
     r.map_err(|_| Error::Source)
 }
-fn target(log: &ManagedLog, scope: Scope<'_>, expected: Option<&Binding>) -> Result<Binding> {
-    let binding = log
-        .with_rank_view(scope, AsOf::default(), Filter::default(), |view| {
-            view.validate_current()?;
-            Ok(view.binding().clone())
-        })
+fn snapshot_binding(log: &ManagedLog, scope: Scope<'_>) -> record::Result<Binding> {
+    log.with_rank_view(scope, AsOf::default(), Filter::default(), |view| {
+        view.validate_current()?;
+        Ok(view.binding().clone())
+    })
+}
+// Only these two actual engine owners can authorize this bridge. No caller-supplied trait.
+enum Target<'a> {
+    Snapshot(&'a mut ManagedLog),
+    Paged(&'a mut ManagedPagedLog),
+}
+impl Target<'_> {
+    fn binding(&self, scope: Scope<'_>, expected: Option<&Binding>) -> Result<Binding> {
+        let binding = match self {
+            Self::Snapshot(log) => snapshot_binding(log, scope),
+            Self::Paged(log) => log.scoped_binding(scope),
+        }
         .map_err(Error::Target)?;
-    if expected.is_some_and(|old| {
-        old.stable_origin != binding.stable_origin || old.identity != binding.identity
-    }) {
-        return Err(Error::Authority);
+        if expected.is_some_and(|old| {
+            old.stable_origin != binding.stable_origin || old.identity != binding.identity
+        }) {
+            return Err(Error::Authority);
+        }
+        Ok(binding)
     }
-    Ok(binding)
+    fn append(&mut self, operation: &str, input: Input) -> record::Result<AppendResult> {
+        match self {
+            Self::Snapshot(log) => log.append(operation, &[input]),
+            Self::Paged(log) => log.append(operation, &[input]),
+        }
+    }
 }
 fn check_parent(path: &Path) -> Result<PathBuf> {
     if !path.is_absolute()
@@ -288,9 +306,43 @@ pub fn ingest(
         &mut || Ok(()),
     )
 }
+/// Explicit existing paged target. No conversion, enrollment or source policy reinterpretation.
+pub fn ingest_paged(
+    source_log: &CaptureLog,
+    destination: &mut ManagedPagedLog,
+    scope: Scope<'_>,
+    checkpoint: &Path,
+    limits: Limits,
+) -> Result<Report> {
+    run_target(
+        source_log,
+        Target::Paged(destination),
+        scope,
+        checkpoint,
+        limits,
+        &mut || Ok(()),
+    )
+}
 fn run(
     source_log: &CaptureLog,
     destination: &mut ManagedLog,
+    scope: Scope<'_>,
+    checkpoint: &Path,
+    limits: Limits,
+    after_append: &mut dyn FnMut() -> Result<()>,
+) -> Result<Report> {
+    run_target(
+        source_log,
+        Target::Snapshot(destination),
+        scope,
+        checkpoint,
+        limits,
+        after_append,
+    )
+}
+fn run_target(
+    source_log: &CaptureLog,
+    mut destination: Target<'_>,
     scope: Scope<'_>,
     checkpoint: &Path,
     limits: Limits,
@@ -307,7 +359,7 @@ fn run(
     if identity.writer != scope.writer || identity.agent != scope.owner {
         return Err(Error::Scope);
     }
-    let initial = target(destination, scope, None)?;
+    let initial = destination.binding(scope, None)?;
     let origin = source(source_log.ingest_binding())?;
     let tip = source(source_log.cache_tip())?;
     let mut position = Position::default();
@@ -371,13 +423,11 @@ fn run(
                         }
                         break;
                     }
-                    let before = target(destination, scope, Some(&initial))?;
+                    let before = destination.binding(scope, Some(&initial))?;
                     let operation = request(origin, identity, batch.source, event)?;
-                    let result = destination
-                        .append(&operation, &[row])
-                        .map_err(Error::Target)?;
+                    let result = destination.append(&operation, row).map_err(Error::Target)?;
                     after_append()?;
-                    let after = target(destination, scope, Some(&initial))?;
+                    let after = destination.binding(scope, Some(&initial))?;
                     if result.commit.origin != initial.stable_origin
                         || result.commit.ids.len() != 1
                         || result.commit.recorded_at.len() != 1
@@ -425,7 +475,7 @@ fn run(
         position.emission = 0;
     }
     report.more = position.batch < tip.batches;
-    target(destination, scope, Some(&initial))?;
+    destination.binding(scope, Some(&initial))?;
     let progress = Progress {
         schema: 1,
         source_binding: origin,
@@ -441,7 +491,7 @@ fn run(
         return Err(Error::Checkpoint);
     }
     save(checkpoint, &sealed)?;
-    target(destination, scope, Some(&initial))?;
+    destination.binding(scope, Some(&initial))?;
     Ok(report)
 }
 #[cfg(test)]
