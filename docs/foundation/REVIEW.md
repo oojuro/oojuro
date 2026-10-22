@@ -1,7 +1,10 @@
 # Foundation and Soft Axiom storage review
 
 Review date: 2026-10-21 America/New_York. Reference engine: `3a17d1d`.
-This is a review package, not a completed replacement engine, production readiness claim or cutover instruction.
+Oojuro is a standalone commercial agent flight recorder, with a public local engine and separate hosted service.
+Soft Axiom is its first customer. Agents review their own history, other agents read only authorized shared history,
+and people inspect/export traces through authenticated review surfaces. This is a review package, not a completed
+replacement engine, production readiness claim or cutover instruction.
 
 ## What exists and what this finishes
 
@@ -51,6 +54,25 @@ arbitrary multi-record application transactions merely because it can store JSON
 | Availability | one EC2 process + backup downtime | agree outage/maintenance budget; bounded graceful restart and health checks; independent alerting |
 | Migration | no production migration performed | shadow copies, reconciliation, explicit owner acceptance, reversible read switch |
 
+### Confirmed product and durability target
+
+The owner confirmed authority scope: **agent transcripts, memory and files only**. Accounts, wallets and workflow state
+remain in their existing systems. The requested service target is comparable to Temporal/Kafka for acknowledged writes
+surviving process, host and Availability Zone loss. Regional disaster recovery is a separate objective.
+
+[Temporal Cloud documents synchronous storage across three AZs before acknowledging a write](https://docs.temporal.io/evaluate/cloud).
+[Kafka's replication design](https://kafka.apache.org/43/design/design/) requires the appropriate in-sync replica policy as well
+as `acks=all`; an `acks=all` setting by itself can acknowledge a single remaining replica. Refusing writes with insufficient
+replication and fencing stale leaders are part of the target. These references establish the requested failure contract;
+Oojuro has not implemented equivalent hosted replication.
+
+The existing hourly backup path cannot meet that target. The hosted committed-prefix prototype is a separate implementation
+track: immutable durable transaction/blob objects, one conditional authoritative head, owner epochs, exact request results,
+key/deletion state in the same committed prefix, and watermarked derived reads. Local precommit appends must not be searchable.
+A test filesystem backend can establish protocol behavior under its declared contract; it cannot certify AWS multi-AZ durability.
+Kafka/MSK as a replicated journal remains an alternative to implementing the conditional-object protocol. No provider deployment
+or billable infrastructure choice has been made by this review.
+
 ### Failure domains and the acknowledgement choice
 
 | Failure | Existing design boundary | Evidence still required |
@@ -81,6 +103,15 @@ caller's acknowledged watermark. A local fsync followed by later S3 upload does 
 Test process death after each upload/manifest step, duplicate requests, competing owners, stale manifests, missing/corrupt
 objects, erased-writer recovery, and snapshots during writes. Do not assume S3 alone supplies writer ordering or a database
 transaction. AWS provides [conditional creates and compare-and-swap writes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-writes.html) through `If-None-Match` and `If-Match`. Applying them to the manifest protocol is a proposed design, not an implemented transaction. KMS authority, conflict handling and recovery still require implementation review and fault tests. This review did not query live AWS state.
+
+## Implementation continuation
+
+[Engine PR #5](https://github.com/oojuro/oojuro/pull/5) implements the first sealed byte-exact raw-source journal slice,
+with cursors reconstructed from its existing Store journal; it remains draft while validation is pending.
+Cloud PRs [#2](https://github.com/oojuro/cloud/pull/2), [#3](https://github.com/oojuro/cloud/pull/3) and
+[#4](https://github.com/oojuro/cloud/pull/4) continue exact retry authority, conditional blob revisions and current deletion authority.
+These are active code reviews; their draft status and validation limits govern acceptance. Authenticated human review and
+hosted committed-prefix work are also in progress. None is a declaration that the new core or commercial hosted product is finished.
 
 ## Current blockers for primary agent storage
 
@@ -120,9 +151,9 @@ performance is unmeasured. GitHub exposes no configured status checks for engine
 
 ## Decisions needed before live hosting or cutover
 
-- Primary scope: agent journal plus immutable payloads, or additional transactional state (which needs a separate design).
-- Durability: EBS authority plus a declared nonzero disaster RPO, or S3-acknowledged commits (new protocol work).
-- Reliability budget: target RPO/RTO, acceptable snapshot downtime, staging region and spending ceiling.
+- Confirmed: standalone product; agent transcripts/memory/files are the customer payloads. Other transactional state remains external.
+- Confirmed target: acknowledged data survives process/host/AZ failure; region loss is separate. Provider/protocol implementation and independent acceptance evidence remain required.
+- Live staging decisions remaining: region, spending ceiling, concrete availability/recovery-time objective and failure drill authorization.
 - Raw privacy: local originals only, or an explicit encrypted raw-upload mode with key authority and erasure requirements.
 - Launch identity/licensing and ids remain owner decisions; this work does not archive repositories or relicense code.
 
