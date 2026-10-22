@@ -22,6 +22,7 @@
 //! (the frame head already carries both), so small per-turn frames stay small.
 
 mod bounded;
+pub mod paged;
 use crate::crypto::FrameCipher;
 use crate::format::*;
 use crate::pack::{PackOpts, Packer, Row, new_cctx, pack_body};
@@ -146,17 +147,17 @@ impl FrameRef {
 }
 
 impl Frames for Store {
-    fn loc(&self, i: usize) -> Loc {
-        self.frames[i].loc()
+    fn loc(&self, i: usize) -> Result<Loc> {
+        self.frames.get(i).map(FrameRef::loc).ok_or(Error::NotFound)
     }
     fn frame_index(&self, seq: u64) -> Result<usize> {
         Store::frame_index(self, seq)
     }
-    fn file(&self, id: u64) -> &File {
-        &self.files[&id]
+    fn file(&self, id: u64) -> Result<reader::FileLease<'_>> {
+        self.files.get(&id).map(reader::FileLease::Borrowed).ok_or(Error::Corrupt("missing frame file"))
     }
-    fn dict(&self, id: u32) -> Option<&[u8]> {
-        self.dicts.get(&id).map(|d| d.as_slice())
+    fn dict(&self, id: u32) -> Result<Option<reader::DictLease<'_>>> {
+        Ok(self.dicts.get(&id).map(|d| reader::DictLease::Borrowed(d.as_slice())))
     }
     fn read_state(&self) -> &ReadState {
         &self.read

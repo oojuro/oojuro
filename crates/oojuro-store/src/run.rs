@@ -198,22 +198,22 @@ pub struct RunReader {
 }
 
 impl Frames for RunReader {
-    fn loc(&self, i: usize) -> Loc {
-        self.frames[i]
+    fn loc(&self, i: usize) -> Result<Loc> {
+        self.frames.get(i).copied().ok_or(Error::NotFound)
     }
     fn frame_index(&self, seq: u64) -> Result<usize> {
         let i = self.frames.partition_point(|f| f.first_seq + f.count as u64 <= seq);
         if i < self.frames.len() && self.frames[i].first_seq <= seq { Ok(i) } else { Err(Error::NotFound) }
     }
-    fn file(&self, _: u64) -> &File {
-        &self.file
+    fn file(&self, _: u64) -> Result<crate::reader::FileLease<'_>> {
+        Ok(crate::reader::FileLease::Borrowed(&self.file))
     }
-    fn dict(&self, id: u32) -> Option<&[u8]> {
-        match id {
+    fn dict(&self, id: u32) -> Result<Option<crate::reader::DictLease<'_>>> {
+        Ok(match id {
             1 => self.dict.as_deref(),
             2 => self.shared.as_ref().map(|d| &d.bytes[..]),
             _ => None,
-        }
+        }.map(crate::reader::DictLease::Borrowed))
     }
     fn ddict(&self, id: u32) -> Option<&'static zstd::zstd_safe::DDict<'static>> {
         (id == 2).then(|| self.shared.as_ref().map(|d| d.ddict)).flatten()

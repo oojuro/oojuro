@@ -22,12 +22,17 @@ pub(crate) struct Loc {
     pub raw_len: u32,
 }
 
+pub(crate) enum FileLease<'a> { Borrowed(&'a File), Shared(Arc<File>) }
+impl std::ops::Deref for FileLease<'_> {type Target=File;fn deref(&self)->&File {match self{Self::Borrowed(v)=>v,Self::Shared(v)=>v}}}
+pub(crate) enum DictLease<'a> { Borrowed(&'a [u8]), Shared(Arc<Vec<u8>>) }
+impl std::ops::Deref for DictLease<'_> {type Target=[u8];fn deref(&self)->&[u8] {match self{Self::Borrowed(v)=>v,Self::Shared(v)=>v}}}
+
 /// A sequence of frames ordered by `first_seq`.
 pub(crate) trait Frames {
-    fn loc(&self, i: usize) -> Loc;
+    fn loc(&self, i: usize) -> Result<Loc>;
     fn frame_index(&self, seq: u64) -> Result<usize>;
-    fn file(&self, id: u64) -> &File;
-    fn dict(&self, id: u32) -> Option<&[u8]>;
+    fn file(&self, id: u64) -> Result<FileLease<'_>>;
+    fn dict(&self, id: u32) -> Result<Option<DictLease<'_>>>;
     /// A prepared shared dictionary for `id`, referenced instead of loaded.
     fn ddict(&self, _id: u32) -> Option<&'static zstd_safe::DDict<'static>> {
         None
@@ -68,12 +73,19 @@ struct ReadCtx {
 pub(crate) struct ReadState {
     ctx: Mutex<ReadCtx>,
     budget: usize,
+    idle_dicts: usize,
+    idle_per_dict: usize,
 }
 
 impl ReadState {
     pub fn new(budget: usize) -> Self {
-        Self { ctx: Mutex::new(ReadCtx { dctx: HashMap::new(), cache: HashMap::new(), order: VecDeque::new(), cached_bytes: 0 }), budget }
+        Self { ctx: Mutex::new(ReadCtx { dctx: HashMap::new(), cache: HashMap::new(), order: VecDeque::new(), cached_bytes: 0 }), budget, idle_dicts: usize::MAX, idle_per_dict: 8 }
     }
+
+    pub fn bounded(budget:usize)->Self {let mut state=Self::new(budget);state.idle_dicts=4;state.idle_per_dict=1;state}
+
+    #[cfg(test)]
+    pub fn idle_dictionary_count(&self)->usize {self.ctx.lock().unwrap().dctx.len()}
 
     pub fn clear_cache(&self) {
         let mut rc = self.ctx.lock().unwrap();
@@ -173,9 +185,9 @@ pub(crate) fn decode_payload<F: Frames + ?Sized>(fs: &F, payload: &[u8], head: &
                     None => {
                         let dict = match head.dict {
                             0 => None,
-                            id => Some(fs.dict(id).ok_or(Error::Corrupt("frame names an unknown dictionary"))?),
+                            id => Some(fs.dict(id)?.ok_or(Error::Corrupt("frame names an unknown dictionary"))?),
                         };
-                        new_dctx(dict)?
+                        new_dctx(dict.as_deref())?
                     }
                 },
             };
@@ -202,8 +214,12 @@ pub(crate) fn decode_payload<F: Frames + ?Sized>(fs: &F, payload: &[u8], head: &
             fill(target, &mut out, &mut pos, &mut input)?;
             out.truncate(target);
             let mut rc = fs.read_state().ctx.lock().unwrap();
+            if !rc.dctx.contains_key(&head.dict) && rc.dctx.len()>=fs.read_state().idle_dicts
+                && let Some(id)=rc.dctx.keys().next().copied() {
+                rc.dctx.remove(&id);
+            }
             let idle = rc.dctx.entry(head.dict).or_default();
-            if idle.len() < 8 {
+            if idle.len() < fs.read_state().idle_per_dict {
                 idle.push(owned);
             }
             (meta, out)
@@ -218,7 +234,7 @@ pub(crate) fn decode_payload<F: Frames + ?Sized>(fs: &F, payload: &[u8], head: &
 
 /// Frame `i` decoded through at least the bytes `need` asks for.
 pub(crate) fn decoded_with<F: Frames + ?Sized>(fs: &F, i: usize, need: Option<&dyn Fn(&Meta) -> usize>) -> Result<Arc<Decoded>> {
-    let f = fs.loc(i);
+    let f = fs.loc(i)?;
     let state = fs.read_state();
     let cached = state.ctx.lock().unwrap().cache.get(&f.first_seq).cloned();
     if let Some(d) = cached {
@@ -227,7 +243,8 @@ pub(crate) fn decoded_with<F: Frames + ?Sized>(fs: &F, i: usize, need: Option<&d
             return Ok(d);
         }
     }
-    let payload = read_payload(fs.file(f.file), &f)?;
+    let file = fs.file(f.file)?;
+    let payload = read_payload(&file, &f)?;
     let head = check_head(&f, &payload)?;
     let (meta, body) = decode_payload(fs, &payload, &head, need)?;
     let d = Arc::new(Decoded { meta, body });
@@ -255,7 +272,7 @@ pub(crate) fn decoded<F: Frames + ?Sized>(fs: &F, i: usize, want: usize) -> Resu
 /// Literal bytes `at..at+len` of the text area of the frame starting at `first_seq`.
 fn lit<F: Frames + ?Sized>(fs: &F, first_seq: u64, at: usize, len: usize) -> Result<Vec<u8>> {
     let i = fs.frame_index(first_seq)?;
-    if fs.loc(i).first_seq != first_seq {
+    if fs.loc(i)?.first_seq != first_seq {
         return Err(Error::Corrupt("reference does not name a frame"));
     }
     let d = decoded_with(fs, i, Some(&|m: &Meta| m.text_start[0] as usize + at + len))?;
@@ -301,7 +318,7 @@ pub(crate) fn text_range<F: Frames + ?Sized>(fs: &F, i: usize, r: usize, start: 
         let s = m.text_start[r] as usize;
         return Ok(d.body[s + a..s + b].to_vec());
     }
-    let first_seq = fs.loc(i).first_seq;
+    let first_seq = fs.loc(i)?.first_seq;
     let mut out = Vec::with_capacity(b - a);
     let (mut pos, mut lit_at) = (0usize, m.text_start[r] as usize);
     for p in &m.piece_list[p0 as usize..p1 as usize] {

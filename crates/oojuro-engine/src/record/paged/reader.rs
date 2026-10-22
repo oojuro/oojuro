@@ -2,7 +2,7 @@ mod directory;
 use super::*;
 use crate::capture_log::Identity;
 use crate::record::authority::{self, Batch, Unsigned};
-use oojuro_store::{Options, Store, crypto::FrameCipher};
+use oojuro_store::{Options, Store, crypto::FrameCipher, store::paged::PagedStore};
 use std::{
     collections::{BTreeSet, BinaryHeap, VecDeque},
     fs,
@@ -35,9 +35,36 @@ struct Winner {
     key: String,
     id: Option<u64>,
 }
+enum Source {
+    Legacy(Box<Store>),
+    Paged(Box<PagedStore>),
+}
+impl Source {
+    fn len(&self) -> u64 {
+        match self {
+            Self::Legacy(s) => s.len(),
+            Self::Paged(s) => s.len(),
+        }
+    }
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+    fn get(&self, n: u64) -> oojuro_store::Result<Vec<u8>> {
+        match self {
+            Self::Legacy(s) => s.get(n),
+            Self::Paged(s) => s.get(n),
+        }
+    }
+    fn sealed_origin_digest(&self) -> oojuro_store::Result<[u8; 32]> {
+        match self {
+            Self::Legacy(s) => s.sealed_origin_digest(),
+            Self::Paged(s) => s.sealed_origin_digest(),
+        }
+    }
+}
 /// Owning/recovering Store reader, not a filesystem read-only open. No data writes/ACK API.
 pub struct Reader {
-    store: Store,
+    store: Source,
     cipher: Arc<FrameCipher>,
     intent: Intent,
     identity: Identity,
@@ -84,6 +111,14 @@ struct Cursor {
 }
 impl Reader {
     fn base(dir: &Path, key: &[u8; 32], identity: Identity) -> Result<(Self, usize)> {
+        Self::base_source(dir, key, identity, None)
+    }
+    fn base_source(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        store_directory: Option<&Path>,
+    ) -> Result<(Self, usize)> {
         if !name(&identity.writer, 256)
             || identity.agent == 0
             || identity.first_id == 0
@@ -103,18 +138,22 @@ impl Reader {
             return Err(Error::Authority);
         }
         let cipher = Arc::new(FrameCipher::new(key));
-        let store = Store::open(
-            dir,
-            Options {
-                cipher: Some(cipher.clone()),
-                require_sealed: true,
-                sync: true,
-                compact_threads: 1,
-                cache_bytes: 1 << 20,
-                ..Options::default()
-            },
-        )
-        .map_err(|_| Error::Unavailable)?;
+        let options = Options {
+            cipher: Some(cipher.clone()),
+            require_sealed: true,
+            sync: true,
+            compact_threads: 1,
+            cache_bytes: 1 << 20,
+            ..Options::default()
+        };
+        let store = match store_directory {
+            Some(path) => Source::Paged(Box::new(
+                PagedStore::open(dir, options, path).map_err(|_| Error::Unavailable)?,
+            )),
+            None => Source::Legacy(Box::new(
+                Store::open(dir, options).map_err(|_| Error::Unavailable)?,
+            )),
+        };
         if store.is_empty() {
             return Err(Error::Authority);
         }
