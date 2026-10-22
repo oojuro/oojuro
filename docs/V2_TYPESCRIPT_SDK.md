@@ -91,6 +91,14 @@ server body, URL, token or request dump. Injected fetch implementations are trus
 code and must preserve those privacy rules. Supply AbortSignals for explicit deadlines; there is
 no implicit application timeout or retry policy.
 
+## Explicit user files
+
+The separate opt-in [user-file protocol](USER_FILE_PROTOCOL.md) composes bounded
+parts and an atomic manifest over these existing Blob calls. It requires explicit
+file consent and a transactional download sink; it does not enable capture or raw
+harness upload. Its own tested limits and joined-HTTP acceptance boundary are
+documented separately.
+
 ## Offline verification
 
 ```sh
