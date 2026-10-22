@@ -23,8 +23,10 @@ pub struct CaptureReport {
 
 /// Capture one explicitly chosen regular file. `None` means policy withheld the whole source.
 ///
-/// `id` names a source GENERATION, not a pathname. Persist/reuse it across retries. Replacement,
-/// truncation or changed retained bytes fails; the owner must deliberately assign a new id.
+/// `id` names a source GENERATION, not a pathname. Persist/reuse it across retries. Detected
+/// replacement/truncation or changed retained bytes fails; the owner must assign a new id.
+/// Inode reuse or truncate-and-regrow with an identical retained prefix is not detectable:
+/// the producer/owner must supply a new generation id for those events.
 /// Callers must authorize the configured path, including parent directories, against their
 /// trust boundary. This function refuses a final symlink and compares the opened inode, but
 /// does not provide a sandbox against hostile parent-directory replacement.

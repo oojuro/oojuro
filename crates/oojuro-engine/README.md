@@ -30,8 +30,9 @@ Keys are not persisted here and their secure lifecycle, backup/revocation and in
 
 `file_capture::capture_file` captures one caller-selected local file after an explicit per-source raw-retention policy decision.
 A denied source is not inspected, opened or registered. The journal seals the original path and device/inode provenance.
-Callers supply a stable source-generation id; changed inode, truncation or changed retained bytes is refused until the owner
-chooses a new generation. Every pass revalidates the entire retained prefix before retaining new bytes, including partial
+Callers supply a stable source-generation id; changed inode, observed truncation or changed retained bytes is refused until the owner
+chooses a new generation. Inode reuse or truncate-and-regrow to an identical retained prefix is not detectable; the producer/owner
+must issue a new generation id. Changes that occur entirely between capture passes are not reconstructed. Every pass revalidates the entire retained prefix before retaining new bytes, including partial
 JSONL tails and non-UTF-8 bytes. This favors correctness over tail-only performance; large-source scaling is unmeasured.
 
 The adapter does not discover files or connect to the existing recorder automatically. It requires trusted configured parent
