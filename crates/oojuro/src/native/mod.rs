@@ -2,6 +2,7 @@
 mod config;
 mod policy;
 mod records;
+mod temporal;
 use config::{Config, Harness};
 use oojuro_capture::{
     ingest::Policy,
@@ -189,6 +190,9 @@ fn open(
             LocalCapture::open_claude(&root.join(config::JOURNAL), key, options, policy)
         }
         Harness::Pi => LocalCapture::open_pi(&root.join(config::JOURNAL), key, options, policy),
+        Harness::Temporal => {
+            LocalCapture::open_temporal(&root.join(config::JOURNAL), key, options, policy)
+        }
     };
     result.map_err(|_| Error::Authority)
 }
@@ -239,6 +243,7 @@ pub fn run() -> Result<i32> {
             "codex" => Harness::Codex,
             "claude-code" => Harness::ClaudeCode,
             "pi" => Harness::Pi,
+            "temporal" => Harness::Temporal,
             _ => return Err(Error::Usage),
         };
         let config = Config {
@@ -258,6 +263,12 @@ pub fn run() -> Result<i32> {
         open(&root, &config, &key, Box::new(policy::ReadOnly), &policy.id)?;
         emit(&json!({"status":"initialized","format":1}), 4096)?;
         return Ok(0);
+    }
+    if matches!(
+        args.command.as_str(),
+        "temporal-append" | "temporal-position"
+    ) {
+        return temporal::run(&root, &args);
     }
     // Consent is required before source inspection or raw export destination creation.
     if args.command == "capture" && !args.flags.contains("--allow-raw-source")

@@ -318,6 +318,11 @@ impl CaptureLog {
             .ok_or(Error::NotFound)?
             .initial_context)
     }
+    /// Opaque adapter descriptor for the caller-owned local authority; never an access grant.
+    pub fn source_descriptor(&self, source: Source) -> Result<Option<&[u8]>> {
+        self.healthy()?;
+        Ok(self.sources.get(&source).map(|s| s.descriptor.as_slice()))
+    }
     pub fn progress(&self, source: Source) -> Result<Progress> {
         self.healthy()?;
         let s = self.sources.get(&source).ok_or(Error::NotFound)?;
