@@ -26,8 +26,8 @@
 use crate::lexical::{Error, Result};
 use std::collections::BTreeMap;
 
-pub(super) const MAX_ROWS: usize = 8192;
-pub(super) const MAX_BYTES: usize = 16 << 20;
+pub(crate) const MAX_ROWS: usize = 8192;
+pub(crate) const MAX_BYTES: usize = 16 << 20;
 const HEADER: usize = 192;
 const FOOTER: usize = 16;
 const BLOCK: usize = 128;
@@ -36,14 +36,14 @@ const MAGIC: &[u8; 8] = b"OOJLEX01";
 const END: &[u8; 8] = b"OOJLEXND";
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct Row {
+pub(crate) struct Row {
     pub id: u64,
     pub length: u32,
     pub scope: u32,
     pub fingerprint: [u8; 12],
 }
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct Segment {
+pub(crate) struct Segment {
     pub start: u32,
     pub rows: Vec<Row>,
     pub postings: BTreeMap<String, Vec<(u32, u32)>>,
@@ -300,7 +300,7 @@ fn decode_field(r: &mut Read<'_>, n: usize, base: u64, w: u32, max: u64) -> Resu
     Ok(vals)
 }
 
-pub(super) fn encode(s: &Segment) -> Result<Vec<u8>> {
+pub(crate) fn encode(s: &Segment) -> Result<Vec<u8>> {
     let n = s.rows.len();
     if n > MAX_ROWS || s.start.checked_add(n as u32).is_none() {
         return invalid();
@@ -444,7 +444,7 @@ pub(super) fn encode(s: &Segment) -> Result<Vec<u8>> {
     Ok(out.0)
 }
 
-pub(super) fn decode(bytes: &[u8]) -> Result<Segment> {
+pub(crate) fn decode(bytes: &[u8]) -> Result<Segment> {
     if bytes.len() < HEADER + FOOTER || bytes.len() > MAX_BYTES {
         return invalid();
     }

@@ -24,9 +24,9 @@ pub struct Search {
 }
 /// Disposable memory projection; each read independently validates its authority.
 pub struct Index {
-    inner: lexical::Index,
-    mark: Watermark,
-    failed: bool,
+    pub(super) inner: lexical::Index,
+    pub(super) mark: Watermark,
+    pub(super) failed: bool,
 }
 impl Index {
     pub fn rebuild(log: &RecordLog) -> Result<Self> {

@@ -2,6 +2,7 @@
 //! Reported agent identities and stored data are not verified truth or instructions.
 mod authority;
 mod index;
+pub mod persistent;
 mod view;
 pub use authority::{Commit, RecordLog, Watermark};
 pub use index::{Hit, Index, Query, Search};
