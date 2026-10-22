@@ -672,3 +672,46 @@ fn existing_empty_sealed_store_is_partial_enrollment_and_cannot_be_initialized_b
     );
     assert_eq!(fs::read(f.data.join("MANIFEST")).unwrap(), manifest);
 }
+
+#[test]
+fn bare_relative_directory_create_reopen_keeps_original_atomic_intent() {
+    if std::env::var_os("OOJURO_MESSAGE_RELATIVE_CHILD").is_some() {
+        let data = Path::new("messages");
+        let mut log = MessageLog::create(data, &KEY, identity()).unwrap();
+        log.register(SOURCE, b"reported-source-generation", b"{}")
+            .unwrap();
+        let b = batch(
+            &log,
+            "relative-intent",
+            1,
+            b"raw-body",
+            Some(("battery relative", true)),
+        );
+        let original = b.parsed.request.clone();
+        let ack = commit(&mut log, b);
+        drop(log);
+        let log = MessageLog::open(data, &KEY, identity()).unwrap();
+        assert_eq!(log.read_raw(SOURCE, 0, 8).unwrap(), b"raw-body");
+        assert_eq!(
+            log.lookup(SOURCE, 0, &original, b"raw-body")
+                .unwrap()
+                .unwrap()
+                .outcome,
+            ack.outcome
+        );
+        assert!(MessageLog::create(data, &KEY, identity()).is_err());
+        return;
+    }
+    let f = Fixture::new();
+    let child = Command::new(std::env::current_exe().unwrap())
+        .args(["--exact", "capture_log::messages::tests::bare_relative_directory_create_reopen_keeps_original_atomic_intent", "--nocapture"])
+        .current_dir(&f.root)
+        .env("OOJURO_MESSAGE_RELATIVE_CHILD", "1")
+        .output()
+        .unwrap();
+    assert!(
+        child.status.success(),
+        "relative-directory child: {}",
+        String::from_utf8_lossy(&child.stderr)
+    );
+}
