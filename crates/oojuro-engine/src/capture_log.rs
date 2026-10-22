@@ -2,6 +2,9 @@
 //! No adapter, filesystem discovery, query engine, key persistence or second WAL lives here.
 //! The format is distinct from raw::RawJournal; neither silently upgrades the other's files.
 pub use crate::raw::MAX_BLOCK_BYTES;
+/// Explicit direct-record namespace; never opens or converts a v1 capture log.
+pub use crate::record::RecordLog;
+
 use oojuro_store::{Error, NewRecord, Options, Result, Store, crypto::FrameCipher};
 use serde::{Deserialize, Serialize};
 use std::{collections::BTreeMap, path::Path, sync::Arc};

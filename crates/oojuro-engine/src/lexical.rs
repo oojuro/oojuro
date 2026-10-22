@@ -49,6 +49,11 @@ struct Document {
     scope: u32,
     normalized_args: String,
 }
+/// Private new-record visibility. Legacy capture scoring always passes None.
+pub(crate) struct RecordVisibility<'a> {
+    pub ids: &'a BTreeSet<u64>,
+    pub keys: &'a BTreeMap<String, u64>,
+}
 /// Derived plaintext exists in process memory only. Dropping/rebuilding it does
 /// not mutate authority, policy, source cursors, IDs or original bytes.
 pub struct Index {
@@ -100,6 +105,69 @@ impl Index {
         }
         self.applied = batches.len();
         Ok(())
+    }
+    pub(crate) fn from_record_rows<'a>(
+        writer: &str,
+        owner: u32,
+        rows: impl Iterator<Item = (u64, i64, &'a str, bool)>,
+    ) -> Result<Self> {
+        let mut index = Self {
+            writer: writer.into(),
+            agent: owner,
+            authority: 0,
+            applied: 0,
+            failed: false,
+            documents: vec![],
+            postings: BTreeMap::new(),
+            seen: HashMap::new(),
+        };
+        for (id, valid_at, text, indexed) in rows {
+            let terms = if indexed && !text.is_empty() {
+                analyze(text)?
+            } else {
+                vec![]
+            };
+            let length = u32::try_from(terms.iter().map(|(_, n)| u64::from(*n)).sum::<u64>())
+                .map_err(|_| Error::Invalid)?;
+            let scope = u32::try_from(terms.len()).map_err(|_| Error::Invalid)?;
+            let row = index.documents.len();
+            for (term, tf) in terms {
+                index.postings.entry(term).or_default().push((row, tf));
+            }
+            // Internal lexical carrier only. Never a fabricated capture receipt:
+            // no harness identity/policy/provenance is exported from this path.
+            let event = Event {
+                id,
+                session: 0,
+                parent_session: 0,
+                agent: owner,
+                turn: 0,
+                seq: 0,
+                parent: 0,
+                revises: 0,
+                kind: 5,
+                status: 0,
+                exit_code: None,
+                tokens_in: 0,
+                tokens_out: 0,
+                ts_us: valid_at,
+                duration_us: 0,
+                tool: String::new(),
+                args: String::new(),
+                text: text.into(),
+                indexed,
+                line_start: 0,
+                line_end: 0,
+                emission: 0,
+            };
+            index.documents.push(Document {
+                event,
+                length,
+                scope,
+                normalized_args: String::new(),
+            });
+        }
+        Ok(index)
     }
     pub fn applied_batches(&self) -> usize {
         self.applied
@@ -161,6 +229,21 @@ impl Index {
         q: &Query<'_>,
         keep: &mut dyn FnMut(&Event) -> bool,
     ) -> Result<Vec<Hit>> {
+        self.search_mode(q, keep, None)
+    }
+    pub(crate) fn search_record_view(
+        &self,
+        q: &Query<'_>,
+        view: &RecordVisibility<'_>,
+    ) -> Result<Vec<Hit>> {
+        self.search_mode(q, &mut |_| true, Some(view))
+    }
+    fn search_mode(
+        &self,
+        q: &Query<'_>,
+        keep: &mut dyn FnMut(&Event) -> bool,
+        view: Option<&RecordVisibility<'_>>,
+    ) -> Result<Vec<Hit>> {
         if self.failed {
             return Err(Error::Unavailable);
         }
@@ -175,7 +258,11 @@ impl Index {
         }
         let mut want = q.k;
         loop {
-            let ranked = self.continued(q, want, true);
+            let ranked = if let Some(view) = view {
+                self.continued_view(q, want, true, Some(view))
+            } else {
+                self.continued(q, want, true)
+            };
             let got = ranked.len();
             let mut out = Vec::new();
             for (row, hit) in ranked {
@@ -192,14 +279,25 @@ impl Index {
             want = want.saturating_mul(4);
         }
     }
-    fn visible(&self, row: usize, q: &Query<'_>) -> bool {
-        let ts = self.documents[row].event.ts_us;
-        ts >= q.from && ts <= q.to
+    fn visible(&self, row: usize, q: &Query<'_>, view: Option<&RecordVisibility<'_>>) -> bool {
+        let event = &self.documents[row].event;
+        event.ts_us >= q.from
+            && event.ts_us <= q.to
+            && view.is_none_or(|v| v.ids.contains(&event.id))
     }
     fn continued(&self, q: &Query<'_>, k: usize, prune: bool) -> Vec<(usize, Hit)> {
-        let (mut first, anchored) = self.rank(q, k, false, prune);
+        self.continued_view(q, k, prune, None)
+    }
+    fn continued_view(
+        &self,
+        q: &Query<'_>,
+        k: usize,
+        prune: bool,
+        view: Option<&RecordVisibility<'_>>,
+    ) -> Vec<(usize, Hit)> {
+        let (mut first, anchored) = self.rank(q, k, false, prune, view);
         if anchored && first.len() < k {
-            let (rest, _) = self.rank(q, k, true, prune);
+            let (rest, _) = self.rank(q, k, true, prune, view);
             let listed: BTreeSet<usize> = first.iter().map(|(row, _)| *row).collect();
             for (row, mut hit) in rest {
                 if first.len() == k {
@@ -213,17 +311,23 @@ impl Index {
         }
         first
     }
-    fn rank(&self, q: &Query<'_>, k: usize, split: bool, prune: bool) -> (Vec<(usize, Hit)>, bool) {
+    fn rank(
+        &self,
+        q: &Query<'_>,
+        k: usize,
+        split: bool,
+        prune: bool,
+        view: Option<&RecordVisibility<'_>>,
+    ) -> (Vec<(usize, Hit)>, bool) {
         let literal = literal_query(q.text);
         let mut query = query_terms(q.text);
         let mut backoff = Vec::new();
         for (term, count) in &query {
             if term.contains('_')
                 && (split
-                    || !self
-                        .postings
-                        .get(term)
-                        .is_some_and(|list| list.iter().any(|(row, _)| self.visible(*row, q))))
+                    || !self.postings.get(term).is_some_and(|list| {
+                        list.iter().any(|(row, _)| self.visible(*row, q, view))
+                    }))
             {
                 backoff.push((term.clone(), *count));
             }
@@ -236,6 +340,12 @@ impl Index {
         }
         // Trace records have key = decimal event ID, recorded_at = valid_at.
         let key_row = |key: &str| {
+            if let Some(view) = view {
+                return view
+                    .keys
+                    .get(key)
+                    .and_then(|id| self.documents.iter().position(|d| d.event.id == *id));
+            }
             self.documents
                 .iter()
                 .position(|d| d.event.id.to_string() == key && d.event.ts_us <= q.to)
@@ -254,7 +364,14 @@ impl Index {
         let scan_time = q.text.is_empty() || (literal.is_some() && query.is_empty());
         let terms: Vec<_> = query.iter().map(|(term, n)| (term, *n)).collect();
         let eligible = |row| {
-            self.visible(row, q)
+            self.visible(row, q, view)
+                // Record-only correction: a nonword literal has no postings
+                // and scans text, but must still honor initial eligibility.
+                // Empty timelines and actual-key reads retain stored-only rows.
+                && (view.is_none()
+                    || direct.is_some()
+                    || q.text.is_empty()
+                    || self.documents[row].event.indexed)
                 && literal.is_none_or(|phrase| {
                     phrase_start(&self.documents[row].event.text, phrase).is_some()
                 })
@@ -324,7 +441,7 @@ impl Index {
         let floor = FLOOR_RECORDS * MU;
         let pad = if any_hits && total < floor {
             let view_total = (0..self.documents.len())
-                .filter(|row| self.visible(*row, q))
+                .filter(|row| self.visible(*row, q, view))
                 .map(|row| u64::from(mass(row)))
                 .sum::<u64>();
             let view: Vec<u64> = terms
@@ -338,7 +455,7 @@ impl Index {
                         .get(term.as_str())
                         .into_iter()
                         .flatten()
-                        .filter(|(row, _)| self.visible(*row, q))
+                        .filter(|(row, _)| self.visible(*row, q, view))
                         .map(|(_, tf)| if scope_model { 1 } else { u64::from(*tf) })
                         .sum()
                 })
