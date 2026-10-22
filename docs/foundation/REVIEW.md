@@ -17,7 +17,7 @@ The draft is preserved in its original checkout; no stores, services or customer
 | Ranker seam | [PR #2](https://github.com/oojuro/oojuro/pull/2): separately reviewed standalone crate, 8 synthetic conformance tests; no shipped semantic ranker or live query integration |
 | New consolidated engine | specification only; port and all section 14 gates still required |
 | Information-theory methods | [PR #3](https://github.com/oojuro/oojuro/pull/3): reproducible aggregate of cached exploratory runs; exposed evaluation set, no clean adoption verdict |
-| Hosted API | private `oojuro/cloud` service; existing EC2/EBS Terraform and encrypted S3 backup/restore scripts |
+| Hosted API | [cloud PR #1](https://github.com/oojuro/cloud/pull/1): durable control commits, tenant-bound restore and atomic blob authorization; 86 tests pass, 2 intentional load tests ignored |
 
 Historical figures in SPEC.md are scoped research observations. The 14.5% raw ratio is not an upper bound for arbitrary
 inputs; incompressible/encrypted bytes may not compress. The new format has not been measured.
@@ -81,6 +81,18 @@ caller's acknowledged watermark. A local fsync followed by later S3 upload does 
 Test process death after each upload/manifest step, duplicate requests, competing owners, stale manifests, missing/corrupt
 objects, erased-writer recovery, and snapshots during writes. Do not assume S3 alone supplies writer ordering or a database
 transaction. AWS provides [conditional creates and compare-and-swap writes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-writes.html) through `If-None-Match` and `If-Match`. Applying them to the manifest protocol is a proposed design, not an implemented transaction. KMS authority, conflict handling and recovery still require implementation review and fault tests. This review did not query live AWS state.
+
+## Executable gates delivered for review
+
+Cloud PR #1 adds a synthetic real-process gate: a writer-restricted agent writes a transcript, explicit memory note and exact binary blob;
+the process is killed with SIGKILL; reopening must preserve record ids/blob bytes, reject a forbidden writer and deduplicate retries.
+An encrypted isolated snapshot restore must pass those checks again. The full cloud suite passes 86 tests; two opt-in load tests remain
+ignored. The tenant-remapping and missing-control-database restore regressions both failed before their fixes. These are process/snapshot
+correctness checks, not power-loss, regional disaster, deployment or SLA proof.
+
+PR #2 passes eight ranker conformance tests and strict clippy; PR #3 passes six synthetic aggregation tests; PR #4 passes 27 store tests
+and application/engine compilation. Full benchmark-workspace compilation is blocked by absent libclang/llvm-config, and optional encryption
+performance is unmeasured. GitHub exposes no configured status checks for engine PRs #1 through #4; these results come from Rocket2 local runs.
 
 ## Review and migration sequence
 
