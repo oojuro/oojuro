@@ -36,7 +36,38 @@ impl Reader {
         directory: &Path,
         minimum: Option<&Watermark>,
     ) -> Result<Self> {
-        let (mut reader, mut total) = Self::base(dir, key, identity)?;
+        Self::open_directory(dir, key, identity, directory, minimum, None)
+    }
+    /// Explicit bounded Store-metadata + Record-directory owner; no old-Store fallback.
+    pub fn open_disk_store(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        store_directory: &Path,
+        directory: &Path,
+        minimum: Option<&Watermark>,
+    ) -> Result<Self> {
+        Self::open_directory(
+            dir,
+            key,
+            identity,
+            directory,
+            minimum,
+            Some(store_directory),
+        )
+    }
+    pub fn uses_paged_store(&self) -> bool {
+        matches!(self.store, Source::Paged(_))
+    }
+    fn open_directory(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        directory: &Path,
+        minimum: Option<&Watermark>,
+        store_directory: Option<&Path>,
+    ) -> Result<Self> {
+        let (mut reader, mut total) = Self::base_source(dir, key, identity, store_directory)?;
         reader.refs.clear();
         reader.refs.shrink_to_fit();
         for sequence in 1..reader.store.len() {

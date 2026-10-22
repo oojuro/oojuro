@@ -26,9 +26,6 @@ impl<'a> Cursor<'a> {
     pub fn pos(&self) -> u64 {
         self.pos
     }
-    pub fn end(&self) -> u64 {
-        self.end
-    }
     pub fn byte(&mut self) -> Result<u8> {
         if self.pos >= self.end {
             return Err(Error::Corrupt("source cursor truncated"));
