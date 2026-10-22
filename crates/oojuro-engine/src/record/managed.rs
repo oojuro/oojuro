@@ -1078,6 +1078,13 @@ fn decoded_occurrences(
     let mut stack = vec![&value];
     let mut count = 0u64;
     while let Some(value) = stack.pop() {
+        // Needles include whole typed containers, including empty string/key leaves.
+        // Walk their children too, but never substitute child-only scans for the exact container.
+        if value.is_array() || value.is_object() {
+            count = count
+                .checked_add(occurrences(&json(value, MAX_STATE_BYTES)?, needles))
+                .ok_or(Error::Bounds)?;
+        }
         match value {
             serde_json::Value::String(value) => {
                 count = count
@@ -1085,19 +1092,9 @@ fn decoded_occurrences(
                     .ok_or(Error::Bounds)?;
             }
             serde_json::Value::Array(values) => {
-                if values.is_empty() {
-                    count = count
-                        .checked_add(occurrences(b"[]", needles))
-                        .ok_or(Error::Bounds)?;
-                }
                 stack.extend(values);
             }
             serde_json::Value::Object(values) => {
-                if values.is_empty() {
-                    count = count
-                        .checked_add(occurrences(b"{}", needles))
-                        .ok_or(Error::Bounds)?;
-                }
                 for (key, value) in values {
                     count = count
                         .checked_add(occurrences(key.as_bytes(), needles))

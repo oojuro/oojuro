@@ -98,7 +98,8 @@ Selections cover IDs, matching caller agent labels, all versions of a key, or an
 source generations and parser-resume state remain a separate explicit prune stage.
 
 Decoded shared and encoded-byte occurrences are separate. Selected attribute metadata
-includes non-string JSON payloads; preserved numeric provenance or common typed values
+includes non-string JSON payloads and canonical bytes of every container node,
+including nonempty containers with empty string/key leaves; preserved numeric provenance or common typed values
 can therefore prevent a broad byte-absence claim. Scan counts live only in signed control,
 so the exact staged data is scanned after generation assignment without self-referential
 scan statistics changing it afterward. Surviving values, header labels
@@ -146,3 +147,9 @@ data directory. Each has a runtime regression. Exact pending-tag admission, comp
 staged-snapshot scanning, and immutable enrollment plus explicit create/open distinction
 address those defects. Initial 103-test evidence above stays pinned to that earlier source;
 the correction gate records its own final source/result.
+
+The follow-up exact empty-leaf container regression failed before canonical comparison
+of every array/object node and passed after it. The corrected engine suite passes
+106 tests with five existing/subprocess helpers ignored; strict package library-and-test
+Clippy and diff checks pass. This includes all sixteen active managed tests. The complete
+corrected scan still preserves the stated local-file and copied-key/backup limitations.

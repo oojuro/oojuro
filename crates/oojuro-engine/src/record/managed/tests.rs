@@ -622,6 +622,8 @@ fn typed_attribute_payload_residue_prevents_false_local_absence() {
         serde_json::json!(null),
         serde_json::json!([]),
         serde_json::json!({}),
+        serde_json::json!([""]),
+        serde_json::json!({"": ""}),
     ] {
         let f = Fixture::new();
         let mut log = f.log(f.control());
