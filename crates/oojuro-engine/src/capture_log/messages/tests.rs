@@ -418,6 +418,10 @@ fn fresh_marker_mode_key_identity_and_missing_enrollment_are_not_interchangeable
     assert!(!f.data.exists());
     let log = f.create();
     let scoped_id = log.inner.cipher.key_id();
+    assert!(
+        log.inner.ingest_binding().is_err(),
+        "message mode cannot enter the Lines bridge"
+    );
     drop(log);
     assert_ne!(scoped_id, FrameCipher::new(&KEY).key_id());
     assert!(MessageLog::create(&f.data, &KEY, identity()).is_err());
