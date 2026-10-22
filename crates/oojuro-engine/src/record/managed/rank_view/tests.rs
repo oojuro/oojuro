@@ -27,6 +27,14 @@ fn genuine_managed_projection_selects_key_winner_before_eligibility_or_filter() 
             view.records().iter().map(|r| r.id).collect::<Vec<_>>(),
             vec![11]
         );
+        assert_eq!(
+            view.lexical_records()
+                .iter()
+                .map(|r| r.id)
+                .collect::<Vec<_>>(),
+            vec![10, 11]
+        );
+        assert!(!view.lexical_records()[0].indexed);
         assert_eq!(view.records()[0].recorded_at, ack.commit.recorded_at[2]);
         assert_eq!(view.records()[0].adapter, identity().adapter);
         assert!(!view.directory().exists());
@@ -111,6 +119,8 @@ fn derived_sealing_is_current_generation_scope_time_filter_and_purpose_bound() {
     log.with_rank_view(scope(), AsOf::default(), Filter::default(), |view| {
         assert_ne!(view.binding(), &before);
         assert!(view.records().is_empty());
+        assert_eq!(view.scope().writer, scope().writer);
+        assert_eq!(view.scope().owner, scope().owner);
         assert!(view.open_derived("rank-table-v1", &sealed).is_err());
         assert!(!view.directory().exists());
         Ok(())
@@ -174,7 +184,14 @@ fn final_retained_witness_check_refuses_callback_result_after_external_change() 
     .unwrap();
     let result = log.with_rank_view(scope(), AsOf::default(), Filter::default(), |view| {
         assert_eq!(view.records().len(), 1);
+        let sealed = view.seal_derived("rank-table-v1", b"synthetic prior table")?;
         fs::write(f.root.join("witness/CURRENT"), b"invalid retained witness").map_err(io)?;
+        // The ranking owner calls this before callback2: callback1's change fences it.
+        assert!(view.validate_current().is_err());
+        assert!(view.open_derived("rank-table-v1", &sealed).is_err());
+        assert!(view.seal_derived("rank-table-v1", b"new table").is_err());
+        assert!(view.create_derived_directory().is_err());
+        assert!(!view.directory().exists());
         Ok("callback result must be refused")
     });
     assert!(result.is_err());
