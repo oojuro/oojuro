@@ -149,6 +149,7 @@ struct Plugin<'a> {
     id: &'static str,
     mode: Mode,
     calls: AtomicUsize,
+    dispatches: AtomicUsize,
     advance: Option<&'a Guard>,
 }
 impl Plugin<'_> {
@@ -157,6 +158,7 @@ impl Plugin<'_> {
             id,
             mode,
             calls: AtomicUsize::new(0),
+            dispatches: AtomicUsize::new(0),
             advance: None,
         }
     }
@@ -211,6 +213,7 @@ impl rank::Ranker for Plugin<'_> {
         c: &[rank::Candidate<'_>],
         work: &mut rank::WorkBudget,
     ) -> std::result::Result<Vec<f64>, rank::Skip> {
+        self.dispatches.fetch_add(1, Ordering::SeqCst);
         if let Some(guard) = self.advance {
             guard.generation.fetch_add(1, Ordering::SeqCst);
         }
@@ -617,4 +620,31 @@ fn expansion_never_promotes_a_new_identifier_into_the_original_anchor_group() {
             .filter(|h| h.record.id != 1)
             .all(|h| h.continued)
     );
+}
+
+#[test]
+fn rescore_rechecks_lifecycle_before_each_callback() {
+    let f = Fixture::new(&[("alpha original", true, None, 1)]);
+    let view = f.view();
+    let index = Index::rebuild(&f.log).unwrap();
+    let mut first = Plugin::new("first", Mode::Delta(1.0));
+    first.advance = Some(&f.guard);
+    let second = Plugin::new("second", Mode::Delta(1.0));
+    let first_table = f.table(&view, "first");
+    let second_table = f.table(&view, "second");
+    let stages = [
+        stage(Hook::Rescore, &first, Some(&first_table)),
+        stage(Hook::Rescore, &second, Some(&second_table)),
+    ];
+    let result = search(
+        &index,
+        &f.log,
+        &view,
+        &query("alpha", 1),
+        &f.guard,
+        &pipeline(&stages),
+    );
+    assert!(matches!(result, Err(Error::Authority)));
+    assert_eq!(first.dispatches.load(Ordering::SeqCst), 1);
+    assert_eq!(second.dispatches.load(Ordering::SeqCst), 0);
 }
