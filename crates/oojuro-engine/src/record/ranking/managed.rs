@@ -37,13 +37,14 @@ impl ManagedRankView<'_> {
         let index = lexical::Index::from_record_rows(
             scope.writer,
             scope.owner,
-            rows.iter()
+            self.lexical_documents()
+                .iter()
                 .map(|r| (r.id, r.valid_at, r.text.as_str(), r.indexed)),
         )
         .map_err(|_| Error::Unavailable)?;
         let ids = rows.iter().map(|r| r.id).collect::<BTreeSet<_>>();
-        let keys = rows
-            .iter()
+        let keys = self
+            .latest_records()
             .filter_map(|r| r.key.as_ref().map(|key| (key.clone(), r.id)))
             .collect::<BTreeMap<_, _>>();
         let mask = lexical::RecordVisibility {
