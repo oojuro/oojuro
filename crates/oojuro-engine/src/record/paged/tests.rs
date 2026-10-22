@@ -576,3 +576,146 @@ fn paged_page_selection_does_not_skip_oversized_next_row() {
             .is_err()
     );
 }
+
+#[test]
+fn paged_winner_precedes_lower_bounds_and_typed_filter_statistics() {
+    let f = Fixture::new();
+    let mut log = f.log();
+    let mut old = row("alpha old_tool word", Some("memory"), 10);
+    old.kind = Kind::Input;
+    old.tool = Some("old-tool".into());
+    log.append("old", &[old]).unwrap();
+    log.append("new", &[row("alpha newest", Some("memory"), 20)])
+        .unwrap();
+    let native = super::super::Index::rebuild(&log).unwrap();
+    let mut q = query("alpha", AsOf::default());
+    q.filter = Filter {
+        kind: Some(Kind::Input),
+        tool: Some("old-tool".into()),
+        status: Some(Status::Ok),
+        agent_id: Some("reported-paged-agent".into()),
+    };
+    let hidden = signature(native.search(&log, &q).unwrap());
+    assert!(hidden.is_empty());
+    q.as_of.known_at = 100;
+    let past = signature(native.search(&log, &q).unwrap());
+    assert_eq!(past.len(), 1);
+    drop(native);
+    drop(log);
+    let reader = f.reader(None);
+    let index = f.index(&reader);
+    q.as_of = AsOf::default();
+    assert_eq!(signature(index.search(&reader, &q).unwrap()), hidden);
+    q.as_of.known_at = 100;
+    assert_eq!(signature(index.search(&reader, &q).unwrap()), past);
+    q.as_of.from = 11;
+    assert!(index.search(&reader, &q).unwrap().hits.is_empty());
+}
+#[test]
+#[ignore]
+fn paged_crash_publication_child() {
+    let root = PathBuf::from(std::env::var("OOJURO_PAGED_CRASH_ROOT").unwrap());
+    let phase = std::env::var("OOJURO_PAGED_CRASH_PHASE").unwrap();
+    let reader = Reader::open(&root.join("authority"), &KEY, identity(), None).unwrap();
+    let mut cache = Index::open(&reader, &root.join("cache")).unwrap();
+    drop(reader);
+    let mut log = RecordLog::open_clock(
+        &root.join("authority"),
+        &KEY,
+        identity(),
+        Arc::new(|| Ok(100)),
+    )
+    .unwrap();
+    log.append("child", &[row("alpha child committed", None, 2)])
+        .unwrap();
+    drop(log);
+    let reader = Reader::open(&root.join("authority"), &KEY, identity(), None).unwrap();
+    cache.hook_for_test(Box::new(move |at| {
+        if at == phase {
+            println!("PAGED_CACHE_BOUNDARY_READY");
+            use std::io::Write;
+            std::io::stdout().flush().unwrap();
+            loop {
+                std::thread::park();
+            }
+        }
+    }));
+    cache.refresh(&reader).unwrap();
+    panic!("crash boundary not reached");
+}
+#[test]
+fn paged_sigkill_new_cache_publication_preserves_original_ack_and_query() {
+    use std::{
+        io::{BufRead, BufReader},
+        process::{Command, Stdio},
+        sync::mpsc,
+        time::Duration,
+    };
+    for phase in [
+        "SegmentTemp",
+        "SegmentPublished",
+        "ManifestTemp",
+        "ManifestPublished",
+        "ManifestDurable",
+    ] {
+        let f = Fixture::new();
+        let mut log = f.log();
+        log.append("parent", &[row("alpha parent", None, 1)])
+            .unwrap();
+        drop(log);
+        let reader = f.reader(None);
+        drop(f.index(&reader));
+        drop(reader);
+        let mut child = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "record::paged::tests::paged_crash_publication_child",
+                "--ignored",
+                "--exact",
+                "--nocapture",
+            ])
+            .env("OOJURO_PAGED_CRASH_ROOT", &f.root)
+            .env("OOJURO_PAGED_CRASH_PHASE", phase)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let stdout = child.stdout.take().unwrap();
+        let (tx, rx) = mpsc::channel();
+        let listener = std::thread::spawn(move || {
+            for line in BufReader::new(stdout).lines() {
+                if line.unwrap().contains("PAGED_CACHE_BOUNDARY_READY") {
+                    let _ = tx.send(());
+                    break;
+                }
+            }
+        });
+        let reached = rx.recv_timeout(Duration::from_secs(8));
+        let _ = child.kill();
+        let status = child.wait().unwrap();
+        listener.join().unwrap();
+        assert!(reached.is_ok(), "phase={phase}");
+        use std::os::unix::process::ExitStatusExt;
+        assert_eq!(status.signal(), Some(libc::SIGKILL));
+        let reader = f.reader(None);
+        let commit = reader.receipt("child").unwrap().unwrap();
+        assert_eq!(commit.ids, vec![10]);
+        let cache = f.index(&reader);
+        assert_eq!(
+            cache
+                .search(&reader, &query("alpha", AsOf::default()))
+                .unwrap()
+                .hits
+                .len(),
+            2,
+            "phase={phase}"
+        );
+        drop(cache);
+        drop(reader);
+        let mut log = f.log();
+        assert_eq!(
+            log.append("child", &[row("alpha child committed", None, 2)])
+                .unwrap(),
+            commit
+        );
+    }
+}
