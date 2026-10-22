@@ -10,3 +10,6 @@ pub mod capture_log;
 
 /// Native derived lexical postings/query over committed authorized receipts.
 pub mod lexical;
+
+/// Scoped original committed-receipt timeline and bounded export (opt-in).
+pub mod receipts;
