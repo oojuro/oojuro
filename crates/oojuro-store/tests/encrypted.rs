@@ -157,3 +157,128 @@ fn an_unencrypted_store_gets_a_key_and_old_frames_stay_readable() {
     let s = Store::open(&dir, opts(Some(c))).unwrap();
     check(&s, &recs);
 }
+
+
+#[test]
+fn encrypted_raw_frames_preserve_side_fields_ranges_and_time_scan() {
+    let dir = temp("raw-fields");
+    let cipher = Arc::new(FrameCipher::new(&random_key()));
+    let options = Options {
+        hot_level: 0,
+        cold_level: 0,
+        dict_bytes: 0,
+        cache_bytes: 0,
+        cipher: Some(cipher.clone()),
+        sync: false,
+        ..Options::default()
+    };
+    let text = b"synthetic text marker with a range";
+    let key = b"synthetic private record key";
+    let attrs = b"synthetic private record attributes";
+    let expected = oojuro_store::Record {
+        seq: 0, kind: 2, valid_at: 100, recorded_at: 200,
+        key: key.to_vec(), attrs: attrs.to_vec(), text: text.to_vec(),
+    };
+    {
+        let mut store = Store::open(&dir, options.clone()).unwrap();
+        store.append(&[NewRecord {
+            kind: expected.kind, valid_at: expected.valid_at, recorded_at: expected.recorded_at,
+            key, attrs, text,
+        }]).unwrap();
+        assert_eq!(store.record(0).unwrap(), expected);
+        assert_eq!(store.get_range(0, 10, 21).unwrap(), &text[10..21]);
+        for file in all_files(&dir) {
+            let bytes = std::fs::read(file).unwrap();
+            for marker in [text.as_slice(), key.as_slice(), attrs.as_slice()] {
+                assert!(!contains(&bytes, marker), "raw hot body leaked a side field or text");
+            }
+        }
+        store.compact().unwrap();
+    }
+    let store = Store::open(&dir, options).unwrap();
+    assert_eq!(store.record(0).unwrap(), expected);
+    assert_eq!(store.get_range(0, 10, 21).unwrap(), &text[10..21]);
+    let mut found = Vec::new();
+    store.scan_time(100, 101, |record| { found.push(record.clone()); true }).unwrap();
+    assert_eq!(found, vec![expected]);
+    let mut excluded = false;
+    store.scan_time(101, 102, |_| { excluded = true; true }).unwrap();
+    assert!(!excluded);
+    for file in all_files(&dir) {
+        let bytes = std::fs::read(file).unwrap();
+        for marker in [text.as_slice(), key.as_slice(), attrs.as_slice()] {
+            assert!(!contains(&bytes, marker), "raw cold body leaked a side field or text");
+        }
+    }
+}
+
+#[test]
+fn forged_hot_frame_fails_replay_without_truncating_the_log() {
+    let dir = temp("hot-forged");
+    let cipher = Arc::new(FrameCipher::new(&random_key()));
+    let options = Options { dict_bytes: 0, ..opts(Some(cipher)) };
+    {
+        let mut store = Store::open(&dir, options.clone()).unwrap();
+        append(&mut store, &records(1, 9), 0);
+    }
+    let hot = all_files(&dir).into_iter().find(|p| p.extension().is_some_and(|e| e == "ojl")).unwrap();
+    let mut bytes = std::fs::read(&hot).unwrap();
+    let at = 32;
+    let len = u32::from_le_bytes(bytes[at..at + 4].try_into().unwrap()) as usize;
+    bytes[at + 8 + len - 1] ^= 1;
+    let mut hash = crc32fast::Hasher::new();
+    hash.update(&bytes[at..at + 4]);
+    hash.update(&bytes[at + 8..at + 8 + len]);
+    let checksum = hash.finalize();
+    bytes[at + 4..at + 8].copy_from_slice(&checksum.to_le_bytes());
+    std::fs::write(&hot, &bytes).unwrap();
+    assert!(matches!(Store::open(&dir, options), Err(Error::Crypto(_))));
+    assert_eq!(std::fs::read(hot).unwrap(), bytes, "authentication failure must preserve evidence");
+}
+
+#[test]
+fn forged_dictionary_fails_authentication_even_with_a_valid_checksum() {
+    let dir = temp("dict-forged");
+    let options = opts(Some(Arc::new(FrameCipher::new(&random_key()))));
+    {
+        let mut store = Store::open(&dir, options.clone()).unwrap();
+        append(&mut store, &records(80, 10), 0);
+        store.compact().unwrap();
+    }
+    let dict = all_files(&dir).into_iter().find(|p| p.extension().is_some_and(|e| e == "ojd")).expect("dictionary trained");
+    let mut bytes = std::fs::read(&dict).unwrap();
+    assert_eq!(&bytes[..8], b"OJDICT02");
+    *bytes.last_mut().unwrap() ^= 1;
+    let checksum = crc32fast::hash(&bytes[20..]);
+    bytes[16..20].copy_from_slice(&checksum.to_le_bytes());
+    std::fs::write(&dict, bytes).unwrap();
+    assert!(matches!(Store::open(&dir, options), Err(Error::Crypto(_))));
+}
+
+#[test]
+fn malformed_encryption_marker_is_rejected_without_replacement() {
+    let dir = temp("marker");
+    let options = opts(Some(Arc::new(FrameCipher::new(&random_key()))));
+    drop(Store::open(&dir, options.clone()).unwrap());
+    let marker = dir.join("ENCRYPTED");
+    for bytes in [Vec::new(), b"OJENC001".to_vec(), vec![0u8; 16], vec![0u8; 17]] {
+        std::fs::write(&marker, &bytes).unwrap();
+        assert!(matches!(Store::open(&dir, options.clone()), Err(Error::Corrupt(_))));
+        assert_eq!(std::fs::read(&marker).unwrap(), bytes);
+    }
+}
+
+#[test]
+fn sealed_empty_bodies_and_truncation_are_checked() {
+    let cipher = FrameCipher::new(&random_key());
+    let frame = cipher.seal_frame(b"same head", b"");
+    let dict = cipher.seal_dict(b"same head", b"");
+    assert_eq!(cipher.open_frame(b"same head", &frame).unwrap(), b"");
+    assert_eq!(cipher.open_dict(b"same head", &dict).unwrap(), b"");
+    assert!(matches!(cipher.open_dict(b"same head", &frame), Err(Error::Crypto(_))));
+    assert!(matches!(cipher.open_frame(b"same head", &dict), Err(Error::Crypto(_))));
+    for len in 0..frame.len() {
+        assert!(cipher.open_frame(b"same head", &frame[..len]).is_err());
+        assert!(cipher.open_dict(b"same head", &dict[..len]).is_err());
+    }
+}
