@@ -196,6 +196,12 @@ impl LocalCapture {
         }
         self.projection.as_ref().ok_or(Error::Unavailable)
     }
+    /// Read-only committed authority after the local projection is healthy.
+    /// This Rust accessor is not an authorization boundary; the caller owns its key.
+    pub fn authority(&self) -> Result<&CaptureLog> {
+        self.ready()?;
+        Ok(&self.log)
+    }
     pub fn get(&self, id: u64) -> Result<Option<(Event, Provenance)>> {
         self.ready()?;
         let Some((source, event)) = self.log.event(id).map_err(authority)? else {
