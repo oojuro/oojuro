@@ -328,14 +328,30 @@ fn raw_cold_frames_cannot_bypass_manifest_dictionary_inventory() {
         attrs: b"",
         text: b"raw cold synthetic",
     }];
-    let (payload, body, _) = build_payload(None, 77, 0, &rows, false, Some(&cipher)).unwrap();
-    assert_eq!(get_head(&payload).unwrap().codec, CODEC_RAW);
+    // build_payload canonicalizes RAW dictionary IDs to zero. Construct and seal
+    // the explicit authenticated nonzero reference so only inventory is absent.
+    let (plain, body, _) = build_payload(None, 0, 0, &rows, false, None).unwrap();
+    let mut head = get_head(&plain).unwrap();
+    head.dict = 77;
+    head.encrypted = true;
+    head.digest = None;
+    let mut payload = Vec::new();
+    put_head(&mut payload, &head);
+    let encrypted = cipher.seal_frame(&payload, &body);
+    payload.extend(encrypted);
+    let head = get_head(&payload).unwrap();
+    assert_eq!(
+        (head.codec, head.dict, head.encrypted),
+        (CODEC_RAW, 77, true)
+    );
+    let index_dictionary = 77;
+    assert_eq!(index_dictionary, head.dict);
     let mut bytes = file_head(COLD_MAGIC, 2, 0).to_vec();
     bytes.extend(seal_frame(&payload));
     let mut index = Vec::new();
     for n in [
         1,
-        77,
+        index_dictionary as u64,
         payload.len() as u64,
         1,
         body.len() as u64,
@@ -350,24 +366,23 @@ fn raw_cold_frames_cannot_bypass_manifest_dictionary_inventory() {
     bytes.extend(crc(&index).to_le_bytes());
     bytes.extend(COLD_END);
     std::fs::write(cold_path(&f.source(), 2), bytes).unwrap();
-    Store::write_manifest(
-        &f.source(),
-        &Manifest {
-            next_file: 4,
-            hot_from: 3,
-            cold: vec![2],
-            dicts: vec![],
-        },
-    )
-    .unwrap();
+    let manifest = Manifest {
+        next_file: 4,
+        hot_from: 3,
+        cold: vec![2],
+        dicts: vec![],
+    };
+    assert!(!manifest.dicts.contains(&77));
+    Store::write_manifest(&f.source(), &manifest).unwrap();
     assert!(matches!(
         Store::open(&f.source(), f.opts()),
         Err(Error::Corrupt("cold segment names an unknown dictionary"))
     ));
-    assert!(matches!(
-        PagedStore::open(&f.source(), f.opts(), &f.cache()),
-        Err(Error::Corrupt("cold segment names an unknown dictionary"))
-    ));
+    match PagedStore::open(&f.source(), f.opts(), &f.cache()) {
+        Err(Error::Corrupt("cold segment names an unknown dictionary")) => {}
+        Err(other) => panic!("fixture refused for the wrong reason: {other}"),
+        Ok(_) => panic!("RAW frame with absent dictionary was accepted"),
+    }
 }
 #[test]
 fn paged_file_dictionary_and_decoder_resources_evict_with_fixed_bounds() {
