@@ -15,7 +15,7 @@ The coordinator owns module registration, the native socket API and launcher wir
 | Record | search, get, history, range, export, stats |
 | Capture | search, get, range, export, stats |
 
-Record search uses query, k, time cuts `from_us/valid_at_us/known_at_us`, and kind/status/tool/reported_agent filters. Get requires exactly id or key. History starts with key. Range/export/stats support current/all versions and the same time cuts/filters; range/export also support entries and cursor. A Record cursor continuation accepts **only cursor, entries, bytes**; the protected cursor carries its original scope, prefix, cuts, filters, versions and page mode. History continuation uses the protected cursor rather than asserting a new key.
+An explicitly supplied empty query selects native timeline mode; a missing query is invalid. Record search uses query, k, time cuts `from_us/valid_at_us/known_at_us`, and kind/status/tool/reported_agent filters. Get requires exactly id or key. History starts with key. Range/export/stats support current/all versions and the same time cuts/filters; range/export also support entries and cursor. A Record cursor continuation accepts **only cursor, entries, bytes**; the protected cursor carries its original scope, prefix, cuts, filters, versions and page mode. History continuation uses the protected cursor rather than asserting a new key.
 
 Capture search uses query, k and `from_us/to_us`; get/range/export/stats use start/end/cursor, get requires id, and range/export accept entries. Capture cursors retain the native API's explicit start/end behavior. No Capture key history or Record bitemporal semantics are invented.
 

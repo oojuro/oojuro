@@ -298,3 +298,16 @@ fn full_native_integer_tokens_remain_exact_without_float_conversion() {
     let (_, output) = run("capture-v1", messages, |_| Ok(json!({})));
     assert_eq!(output[1]["result"]["isError"], false);
 }
+
+#[test]
+fn empty_query_is_timeline_mode_in_both_namespaces() {
+    for namespace in ["record-v2", "capture-v1"] {
+        let mut messages = ready();
+        messages.push(tool(2, "search", json!({"query":""})));
+        let (_, output) = run(namespace, messages, |request| {
+            assert_eq!(request["request"]["query"], "");
+            Ok(json!({"hits":[]}))
+        });
+        assert_eq!(output[1]["result"]["isError"], false);
+    }
+}
