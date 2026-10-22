@@ -19,3 +19,6 @@ pub mod record;
 
 /// Opt-in content-free signed audit wire; persistence and current witnesses are external.
 pub mod audit;
+
+#[cfg(unix)]
+mod existing;

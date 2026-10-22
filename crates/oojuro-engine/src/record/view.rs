@@ -80,6 +80,13 @@ pub struct Page {
     pub records: Vec<Record>,
     pub next: Option<String>,
 }
+#[derive(Serialize)]
+pub struct Stats {
+    pub watermark: Watermark,
+    pub records: usize,
+    pub indexed: usize,
+    pub stored_only: usize,
+}
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Context {
@@ -175,6 +182,27 @@ impl View {
     ) -> Result<Page> {
         filter.validate()?;
         self.page(log, Mode::Range { versions, filter }, 0, limits)
+    }
+    /// Counts the actual same protected selection without serializing original texts.
+    pub fn stats(
+        &self,
+        log: &RecordLog,
+        versions: Versions,
+        filter: Filter,
+        bytes: usize,
+    ) -> Result<Stats> {
+        filter.validate()?;
+        check_bytes(bytes)?;
+        let rows = self.selection(log, &Mode::Range { versions, filter })?;
+        let indexed = rows.iter().filter(|r| r.input.indexed).count();
+        let stats = Stats {
+            watermark: self.watermark().clone(),
+            records: rows.len(),
+            indexed,
+            stored_only: rows.len() - indexed,
+        };
+        sized(&stats, bytes)?;
+        Ok(stats)
     }
     pub fn export(
         &self,

@@ -11,10 +11,10 @@ use std::path::Path;
 const CONFIG: &str = "record.json";
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Config {
+pub(super) struct Config {
     version: u32,
-    writer: String,
-    owner: u32,
+    pub(super) writer: String,
+    pub(super) owner: u32,
     first_id: u64,
     adapter: String,
 }
@@ -32,7 +32,7 @@ impl Config {
         }
         Ok(())
     }
-    fn identity(&self) -> Identity {
+    pub(super) fn identity(&self) -> Identity {
         Identity {
             writer: self.writer.clone(),
             agent: self.owner,
@@ -40,14 +40,14 @@ impl Config {
             adapter: self.adapter.clone(),
         }
     }
-    fn scope(&self) -> Scope<'_> {
+    pub(super) fn scope(&self) -> Scope<'_> {
         Scope {
             writer: &self.writer,
             owner: self.owner,
         }
     }
 }
-fn load(root: &Path) -> Result<(Config, [u8; 32])> {
+pub(super) fn load(root: &Path) -> Result<(Config, [u8; 32])> {
     config::check_root(root)?;
     let cfg: Config = serde_json::from_slice(&config::read_private(&root.join(CONFIG), 4096)?)
         .map_err(|_| Error::Config)?;

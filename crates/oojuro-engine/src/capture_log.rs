@@ -161,6 +161,17 @@ pub struct CaptureLog {
 }
 impl CaptureLog {
     pub fn open(dir: &Path, key: &[u8; 32], identity: Identity) -> Result<Self> {
+        Self::open_mode(dir, key, identity, false)
+    }
+    /// Existing namespace only; recovery is permitted, automatic bootstrap is not.
+    pub fn open_existing(dir: &Path, key: &[u8; 32], identity: Identity) -> Result<Self> {
+        Self::open_mode(dir, key, identity, true)
+    }
+    fn open_mode(dir: &Path, key: &[u8; 32], identity: Identity, existing: bool) -> Result<Self> {
+        if existing {
+            crate::existing::check(dir, None)
+                .map_err(|_| Error::Invalid("existing capture authority required"))?;
+        }
         if identity.writer.is_empty()
             || identity.writer.len() > 256
             || identity.agent == 0
@@ -214,6 +225,9 @@ impl CaptureLog {
             serde_json::to_vec(&log.identity).map_err(|_| Error::Invalid("capture identity"))?,
         );
         if log.store.is_empty() {
+            if existing {
+                return Err(Error::Corrupt("existing capture header required"));
+            }
             log.write(&header)?;
         } else if log.store.get(0)? != header {
             return Err(Error::Corrupt("capture format or identity mismatch"));
