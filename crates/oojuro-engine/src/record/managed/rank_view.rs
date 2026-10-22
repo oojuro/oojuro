@@ -7,9 +7,12 @@ const MAX_DERIVED_BYTES: usize = 16 << 20;
 /// Records and plaintext returned earlier cannot be recalled by later logical denial.
 pub struct ManagedRankView<'a> {
     binding: Binding,
+    identity: &'a Identity,
     as_of: AsOf,
     filter: Filter,
     records: Vec<Record>,
+    lexical_records: Vec<Record>,
+    validate: &'a dyn Fn() -> Result<()>,
     directory: PathBuf,
     cipher: &'a FrameCipher,
     stamp: [u8; 32],
@@ -37,11 +40,9 @@ impl ManagedLog {
             owner.checkpoint.floor().map_err(|_| Error::Authority)?,
         );
         let mut rows = crate::record::view::latest_rows(self.snapshot.rows.iter(), as_of);
-        rows.retain(|row| {
-            row.input.indexed && row.input.valid_at >= as_of.from && filter.keep(row)
-        });
+        rows.retain(|row| row.input.valid_at >= as_of.from && filter.keep(row));
         rows.sort_by_key(|row| row.id);
-        let records = rows
+        let lexical_records = rows
             .into_iter()
             .map(|row| {
                 row.record(
@@ -56,20 +57,32 @@ impl ManagedLog {
             &json(&("managed-rank-stamp-v1", &binding, as_of, &filter), 8192)?,
         )
         .as_bytes();
-        let view = ManagedRankView {
+        let validate = || {
+            owner.recheck()?;
+            self.current(&owner.state)
+        };
+        let mut view = ManagedRankView {
             binding,
+            identity: &self.snapshot.identity,
             as_of,
             filter,
-            records,
+            records: Vec::new(),
+            lexical_records,
+            validate: &validate,
             directory: self
                 .directory
                 .join(format!("d-{}", self.snapshot.generation)),
             cipher: &self.cipher,
             stamp,
         };
+        view.records = view
+            .lexical_records()
+            .iter()
+            .filter(|r| r.indexed)
+            .cloned()
+            .collect();
         let result = run(&view);
-        owner.recheck()?;
-        self.current(&owner.state)?;
+        view.validate_current()?;
         result
     }
 }
@@ -77,8 +90,24 @@ impl ManagedRankView<'_> {
     pub fn binding(&self) -> &Binding {
         &self.binding
     }
+    /// Genuine enrolled identity, including when the selected record set is empty.
+    pub fn scope(&self) -> Scope<'_> {
+        Scope {
+            writer: &self.identity.writer,
+            owner: self.identity.agent,
+        }
+    }
+    /// Ranking callers must recheck before/after each optional callback or table use.
+    pub fn validate_current(&self) -> Result<()> {
+        (self.validate)()
+    }
     pub fn records(&self) -> &[Record] {
         &self.records
+    }
+    /// Direct-key/empty-timeline lexical behavior includes stored-only latest winners.
+    /// Optional plugins and table builders use only the public indexed records.
+    pub(crate) fn lexical_records(&self) -> &[Record] {
+        &self.lexical_records
     }
     pub fn as_of(&self) -> AsOf {
         self.as_of
@@ -95,23 +124,32 @@ impl ManagedRankView<'_> {
     }
     /// Explicit table-build path only, while this genuine current guard is held.
     pub fn create_derived_directory(&self) -> Result<&Path> {
+        self.validate_current()?;
         directory_create(&self.directory)?;
         sync_dir(self.directory.parent().ok_or(Error::Invalid)?)?;
+        self.validate_current()?;
         Ok(&self.directory)
     }
     pub fn seal_derived(&self, purpose: &str, plain: &[u8]) -> Result<Vec<u8>> {
         if plain.len() > MAX_DERIVED_BYTES {
             return Err(Error::Bounds);
         }
-        Ok(self.cipher.seal_dict(&self.aad(purpose)?, plain))
+        self.validate_current()?;
+        let sealed = self.cipher.seal_dict(&self.aad(purpose)?, plain);
+        self.validate_current()?;
+        Ok(sealed)
     }
     pub fn open_derived(&self, purpose: &str, sealed: &[u8]) -> Result<Vec<u8>> {
         if sealed.len() > MAX_DERIVED_BYTES + oojuro_store::crypto::SEAL_OVERHEAD {
             return Err(Error::Bounds);
         }
-        self.cipher
+        self.validate_current()?;
+        let plain = self
+            .cipher
             .open_dict(&self.aad(purpose)?, sealed)
-            .map_err(|_| Error::Authority)
+            .map_err(|_| Error::Authority)?;
+        self.validate_current()?;
+        Ok(plain)
     }
     fn aad(&self, purpose: &str) -> Result<Vec<u8>> {
         if purpose.is_empty()

@@ -24,6 +24,14 @@ older version. Unkeyed visible records remain independent, sorted by original ID
 
 ## Derived capability
 
+The ranking owner must call `validate_current()` before/after EACH optional callback
+and table use, so callback1 changing the retained witness fences callback2. Derived
+seal/open and explicit directory creation also perform their own before/after checks.
+`scope()` supplies the actual enrolled identity even when no records are selected.
+The crate-private `lexical_records()` retains stored-only latest winners for the existing
+direct-key/empty-timeline lexical baseline; public `records()` remains indexed-only for
+plugins/table building. Both derive from the same genuine time/key/filter projection.
+
 The view supplies a genuine current `Binding`, a keyed opaque context stamp,
 selected immutable records, and generation-owned directory path.
 `directory()` never creates a file/directory. Explicit table builders may call
@@ -48,8 +56,10 @@ every-backup erasure claim follows from this adapter.
 Focused tests exercise real managed append/prune/denial, original-ID/time projection,
 winner-before-filter behavior, purpose/time/filter/generation binding, read-only
 directory access and explicit-builder cache retirement. Four focused managed adapter tests and package strict lib+tests lint passed.
-The complete engine suite on runtime 322207c passed 110 tests with five existing/
+The complete engine suite, including per-callback freshness and the lexical source
+split, passed 110 tests with five existing/
 subprocess helpers ignored; strict package lib+tests lint and diff checks passed.
-This includes the shared View winner-kernel extraction and all corrected managed
+A final scope-accessor follow-up passed all four focused adapter tests plus strict
+package lib+tests lint. This includes the shared View winner-kernel extraction and all corrected managed
 prune/enrollment cases from the current parent. Evidence remains local synthetic
 filesystem proof, not live provider or permanent erasure acceptance.
