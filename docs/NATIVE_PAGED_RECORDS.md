@@ -149,6 +149,19 @@ Initial seven focused regressions passed (11.87s compile,10.39s runtime), coveri
 native bitwise parity below/above F3 floor and1200 candidates, IDs/times/provenance,
 known/key visibility, duplicate text, literal/identifier continuation, original
 receipt/get/history/range/cursors, restart/tail, fork/corruption/bounds/privacy.
-Two concrete proof additions cover winner-before-typed-filter and actual SIGKILL
-at all five new cache publication boundaries. Full affected gate and strict lint
-are pending final source freeze. Logs remain ignored worktree artifacts.
+The full current-source engine gate at bf1804d passed **81 tests,0 failed,
+5 ignored helpers** (1.27s compile,12.02s runtime), including the nine new active
+paged regressions and actual SIGKILL at all five new cache publication boundaries.
+Strict owned engine lib/tests clippy initially found two style diagnostics; only
+nested-if and fixed-chunk syntax were changed, then strict lint passed. The final
+historical future-DF test passed separately (1.34s compile,0.17s runtime); it did
+not require rerunning unrelated behavior. Final strict lint including that test
+passed0.60s. This is not a claimed fresh82-test aggregate run.
+
+Root source review cleared the first read/cache runtime; the follow-ups add
+explicit proof cases, documentation and mechanical lint corrections. Tests used
+only synthetic stores and this worktree's isolated target, acquiring the shared
+verification lock outside each bounded actual step. Ignored local evidence logs
+are `.scratch/paged-first-test.txt`, `paged-full-test.txt`,
+`paged-historical-test.txt` and `paged-lint-historical.txt`. No large-store/RSS,
+provider/AZ, production concurrency or full-SPEC acceptance was measured.
