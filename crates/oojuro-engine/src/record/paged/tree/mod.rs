@@ -3,7 +3,7 @@
 mod sort;
 use super::super::*;
 use oojuro_store::crypto::{FrameCipher, SEAL_OVERHEAD, random_key};
-pub(super) use sort::Sorter;
+pub(in crate::record) use sort::Sorter;
 use std::{
     collections::VecDeque,
     fs::{self, File, OpenOptions},
@@ -12,7 +12,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
-pub(super) const PAGE_BYTES: usize = 64 << 10;
+pub(in crate::record) const PAGE_BYTES: usize = 64 << 10;
 const PACK_BYTES: u64 = 64 << 20;
 const MAX_CHILDREN: usize = 128;
 const MAX_DEPTH: u8 = 16;
@@ -22,13 +22,16 @@ const MAX_VALUE: usize = 32 << 10;
 const MAGIC: &[u8; 8] = b"OJDIR001";
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub(super) enum Purpose {
+pub(in crate::record) enum Purpose {
     Prefix,
     Request,
     Record,
     KeyVersion,
     Segment,
     Sort,
+    Frame,
+    File,
+    Dictionary,
 }
 impl Purpose {
     fn byte(self) -> u8 {
@@ -39,21 +42,24 @@ impl Purpose {
             Self::KeyVersion => 4,
             Self::Segment => 5,
             Self::Sort => 6,
+            Self::Frame => 7,
+            Self::File => 8,
+            Self::Dictionary => 9,
         }
     }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum KeyClass {
+pub(in crate::record) enum KeyClass {
     Data,
     RetainedControl,
 }
 /// Trusted authority adapter, never a wire-selected authenticated bool.
-pub(super) trait Authority {
+pub(in crate::record) trait Authority {
     fn current(&self) -> Result<Vec<u8>>;
     fn validate_birth(&self, birth: &[u8], purpose: Purpose, class: KeyClass) -> Result<()>;
 }
 #[derive(Clone)]
-pub(super) struct Context<'a> {
+pub(in crate::record) struct Context<'a> {
     pub directory: &'a Path,
     pub cipher: &'a FrameCipher,
     pub authority: &'a dyn Authority,
@@ -94,7 +100,7 @@ impl<'a> Context<'a> {
 }
 /// Bounded decoded metadata cache bound to one owned immutable cipher instance.
 /// A new key/cipher object cannot reuse entries even if caller metadata is copied.
-pub(super) struct PageCache {
+pub(in crate::record) struct PageCache {
     cipher: Arc<FrameCipher>,
     state: Mutex<CacheState>,
 }
@@ -180,7 +186,7 @@ fn node_accounted(node: &Node) -> Result<usize> {
     }
 }
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct Entry {
+pub(in crate::record) struct Entry {
     pub key: Vec<u8>,
     pub value: Vec<u8>,
 }
@@ -197,7 +203,7 @@ impl Entry {
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct Reference {
+pub(in crate::record) struct Reference {
     pub generation: [u8; 32],
     pub file: u64,
     pub offset: u64,
@@ -211,7 +217,7 @@ pub(super) struct Reference {
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct Root {
+pub(in crate::record) struct Root {
     pub format: u32,
     pub purpose: Purpose,
     pub binding: Vec<u8>,
@@ -282,7 +288,95 @@ fn sync_dir(dir: &Path) -> Result<()> {
         .and_then(|f| f.sync_all())
         .map_err(|_| Error::Unavailable)
 }
-pub(super) fn prepare_directory(dir: &Path) -> Result<()> {
+#[derive(Clone, Debug)]
+pub(in crate::record) struct Artifact {
+    pub path: PathBuf,
+    pub byte_len: u64,
+    pub temporary: bool,
+}
+/// Read-only complete owned DATA tree namespace inventory, including COW orphans.
+/// Current authority is checked on every yield; exclusive fencing is the caller's
+/// prerequisite for stable retirement. This function grants no unlink authority.
+pub(in crate::record) fn scan_owned_files(
+    ctx: &Context<'_>,
+    mut visit: impl FnMut(Artifact) -> Result<()>,
+) -> Result<()> {
+    if ctx.class != KeyClass::Data {
+        return Err(Error::Scope);
+    }
+    let binding = ctx.check()?;
+    scan_owned_paths(ctx.directory, |entry| {
+        if ctx.check()? != binding {
+            return Err(Error::Conflict);
+        }
+        visit(entry)?;
+        if ctx.check()? != binding {
+            return Err(Error::Conflict);
+        }
+        Ok(())
+    })?;
+    if ctx.check()? != binding {
+        return Err(Error::Conflict);
+    }
+    Ok(())
+}
+/// Cipherless read-only namespace enumeration for post-key-denial retirement.
+/// The managed caller must hold independently current denial and exclusive DATA
+/// directory ownership on every yield. Names alone never establish that scope.
+pub(in crate::record) fn scan_owned_paths(
+    directory: &Path,
+    mut visit: impl FnMut(Artifact) -> Result<()>,
+) -> Result<()> {
+    let m = fs::symlink_metadata(directory).map_err(|_| Error::Unavailable)?;
+    if !m.is_dir() || m.file_type().is_symlink() {
+        return Err(Error::Invalid);
+    }
+    let lower_hex = |s: &str, n: usize| {
+        s.len() == n
+            && s.bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    };
+    for entry in fs::read_dir(directory).map_err(|_| Error::Unavailable)? {
+        let entry = entry.map_err(|_| Error::Unavailable)?;
+        let name = entry.file_name();
+        let name = name.to_str().ok_or(Error::Invalid)?;
+        let temporary = if let Some(t) = name
+            .strip_prefix("queue-")
+            .and_then(|s| s.strip_suffix(".bin"))
+        {
+            if !lower_hex(t, 64) {
+                return Err(Error::Invalid);
+            }
+            true
+        } else {
+            let (rest, temp) = if let Some(s) = name.strip_prefix("pack-") {
+                (s, false)
+            } else if let Some(s) = name.strip_prefix("tmp-") {
+                (s, true)
+            } else {
+                return Err(Error::Invalid);
+            };
+            let rest = rest.strip_suffix(".bin").ok_or(Error::Invalid)?;
+            let (generation, file) = rest.split_once('-').ok_or(Error::Invalid)?;
+            if !lower_hex(generation, 64) || !lower_hex(file, 16) {
+                return Err(Error::Invalid);
+            }
+            temp
+        };
+        let path = entry.path();
+        let m = fs::symlink_metadata(&path).map_err(|_| Error::Unavailable)?;
+        if !m.is_file() || m.file_type().is_symlink() {
+            return Err(Error::Invalid);
+        }
+        visit(Artifact {
+            path,
+            byte_len: m.len(),
+            temporary,
+        })?;
+    }
+    Ok(())
+}
+pub(in crate::record) fn prepare_directory(dir: &Path) -> Result<()> {
     match fs::symlink_metadata(dir) {
         Ok(m) if !m.is_dir() || m.file_type().is_symlink() => return Err(Error::Invalid),
         Ok(_) => (),
@@ -302,7 +396,7 @@ fn file_new(path: &Path) -> Result<File> {
         .open(path)
         .map_err(|_| Error::Unavailable)
 }
-pub(super) struct Pack<'a> {
+pub(in crate::record) struct Pack<'a> {
     ctx: Context<'a>,
     generation: [u8; 32],
     number: u64,
@@ -485,7 +579,7 @@ fn load(ctx: &Context<'_>, r: &Reference) -> Result<Node> {
     }
     Ok(node)
 }
-pub(super) struct Builder<'a> {
+pub(in crate::record) struct Builder<'a> {
     pack: Pack<'a>,
     leaf: Vec<Entry>,
     levels: Vec<Vec<Reference>>,
@@ -579,7 +673,7 @@ impl<'a> Builder<'a> {
         Ok(root)
     }
 }
-pub(super) struct Cursor<'a> {
+pub(in crate::record) struct Cursor<'a> {
     ctx: Context<'a>,
     stack: Vec<(Reference, usize)>,
     leaf: VecDeque<Entry>,
@@ -666,7 +760,7 @@ impl<'a> Cursor<'a> {
         }
     }
 }
-pub(super) fn visit_pages(
+pub(in crate::record) fn visit_pages(
     ctx: Context<'_>,
     root: &Root,
     mut visit: impl FnMut(&Reference) -> Result<()>,
@@ -691,15 +785,48 @@ pub(super) fn visit_pages(
     }
     Ok(())
 }
-pub(super) fn get(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
+pub(in crate::record) fn visit_ancestor_pages(
+    ctx: Context<'_>,
+    root: &Root,
+    mut visit: impl FnMut(&Reference) -> Result<()>,
+) -> Result<()> {
+    validate_ancestor_root(&ctx, root)?;
+    let binding = ctx.check()?;
+    let mut pending = Vec::new();
+    if let Some(r) = &root.node {
+        pending.push(r.clone());
+    }
+    while let Some(r) = pending.pop() {
+        if ctx.check()? != binding {
+            return Err(Error::Conflict);
+        }
+        let node = load(&ctx, &r)?;
+        visit(&r)?;
+        if let Node::Branch(children) = node {
+            pending.extend(children.into_iter().rev());
+            if pending.len() > usize::from(MAX_DEPTH) * MAX_CHILDREN + 1 {
+                return Err(Error::Bounds);
+            }
+        }
+    }
+    if ctx.check()? != binding {
+        return Err(Error::Conflict);
+    }
+    Ok(())
+}
+pub(in crate::record) fn get(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
     let mut c = Cursor::seek(ctx, root, key)?;
     Ok(c.next()?.filter(|e| e.key == key).map(|e| e.value))
 }
-pub(super) fn get_ancestor(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
+pub(in crate::record) fn get_ancestor(
+    ctx: Context<'_>,
+    root: &Root,
+    key: &[u8],
+) -> Result<Option<Vec<u8>>> {
     let mut c = Cursor::seek_ancestor(ctx, root, key)?;
     Ok(c.next()?.filter(|e| e.key == key).map(|e| e.value))
 }
-pub(super) fn validate_ancestor_root(ctx: &Context<'_>, root: &Root) -> Result<()> {
+pub(in crate::record) fn validate_ancestor_root(ctx: &Context<'_>, root: &Root) -> Result<()> {
     ctx.check()?;
     if root.format != 1
         || root.purpose != ctx.purpose
@@ -710,7 +837,41 @@ pub(super) fn validate_ancestor_root(ctx: &Context<'_>, root: &Root) -> Result<(
     ctx.authority
         .validate_birth(&root.binding, ctx.sort_of.unwrap_or(ctx.purpose), ctx.class)
 }
-pub(super) struct Editor<'a> {
+/// Greatest key <= requested key, with independently validated ancestor roots.
+pub(in crate::record) fn floor_ancestor(
+    ctx: Context<'_>,
+    root: &Root,
+    key: &[u8],
+) -> Result<Option<Entry>> {
+    validate_ancestor_root(&ctx, root)?;
+    let binding = ctx.check()?;
+    let Some(mut reference) = root.node.clone() else {
+        return Ok(None);
+    };
+    loop {
+        if root.fresh.is_some_and(|g| g != reference.generation) {
+            return Err(Error::Authority);
+        }
+        match load(&ctx, &reference)? {
+            Node::Leaf(rows) => {
+                let at = rows.partition_point(|r| r.key.as_slice() <= key);
+                let out = at.checked_sub(1).map(|n| rows[n].clone());
+                if ctx.check()? != binding {
+                    return Err(Error::Conflict);
+                }
+                return Ok(out);
+            }
+            Node::Branch(children) => {
+                let at = children.partition_point(|r| r.first.as_slice() <= key);
+                let Some(n) = at.checked_sub(1) else {
+                    return Ok(None);
+                };
+                reference = children[n].clone();
+            }
+        }
+    }
+}
+pub(in crate::record) struct Editor<'a> {
     pack: Pack<'a>,
     root: Root,
 }
@@ -721,6 +882,61 @@ impl<'a> Editor<'a> {
             pack: Pack::new(ctx)?,
             root,
         })
+    }
+    /// Lookup includes this editor's bounded unpublished COW pages.
+    pub fn lookup(&self, key: &[u8]) -> Result<Option<Vec<u8>>> {
+        let binding = self.pack.ctx.check()?;
+        let Some(mut r) = self.root.node.clone() else {
+            return Ok(None);
+        };
+        let out = loop {
+            match self.pack.load(&r)? {
+                Node::Leaf(rows) => {
+                    break rows
+                        .binary_search_by(|e| e.key.as_slice().cmp(key))
+                        .ok()
+                        .map(|n| rows[n].value.clone());
+                }
+                Node::Branch(rows) => {
+                    let n = rows.partition_point(|r| r.last.as_slice() < key);
+                    let Some(next) = rows.get(n) else { break None };
+                    r = next.clone();
+                }
+            }
+        };
+        if self.pack.ctx.check()? != binding {
+            return Err(Error::Conflict);
+        }
+        Ok(out)
+    }
+    pub fn lookup_floor(&self, key: &[u8]) -> Result<Option<Entry>> {
+        let binding = self.pack.ctx.check()?;
+        let mut next = self.root.node.clone();
+        let out = loop {
+            let Some(r) = next else { break None };
+            match self.pack.load(&r)? {
+                Node::Leaf(rows) => {
+                    let at = rows.partition_point(|r| r.key.as_slice() <= key);
+                    break at.checked_sub(1).map(|n| rows[n].clone());
+                }
+                Node::Branch(rows) => {
+                    let at = rows.partition_point(|r| r.first.as_slice() <= key);
+                    next = at.checked_sub(1).map(|n| rows[n].clone());
+                }
+            }
+        };
+        if self.pack.ctx.check()? != binding {
+            return Err(Error::Conflict);
+        }
+        Ok(out)
+    }
+    /// Immutable inventories cannot replace a file/frame/dictionary identity.
+    pub fn insert_immutable(&mut self, entry: Entry) -> Result<()> {
+        match self.lookup(&entry.key)? {
+            Some(v) if v == entry.value => Ok(()),
+            Some(_) => Err(Error::Conflict),
+            None => self.insert(entry),
+        }
     }
     pub fn insert(&mut self, entry: Entry) -> Result<()> {
         Entry::new(entry.key.clone(), entry.value.clone())?;
@@ -970,7 +1186,7 @@ fn decode_node(bytes: &[u8], level: u8) -> Result<Node> {
 mod tests;
 
 #[cfg(test)]
-pub(super) fn test_phase(at: &str) {
+pub(in crate::record) fn test_phase(at: &str) {
     if std::env::var("OOJURO_DIRECTORY_CRASH_PHASE").as_deref() == Ok(at) {
         println!("DIRECTORY_BOUNDARY_READY");
         std::io::stdout().flush().unwrap();

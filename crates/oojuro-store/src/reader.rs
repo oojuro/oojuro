@@ -42,6 +42,11 @@ pub(crate) trait Frames {
     fn cipher(&self) -> Option<&crate::crypto::FrameCipher> {
         None
     }
+    /// Trusted immutable managed catalog may bind additional birth/pack context.
+    /// Legacy Store/Run keep byte-identical header-only AEAD by default.
+    fn open_frame(&self, _head: &FrameHead, encoded_head: &[u8], sealed: &[u8]) -> Result<Vec<u8>> {
+        self.cipher().ok_or(Error::KeyRequired)?.open_frame(encoded_head, sealed)
+    }
     fn require_sealed(&self) -> bool {
         false
     }
@@ -92,6 +97,12 @@ impl ReadState {
         rc.cache.clear();
         rc.order.clear();
         rc.cached_bytes = 0;
+    }
+
+    /// Drop both decoded DATA and dictionary decoder state after managed denial.
+    /// This is cache invalidation, not a claim of allocator-memory zeroization.
+    pub fn clear_sensitive(&self) {
+        let mut state=self.ctx.lock().unwrap();state.cache.clear();state.order.clear();state.cached_bytes=0;state.dctx.clear();
     }
 
     pub fn forget_dict(&self, id: u32) {
@@ -156,8 +167,7 @@ pub(crate) fn decode_payload<F: Frames + ?Sized>(fs: &F, payload: &[u8], head: &
     }
     let opened;
     let packed: &[u8] = if head.encrypted {
-        let c = fs.cipher().ok_or(Error::KeyRequired)?;
-        opened = c.open_frame(&payload[..head.body_at as usize], &payload[head.body_at as usize..])?;
+        opened = fs.open_frame(head, &payload[..head.body_at as usize], &payload[head.body_at as usize..])?;
         &opened
     } else {
         &payload[head.body_at as usize..]
