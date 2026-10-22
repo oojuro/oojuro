@@ -4674,6 +4674,7 @@ dependencies = [
 name = "oojuro-engine"
 version = "0.1.0"
 dependencies = [
+ "aho-corasick",
  "blake3",
  "libc",
  "oojuro-core",
