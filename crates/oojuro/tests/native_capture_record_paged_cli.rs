@@ -172,21 +172,6 @@ impl Fixture {
                 .unwrap(),
         )
     }
-    fn prune(&self, id: u64) {
-        let input = self.parent.join("selection.json");
-        private(&input, &serde_json::to_vec(&json!({"Ids":[id]})).unwrap());
-        success(
-            self.command("managed-prune", &self.operator)
-                .args([
-                    "--operation",
-                    "synthetic-prune",
-                    "--input",
-                    input.to_str().unwrap(),
-                ])
-                .output()
-                .unwrap(),
-        );
-    }
 }
 impl Drop for Fixture {
     fn drop(&mut self) {
