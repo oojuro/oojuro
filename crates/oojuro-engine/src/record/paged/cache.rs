@@ -1,3 +1,4 @@
+mod disk;
 use super::*;
 use crate::lexical::{self, paged, record_cache as projection, segments::codec};
 use oojuro_store::crypto::{SEAL_OVERHEAD, random_key};
@@ -49,6 +50,7 @@ pub enum Opened {
 /// Retains only bounded manifest references, not payload rows, terms or a hydrated Index.
 pub struct Index {
     manifest: Manifest,
+    disk: Option<disk::References>,
     directory: PathBuf,
     _lock: File,
     opened: Opened,
@@ -60,6 +62,7 @@ pub struct Index {
 enum Phase {
     SegmentTemp,
     SegmentPublished,
+    DirectoryPagesDurable,
     ManifestTemp,
     ManifestPublished,
     ManifestDurable,
@@ -104,6 +107,7 @@ impl Index {
         };
         let mut index = Self {
             manifest,
+            disk: None,
             directory: directory.into(),
             _lock: lock,
             opened,
@@ -124,11 +128,16 @@ impl Index {
         self.opened
     }
     pub fn segment_count(&self) -> usize {
-        self.manifest.segments.len()
+        self.disk
+            .as_ref()
+            .map_or(self.manifest.segments.len(), |d| d.count())
     }
     fn current(&self, reader: &Reader) -> Result<()> {
         if self.failed {
             return Err(Error::Unavailable);
+        }
+        if let Some(disk) = &self.disk {
+            disk.current(reader, &self.directory)?;
         }
         reader.validate(&self.manifest.prefix)?;
         if !same_prefix(&self.manifest.prefix, &reader.watermark()?) {
@@ -142,6 +151,13 @@ impl Index {
         }
         if self.current(reader).is_ok() {
             return Ok(());
+        }
+        if self.disk.is_some() {
+            let result = self.append_disk_tail(reader, false);
+            if result.is_err() {
+                self.failed = true;
+            }
+            return result;
         }
         let result = self.append_tail(reader, false);
         if result.is_err() {
@@ -306,6 +322,9 @@ impl Index {
     }
     /// Coalesces contiguous bounded segments; never loads the full population.
     pub fn merge(&mut self, reader: &Reader) -> Result<()> {
+        if self.disk.is_some() {
+            return self.merge_disk(reader);
+        }
         self.current(reader)?;
         let result = (|| {
             let mut next = Manifest {
@@ -455,6 +474,21 @@ impl Index {
         json(&result, query.max_bytes)?;
         Ok(result)
     }
+    fn visit_references(
+        &self,
+        reader: &Reader,
+        mut visit: impl FnMut(&Reference) -> Result<bool>,
+    ) -> Result<()> {
+        if let Some(disk) = &self.disk {
+            return disk.visit(reader, &self.directory, false, &mut visit);
+        }
+        for reference in &self.manifest.segments {
+            if !visit(reference)? {
+                break;
+            }
+        }
+        Ok(())
+    }
     fn rank(
         &self,
         reader: &Reader,
@@ -467,14 +501,15 @@ impl Index {
         let mut df: BTreeMap<String, u64> = possible.iter().map(|t| (t.clone(), 0)).collect();
         let mut present = BTreeSet::new();
         let raw: Vec<_> = paged::terms(query.text).into_iter().collect();
-        for reference in &self.manifest.segments {
+        self.visit_references(reader, |reference| {
             let segment = load_segment(reader, &self.directory, &self.manifest, reference)?;
             for (term, n) in &mut df {
                 *n = n
                     .checked_add(segment.postings.get(term).map_or(0, |p| p.len() as u64))
                     .ok_or(Error::Bounds)?;
             }
-        }
+            Ok(true)
+        })?;
         self.walk(
             reader,
             snapshot,
@@ -544,10 +579,10 @@ impl Index {
         mut visit: impl FnMut(&Assigned, &codec::Row, &[u32], bool) -> Result<()>,
     ) -> Result<()> {
         let bound = reader.snapshot(snapshot)?;
-        for reference in &self.manifest.segments {
+        self.visit_references(reader, |reference| {
             let start = reference.start as usize;
             if start >= bound {
-                break;
+                return Ok(false);
             }
             let segment = load_segment(reader, &self.directory, &self.manifest, reference)?;
             let end = (start + segment.rows.len()).min(bound);
@@ -576,7 +611,8 @@ impl Index {
                 local += 1;
                 Ok(true)
             })?;
-        }
+            Ok(true)
+        })?;
         Ok(())
     }
 }

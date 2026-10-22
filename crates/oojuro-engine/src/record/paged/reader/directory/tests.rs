@@ -405,3 +405,91 @@ fn directory_scope_lock_symlinks_and_plaintext_are_refused() {
         .is_err()
     );
 }
+
+#[test]
+#[ignore]
+fn directory_crash_child() {
+    let root = PathBuf::from(std::env::var("OOJURO_DIRECTORY_CRASH_ROOT").unwrap());
+    let mut log = RecordLog::open_clock(
+        &root.join("authority"),
+        &KEY,
+        identity(),
+        Arc::new(|| Ok(100)),
+    )
+    .unwrap();
+    log.append("child", &[row("alpha child", None, 2)]).unwrap();
+    drop(log);
+    let _reader = Reader::open_disk(
+        &root.join("authority"),
+        &KEY,
+        identity(),
+        &root.join("directory"),
+        None,
+    )
+    .unwrap();
+    panic!("phase not reached");
+}
+#[test]
+fn directory_sigkill_pack_and_root_boundaries_never_lose_the_original_ack() {
+    use std::{
+        io::{BufRead, BufReader},
+        process::{Command, Stdio},
+        sync::mpsc,
+        time::Duration,
+    };
+    for phase in [
+        "PackTemp",
+        "PackPublished",
+        "RootPagesDurable",
+        "RootTemp",
+        "RootPublished",
+        "RootDurable",
+    ] {
+        let f = Fixture::new();
+        let mut log = f.log();
+        log.append("parent", &[row("alpha parent", None, 1)])
+            .unwrap();
+        drop(log);
+        drop(f.reader(None));
+        let mut child = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "record::paged::reader::directory::tests::directory_crash_child",
+                "--ignored",
+                "--exact",
+                "--nocapture",
+            ])
+            .env("OOJURO_DIRECTORY_CRASH_ROOT", &f.root)
+            .env("OOJURO_DIRECTORY_CRASH_PHASE", phase)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let output = child.stdout.take().unwrap();
+        let (tx, rx) = mpsc::channel();
+        let listen = std::thread::spawn(move || {
+            for line in BufReader::new(output).lines() {
+                if line.unwrap().contains("DIRECTORY_BOUNDARY_READY") {
+                    let _ = tx.send(());
+                    break;
+                }
+            }
+        });
+        let reached = rx.recv_timeout(Duration::from_secs(8));
+        let _ = child.kill();
+        let status = child.wait().unwrap();
+        listen.join().unwrap();
+        assert!(reached.is_ok(), "{phase}");
+        use std::os::unix::process::ExitStatusExt;
+        assert_eq!(status.signal(), Some(libc::SIGKILL));
+        let reader = f.reader(None);
+        let receipt = reader.receipt("child").unwrap().unwrap();
+        assert_eq!(receipt.ids, vec![10]);
+        assert_eq!(reader.locator_count(), 0);
+        drop(reader);
+        let mut log = f.log();
+        assert_eq!(
+            log.append("child", &[row("alpha child", None, 2)]).unwrap(),
+            receipt
+        );
+    }
+}

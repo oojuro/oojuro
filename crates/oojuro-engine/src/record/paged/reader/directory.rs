@@ -77,6 +77,11 @@ impl Reader {
     pub fn uses_disk_directory(&self) -> bool {
         self.disk.is_some()
     }
+    pub(in crate::record::paged) fn boundary_binding(&self, w: &Watermark) -> Result<Vec<u8>> {
+        self.validate(w)?;
+        let reference = self.reference(w.sequence)?;
+        Ok(self.binding_at(w.sequence, &reference))
+    }
     pub(in crate::record::paged) fn tree_context<'a>(
         &'a self,
         path: &'a Path,
@@ -643,6 +648,8 @@ fn load_roots(reader: &Reader, path: &Path) -> Result<Roots> {
     serde_json::from_slice(&plain).map_err(|_| Error::Authority)
 }
 fn publish(reader: &Reader, path: &Path, roots: &Roots) -> Result<()> {
+    #[cfg(test)]
+    tree::test_phase("RootPagesDurable");
     let bytes = json(roots, ROOT_BYTES)?;
     let sealed = reader.seal(&root_aad(reader), &bytes);
     let tmp = path.join(format!(
@@ -659,10 +666,17 @@ fn publish(reader: &Reader, path: &Path, roots: &Roots) -> Result<()> {
     file.write_all(&sealed)
         .and_then(|_| file.sync_all())
         .map_err(|_| Error::Unavailable)?;
+    #[cfg(test)]
+    tree::test_phase("RootTemp");
     fs::rename(tmp, path.join(ROOT)).map_err(|_| Error::Unavailable)?;
+    #[cfg(test)]
+    tree::test_phase("RootPublished");
     File::open(path)
         .and_then(|f| f.sync_all())
-        .map_err(|_| Error::Unavailable)
+        .map_err(|_| Error::Unavailable)?;
+    #[cfg(test)]
+    tree::test_phase("RootDurable");
+    Ok(())
 }
 fn hex(bytes: &[u8]) -> String {
     bytes.iter().map(|v| format!("{v:02x}")).collect()
