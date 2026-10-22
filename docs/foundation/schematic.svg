@@ -1,0 +1,50 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 820" role="img" aria-labelledby="title desc"><title id="title">Oojuro foundation and AWS storage boundaries</title><desc id="desc">Raw originals remain local. Parsed local journals and hosted EBS are live authorities; S3 is only backup. Lexical retrieval stays default and optional rankers remain off.</desc><defs><marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#475569"/></marker></defs><rect width="1240" height="820" fill="#f8fafc"/>
+<rect x="30" y="30" width="310" height="66" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+<text x="46" y="58" font-family="sans-serif" font-size="17" fill="#0f172a">Harness / SDK / proxy</text>
+<text x="46" y="81" font-family="sans-serif" font-size="14" fill="#475569">existing capture surfaces</text>
+<rect x="30" y="150" width="310" height="76" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+<text x="46" y="178" font-family="sans-serif" font-size="17" fill="#0f172a">Capture + policy + redaction</text>
+<text x="46" y="201" font-family="sans-serif" font-size="14" fill="#475569">stable writer / agent identity</text>
+<rect x="30" y="300" width="310" height="88" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+<text x="46" y="328" font-family="sans-serif" font-size="17" fill="#0f172a">Raw bytes: local only</text>
+<text x="46" y="351" font-family="sans-serif" font-size="14" fill="#475569">sealed prototype; retain originals</text>
+<rect x="440" y="150" width="340" height="76" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+<text x="456" y="178" font-family="sans-serif" font-size="17" fill="#0f172a">Parsed journal + local fsync</text>
+<text x="456" y="201" font-family="sans-serif" font-size="14" fill="#475569">current source of truth</text>
+<rect x="440" y="300" width="340" height="76" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+<text x="456" y="328" font-family="sans-serif" font-size="17" fill="#0f172a">Index and derived tables</text>
+<text x="456" y="351" font-family="sans-serif" font-size="14" fill="#475569">rebuildable; never authority</text>
+<rect x="440" y="450" width="340" height="76" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+<text x="456" y="478" font-family="sans-serif" font-size="17" fill="#0f172a">Scoped lexical retrieval</text>
+<text x="456" y="501" font-family="sans-serif" font-size="14" fill="#475569">default; preserve exact baseline</text>
+<rect x="440" y="600" width="340" height="76" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+<text x="456" y="628" font-family="sans-serif" font-size="17" fill="#0f172a">Optional ranker seam</text>
+<text x="456" y="651" font-family="sans-serif" font-size="14" fill="#475569">bounded; off; integration pending</text>
+<rect x="440" y="720" width="340" height="66" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+<text x="456" y="748" font-family="sans-serif" font-size="17" fill="#0f172a">Results + provenance</text>
+<text x="456" y="771" font-family="sans-serif" font-size="14" fill="#475569">authorized visible rows only</text>
+<rect x="880" y="150" width="330" height="76" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+<text x="896" y="178" font-family="sans-serif" font-size="17" fill="#0f172a">Cloud EC2: one owner</text>
+<text x="896" y="201" font-family="sans-serif" font-size="14" fill="#475569">proposed Soft Axiom adapter</text>
+<rect x="880" y="300" width="330" height="76" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+<text x="896" y="328" font-family="sans-serif" font-size="17" fill="#0f172a">EBS live authority</text>
+<text x="896" y="351" font-family="sans-serif" font-size="14" fill="#475569">single host; fencing required</text>
+<rect x="880" y="450" width="330" height="88" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+<text x="896" y="478" font-family="sans-serif" font-size="17" fill="#0f172a">S3 encrypted backups</text>
+<text x="896" y="501" font-family="sans-serif" font-size="14" fill="#475569">hourly; nonzero disaster RPO</text>
+<rect x="30" y="580" width="310" height="100" rx="10" fill="#ffffff" stroke="#94a3b8" stroke-width="2"/>
+<text x="46" y="608" font-family="sans-serif" font-size="17" fill="#0f172a">Writer key authority</text>
+<text x="46" y="631" font-family="sans-serif" font-size="14" fill="#475569">outside backup copies</text>
+<text x="46" y="654" font-family="sans-serif" font-size="14" fill="#475569">old-backup revocation test required</text>
+<path d="M185,96 L185,150" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M185,226 L185,300" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M340,188 L440,188" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M610,226 L610,300" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M610,376 L610,450" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M610,526 L610,600" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M610,676 L610,720" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M1045,226 L1045,300" fill="none" stroke="#475569" stroke-width="2" marker-end="url(#arrow)"/>
+<path d="M780,188 L880,188" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arrow)"/>
+<path d="M1045,376 L1045,450" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arrow)"/>
+<path d="M185,580 L185,388" fill="none" stroke="#475569" stroke-width="2" stroke-dasharray="7 5" marker-end="url(#arrow)"/>
+<text x="882" y="590" font-family="sans-serif" font-size="15" fill="#9a3412">No HA / live cutover verified.</text><text x="882" y="615" font-family="sans-serif" font-size="15" fill="#9a3412">New S3 commit protocol required</text><text x="882" y="640" font-family="sans-serif" font-size="15" fill="#9a3412">before S3 becomes live authority.</text></svg>

@@ -1,0 +1,16 @@
+flowchart TD
+  H[Agent harness / SDK / proxy] --> P[Capture policy + identity + redaction]
+  P --> R[Raw bytes: encrypted local authority]
+  P --> J[Parsed journal: local fsync authority]
+  J --> I[Derived index: rebuildable]
+  Q[Scoped query + knowledge cutoff] --> V[Authorization + visibility]
+  V --> L[Lexical candidates + bits]
+  I --> L
+  L --> X[Optional bounded ranker seam: default off]
+  X --> O[Deterministic results + provenance]
+  J -. proposed adapter .-> C[Cloud: one owning EC2 service]
+  C --> E[EBS: current live authority]
+  E -. hourly encrypted snapshot .-> S[S3: backup only]
+  S -. isolated restore gate .-> E
+  K[Writer key authority outside data backups] -. seals .-> R
+  K -. revocation gate .-> S
