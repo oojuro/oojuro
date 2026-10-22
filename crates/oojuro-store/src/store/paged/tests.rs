@@ -380,6 +380,19 @@ fn paged_file_dictionary_and_decoder_resources_evict_with_fixed_bounds() {
     append(&mut source, 0, 48);
     for id in 1..=17 {
         source.publish_dict(id, vec![id as u8; 1 << 20], 0).unwrap();
+        source.hot_dict = id;
+        source.opts.hot_level = 1;
+        source.hot_cctx = new_cctx(1, Some(&source.dicts[&id])).unwrap();
+        source
+            .append(&[NewRecord {
+                kind: 1,
+                valid_at: id as i64,
+                recorded_at: id as i64,
+                key: b"",
+                attrs: b"",
+                text: b"synthetic different dictionary context payload",
+            }])
+            .unwrap();
     }
     drop(source);
     let reader = PagedStore::open(&f.source(), opts, &f.cache()).unwrap();
@@ -388,6 +401,7 @@ fn paged_file_dictionary_and_decoder_resources_evict_with_fixed_bounds() {
     assert_eq!(usage.open_files, 32);
     assert_eq!(usage.dictionaries, 16);
     assert_eq!(usage.dictionary_bytes, 16 << 20);
+    assert_eq!(reader.read.idle_dictionary_count(), 4);
     // The first dictionary was evicted: a damaged source cannot be served from a fallback.
     let path = dict_path(&f.source(), 1);
     let mut bytes = std::fs::read(&path).unwrap();
