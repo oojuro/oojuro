@@ -755,9 +755,7 @@ fn insert_at(pack: &mut Pack<'_>, reference: &Reference, entry: Entry) -> Result
     let node = pack.load(reference)?;
     let mut node = match node {
         Node::Leaf(mut entries) => {
-            let at = entries
-                .binary_search_by(|e| e.key.cmp(&entry.key))
-                .map_err(|at| at);
+            let at = entries.binary_search_by(|e| e.key.cmp(&entry.key));
             match at {
                 Ok(_) => return Err(Error::Conflict),
                 Err(at) => entries.insert(at, entry),
