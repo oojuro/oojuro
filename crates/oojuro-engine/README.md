@@ -26,6 +26,20 @@ Metadata such as compressed lengths, frame counts and public key identifiers rem
 AEAD rejects modified/downgraded frame bodies, but trusted external checkpoints are still needed to detect rollback or suffix truncation.
 Keys are not persisted here and their secure lifecycle, backup/revocation and in-memory zeroization remain caller/integration requirements.
 
+## Explicit file adapter (Unix)
+
+`file_capture::capture_file` captures one caller-selected local file after an explicit per-source raw-retention policy decision.
+A denied source is not inspected, opened or registered. The journal seals the original path and device/inode provenance.
+Callers supply a stable source-generation id; changed inode, truncation or changed retained bytes is refused until the owner
+chooses a new generation. Every pass revalidates the entire retained prefix before retaining new bytes, including partial
+JSONL tails and non-UTF-8 bytes. This favors correctness over tail-only performance; large-source scaling is unmeasured.
+
+The adapter does not discover files or connect to the existing recorder automatically. It requires trusted configured parent
+paths and an append-only producer while reading. It refuses final symlinks, but is not a filesystem sandbox against hostile
+parent-directory replacement. Concurrent in-place edits cannot provide a consistent file snapshot. Each new block commits
+independently; an interrupted pass resumes from the durable byte prefix. Raw policy is separate from per-record redaction,
+thinking filters, parsed/index visibility and cloud-forwarding policy, which remain integration work.
+
 ## Verification
 
 ```sh
@@ -42,7 +56,7 @@ are separate hosted-service gates. No user transcripts are included. Storage/lat
 
 ## Next implementation gates
 
-1. Connect capture policy and source-generation detection to this raw sink; prove raw/parsed batch visibility and cursor recovery together.
+1. Connect the explicit file adapter to production capture policy and coordinated parsed visibility; prove raw/parsed batch visibility and cursor recovery together.
 2. Port the flat record, store/index and lexical query path, retaining reference ids/ties for differential checks.
 3. Integrate optional ranker after access/time filters, with receipts and erasure-safe table ownership.
 4. Complete writer erasure, key lifecycle and externally witnessed audit.
