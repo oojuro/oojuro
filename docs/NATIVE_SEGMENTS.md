@@ -142,3 +142,7 @@ This measures local CPU/encryption/filesystem operations with warm OS caches;
 it excludes independent CaptureLog startup and establishes neither launch-scale
 latency/throughput nor hosted/provider/AZ durability. Ordinary no-deps Clippy
 found one mechanical new warning, corrected before final strict lint.
+Final `cargo clippy -p oojuro-engine --lib --tests --no-deps -- -D warnings`
+passed (0.94s active gate). Only baseline test-oracle dependencies emitted
+warnings. Independent source review found no concrete P1/P2 in the bounded
+cache/codec/authority-binding slice; it did not run duplicate test gates.
