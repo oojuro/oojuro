@@ -98,15 +98,13 @@ only registered regular files, refuses unknown/symlink entries and never
 recursively follows arbitrary paths. Owner generation retirement must include
 RANK_TABLE/LOCK/tmp-64lowerhex.bin before reporting local pruning complete.
 
-This first implementation uses actual direct RecordLog sealing and prefix
-verification. Fresh managed-v3 is a different format with no RecordLog backing.
-Its required with_rank_view adapter, held independent current-control guard,
-selected-original projection and actual managed data-DEK seal/open capability
-are separate code being composed with that owner. Supplying an arbitrary Binding
-does not complete that join. No managed-v3 erasure or old-backup crypto-erasure
-acceptance is claimed by this direct lane. Plaintext exists in RAM; retained old
-keys/copied ciphertext outside the guarded API are not made unreadable by a
-logical cache removal.
+The direct lane uses actual RecordLog sealing and prefix verification.
+Fresh managed-v3 has its own genuine held-view and data-DEK adapter; see
+[NATIVE_MANAGED_RANK_PIPELINE.md](NATIVE_MANAGED_RANK_PIPELINE.md) for that
+separate authority wrapper and verification scope. It does not fabricate a
+RecordLog or legacy Watermark. Supplying an arbitrary Binding cannot complete
+the managed join. Plaintext exists in RAM; retained old keys/copied ciphertext
+outside the guarded API are not made unreadable by logical cache removal.
 
 ## Explicit native context command
 
