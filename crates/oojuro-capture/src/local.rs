@@ -1,8 +1,9 @@
-//! Opt-in, Codex-only native raw/parsed capture. No recorder, CLI, cloud or discovery selects it.
+//! Opt-in native raw/parsed capture with explicitly selected Codex or Claude adapters.
+//! No recorder, CLI, cloud or discovery selects it.
 //! Raw consent precedes file inspection. Native derived postings live only in memory;
 //! this is not a production swap, confidentiality or key-lifecycle claim.
 use crate::{
-    FileCtx, ParseCounts, Rec, codex,
+    FileCtx, Format, ParseCounts, Rec, claude, codex,
     ingest::{Decision, Policy},
     kind, redact, sink,
 };
@@ -16,7 +17,10 @@ use oojuro_engine::{
 };
 use std::{io::Read, path::Path};
 
+#[path = "local_claude.rs"]
+mod claude_adapter;
 const ADAPTER: &str = "codex-buffer-1/redact-escaped-1/context-1";
+const CLAUDE_ADAPTER: &str = "claude-buffer-1/no-sidefiles-1/redact-escaped-1/context-1";
 #[derive(Clone)]
 pub struct Options {
     pub writer: String,
@@ -102,6 +106,7 @@ pub struct Report {
 pub struct LocalCapture {
     log: CaptureLog,
     options: Options,
+    format: Format,
     policy: Box<dyn Policy>,
     redactor: redact::Redactor,
     projection: Option<Index>,
@@ -117,6 +122,24 @@ impl LocalCapture {
         options: Options,
         policy: Box<dyn Policy>,
     ) -> Result<Self> {
+        Self::open_adapter(dir, key, options, policy, Format::Codex)
+    }
+    /// Explicit Claude transcript lane. Referenced tool-result files are never inspected.
+    pub fn open_claude(
+        dir: &Path,
+        key: &[u8; 32],
+        options: Options,
+        policy: Box<dyn Policy>,
+    ) -> Result<Self> {
+        Self::open_adapter(dir, key, options, policy, Format::ClaudeCode)
+    }
+    fn open_adapter(
+        dir: &Path,
+        key: &[u8; 32],
+        options: Options,
+        policy: Box<dyn Policy>,
+        format: Format,
+    ) -> Result<Self> {
         if options.chunk_bytes == 0
             || options.chunk_bytes > MAX_BLOCK_BYTES
             || options.policy_id.is_empty()
@@ -130,12 +153,17 @@ impl LocalCapture {
             writer: options.writer.clone(),
             agent: options.agent,
             first_id: options.first_id,
-            adapter: ADAPTER.into(),
+            adapter: match format {
+                Format::Codex => ADAPTER,
+                Format::ClaudeCode => CLAUDE_ADAPTER,
+            }
+            .into(),
         };
         let log = CaptureLog::open(dir, key, identity).map_err(authority)?;
         let mut this = Self {
             log,
             options,
+            format,
             policy,
             redactor: redact::Redactor::new(),
             projection: None,
@@ -217,7 +245,10 @@ impl LocalCapture {
             return Ok(None);
         };
         self.policy.refresh();
-        let initial = encode_context(&codex::new_ctx(path))?;
+        let initial = encode_context(&match self.format {
+            Format::Codex => codex::new_ctx(path),
+            Format::ClaudeCode => claude_adapter::new_ctx(path),
+        })?;
         self.log
             .register(source, &opened.descriptor, &initial)
             .map_err(authority)?;
@@ -359,8 +390,15 @@ impl LocalCapture {
             let bad = pc.bad_lines;
             let blank = line.iter().all(u8::is_ascii_whitespace);
             if !blank {
-                check_call_state(&context, line)?;
-                codex::parse_line(
+                match self.format {
+                    Format::Codex => check_call_state(&context, line)?,
+                    Format::ClaudeCode => claude_adapter::check_call_state(&context, line)?,
+                }
+                let parse = match self.format {
+                    Format::Codex => codex::parse_line,
+                    Format::ClaudeCode => claude::parse_line,
+                };
+                parse(
                     &mut context,
                     line,
                     from,
@@ -645,3 +683,7 @@ use std::{
 #[cfg(test)]
 #[path = "local_tests.rs"]
 mod tests;
+
+#[cfg(test)]
+#[path = "local_claude_tests.rs"]
+mod claude_tests;
