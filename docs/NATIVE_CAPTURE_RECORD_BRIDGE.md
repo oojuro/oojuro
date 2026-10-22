@@ -77,7 +77,7 @@ The current Capture1 source itself has its existing smaller capture-batch bounds
 
 ## Durable retry and checkpoint ordering
 
-Each immutable source generation/line/emission/original ID has one deterministic
+Each immutable source generation/line span/emission has one deterministic
 request identity bound to an engine-private keyed MAC of the configured source
 key, exact verified Capture1 header Identity and fixed framing domain. It is
 stable across compaction; the disposable physical cache origin is never a retry
@@ -86,9 +86,10 @@ identity. The MAC is not exported in provenance or report output.
 This is not globally unique fresh-store enrollment. Reusing the same key,
 Identity and source generation means the SAME logical source. Changed payload
 must conflict; independent sources require a distinct key/Identity/generation.
-Assigned source ID and batch spans remain immutable Input provenance, not a way
-to allocate a fresh operation for the same generation/line/emission. No public plaintext-content fingerprint is published. ManagedLog
-separately keys the request tag and exact typed Input fingerprint. A changed Input
+Assigned source ID and batch spans remain immutable Input provenance checked by
+the exact typed Input fingerprint; they do not allocate a fresh retry identity.
+No public plaintext-content fingerprint is published. ManagedLog separately
+keys the request tag and exact typed Input fingerprint. A changed Input
 under the same operation refuses.
 
 For each Stored emission:
@@ -145,7 +146,8 @@ bytes, redaction, withheld/stored-only/duplicate lexical eligibility, keyed memo
 noninterference, bounded continuation, lost/rewound progress, a real SIGKILL after destination append and before progress,
 pruned receipt-only replay, wrong target, corruption, appendable ancestor prefix,
 permission/oversized-first refusal, kind/status mapping and denial between append
-and checkpoint. The actual focused gate passes all11 cases (9 engine,2 LocalCapture integration),\nwith zero diagnostics in owned paths under package lib/tests and edge lint.
+and checkpoint. The actual focused gate passes all11 cases (9 engine,2 LocalCapture integration),
+with zero diagnostics in owned paths under package lib/tests and edge lint.
 
 No live user source, cloud/provider call, backup crypto-erasure, live power-loss
 or host/AZ durability test, scale measurement, automatic capture scheduling,
