@@ -13,8 +13,8 @@ mod control;
 use crate::audit::{RetainedFloor, SignedCheckpoint};
 use control::State;
 pub use control::{FileWitness, LifecycleReceipt, ReceiptDetails, RetainedControl, Status};
-const FORMAT: &[u8] = b"oojuro-managed-record-3
-";
+const FORMAT: &[u8] = b"oojuro-managed-record-3\n";
+const ENROLLMENT_AAD: &[u8] = b"oojuro/managed/data-root-enrollment/v1\0";
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub struct OriginalCommit {
@@ -64,7 +64,6 @@ struct Erased {
     fingerprint: [u8; 32],
     ids: Vec<u64>,
     bytes: u64,
-    decoded_matches: u64,
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -106,6 +105,7 @@ pub struct ManagedLog {
     cipher: Arc<FrameCipher>,
     control: Arc<RetainedControl>,
     snapshot: Snapshot,
+    enrollment_digest: [u8; 32],
     #[cfg(test)]
     hook: Option<Arc<dyn Fn(Phase) + Send + Sync>>,
 }
@@ -113,11 +113,34 @@ pub fn identity_binding(key: &[u8; 32], identity: &Identity) -> Result<[u8; 32]>
     Ok(*blake3::keyed_hash(key, &json(&("managed-identity-v3", identity), 4096)?).as_bytes())
 }
 impl ManagedLog {
+    /// Explicit fresh enrollment. Existing directories are never reset or re-enrolled.
+    pub fn create(
+        directory: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        control: Arc<RetainedControl>,
+    ) -> Result<Self> {
+        match fs::symlink_metadata(directory) {
+            Ok(_) => return Err(Error::Conflict),
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(_) => return Err(Error::Unavailable),
+        }
+        Self::open_mode(directory, key, identity, control, true)
+    }
     pub fn open(
         directory: &Path,
         key: &[u8; 32],
         identity: Identity,
         control: Arc<RetainedControl>,
+    ) -> Result<Self> {
+        Self::open_mode(directory, key, identity, control, false)
+    }
+    fn open_mode(
+        directory: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        control: Arc<RetainedControl>,
+        fresh: bool,
     ) -> Result<Self> {
         if !name(&identity.writer, 256)
             || identity.agent == 0
@@ -126,22 +149,18 @@ impl ManagedLog {
         {
             return Err(Error::Invalid);
         }
+        if !fresh {
+            let meta = fs::symlink_metadata(directory).map_err(io)?;
+            if !meta.is_dir() || meta.file_type().is_symlink() {
+                return Err(Error::Authority);
+            }
+        }
         directory_create(directory)?;
         let directory = directory.canonicalize().map_err(io)?;
         if overlaps(&directory, &control.directory)
             || overlaps(&directory, &control.witness_directory)
         {
             return Err(Error::Invalid);
-        }
-        let marker = directory.join("MANAGED_FORMAT");
-        if !marker.exists() {
-            if fs::read_dir(&directory).map_err(io)?.next().is_some() {
-                return Err(Error::Authority);
-            }
-            write_new(&marker, FORMAT)?;
-            sync_dir(&directory)?;
-        } else if read_regular(&marker, 128)? != FORMAT {
-            return Err(Error::Authority);
         }
         let lock = owner_lock(&directory)?;
         let cipher = Arc::new(FrameCipher::new(key));
@@ -154,6 +173,39 @@ impl ManagedLog {
         {
             return Err(Error::Scope);
         }
+        let marker = directory.join("MANAGED_FORMAT");
+        let enrollment_path = directory.join("ENROLLMENT");
+        let expected_enrollment = owner.enrollment();
+        let enrollment_bytes = if fresh {
+            if owner.state.generation != 0 {
+                return Err(Error::Authority);
+            }
+            if fs::read_dir(&directory)
+                .map_err(io)?
+                .any(|item| item.map(|item| item.file_name() != "LOCK").unwrap_or(true))
+            {
+                return Err(Error::Authority);
+            }
+            write_new(&marker, FORMAT)?;
+            let bytes = cipher.seal_dict(ENROLLMENT_AAD, &json(&expected_enrollment, 4096)?);
+            write_new(&enrollment_path, &bytes)?;
+            sync_dir(&directory)?;
+            sync_dir(directory.parent().ok_or(Error::Invalid)?)?;
+            bytes
+        } else {
+            if read_regular(&marker, 128)? != FORMAT {
+                return Err(Error::Authority);
+            }
+            let bytes = read_regular(&enrollment_path, 8192)?;
+            let decoded = cipher.open_dict(ENROLLMENT_AAD, &bytes).map_err(io)?;
+            let enrolled: control::Enrollment =
+                serde_json::from_slice(&decoded).map_err(|_| Error::Authority)?;
+            if enrolled != expected_enrollment {
+                return Err(Error::Authority);
+            }
+            bytes
+        };
+        let enrollment_digest = *blake3::hash(&enrollment_bytes).as_bytes();
         let snapshot = if owner.state.generation == 0 {
             Snapshot {
                 schema: 3,
@@ -178,6 +230,7 @@ impl ManagedLog {
             cipher,
             control: control.clone(),
             snapshot,
+            enrollment_digest,
             #[cfg(test)]
             hook: None,
         };
@@ -197,7 +250,16 @@ impl ManagedLog {
             hook(phase);
         }
     }
+    fn check_enrollment(&self) -> Result<()> {
+        if *blake3::hash(&read_regular(&self.directory.join("ENROLLMENT"), 8192)?).as_bytes()
+            != self.enrollment_digest
+        {
+            return Err(Error::Authority);
+        }
+        Ok(())
+    }
     fn current(&self, state: &State) -> Result<()> {
+        self.check_enrollment()?;
         if state.status != Status::Active
             || state.origin != self.snapshot.origin
             || state.generation != self.snapshot.generation
@@ -368,6 +430,14 @@ impl ManagedLog {
         let control = self.control.clone();
         let mut owner = control.lock()?;
         self.current(&owner.state)?;
+        if owner
+            .state
+            .prune
+            .as_ref()
+            .is_some_and(|pending| !owner.state.pruned && pending.tag != tag)
+        {
+            return Err(Error::Unavailable);
+        }
         let receipt = if let Some(prior) = self.snapshot.erased.iter().find(|r| r.tag == tag) {
             if prior.fingerprint != fingerprint {
                 return Err(Error::Conflict);
@@ -375,21 +445,28 @@ impl ManagedLog {
             prior.clone()
         } else {
             let mut next = self.snapshot.clone();
+            let id_set = match selection {
+                Selection::Ids(ids) => Some(
+                    ids.iter()
+                        .copied()
+                        .collect::<std::collections::BTreeSet<_>>(),
+                ),
+                _ => None,
+            };
             let removed: Vec<_> = next
                 .rows
                 .iter()
-                .filter(|r| selected(r, selection))
+                .filter(|r| selected(r, selection, id_set.as_ref()))
                 .cloned()
                 .collect();
             let needles = needles(&removed)?;
-            next.rows.retain(|r| !selected(r, selection));
-            let decoded_matches = decoded_occurrences(&next, &needles)?;
+            next.rows
+                .retain(|r| !selected(r, selection, id_set.as_ref()));
             let erased = Erased {
                 tag,
                 fingerprint,
                 ids: removed.iter().map(|r| r.id).collect(),
                 bytes: record_bytes(&removed)?,
-                decoded_matches,
             };
             next.erased.push(erased);
             let (mut state, staged) = stage(
@@ -398,6 +475,8 @@ impl ManagedLog {
                 self.cipher.clone(),
                 owner.state.identity,
             )?;
+            // Scan the exact fully staged snapshot, including its final generation and receipt metadata.
+            let decoded_matches = decoded_occurrences(&next, &needles)?;
             // Scan the EXACT ciphertext generation published below, not a re-encrypted candidate.
             let encoded_matches = scan_files(&self.directory, &staged, &needles)?;
             state.prune = Some(control::PruneEvidence {
@@ -433,6 +512,7 @@ impl ManagedLog {
             #[cfg(test)]
             self.phase(Phase::AfterCleanup);
             let mut state = owner.state.clone();
+            self.check_enrollment()?;
             if physical(
                 &self
                     .directory
@@ -478,6 +558,7 @@ impl ManagedLog {
     }
     /// Immediate logical denial is committed before cleanup. Local caller keys still decrypt backups.
     pub fn deny_writer(&mut self) -> Result<LifecycleReceipt> {
+        self.check_enrollment()?;
         let control = self.control.clone();
         let mut owner = control.lock()?;
         if owner.state.origin != self.snapshot.origin {
@@ -676,7 +757,7 @@ fn root_entries(directory: &Path) -> Result<Vec<PathBuf>> {
         if meta.file_type().is_symlink() {
             return Err(Error::Authority);
         }
-        if name == "LOCK" || name == "MANAGED_FORMAT" {
+        if name == "LOCK" || name == "MANAGED_FORMAT" || name == "ENROLLMENT" {
             if !meta.is_file()
                 || (name == "LOCK" && meta.len() != 0)
                 || (name == "MANAGED_FORMAT" && read_regular(&path, 128)? != FORMAT)
@@ -915,9 +996,13 @@ fn validate_selection(selection: &Selection) -> Result<()> {
         _ => Ok(()),
     }
 }
-fn selected(row: &Assigned, selection: &Selection) -> bool {
+fn selected(
+    row: &Assigned,
+    selection: &Selection,
+    ids: Option<&std::collections::BTreeSet<u64>>,
+) -> bool {
     match selection {
-        Selection::Ids(ids) => ids.contains(&row.id),
+        Selection::Ids(_) => ids.is_some_and(|ids| ids.contains(&row.id)),
         Selection::Agent(agent) => &row.input.agent_id == agent,
         Selection::Key(key) => row.input.key.as_ref() == Some(key),
         Selection::RecordedBefore(at) => row.recorded_at < *at,
@@ -939,7 +1024,7 @@ fn row_strings(row: &Assigned) -> std::collections::BTreeSet<Vec<u8>> {
         if !key.is_empty() {
             strings.insert(key.as_bytes().to_vec());
         }
-        collect_strings(value, &mut strings);
+        collect_values(value, &mut strings);
     }
     strings.remove(&Vec::new());
     strings
@@ -957,20 +1042,23 @@ fn needles(rows: &[Assigned]) -> Result<Option<aho_corasick::AhoCorasick>> {
             .map_err(io)
     }
 }
-fn collect_strings(value: &serde_json::Value, strings: &mut std::collections::BTreeSet<Vec<u8>>) {
+fn collect_values(value: &serde_json::Value, strings: &mut std::collections::BTreeSet<Vec<u8>>) {
+    if !value.is_string() {
+        strings.insert(value.to_string().into_bytes());
+    }
     match value {
         serde_json::Value::String(s) => {
             strings.insert(s.as_bytes().to_vec());
         }
         serde_json::Value::Array(items) => {
             for value in items {
-                collect_strings(value, strings);
+                collect_values(value, strings);
             }
         }
         serde_json::Value::Object(items) => {
             for (key, value) in items {
                 strings.insert(key.as_bytes().to_vec());
-                collect_strings(value, strings);
+                collect_values(value, strings);
             }
         }
         _ => {}
@@ -986,20 +1074,44 @@ fn decoded_occurrences(
     snapshot: &Snapshot,
     needles: &Option<aho_corasick::AhoCorasick>,
 ) -> Result<u64> {
+    let value = serde_json::to_value(snapshot).map_err(io)?;
+    let mut stack = vec![&value];
     let mut count = 0u64;
-    for row in &snapshot.rows {
-        for bytes in row_strings(row) {
-            count = count
-                .checked_add(occurrences(&bytes, needles))
-                .ok_or(Error::Bounds)?;
+    while let Some(value) = stack.pop() {
+        match value {
+            serde_json::Value::String(value) => {
+                count = count
+                    .checked_add(occurrences(value.as_bytes(), needles))
+                    .ok_or(Error::Bounds)?;
+            }
+            serde_json::Value::Array(values) => {
+                if values.is_empty() {
+                    count = count
+                        .checked_add(occurrences(b"[]", needles))
+                        .ok_or(Error::Bounds)?;
+                }
+                stack.extend(values);
+            }
+            serde_json::Value::Object(values) => {
+                if values.is_empty() {
+                    count = count
+                        .checked_add(occurrences(b"{}", needles))
+                        .ok_or(Error::Bounds)?;
+                }
+                for (key, value) in values {
+                    count = count
+                        .checked_add(occurrences(key.as_bytes(), needles))
+                        .ok_or(Error::Bounds)?;
+                    stack.push(value);
+                }
+            }
+            scalar => {
+                count = count
+                    .checked_add(occurrences(scalar.to_string().as_bytes(), needles))
+                    .ok_or(Error::Bounds)?;
+            }
         }
     }
-    count = count
-        .checked_add(occurrences(snapshot.identity.writer.as_bytes(), needles))
-        .ok_or(Error::Bounds)?;
-    count = count
-        .checked_add(occurrences(snapshot.identity.adapter.as_bytes(), needles))
-        .ok_or(Error::Bounds)?;
     Ok(count)
 }
 fn scan_files(
@@ -1011,6 +1123,7 @@ fn scan_files(
     let mut files = store_files(directory)?;
     files.push(root.join("LOCK"));
     files.push(root.join("MANAGED_FORMAT"));
+    files.push(root.join("ENROLLMENT"));
     for file in files {
         count = count
             .checked_add(occurrences(

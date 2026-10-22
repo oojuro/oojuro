@@ -45,7 +45,11 @@ impl Fixture {
         )
     }
     fn log(&self, control: Arc<RetainedControl>) -> ManagedLog {
-        ManagedLog::open(&self.root.join("data"), &DATA_KEY, identity(), control).unwrap()
+        if self.root.join("data").exists() {
+            ManagedLog::open(&self.root.join("data"), &DATA_KEY, identity(), control).unwrap()
+        } else {
+            ManagedLog::create(&self.root.join("data"), &DATA_KEY, identity(), control).unwrap()
+        }
     }
 }
 impl Drop for Fixture {
@@ -462,8 +466,19 @@ fn managed_sigkill_publication_boundaries() {
         } else {
             assert!(log.get(9, 4096).unwrap().is_none());
         }
+        if phase == "control" {
+            assert_eq!(
+                log.prune("different-pending-prune", &Selection::Ids(vec![9]))
+                    .err(),
+                Some(Error::Unavailable)
+            );
+        }
         let proof = log.prune("crash-prune", &Selection::Ids(vec![9])).unwrap();
         assert!(proof.all_owned_prior_generations_removed);
+        assert!(
+            log.prune("allowed-after-recovery", &Selection::Ids(vec![9]))
+                .is_ok()
+        );
         assert!(log.get(9, 4096).unwrap().is_none());
         let replay = log
             .append("original", std::slice::from_ref(&input))
@@ -594,7 +609,108 @@ fn data_and_retained_control_encryption_keys_must_be_distinct() {
         .unwrap(),
     );
     assert!(matches!(
-        ManagedLog::open(&f.root.join("data"), &DATA_KEY, identity(), control),
+        ManagedLog::create(&f.root.join("data"), &DATA_KEY, identity(), control),
         Err(Error::Scope)
     ));
+}
+
+#[test]
+fn typed_attribute_payload_residue_prevents_false_local_absence() {
+    for payload in [
+        serde_json::json!(123456789),
+        serde_json::json!([false, [true, null, 987654321]]),
+        serde_json::json!(null),
+        serde_json::json!([]),
+        serde_json::json!({}),
+    ] {
+        let f = Fixture::new();
+        let mut log = f.log(f.control());
+        let mut removed = input("removed-typed-metadata-agent", "");
+        removed
+            .attrs
+            .insert("removed-only-field".into(), payload.clone());
+        let mut survivor = input("kept-typed-metadata-agent", "safe");
+        survivor
+            .attrs
+            .insert("different-kept-field".into(), payload);
+        log.append("typed-attributes", &[removed, survivor])
+            .unwrap();
+        let report = log.prune("remove-typed", &Selection::Ids(vec![9])).unwrap();
+        assert!(
+            report.decoded_shared_occurrences > 0,
+            "typed shared payload was skipped"
+        );
+        assert!(!report.local_live_absence_verified);
+    }
+}
+
+#[test]
+fn existing_or_denied_data_cannot_reenroll_under_a_fresh_control_root() {
+    for denied in [false, true] {
+        let f = Fixture::new();
+        let original = f.control();
+        let mut log = f.log(original.clone());
+        log.append(
+            "original-root",
+            &[input(
+                "synthetic-enrolled-owner",
+                "synthetic original acknowledged data",
+            )],
+        )
+        .unwrap();
+        if denied {
+            log.deny_writer().unwrap();
+        }
+        drop(log);
+        let fresh = Arc::new(
+            RetainedControl::open(
+                &f.root.join("wrong-control"),
+                &CONTROL_KEY,
+                f.signer(),
+                AUTHORITY,
+                FileWitness::open(&f.root.join("wrong-witness")).unwrap(),
+                identity_binding(&DATA_KEY, &identity()).unwrap(),
+            )
+            .unwrap(),
+        );
+        assert!(
+            ManagedLog::open(&f.root.join("data"), &DATA_KEY, identity(), fresh).is_err(),
+            "existing data was silently reenrolled under a fresh authority"
+        );
+        if !denied {
+            assert_eq!(
+                f.log(original).get(9, 4096).unwrap().unwrap().text,
+                "synthetic original acknowledged data"
+            );
+        }
+    }
+}
+
+#[test]
+fn missing_enrollment_never_bootstraps_existing_data_or_empty_marker() {
+    let f = Fixture::new();
+    let control = f.control();
+    let mut log = f.log(control.clone());
+    log.append(
+        "original",
+        &[input(
+            "synthetic-missing-enrollment",
+            "synthetic immutable original",
+        )],
+    )
+    .unwrap();
+    drop(log);
+    fs::remove_file(f.root.join("data/ENROLLMENT")).unwrap();
+    assert!(
+        ManagedLog::open(&f.root.join("data"), &DATA_KEY, identity(), control.clone()).is_err()
+    );
+    assert!(ManagedLog::create(&f.root.join("data"), &DATA_KEY, identity(), control).is_err());
+
+    let g = Fixture::new();
+    let control = g.control();
+    directory_create(&g.root.join("partial-data")).unwrap();
+    write_new(&g.root.join("partial-data/MANAGED_FORMAT"), FORMAT).unwrap();
+    assert!(
+        ManagedLog::open(&g.root.join("partial-data"), &DATA_KEY, identity(), control).is_err()
+    );
 }

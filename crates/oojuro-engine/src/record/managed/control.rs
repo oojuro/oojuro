@@ -13,6 +13,16 @@ pub enum Status {
     Active,
     DeniedPendingPermanent,
 }
+#[derive(Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
+pub(super) struct Enrollment {
+    pub schema: u32,
+    pub origin: [u8; 32],
+    pub identity: [u8; 32],
+    pub authority: [u8; 32],
+    pub signing_public_key: [u8; 32],
+    pub control_key_id: [u8; 8],
+}
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct State {
@@ -441,6 +451,12 @@ impl RetainedControl {
     }
 }
 impl Inner {
+    pub fn enrollment(&self) -> Enrollment {
+        Enrollment { schema: 1, origin: self.state.origin, identity: self.state.identity,
+            authority: self.authority, signing_public_key: self.signer.public_key(),
+            control_key_id: self.cipher.key_id() }
+    }
+
     pub fn uses_key(&self, cipher: &FrameCipher) -> bool {
         self.cipher.key_id() == cipher.key_id()
     }

@@ -2,14 +2,22 @@
 
 This is a fresh, opt-in direct-record namespace: `record::managed::ManagedLog`. Existing
 Record2, CaptureLog, raw capture, paged readers and default write paths are unchanged.
-There is no implicit import or migration. A managed namespace refuses a different format.
+There is no implicit import, migration, or data-root reenrollment. A managed namespace refuses a different format.
 Capture raw sources and parser context are not opened or pruned by this API.
 
 ## Authority and actual erasure boundary
 
 Create three independent directories: managed data, retained control, and retained witness.
 `FileWitness::open` and `RetainedControl::open` own their exclusive locks; `ManagedLog::open`
-takes the data lock. Control has a distinct encryption key and independently configured
+takes the data lock. Fresh setup uses `ManagedLog::create`, which requires a NEW nonexistent
+data directory and unused control root. `open` requires existing valid marker and AEAD
+`ENROLLMENT`. That immutable API binding pins original stable origin, writer identity,
+control authority, signing public key and control-key ID. A different/fresh control root
+cannot reopen acknowledged or denied data, even when old generations were removed. Missing
+enrollment on any existing directory fails closed; it is never guessed from remaining rows.
+Correctly enrolled generation-zero data can finish an interrupted initial publication.
+A marker-only interrupted setup has no ACK and stays refused; use an explicitly new
+namespace/directory rather than silently reenrolling it. Control has a distinct encryption key and independently configured
 Ed25519 signing key/authority. Produce the expected writer identity commitment with
 `identity_binding(data_key, identity)`. None of these directories may overlap; data/control encryption-key reuse is rejected.
 
@@ -59,8 +67,10 @@ must share this control/lineage protocol rather than add a competing managed for
 2. Create a generation above every prior data/cache ordinal; write and sync.
 3. Decode every carrier and compare the complete snapshot, including all survivors and
    retry/provenance metadata, with the intended snapshot. Recompute every-file commitment.
-4. For prune, scan all surviving relevant decoded strings/attribute metadata and header
-   labels, every staged Store file, and root marker/lock bytes. No short-needle exclusion,
+4. For prune, scan every node/key/value of the exact fully staged snapshot, including
+   strings, canonical numeric/bool/null values, nested and empty attribute containers,
+   header and retained receipt metadata; scan every staged Store file and root
+   marker/lock/enrollment bytes. No short-needle exclusion,
    sampling, ignored open error or unknown-file skip establishes proof.
 5. Append/sync signed sealed control, then atomically sync its independent current witness.
    Only that authority selects the generation.
@@ -70,7 +80,10 @@ must share this control/lineage protocol rather than add a competing managed for
 Crash before publication leaves old authority. A signed durable control append interrupted
 before witness advancement recovers only after signature, exact floor ancestry, identity
 and transition validation; witness is then finished. After publication, reopen selects new
-data. Pending cleanup blocks new appends; exact prune retries resume cleanup. SIGKILL tests
+data. Pending cleanup blocks new appends AND different prune operation tags; only the exact
+pending tag/selection may resume cleanup. Administrative writer denial can explicitly
+supersede pending operations by fencing the entire namespace; it does not promise completion
+of earlier per-record receipts. SIGKILL tests
 cover stage, control append before witness, published control, cleanup and final ACK.
 
 Unknown files and symlinks cause refusal; they are not silently removed. Derived directories
@@ -84,7 +97,11 @@ Selections cover IDs, matching caller agent labels, all versions of a key, or an
 **engine recorded-at** cutoff. Claimed valid/event time does not set retention. Capture raw,
 source generations and parser-resume state remain a separate explicit prune stage.
 
-Decoded shared and encoded-byte occurrences are separate. Surviving values, header labels
+Decoded shared and encoded-byte occurrences are separate. Selected attribute metadata
+includes non-string JSON payloads; preserved numeric provenance or common typed values
+can therefore prevent a broad byte-absence claim. Scan counts live only in signed control,
+so the exact staged data is scanned after generation assignment without self-referential
+scan statistics changing it afterward. Surviving values, header labels
 and fixed marker bytes prevent blanket byte absence. One-byte needles are scanned; ciphertext
 coincidences are reported. Local absence requires zero occurrences and complete prior-generation
 retirement. Scope is current tracked files, excluding plaintext in memory, freed disk blocks,
@@ -118,3 +135,14 @@ active-owner denial, honest primitive backup decryption, key separation, corrupt
 data, unknown residue, shared one-byte strings, complete root-marker scanning, original
 recorded-at retention, and independently verifiable public receipt metadata mutation.
 This is local synthetic filesystem evidence, not live provider/backup-destruction acceptance.
+
+
+## Independent review corrections
+
+Review reproduced three defects against the initial frozen runtime: a new prune could
+supersede pending cleanup (actual AfterControl SIGKILL case), string-only scanning skipped
+shared numeric/nested typed attributes, and a fresh control root could reenroll an existing
+data directory. Each has a runtime regression. Exact pending-tag admission, complete typed
+staged-snapshot scanning, and immutable enrollment plus explicit create/open distinction
+address those defects. Initial 103-test evidence above stays pinned to that earlier source;
+the correction gate records its own final source/result.
