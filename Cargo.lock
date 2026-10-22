@@ -4674,6 +4674,8 @@ version = "0.1.0"
 dependencies = [
  "blake3",
  "libc",
+ "oojuro-core",
+ "oojuro-nine",
  "oojuro-store",
  "oojuro-trace",
  "rust-stemmers",

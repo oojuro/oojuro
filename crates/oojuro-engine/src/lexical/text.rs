@@ -150,13 +150,13 @@ impl std::hash::Hasher for FastHasher {
     #[inline]
     fn write(&mut self, bytes: &[u8]) {
         const K: u64 = 0x51_7c_c1_b7_27_22_0a_95;
-        let mut chunks = bytes.chunks_exact(8);
-        for c in &mut chunks {
-            let v = u64::from_le_bytes(c.try_into().expect("8 bytes"));
+        let (chunks, remainder) = bytes.as_chunks::<8>();
+        for c in chunks {
+            let v = u64::from_le_bytes(*c);
             self.0 = (self.0.rotate_left(5) ^ v).wrapping_mul(K);
         }
         let mut tail = 0u64;
-        for (i, b) in chunks.remainder().iter().enumerate() {
+        for (i, b) in remainder.iter().enumerate() {
             tail |= u64::from(*b) << (8 * i);
         }
         self.0 = (self.0.rotate_left(5) ^ tail ^ (bytes.len() as u64) << 56).wrapping_mul(K);

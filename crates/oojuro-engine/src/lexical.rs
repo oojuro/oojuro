@@ -272,14 +272,12 @@ impl Index {
             });
             for (i, (term, _)) in terms.iter().enumerate() {
                 let first = rarest.map_or(!anchored || term.contains('_'), |r| r == i);
-                if first {
-                    if let Some(list) = self.postings.get(term.as_str()) {
-                        candidates.extend(
-                            list.iter()
-                                .map(|(row, _)| *row)
-                                .filter(|row| eligible(*row)),
-                        );
-                    }
+                if first && let Some(list) = self.postings.get(term.as_str()) {
+                    candidates.extend(
+                        list.iter()
+                            .map(|(row, _)| *row)
+                            .filter(|row| eligible(*row)),
+                    );
                 }
             }
         }
@@ -418,7 +416,9 @@ impl Index {
             let reach = theta - 1e-9 * (1.0 + theta.abs());
             let mut more = vec![false; rows.len()];
             for at in 0..rows.len() {
-                if !exact[at] && !(bound[at] + 0.0 < reach) {
+                if !exact[at]
+                    && (bound[at] + 0.0).partial_cmp(&reach) != Some(std::cmp::Ordering::Less)
+                {
                     exact[at] = true;
                     more[at] = true;
                 }
