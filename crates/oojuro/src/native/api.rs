@@ -1,7 +1,7 @@
 //! Explicit existing native authority only. No legacy reader, write operation or wire-selected path.
 use super::{Config, Error, Harness, LocalCapture, Options, config, policy, records};
 use oojuro_engine::{receipts, record};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use serde_json::{Value, json};
 use std::{io::Write, path::Path};
 pub(super) const REQUEST_BYTES: usize = 64 << 10;
@@ -317,7 +317,7 @@ impl Owner {
         Ok(result)
     }
 }
-pub(super) fn encode(value: &Value, limit: usize) -> Result<Vec<u8>, Failure> {
+pub(super) fn encode(value: &impl Serialize, limit: usize) -> Result<Vec<u8>, Failure> {
     struct Bounded {
         bytes: Vec<u8>,
         limit: usize,

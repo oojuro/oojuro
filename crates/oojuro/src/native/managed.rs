@@ -532,3 +532,61 @@ fn verify_file(
         limit,
     )
 }
+
+/// New explicit ingest lane only. Existing operator/default loader behavior is unchanged.
+pub(super) fn with_existing_for_ingest<T>(
+    root: &Path,
+    capture_root: &Path,
+    checkpoint: &Path,
+    run: impl FnOnce(&mut ManagedLog, record::Scope<'_>) -> Result<T>,
+) -> Result<T> {
+    config::check_private_path(root)?;
+    let (cfg, key) = load(root)?;
+    let progress = checkpoint.parent().ok_or(Error::Config)?;
+    config::check_private_path(progress)?;
+    for path in [&cfg.data, &cfg.control, &cfg.witness] {
+        config::check_private_path(path)?;
+    }
+    let overlaps = |a: &Path, b: &Path| a.starts_with(b) || b.starts_with(a);
+    for authority in [root, &cfg.data, &cfg.control, &cfg.witness] {
+        if overlaps(progress, authority) || overlaps(capture_root, authority) {
+            return Err(Error::Config);
+        }
+    }
+    if overlaps(progress, capture_root) {
+        return Err(Error::Config);
+    }
+    // All path/layout and required-file checks precede recovery-capable constructors.
+    config::existing_store(&capture_root.join(config::JOURNAL))?;
+    config::existing_store(&cfg.control)?;
+    for (path, bytes) in [
+        (cfg.data.join("MANAGED_FORMAT"), 128),
+        (cfg.data.join("ENROLLMENT"), 8192),
+        (cfg.data.join("LOCK"), 1),
+        (cfg.witness.join("CURRENT"), 4096),
+        (cfg.witness.join("LOCK"), 1),
+    ] {
+        config::read_private(&path, bytes)?;
+    }
+    match fs::symlink_metadata(checkpoint) {
+        Ok(_) => {
+            config::read_private(checkpoint, 8192)?;
+        }
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+        Err(_) => return Err(Error::Io),
+    }
+    let owner = control(root, &cfg)?;
+    let status = map(owner.status())?;
+    if status.status != managed::Status::Active || status.generation == 0 {
+        return Err(Error::Authority);
+    }
+    config::existing_store(&cfg.data.join(format!("g-{}", status.generation)))?;
+    let mut log = map(ManagedLog::open(&cfg.data, &key, cfg.source(), owner))?;
+    run(
+        &mut log,
+        record::Scope {
+            writer: &cfg.writer,
+            owner: cfg.owner,
+        },
+    )
+}

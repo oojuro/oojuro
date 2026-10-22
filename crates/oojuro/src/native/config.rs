@@ -168,3 +168,52 @@ pub(super) fn check_private_path(root: &Path) -> Result<()> {
     }
     check_root(root)
 }
+
+/// Metadata-only preflight after the caller checks its protected authority root.
+/// Existing setup may create a journal directory mode0755 INSIDE that mode0700 root.
+pub(super) fn existing_store(directory: &Path) -> Result<()> {
+    let metadata = fs::symlink_metadata(directory).map_err(|_| Error::Authority)?;
+    if !metadata.is_dir()
+        || metadata.file_type().is_symlink()
+        || metadata.uid() != unsafe { libc::geteuid() }
+        || metadata.mode() & 0o022 != 0
+        || fs::canonicalize(directory).map_err(|_| Error::Authority)? != directory
+    {
+        return Err(Error::Authority);
+    }
+    let regular = |path: &Path, empty: bool| -> Result<()> {
+        let file = OpenOptions::new()
+            .read(true)
+            .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
+            .open(path)
+            .map_err(|_| Error::Authority)?;
+        let m = file.metadata().map_err(|_| Error::Authority)?;
+        if !m.is_file()
+            || m.uid() != unsafe { libc::geteuid() }
+            || m.mode() & 0o022 != 0
+            || (!empty && m.len() == 0)
+        {
+            return Err(Error::Authority);
+        }
+        Ok(())
+    };
+    for (name, empty) in [("MANIFEST", false), ("ENCRYPTED", false), ("LOCK", true)] {
+        regular(&directory.join(name), empty)?;
+    }
+    let mut payload = false;
+    for entry in fs::read_dir(directory).map_err(|_| Error::Authority)? {
+        let entry = entry.map_err(|_| Error::Authority)?;
+        let name = entry.file_name();
+        let name = name.to_str().ok_or(Error::Authority)?;
+        if (name.starts_with("hot-") && name.ends_with(".ojl"))
+            || (name.starts_with("cold-") && name.ends_with(".ojc"))
+        {
+            regular(&entry.path(), false)?;
+            payload = true;
+        }
+    }
+    if !payload {
+        return Err(Error::Authority);
+    }
+    Ok(())
+}
