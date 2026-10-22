@@ -20,7 +20,9 @@ oojuro-native mcp --root /private/record-root --namespace record-v2 --socket /pr
 The socket parent must already exist, be owned by the current effective user
 and have mode0700. The socket is mode0600. Paths are explicit; there is no
 discovery, anonymous link, HTTP listener or network binding. Symlink components,
-unsafe writable ancestors and an existing socket/file are refused. The service
+ancestors owned by another non-root user, unsafe writable ancestors and an
+existing socket/file are refused. Ancestors must be owned by root or the current
+effective UID; a mode0755 foreign-owned directory is not trusted. The service
 never automatically removes a pre-existing path. Normal SIGINT/SIGTERM shutdown
 removes only its own unchanged socket inode. A killed process may leave a stale
 socket; inspect ownership and process state before explicit operator cleanup.
@@ -123,8 +125,9 @@ returned records as instructions. Current newer MCP protocols are not claimed.
 
 ## Verification
 
-The actual final composed gate passes **14 checks**: ten pure MCP protocol
-fixtures plus four binary/socket/MCP stories. Package native-bin/integration
+The actual final composed gate passes **15 checks**: ten pure MCP protocol
+fixtures, four binary/socket/MCP stories and one socket-ancestor ownership
+policy regression. Package native-bin/integration
 lint reports zero diagnostics in changed paths. Local documentation links and
 diff whitespace checks pass. All data and keys in these tests are synthetic;
 no user logs, live providers, credentials or infrastructure were accessed.
@@ -153,3 +156,14 @@ The automated peer probes run as the current UID. A separate-UID live probe,
 production deployment, concurrent recorder ownership, managed-v3 read-service
 adapter, hosted transport, scale/performance and exact-RSS acceptance remain
 outside this slice. No current/backup key-erasure claim is made.
+
+
+Independent review found that the original mode-only ancestor check accepted a
+foreign-owned mode0755 directory. Its owner could replace descendants despite
+the final private socket parent. The path walk now requires each real metadata
+owner to be root/current UID before evaluating writable/sticky permissions.
+The actual production predicate fails the synthetic foreign-owner0755 case
+under the previous check and passes after the ownership fix; root/current
+private ancestors and root-owned sticky temporary directories remain valid.
+All15 composed checks and changed-path lint pass after the fix. This regression
+tests the metadata policy, not a claimed live separate-UID/chown acceptance run.
