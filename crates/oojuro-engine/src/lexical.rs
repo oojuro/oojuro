@@ -5,6 +5,7 @@
 //! Retention/erasure, learned outcomes and launch scale are
 //! deliberately outside this slice. Each index is bound to one open writer log.
 mod args;
+pub(crate) mod passage;
 pub(crate) mod record_cache;
 pub mod segments;
 mod text;
@@ -252,20 +253,32 @@ impl Index {
         q: &Query<'_>,
         keep: &mut dyn FnMut(&Event) -> bool,
     ) -> Result<Vec<Hit>> {
-        self.search_mode(q, keep, None)
+        self.search_mode(q, keep, None, None)
     }
     pub(crate) fn search_record_view(
         &self,
         q: &Query<'_>,
         view: &RecordVisibility<'_>,
     ) -> Result<Vec<Hit>> {
-        self.search_mode(q, &mut |_| true, Some(view))
+        self.search_mode(q, &mut |_| true, Some(view), None)
+    }
+    pub(crate) fn search_projected(
+        &self,
+        q: &Query<'_>,
+        view: &RecordVisibility<'_>,
+        ids: &[String],
+    ) -> Result<Vec<Hit>> {
+        if ids.len() != self.documents.len() {
+            return Err(Error::Authority);
+        }
+        self.search_mode(q, &mut |_| true, Some(view), Some(ids))
     }
     fn search_mode(
         &self,
         q: &Query<'_>,
         keep: &mut dyn FnMut(&Event) -> bool,
         view: Option<&RecordVisibility<'_>>,
+        original_ids: Option<&[String]>,
     ) -> Result<Vec<Hit>> {
         if self.failed {
             return Err(Error::Unavailable);
@@ -282,7 +295,7 @@ impl Index {
         let mut want = q.k;
         loop {
             let ranked = if let Some(view) = view {
-                self.continued_view(q, want, true, Some(view))
+                self.continued_view(q, want, true, Some(view), original_ids)
             } else {
                 self.continued(q, want, true)
             };
@@ -309,7 +322,7 @@ impl Index {
             && view.is_none_or(|v| v.ids.contains(&event.id))
     }
     fn continued(&self, q: &Query<'_>, k: usize, prune: bool) -> Vec<(usize, Hit)> {
-        self.continued_view(q, k, prune, None)
+        self.continued_view(q, k, prune, None, None)
     }
     fn continued_view(
         &self,
@@ -317,10 +330,11 @@ impl Index {
         k: usize,
         prune: bool,
         view: Option<&RecordVisibility<'_>>,
+        original_ids: Option<&[String]>,
     ) -> Vec<(usize, Hit)> {
-        let (mut first, anchored) = self.rank(q, k, false, prune, view);
+        let (mut first, anchored) = self.rank(q, k, false, prune, view, original_ids);
         if anchored && first.len() < k {
-            let (rest, _) = self.rank(q, k, true, prune, view);
+            let (rest, _) = self.rank(q, k, true, prune, view, original_ids);
             let listed: BTreeSet<usize> = first.iter().map(|(row, _)| *row).collect();
             for (row, mut hit) in rest {
                 if first.len() == k {
@@ -341,6 +355,7 @@ impl Index {
         split: bool,
         prune: bool,
         view: Option<&RecordVisibility<'_>>,
+        original_ids: Option<&[String]>,
     ) -> (Vec<(usize, Hit)>, bool) {
         let literal = literal_query(q.text);
         let mut query = query_terms(q.text);
@@ -591,11 +606,14 @@ impl Index {
             .collect();
         // F4 full textual ID order. Coarse prefix selection is an optimization,
         // not another tie rule; all exact finalists use the full decimal string.
-        result.sort_by(|(_, a), (_, b)| {
+        result.sort_by(|(ar, a), (br, b)| {
             b.bits
                 .total_cmp(&a.bits)
                 .then_with(|| b.time.cmp(&a.time))
-                .then_with(|| a.id.to_string().cmp(&b.id.to_string()))
+                .then_with(|| match original_ids {
+                    Some(ids) => ids[*ar].cmp(&ids[*br]),
+                    None => a.id.to_string().cmp(&b.id.to_string()),
+                })
         });
         result.truncate(k);
         (result, anchored && literal.is_none())
