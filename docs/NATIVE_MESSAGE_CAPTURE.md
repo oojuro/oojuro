@@ -90,3 +90,17 @@ coverage/capacity refusal, bounded exports, compression, compaction and actual
 process SIGKILL before write, after durable write, before ACK and after ACK.
 Final source-bound test/lint counts are recorded in the review handoff. There are
 no real private logs, provider calls, AWS operations or production acceptance.
+
+The final engine-only source passed 189 engine tests (10 existing/helper tests
+ignored), 83 capture unit tests, 9 capture integration tests and strict engine
+lib/tests Clippy. The message selection contributes 11 active tests and one
+ignored process-helper fixture. Actual old-line LF validation and old relative
+parent handling each fail their targeted semantic controls; the restored source
+passes both. Negative and positive builds use separate physical Cargo targets:
+an initial shared-target positive run reused a negative-control binary and was
+discarded, not counted as passing evidence.
+
+This component is stacked on the Capture1 ingest-bridge source. It does not
+establish compatibility with the later read-service existing-only constructor;
+the cumulative integration must retain that constructor's missing/partial-root
+refusal and run its actual read-service stories separately.
