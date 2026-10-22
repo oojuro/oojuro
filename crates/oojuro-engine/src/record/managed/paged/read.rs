@@ -203,6 +203,9 @@ impl ManagedPagedLog {
             next,
         };
         json(&page, limits.bytes)?;
+        #[cfg(test)]
+        self.phase(Phase::BeforeAck);
+        self.current(&owner)?;
         Ok(page)
     }
 }
@@ -448,5 +451,32 @@ mod tests {
             .is_err()
         );
         let _ = identity();
+    }
+    #[test]
+    fn retained_witness_change_at_final_serialized_page_boundary_refuses_egress() {
+        let f = Fixture::new();
+        let c = control(&f, true);
+        let mut l = log(&f, c.clone(), true);
+        l.append("original", &[input("private", "protected final page")])
+            .unwrap();
+        let witness = c.witness_directory.join("CURRENT");
+        l.hook = Some(Arc::new(move |at| {
+            if at == Phase::BeforeAck {
+                let mut bytes = fs::read(&witness).unwrap();
+                bytes[0] ^= 1;
+                fs::write(&witness, bytes).unwrap();
+            }
+        }));
+        assert!(
+            l.read(
+                scope(),
+                AsOf::default(),
+                &Filter::default(),
+                Versions::All,
+                None,
+                ReadLimits::default()
+            )
+            .is_err()
+        );
     }
 }

@@ -291,34 +291,6 @@ fn sync_dir(dir: &Path) -> Result<()> {
 #[derive(Clone, Debug)]
 pub(in crate::record) struct Artifact {
     pub path: PathBuf,
-    pub byte_len: u64,
-    pub temporary: bool,
-}
-/// Read-only complete owned DATA tree namespace inventory, including COW orphans.
-/// Current authority is checked on every yield; exclusive fencing is the caller's
-/// prerequisite for stable retirement. This function grants no unlink authority.
-pub(in crate::record) fn scan_owned_files(
-    ctx: &Context<'_>,
-    mut visit: impl FnMut(Artifact) -> Result<()>,
-) -> Result<()> {
-    if ctx.class != KeyClass::Data {
-        return Err(Error::Scope);
-    }
-    let binding = ctx.check()?;
-    scan_owned_paths(ctx.directory, |entry| {
-        if ctx.check()? != binding {
-            return Err(Error::Conflict);
-        }
-        visit(entry)?;
-        if ctx.check()? != binding {
-            return Err(Error::Conflict);
-        }
-        Ok(())
-    })?;
-    if ctx.check()? != binding {
-        return Err(Error::Conflict);
-    }
-    Ok(())
 }
 /// Cipherless read-only namespace enumeration for post-key-denial retirement.
 /// The managed caller must hold independently current denial and exclusive DATA
@@ -340,7 +312,7 @@ pub(in crate::record) fn scan_owned_paths(
         let entry = entry.map_err(|_| Error::Unavailable)?;
         let name = entry.file_name();
         let name = name.to_str().ok_or(Error::Invalid)?;
-        let temporary = if let Some(t) = name
+        let _temporary = if let Some(t) = name
             .strip_prefix("queue-")
             .and_then(|s| s.strip_suffix(".bin"))
         {
@@ -368,11 +340,7 @@ pub(in crate::record) fn scan_owned_paths(
         if !m.is_file() || m.file_type().is_symlink() {
             return Err(Error::Invalid);
         }
-        visit(Artifact {
-            path,
-            byte_len: m.len(),
-            temporary,
-        })?;
+        visit(Artifact { path })?;
     }
     Ok(())
 }
@@ -785,6 +753,8 @@ pub(in crate::record) fn visit_pages(
     }
     Ok(())
 }
+// Test-only COW introspection; runtime lifecycle uses complete owned-file scans.
+#[cfg(test)]
 pub(in crate::record) fn visit_ancestor_pages(
     ctx: Context<'_>,
     root: &Root,

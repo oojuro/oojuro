@@ -249,22 +249,20 @@ impl CommitRoot {
                 return Err(Error::Authority);
             }
         }
-        if let Some(data) = &self.data {
-            if data.record.count != self.live_records
+        if let Some(data) = &self.data
+            && (data.record.count != self.live_records
                 || data.key_version.count > self.live_records
-                || data.segment.count > self.live_records
-            {
-                return Err(Error::Authority);
-            }
+                || data.segment.count > self.live_records)
+        {
+            return Err(Error::Authority);
         }
-        if let Some(physical) = &self.physical {
-            if physical.format != 1
+        if let Some(physical) = &self.physical
+            && (physical.format != 1
                 || physical.file.count > self.live_records
                 || (physical.file.count == 0) != (self.live_records == 0)
-                || physical.frame.count > self.next_physical
-            {
-                return Err(Error::Authority);
-            }
+                || physical.frame.count > self.next_physical)
+        {
+            return Err(Error::Authority);
         }
         Ok(birth)
     }

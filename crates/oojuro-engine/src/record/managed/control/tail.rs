@@ -53,7 +53,7 @@ impl Verified {
     }
 }
 pub(super) enum Journal {
-    Snapshot(Store),
+    Snapshot(Box<Store>),
     Paged {
         directory: PathBuf,
         cipher: Arc<FrameCipher>,
@@ -131,7 +131,7 @@ impl Journal {
             Err(e) if e.kind() == std::io::ErrorKind::NotFound => (),
             Err(_) => return Err(Error::Unavailable),
         }
-        Ok(Self::Snapshot(open_store(directory, cipher)?))
+        Ok(Self::Snapshot(Box::new(open_store(directory, cipher)?)))
     }
     pub fn create_paged(
         directory: &Path,

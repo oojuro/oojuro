@@ -97,7 +97,11 @@ ordinal as-of pages, stored-only key winners, cursor/scope/byte/work refusals,
 legal ASCII 16 MiB and explicit worst-escaping refusal, full end guards,
 DATA-key-free denial cleanup and restored-backup refusal, eight KMP proof cases,
 streamed signed removed-ID pages, and five actual SIGKILL publication/cleanup
-boundaries. Strict lint is reported separately. No performance, 10M-row,
+boundaries. After the independent review corrections and real module reachability cleanup,
+the complete managed filter passed 59 tests (two subprocess helpers ignored)
+in 40.01 seconds. Engine library and tests strict clippy --no-deps -- -D warnings
+passed in 1.47 seconds, with no engine warnings/suppressions; existing dependency
+warnings are not an engine-wide dependency-clean claim. No performance, 10M-row,
 full SPEC or provider acceptance is established.
 
 A physical-root commitment is not proof of byte absence. Local retirement uses
@@ -135,3 +139,33 @@ Final joined source evidence is reported separately.
 A final-return source check also found prune's test ACK boundary after publication
 without another current guard. It now verifies the full current authority before
 returning the signed local receipt; a witness mutation at that boundary must fail.
+
+## Joined capability boundary
+
+The production driver currently uses no dictionaries and performs no dictionary
+training/adoption or cross-pack dedupe. Lower immutable dictionary primitives
+remain independently tested; they are not a claim that this driver adopts them.
+Reference-only inventory and metadata diagnostics are unit-test helpers in this
+join. Production cleanup uses the complete cipherless owned-namespace scanner,
+including orphans and partial artifacts. No full metadata walk is added per append.
+The obsolete duplicate test-only physical module is removed now that the real
+production driver reaches the kernel.
+
+Independent source review found read's final page serialization followed the
+last current check. A deterministic final-boundary witness mutation reproduced
+an actual returned stale page before the correction. The final current guard
+now follows both cursor construction and exact encoded page validation, directly
+before egress. The focused counterfactual failed with the guard absent.
+
+Review also reproduced an uncharged-work failure: 32 empty owned namespaces were
+removed and a cleanup receipt returned despite a one-row work limit. Each variable
+namespace now prepays 20 work units for its bounded directory visits/removals,
+with file actions charged separately. Prepublication retirement reserves the
+same units plus the final live-only namespace check. Low-budget denied cleanup
+refuses without completing; live prune with 128 empty orphans refuses before
+logical publication and remains retryable with sufficient budget.
+
+The final source contains no per-append population replay/metadata walk. Cleanup
+work accounting includes empty namespaces, and final public page egress checks
+current authority after its last serialization. The actual counterfactual read
+and empty-namespace cases both failed before their corrections and pass afterward.
