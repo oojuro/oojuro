@@ -35,6 +35,17 @@ fn genuine_managed_projection_selects_key_winner_before_eligibility_or_filter() 
             vec![10, 11]
         );
         assert!(!view.lexical_records()[0].indexed);
+        assert_eq!(
+            view.lexical_documents()
+                .iter()
+                .map(|r| r.id)
+                .collect::<Vec<_>>(),
+            vec![9, 10, 11]
+        );
+        assert_eq!(
+            view.latest_records().map(|r| r.id).collect::<Vec<_>>(),
+            vec![10, 11]
+        );
         assert_eq!(view.records()[0].recorded_at, ack.commit.recorded_at[2]);
         assert_eq!(view.records()[0].adapter, identity().adapter);
         assert!(!view.directory().exists());
@@ -60,8 +71,35 @@ fn genuine_managed_projection_selects_key_winner_before_eligibility_or_filter() 
     };
     log.with_rank_view(scope(), AsOf::default(), calendar, |view| {
         assert!(view.records().is_empty()); // no fallback to the old matching version
+        assert!(view.lexical_records().is_empty());
+        assert_eq!(
+            view.latest_records()
+                .find(|r| r.key.as_deref() == Some("state"))
+                .unwrap()
+                .id,
+            10
+        );
+        assert_eq!(view.lexical_documents().len(), 3); // real excluded-key doc still exists
         Ok(())
     })
+    .unwrap();
+    log.with_rank_view(
+        scope(),
+        AsOf {
+            from: 30,
+            ..AsOf::default()
+        },
+        Filter::default(),
+        |view| {
+            assert!(view.lexical_records().is_empty());
+            assert_eq!(
+                view.latest_records().map(|r| r.id).collect::<Vec<_>>(),
+                vec![10, 11]
+            );
+            assert_eq!(view.lexical_documents().len(), 3);
+            Ok(())
+        },
+    )
     .unwrap();
 }
 #[test]

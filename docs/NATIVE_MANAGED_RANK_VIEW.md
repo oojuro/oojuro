@@ -31,6 +31,12 @@ seal/open and explicit directory creation also perform their own before/after ch
 The crate-private `lexical_records()` retains stored-only latest winners for the existing
 direct-key/empty-timeline lexical baseline; public `records()` remains indexed-only for
 plugins/table building. Both derive from the same genuine time/key/filter projection.
+The crate-private `lexical_documents()` supplies ALL surviving original versions to the
+same native lexical index. `latest_records()` supplies genuine valid/known-time winners
+BEFORE lower bounds or filters for key existence. A filtered-out real key therefore
+cannot become a content-search fallback. These private universes never feed optional
+plugins or table training. Their original IDs/data remain current-control guarded;
+the bounded RAM lane is not a paged-memory claim.
 
 The view supplies a genuine current `Binding`, a keyed opaque context stamp,
 selected immutable records, and generation-owned directory path.
@@ -63,3 +69,7 @@ A final scope-accessor follow-up passed all four focused adapter tests plus stri
 package lib+tests lint. This includes the shared View winner-kernel extraction and all corrected managed
 prune/enrollment cases from the current parent. Evidence remains local synthetic
 filesystem proof, not live provider or permanent erasure acceptance.
+
+The full-document and pre-filter-key capability follow-up passed all four focused
+adapter tests plus strict package lib+tests lint. The ranking owner separately owns
+the actual hidden-key baseline counterfactual regression and caller composition.

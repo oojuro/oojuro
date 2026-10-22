@@ -12,6 +12,8 @@ pub struct ManagedRankView<'a> {
     filter: Filter,
     records: Vec<Record>,
     lexical_records: Vec<Record>,
+    documents: Vec<Record>,
+    latest: std::collections::BTreeSet<u64>,
     validate: &'a dyn Fn() -> Result<()>,
     directory: PathBuf,
     cipher: &'a FrameCipher,
@@ -40,6 +42,18 @@ impl ManagedLog {
             owner.checkpoint.floor().map_err(|_| Error::Authority)?,
         );
         let mut rows = crate::record::view::latest_rows(self.snapshot.rows.iter(), as_of);
+        let latest = rows.iter().map(|row| row.id).collect();
+        let documents = self
+            .snapshot
+            .rows
+            .iter()
+            .map(|row| {
+                row.record(
+                    &self.snapshot.identity.writer,
+                    &self.snapshot.identity.adapter,
+                )
+            })
+            .collect();
         rows.retain(|row| row.input.valid_at >= as_of.from && filter.keep(row));
         rows.sort_by_key(|row| row.id);
         let lexical_records = rows
@@ -68,6 +82,8 @@ impl ManagedLog {
             filter,
             records: Vec::new(),
             lexical_records,
+            documents,
+            latest,
             validate: &validate,
             directory: self
                 .directory
@@ -75,10 +91,11 @@ impl ManagedLog {
             cipher: &self.cipher,
             stamp,
         };
+        let selected: std::collections::BTreeSet<_> =
+            view.lexical_records().iter().map(|r| r.id).collect();
         view.records = view
-            .lexical_records()
-            .iter()
-            .filter(|r| r.indexed)
+            .latest_records()
+            .filter(|r| r.indexed && selected.contains(&r.id))
             .cloned()
             .collect();
         let result = run(&view);
@@ -103,6 +120,18 @@ impl ManagedRankView<'_> {
     }
     pub fn records(&self) -> &[Record] {
         &self.records
+    }
+    /// Engine-private real lexical document locators: ALL surviving original versions.
+    /// Visibility masks, not an impoverished document index, gate query results.
+    pub(crate) fn lexical_documents(&self) -> &[Record] {
+        &self.documents
+    }
+    /// Key existence/winner resolution precedes lower bounds, filters and eligibility.
+    /// These records must never be forwarded as optional-plugin/table input.
+    pub(crate) fn latest_records(&self) -> impl Iterator<Item = &Record> {
+        self.lexical_documents()
+            .iter()
+            .filter(|row| self.latest.contains(&row.id))
     }
     /// Direct-key/empty-timeline lexical behavior includes stored-only latest winners.
     /// Optional plugins and table builders use only the public indexed records.
