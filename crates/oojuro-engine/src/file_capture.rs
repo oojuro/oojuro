@@ -8,7 +8,10 @@ use oojuro_store::{Error, Result};
 use std::{
     fs::{self, File},
     io::Read,
-    os::unix::{ffi::OsStrExt, fs::MetadataExt},
+    os::unix::{
+        ffi::OsStrExt,
+        fs::{MetadataExt, OpenOptionsExt},
+    },
     path::Path,
 };
 
