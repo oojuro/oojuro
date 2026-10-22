@@ -80,13 +80,18 @@ impl Work {
         }
     }
 }
+pub(in crate::record) type Rows<'a> =
+    dyn FnMut(&mut dyn FnMut(&Assigned) -> Result<()>) -> Result<()> + 'a;
+pub(in crate::record) type Files<'a> =
+    dyn FnMut(&mut dyn FnMut(&Path) -> Result<()>) -> Result<()> + 'a;
+
 /// A successful return means only that the supplied complete callbacks finished.
 /// Budget, IO, callback or validation failure poisons Work; no partial Counts escape.
 pub(in crate::record) fn scan_one(
     selected: &Assigned,
     metadata: &Value,
-    live_rows: &mut dyn FnMut(&mut dyn FnMut(&Assigned) -> Result<()>) -> Result<()>,
-    files: &mut dyn FnMut(&mut dyn FnMut(&Path) -> Result<()>) -> Result<()>,
+    live_rows: &mut Rows<'_>,
+    files: &mut Files<'_>,
     work: &mut Work,
 ) -> Result<Counts> {
     let out = scan_inner(selected, metadata, live_rows, files, work);
@@ -98,8 +103,8 @@ pub(in crate::record) fn scan_one(
 fn scan_inner(
     selected: &Assigned,
     metadata: &Value,
-    live_rows: &mut dyn FnMut(&mut dyn FnMut(&Assigned) -> Result<()>) -> Result<()>,
-    files: &mut dyn FnMut(&mut dyn FnMut(&Path) -> Result<()>) -> Result<()>,
+    live_rows: &mut Rows<'_>,
+    files: &mut Files<'_>,
     work: &mut Work,
 ) -> Result<Counts> {
     work.charge_rows(1)?;

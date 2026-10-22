@@ -172,7 +172,7 @@ fn file_stream_matches_across_fixed_buffer_boundaries_and_counts_overlaps_exactl
         &selected,
         &json!({}),
         &[],
-        &[p.clone()],
+        std::slice::from_ref(&p),
         &mut Work::new(2 << 20, 1).unwrap(),
     )
     .unwrap();
@@ -281,7 +281,7 @@ fn empty_leaf_has_no_absence_needle_and_files_must_be_regular_not_symlink() {
             &selected,
             &json!({"empty":""}),
             &[],
-            &[p.clone()],
+            std::slice::from_ref(&p),
             &mut Work::new(1 << 20, 1).unwrap()
         )
         .unwrap(),
@@ -307,7 +307,7 @@ fn empty_leaf_has_no_absence_needle_and_files_must_be_regular_not_symlink() {
             &selected,
             &json!({}),
             &[],
-            &[f.root.clone()],
+            std::slice::from_ref(&f.root),
             &mut Work::new(1 << 20, 1).unwrap()
         )
         .is_err()
