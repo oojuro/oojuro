@@ -1,6 +1,6 @@
 //! Opt-in, Codex-only native raw/parsed capture. No recorder, CLI, cloud or discovery selects it.
-//! Raw consent precedes file inspection. Derived plaintext exists only on verified Linux tmpfs;
-//! tmpfs can swap, so this is not a production confidentiality or key-lifecycle claim.
+//! Raw consent precedes file inspection. Native derived postings live only in memory;
+//! this is not a production swap, confidentiality or key-lifecycle claim.
 use crate::{
     FileCtx, ParseCounts, Rec, codex,
     ingest::{Decision, Policy},
@@ -12,14 +12,9 @@ use oojuro_engine::{
         MAX_LINE_BYTES, Outcome, ParsedBatch, PolicyReceipt, Source,
     },
     file_capture::open_authorized_file,
+    lexical::{self, Index, Query},
 };
-use oojuro_trace::{EventIn, EventOut, TraceDb};
-use std::{
-    fs,
-    io::Read,
-    path::{Path, PathBuf},
-    sync::atomic::{AtomicU64, Ordering},
-};
+use std::{fs, io::Read, path::Path};
 
 const ADAPTER: &str = "codex-buffer-1/redact-escaped-1/context-1";
 #[derive(Clone)]
@@ -95,7 +90,7 @@ pub struct Provenance {
     pub emission: u32,
 }
 pub struct Hit {
-    pub hit: oojuro_trace::SearchHit,
+    pub hit: lexical::Hit,
     pub provenance: Provenance,
 }
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -104,23 +99,12 @@ pub struct Report {
     pub parsed_end: u64,
     pub event_ids: Vec<u64>,
 }
-struct Projection {
-    db: Option<TraceDb>,
-    path: PathBuf,
-}
-impl Drop for Projection {
-    fn drop(&mut self) {
-        drop(self.db.take());
-        let _ = fs::remove_dir_all(&self.path);
-    }
-}
 pub struct LocalCapture {
     log: CaptureLog,
     options: Options,
     policy: Box<dyn Policy>,
     redactor: redact::Redactor,
-    ram_root: PathBuf,
-    projection: Option<Projection>,
+    projection: Option<Index>,
     applied: usize,
     #[cfg(test)]
     fail_projection: bool,
@@ -130,7 +114,6 @@ impl LocalCapture {
     pub fn open(
         dir: &Path,
         key: &[u8; 32],
-        ram_root: &Path,
         options: Options,
         policy: Box<dyn Policy>,
     ) -> Result<Self> {
@@ -143,7 +126,6 @@ impl LocalCapture {
         {
             return Err(Error::Invalid("capture options"));
         }
-        verify_tmpfs(ram_root)?;
         let identity = Identity {
             writer: options.writer.clone(),
             agent: options.agent,
@@ -156,7 +138,6 @@ impl LocalCapture {
             options,
             policy,
             redactor: redact::Redactor::new(),
-            ram_root: fs::canonicalize(ram_root).map_err(storage)?,
             projection: None,
             applied: 0,
             #[cfg(test)]
@@ -173,36 +154,26 @@ impl LocalCapture {
             decode_context(self.log.initial_context(source).map_err(authority)?)?;
             decode_context(&self.log.progress(source).map_err(authority)?.context)?;
         }
-        verify_tmpfs(&self.ram_root)?;
-        let path = private_directory(&self.ram_root)?;
-        let mut projection = Projection { db: None, path };
-        let db = TraceDb::open(&projection.path, crate::ingest::capture_trace_options())
-            .map_err(storage)?;
-        projection.db = Some(db);
         for batch in self.log.batches().map_err(authority)? {
             decode_context(&batch.context)?;
-            project(projection.db.as_ref().unwrap(), batch)?;
         }
+        let projection = Index::rebuild(&self.log).map_err(|_| Error::Unavailable)?;
         self.applied = self.log.batches().map_err(authority)?.len();
         self.projection = Some(projection);
         Ok(())
     }
-    fn ready(&self) -> Result<&TraceDb> {
+    fn ready(&self) -> Result<&Index> {
         if self.applied != self.log.batches().map_err(authority)?.len() {
             return Err(Error::Unavailable);
         }
-        self.projection
-            .as_ref()
-            .and_then(|p| p.db.as_ref())
-            .ok_or(Error::Unavailable)
+        self.projection.as_ref().ok_or(Error::Unavailable)
     }
-    pub fn get(&self, id: u64) -> Result<Option<(EventOut, Provenance)>> {
-        let db = self.ready()?;
+    pub fn get(&self, id: u64) -> Result<Option<(Event, Provenance)>> {
+        self.ready()?;
         let Some((source, event)) = self.log.event(id).map_err(authority)? else {
             return Ok(None);
         };
-        let read = db.get(id).map_err(storage)?.ok_or(Error::Corrupt)?;
-        Ok(Some((read, provenance(source, event))))
+        Ok(Some((event.clone(), provenance(source, event))))
     }
     pub fn search(&self, query: &str, from: i64, to: i64, k: usize) -> Result<Vec<Hit>> {
         if k == 0 || k > 1000 {
@@ -210,8 +181,15 @@ impl LocalCapture {
         }
         let hits = self
             .ready()?
-            .search_where(self.options.agent, query, from, to, k, &mut |_| true)
-            .map_err(storage)?;
+            .search(&Query {
+                writer: &self.options.writer,
+                agent: self.options.agent,
+                text: query,
+                from,
+                to,
+                k,
+            })
+            .map_err(|_| Error::Unavailable)?;
         hits.into_iter()
             .map(|hit| {
                 let (source, event) = self
@@ -279,19 +257,9 @@ impl LocalCapture {
             }
             let projected = self
                 .projection
-                .as_ref()
-                .and_then(|p| p.db.as_ref())
+                .as_mut()
                 .ok_or(Error::Unavailable)
-                .and_then(|db| {
-                    project(
-                        db,
-                        self.log
-                            .batches()
-                            .map_err(authority)?
-                            .last()
-                            .ok_or(Error::Corrupt)?,
-                    )
-                });
+                .and_then(|index| index.refresh(&self.log).map_err(|_| Error::Unavailable));
             if projected.is_err() {
                 self.projection = None;
                 return Err(Error::CommittedUnavailable(outcome));
@@ -661,34 +629,6 @@ fn owned(
         emission: rec.k,
     }
 }
-fn project(db: &TraceDb, batch: &ParsedBatch) -> Result<()> {
-    let events: Vec<_> = batch
-        .events
-        .iter()
-        .map(|e| EventIn {
-            id: e.id,
-            session: e.session,
-            parent_session: e.parent_session,
-            agent: e.agent,
-            turn: e.turn,
-            seq: e.seq,
-            parent: e.parent,
-            revises: e.revises,
-            kind: e.kind,
-            status: e.status,
-            exit_code: e.exit_code,
-            tokens_in: e.tokens_in,
-            tokens_out: e.tokens_out,
-            ts_us: e.ts_us,
-            duration_us: e.duration_us,
-            tool: &e.tool,
-            args: &e.args,
-            text: &e.text,
-            indexed: e.indexed,
-        })
-        .collect();
-    db.append(&events).map_err(storage)
-}
 fn provenance(source: Source, e: &Event) -> Provenance {
     Provenance {
         source,
@@ -697,40 +637,11 @@ fn provenance(source: Source, e: &Event) -> Provenance {
         emission: e.emission,
     }
 }
-fn verify_tmpfs(path: &Path) -> Result<()> {
-    use std::os::unix::ffi::OsStrExt;
-    let path = fs::canonicalize(path).map_err(storage)?;
-    if !path.is_dir() {
-        return Err(Error::Invalid("cache root is not a directory"));
-    }
-    let c = std::ffi::CString::new(path.as_os_str().as_bytes()).map_err(storage)?;
-    let mut info = std::mem::MaybeUninit::<libc::statfs>::uninit();
-    // SAFETY: live CString and initialized output checked after successful syscall.
-    if unsafe { libc::statfs(c.as_ptr(), info.as_mut_ptr()) } != 0 {
-        return Err(Error::Storage);
-    }
-    if unsafe { info.assume_init() }.f_type != libc::TMPFS_MAGIC {
-        return Err(Error::Invalid("cache requires explicit Linux tmpfs"));
-    }
-    Ok(())
-}
-fn private_directory(root: &Path) -> Result<PathBuf> {
-    use std::os::unix::fs::DirBuilderExt;
-    static NEXT: AtomicU64 = AtomicU64::new(0);
-    for _ in 0..8 {
-        let path = root.join(format!(
-            "oojuro-local-{}-{}",
-            std::process::id(),
-            NEXT.fetch_add(1, Ordering::Relaxed)
-        ));
-        match fs::DirBuilder::new().mode(0o700).create(&path) {
-            Ok(()) => return Ok(path),
-            Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
-            Err(_) => return Err(Error::Storage),
-        }
-    }
-    Err(Error::Storage)
-}
+#[cfg(test)]
+use std::{
+    path::PathBuf,
+    sync::atomic::{AtomicU64, Ordering},
+};
 #[cfg(test)]
 #[path = "local_tests.rs"]
 mod tests;

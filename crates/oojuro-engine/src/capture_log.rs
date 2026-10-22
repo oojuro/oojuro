@@ -134,6 +134,7 @@ pub struct Progress {
 }
 pub struct CaptureLog {
     store: Store,
+    instance: u64,
     identity: Identity,
     sources: BTreeMap<Source, SourceState>,
     batches: Vec<ParsedBatch>,
@@ -180,6 +181,7 @@ impl CaptureLog {
         )?;
         let mut log = Self {
             store,
+            instance: next_instance()?,
             next_id: identity.first_id,
             identity,
             sources: BTreeMap::new(),
@@ -235,6 +237,9 @@ impl CaptureLog {
     pub fn batches(&self) -> Result<&[ParsedBatch]> {
         self.healthy()?;
         Ok(&self.batches)
+    }
+    pub(crate) fn instance(&self) -> u64 {
+        self.instance
     }
     pub fn sources(&self) -> impl Iterator<Item = Source> + '_ {
         self.sources.keys().copied()
@@ -685,6 +690,23 @@ mod tests {
                 CaptureLog::open(&t.0, &KEY, identity()),
                 Err(Error::Corrupt(_))
             ));
+        }
+    }
+}
+
+// An in-memory projection may only follow this particular open authority handle.
+// Reopening (including the same path/key) requires rebuilding from receipts.
+fn next_instance() -> Result<u64> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static NEXT: AtomicU64 = AtomicU64::new(1);
+    let mut current = NEXT.load(Ordering::Relaxed);
+    loop {
+        let next = current
+            .checked_add(1)
+            .ok_or(Error::Invalid("authority instance exhaustion"))?;
+        match NEXT.compare_exchange_weak(current, next, Ordering::Relaxed, Ordering::Relaxed) {
+            Ok(value) => return Ok(value),
+            Err(observed) => current = observed,
         }
     }
 }

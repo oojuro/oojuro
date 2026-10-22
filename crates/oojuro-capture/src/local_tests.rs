@@ -40,7 +40,6 @@ impl Fixture {
         LocalCapture::open(
             &self.root.join("authority"),
             &KEY,
-            &self.ram,
             self.options(),
             Box::new(policy),
         )
@@ -132,7 +131,7 @@ fn signature(capture: &LocalCapture, query: &str, k: usize) -> Vec<(u64, u64, bo
 }
 
 #[test]
-fn consent_precedes_source_inspection_and_cache_requires_explicit_tmpfs() {
+fn consent_precedes_source_inspection_and_native_index_needs_no_cache_directory() {
     let f = Fixture::new();
     let mut c = f.open(Mode::Allow);
     assert_eq!(
@@ -141,15 +140,14 @@ fn consent_precedes_source_inspection_and_cache_requires_explicit_tmpfs() {
         None
     );
     assert_eq!(c.log.sources().count(), 0);
-    let result = LocalCapture::open(
-        &f.root.join("forbidden"),
-        &KEY,
-        Path::new("/proc"),
-        f.options(),
-        Box::new(Mode::Allow),
+    // No tmpfs or cache argument exists in this stacked API revision.
+    assert!(
+        fs::read_dir(f.root.join("authority")).unwrap().all(|e| !e
+            .unwrap()
+            .file_name()
+            .to_string_lossy()
+            .contains("cache"))
     );
-    assert!(matches!(result, Err(Error::Invalid(_))));
-    assert!(!f.root.join("forbidden").exists());
 }
 
 #[test]
@@ -169,7 +167,6 @@ fn withheld_thinking_tool_results_and_unindexed_outputs_stay_authorized_on_relax
     let mut c = LocalCapture::open(
         &f.root.join("authority"),
         &KEY,
-        &f.ram,
         options.clone(),
         Box::new(Mode::Strict),
     )
@@ -194,9 +191,7 @@ fn withheld_thinking_tool_results_and_unindexed_outputs_stay_authorized_on_relax
             .text
             .contains("STOREONLYMARKER")
     );
-    let cache = c.projection.as_ref().unwrap().path.clone();
     drop(c);
-    assert!(!cache.exists());
     f.append(
         &[
             result("c-denied", "BLOCKEDRESULTMARKER"),
@@ -208,7 +203,6 @@ fn withheld_thinking_tool_results_and_unindexed_outputs_stay_authorized_on_relax
     let mut c = LocalCapture::open(
         &f.root.join("authority"),
         &KEY,
-        &f.ram,
         options,
         Box::new(Mode::Allow),
     )
@@ -239,9 +233,7 @@ fn withheld_thinking_tool_results_and_unindexed_outputs_stay_authorized_on_relax
         raw.windows(b"RAWONLYTHOUGHTMARKER".len())
             .any(|b| b == b"RAWONLYTHOUGHTMARKER")
     );
-    let old = c.projection.as_ref().unwrap().path.clone();
     c.projection = None;
-    assert!(!old.exists());
     c.rebuild().unwrap();
     assert_eq!(c.report(SOURCE).unwrap(), report);
     assert!(
@@ -308,7 +300,7 @@ fn projection_failure_reports_committed_ids_blocks_reads_and_retry_reuses_receip
         c.search("battery", 0, i64::MAX, 10),
         Err(Error::Unavailable)
     ));
-    assert_eq!(c.get(1).unwrap_err(), Error::Unavailable);
+    assert!(matches!(c.get(1), Err(Error::Unavailable)));
     assert!(matches!(
         c.capture_file(SOURCE, &f.file, |_| panic!(
             "must refuse before source read"
@@ -343,7 +335,6 @@ fn partial_non_utf8_prefix_mutation_rotation_and_tool_links_across_blocks() {
     let mut c = LocalCapture::open(
         &f.root.join("authority"),
         &KEY,
-        &f.ram,
         options.clone(),
         Box::new(Mode::Allow),
     )
@@ -358,7 +349,6 @@ fn partial_non_utf8_prefix_mutation_rotation_and_tool_links_across_blocks() {
     let mut c = LocalCapture::open(
         &f.root.join("authority"),
         &KEY,
-        &f.ram,
         options,
         Box::new(Mode::Allow),
     )
@@ -431,7 +421,6 @@ fn oracle_ids_bits_decimal_ties_identifier_continuations_and_deleted_cache_rebui
     let mut c = LocalCapture::open(
         &f.root.join("authority"),
         &KEY,
-        &f.ram,
         options.clone(),
         Box::new(Mode::Allow),
     )
@@ -510,9 +499,7 @@ fn oracle_ids_bits_decimal_ties_identifier_continuations_and_deleted_cache_rebui
     assert_eq!(ties.iter().map(|h| h.0).collect::<Vec<_>>(), vec![10, 9]);
     let continued = signature(&c, "lookup_needle battery", 10);
     assert!(continued.iter().any(|h| h.2));
-    let cache = c.projection.as_ref().unwrap().path.clone();
     c.projection = None;
-    assert!(!cache.exists());
     c.rebuild().unwrap();
     compare(&c);
     c.log.compact().unwrap();
@@ -520,7 +507,6 @@ fn oracle_ids_bits_decimal_ties_identifier_continuations_and_deleted_cache_rebui
     let c = LocalCapture::open(
         &f.root.join("authority"),
         &KEY,
-        &f.ram,
         options,
         Box::new(Mode::WithholdAll),
     )
@@ -537,11 +523,9 @@ fn crash_worker() {
         return;
     };
     let root = PathBuf::from(root);
-    let ram = PathBuf::from(std::env::var_os("OOJURO_LOCAL_TEST_RAM").unwrap());
     let mut c = LocalCapture::open(
         &root.join("authority"),
         &KEY,
-        &ram,
         Options::new(WRITER, 1, "synthetic"),
         Box::new(Mode::Allow),
     )
@@ -564,7 +548,6 @@ fn sigkill_after_authority_or_projection_before_ack_recovers_exact_original_ids(
             .arg("local::tests::crash_worker")
             .arg("--exact")
             .env("OOJURO_LOCAL_TEST_ROOT", &f.root)
-            .env("OOJURO_LOCAL_TEST_RAM", &f.ram)
             .env("OOJURO_LOCAL_TEST_CRASH", phase)
             .output()
             .unwrap();
@@ -619,7 +602,6 @@ fn escaped_tool_argument_and_metadata_secrets_are_masked_before_projection_and_a
         }
     }
     no_token(&f.root.join("authority"), token.as_bytes());
-    no_token(&c.projection.as_ref().unwrap().path, token.as_bytes());
 }
 
 #[test]
@@ -664,7 +646,6 @@ fn metadata_output_bound_refuses_progress_and_smaller_chunk_retry_loses_no_blank
     let mut c = LocalCapture::open(
         &f.root.join("authority"),
         &KEY,
-        &f.ram,
         options,
         Box::new(Mode::Allow),
     )
@@ -689,7 +670,6 @@ fn incomplete_raw_line_cannot_be_reinterpreted_by_relaxing_its_policy_identity()
     let mut c = LocalCapture::open(
         &f.root.join("authority"),
         &KEY,
-        &f.ram,
         original.clone(),
         Box::new(Mode::Strict),
     )
@@ -703,7 +683,6 @@ fn incomplete_raw_line_cannot_be_reinterpreted_by_relaxing_its_policy_identity()
     let mut c = LocalCapture::open(
         &f.root.join("authority"),
         &KEY,
-        &f.ram,
         relaxed.clone(),
         Box::new(Mode::Allow),
     )
@@ -717,7 +696,6 @@ fn incomplete_raw_line_cannot_be_reinterpreted_by_relaxing_its_policy_identity()
     let mut c = LocalCapture::open(
         &f.root.join("authority"),
         &KEY,
-        &f.ram,
         original,
         Box::new(Mode::Strict),
     )
@@ -729,7 +707,6 @@ fn incomplete_raw_line_cannot_be_reinterpreted_by_relaxing_its_policy_identity()
     let c = LocalCapture::open(
         &f.root.join("authority"),
         &KEY,
-        &f.ram,
         relaxed,
         Box::new(Mode::Allow),
     )
@@ -806,7 +783,6 @@ fn versioned_context_requires_complete_call_policy_state_in_every_sealed_receipt
             let reopened = LocalCapture::open(
                 &f.root.join("authority"),
                 &KEY,
-                &f.ram,
                 f.options(),
                 Box::new(Mode::Allow),
             );
@@ -850,7 +826,6 @@ fn unresolved_call_overflow_keeps_denial_prefix_and_allocator_across_restart() {
     let mut c = LocalCapture::open(
         &f.root.join("authority"),
         &KEY,
-        &f.ram,
         options,
         Box::new(Mode::Allow),
     )
@@ -1009,7 +984,6 @@ fn duplicate_unresolved_call_or_empty_lookup_cannot_shadow_denial_after_restart(
         let mut c = LocalCapture::open(
             &f.root.join("authority"),
             &KEY,
-            &f.ram,
             options.clone(),
             Box::new(Mode::Allow),
         )
@@ -1026,7 +1000,6 @@ fn duplicate_unresolved_call_or_empty_lookup_cannot_shadow_denial_after_restart(
         let mut c = LocalCapture::open(
             &f.root.join("authority"),
             &KEY,
-            &f.ram,
             options,
             Box::new(Mode::Allow),
         )
@@ -1091,7 +1064,6 @@ fn sealed_duplicate_unresolved_context_is_rejected_on_replay() {
             LocalCapture::open(
                 &f.root.join("authority"),
                 &KEY,
-                &f.ram,
                 f.options(),
                 Box::new(Mode::Allow)
             ),

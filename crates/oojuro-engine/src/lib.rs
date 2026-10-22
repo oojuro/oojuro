@@ -1,5 +1,5 @@
-//! The first working slice of the new engine: sealed, byte-exact local raw sources.
-//! Parsed/index/query/access-policy/audit and hosted replicated commits are separate milestones.
+//! Native sealed raw/parsed capture authority and bounded in-memory lexical retrieval.
+//! Disk index/merge, access policy, erasure/audit and hosted replicated commits remain separate milestones.
 pub mod raw;
 
 #[cfg(unix)]
@@ -7,3 +7,6 @@ pub mod file_capture;
 
 /// Atomic sealed raw/parsed authority; legacy raw-only format remains independent.
 pub mod capture_log;
+
+/// Native derived lexical postings/query over committed authorized receipts.
+pub mod lexical;

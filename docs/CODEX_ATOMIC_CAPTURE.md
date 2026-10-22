@@ -85,18 +85,23 @@ hashes. Pattern redaction is not a guarantee that all possible secrets are detec
 
 ## Actual lexical baseline and cache boundary
 
-Each owner journal projects into real `oojuro_trace::TraceDb`, using the existing
-Nine lexical scorer, per-writer term statistics and exact original IDs/valid times.
+Each owner journal projects into `oojuro_engine::lexical::Index`, using the native in-memory lexical port, per-writer term statistics and exact
+original IDs/valid times.
 Results retain baseline ordering and score bits, including identifier continuations
 and decimal-string ties (`10` before `9`). Provenance follows the reported event's
-own source, not a dedupe host's row. This is a verified baseline bridge; native
-query/index ports and semantic superiority are not claimed.
+own source, not a dedupe host's row. This is a bounded native index/query port;
+persistent segments, scale acceptance and semantic superiority are not claimed.
 
-The derived cache must use an explicitly provided, verified Linux tmpfs directory.
-There is no plaintext disk fallback. Each open/rebuild creates a fresh private
-0700 cache and reads no old cache authority. Cached files can contain redacted
-plaintext; tmpfs can swap, so production swap/resource/confidentiality review
-remains necessary. No raw bytes, parser context or encryption keys enter that cache.
+This stacked revision changes the opt-in `LocalCapture::open` API: the former
+`ram_root` argument is removed, `get` returns the complete native `capture_log::Event`,
+and hit types belong to the native lexical module. No unused cache argument is
+accepted. The derived postings and host rows live only in memory; no derived files
+are written. Dropping the projection loses no authority and rebuild reads only the
+sealed initial parsed receipts. Process memory can swap; OS confidentiality and
+resource review remain necessary. Legacy recorder/capture paths remain unchanged.
+
+See [native lexical port](NATIVE_LEXICAL.md) for exact source mapping, oracle
+differential scope, pruning, dedupe and remaining persistence/scale gates.
 
 ## Bounds and remaining gates
 

@@ -4672,8 +4672,11 @@ dependencies = [
 name = "oojuro-engine"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "libc",
  "oojuro-store",
+ "oojuro-trace",
+ "rust-stemmers",
  "serde",
  "serde_json",
 ]

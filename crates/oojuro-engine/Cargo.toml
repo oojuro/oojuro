@@ -4,12 +4,19 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Oojuro foundation: sealed byte-exact local raw journal."
+description = "Oojuro foundation: sealed raw/parsed authority and native lexical retrieval."
 
 [dependencies]
 oojuro-store = { path = "../oojuro-store" }
 serde.workspace = true
 serde_json.workspace = true
+blake3.workspace = true
+rust-stemmers = "=1.2.0"
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"
+
+[dev-dependencies]
+oojuro-nine = { path = "../oojuro-nine" }
+oojuro-core = { path = "../oojuro-core" }
+oojuro-trace = { path = "../oojuro-trace" }
