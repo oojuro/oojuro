@@ -84,6 +84,9 @@ impl ReadState {
 
     pub fn bounded(budget:usize)->Self {let mut state=Self::new(budget);state.idle_dicts=4;state.idle_per_dict=1;state}
 
+    #[cfg(test)]
+    pub fn idle_dictionary_count(&self)->usize {self.ctx.lock().unwrap().dctx.len()}
+
     pub fn clear_cache(&self) {
         let mut rc = self.ctx.lock().unwrap();
         rc.cache.clear();
