@@ -18,6 +18,8 @@
 pub mod claude;
 pub mod codex;
 pub mod ingest;
+#[cfg(target_os = "linux")]
+pub mod local;
 pub mod marker;
 pub mod redact;
 pub mod sink;

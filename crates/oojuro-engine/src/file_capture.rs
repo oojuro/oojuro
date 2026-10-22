@@ -45,6 +45,64 @@ pub fn capture_file(
     path: &Path,
     mut retain_raw: impl FnMut(&Path) -> bool,
 ) -> Result<Option<CaptureReport>> {
+    let Some(opened) = open_authorized_file(path, &mut retain_raw)? else {
+        return Ok(None);
+    };
+    let AuthorizedFile {
+        mut file,
+        descriptor,
+        observed_length,
+    } = opened;
+    // Registration seals path and inode provenance in the same journal; no cursor sidecar.
+    journal.register(id, &descriptor)?;
+    let start = journal.cursor(id)?.offset;
+    if observed_length < start {
+        return Err(Error::Invalid(
+            "raw source was truncated; use a new generation id",
+        ));
+    }
+    let mut offset = 0_u64;
+    let mut block = vec![0; MAX_BLOCK_BYTES];
+    // Revalidate the ENTIRE retained prefix, not only its tail or current file length.
+    // New bytes start only after every earlier retained byte has matched.
+    while offset < observed_length {
+        let boundary = if offset < start {
+            start
+        } else {
+            observed_length
+        };
+        let n = (boundary - offset).min(MAX_BLOCK_BYTES as u64) as usize;
+        file.read_exact(&mut block[..n])?;
+        journal.append(id, offset, &block[..n])?;
+        offset += n as u64;
+    }
+    let after = file.metadata()?;
+    if after.len() < observed_length {
+        return Err(Error::Invalid(
+            "raw source shrank during capture; use a new generation id",
+        ));
+    }
+    let cursor = journal.cursor(id)?;
+    Ok(Some(CaptureReport {
+        cursor,
+        appended: cursor.offset - start,
+        observed_length: observed_length,
+    }))
+}
+
+/// An explicitly consented regular source. Authorization lasts for this open pass.
+/// Callers still validate their complete retained prefix before appending a suffix.
+pub struct AuthorizedFile {
+    pub file: File,
+    pub descriptor: Vec<u8>,
+    pub observed_length: u64,
+}
+
+/// Policy runs before metadata or open; final symlink/non-regular replacements fail closed.
+pub fn open_authorized_file(
+    path: &Path,
+    mut retain_raw: impl FnMut(&Path) -> bool,
+) -> Result<Option<AuthorizedFile>> {
     if !retain_raw(path) {
         return Ok(None);
     }
@@ -54,40 +112,14 @@ pub fn capture_file(
             "raw source must be a regular file, not a symlink",
         ));
     }
-    let (mut file, opened) = open_unchanged_regular(path, &before)?;
+    let (file, opened) = open_unchanged_regular(path, &before)?;
     let mut descriptor = b"oojuro-file-source-1\0".to_vec();
     descriptor.extend_from_slice(&opened.dev().to_le_bytes());
     descriptor.extend_from_slice(&opened.ino().to_le_bytes());
     descriptor.extend_from_slice(path.as_os_str().as_bytes());
-    // Registration seals path and inode provenance in the same journal; no cursor sidecar.
-    journal.register(id, &descriptor)?;
-    let start = journal.cursor(id)?.offset;
-    if opened.len() < start {
-        return Err(Error::Invalid(
-            "raw source was truncated; use a new generation id",
-        ));
-    }
-    let mut offset = 0_u64;
-    let mut block = vec![0; MAX_BLOCK_BYTES];
-    // Revalidate the ENTIRE retained prefix, not only its tail or current file length.
-    // New bytes start only after every earlier retained byte has matched.
-    while offset < opened.len() {
-        let boundary = if offset < start { start } else { opened.len() };
-        let n = (boundary - offset).min(MAX_BLOCK_BYTES as u64) as usize;
-        file.read_exact(&mut block[..n])?;
-        journal.append(id, offset, &block[..n])?;
-        offset += n as u64;
-    }
-    let after = file.metadata()?;
-    if after.len() < opened.len() {
-        return Err(Error::Invalid(
-            "raw source shrank during capture; use a new generation id",
-        ));
-    }
-    let cursor = journal.cursor(id)?;
-    Ok(Some(CaptureReport {
-        cursor,
-        appended: cursor.offset - start,
+    Ok(Some(AuthorizedFile {
+        file,
+        descriptor,
         observed_length: opened.len(),
     }))
 }

@@ -1,0 +1,636 @@
+//! Native atomic raw + authorized parsed authority over the existing sealed Store.
+//! No adapter, filesystem discovery, query engine, key persistence or second WAL lives here.
+//! The format is distinct from raw::RawJournal; neither silently upgrades the other's files.
+pub use crate::raw::MAX_BLOCK_BYTES;
+use oojuro_store::{Error, NewRecord, Options, Result, Store, crypto::FrameCipher};
+use serde::{Deserialize, Serialize};
+use std::{collections::BTreeMap, path::Path, sync::Arc};
+
+const FORMAT: &[u8] = b"oojuro-capture-1\n";
+pub const MAX_LINE_BYTES: usize = 1 << 20;
+pub const MAX_CONTEXT_BYTES: usize = 128 << 10;
+pub const MAX_BATCH_BYTES: usize = 8 << 20;
+pub const MAX_EVENTS: usize = 100_000;
+pub const MAX_PARSED_BYTES: usize = 128 << 20;
+pub type Source = [u8; 16];
+
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Identity {
+    pub writer: String,
+    pub agent: u32,
+    pub first_id: u64,
+    pub adapter: String,
+}
+/// Complete owned EventIn fields, including eligibility and replay-only fields.
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Event {
+    pub id: u64,
+    pub session: u64,
+    pub parent_session: u64,
+    pub agent: u32,
+    pub turn: u32,
+    pub seq: u32,
+    pub parent: u64,
+    pub revises: u64,
+    pub kind: u8,
+    pub status: u8,
+    pub exit_code: Option<i32>,
+    pub tokens_in: u32,
+    pub tokens_out: u32,
+    pub ts_us: i64,
+    pub duration_us: i64,
+    pub tool: String,
+    pub args: String,
+    pub text: String,
+    pub indexed: bool,
+    pub line_start: u64,
+    pub line_end: u64,
+    pub emission: u32,
+}
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum Decision {
+    Stored { id: u64, indexed: bool },
+    Withheld { reason: String },
+}
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub enum LineKind {
+    Parsed,
+    Blank,
+    Malformed,
+}
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Line {
+    pub start: u64,
+    pub end: u64,
+    pub kind: LineKind,
+    pub emissions: Vec<Decision>,
+}
+#[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+pub struct PolicyReceipt {
+    pub policy_id: String,
+    pub raw_authorization: String,
+    pub lines: Vec<Line>,
+}
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub struct Outcome {
+    pub raw_end: u64,
+    pub parsed_end: u64,
+    pub first_id: Option<u64>,
+    pub stored: u64,
+    pub next_id: u64,
+}
+#[derive(Clone, Serialize, Deserialize)]
+pub struct ParsedBatch {
+    pub source: Source,
+    pub raw_start: u64,
+    pub parsed_before: u64,
+    pub outcome: Outcome,
+    pub policy: PolicyReceipt,
+    /// Opaque adapter state, SEALED with raw and receipts; never a plaintext sidecar.
+    pub context: Vec<u8>,
+    pub events: Vec<Event>,
+}
+pub struct Batch {
+    pub parsed: ParsedBatch,
+    pub raw: Vec<u8>,
+}
+#[derive(Serialize, Deserialize)]
+struct Registration {
+    source: Source,
+    descriptor: Vec<u8>,
+    context: Vec<u8>,
+}
+struct Block {
+    seq: u64,
+    offset: u64,
+    len: usize,
+    at: usize,
+}
+struct SourceState {
+    descriptor: Vec<u8>,
+    context: Vec<u8>,
+    raw_end: u64,
+    parsed_end: u64,
+    file_no: u32,
+    blocks: Vec<Block>,
+}
+#[derive(Clone)]
+pub struct Progress {
+    pub raw_end: u64,
+    pub parsed_end: u64,
+    pub file_no: u32,
+    pub context: Vec<u8>,
+}
+pub struct CaptureLog {
+    store: Store,
+    identity: Identity,
+    sources: BTreeMap<Source, SourceState>,
+    batches: Vec<ParsedBatch>,
+    ids: BTreeMap<u64, (usize, usize)>,
+    next_id: u64,
+    parsed_bytes: usize,
+    failed: bool,
+}
+impl CaptureLog {
+    pub fn open(dir: &Path, key: &[u8; 32], identity: Identity) -> Result<Self> {
+        if identity.writer.is_empty()
+            || identity.writer.len() > 256
+            || identity.agent == 0
+            || identity.first_id == 0
+            || identity.adapter.is_empty()
+            || identity.adapter.len() > 128
+        {
+            return Err(Error::Invalid("invalid capture identity"));
+        }
+        let parent = dir
+            .parent()
+            .filter(|p| !p.as_os_str().is_empty())
+            .unwrap_or(Path::new("."));
+        if !parent.is_dir() {
+            return Err(Error::Invalid("capture parent must exist"));
+        }
+        if dir.is_dir()
+            && !dir.join("MANIFEST").exists()
+            && std::fs::read_dir(dir)?.next().is_some()
+        {
+            return Err(Error::Invalid(
+                "capture authority requires a dedicated directory",
+            ));
+        }
+        let store = Store::open(
+            dir,
+            Options {
+                cipher: Some(Arc::new(FrameCipher::new(key))),
+                require_sealed: true,
+                sync: true,
+                compact_threads: 1,
+                ..Options::default()
+            },
+        )?;
+        let mut log = Self {
+            store,
+            next_id: identity.first_id,
+            identity,
+            sources: BTreeMap::new(),
+            batches: Vec::new(),
+            ids: BTreeMap::new(),
+            parsed_bytes: 0,
+            failed: false,
+        };
+        let mut header = FORMAT.to_vec();
+        header.extend(
+            serde_json::to_vec(&log.identity).map_err(|_| Error::Invalid("capture identity"))?,
+        );
+        if log.store.is_empty() {
+            log.write(&header)?;
+        } else if log.store.get(0)? != header {
+            return Err(Error::Corrupt("capture format or identity mismatch"));
+        }
+        for seq in 1..log.store.len() {
+            let bytes = log.store.get(seq)?;
+            log.replay(seq, &bytes)?;
+        }
+        std::fs::File::open(parent)?.sync_all()?;
+        Ok(log)
+    }
+    fn healthy(&self) -> Result<()> {
+        if self.failed {
+            Err(Error::Invalid("capture authority failed; reopen required"))
+        } else {
+            Ok(())
+        }
+    }
+    fn write(&mut self, bytes: &[u8]) -> Result<u64> {
+        self.healthy()?;
+        let result = self.store.append(&[NewRecord {
+            kind: 7,
+            valid_at: 0,
+            recorded_at: 0,
+            key: b"",
+            attrs: b"",
+            text: bytes,
+        }]);
+        if result.is_err() {
+            self.failed = true;
+        }
+        result
+    }
+    pub fn identity(&self) -> &Identity {
+        &self.identity
+    }
+    pub fn next_id(&self) -> u64 {
+        self.next_id
+    }
+    pub fn batches(&self) -> Result<&[ParsedBatch]> {
+        self.healthy()?;
+        Ok(&self.batches)
+    }
+    pub fn sources(&self) -> impl Iterator<Item = Source> + '_ {
+        self.sources.keys().copied()
+    }
+    pub fn progress(&self, source: Source) -> Result<Progress> {
+        self.healthy()?;
+        let s = self.sources.get(&source).ok_or(Error::NotFound)?;
+        Ok(Progress {
+            raw_end: s.raw_end,
+            parsed_end: s.parsed_end,
+            file_no: s.file_no,
+            context: s.context.clone(),
+        })
+    }
+    pub fn event(&self, id: u64) -> Result<Option<(Source, &Event)>> {
+        self.healthy()?;
+        Ok(self
+            .ids
+            .get(&id)
+            .map(|&(b, e)| (self.batches[b].source, &self.batches[b].events[e])))
+    }
+    pub fn register(&mut self, source: Source, descriptor: &[u8], context: &[u8]) -> Result<()> {
+        self.healthy()?;
+        if let Some(old) = self.sources.get(&source) {
+            return if old.descriptor == descriptor {
+                Ok(())
+            } else {
+                Err(Error::Invalid("source generation descriptor changed"))
+            };
+        }
+        valid_context(context)?;
+        if descriptor.len() > crate::raw::MAX_DESCRIPTOR_BYTES {
+            return Err(Error::Invalid("source descriptor bound"));
+        }
+        let record = Registration {
+            source,
+            descriptor: descriptor.to_vec(),
+            context: context.to_vec(),
+        };
+        let mut bytes = vec![1];
+        bytes.extend(
+            serde_json::to_vec(&record).map_err(|_| Error::Invalid("source registration"))?,
+        );
+        let seq = self.write(&bytes)?;
+        if let Err(e) = self.replay(seq, &bytes) {
+            self.failed = true;
+            return Err(e);
+        }
+        Ok(())
+    }
+    pub fn read_raw(&self, source: Source, offset: u64, len: usize) -> Result<Vec<u8>> {
+        self.healthy()?;
+        if len > MAX_LINE_BYTES + MAX_BLOCK_BYTES {
+            return Err(Error::Invalid("raw read bound"));
+        }
+        let s = self.sources.get(&source).ok_or(Error::NotFound)?;
+        let end = offset
+            .checked_add(len as u64)
+            .ok_or(Error::Invalid("raw range overflow"))?;
+        if end > s.raw_end {
+            return Err(Error::Invalid("raw range beyond retained prefix"));
+        }
+        let mut out = Vec::with_capacity(len);
+        for b in s
+            .blocks
+            .iter()
+            .skip_while(|b| b.offset + b.len as u64 <= offset)
+            .take_while(|b| b.offset < end)
+        {
+            let bytes = self.store.get(b.seq)?;
+            let start = offset.saturating_sub(b.offset) as usize;
+            let stop = (end - b.offset).min(b.len as u64) as usize;
+            out.extend_from_slice(&bytes[b.at + start..b.at + stop]);
+        }
+        if out.len() != len {
+            return Err(Error::Corrupt("raw block coverage"));
+        }
+        Ok(out)
+    }
+    /// Native authority commit: one bounded sealed Store frame; no cache side effects.
+    pub fn commit(&mut self, batch: Batch) -> Result<Outcome> {
+        self.healthy()?;
+        self.validate(&batch.parsed, &batch.raw)?;
+        let meta = serde_json::to_vec(&batch.parsed)
+            .map_err(|_| Error::Invalid("capture batch encoding"))?;
+        if meta.len() > MAX_BATCH_BYTES {
+            return Err(Error::Invalid("parsed batch bound"));
+        }
+        let mut bytes = Vec::with_capacity(5 + meta.len() + batch.raw.len());
+        bytes.push(2);
+        bytes.extend_from_slice(&(meta.len() as u32).to_le_bytes());
+        bytes.extend(meta);
+        bytes.extend(batch.raw);
+        let seq = self.write(&bytes)?;
+        if let Err(e) = self.replay(seq, &bytes) {
+            self.failed = true;
+            return Err(e);
+        }
+        Ok(batch.parsed.outcome)
+    }
+    fn validate(&self, p: &ParsedBatch, raw: &[u8]) -> Result<()> {
+        valid_context(&p.context)?;
+        let s = self
+            .sources
+            .get(&p.source)
+            .ok_or(Error::Invalid("unregistered capture source"))?;
+        let end = s
+            .raw_end
+            .checked_add(raw.len() as u64)
+            .ok_or(Error::Invalid("raw offset overflow"))?;
+        if raw.len() > MAX_BLOCK_BYTES
+            || p.raw_start != s.raw_end
+            || p.parsed_before != s.parsed_end
+            || p.outcome.raw_end != end
+            || p.outcome.parsed_end < s.parsed_end
+            || p.outcome.parsed_end > end
+            || end - p.outcome.parsed_end > MAX_LINE_BYTES as u64
+            || p.policy.policy_id.is_empty()
+            || p.policy.policy_id.len() > 128
+            || p.policy.raw_authorization.is_empty()
+            || p.policy.raw_authorization.len() > 128
+        {
+            return Err(Error::Invalid("capture progress or policy receipt"));
+        }
+        let processed = p.outcome.parsed_end - s.parsed_end;
+        if processed > (MAX_LINE_BYTES + MAX_BLOCK_BYTES) as u64 {
+            return Err(Error::Invalid("parse work bound"));
+        }
+        let mut input =
+            self.read_raw(p.source, s.parsed_end, (s.raw_end - s.parsed_end) as usize)?;
+        input.extend_from_slice(raw);
+        let mut at = s.parsed_end;
+        let mut events = p.events.iter();
+        let mut next = self.next_id;
+        for line in &p.policy.lines {
+            if line.start != at
+                || line.end <= at
+                || line.end > p.outcome.parsed_end
+                || line.end - at > MAX_LINE_BYTES as u64
+                || input[(line.end - s.parsed_end - 1) as usize] != b'\n'
+                || input
+                    [(line.start - s.parsed_end) as usize..(line.end - s.parsed_end - 1) as usize]
+                    .contains(&b'\n')
+                || (!matches!(line.kind, LineKind::Parsed) && !line.emissions.is_empty())
+            {
+                return Err(Error::Invalid("capture line receipt coverage"));
+            }
+            for (k, decision) in line.emissions.iter().enumerate() {
+                match decision {
+                    Decision::Stored { id, indexed } => {
+                        let event = events
+                            .next()
+                            .ok_or(Error::Invalid("missing authorized parsed output"))?;
+                        if *id != next
+                            || event.id != *id
+                            || event.indexed != *indexed
+                            || event.agent != self.identity.agent
+                            || event.line_start != at
+                            || event.line_end != line.end
+                            || event.emission as usize != k
+                            || event.kind > 6
+                            || event.revises != 0
+                        {
+                            return Err(Error::Invalid("parsed identity or eligibility mismatch"));
+                        }
+                        next = next
+                            .checked_add(1)
+                            .ok_or(Error::Invalid("event ID exhaustion"))?;
+                    }
+                    Decision::Withheld { reason } if !reason.is_empty() && reason.len() <= 128 => {}
+                    _ => return Err(Error::Invalid("withholding receipt missing")),
+                }
+            }
+            at = line.end;
+        }
+        if input[processed as usize..].contains(&b'\n')
+            || at != p.outcome.parsed_end
+            || events.next().is_some()
+            || p.outcome.stored != p.events.len() as u64
+            || p.outcome.next_id != next
+            || p.outcome.first_id != p.events.first().map(|e| e.id)
+        {
+            return Err(Error::Invalid("capture outcome mismatch"));
+        }
+        if self.ids.len() + p.events.len() > MAX_EVENTS {
+            return Err(Error::Invalid("parsed event capacity"));
+        }
+        let bytes = p.events.iter().try_fold(self.parsed_bytes, |n, e| {
+            n.checked_add(e.text.len())
+                .ok_or(Error::Invalid("parsed size overflow"))
+        })?;
+        if bytes > MAX_PARSED_BYTES {
+            return Err(Error::Invalid("parsed text capacity"));
+        }
+        Ok(())
+    }
+    fn replay(&mut self, seq: u64, bytes: &[u8]) -> Result<()> {
+        match bytes.first() {
+            Some(1) => {
+                let r: Registration = serde_json::from_slice(&bytes[1..])
+                    .map_err(|_| Error::Corrupt("source registration"))?;
+                valid_context(&r.context).map_err(|_| Error::Corrupt("source context"))?;
+                if r.descriptor.len() > crate::raw::MAX_DESCRIPTOR_BYTES
+                    || self.sources.contains_key(&r.source)
+                {
+                    return Err(Error::Corrupt("duplicate or oversized source"));
+                }
+                self.sources.insert(
+                    r.source,
+                    SourceState {
+                        descriptor: r.descriptor,
+                        context: r.context,
+                        raw_end: 0,
+                        parsed_end: 0,
+                        file_no: u32::try_from(self.sources.len() + 1)
+                            .map_err(|_| Error::Corrupt("source ordinal exhaustion"))?,
+                        blocks: Vec::new(),
+                    },
+                );
+            }
+            Some(2) if bytes.len() >= 5 => {
+                let len = u32::from_le_bytes(bytes[1..5].try_into().unwrap()) as usize;
+                if len > MAX_BATCH_BYTES || 5 + len > bytes.len() {
+                    return Err(Error::Corrupt("capture batch length"));
+                }
+                let p: ParsedBatch = serde_json::from_slice(&bytes[5..5 + len])
+                    .map_err(|_| Error::Corrupt("missing capture policy/context/output"))?;
+                let raw = &bytes[5 + len..];
+                self.validate(&p, raw)
+                    .map_err(|_| Error::Corrupt("capture receipt validation"))?;
+                let s = self.sources.get_mut(&p.source).unwrap();
+                if !raw.is_empty() {
+                    s.blocks.push(Block {
+                        seq,
+                        offset: s.raw_end,
+                        len: raw.len(),
+                        at: 5 + len,
+                    });
+                }
+                s.raw_end = p.outcome.raw_end;
+                s.parsed_end = p.outcome.parsed_end;
+                s.context = p.context.clone();
+                for (e, event) in p.events.iter().enumerate() {
+                    self.ids.insert(event.id, (self.batches.len(), e));
+                    self.parsed_bytes += event.text.len();
+                }
+                self.next_id = p.outcome.next_id;
+                self.batches.push(p);
+            }
+            _ => return Err(Error::Corrupt("unknown capture authority record")),
+        }
+        Ok(())
+    }
+    pub fn compact(&mut self) -> Result<()> {
+        self.healthy()?;
+        if let Err(e) = self.store.compact() {
+            self.failed = true;
+            return Err(e);
+        }
+        Ok(())
+    }
+}
+fn valid_context(context: &[u8]) -> Result<()> {
+    if context.is_empty()
+        || context.len() > MAX_CONTEXT_BYTES
+        || !serde_json::from_slice::<serde_json::Value>(context).is_ok_and(|v| v.is_object())
+    {
+        return Err(Error::Invalid("missing or oversized sealed parser context"));
+    }
+    Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static NEXT: AtomicU64 = AtomicU64::new(0);
+    const SOURCE: Source = [6; 16];
+    const KEY: [u8; 32] = [91; 32];
+    struct Temp(std::path::PathBuf);
+    impl Temp {
+        fn new() -> Self {
+            Self(std::env::temp_dir().join(format!(
+                "capture-authority-{}-{}",
+                std::process::id(),
+                NEXT.fetch_add(1, Ordering::Relaxed)
+            )))
+        }
+    }
+    impl Drop for Temp {
+        fn drop(&mut self) {
+            let _ = std::fs::remove_dir_all(&self.0);
+        }
+    }
+    fn identity() -> Identity {
+        Identity {
+            writer: "synthetic-writer".into(),
+            agent: 1,
+            first_id: 9,
+            adapter: "synthetic-adapter-v1".into(),
+        }
+    }
+    fn open(dir: &Path) -> CaptureLog {
+        CaptureLog::open(dir, &KEY, identity()).unwrap()
+    }
+    fn batch() -> Batch {
+        Batch {
+            raw: b"{}\n".to_vec(),
+            parsed: ParsedBatch {
+                source: SOURCE,
+                raw_start: 0,
+                parsed_before: 0,
+                outcome: Outcome {
+                    raw_end: 3,
+                    parsed_end: 3,
+                    first_id: None,
+                    stored: 0,
+                    next_id: 9,
+                },
+                policy: PolicyReceipt {
+                    policy_id: "deny-all".into(),
+                    raw_authorization: "explicit-source".into(),
+                    lines: vec![Line {
+                        start: 0,
+                        end: 3,
+                        kind: LineKind::Parsed,
+                        emissions: vec![Decision::Withheld {
+                            reason: "synthetic-policy".into(),
+                        }],
+                    }],
+                },
+                context: br#"{"seq":1}"#.to_vec(),
+                events: vec![],
+            },
+        }
+    }
+    #[test]
+    fn capture_authority_zero_output_progress_reopens_and_compacts_without_sidecars() {
+        let t = Temp::new();
+        let mut log = open(&t.0);
+        log.register(SOURCE, b"synthetic-private-path-marker", br#"{"seq":0}"#)
+            .unwrap();
+        let expected = log.commit(batch()).unwrap();
+        log.compact().unwrap();
+        assert_eq!(log.read_raw(SOURCE, 0, 3).unwrap(), b"{}\n");
+        drop(log);
+        let log = open(&t.0);
+        assert_eq!(log.progress(SOURCE).unwrap().parsed_end, 3);
+        assert_eq!(log.batches().unwrap()[0].outcome, expected);
+        assert_eq!(log.next_id(), 9);
+        assert_eq!(log.progress(SOURCE).unwrap().context, br#"{"seq":1}"#);
+        assert!(crate::raw::RawJournal::open(&t.0, &KEY).is_err());
+        for entry in std::fs::read_dir(&t.0).unwrap() {
+            let entry = entry.unwrap();
+            if entry.file_type().unwrap().is_file() {
+                let bytes = std::fs::read(entry.path()).unwrap();
+                assert!(
+                    !bytes
+                        .windows(b"synthetic-private-path-marker".len())
+                        .any(|v| v == b"synthetic-private-path-marker")
+                );
+            }
+        }
+    }
+    #[test]
+    fn capture_authority_torn_or_uncertain_write_never_advances_acknowledged_memory() {
+        for cut in [9, usize::MAX] {
+            let t = Temp::new();
+            let mut log = open(&t.0);
+            log.register(SOURCE, b"synthetic", br#"{"seq":0}"#).unwrap();
+            log.store.fail_next_append_after = Some(cut);
+            assert!(log.commit(batch()).is_err());
+            assert!(log.progress(SOURCE).is_err());
+            drop(log);
+            let log = open(&t.0);
+            let progress = log.progress(SOURCE).unwrap();
+            assert_eq!(progress.parsed_end, if cut == 9 { 0 } else { 3 });
+            assert_eq!(log.next_id(), 9);
+        }
+    }
+    #[test]
+    fn capture_authority_missing_policy_context_and_contradictory_offsets_fail_closed() {
+        for field in ["policy", "context"] {
+            let t = Temp::new();
+            let mut log = open(&t.0);
+            log.register(SOURCE, b"synthetic", br#"{"seq":0}"#).unwrap();
+            let b = batch();
+            let mut value = serde_json::to_value(&b.parsed).unwrap();
+            value.as_object_mut().unwrap().remove(field);
+            let encoded = serde_json::to_vec(&value).unwrap();
+            let mut bytes = vec![2];
+            bytes.extend_from_slice(&(encoded.len() as u32).to_le_bytes());
+            bytes.extend(encoded);
+            bytes.extend(b.raw);
+            log.write(&bytes).unwrap(); // valid sealed Store frame, invalid native receipt
+            drop(log);
+            assert!(matches!(
+                CaptureLog::open(&t.0, &KEY, identity()),
+                Err(Error::Corrupt(_))
+            ));
+        }
+        let t = Temp::new();
+        let mut log = open(&t.0);
+        log.register(SOURCE, b"synthetic", br#"{"seq":0}"#).unwrap();
+        let mut b = batch();
+        b.parsed.outcome.next_id = 10;
+        assert!(log.commit(b).is_err());
+        assert_eq!(log.progress(SOURCE).unwrap().raw_end, 0);
+    }
+}

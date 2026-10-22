@@ -11,7 +11,7 @@
 //! `fireworks`, `xai`, `pinecone`), `aws_secret`, `url_credentials`, `bearer`,
 //! `assignment` (`password=` / `token:` / `API_KEY=` style values) and
 //! `high_entropy` (long random strings next to key/secret/token/password words).
-use regex::{Captures, Regex};
+use regex::Regex;
 use sha2::{Digest, Sha256};
 use std::collections::BTreeMap;
 
@@ -651,45 +651,87 @@ impl Redactor {
         let mut cur: Option<String> = None;
         for r in &self.rules {
             let src = cur.as_deref().unwrap_or(text);
-            let out = r.re.replace_all(src, |caps: &Captures| {
+            // Match JSON-escaped control boundaries as whitespace without changing byte
+            // offsets or the original representation. A literal \n previously left the
+            // alphabetic `n` glued to the following credential and defeated \b rules.
+            let view = escaped_boundary_view(src);
+            let matching = view.as_deref().unwrap_or(src);
+            let mut out = String::new();
+            let mut copied = 0;
+            for caps in r.re.captures_iter(matching) {
                 let whole = caps.get(0).unwrap();
-                let Some(g) = caps.get(r.group) else { return whole.as_str().to_string() };
+                let Some(g) = caps.get(r.group) else { continue };
                 if inside_placeholder(src, whole.start()) {
-                    return whole.as_str().to_string();
+                    continue;
                 }
-                let secret = g.as_str();
+                let secret = &src[g.start()..g.end()];
+                let original_whole = &src[whole.start()..whole.end()];
                 let ok = if r.context {
                     let start = whole.start();
-                    // a token glued to a longer word run is not a standalone value
-                    let prev = src[..start].chars().next_back();
+                    let prev = matching[..start].chars().next_back();
                     let mut from = start.saturating_sub(40);
-                    while !src.is_char_boundary(from) {
+                    while !matching.is_char_boundary(from) {
                         from += 1;
                     }
-                    // glued to a word, an env reference (`$X`), a host or a path: not standalone
                     prev.is_none_or(|c| !c.is_ascii_alphanumeric() && !matches!(c, '$' | '.' | '/'))
-                        && high_entropy_ok(secret, &src[from..start])
+                        && high_entropy_ok(secret, &matching[from..start])
                 } else {
-                    (r.check)(if r.group == 0 { whole.as_str() } else { secret }, whole.as_str())
+                    (r.check)(
+                        if r.group == 0 { original_whole } else { secret },
+                        original_whole,
+                    )
                 };
                 if !ok {
-                    return whole.as_str().to_string();
+                    continue;
                 }
                 let kind = r.kind_of.map_or(r.kind, |f| f(secret));
                 *counts.entry(kind).or_default() += 1;
                 if let Some((a, plain)) = &self.audit {
-                    Self::sample(a, plain, kind, src, (whole.start(), whole.end()), (g.start(), g.end()), secret);
+                    Self::sample(
+                        a,
+                        plain,
+                        kind,
+                        src,
+                        (whole.start(), whole.end()),
+                        (g.start(), g.end()),
+                        secret,
+                    );
                 }
-                let w = whole.as_str();
-                let (a, b) = (g.start() - whole.start(), g.end() - whole.start());
-                format!("{}{}{}", &w[..a], placeholder(kind, secret), &w[b..])
-            });
-            if let std::borrow::Cow::Owned(s) = out {
-                cur = Some(s);
+                out.push_str(&src[copied..g.start()]);
+                out.push_str(&placeholder(kind, secret));
+                copied = g.end();
+            }
+            if copied > 0 {
+                out.push_str(&src[copied..]);
+                cur = Some(out);
             }
         }
         cur.unwrap_or_else(|| text.to_string())
     }
+}
+
+/// Only odd backslash runs encode a control escape; even runs are literal backslashes.
+fn escaped_boundary_view(src: &str) -> Option<String> {
+    let bytes = src.as_bytes();
+    let mut out: Option<Vec<u8>> = None;
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] != b'\\' {
+            i += 1;
+            continue;
+        }
+        let start = i;
+        while i < bytes.len() && bytes[i] == b'\\' {
+            i += 1;
+        }
+        if (i - start) % 2 == 1 && i < bytes.len() && matches!(bytes[i], b'n' | b'r' | b't') {
+            let view = out.get_or_insert_with(|| bytes.to_vec());
+            view[i - 1] = b' ';
+            view[i] = b' ';
+        }
+        i += 1;
+    }
+    out.map(|bytes| String::from_utf8(bytes).expect("ASCII substitution preserves UTF-8"))
 }
 
 #[cfg(test)]
@@ -887,5 +929,24 @@ mod tests {
     fn placeholder_format() {
         // sha256("abc") = ba7816bf...
         assert_eq!(placeholder("jwt", "abc"), "[REDACTED:jwt:ba7816bf]");
+    }
+}
+
+#[cfg(test)]
+mod escaped_boundary_tests {
+    use super::*;
+    #[test]
+    fn escaped_control_boundary_masks_synthetic_credentials_without_rewriting_json() {
+        let secret = format!("ghp_{}", "aB7cD9eF2gH4jK6mN8pQ3rS5tU7vW9xY1zA3");
+        for delimiter in [r"\n", r"\r", r"\t"] {
+            let input = format!(r#"{{"command":"echo 🚀{delimiter}{secret}","keep":"unchanged"}}"#);
+            let red = Redactor::new().redact(&input, &mut Counts::new());
+            assert!(!red.contains(&secret));
+            assert!(red.contains(delimiter));
+            assert!(red.contains("🚀"));
+            let value: serde_json::Value = serde_json::from_str(&red).unwrap();
+            assert_eq!(value["keep"], "unchanged");
+        }
+        assert!(escaped_boundary_view(r"C:\\new\\temp").is_none());
     }
 }

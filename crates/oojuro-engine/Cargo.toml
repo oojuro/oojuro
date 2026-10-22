@@ -8,6 +8,8 @@ description = "Oojuro foundation: sealed byte-exact local raw journal."
 
 [dependencies]
 oojuro-store = { path = "../oojuro-store" }
+serde.workspace = true
+serde_json.workspace = true
 
 [target.'cfg(unix)'.dependencies]
 libc = "0.2"

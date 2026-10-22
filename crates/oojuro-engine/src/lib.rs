@@ -4,3 +4,6 @@ pub mod raw;
 
 #[cfg(unix)]
 pub mod file_capture;
+
+/// Atomic sealed raw/parsed authority; legacy raw-only format remains independent.
+pub mod capture_log;

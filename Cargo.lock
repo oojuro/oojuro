@@ -4647,6 +4647,9 @@ version = "0.1.0"
 dependencies = [
  "blake3",
  "fastcdc",
+ "libc",
+ "oojuro-engine",
+ "oojuro-store",
  "oojuro-trace",
  "regex",
  "serde",
@@ -4671,6 +4674,8 @@ version = "0.1.0"
 dependencies = [
  "libc",
  "oojuro-store",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
