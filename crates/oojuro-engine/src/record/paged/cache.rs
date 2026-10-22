@@ -116,6 +116,10 @@ impl Index {
         }
         Ok(index)
     }
+    #[cfg(test)]
+    pub(super) fn hook_for_test(&mut self, hook: Box<dyn Fn(String)>) {
+        self.hook = Some(Box::new(move |at| hook(format!("{at:?}"))));
+    }
     pub fn opened(&self) -> Opened {
         self.opened
     }
@@ -398,8 +402,8 @@ impl Index {
                 hits: vec![],
             });
         }
-        let direct = if query.text.starts_with("key:") {
-            Some(reader.winner(snapshot, &query.text[4..])?)
+        let direct = if let Some(key) = query.text.strip_prefix("key:") {
+            Some(reader.winner(snapshot, key)?)
         } else {
             reader.winner(snapshot, query.text)?.map(Some)
         };
