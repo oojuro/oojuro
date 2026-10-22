@@ -482,6 +482,7 @@ test("actual Rust framed HTTP bodies and headers pass without converting text in
     verified++;
   }
   assert.equal(verified, 2);
+  assert.deepEqual(Object.keys(fixture.controls).sort(), ["json_conflict", "json_retry"]);
   if (fixture.controls) {
     for (const [name, item] of Object.entries(fixture.controls)) {
       let calls = 0;
@@ -615,4 +616,26 @@ test("framed chunk intrinsic brands refuse cross-realm shared buffers without in
     PRIVATE,
   );
   assert.equal(getters, 0);
+});
+
+test("hostile SDK-error code/status getters cannot escape private-safe read/write boundaries", async () => {
+  for (const field of ["code", "status"]) {
+    const hostile = new OojuroError("transport", { status: 503 });
+    Object.defineProperty(hostile, field, {
+      get() {
+        throw Error(PRIVATE + TOKEN);
+      },
+    });
+    const client = sdk(async () => {
+      throw hostile;
+    });
+    await assert.rejects(
+      client.journalRecordFramed({ expectedRoot: root(), id: I }),
+      safe("transport"),
+    );
+    await assert.rejects(
+      client.prepareJournalRecordFramed(append()).send(),
+      safe("transport", "unknown"),
+    );
+  }
 });

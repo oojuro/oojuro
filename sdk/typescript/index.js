@@ -557,33 +557,37 @@ function journalStats(value) {
     fail();
 }
 function safeError(error, committing) {
-  const known = [
-    "invalid_response",
-    "invalid_request",
-    "invalid_configuration",
-    "transport",
-    "http",
-    "aborted",
-    "behind",
-    "response_too_large",
-    "truncated_response",
-    "truncated_export",
-    "search_pending",
-    "search_completed",
-    "search_failed",
-  ];
-  const code =
-    error instanceof OojuroError && known.includes(error.code) ? error.code : "transport";
-  return new OojuroError(code, {
-    status:
-      error instanceof OojuroError &&
-      Number.isInteger(error.status) &&
-      error.status >= 100 &&
-      error.status <= 599
-        ? error.status
-        : undefined,
-    outcome: committing ? "unknown" : "none",
-  });
+  try {
+    const known = [
+      "invalid_response",
+      "invalid_request",
+      "invalid_configuration",
+      "transport",
+      "http",
+      "aborted",
+      "behind",
+      "response_too_large",
+      "truncated_response",
+      "truncated_export",
+      "search_pending",
+      "search_completed",
+      "search_failed",
+    ];
+    const code =
+      error instanceof OojuroError && known.includes(error.code) ? error.code : "transport";
+    return new OojuroError(code, {
+      status:
+        error instanceof OojuroError &&
+        Number.isInteger(error.status) &&
+        error.status >= 100 &&
+        error.status <= 599
+          ? error.status
+          : undefined,
+      outcome: committing ? "unknown" : "none",
+    });
+  } catch {
+    return new OojuroError("transport", { outcome: committing ? "unknown" : "none" });
+  }
 }
 function options(input = {}) {
   const min = input.minGeneration ?? 0;
