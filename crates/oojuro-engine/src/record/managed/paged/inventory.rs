@@ -3,6 +3,10 @@ use super::*;
 use driver::{ManagedPagedLog, commitment, data_directory};
 use schema::RootName as N;
 use std::io::Read;
+// At most nine owned directories: namespace, packs, trees and six tree purposes.
+// Prepay their visits/removals plus root enumeration conservatively; files are
+// charged individually. Empty namespaces therefore cannot evade the work budget.
+pub(super) const NAMESPACE_WORK: u64 = 20;
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct File {
@@ -239,10 +243,19 @@ pub(super) fn retire(
     }
     let mut fence = || log.witness_current(owner);
     owned_namespaces(&log.directory, &mut |p| {
+        work.charge_rows(NAMESPACE_WORK)?;
         fence()?;
         if p != live {
             remove_namespace(p, &mut fence, work)?;
             sync_dir(&log.directory)?;
+        }
+        Ok(())
+    })?;
+    owned_namespaces(&log.directory, &mut |p| {
+        work.charge_rows(1)?;
+        fence()?;
+        if p != live {
+            return Err(Error::Authority);
         }
         Ok(())
     })?;
@@ -318,8 +331,11 @@ pub(super) fn preflight_retire(
     work: &mut proof::Work,
 ) -> Result<u64> {
     let live = data_directory(&log.directory, root)?;
-    let mut count = 0u64;
+    // The final absence pass should encounter only the surviving live namespace.
+    let mut count = 1u64;
     owned_namespaces(&log.directory, &mut |p| {
+        work.charge_rows(NAMESPACE_WORK)?;
+        count = count.checked_add(NAMESPACE_WORK).ok_or(Error::Bounds)?;
         log.witness_current(owner)?;
         if p != live {
             namespace(p, &mut |_| {

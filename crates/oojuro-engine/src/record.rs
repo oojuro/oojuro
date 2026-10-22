@@ -216,7 +216,3 @@ fn json<T: Serialize + ?Sized>(value: &T, limit: usize) -> Result<Vec<u8>> {
 
 /// Explicit opt-in retained-control lifecycle namespace; no implicit v2 conversion.
 pub mod managed;
-
-#[cfg(test)]
-#[path = "record/managed/paged/physical.rs"]
-mod physical_kernel_tests;

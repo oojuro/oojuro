@@ -803,6 +803,51 @@ fn verify_tail(
     owner.recheck()
 }
 
+pub(super) fn data_directory(directory: &Path, root: &schema::CommitRoot) -> Result<PathBuf> {
+    Ok(directory.join(format!(
+        "data-{}",
+        schema::token_hex(&root.data_namespace.ok_or(Error::Authority)?)
+    )))
+}
+
+pub(super) fn candidate_row(
+    log: &ManagedPagedLog,
+    owner: &control::Inner,
+    root: &schema::CommitRoot,
+    stage: &checkpoint::Stage<'_>,
+    id: u64,
+) -> Result<Assigned> {
+    let namespace = data_directory(&log.directory, root)?;
+    let paths = Paths::new(&log.control.directory, &namespace);
+    let data = root.data.as_ref().ok_or(Error::Authority)?;
+    let value = tree::get_ancestor(
+        paths.ctx(N::Record, &log.cipher, stage, owner.state.identity),
+        &data.record,
+        &id.to_be_bytes(),
+    )?
+    .ok_or(Error::Authority)?;
+    let r: RowRef = serde_json::from_slice(&value).map_err(|_| Error::Authority)?;
+    let candidate = StagedTail {
+        owner,
+        stage,
+        paths: &paths,
+        roots: root.physical.as_ref().ok_or(Error::Authority)?,
+        cipher: log.cipher.clone(),
+        first: 0,
+        end: root.next_physical,
+        enrollment_directory: &log.directory,
+        enrollment_digest: log.enrollment_digest,
+    };
+    let reader = Reader::new(&namespace.join("packs"), &candidate, 4 << 20).map_err(io)?;
+    decode_row(&reader, &r, id)?.ok_or(Error::Authority)
+}
+
+pub(super) fn create_namespace(path: &Path) -> Result<()> {
+    use std::os::unix::fs::DirBuilderExt;
+    fs::DirBuilder::new().mode(0o700).create(path).map_err(io)?;
+    sync_dir(path.parent().ok_or(Error::Invalid)?)
+}
+
 #[cfg(test)]
 pub(super) mod tests {
     use super::*;
@@ -982,49 +1027,4 @@ pub(super) mod tests {
         drop(l);
         assert!(ManagedLog::open(&f.root.join("paged-data"), &DATA, identity(), c).is_err());
     }
-}
-
-pub(super) fn data_directory(directory: &Path, root: &schema::CommitRoot) -> Result<PathBuf> {
-    Ok(directory.join(format!(
-        "data-{}",
-        schema::token_hex(&root.data_namespace.ok_or(Error::Authority)?)
-    )))
-}
-
-pub(super) fn candidate_row(
-    log: &ManagedPagedLog,
-    owner: &control::Inner,
-    root: &schema::CommitRoot,
-    stage: &checkpoint::Stage<'_>,
-    id: u64,
-) -> Result<Assigned> {
-    let namespace = data_directory(&log.directory, root)?;
-    let paths = Paths::new(&log.control.directory, &namespace);
-    let data = root.data.as_ref().ok_or(Error::Authority)?;
-    let value = tree::get_ancestor(
-        paths.ctx(N::Record, &log.cipher, stage, owner.state.identity),
-        &data.record,
-        &id.to_be_bytes(),
-    )?
-    .ok_or(Error::Authority)?;
-    let r: RowRef = serde_json::from_slice(&value).map_err(|_| Error::Authority)?;
-    let candidate = StagedTail {
-        owner,
-        stage,
-        paths: &paths,
-        roots: root.physical.as_ref().ok_or(Error::Authority)?,
-        cipher: log.cipher.clone(),
-        first: 0,
-        end: root.next_physical,
-        enrollment_directory: &log.directory,
-        enrollment_digest: log.enrollment_digest,
-    };
-    let reader = Reader::new(&namespace.join("packs"), &candidate, 4 << 20).map_err(io)?;
-    decode_row(&reader, &r, id)?.ok_or(Error::Authority)
-}
-
-pub(super) fn create_namespace(path: &Path) -> Result<()> {
-    use std::os::unix::fs::DirBuilderExt;
-    fs::DirBuilder::new().mode(0o700).create(path).map_err(io)?;
-    sync_dir(path.parent().ok_or(Error::Invalid)?)
 }

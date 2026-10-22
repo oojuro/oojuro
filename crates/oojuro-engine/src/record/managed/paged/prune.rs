@@ -73,10 +73,10 @@ impl ManagedPagedLog {
             return Err(Error::Bounds);
         }
         validate_selection(selection)?;
-        if let Selection::Ids(ids) = selection {
-            if ids.len() > 1000 || ids.windows(2).any(|p| p[0] >= p[1]) {
-                return Err(Error::Bounds);
-            }
+        if let Selection::Ids(ids) = selection
+            && (ids.len() > 1000 || ids.windows(2).any(|p| p[0] >= p[1]))
+        {
+            return Err(Error::Bounds);
         }
         let mut work = proof::Work::new(limits.bytes, limits.rows)?;
         let control = self.control.clone();
@@ -344,12 +344,12 @@ impl ManagedPagedLog {
         while let Some(e) = originals.next()? {
             work.charge_rows(1)?;
             let id = u64::from_be_bytes(e.key.try_into().map_err(|_| Error::Authority)?);
-            if let Some(row) = read_assigned(&source, &self.directory, id)? {
-                if !matches(&row, selection) {
-                    let actual = candidate_row(self, &owner, &root, &data_stage, id)?;
-                    if json(&actual, MAX_BATCH_BYTES)? != json(&row, MAX_BATCH_BYTES)? {
-                        return Err(Error::Authority);
-                    }
+            if let Some(row) = read_assigned(&source, &self.directory, id)?
+                && !matches(&row, selection)
+            {
+                let actual = candidate_row(self, &owner, &root, &data_stage, id)?;
+                if json(&actual, MAX_BATCH_BYTES)? != json(&row, MAX_BATCH_BYTES)? {
+                    return Err(Error::Authority);
                 }
             }
         }

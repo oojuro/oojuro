@@ -377,8 +377,8 @@ fn complete_metadata_scan_covers_orphan_packed_tmp_queue_without_key_and_current
     let mut temporary = 0;
     scan_metadata(&c, &mut |_, a| {
         count += 1;
-        temporary += usize::from(a.temporary);
-        assert_eq!(std::fs::metadata(a.path).unwrap().len(), a.byte_len);
+        let name = a.path.file_name().unwrap().to_str().unwrap();
+        temporary += usize::from(name.starts_with("tmp-") || name.starts_with("queue-"));
         Ok(())
     })
     .unwrap();
@@ -404,4 +404,120 @@ fn complete_metadata_scan_covers_orphan_packed_tmp_queue_without_key_and_current
         .join(format!("pack-{}-0000000000000000.bin", "d".repeat(64)));
     std::os::unix::fs::symlink(&orphan, &link).unwrap();
     assert!(tree::scan_owned_paths(&f.frame, |_| Ok(())).is_err());
+}
+
+// Test-only diagnostics: the joined writer uses complete owned namespaces,
+// not reference-only inventory; production dictionary adoption is not exposed.
+enum Inventory<'a> {
+    Pack(&'a PackRef),
+    Dictionary(&'a DictionaryRef),
+}
+
+impl Roots {
+    /// Streams complete data-file/dictionary inventory; it never authorizes unlink.
+    /// Managed owner must first publish exclusion/tombstone and prune DATA trees.
+    fn inventory(
+        &self,
+        c: &Contexts<'_>,
+        visit: &mut dyn FnMut(Inventory<'_>) -> Result<()>,
+    ) -> Result<()> {
+        let b = self.check(c)?;
+        let mut cursor = tree::Cursor::seek_ancestor(c.file.clone(), &self.file, &[])?;
+        while let Some(e) = cursor.next()? {
+            let p = PackRef::decode(&e.value).map_err(|_| Error::Authority)?;
+            if e.key != p.file_id.to_be_bytes() {
+                return Err(Error::Authority);
+            }
+            c.file.authority.validate_birth(
+                &p.birth.encode().map_err(|_| Error::Authority)?,
+                Purpose::File,
+                KeyClass::Data,
+            )?;
+            visit(Inventory::Pack(&p))?;
+        }
+        let mut cursor = tree::Cursor::seek_ancestor(c.dictionary.clone(), &self.dictionary, &[])?;
+        while let Some(e) = cursor.next()? {
+            let d = DictionaryRef::decode(&e.value).map_err(|_| Error::Authority)?;
+            if e.key != d.id.to_be_bytes() {
+                return Err(Error::Authority);
+            }
+            c.dictionary.authority.validate_birth(
+                &d.birth.encode().map_err(|_| Error::Authority)?,
+                Purpose::Dictionary,
+                KeyClass::Data,
+            )?;
+            visit(Inventory::Dictionary(&d))?;
+        }
+        if c.check()? != b {
+            return Err(Error::Conflict);
+        }
+        Ok(())
+    }
+    /// Includes reused COW pages, not only pages born in the newest generation.
+    fn metadata_pages(
+        &self,
+        c: &Contexts<'_>,
+        visit: &mut dyn FnMut(Purpose, &tree::Reference) -> Result<()>,
+    ) -> Result<()> {
+        let b = self.check(c)?;
+        for (root, ctx) in [
+            (&self.frame, &c.frame),
+            (&self.file, &c.file),
+            (&self.dictionary, &c.dictionary),
+        ] {
+            tree::visit_ancestor_pages(ctx.clone(), root, |r: &tree::Reference| {
+                visit(ctx.purpose, r)
+            })?;
+        }
+        if c.check()? != b {
+            return Err(Error::Conflict);
+        }
+        Ok(())
+    }
+}
+impl Editor<'_> {
+    fn insert_dictionary(&mut self, d: &DictionaryRef) -> Result<()> {
+        let result = (|| {
+            self.check()?;
+            let bytes = d.encode().map_err(|_| Error::Bounds)?;
+            match self.dictionary.lookup(&d.id.to_be_bytes())? {
+                Some(old) if old == bytes => self.contexts.dictionary.authority.validate_birth(
+                    &d.birth.encode().map_err(|_| Error::Authority)?,
+                    Purpose::Dictionary,
+                    KeyClass::Data,
+                ),
+                Some(_) => Err(Error::Conflict),
+                None => {
+                    if d.birth.encode().map_err(|_| Error::Authority)? != self.binding {
+                        return Err(Error::Authority);
+                    }
+                    self.dictionary
+                        .insert_immutable(Entry::new(d.id.to_be_bytes().to_vec(), bytes)?)
+                }
+            }
+        })();
+        if result.is_err() {
+            self.poisoned = true;
+        }
+        result
+    }
+}
+fn scan_metadata(
+    c: &Contexts<'_>,
+    visit: &mut dyn FnMut(Purpose, tree::Artifact) -> Result<()>,
+) -> Result<()> {
+    let binding = c.check()?;
+    for ctx in [&c.frame, &c.file, &c.dictionary] {
+        tree::scan_owned_paths(ctx.directory, |entry| {
+            if c.check()? != binding {
+                return Err(Error::Conflict);
+            }
+            visit(ctx.purpose, entry)?;
+            if c.check()? != binding {
+                return Err(Error::Conflict);
+            }
+            Ok(())
+        })?;
+    }
+    Ok(())
 }

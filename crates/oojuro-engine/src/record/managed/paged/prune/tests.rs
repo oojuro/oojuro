@@ -273,3 +273,32 @@ fn changed_retained_witness_before_local_receipt_return_is_not_acknowledged() {
             .is_err()
     );
 }
+
+#[test]
+fn empty_orphan_namespace_work_is_reserved_before_logical_publication() {
+    let f = Fixture::new();
+    let c = control(&f, true);
+    let mut l = log(&f, c, true);
+    l.append("original", &[input("removed", "selected")])
+        .unwrap();
+    for n in 1..=128 {
+        fs::create_dir(l.directory.join(format!("data-{n:064x}"))).unwrap();
+    }
+    let before = l.binding().unwrap();
+    assert!(
+        l.prune(
+            "empty-namespace-budget",
+            &Selection::Ids(vec![9]),
+            PruneLimits {
+                bytes: 1 << 30,
+                rows: 1000
+            }
+        )
+        .is_err()
+    );
+    assert_eq!(l.binding().unwrap(), before);
+    assert!(l.get(9, 4096).unwrap().is_some());
+    l.prune("empty-namespace-budget", &Selection::Ids(vec![9]), limits())
+        .unwrap();
+    assert!(l.get(9, 4096).unwrap().is_none());
+}

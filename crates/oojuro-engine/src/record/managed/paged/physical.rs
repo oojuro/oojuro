@@ -47,19 +47,6 @@ impl Contexts<'_> {
 }
 /// Complete physical metadata namespace, not only root-reachable pages.
 /// Includes COW orphan/tmp/queue packs; no unlink authority or object decoding.
-pub(in crate::record) fn scan_metadata(
-    c: &Contexts<'_>,
-    visit: &mut dyn FnMut(Purpose, tree::Artifact) -> Result<()>,
-) -> Result<()> {
-    let binding = c.check()?;
-    for ctx in [&c.frame, &c.file, &c.dictionary] {
-        tree::scan_owned_files(ctx, |entry| visit(ctx.purpose, entry))?;
-    }
-    if c.check()? != binding {
-        return Err(Error::Conflict);
-    }
-    Ok(())
-}
 impl Roots {
     pub fn empty(c: &Contexts<'_>) -> Result<Self> {
         c.check()?;
@@ -151,70 +138,6 @@ impl Roots {
         }
         Ok(out)
     }
-    /// Streams complete data-file/dictionary inventory; it never authorizes unlink.
-    /// Managed owner must first publish exclusion/tombstone and prune DATA trees.
-    pub fn inventory(
-        &self,
-        c: &Contexts<'_>,
-        visit: &mut dyn FnMut(Inventory<'_>) -> Result<()>,
-    ) -> Result<()> {
-        let b = self.check(c)?;
-        let mut cursor = tree::Cursor::seek_ancestor(c.file.clone(), &self.file, &[])?;
-        while let Some(e) = cursor.next()? {
-            let p = PackRef::decode(&e.value).map_err(|_| Error::Authority)?;
-            if e.key != p.file_id.to_be_bytes() {
-                return Err(Error::Authority);
-            }
-            c.file.authority.validate_birth(
-                &p.birth.encode().map_err(|_| Error::Authority)?,
-                Purpose::File,
-                KeyClass::Data,
-            )?;
-            visit(Inventory::Pack(&p))?;
-        }
-        let mut cursor = tree::Cursor::seek_ancestor(c.dictionary.clone(), &self.dictionary, &[])?;
-        while let Some(e) = cursor.next()? {
-            let d = DictionaryRef::decode(&e.value).map_err(|_| Error::Authority)?;
-            if e.key != d.id.to_be_bytes() {
-                return Err(Error::Authority);
-            }
-            c.dictionary.authority.validate_birth(
-                &d.birth.encode().map_err(|_| Error::Authority)?,
-                Purpose::Dictionary,
-                KeyClass::Data,
-            )?;
-            visit(Inventory::Dictionary(&d))?;
-        }
-        if c.check()? != b {
-            return Err(Error::Conflict);
-        }
-        Ok(())
-    }
-    /// Includes reused COW pages, not only pages born in the newest generation.
-    pub fn metadata_pages(
-        &self,
-        c: &Contexts<'_>,
-        visit: &mut dyn FnMut(Purpose, &tree::Reference) -> Result<()>,
-    ) -> Result<()> {
-        let b = self.check(c)?;
-        for (root, ctx) in [
-            (&self.frame, &c.frame),
-            (&self.file, &c.file),
-            (&self.dictionary, &c.dictionary),
-        ] {
-            tree::visit_ancestor_pages(ctx.clone(), root, |r: &tree::Reference| {
-                visit(ctx.purpose, r)
-            })?;
-        }
-        if c.check()? != b {
-            return Err(Error::Conflict);
-        }
-        Ok(())
-    }
-}
-pub(in crate::record) enum Inventory<'a> {
-    Pack(&'a PackRef),
-    Dictionary(&'a DictionaryRef),
 }
 pub(in crate::record) struct Editor<'a> {
     contexts: Contexts<'a>,
@@ -333,31 +256,6 @@ impl<'a> Editor<'a> {
             )?)?;
             self.pending = None;
             Ok(())
-        })();
-        if result.is_err() {
-            self.poisoned = true;
-        }
-        result
-    }
-    pub fn insert_dictionary(&mut self, d: &DictionaryRef) -> Result<()> {
-        let result = (|| {
-            self.check()?;
-            let bytes = d.encode().map_err(|_| Error::Bounds)?;
-            match self.dictionary.lookup(&d.id.to_be_bytes())? {
-                Some(old) if old == bytes => self.contexts.dictionary.authority.validate_birth(
-                    &d.birth.encode().map_err(|_| Error::Authority)?,
-                    Purpose::Dictionary,
-                    KeyClass::Data,
-                ),
-                Some(_) => Err(Error::Conflict),
-                None => {
-                    if d.birth.encode().map_err(|_| Error::Authority)? != self.binding {
-                        return Err(Error::Authority);
-                    }
-                    self.dictionary
-                        .insert_immutable(Entry::new(d.id.to_be_bytes().to_vec(), bytes)?)
-                }
-            }
         })();
         if result.is_err() {
             self.poisoned = true;

@@ -51,13 +51,17 @@ impl RetainedControl {
         };
         let mut removed = 0u64;
         inventory::owned_namespaces(&directory, &mut |p| {
+            work.charge_rows(inventory::NAMESPACE_WORK)?;
             fence()?;
             inventory::remove_namespace(p, &mut fence, &mut work)?;
             removed = removed.checked_add(1).ok_or(Error::Bounds)?;
             sync_dir(&directory)?;
             Ok(())
         })?;
-        inventory::owned_namespaces(&directory, &mut |_| Err(Error::Authority))?;
+        inventory::owned_namespaces(&directory, &mut |_| {
+            work.charge_rows(inventory::NAMESPACE_WORK)?;
+            Err(Error::Authority)
+        })?;
         fence()?;
         if !owner.state.pruned || removed != 0 {
             let mut state = owner.state.clone();
@@ -145,6 +149,33 @@ mod tests {
             ManagedPagedLog::open(&f.root.join("paged-data"), &[51; 32], identity(), c.clone())
                 .is_err()
         );
+        c.cleanup_paged_data(&f.root.join("paged-data"), prune::PruneLimits::default())
+            .unwrap();
+        assert!(c.status().unwrap().local_cleanup_completed);
+    }
+    #[test]
+    fn empty_owned_namespaces_consume_cleanup_work_before_any_completion() {
+        let f = Fixture::new();
+        let c = control(&f, true);
+        let l = log(&f, c.clone(), true);
+        for n in 1..=32 {
+            fs::create_dir(l.directory.join(format!("data-{n:064x}"))).unwrap();
+        }
+        drop(l);
+        c.deny().unwrap();
+        let before = c.current_floor().unwrap();
+        assert!(
+            c.cleanup_paged_data(
+                &f.root.join("paged-data"),
+                prune::PruneLimits {
+                    bytes: 1 << 30,
+                    rows: 1
+                }
+            )
+            .is_err()
+        );
+        assert_eq!(c.current_floor().unwrap(), before);
+        assert!(!c.status().unwrap().local_cleanup_completed);
         c.cleanup_paged_data(&f.root.join("paged-data"), prune::PruneLimits::default())
             .unwrap();
         assert!(c.status().unwrap().local_cleanup_completed);
