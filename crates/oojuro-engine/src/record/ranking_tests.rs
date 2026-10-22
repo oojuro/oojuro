@@ -501,11 +501,15 @@ fn tables_are_sealed_bound_to_view_filter_key_and_current_lifecycle_and_load_has
                 .any(|w| w == b"synthetic_private_rank_table")
         );
     }
-    let mut filter = Filter::default();
-    filter.kind = Some(Kind::Input);
+    let filter = Filter {
+        kind: Some(Kind::Input),
+        ..Filter::default()
+    };
     assert!(rank_tables::load(&f.log, &view, &filter, &f.guard, "rank", "1", "table1").is_err());
-    let mut as_of = AsOf::default();
-    as_of.known_at = 100;
+    let as_of = AsOf {
+        known_at: 100,
+        ..AsOf::default()
+    };
     let old = View::open(&f.log, scope(), as_of).unwrap();
     assert!(
         rank_tables::load(
