@@ -19,3 +19,7 @@ pub mod record;
 
 /// Opt-in content-free signed audit wire; persistence and current witnesses are external.
 pub mod audit;
+
+/// Explicit opt-in durable Capture1 to managed Record ingestion.
+#[cfg(unix)]
+pub mod capture_record;
