@@ -1,19 +1,19 @@
 //! Explicit flat-record namespace. Harness CaptureLog/receipts remain a separate unchanged format.
 //! Reported agent identities and stored data are not verified truth or instructions.
 mod authority;
+pub mod context;
 mod index;
 pub mod paged;
-pub mod ranking;
-pub mod context;
-pub mod rank_tables;
 pub mod persistent;
 pub mod projection;
+pub mod rank_tables;
+pub mod ranking;
 mod view;
 pub use authority::{Commit, RecordLog, Watermark};
 pub use index::{Hit, Index, Query, Search};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-pub use view::{AsOf, Filter, Limits, MAX_OUTPUT_BYTES, Page, Scope, Versions, View};
+pub use view::{AsOf, Filter, Limits, MAX_OUTPUT_BYTES, Page, Scope, Stats, Versions, View};
 pub const MAX_TEXT_BYTES: usize = 16 << 20;
 pub const MAX_ATTR_BYTES: usize = 4096;
 pub const MAX_RECORDS: usize = 100_000;

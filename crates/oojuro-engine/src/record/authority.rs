@@ -89,12 +89,28 @@ impl RecordLog {
     pub fn open(dir: &Path, key: &[u8; 32], identity: Identity) -> Result<Self> {
         Self::open_clock(dir, key, identity, Arc::new(now))
     }
+    /// Existing namespace only. Startup may recover unpublished/torn state; no fresh header is allowed.
+    pub fn open_existing(dir: &Path, key: &[u8; 32], identity: Identity) -> Result<Self> {
+        Self::open_mode(dir, key, identity, Arc::new(now), true)
+    }
     pub(super) fn open_clock(
         dir: &Path,
         key: &[u8; 32],
         identity: Identity,
         clock: Arc<dyn Fn() -> Result<i64> + Send + Sync>,
     ) -> Result<Self> {
+        Self::open_mode(dir, key, identity, clock, false)
+    }
+    fn open_mode(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        clock: Arc<dyn Fn() -> Result<i64> + Send + Sync>,
+        existing: bool,
+    ) -> Result<Self> {
+        if existing {
+            crate::existing::check(dir, Some(FORMAT)).map_err(|_| Error::Authority)?;
+        }
         if !name(&identity.writer, 256)
             || identity.agent == 0
             || identity.first_id == 0
@@ -125,6 +141,9 @@ impl RecordLog {
         let mut header = FORMAT.to_vec();
         header.extend(serde_json::to_vec(&identity).map_err(|_| Error::Invalid)?);
         if store.is_empty() {
+            if existing {
+                return Err(Error::Authority);
+            }
             store
                 .append(&[carrier(&header)])
                 .map_err(|_| Error::Unavailable)?;

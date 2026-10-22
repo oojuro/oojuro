@@ -165,12 +165,55 @@ impl LocalCapture {
     ) -> Result<Self> {
         Self::open_adapter(dir, key, options, policy, Adapter::Temporal)
     }
+    /// Read-server startup for an explicitly initialized existing namespace only.
+    pub fn open_existing(
+        dir: &Path,
+        key: &[u8; 32],
+        options: Options,
+        policy: Box<dyn Policy>,
+    ) -> Result<Self> {
+        Self::open_adapter_mode(dir, key, options, policy, Adapter::Codex, true)
+    }
+    pub fn open_claude_existing(
+        dir: &Path,
+        key: &[u8; 32],
+        options: Options,
+        policy: Box<dyn Policy>,
+    ) -> Result<Self> {
+        Self::open_adapter_mode(dir, key, options, policy, Adapter::ClaudeCode, true)
+    }
+    pub fn open_pi_existing(
+        dir: &Path,
+        key: &[u8; 32],
+        options: Options,
+        policy: Box<dyn Policy>,
+    ) -> Result<Self> {
+        Self::open_adapter_mode(dir, key, options, policy, Adapter::Pi, true)
+    }
+    pub fn open_temporal_existing(
+        dir: &Path,
+        key: &[u8; 32],
+        options: Options,
+        policy: Box<dyn Policy>,
+    ) -> Result<Self> {
+        Self::open_adapter_mode(dir, key, options, policy, Adapter::Temporal, true)
+    }
     fn open_adapter(
         dir: &Path,
         key: &[u8; 32],
         options: Options,
         policy: Box<dyn Policy>,
         format: Adapter,
+    ) -> Result<Self> {
+        Self::open_adapter_mode(dir, key, options, policy, format, false)
+    }
+    fn open_adapter_mode(
+        dir: &Path,
+        key: &[u8; 32],
+        options: Options,
+        policy: Box<dyn Policy>,
+        format: Adapter,
+        existing: bool,
     ) -> Result<Self> {
         if options.chunk_bytes == 0
             || options.chunk_bytes > MAX_BLOCK_BYTES
@@ -193,7 +236,12 @@ impl LocalCapture {
             }
             .into(),
         };
-        let log = CaptureLog::open(dir, key, identity).map_err(authority)?;
+        let log = if existing {
+            CaptureLog::open_existing(dir, key, identity)
+        } else {
+            CaptureLog::open(dir, key, identity)
+        }
+        .map_err(authority)?;
         let mut this = Self {
             log,
             options,

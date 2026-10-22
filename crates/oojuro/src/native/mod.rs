@@ -1,9 +1,12 @@
 //! Explicit native command composition; existing recorder/socket/MCP paths are independent.
+mod api;
 mod config;
+mod managed;
+mod mcp;
 mod policy;
 mod records;
+mod socket;
 mod temporal;
-mod managed;
 use config::{Config, Harness};
 use oojuro_capture::{
     ingest::Policy,
@@ -19,7 +22,7 @@ use serde_json::json;
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs::OpenOptions,
-    io::Write,
+    io::{Read, Write},
     os::unix::fs::OpenOptionsExt,
     path::{Path, PathBuf},
 };
@@ -40,11 +43,13 @@ pub enum Error {
     Cache,
     Capture(&'static str),
     RecordConsent,
+    Read(&'static str),
     Record(oojuro_engine::record::Error),
 }
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let code = match self {
+            Self::Read(code) => return write!(f, "native_read_refused: {code}"),
             Self::Usage => "invalid_arguments",
             Self::Config => "invalid_config",
             Self::Key => "invalid_key",
@@ -234,6 +239,45 @@ pub fn run() -> Result<i32> {
     let root = std::path::absolute(args.required("--root")?).map_err(|_| Error::Io)?;
     if args.command.starts_with("managed-") {
         return managed::run(&root, &args);
+    }
+    if matches!(args.command.as_str(), "serve" | "read" | "mcp") {
+        args.only(&["--namespace", "--socket"], &[])?;
+        let namespace =
+            api::Namespace::parse(args.required("--namespace")?).map_err(Error::Read)?;
+        let path = Path::new(args.required("--socket")?);
+        if args.command == "serve" {
+            let owner = api::Owner::open(&root, namespace)?;
+            socket::serve(path, owner).map_err(Error::Read)?;
+        } else {
+            config::check_root(&root)?;
+            if args.command == "mcp" {
+                mcp::serve(
+                    std::io::stdin().lock(),
+                    std::io::stdout().lock(),
+                    namespace.name(),
+                    |value| socket::call(path, namespace, value),
+                )
+                .map_err(|_| Error::Read("mcp_io_refused"))?;
+            } else {
+                let mut bytes = Vec::new();
+                std::io::Read::take(std::io::stdin(), api::REQUEST_BYTES as u64 + 1)
+                    .read_to_end(&mut bytes)
+                    .map_err(|_| Error::Io)?;
+                if bytes.len() > api::REQUEST_BYTES {
+                    return Err(Error::Bounds);
+                }
+                let request: serde_json::Value =
+                    serde_json::from_slice(&bytes).map_err(|_| Error::Usage)?;
+                let value = socket::call(
+                    path,
+                    namespace,
+                    json!({"version":1,"namespace":namespace.name(),"request":request}),
+                )
+                .map_err(Error::Read)?;
+                emit(&value, api::OUTPUT_BYTES)?;
+            }
+        }
+        return Ok(0);
     }
     if args.command.starts_with("record-") {
         return records::run(&root, &args);
