@@ -288,6 +288,94 @@ fn sync_dir(dir: &Path) -> Result<()> {
         .and_then(|f| f.sync_all())
         .map_err(|_| Error::Unavailable)
 }
+#[derive(Clone, Debug)]
+pub(in crate::record) struct Artifact {
+    pub path: PathBuf,
+    pub byte_len: u64,
+    pub temporary: bool,
+}
+/// Read-only complete owned DATA tree namespace inventory, including COW orphans.
+/// Current authority is checked on every yield; exclusive fencing is the caller's
+/// prerequisite for stable retirement. This function grants no unlink authority.
+pub(in crate::record) fn scan_owned_files(
+    ctx: &Context<'_>,
+    mut visit: impl FnMut(Artifact) -> Result<()>,
+) -> Result<()> {
+    if ctx.class != KeyClass::Data {
+        return Err(Error::Scope);
+    }
+    let binding = ctx.check()?;
+    scan_owned_paths(ctx.directory, |entry| {
+        if ctx.check()? != binding {
+            return Err(Error::Conflict);
+        }
+        visit(entry)?;
+        if ctx.check()? != binding {
+            return Err(Error::Conflict);
+        }
+        Ok(())
+    })?;
+    if ctx.check()? != binding {
+        return Err(Error::Conflict);
+    }
+    Ok(())
+}
+/// Cipherless read-only namespace enumeration for post-key-denial retirement.
+/// The managed caller must hold independently current denial and exclusive DATA
+/// directory ownership on every yield. Names alone never establish that scope.
+pub(in crate::record) fn scan_owned_paths(
+    directory: &Path,
+    mut visit: impl FnMut(Artifact) -> Result<()>,
+) -> Result<()> {
+    let m = fs::symlink_metadata(directory).map_err(|_| Error::Unavailable)?;
+    if !m.is_dir() || m.file_type().is_symlink() {
+        return Err(Error::Invalid);
+    }
+    let lower_hex = |s: &str, n: usize| {
+        s.len() == n
+            && s.bytes()
+                .all(|b| b.is_ascii_digit() || (b'a'..=b'f').contains(&b))
+    };
+    for entry in fs::read_dir(directory).map_err(|_| Error::Unavailable)? {
+        let entry = entry.map_err(|_| Error::Unavailable)?;
+        let name = entry.file_name();
+        let name = name.to_str().ok_or(Error::Invalid)?;
+        let temporary = if let Some(t) = name
+            .strip_prefix("queue-")
+            .and_then(|s| s.strip_suffix(".bin"))
+        {
+            if !lower_hex(t, 64) {
+                return Err(Error::Invalid);
+            }
+            true
+        } else {
+            let (rest, temp) = if let Some(s) = name.strip_prefix("pack-") {
+                (s, false)
+            } else if let Some(s) = name.strip_prefix("tmp-") {
+                (s, true)
+            } else {
+                return Err(Error::Invalid);
+            };
+            let rest = rest.strip_suffix(".bin").ok_or(Error::Invalid)?;
+            let (generation, file) = rest.split_once('-').ok_or(Error::Invalid)?;
+            if !lower_hex(generation, 64) || !lower_hex(file, 16) {
+                return Err(Error::Invalid);
+            }
+            temp
+        };
+        let path = entry.path();
+        let m = fs::symlink_metadata(&path).map_err(|_| Error::Unavailable)?;
+        if !m.is_file() || m.file_type().is_symlink() {
+            return Err(Error::Invalid);
+        }
+        visit(Artifact {
+            path,
+            byte_len: m.len(),
+            temporary,
+        })?;
+    }
+    Ok(())
+}
 pub(in crate::record) fn prepare_directory(dir: &Path) -> Result<()> {
     match fs::symlink_metadata(dir) {
         Ok(m) if !m.is_dir() || m.file_type().is_symlink() => return Err(Error::Invalid),

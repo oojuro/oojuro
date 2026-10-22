@@ -354,3 +354,54 @@ fn candidate_cannot_introduce_pack_or_dictionary_from_other_birth_even_valid_anc
     assert!(e.insert_dictionary(&d).is_err());
     assert!(e.finish().is_err());
 }
+
+#[test]
+fn complete_metadata_scan_covers_orphan_packed_tmp_queue_without_key_and_current_guard() {
+    let f = F::new();
+    let c = f.contexts();
+    let roots = Roots::empty(&c).unwrap();
+    let mut e = Editor::new(c.clone(), roots).unwrap();
+    f.append(&mut e, 1, 0, 1);
+    let _ = e.finish().unwrap();
+    let tmp = f
+        .frame
+        .join(format!("tmp-{}-00000000000000ab.bin", "a".repeat(64)));
+    std::fs::write(&tmp, b"partial encrypted page bytes").unwrap();
+    let queue = f.file.join(format!("queue-{}.bin", "b".repeat(64)));
+    std::fs::write(&queue, b"").unwrap();
+    let orphan = f
+        .dictionary
+        .join(format!("pack-{}-0000000000000000.bin", "c".repeat(64)));
+    std::fs::write(&orphan, b"corrupt orphan").unwrap();
+    let mut count = 0;
+    let mut temporary = 0;
+    scan_metadata(&c, &mut |_, a| {
+        count += 1;
+        temporary += usize::from(a.temporary);
+        assert_eq!(std::fs::metadata(a.path).unwrap().len(), a.byte_len);
+        Ok(())
+    })
+    .unwrap();
+    assert_eq!((count, temporary), (5, 2));
+    // No DATA-key lookup/decryption occurs; a separate trusted prune guard is
+    // mandatory around these raw post-denial filesystem yields.
+    f.a.generation.store(999, Ordering::Relaxed);
+    assert!(scan_metadata(&c, &mut |_, _| Ok(())).is_err());
+    let mut raw = 0;
+    tree::scan_owned_paths(&f.frame, |_| {
+        raw += 1;
+        Ok(())
+    })
+    .unwrap();
+    assert_eq!(raw, 2);
+    let foreign = f.frame.join("CURRENT");
+    std::fs::write(&foreign, b"retained control must not be pruned").unwrap();
+    assert!(tree::scan_owned_paths(&f.frame, |_| Ok(())).is_err());
+    assert!(foreign.exists());
+    std::fs::remove_file(foreign).unwrap();
+    let link = f
+        .frame
+        .join(format!("pack-{}-0000000000000000.bin", "d".repeat(64)));
+    std::os::unix::fs::symlink(&orphan, &link).unwrap();
+    assert!(tree::scan_owned_paths(&f.frame, |_| Ok(())).is_err());
+}

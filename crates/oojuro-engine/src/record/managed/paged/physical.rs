@@ -45,6 +45,21 @@ impl Contexts<'_> {
         Ok(binding.unwrap())
     }
 }
+/// Complete physical metadata namespace, not only root-reachable pages.
+/// Includes COW orphan/tmp/queue packs; no unlink authority or object decoding.
+pub(in crate::record) fn scan_metadata(
+    c: &Contexts<'_>,
+    visit: &mut dyn FnMut(Purpose, tree::Artifact) -> Result<()>,
+) -> Result<()> {
+    let binding = c.check()?;
+    for ctx in [&c.frame, &c.file, &c.dictionary] {
+        tree::scan_owned_files(ctx, |entry| visit(ctx.purpose, entry))?;
+    }
+    if c.check()? != binding {
+        return Err(Error::Conflict);
+    }
+    Ok(())
+}
 impl Roots {
     pub fn empty(c: &Contexts<'_>) -> Result<Self> {
         c.check()?;
