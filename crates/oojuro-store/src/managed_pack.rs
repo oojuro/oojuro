@@ -3,9 +3,11 @@
 //! These references are candidates until the independently retained managed
 //! control commits their exact inventory. This module never returns a commit ACK.
 mod codec;
+mod inventory;
 mod reader;
 use crate::{Error, Result};
 pub use codec::{Options, Stage, stage_dictionary};
+pub use inventory::{Artifact, ArtifactKind, scan_inventory};
 pub use reader::{CacheUsage, Catalog, Reader};
 
 pub const FORMAT: u32 = 1;

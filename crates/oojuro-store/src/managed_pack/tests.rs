@@ -418,3 +418,56 @@ fn sigkill_staging_publication_never_changes_committed_inventory_or_original_dat
         assert!(r.get(3).is_err());
     }
 }
+
+#[test]
+fn complete_owned_data_scan_covers_committed_orphan_partial_and_refuses_foreign_types() {
+    let f = Fixture::new();
+    let _ = staged(&f, 1, 0, 1, b"published synthetic inventory");
+    let _orphan = Stage::new(
+        &f.dir,
+        birth(2),
+        Reservation {
+            file_id: 2,
+            first_physical_seq: 3,
+        },
+        Arc::new(FrameCipher::new(&KEY)),
+        Options::default(),
+    )
+    .unwrap();
+    let _ = stage_dictionary(
+        &f.dir,
+        birth(1),
+        7,
+        b"inventory dictionary",
+        &FrameCipher::new(&KEY),
+    )
+    .unwrap();
+    let mut count = 0;
+    let mut temp = 0;
+    let mut dict = 0;
+    scan_inventory(&f.dir, |a| {
+        assert_eq!(a.path.parent(), Some(f.dir.as_path()));
+        assert_eq!(std::fs::metadata(&a.path).unwrap().len(), a.byte_len);
+        count += 1;
+        temp += usize::from(a.temporary);
+        dict += usize::from(a.kind == ArtifactKind::Dictionary);
+        Ok(())
+    })
+    .unwrap();
+    assert_eq!((count, temp, dict), (3, 1, 1));
+    let partial = f.dir.join(format!("data-{}.stage", "a".repeat(64)));
+    std::fs::write(&partial, b"").unwrap();
+    scan_inventory(&f.dir, |_| Ok(())).unwrap();
+    let foreign = f.dir.join("foreign-authority");
+    std::fs::write(&foreign, b"private unrelated authority").unwrap();
+    assert!(scan_inventory(&f.dir, |_| Ok(())).is_err());
+    assert!(foreign.exists());
+    std::fs::remove_file(foreign).unwrap();
+    let link = f.dir.join(format!("data-{}.bin", "b".repeat(64)));
+    std::os::unix::fs::symlink(&partial, &link).unwrap();
+    assert!(scan_inventory(&f.dir, |_| Ok(())).is_err());
+    std::fs::remove_file(link).unwrap();
+    let directory = f.dir.join(format!("dict-{}.stage", "c".repeat(64)));
+    std::fs::create_dir(&directory).unwrap();
+    assert!(scan_inventory(&f.dir, |_| Ok(())).is_err());
+}
