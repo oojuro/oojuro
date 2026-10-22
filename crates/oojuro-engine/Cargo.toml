@@ -8,3 +8,6 @@ description = "Oojuro foundation: sealed byte-exact local raw journal."
 
 [dependencies]
 oojuro-store = { path = "../oojuro-store" }
+
+[target.'cfg(unix)'.dependencies]
+libc = "0.2"

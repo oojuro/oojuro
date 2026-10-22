@@ -4669,6 +4669,7 @@ dependencies = [
 name = "oojuro-engine"
 version = "0.1.0"
 dependencies = [
+ "libc",
  "oojuro-store",
 ]
 

@@ -51,11 +51,7 @@ pub fn capture_file(
             "raw source must be a regular file, not a symlink",
         ));
     }
-    let mut file = File::open(path)?;
-    let opened = file.metadata()?;
-    if !opened.is_file() || (opened.dev(), opened.ino()) != (before.dev(), before.ino()) {
-        return Err(Error::Invalid("raw source changed while opening"));
-    }
+    let (mut file, opened) = open_unchanged_regular(path, &before)?;
     let mut descriptor = b"oojuro-file-source-1\0".to_vec();
     descriptor.extend_from_slice(&opened.dev().to_le_bytes());
     descriptor.extend_from_slice(&opened.ino().to_le_bytes());
@@ -91,6 +87,20 @@ pub fn capture_file(
         appended: cursor.offset - start,
         observed_length: opened.len(),
     }))
+}
+
+fn open_unchanged_regular(path: &Path, before: &fs::Metadata) -> Result<(File, fs::Metadata)> {
+    // O_NOFOLLOW is atomic for the final component. O_NONBLOCK avoids hanging if an
+    // append-only file is swapped for a FIFO/device before the regular-file check.
+    let file = File::options()
+        .read(true)
+        .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
+        .open(path)?;
+    let opened = file.metadata()?;
+    if !opened.is_file() || (opened.dev(), opened.ino()) != (before.dev(), before.ino()) {
+        return Err(Error::Invalid("raw source changed while opening"));
+    }
+    Ok((file, opened))
 }
 
 #[cfg(test)]
@@ -208,6 +218,22 @@ mod tests {
         let mut original = Vec::new();
         j.restore(A, &mut original).unwrap();
         assert_eq!(original, expected);
+    }
+
+    #[test]
+    fn final_symlink_swap_to_the_same_inode_is_atomically_refused() {
+        let t = Temp::new();
+        let p = t.0.join("source");
+        let renamed = t.0.join("renamed");
+        fs::write(&p, b"synthetic retained bytes").unwrap();
+        let before = fs::symlink_metadata(&p).unwrap();
+        fs::rename(&p, &renamed).unwrap();
+        std::os::unix::fs::symlink(&renamed, &p).unwrap();
+        assert_eq!(
+            File::open(&p).unwrap().metadata().unwrap().ino(),
+            before.ino()
+        );
+        assert!(open_unchanged_regular(&p, &before).is_err());
     }
 
     #[test]
