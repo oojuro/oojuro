@@ -1,0 +1,20 @@
+{
+  "name": "@oojuro/v2-client",
+  "version": "0.0.0-experimental",
+  "type": "module",
+  "private": true,
+  "description": "Explicit experimental Oojuro v2 namespace client",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    }
+  },
+  "scripts": {
+    "test": "node --test test/client.test.js"
+  }
+}
