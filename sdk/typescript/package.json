@@ -12,9 +12,13 @@
     ".": {
       "types": "./index.d.ts",
       "import": "./index.js"
+    },
+    "./files": {
+      "types": "./files.d.ts",
+      "import": "./files.js"
     }
   },
   "scripts": {
-    "test": "node --test test/client.test.js"
+    "test": "node --test test/*.test.js"
   }
 }
