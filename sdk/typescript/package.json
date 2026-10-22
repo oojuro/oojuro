@@ -16,6 +16,10 @@
     "./files": {
       "types": "./files.d.ts",
       "import": "./files.js"
+    },
+    "./file-deletion": {
+      "types": "./file-deletion.d.ts",
+      "import": "./file-deletion.js"
     }
   },
   "scripts": {
