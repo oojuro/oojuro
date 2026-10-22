@@ -500,6 +500,21 @@ impl<'a> Cursor<'a> {
         }
         Ok(cursor)
     }
+    pub fn seek_ancestor(ctx: Context<'a>, root: &Root, key: &[u8]) -> Result<Self> {
+        validate_ancestor_root(&ctx, root)?;
+        let binding = ctx.check()?;
+        let mut cursor = Self {
+            ctx,
+            stack: vec![],
+            leaf: VecDeque::new(),
+            fresh: root.fresh,
+            binding,
+        };
+        if let Some(r) = &root.node {
+            cursor.descend(r.clone(), Some(key))?;
+        }
+        Ok(cursor)
+    }
     fn descend(&mut self, mut reference: Reference, low: Option<&[u8]>) -> Result<()> {
         loop {
             if self.fresh.is_some_and(|g| g != reference.generation) {
@@ -554,7 +569,11 @@ pub(super) fn get(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Ve
     let mut c = Cursor::seek(ctx, root, key)?;
     Ok(c.next()?.filter(|e| e.key == key).map(|e| e.value))
 }
-fn check_ancestor(ctx: &Context<'_>, root: &Root) -> Result<()> {
+pub(super) fn get_ancestor(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
+    let mut c = Cursor::seek_ancestor(ctx, root, key)?;
+    Ok(c.next()?.filter(|e| e.key == key).map(|e| e.value))
+}
+pub(super) fn validate_ancestor_root(ctx: &Context<'_>, root: &Root) -> Result<()> {
     ctx.check()?;
     if root.format != 1
         || root.purpose != ctx.purpose
@@ -571,7 +590,7 @@ pub(super) struct Editor<'a> {
 }
 impl<'a> Editor<'a> {
     pub fn new(ctx: Context<'a>, root: Root) -> Result<Self> {
-        check_ancestor(&ctx, &root)?;
+        validate_ancestor_root(&ctx, &root)?;
         Ok(Self {
             pack: Pack::new(ctx)?,
             root,
@@ -600,7 +619,8 @@ impl<'a> Editor<'a> {
         };
         Ok(())
     }
-    pub fn finish(self) -> Result<Root> {
+    pub fn finish(mut self) -> Result<Root> {
+        self.root.binding = self.pack.binding.clone();
         self.pack.finish()?;
         Ok(self.root)
     }
