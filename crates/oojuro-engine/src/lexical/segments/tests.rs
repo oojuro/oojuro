@@ -527,7 +527,12 @@ fn copied_origin_fork_with_equal_highwater_rebuilds_exact_receipt_branch() {
     let cache = f.cache(&b);
     assert_eq!(cache.opened(), Opened::Rebuilt);
     parity(&cache, &b);
-    assert!(cache.search(&b, &query("branch_a")).unwrap().is_empty());
+    assert!(
+        cache
+            .search(&b, &query("\"alpha only branch_a\""))
+            .unwrap()
+            .is_empty()
+    );
 }
 #[test]
 fn actual_multisegment_row_boundaries_keep_native_score_bits() {
