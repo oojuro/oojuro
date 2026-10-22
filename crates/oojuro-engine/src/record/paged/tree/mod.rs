@@ -337,6 +337,8 @@ impl<'a> Pack<'a> {
             )
             .map_err(|_| Error::Unavailable)?;
             sync_dir(self.ctx.directory)?;
+            #[cfg(test)]
+            test_phase("PackPublished");
             self.poisoned = false;
         }
         Ok(())
@@ -433,6 +435,8 @@ impl<'a> Pack<'a> {
             .map_err(|_| Error::Unavailable)?;
         self.offset += sealed.len() as u64;
         self.poisoned = false;
+        #[cfg(test)]
+        test_phase("PackTemp");
         Ok(r)
     }
 }
@@ -661,6 +665,31 @@ impl<'a> Cursor<'a> {
             }
         }
     }
+}
+pub(super) fn visit_pages(
+    ctx: Context<'_>,
+    root: &Root,
+    mut visit: impl FnMut(&Reference) -> Result<()>,
+) -> Result<()> {
+    root.check(&ctx)?;
+    let mut pending = Vec::new();
+    if let Some(node) = &root.node {
+        pending.push(node.clone());
+    }
+    while let Some(reference) = pending.pop() {
+        if ctx.check()? != root.binding {
+            return Err(Error::Conflict);
+        }
+        let node = load(&ctx, &reference)?;
+        visit(&reference)?;
+        if let Node::Branch(children) = node {
+            pending.extend(children.into_iter().rev());
+            if pending.len() > usize::from(MAX_DEPTH) * MAX_CHILDREN + 1 {
+                return Err(Error::Bounds);
+            }
+        }
+    }
+    Ok(())
 }
 pub(super) fn get(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
     let mut c = Cursor::seek(ctx, root, key)?;
@@ -941,3 +970,14 @@ fn decode_node(bytes: &[u8], level: u8) -> Result<Node> {
 }
 #[cfg(test)]
 mod tests;
+
+#[cfg(test)]
+pub(super) fn test_phase(at: &str) {
+    if std::env::var("OOJURO_DIRECTORY_CRASH_PHASE").as_deref() == Ok(at) {
+        println!("DIRECTORY_BOUNDARY_READY");
+        std::io::stdout().flush().unwrap();
+        loop {
+            std::thread::park();
+        }
+    }
+}
