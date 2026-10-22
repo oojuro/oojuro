@@ -225,7 +225,7 @@ pub fn run() -> Result<i32> {
     if matches!(args.command.as_str(), "help" | "--help") {
         args.only(&[], &[])?;
         emit(
-            &json!({"platform":"linux","commands":["setup","capture","search","get","timeline","stats","export","restore-raw","cache-merge","record-setup","record-append","record-get","record-history","record-range","record-export","record-continue","record-search","record-context"],"required":"--root DIR","raw_capture":"--allow-raw-source","raw_export":"--allow-raw-export"}),
+            &json!({"platform":"linux","commands":["setup","temporal-append","temporal-position","capture","search","get","timeline","stats","export","restore-raw","cache-merge","record-setup","record-append","record-get","record-history","record-range","record-export","record-continue","record-search","record-context"],"required":"--root DIR","raw_capture":"--allow-raw-source","raw_export":"--allow-raw-export"}),
             4096,
         )?;
         return Ok(0);
