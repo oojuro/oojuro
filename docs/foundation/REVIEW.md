@@ -13,14 +13,16 @@ The draft is preserved in its original checkout; no stores, services or customer
 |---|---|
 | Lexical baseline | [search fixes](../SEARCH_FIXES.md), [performance round 2](../PERF_ROUND2.md); reference measurements, not rerun here |
 | Byte-exact raw capture | `lossless-exp`, commit `c7bae21`, `docs/LOSSLESS_EXPERIMENT.md`; prototype examples, not the default daemon |
-| Store sealing | `bld-1-lossless-core`, commit `00deb56`; prototype encrypted frames/dictionaries; independent regression review in progress |
-| Ranker seam | separately reviewed standalone crate; no shipped semantic ranker or live query integration |
+| Store sealing | [PR #4](https://github.com/oojuro/oojuro/pull/4): preserved sealing implementation plus regression review; 27 store tests and application compilation pass; low-level prototype, no capture integration |
+| Ranker seam | [PR #2](https://github.com/oojuro/oojuro/pull/2): separately reviewed standalone crate, 8 synthetic conformance tests; no shipped semantic ranker or live query integration |
 | New consolidated engine | specification only; port and all section 14 gates still required |
-| Information-theory methods | separate `longctx` worktree; final held-out verdict not verified; remain optional |
+| Information-theory methods | [PR #3](https://github.com/oojuro/oojuro/pull/3): reproducible aggregate of cached exploratory runs; exposed evaluation set, no clean adoption verdict |
 | Hosted API | private `oojuro/cloud` service; existing EC2/EBS Terraform and encrypted S3 backup/restore scripts |
 
 Historical figures in SPEC.md are scoped research observations. The 14.5% raw ratio is not an upper bound for arbitrary
 inputs; incompressible/encrypted bytes may not compress. The new format has not been measured.
+The cached own-history hybrid reaches recall 0.747 versus lexical 0.630 and Qwen3 0.781; this is exploratory evidence, not a held-out adoption result. The shared starter headline has essentially no gain. See PR #3 for uncertainty, missing scenarios and reproducibility.
+
 The reference labels F1 (time view), F2 (anchored continuation), F3 (background floor), F4 (tie rule) have been checked against
 SEARCH_FIXES.md. Proposed writer-score isolation and redundancy-aware packing are separate changes requiring their own evals.
 
@@ -30,8 +32,9 @@ The repository already describes one EC2 host running the service with retained 
 That is an AWS hosting design. It is not a completed live deployment verification, a distributed database, or S3-authoritative
 storage. No new AWS resources, costs, secret reads, or live cutover are part of this work.
 
-The useful first role for Soft Axiom is durable agent journal records and immutable large tool/artifact payloads referenced
-by stable ids. Accounts, permissions, billing, workflow scheduling and transactional application state keep their own explicit
+The useful first role for Soft Axiom is agent transcripts, explicit memory notes and immutable file/tool/artifact payloads referenced
+by stable ids. Postgres remains the account/wallet authority and Temporal remains the workflow durability authority.
+Accounts, permissions, billing, workflow scheduling and transactional application state keep their own explicit
 systems of record until a separate correctness contract and migration are approved. An append-only journal cannot implement
 arbitrary multi-record application transactions merely because it can store JSON.
 
@@ -48,6 +51,24 @@ arbitrary multi-record application transactions merely because it can store JSON
 | Availability | one EC2 process + backup downtime | agree outage/maintenance budget; bounded graceful restart and health checks; independent alerting |
 | Migration | no production migration performed | shadow copies, reconciliation, explicit owner acceptance, reversible read switch |
 
+### Failure domains and the acknowledgement choice
+
+| Failure | Existing design boundary | Evidence still required |
+|---|---|---|
+| Process SIGKILL | local journal fsync and durable SQLite/blob commits should recover acknowledged state | executable restart gate; not a disk power-cut test |
+| EC2 host replacement | retained usable EBS can be reattached in its own AZ | fence old owner, repair/mount/check/replay, measured restore time |
+| EBS volume loss or AZ loss | restore last completed encrypted S3 backup; later acknowledged writes can be lost | monitor last successful backup, include key authority and control state, test complete restore |
+| Region loss | current same-region backup design does not establish independent regional recovery | separate region/key recovery design and explicit owner approval |
+| Credential/key compromise or deletion | encrypted data alone does not protect an available decrypt key or revoked key copies | scoped IAM, tested key revocation, access audit, independently recoverable control/key policy |
+
+AWS documents [EBS attachment within the same AZ](https://docs.aws.amazon.com/ebs/latest/userguide/ebs-attaching-volume.html).
+[S3 Standard stores across at least three AZs within a region](https://docs.aws.amazon.com/AmazonS3/latest/userguide/DataDurability.html);
+One Zone classes have a different failure boundary. These are service properties, not proof of the application's recovery behavior.
+
+The hourly schedule is not a hard one-hour maximum loss bound: failed backups can make the last successful recovery point older.
+A shorter asynchronous schedule still has a nonzero loss window. If the owner requires no acknowledged-data loss on volume/AZ failure,
+acknowledgement must wait for the required independent durable authority; the current backup path cannot supply that guarantee.
+
 ### If S3 is to hold the authoritative journal
 
 Implement and test a distinct commit protocol: immutable per-project/writer objects, content digest and format version,
@@ -59,8 +80,7 @@ caller's acknowledged watermark. A local fsync followed by later S3 upload does 
 
 Test process death after each upload/manifest step, duplicate requests, competing owners, stale manifests, missing/corrupt
 objects, erased-writer recovery, and snapshots during writes. Do not assume S3 alone supplies writer ordering or a database
-transaction. The concrete AWS API/conditional-write and KMS policy choices need current official documentation and a design
-review before implementation; this review did not query live AWS state.
+transaction. AWS provides [conditional creates and compare-and-swap writes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-writes.html) through `If-None-Match` and `If-Match`. Applying them to the manifest protocol is a proposed design, not an implemented transaction. KMS authority, conflict handling and recovery still require implementation review and fault tests. This review did not query live AWS state.
 
 ## Review and migration sequence
 
