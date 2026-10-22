@@ -598,3 +598,6 @@ fn reused_key_identity_and_generation_are_same_source_and_changed_payload_confli
     assert_eq!(destination.binding().unwrap(), before);
     assert!(!other.checkpoint().exists());
 }
+
+#[path = "paged_tests.rs"]
+mod paged;

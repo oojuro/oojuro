@@ -303,6 +303,13 @@ impl ManagedPagedLog {
             h(at);
         }
     }
+    /// Genuine current authority for the configured writer/owner; no record scan or view.
+    pub fn scoped_binding(&self, scope: Scope<'_>) -> Result<Binding> {
+        if scope.writer != self.identity.writer || scope.owner != self.identity.agent {
+            return Err(Error::Scope);
+        }
+        self.binding()
+    }
     pub fn binding(&self) -> Result<Binding> {
         let owner = self.control.lock()?;
         self.current(&owner)?;
