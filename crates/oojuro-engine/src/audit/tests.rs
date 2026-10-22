@@ -253,7 +253,7 @@ fn hosted_opaque_ciphertext_heads_and_timer_checkpoints_use_same_signature_seam(
         .verify_chain(&[one, two.clone()], current, Some(floor))
         .unwrap();
     verifier
-        .verify_chain(&[two.clone()], current, Some(current))
+        .verify_chain(std::slice::from_ref(&two), current, Some(current))
         .unwrap();
     assert!(verifier.verify_chain(&[two], current, None).is_err());
 }
