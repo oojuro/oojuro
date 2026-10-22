@@ -239,7 +239,8 @@ pub(crate) fn decoded_with<F: Frames + ?Sized>(fs: &F, i: usize, need: Option<&d
             return Ok(d);
         }
     }
-    let payload = read_payload(&fs.file(f.file)?, &f)?;
+    let file = fs.file(f.file)?;
+    let payload = read_payload(&file, &f)?;
     let head = check_head(&f, &payload)?;
     let (meta, body) = decode_payload(fs, &payload, &head, need)?;
     let d = Arc::new(Decoded { meta, body });
