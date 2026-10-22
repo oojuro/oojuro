@@ -71,7 +71,8 @@ authorized operation and is not implemented here. Claude's parser can read
 secondary persisted tool-result files, so it is deliberately absent from this
 lane; those files need their own consent and provenance before adding that adapter.
 
-The shared redactor now recognizes JSON-escaped control boundaries before known
+Parsed tool and metadata strings receive the shared redactor at the output boundary,
+as well as the parser-redacted text. The shared redactor now recognizes JSON-escaped control boundaries before known
 credential formats. Matching uses an equal-byte-length whitespace view; masking
 uses the original bytes, preserving JSON escapes, Unicode, offsets and placeholder
 hashes. Pattern redaction is not a guarantee that all possible secrets are detected.
@@ -98,6 +99,8 @@ context and 8 MiB serialized parsed receipt. The current projection limits are
 100,000 stored events and 128 MiB parsed text. Source/descriptor bounds also apply.
 A limit error does not advance that batch or discard its provenance. Earlier
 blocks may already be committed; original files and remaining suffixes stay intact.
+Many tiny lines can hit the serialized-receipt bound before the raw-byte bound;
+retrying with a smaller configured raw chunk is supported without losing progress.
 Inputs that exceed a bound require an explicit operator/configuration decision,
 not silent dropping or cursor skipping. The full-file report returns the generation's
 committed event IDs, so retries are stable.

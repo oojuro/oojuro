@@ -437,8 +437,10 @@ fn oracle_ids_bits_decimal_ties_identifier_continuations_and_deleted_cache_rebui
     .unwrap();
     let r = c.capture_file(SOURCE, &f.file, |_| true).unwrap().unwrap();
     assert_eq!(r.event_ids, (9..15).collect::<Vec<_>>());
-    let mut oracle_opts = crate::ingest::Options::default();
-    oracle_opts.batch_bytes = 79;
+    let oracle_opts = crate::ingest::Options {
+        batch_bytes: 79,
+        ..crate::ingest::Options::default()
+    };
     let mut oracle = crate::ingest::Capture::open(&f.ram.join("oracle"), oracle_opts).unwrap();
     oracle.state.next_id = 9;
     oracle.save().unwrap();
@@ -574,4 +576,103 @@ fn sigkill_after_authority_or_projection_before_ack_recovers_exact_original_ids(
         c.restore_raw(SOURCE, &mut raw, true).unwrap();
         assert_eq!(raw, data);
     }
+}
+
+#[test]
+fn escaped_tool_argument_and_metadata_secrets_are_masked_before_projection_and_after_rebuild() {
+    let f = Fixture::new();
+    // Synthetic format-only credential, assembled at runtime; never a real account key.
+    let token = ["ghp_", "aB7cD9eF2gH4jK6mN8pQ3rS5tU7vW9xY1zA3"].concat();
+    let body = format!(r#"{{"command":"echo ok\n{token}","keep":"unicode 🚀"}}"#);
+    let data = [meta(), item(json!({"type":"function_call","name":token,"namespace":token,"call_id":"synthetic-secret-call","arguments":body}))].concat();
+    fs::write(&f.file, &data).unwrap();
+    let mut c = f.open(Mode::Allow);
+    c.capture_file(SOURCE, &f.file, |_| true).unwrap();
+    for _ in 0..2 {
+        let event = c.get(1).unwrap().unwrap().0;
+        assert!(!event.text.contains(&token));
+        assert!(!event.tool.contains(&token));
+        assert!(!event.args.contains(&token));
+        assert!(event.text.contains(r"\n"));
+        assert!(event.text.contains("🚀"));
+        let _: Value = serde_json::from_str(&event.text).unwrap();
+        let _: Value = serde_json::from_str(&event.args).unwrap();
+        c.rebuild().unwrap();
+    }
+    let mut raw = Vec::new();
+    c.restore_raw(SOURCE, &mut raw, true).unwrap();
+    assert_eq!(raw, data);
+    fn no_token(path: &Path, token: &[u8]) {
+        for entry in fs::read_dir(path).unwrap() {
+            let entry = entry.unwrap();
+            if entry.file_type().unwrap().is_dir() {
+                no_token(&entry.path(), token);
+            } else {
+                assert!(
+                    !fs::read(entry.path())
+                        .unwrap()
+                        .windows(token.len())
+                        .any(|v| v == token)
+                );
+            }
+        }
+    }
+    no_token(&f.root.join("authority"), token.as_bytes());
+    no_token(&c.projection.as_ref().unwrap().path, token.as_bytes());
+}
+
+#[test]
+fn oversized_sealed_context_refuses_entire_candidate_batch_without_cursor_or_id_advance() {
+    let f = Fixture::new();
+    let bytes = [
+        meta(),
+        call(
+            &"N".repeat(log::MAX_CONTEXT_BYTES),
+            "huge-tool",
+            "small synthetic args",
+        ),
+    ]
+    .concat();
+    fs::write(&f.file, &bytes).unwrap();
+    let mut c = f.open(Mode::Allow);
+    assert!(matches!(
+        c.capture_file(SOURCE, &f.file, |_| true),
+        Err(Error::Invalid(_))
+    ));
+    assert_eq!(c.log.progress(SOURCE).unwrap().raw_end, 0);
+    assert_eq!(c.log.progress(SOURCE).unwrap().parsed_end, 0);
+    assert_eq!(c.log.next_id(), 1);
+    assert_eq!(fs::read(&f.file).unwrap(), bytes);
+}
+
+#[test]
+fn metadata_output_bound_refuses_progress_and_smaller_chunk_retry_loses_no_blank_bytes() {
+    let f = Fixture::new();
+    let bytes = vec![b'\n'; MAX_BLOCK_BYTES];
+    fs::write(&f.file, &bytes).unwrap();
+    let mut c = f.open(Mode::Allow);
+    assert!(matches!(
+        c.capture_file(SOURCE, &f.file, |_| true),
+        Err(Error::Invalid(_))
+    ));
+    assert_eq!(c.log.progress(SOURCE).unwrap().raw_end, 0);
+    assert_eq!(c.log.next_id(), 1);
+    drop(c);
+    let mut options = f.options();
+    options.chunk_bytes = 4096;
+    let mut c = LocalCapture::open(
+        &f.root.join("authority"),
+        &KEY,
+        &f.ram,
+        options,
+        Box::new(Mode::Allow),
+    )
+    .unwrap();
+    let report = c.capture_file(SOURCE, &f.file, |_| true).unwrap().unwrap();
+    assert_eq!(report.raw_end, bytes.len() as u64);
+    assert_eq!(report.parsed_end, report.raw_end);
+    assert!(report.event_ids.is_empty());
+    let mut raw = Vec::new();
+    c.restore_raw(SOURCE, &mut raw, true).unwrap();
+    assert_eq!(raw, bytes);
 }

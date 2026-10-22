@@ -86,7 +86,7 @@ pub fn capture_file(
     Ok(Some(CaptureReport {
         cursor,
         appended: cursor.offset - start,
-        observed_length: observed_length,
+        observed_length,
     }))
 }
 

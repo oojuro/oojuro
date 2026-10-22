@@ -420,15 +420,13 @@ impl LocalCapture {
                 match decision {
                     Decision::Store { indexed } => {
                         let args = sink::args_json(&rec, old.file_no, recorded);
-                        events.push(owned(
-                            &rec,
-                            id,
-                            self.options.agent,
-                            parent,
-                            args,
-                            indexed,
-                            through,
-                        ));
+                        let mut event =
+                            owned(&rec, id, self.options.agent, parent, args, indexed, through);
+                        // Tool/metadata strings cross the same parsed-output boundary as text.
+                        // Resume context retains original linking state only inside the sealed authority.
+                        event.tool = self.redactor.redact(&event.tool, &mut rc);
+                        event.args = self.redactor.redact(&event.args, &mut rc);
+                        events.push(event);
                         emissions.push(log::Decision::Stored { id, indexed });
                     }
                     Decision::Withhold(reason) => emissions.push(log::Decision::Withheld {

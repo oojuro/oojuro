@@ -15,6 +15,7 @@ pub const MAX_PARSED_BYTES: usize = 128 << 20;
 pub type Source = [u8; 16];
 
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct Identity {
     pub writer: String,
     pub agent: u32,
@@ -23,6 +24,7 @@ pub struct Identity {
 }
 /// Complete owned EventIn fields, including eligibility and replay-only fields.
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct Event {
     pub id: u64,
     pub session: u64,
@@ -59,6 +61,7 @@ pub enum LineKind {
     Malformed,
 }
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct Line {
     pub start: u64,
     pub end: u64,
@@ -66,12 +69,14 @@ pub struct Line {
     pub emissions: Vec<Decision>,
 }
 #[derive(Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct PolicyReceipt {
     pub policy_id: String,
     pub raw_authorization: String,
     pub lines: Vec<Line>,
 }
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+#[serde(deny_unknown_fields)]
 pub struct Outcome {
     pub raw_end: u64,
     pub parsed_end: u64,
@@ -80,6 +85,7 @@ pub struct Outcome {
     pub next_id: u64,
 }
 #[derive(Clone, Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 pub struct ParsedBatch {
     pub source: Source,
     pub raw_start: u64,
@@ -95,6 +101,7 @@ pub struct Batch {
     pub raw: Vec<u8>,
 }
 #[derive(Serialize, Deserialize)]
+#[serde(deny_unknown_fields)]
 struct Registration {
     source: Source,
     descriptor: Vec<u8>,
@@ -385,6 +392,8 @@ impl CaptureLog {
                             || event.line_end != line.end
                             || event.emission as usize != k
                             || event.kind > 6
+                            || (event.parent != 0
+                                && (event.parent < self.identity.first_id || event.parent >= next))
                             || event.revises != 0
                         {
                             return Err(Error::Invalid("parsed identity or eligibility mismatch"));
