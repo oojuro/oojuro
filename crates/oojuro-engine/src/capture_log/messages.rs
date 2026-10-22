@@ -155,6 +155,10 @@ impl MessageLog {
         }
         // Invalid identity/options must not leave a newly enrolled root.
         validate_identity(&identity)?;
+        let parent = dir
+            .parent()
+            .filter(|p| !p.as_os_str().is_empty())
+            .unwrap_or(Path::new("."));
         fs::DirBuilder::new().mode(0o700).create(dir)?;
         let mut marker = OpenOptions::new()
             .write(true)
@@ -165,7 +169,7 @@ impl MessageLog {
         marker.write_all(FORMAT)?;
         marker.sync_all()?;
         fs::File::open(dir)?.sync_all()?;
-        fs::File::open(dir.parent().ok_or(Error::Invalid("message parent"))?)?.sync_all()?;
+        fs::File::open(parent)?.sync_all()?;
         Ok(Self {
             inner: CaptureLog::open_framed(dir, key, identity, Framing::Messages, true)?,
             #[cfg(test)]
