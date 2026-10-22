@@ -102,12 +102,21 @@ pub(super) fn load(root: &Path) -> Result<(Config, [u8; 32])> {
     let config: Config = serde_json::from_slice(&read_private(&root.join(CONFIG), 4096)?)
         .map_err(|_| Error::Config)?;
     config.check()?;
-    let bytes = read_private(&root.join(KEY), 32)?;
-    let key: [u8; 32] = bytes.try_into().map_err(|_| Error::Key)?;
-    Ok((config, key))
+    Ok((config, load_key(root)?))
+}
+pub(super) fn load_key(root: &Path) -> Result<[u8; 32]> {
+    check_root(root)?;
+    read_private(&root.join(KEY), 32)?
+        .try_into()
+        .map_err(|_| Error::Key)
 }
 pub(super) fn setup(root: &Path, config: &Config, policy: &[u8]) -> Result<()> {
     config.check()?;
+    let bytes = serde_json::to_vec(config).map_err(|_| Error::Config)?;
+    setup_files(root, &[(CONFIG, &bytes), (POLICY, policy)])
+}
+/// Only static, trusted metadata names are passed by the two explicit setup lanes.
+pub(super) fn setup_files(root: &Path, files: &[(&str, &[u8])]) -> Result<()> {
     fs::DirBuilder::new()
         .mode(0o700)
         .create(root)
@@ -117,11 +126,9 @@ pub(super) fn setup(root: &Path, config: &Config, policy: &[u8]) -> Result<()> {
         .and_then(|mut file| file.read_exact(&mut key))
         .map_err(|_| Error::Key)?;
     write_new(&root.join(KEY), &key)?;
-    write_new(
-        &root.join(CONFIG),
-        &serde_json::to_vec(config).map_err(|_| Error::Config)?,
-    )?;
-    write_new(&root.join(POLICY), policy)?;
+    for (name, bytes) in files {
+        write_new(&root.join(name), bytes)?;
+    }
     sync_dir(root)?;
     if let Some(parent) = root.parent() {
         sync_dir(parent)?;
