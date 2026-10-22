@@ -995,3 +995,74 @@ fn record_time_known_prefix_detects_same_origin_rollback_and_failed_projection()
 fn view_result(log: &RecordLog) -> Result<View> {
     View::open(log, scope(), AsOf::default())
 }
+
+#[test]
+fn record_time_stored_only_never_reenters_content_phrase_or_identifier_anchor() {
+    let f = Fixture::new();
+    let mut log = f.clock(100);
+    let old = input("the !!!", Some("versioned"), 10);
+    let mut hidden = input("the !!! lookup_needle", Some("versioned"), 20);
+    hidden.indexed = false;
+    let mut only = input("the !!!", Some("stored-only"), 30);
+    only.indexed = false;
+    log.append(
+        "eligibility",
+        &[old, hidden, only, input("lookup needle battery", None, 40)],
+    )
+    .unwrap();
+    let index = Index::rebuild(&log).unwrap();
+    assert!(
+        index
+            .search(&log, &query("\"the\"", AsOf::default()))
+            .unwrap()
+            .hits
+            .is_empty()
+    );
+    assert!(
+        index
+            .search(&log, &query("\"!!!\"", AsOf::default()))
+            .unwrap()
+            .hits
+            .is_empty()
+    );
+    let ids = index
+        .search(&log, &query("", AsOf::default()))
+        .unwrap()
+        .hits
+        .into_iter()
+        .map(|h| h.record.id)
+        .collect::<Vec<_>>();
+    assert_eq!(ids, vec![12, 11, 10]);
+    for (key, id) in [("versioned", 10), ("stored-only", 11)] {
+        assert_eq!(
+            index
+                .search(&log, &query(&format!("key:{key}"), AsOf::default()))
+                .unwrap()
+                .hits[0]
+                .record
+                .id,
+            id
+        );
+        assert_eq!(view(&log).get_key(&log, key, 4096).unwrap().unwrap().id, id);
+    }
+    let hits = index
+        .search(&log, &query("lookup_needle battery", AsOf::default()))
+        .unwrap()
+        .hits;
+    assert_eq!(hits.len(), 1);
+    assert_eq!(hits[0].record.id, 12);
+    assert!(
+        !hits[0].continued,
+        "stored-only identifier must not anchor the view"
+    );
+    let before = AsOf {
+        valid_at: 15,
+        ..AsOf::default()
+    };
+    assert_eq!(
+        index.search(&log, &query("\"the\"", before)).unwrap().hits[0]
+            .record
+            .id,
+        9
+    );
+}
