@@ -478,6 +478,9 @@ impl Replay {
         let n = index.varint()?;
         let dict =
             u32::try_from(index.varint()?).map_err(|_| Error::Corrupt("dictionary id overflow"))?;
+        if dict != 0 && !decoder.resources.manifest.has_dict(dict)? {
+            return Err(Error::Corrupt("cold segment names an unknown dictionary"));
+        }
         let mut at = FILE_HEAD as u64;
         let mut prev = 0i64;
         let initial_text = self.raw_text;

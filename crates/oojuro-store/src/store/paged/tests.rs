@@ -314,3 +314,84 @@ fn paged_store_refuses_oversized_source_metadata_before_decrypted_population_all
         ))
     ));
 }
+
+#[test]
+fn raw_cold_frames_cannot_bypass_manifest_dictionary_inventory() {
+    let f = Fixture::new();
+    drop(f.writer());
+    let cipher = FrameCipher::new(&KEY);
+    let rows = [NewRecord {
+        kind: 1,
+        valid_at: 7,
+        recorded_at: 8,
+        key: b"",
+        attrs: b"",
+        text: b"raw cold synthetic",
+    }];
+    let (payload, body, _) = build_payload(None, 77, 0, &rows, false, Some(&cipher)).unwrap();
+    assert_eq!(get_head(&payload).unwrap().codec, CODEC_RAW);
+    let mut bytes = file_head(COLD_MAGIC, 2, 0).to_vec();
+    bytes.extend(seal_frame(&payload));
+    let mut index = Vec::new();
+    for n in [
+        1,
+        77,
+        payload.len() as u64,
+        1,
+        body.len() as u64,
+        zigzag(7),
+        0,
+        rows[0].text.len() as u64,
+    ] {
+        put_varint(&mut index, n);
+    }
+    bytes.extend(&index);
+    bytes.extend((index.len() as u32).to_le_bytes());
+    bytes.extend(crc(&index).to_le_bytes());
+    bytes.extend(COLD_END);
+    std::fs::write(cold_path(&f.source(), 2), bytes).unwrap();
+    Store::write_manifest(
+        &f.source(),
+        &Manifest {
+            next_file: 4,
+            hot_from: 3,
+            cold: vec![2],
+            dicts: vec![],
+        },
+    )
+    .unwrap();
+    assert!(matches!(
+        Store::open(&f.source(), f.opts()),
+        Err(Error::Corrupt("cold segment names an unknown dictionary"))
+    ));
+    assert!(matches!(
+        PagedStore::open(&f.source(), f.opts(), &f.cache()),
+        Err(Error::Corrupt("cold segment names an unknown dictionary"))
+    ));
+}
+#[test]
+fn paged_file_dictionary_and_decoder_resources_evict_with_fixed_bounds() {
+    let f = Fixture::new();
+    let mut opts = f.opts();
+    opts.hot_level = 0;
+    opts.dict_bytes = 0;
+    opts.hot_file_bytes = 1;
+    let mut source = Store::open(&f.source(), opts.clone()).unwrap();
+    append(&mut source, 0, 48);
+    for id in 1..=17 {
+        source.publish_dict(id, vec![id as u8; 1 << 20], 0).unwrap();
+    }
+    drop(source);
+    let reader = PagedStore::open(&f.source(), opts, &f.cache()).unwrap();
+    check(&reader, 0, 48);
+    let usage = reader.cache_usage().unwrap();
+    assert_eq!(usage.open_files, 32);
+    assert_eq!(usage.dictionaries, 16);
+    assert_eq!(usage.dictionary_bytes, 16 << 20);
+    // The first dictionary was evicted: a damaged source cannot be served from a fallback.
+    let path = dict_path(&f.source(), 1);
+    let mut bytes = std::fs::read(&path).unwrap();
+    bytes[23] ^= 1;
+    std::fs::write(path, bytes).unwrap();
+    assert!(reader.dict(1).is_err());
+}

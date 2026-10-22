@@ -36,8 +36,8 @@ struct Winner {
     id: Option<u64>,
 }
 enum Source {
-    Legacy(Store),
-    Paged(PagedStore),
+    Legacy(Box<Store>),
+    Paged(Box<PagedStore>),
 }
 impl Source {
     fn len(&self) -> u64 {
@@ -147,10 +147,12 @@ impl Reader {
             ..Options::default()
         };
         let store = match store_directory {
-            Some(path) => {
-                Source::Paged(PagedStore::open(dir, options, path).map_err(|_| Error::Unavailable)?)
-            }
-            None => Source::Legacy(Store::open(dir, options).map_err(|_| Error::Unavailable)?),
+            Some(path) => Source::Paged(Box::new(
+                PagedStore::open(dir, options, path).map_err(|_| Error::Unavailable)?,
+            )),
+            None => Source::Legacy(Box::new(
+                Store::open(dir, options).map_err(|_| Error::Unavailable)?,
+            )),
         };
         if store.is_empty() {
             return Err(Error::Authority);
