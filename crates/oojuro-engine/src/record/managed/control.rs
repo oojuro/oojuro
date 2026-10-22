@@ -451,10 +451,19 @@ impl RetainedControl {
     }
 }
 impl Inner {
+    pub(super) fn recheck(&self) -> Result<()> {
+        self.current()
+    }
+
     pub fn enrollment(&self) -> Enrollment {
-        Enrollment { schema: 1, origin: self.state.origin, identity: self.state.identity,
-            authority: self.authority, signing_public_key: self.signer.public_key(),
-            control_key_id: self.cipher.key_id() }
+        Enrollment {
+            schema: 1,
+            origin: self.state.origin,
+            identity: self.state.identity,
+            authority: self.authority,
+            signing_public_key: self.signer.public_key(),
+            control_key_id: self.cipher.key_id(),
+        }
     }
 
     pub fn uses_key(&self, cipher: &FrameCipher) -> bool {

@@ -43,7 +43,7 @@ impl Filter {
             Ok(())
         }
     }
-    fn keep(&self, row: &Assigned) -> bool {
+    pub(super) fn keep(&self, row: &Assigned) -> bool {
         let v = &row.input;
         self.kind.is_none_or(|x| x == v.kind)
             && self
@@ -212,22 +212,7 @@ impl View {
     }
     pub(super) fn latest<'a>(&self, log: &'a RecordLog) -> Result<Vec<&'a Assigned>> {
         let end = self.validate(log)?;
-        let mut keyed: BTreeMap<&str, &Assigned> = BTreeMap::new();
-        let mut unkeyed = Vec::new();
-        for row in log.records[..end].iter().filter(|r| self.time(r)) {
-            if let Some(key) = &row.input.key {
-                if keyed.get(key.as_str()).is_none_or(|old| {
-                    (row.input.valid_at, row.recorded_at, row.id)
-                        > (old.input.valid_at, old.recorded_at, old.id)
-                }) {
-                    keyed.insert(key, row);
-                }
-            } else {
-                unkeyed.push(row);
-            }
-        }
-        unkeyed.extend(keyed.into_values());
-        Ok(unkeyed)
+        Ok(latest_rows(log.records[..end].iter(), self.context.as_of))
     }
     pub(super) fn visible(&self, log: &RecordLog, filter: &Filter) -> Result<BTreeSet<u64>> {
         filter.validate()?;
@@ -286,7 +271,11 @@ impl View {
         let stop = rows.len().min(start + limits.entries);
         let mut sizes = vec![0usize];
         for row in &rows[start..stop] {
-            let length = json(&row.record(&self.context.writer, &log.identity().adapter), MAX_OUTPUT_BYTES)?.len();
+            let length = json(
+                &row.record(&self.context.writer, &log.identity().adapter),
+                MAX_OUTPUT_BYTES,
+            )?
+            .len();
             sizes.push(
                 sizes
                     .last()
@@ -401,4 +390,30 @@ fn unhex(s: &str) -> Result<Vec<u8>> {
         .iter()
         .map(|p| Ok(digit(p[0])? * 16 + digit(p[1])?))
         .collect()
+}
+
+/// Shared current-key winner kernel. Eligibility/filter/lower bound apply AFTER this selection.
+pub(super) fn latest_rows<'a>(
+    rows: impl IntoIterator<Item = &'a Assigned>,
+    as_of: AsOf,
+) -> Vec<&'a Assigned> {
+    let mut keyed: BTreeMap<&str, &Assigned> = BTreeMap::new();
+    let mut unkeyed = Vec::new();
+    for row in rows
+        .into_iter()
+        .filter(|row| row.input.valid_at <= as_of.valid_at && row.recorded_at <= as_of.known_at)
+    {
+        if let Some(key) = &row.input.key {
+            if keyed.get(key.as_str()).is_none_or(|old| {
+                (row.input.valid_at, row.recorded_at, row.id)
+                    > (old.input.valid_at, old.recorded_at, old.id)
+            }) {
+                keyed.insert(key, row);
+            }
+        } else {
+            unkeyed.push(row);
+        }
+    }
+    unkeyed.extend(keyed.into_values());
+    unkeyed
 }
