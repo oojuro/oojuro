@@ -149,6 +149,7 @@ pub(crate) struct CachePrefix {
 pub struct CaptureLog {
     store: Store,
     cipher: Arc<FrameCipher>,
+    ingest_binding: [u8; 32],
     prefixes: Vec<CachePrefix>,
     instance: u64,
     identity: Identity,
@@ -210,6 +211,7 @@ impl CaptureLog {
         let mut log = Self {
             store,
             cipher,
+            ingest_binding: [0; 32],
             prefixes: Vec::new(),
             instance: next_instance()?,
             next_id: identity.first_id,
@@ -232,6 +234,11 @@ impl CaptureLog {
         } else if log.store.get(0)? != header {
             return Err(Error::Corrupt("capture format or identity mismatch"));
         }
+        // Stable source namespace, not fresh-store enrollment or a cache incarnation.
+        // Same key/header/generation means SAME source; changed input must conflict.
+        let mut binding = b"oojuro/capture/ingest-binding/lines-v1\0".to_vec();
+        binding.extend_from_slice(&header);
+        log.ingest_binding = *blake3::keyed_hash(key, &binding).as_bytes();
         log.add_prefix(0, &header)?;
         for seq in 1..log.store.len() {
             let bytes = log.store.get(seq)?;
@@ -239,6 +246,11 @@ impl CaptureLog {
         }
         std::fs::File::open(parent)?.sync_all()?;
         Ok(log)
+    }
+    /// Engine-private typed Capture1 identity; no key getter or public plaintext hash.
+    pub(crate) fn ingest_binding(&self) -> Result<[u8; 32]> {
+        self.healthy()?;
+        Ok(self.ingest_binding)
     }
     pub(crate) fn cache_cipher(&self) -> Arc<FrameCipher> {
         self.cipher.clone()

@@ -22,3 +22,7 @@ pub mod audit;
 
 #[cfg(unix)]
 mod existing;
+
+/// Explicit opt-in durable Capture1 to managed Record ingestion.
+#[cfg(unix)]
+pub mod capture_record;
