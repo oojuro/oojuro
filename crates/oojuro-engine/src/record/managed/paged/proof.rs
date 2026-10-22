@@ -2,7 +2,6 @@
 //! The managed caller must supply every future-live row, DATA metadata and all
 //! owned current/orphan/staged files under exclusive independently current fencing.
 use crate::record::{Assigned, Error, Result};
-use aho_corasick::AhoCorasick;
 use serde::Serialize;
 use serde_json::Value;
 use std::{
@@ -21,8 +20,8 @@ pub(in crate::record) struct Counts {
     pub encoded: u64,
 }
 /// Conservative work budget, shared across ALL selected rows in one operation.
-/// Bytes include complete serialization/decoded/file inputs, rescanned overlap
-/// and one unit per reported match. Counters are work accounting, not RSS.
+/// Bytes include complete serialization/decoded/file inputs, prefix tables/construction
+/// and extra fallback comparisons and one unit per reported match. Counters are work accounting, not RSS.
 pub(in crate::record) struct Work {
     max_bytes: u64,
     max_rows: u64,
@@ -108,38 +107,29 @@ fn scan_inner(
     // Charge full selected source before allocating its one-row matcher.
     charge_serialized(selected, work)?;
     let patterns = crate::record::managed::row_strings(selected);
-    let longest = patterns.iter().map(Vec::len).max().unwrap_or(0);
-    for p in &patterns {
-        work.charge_bytes(p.len() as u64)?;
+    for pattern in &patterns {
+        work.charge_bytes(pattern.len() as u64)?;
     }
-    let matcher = if patterns.is_empty() {
-        None
-    } else {
-        Some(AhoCorasick::new(&patterns).map_err(|_| Error::Bounds)?)
-    };
-    drop(patterns);
+    validate_value(metadata)?;
     let mut counts = Counts {
         decoded: 0,
         encoded: 0,
     };
-    validate_value(metadata)?;
-    scan_value(
-        metadata,
-        matcher.as_ref(),
-        longest,
-        work,
-        &mut counts.decoded,
-    )?;
-    live_rows(&mut |row| {
-        work.charge_rows(1)?;
-        row.input.validate()?;
-        charge_serialized(row, work)?;
-        // Only one live row is materialized; no row population or ID set is kept.
-        let value = serde_json::to_value(row).map_err(|_| Error::Invalid)?;
-        validate_value(&value)?;
-        scan_value(&value, matcher.as_ref(), longest, work, &mut counts.decoded)
-    })?;
-    files(&mut |path| scan_file(path, matcher.as_ref(), longest, work, &mut counts.encoded))?;
+    // One exact-sized u32 KMP table at a time: <=64MiB for a legal16MiB text.
+    // Every callback must reconstruct its complete immutable iterator each pass.
+    for pattern in &patterns {
+        let matcher = Matcher::new(pattern, work)?;
+        scan_value(metadata, &matcher, work, &mut counts.decoded)?;
+        live_rows(&mut |row| {
+            work.charge_rows(1)?;
+            row.input.validate()?;
+            charge_serialized(row, work)?;
+            let value = serde_json::to_value(row).map_err(|_| Error::Invalid)?;
+            validate_value(&value)?;
+            scan_value(&value, &matcher, work, &mut counts.decoded)
+        })?;
+        files(&mut |path| scan_file(path, &matcher, work, &mut counts.encoded))?;
+    }
     if work.failed {
         return Err(Error::Bounds);
     }
@@ -200,88 +190,73 @@ fn add(count: &mut u64, n: u64) -> Result<()> {
     *count = count.checked_add(n).ok_or(Error::Bounds)?;
     Ok(())
 }
-fn matches(
-    bytes: &[u8],
-    matcher: Option<&AhoCorasick>,
-    work: &mut Work,
-    count: &mut u64,
-) -> Result<()> {
-    work.charge_bytes(bytes.len() as u64)?;
-    if let Some(m) = matcher {
-        for _ in m.find_overlapping_iter(bytes) {
-            work.charge_bytes(1)?;
-            add(count, 1)?;
-        }
-    }
-    Ok(())
+/// Standard KMP has linear construction/search work and one u32 per pattern byte.
+/// Unlike a default automaton builder, it has no uncontrolled dense-state peak.
+struct Matcher<'a> {
+    pattern: &'a [u8],
+    prefix: Vec<u32>,
 }
-/// One bounded window plus at most longest-pattern minus one bytes of overlap.
-/// Repeated overlap is charged as work and matches ending there aren't recounted.
-struct Sink<'a> {
-    matcher: Option<&'a AhoCorasick>,
-    longest: usize,
+impl<'a> Matcher<'a> {
+    fn new(pattern: &'a [u8], work: &mut Work) -> Result<Self> {
+        if pattern.is_empty() || pattern.len() > crate::record::MAX_TEXT_BYTES {
+            return Err(Error::Bounds);
+        }
+        let bytes = pattern
+            .len()
+            .checked_mul(std::mem::size_of::<u32>())
+            .ok_or(Error::Bounds)?;
+        work.charge_bytes(bytes as u64)?;
+        let mut prefix = vec![0u32; pattern.len()];
+        for i in 1..pattern.len() {
+            let mut j = prefix[i - 1] as usize;
+            while j > 0 && pattern[i] != pattern[j] {
+                work.charge_bytes(1)?;
+                j = prefix[j - 1] as usize;
+            }
+            work.charge_bytes(1)?;
+            if pattern[i] == pattern[j] {
+                j += 1;
+            }
+            prefix[i] = j as u32;
+        }
+        Ok(Self { pattern, prefix })
+    }
+}
+struct Sink<'a, 'm> {
+    matcher: &'a Matcher<'m>,
     work: &'a mut Work,
     count: &'a mut u64,
-    window: Vec<u8>,
-    carry: usize,
-    new_bytes: usize,
+    state: usize,
 }
-impl<'a> Sink<'a> {
-    fn new(
-        matcher: Option<&'a AhoCorasick>,
-        longest: usize,
-        work: &'a mut Work,
-        count: &'a mut u64,
-    ) -> Self {
+impl<'a, 'm> Sink<'a, 'm> {
+    fn new(matcher: &'a Matcher<'m>, work: &'a mut Work, count: &'a mut u64) -> Self {
         Self {
             matcher,
-            longest,
             work,
             count,
-            window: Vec::new(),
-            carry: 0,
-            new_bytes: 0,
+            state: 0,
         }
     }
-    fn feed(&mut self, mut bytes: &[u8]) -> Result<()> {
+    fn feed(&mut self, bytes: &[u8]) -> Result<()> {
         self.work.charge_bytes(bytes.len() as u64)?;
-        while !bytes.is_empty() {
-            let n = bytes.len().min(CHUNK - self.new_bytes);
-            self.window.extend(&bytes[..n]);
-            self.new_bytes += n;
-            bytes = &bytes[n..];
-            if self.new_bytes == CHUNK {
-                self.scan()?;
+        for &b in bytes {
+            while self.state > 0 && b != self.matcher.pattern[self.state] {
+                self.work.charge_bytes(1)?;
+                self.state = self.matcher.prefix[self.state - 1] as usize;
+            }
+            if b == self.matcher.pattern[self.state] {
+                self.state += 1;
+            }
+            if self.state == self.matcher.pattern.len() {
+                self.work.charge_bytes(1)?;
+                add(self.count, 1)?;
+                self.state = self.matcher.prefix[self.state - 1] as usize;
             }
         }
         Ok(())
-    }
-    fn scan(&mut self) -> Result<()> {
-        if self.new_bytes == 0 {
-            return Ok(());
-        }
-        self.work.charge_bytes(self.window.len() as u64)?;
-        if let Some(m) = self.matcher {
-            for hit in m.find_overlapping_iter(&self.window) {
-                if hit.end() > self.carry {
-                    self.work.charge_bytes(1)?;
-                    add(self.count, 1)?;
-                }
-            }
-        }
-        let keep = self.longest.saturating_sub(1).min(self.window.len());
-        let from = self.window.len() - keep;
-        self.window.copy_within(from.., 0);
-        self.window.truncate(keep);
-        self.carry = keep;
-        self.new_bytes = 0;
-        Ok(())
-    }
-    fn finish(mut self) -> Result<()> {
-        self.scan()
     }
 }
-impl Write for Sink<'_> {
+impl Write for Sink<'_, '_> {
     fn write(&mut self, b: &[u8]) -> std::io::Result<usize> {
         self.feed(b)
             .map_err(|_| std::io::Error::other("proof scan bound"))?;
@@ -291,56 +266,46 @@ impl Write for Sink<'_> {
         Ok(())
     }
 }
-fn canonical(
-    value: &Value,
-    matcher: Option<&AhoCorasick>,
-    longest: usize,
-    work: &mut Work,
-    count: &mut u64,
-) -> Result<()> {
-    let mut sink = Sink::new(matcher, longest, work, count);
-    if serde_json::to_writer(&mut sink, value).is_err() {
-        return Err(if sink.work.failed {
+fn canonical(value: &Value, matcher: &Matcher<'_>, work: &mut Work, count: &mut u64) -> Result<()> {
+    let mut sink = Sink::new(matcher, work, count);
+    serde_json::to_writer(&mut sink, value).map_err(|_| {
+        if sink.work.failed {
             Error::Bounds
         } else {
             Error::Invalid
-        });
-    }
-    sink.finish()
+        }
+    })
+}
+fn raw(bytes: &[u8], matcher: &Matcher<'_>, work: &mut Work, count: &mut u64) -> Result<()> {
+    Sink::new(matcher, work, count).feed(bytes)
 }
 fn scan_value(
     value: &Value,
-    matcher: Option<&AhoCorasick>,
-    longest: usize,
+    matcher: &Matcher<'_>,
     work: &mut Work,
     count: &mut u64,
 ) -> Result<()> {
     match value {
         Value::Array(items) => {
-            canonical(value, matcher, longest, work, count)?;
+            canonical(value, matcher, work, count)?;
             for v in items {
-                scan_value(v, matcher, longest, work, count)?
+                scan_value(v, matcher, work, count)?
             }
         }
         Value::Object(items) => {
-            canonical(value, matcher, longest, work, count)?;
+            canonical(value, matcher, work, count)?;
             for (k, v) in items {
-                matches(k.as_bytes(), matcher, work, count)?;
-                scan_value(v, matcher, longest, work, count)?
+                raw(k.as_bytes(), matcher, work, count)?;
+                scan_value(v, matcher, work, count)?
             }
         }
-        Value::String(s) => matches(s.as_bytes(), matcher, work, count)?,
-        _ => canonical(value, matcher, longest, work, count)?,
+        Value::String(s) => raw(s.as_bytes(), matcher, work, count)?,
+        _ => canonical(value, matcher, work, count)?,
     }
     Ok(())
 }
-fn scan_file(
-    path: &Path,
-    matcher: Option<&AhoCorasick>,
-    longest: usize,
-    work: &mut Work,
-    count: &mut u64,
-) -> Result<()> {
+fn scan_file(path: &Path, matcher: &Matcher<'_>, work: &mut Work, count: &mut u64) -> Result<()> {
+    use std::os::unix::fs::MetadataExt;
     let meta = fs::symlink_metadata(path).map_err(|_| Error::Unavailable)?;
     if !meta.is_file() || meta.file_type().is_symlink() {
         return Err(Error::Scope);
@@ -351,12 +316,12 @@ fn scan_file(
         .open(path)
         .map_err(|_| Error::Unavailable)?;
     let initial = file.metadata().map_err(|_| Error::Unavailable)?;
-    if initial.len() != meta.len() {
+    if initial.len() != meta.len() || initial.dev() != meta.dev() || initial.ino() != meta.ino() {
         return Err(Error::Conflict);
     }
     let mut bytes = 0u64;
     let mut buf = [0u8; CHUNK];
-    let mut sink = Sink::new(matcher, longest, work, count);
+    let mut sink = Sink::new(matcher, work, count);
     loop {
         let n = file.read(&mut buf).map_err(|_| Error::Unavailable)?;
         if n == 0 {
@@ -368,12 +333,17 @@ fn scan_file(
         }
         sink.feed(&buf[..n])?;
     }
+    let final_meta = file.metadata().map_err(|_| Error::Unavailable)?;
     if bytes != initial.len()
-        || file.metadata().map_err(|_| Error::Unavailable)?.len() != initial.len()
+        || final_meta.len() != initial.len()
+        || final_meta.mtime() != initial.mtime()
+        || final_meta.mtime_nsec() != initial.mtime_nsec()
+        || final_meta.ctime() != initial.ctime()
+        || final_meta.ctime_nsec() != initial.ctime_nsec()
     {
         return Err(Error::Conflict);
     }
-    sink.finish()
+    Ok(())
 }
 #[cfg(test)]
 #[path = "proof/tests.rs"]
