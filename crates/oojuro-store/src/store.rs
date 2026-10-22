@@ -214,6 +214,8 @@ pub struct Store {
     hot_cctx: zstd_safe::CCtx<'static>,
     hot_dict: u32,
     hot_raw: usize,
+    /// Nonpersistent geometric retry floor after a failed initial dictionary attempt.
+    hot_train_next: usize,
     next_seq: u64,
     raw_text: u64,
     read: ReadState,
@@ -377,6 +379,7 @@ impl Store {
             dict_trained.insert(id, u64::from_le_bytes(tail[..8].try_into().unwrap()));
             dicts.insert(id, tail[8..].to_vec());
         }
+        let hot_train_next = opts.dict_train_after.max(1);
         let mut store = Store {
             dir: dir.into(),
             opts,
@@ -386,6 +389,7 @@ impl Store {
             hot_cctx: zstd_safe::CCtx::create(),
             hot_dict: 0,
             hot_raw: 0,
+            hot_train_next,
             next_seq: 0,
             raw_text: 0,
             frames: Vec::new(),
@@ -542,8 +546,9 @@ impl Store {
             return Err(Error::Corrupt("hot log sequence gap"));
         }
         let mut at = FILE_HEAD as u64;
+        let mut input = bounded::HotReader::new(&f, size);
         while at < size {
-            match bounded::payload(&f, size, at)? {
+            match input.payload(at)? {
                 Some(payload) => {
                     let head = get_head(&payload)?;
                     if head.first_seq != self.next_seq {
@@ -681,8 +686,10 @@ impl Store {
         let offset = self.hot_len;
         self.hot_len += frame.len() as u64;
         self.push_frame(id, offset, payload.len() as u32, &head, lo, hi, text);
-        self.hot_raw += body.len();
-        if self.opts.dict_bytes > 0 && self.hot_dict == 0 && self.hot_raw >= self.opts.dict_train_after {
+        self.hot_raw = self.hot_raw.saturating_add(body.len());
+        if self.opts.dict_bytes > 0 && self.hot_dict == 0 && self.hot_train_next != usize::MAX && self.hot_raw >= self.hot_train_next {
+            // A failed/insufficient sample must not rescan all history on every append.
+            self.hot_train_next = self.hot_raw.saturating_mul(2).max(self.hot_raw.saturating_add(1));
             self.train_hot_dict()?;
         }
         Ok(first)
@@ -1028,6 +1035,8 @@ impl Store {
             return Err(Error::Corrupt("prepared segment does not match the compacted frames"));
         }
         self.frames.splice(a..b, cold);
+        self.hot_raw = self.frames.iter().filter(|f| !f.cold).fold(0usize, |n, f| n.saturating_add(f.raw_len as usize));
+        self.hot_train_next = self.hot_raw.saturating_add(self.opts.dict_train_after.max(1));
         self.read.clear_cache();
         self.drop_unused_dicts()?;
         Ok(CompactStats {

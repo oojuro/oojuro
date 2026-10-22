@@ -221,3 +221,130 @@ fn streamed_hot_training_reopen_and_compaction_preserve_sealed_original_fields()
         assert!(!b.windows(marker.len()).any(|p| p == marker));
     }
 }
+
+#[test]
+fn short_records_train_and_unusable_records_retry_only_geometrically() {
+    let t = Temp::new();
+    let opts = Options {
+        hot_level: 1,
+        cold_level: 1,
+        dict_bytes: 16 << 10,
+        dict_train_after: 1,
+        hot_file_bytes: 1 << 30,
+        sync: false,
+        dedupe_chunk: 0,
+        compact_threads: 1,
+        ..Options::default()
+    };
+    let mut store = Store::open(&t.0, opts.clone()).unwrap();
+    let mut attempts = 0;
+    for i in 0u64..8192 {
+        let mut text = [b'x'; 32];
+        text[..8].copy_from_slice(&i.to_le_bytes());
+        let next = store.hot_train_next;
+        store
+            .append(&[NewRecord {
+                kind: 1,
+                valid_at: i as i64,
+                recorded_at: i as i64,
+                key: b"",
+                attrs: b"",
+                text: &text,
+            }])
+            .unwrap();
+        attempts += usize::from(store.hot_train_next != next);
+    }
+    assert!(
+        store.hot_dict != 0,
+        "enough valid32-byte rows must produce a dictionary"
+    );
+    assert!(attempts <= 16);
+    drop(store);
+    let store = Store::open(&t.0, opts).unwrap();
+    for i in [0u64, 1, 4095, 8191] {
+        assert_eq!(&store.get(i).unwrap()[..8], &i.to_le_bytes());
+    }
+    let u = Temp::new();
+    let opts = Options {
+        dict_bytes: 16 << 10,
+        dict_train_after: 0,
+        sync: false,
+        dedupe_chunk: 0,
+        compact_threads: 1,
+        cold_level: 1,
+        ..Options::default()
+    };
+    let mut store = Store::open(&u.0, opts).unwrap();
+    let mut attempts = 0;
+    for i in 0..2000 {
+        let next = store.hot_train_next;
+        store
+            .append(&[NewRecord {
+                kind: 1,
+                valid_at: i,
+                recorded_at: i,
+                key: b"",
+                attrs: b"",
+                text: b"x",
+            }])
+            .unwrap();
+        attempts += usize::from(store.hot_train_next != next);
+    }
+    assert_eq!(store.hot_dict, 0);
+    assert!(
+        attempts <= 16,
+        "failed training scanned too often: {attempts}"
+    );
+    store.compact().unwrap();
+    assert_eq!(store.hot_train_next, store.hot_raw + 1);
+    store.hot_raw = usize::MAX - 1;
+    store.hot_train_next = usize::MAX - 1;
+    store
+        .append(&[NewRecord {
+            kind: 1,
+            valid_at: 2001,
+            recorded_at: 2001,
+            key: b"",
+            attrs: b"",
+            text: b"x",
+        }])
+        .unwrap();
+    assert_eq!(store.hot_train_next, usize::MAX);
+    store
+        .append(&[NewRecord {
+            kind: 1,
+            valid_at: 2002,
+            recorded_at: 2002,
+            key: b"",
+            attrs: b"",
+            text: b"x",
+        }])
+        .unwrap();
+    assert_eq!(store.hot_train_next, usize::MAX);
+}
+#[test]
+fn buffered_hot_payloads_match_positional_frames_across_lookahead_windows() {
+    let t = Temp::new();
+    let mut bytes = Vec::new();
+    let mut positions = Vec::new();
+    for i in 0..75 {
+        positions.push(bytes.len());
+        bytes.extend(seal_frame(&vec![
+            i as u8;
+            if i % 9 == 0 {
+                SCAN_BYTES + 19
+            } else {
+                199
+            }
+        ]));
+    }
+    let file = t.file(&bytes);
+    let mut input = HotReader::new(&file, bytes.len() as u64);
+    for at in positions {
+        assert_eq!(
+            input.payload(at as u64).unwrap(),
+            payload(&file, bytes.len() as u64, at as u64).unwrap()
+        );
+        assert!(input.bytes.len() <= SCAN_BYTES);
+    }
+}
