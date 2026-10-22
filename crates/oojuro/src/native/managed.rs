@@ -5,7 +5,10 @@ use oojuro_engine::{
     capture_log::Identity,
     record::{
         self, Input,
-        managed::{self, ControlAuditPage, FileWitness, ManagedLog, RetainedControl, Selection},
+        managed::{
+            self, ControlAuditPage, FileWitness, ManagedLog, ManagedPagedLog, RetainedControl,
+            Selection,
+        },
     },
 };
 use serde::{Deserialize, Serialize};
@@ -19,6 +22,7 @@ use std::{
 };
 
 const CONFIG: &str = "managed.json";
+const PAGED_CONFIG: &str = "managed-paged.json";
 const CONFIG_BYTES: usize = 16 << 10;
 const DATA_KEY: &str = "data-key";
 const CONTROL_KEY: &str = "control-key";
@@ -123,13 +127,16 @@ fn random() -> Result<[u8; 32]> {
     Ok(bytes)
 }
 fn load(root: &Path) -> Result<(Config, [u8; 32])> {
+    load_config(root, CONFIG)
+}
+fn load_config(root: &Path, filename: &str) -> Result<(Config, [u8; 32])> {
     config::check_root(root)?;
     // A configured canonical path cannot be redirected through a replaced ancestor.
     if root.canonicalize().map_err(|_| Error::Io)? != root {
         return Err(Error::Permissions);
     }
     let cfg: Config =
-        serde_json::from_slice(&config::read_private(&root.join(CONFIG), CONFIG_BYTES)?)
+        serde_json::from_slice(&config::read_private(&root.join(filename), CONFIG_BYTES)?)
             .map_err(|_| Error::Config)?;
     cfg.check(root)?;
     for path in [&cfg.control, &cfg.witness] {
@@ -147,6 +154,9 @@ fn load(root: &Path) -> Result<(Config, [u8; 32])> {
     Ok((cfg, key))
 }
 fn control(root: &Path, cfg: &Config) -> Result<Arc<RetainedControl>> {
+    control_mode(root, cfg, false)
+}
+fn control_mode(root: &Path, cfg: &Config, paged: bool) -> Result<Arc<RetainedControl>> {
     // Before constructors that can create fresh roots, require an independently retained current floor.
     // A missing/partial witness or control never becomes a new successful authority on a read.
     let floor: RetainedFloor =
@@ -168,7 +178,12 @@ fn control(root: &Path, cfg: &Config) -> Result<Arc<RetainedControl>> {
         return Err(Error::Authority);
     }
     let witness = map(FileWitness::open(&cfg.witness))?;
-    let control = Arc::new(map(RetainedControl::open(
+    let open = if paged {
+        RetainedControl::open_paged
+    } else {
+        RetainedControl::open
+    };
+    let control = Arc::new(map(open(
         &cfg.control,
         &key,
         signer,
@@ -197,6 +212,12 @@ fn cap(args: &Arguments) -> Result<usize> {
     Ok(n)
 }
 fn setup(root: &Path, args: &Arguments) -> Result<()> {
+    setup_mode(root, args, false)
+}
+pub(super) fn setup_paged(root: &Path, args: &Arguments) -> Result<()> {
+    setup_mode(root, args, true)
+}
+fn setup_mode(root: &Path, args: &Arguments, paged: bool) -> Result<()> {
     let root = canonical_new(root)?;
     let data = canonical_new(Path::new(args.required("--data-root")?))?;
     let retained = canonical_new(Path::new(args.required("--control-root")?))?;
@@ -219,6 +240,11 @@ fn setup(root: &Path, args: &Arguments) -> Result<()> {
         origin: [0; 32],
     };
     cfg.check(&root)?;
+    if paged {
+        for path in [&root, &cfg.data, &cfg.control, &cfg.witness] {
+            config::check_private_path(path.parent().ok_or(Error::Config)?)?;
+        }
+    }
     let data_key = random()?;
     let control_key = random()?;
     if data_key == control_key {
@@ -253,7 +279,12 @@ fn setup(root: &Path, args: &Arguments) -> Result<()> {
         .create(&cfg.control)
         .map_err(|_| Error::Io)?;
     let witness = map(FileWitness::open(&cfg.witness))?;
-    let control = Arc::new(map(RetainedControl::open(
+    let enroll = if paged {
+        RetainedControl::create_paged
+    } else {
+        RetainedControl::open
+    };
+    let control = Arc::new(map(enroll(
         &cfg.control,
         &control_key,
         signer,
@@ -261,16 +292,26 @@ fn setup(root: &Path, args: &Arguments) -> Result<()> {
         witness,
         cfg.identity,
     ))?);
-    let log = map(ManagedLog::create(
-        &cfg.data,
-        &data_key,
-        cfg.source(),
-        control,
-    ))?;
-    let binding = map(log.binding())?;
+    let binding = if paged {
+        let log = map(ManagedPagedLog::create(
+            &cfg.data,
+            &data_key,
+            cfg.source(),
+            control,
+        ))?;
+        map(log.binding())?
+    } else {
+        let log = map(ManagedLog::create(
+            &cfg.data,
+            &data_key,
+            cfg.source(),
+            control,
+        ))?;
+        map(log.binding())?
+    };
     cfg.origin = binding.stable_origin;
     config::write_new(
-        &root.join(CONFIG),
+        &root.join(if paged { PAGED_CONFIG } else { CONFIG }),
         &serde_json::to_vec(&cfg).map_err(|_| Error::Config)?,
     )?;
     for path in [&root, &cfg.data, &cfg.control, &cfg.witness] {
@@ -278,7 +319,7 @@ fn setup(root: &Path, args: &Arguments) -> Result<()> {
         config::sync_dir(path.parent().ok_or(Error::Config)?)?;
     }
     emit(
-        &json!({"status":"initialized","namespace":"oojuro-managed-record-3",
+        &json!({"status":"initialized","namespace":if paged { "oojuro-managed-record-paged-3" } else { "oojuro-managed-record-3" },
         "permanent_erasure":"unsupported_caller_owned_keys"}),
         4096,
     )
@@ -542,23 +583,61 @@ pub(super) fn with_existing_for_ingest<T>(
 ) -> Result<T> {
     config::check_private_path(root)?;
     let (cfg, key) = load(root)?;
-    let progress = checkpoint.parent().ok_or(Error::Config)?;
-    config::check_private_path(progress)?;
+    preflight_existing(root, &cfg, Some((capture_root, checkpoint)), false)?;
+    let owner = control(root, &cfg)?;
+    let status = map(owner.status())?;
+    if status.status != managed::Status::Active || status.generation == 0 {
+        return Err(Error::Authority);
+    }
+    config::existing_store(&cfg.data.join(format!("g-{}", status.generation)))?;
+    let mut log = map(ManagedLog::open(&cfg.data, &key, cfg.source(), owner))?;
+    run(
+        &mut log,
+        record::Scope {
+            writer: &cfg.writer,
+            owner: cfg.owner,
+        },
+    )
+}
+
+fn preflight_existing(
+    root: &Path,
+    cfg: &Config,
+    ingest: Option<(&Path, &Path)>,
+    paged: bool,
+) -> Result<()> {
     for path in [&cfg.data, &cfg.control, &cfg.witness] {
         config::check_private_path(path)?;
     }
-    let overlaps = |a: &Path, b: &Path| a.starts_with(b) || b.starts_with(a);
-    for authority in [root, &cfg.data, &cfg.control, &cfg.witness] {
-        if overlaps(progress, authority) || overlaps(capture_root, authority) {
+    if let Some((capture_root, checkpoint)) = ingest {
+        config::check_private_path(capture_root)?;
+        let progress = checkpoint.parent().ok_or(Error::Config)?;
+        config::check_private_path(progress)?;
+        let overlaps = |a: &Path, b: &Path| a.starts_with(b) || b.starts_with(a);
+        for authority in [root, &cfg.data, &cfg.control, &cfg.witness] {
+            if overlaps(progress, authority) || overlaps(capture_root, authority) {
+                return Err(Error::Config);
+            }
+        }
+        if overlaps(progress, capture_root) {
             return Err(Error::Config);
         }
+        config::existing_store(&capture_root.join(config::JOURNAL))?;
+        match fs::symlink_metadata(checkpoint) {
+            Ok(_) => {
+                config::read_private(checkpoint, 8192)?;
+            }
+            Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
+            Err(_) => return Err(Error::Io),
+        }
     }
-    if overlaps(progress, capture_root) {
-        return Err(Error::Config);
+    // Required namespaces must exist before any recovery-capable constructor.
+    if paged {
+        config::read_private(&cfg.control.join("PAGED_CONTROL"), 128)?;
+        config::read_private(&cfg.control.join("LOCK"), 1)?;
+    } else {
+        config::existing_store(&cfg.control)?;
     }
-    // All path/layout and required-file checks precede recovery-capable constructors.
-    config::existing_store(&capture_root.join(config::JOURNAL))?;
-    config::existing_store(&cfg.control)?;
     for (path, bytes) in [
         (cfg.data.join("MANAGED_FORMAT"), 128),
         (cfg.data.join("ENROLLMENT"), 8192),
@@ -568,20 +647,37 @@ pub(super) fn with_existing_for_ingest<T>(
     ] {
         config::read_private(&path, bytes)?;
     }
-    match fs::symlink_metadata(checkpoint) {
-        Ok(_) => {
-            config::read_private(checkpoint, 8192)?;
-        }
-        Err(error) if error.kind() == std::io::ErrorKind::NotFound => {}
-        Err(_) => return Err(Error::Io),
-    }
-    let owner = control(root, &cfg)?;
+    Ok(())
+}
+pub(super) fn with_paged_for_ingest<T>(
+    root: &Path,
+    capture_root: &Path,
+    checkpoint: &Path,
+    run: impl FnOnce(&mut ManagedPagedLog, record::Scope<'_>) -> Result<T>,
+) -> Result<T> {
+    paged_existing(root, Some((capture_root, checkpoint)), run)
+}
+pub(super) fn with_paged<T>(
+    root: &Path,
+    run: impl FnOnce(&mut ManagedPagedLog, record::Scope<'_>) -> Result<T>,
+) -> Result<T> {
+    paged_existing(root, None, run)
+}
+fn paged_existing<T>(
+    root: &Path,
+    ingest: Option<(&Path, &Path)>,
+    run: impl FnOnce(&mut ManagedPagedLog, record::Scope<'_>) -> Result<T>,
+) -> Result<T> {
+    config::check_private_path(root)?;
+    // No fallback to managed.json, and no snapshot-to-paged conversion.
+    let (cfg, key) = load_config(root, PAGED_CONFIG)?;
+    preflight_existing(root, &cfg, ingest, true)?;
+    let owner = control_mode(root, &cfg, true)?;
     let status = map(owner.status())?;
     if status.status != managed::Status::Active || status.generation == 0 {
         return Err(Error::Authority);
     }
-    config::existing_store(&cfg.data.join(format!("g-{}", status.generation)))?;
-    let mut log = map(ManagedLog::open(&cfg.data, &key, cfg.source(), owner))?;
+    let mut log = map(ManagedPagedLog::open(&cfg.data, &key, cfg.source(), owner))?;
     run(
         &mut log,
         record::Scope {
