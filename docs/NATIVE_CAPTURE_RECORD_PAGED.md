@@ -91,7 +91,14 @@ append before progress. Actual subprocess stories cover fresh explicit setup,
 policy-bound Capture ingestion and get/restart/compaction, protected existing-only
 refusal and layout separation, and closed stdout with unchanged retry outcomes.
 The original snapshot bridge/CLI and managed CLI cases remain regression gates.
-Actual results are recorded after the composed focused gate.
+The composed offline gate passed all32 cases:15 engine bridge cases (six new
+paged stories plus nine snapshot regressions), three new paged CLI stories,
+five snapshot CLI stories and nine managed CLI regressions. Strict engine
+library/tests Clippy passed. The initial compile found imports through the
+integrated driver's private module; corrected imports use its existing public
+re-exports. An unused copied test-only snapshot helper was removed after the
+first edge lint; the focused edge-lint retry passed with zero diagnostics in
+owned binary/test files. No runtime source changed for that lint correction.
 
 No provider/AWS call, deployment, private source, scale measurement, new training
 or irreversible key destruction is claimed.
