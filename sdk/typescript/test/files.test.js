@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import { createHash } from "node:crypto";
 import { inspect } from "node:util";
+import {store,clientOptions} from "./support/file-model.js";
 import { test } from "node:test";
 import { OojuroClient, OojuroError } from "../index.js";
 import { FILE_PART_BYTES, FILE_MAX_BYTES, prepareFileUpload, downloadFile, downloadFileTo, fileManifestName } from "../files.js";
@@ -14,43 +15,7 @@ async function* source(bytes, step = 17011) {
 }
 const descriptor = (bytes, extra = {}) => ({ uploadId: U, writer: W, name: PRIVATE, expected: null,
   size: bytes.length, sha256: sha(bytes), consent: "intentional-user-file", ...extra });
-function store() {
-  return { blobs: new Map(), requests: new Map(), generation: 0, readable: true, writable: true, calls: [], after: null };
-}
-function client(state) {
-  return new OojuroClient({ baseUrl: "https://synthetic.invalid", project: P, token: TOKEN,
-    fetch: async (url, init) => {
-      const path = new URL(url);
-      state.calls.push({ path: path.pathname, query: path.search, body: init.body });
-      let response;
-      if (init.method === "POST") {
-        if (!state.writable) return new Response(null, { status: 401 });
-        const input = JSON.parse(init.body);
-        if (input.scope !== W || input.mutations[0].writer !== W) return new Response(null, { status: 403 });
-        const old = state.requests.get(input.request_id);
-        if (old) {
-          if (old.body !== init.body) return new Response(null, { status: 409 });
-          response = old.response;
-        } else {
-          const part = input.mutations[0];
-          const oldBlob = state.blobs.get(part.name);
-          if ((oldBlob?.revision ?? null) !== part.expected) return new Response(null, { status: 409 });
-          const revision = sha(init.body);
-          state.blobs.set(part.name, { bytes: Uint8Array.from(part.bytes), revision });
-          const generation = ++state.generation;
-          response = { outcome: { generation, record_ids: {}, blob_revisions: { 0: revision }, writer: null, key: null, destruction: null, usage: { request_tag: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", intent_fingerprint: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", scope_tag: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", committed_at_us: 1, recorded_bytes: 0, kept_bytes: 0 } } };
-          state.requests.set(input.request_id, { body: init.body, response });
-        }
-        if (state.after) await state.after(input, state);
-        return new Response(JSON.stringify(response), { headers: { "content-type": "application/json", "x-oojuro-generation": String(response.outcome.generation) } });
-      }
-      if (!state.readable) return new Response(null, { status: 401 });
-      if (path.searchParams.get("writer") !== W) return new Response(null, { status: 403 });
-      const blob = state.blobs.get(path.searchParams.get("name"));
-      if (!blob) return new Response(null, { status: 404 });
-      return new Response(blob.bytes.slice(), { headers: { "content-type": "application/octet-stream", "x-oojuro-generation": String(state.generation) } });
-    } });
-}
+function client(state) { return new OojuroClient(clientOptions(state)); }
 function sink(extra = {}) {
   const out = { parts: [], committed: 0, aborted: 0,
     async write(bytes) { this.parts.push(bytes.slice()); },
@@ -305,4 +270,22 @@ test("advanced iterator cancellation before first next settles completion and ma
   await iterator.return();
   const settled = await Promise.race([read.completion.then(() => "success", () => "rejected"), new Promise((yes) => setTimeout(() => yes("pending"), 25))]);
   assert.equal(settled, "rejected"); assert.equal(state.calls.length, 1);
+});
+
+
+test("strict expected revision pins manifest and each part including same-byte replacement", async () => {
+  for (const mode of ["correct","manifest","part","missing","final"]) {
+    const state=store(),bytes=data(FILE_PART_BYTES+1),sdk=client(state);
+    const ack=await prepareFileUpload(sdk,descriptor(bytes)).send(source(bytes));
+    const manifestName=fileManifestName(PRIVATE);
+    if(mode==="manifest")state.blobs.get(manifestName).revision="e".repeat(64);
+    if(mode==="part")state.blobs.values().next().value.revision="f".repeat(64);
+    if(mode==="missing")state.omitRevision=true;
+    if(mode==="final")state.afterRead=(name,current)=>{
+      if(name!==manifestName)current.blobs.get(manifestName).revision="d".repeat(64);
+    };
+    const target=sink(),read=downloadFileTo(sdk,{writer:W,name:PRIVATE,expectedRevision:ack.revision},target);
+    if(mode==="correct"){await read;assert.equal(target.committed,1);assert.deepEqual(joined(target.parts),Buffer.from(bytes));}
+    else {await assert.rejects(read,e=>e.code==="file_integrity");assert.equal(target.committed,0);assert.equal(target.aborted,1);assert.equal(target.parts.length,0);}
+  }
 });

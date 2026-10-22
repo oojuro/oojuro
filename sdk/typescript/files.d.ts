@@ -41,6 +41,8 @@ export function fileManifestName(name: string): string;
 export interface FileReadOptions {
   writer: OpaqueId;
   name: string;
+  /** Strict immutable receipt: pin manifest revision and every part revision; missing headers refuse. */
+  expectedRevision?: OpaqueId;
   minGeneration?: WireInteger;
   signal?: AbortSignal;
 }
