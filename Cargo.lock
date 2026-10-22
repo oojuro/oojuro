@@ -4625,6 +4625,7 @@ dependencies = [
  "oojuro-trace",
  "prost",
  "regex",
+ "ring",
  "serde",
  "serde_json",
  "toml",
