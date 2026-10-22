@@ -18,6 +18,7 @@ pub(super) enum Harness {
     Codex,
     ClaudeCode,
     Pi,
+    Temporal,
 }
 
 #[derive(Serialize, Deserialize)]
