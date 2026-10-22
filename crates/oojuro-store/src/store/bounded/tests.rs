@@ -348,3 +348,51 @@ fn buffered_hot_payloads_match_positional_frames_across_lookahead_windows() {
         assert!(input.bytes.len() <= SCAN_BYTES);
     }
 }
+
+#[test]
+#[ignore]
+fn local_matched_old_and_windowed_crc_scan_measurement() {
+    use std::{hint::black_box, time::Instant};
+    let t = Temp::new();
+    let mut bytes = Vec::new();
+    for i in 0..2000 {
+        bytes.extend(seal_frame(&vec![i as u8; 512]));
+    }
+    let file = t.file(&bytes);
+    let path = t.0.join("synthetic.bin");
+    let loops = 50;
+    let start = Instant::now();
+    let mut old_count = 0;
+    for _ in 0..loops {
+        let whole = std::fs::read(&path).unwrap();
+        let mut at = 0;
+        while at < whole.len() {
+            let len = old_frame(&whole, at).unwrap();
+            old_count += 1;
+            black_box(&whole[at + 8..at + 8 + len]);
+            at += 8 + len;
+        }
+    }
+    let old = start.elapsed();
+    let start = Instant::now();
+    let mut new_count = 0;
+    for _ in 0..loops {
+        let mut reader = HotReader::new(&file, bytes.len() as u64);
+        let mut at = 0;
+        while at < bytes.len() as u64 {
+            let payload = reader.payload(at).unwrap().unwrap();
+            new_count += 1;
+            black_box(&payload);
+            at += 8 + payload.len() as u64;
+        }
+    }
+    let new = start.elapsed();
+    assert_eq!(old_count, new_count);
+    assert_eq!(new_count, loops * 2000);
+    println!(
+        "LOCAL CRC-only warm-file scan: iterations={loops}, bytes_per_iteration={}, frames={new_count}, old_whole_file_ms={:.3}, bounded_window_ms={:.3}; excludes AEAD/decode, no provider/scale claim",
+        bytes.len(),
+        old.as_secs_f64() * 1000.0,
+        new.as_secs_f64() * 1000.0
+    );
+}
