@@ -3,7 +3,7 @@
 mod sort;
 use super::super::*;
 use oojuro_store::crypto::{FrameCipher, SEAL_OVERHEAD, random_key};
-pub(super) use sort::Sorter;
+pub(in crate::record) use sort::Sorter;
 use std::{
     collections::VecDeque,
     fs::{self, File, OpenOptions},
@@ -12,7 +12,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
-pub(super) const PAGE_BYTES: usize = 64 << 10;
+pub(in crate::record) const PAGE_BYTES: usize = 64 << 10;
 const PACK_BYTES: u64 = 64 << 20;
 const MAX_CHILDREN: usize = 128;
 const MAX_DEPTH: u8 = 16;
@@ -22,13 +22,16 @@ const MAX_VALUE: usize = 32 << 10;
 const MAGIC: &[u8; 8] = b"OJDIR001";
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub(super) enum Purpose {
+pub(in crate::record) enum Purpose {
     Prefix,
     Request,
     Record,
     KeyVersion,
     Segment,
     Sort,
+    Frame,
+    File,
+    Dictionary,
 }
 impl Purpose {
     fn byte(self) -> u8 {
@@ -39,21 +42,24 @@ impl Purpose {
             Self::KeyVersion => 4,
             Self::Segment => 5,
             Self::Sort => 6,
+            Self::Frame => 7,
+            Self::File => 8,
+            Self::Dictionary => 9,
         }
     }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum KeyClass {
+pub(in crate::record) enum KeyClass {
     Data,
     RetainedControl,
 }
 /// Trusted authority adapter, never a wire-selected authenticated bool.
-pub(super) trait Authority {
+pub(in crate::record) trait Authority {
     fn current(&self) -> Result<Vec<u8>>;
     fn validate_birth(&self, birth: &[u8], purpose: Purpose, class: KeyClass) -> Result<()>;
 }
 #[derive(Clone)]
-pub(super) struct Context<'a> {
+pub(in crate::record) struct Context<'a> {
     pub directory: &'a Path,
     pub cipher: &'a FrameCipher,
     pub authority: &'a dyn Authority,
@@ -94,7 +100,7 @@ impl<'a> Context<'a> {
 }
 /// Bounded decoded metadata cache bound to one owned immutable cipher instance.
 /// A new key/cipher object cannot reuse entries even if caller metadata is copied.
-pub(super) struct PageCache {
+pub(in crate::record) struct PageCache {
     cipher: Arc<FrameCipher>,
     state: Mutex<CacheState>,
 }
@@ -180,7 +186,7 @@ fn node_accounted(node: &Node) -> Result<usize> {
     }
 }
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct Entry {
+pub(in crate::record) struct Entry {
     pub key: Vec<u8>,
     pub value: Vec<u8>,
 }
@@ -197,7 +203,7 @@ impl Entry {
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct Reference {
+pub(in crate::record) struct Reference {
     pub generation: [u8; 32],
     pub file: u64,
     pub offset: u64,
@@ -211,7 +217,7 @@ pub(super) struct Reference {
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct Root {
+pub(in crate::record) struct Root {
     pub format: u32,
     pub purpose: Purpose,
     pub binding: Vec<u8>,
@@ -282,7 +288,7 @@ fn sync_dir(dir: &Path) -> Result<()> {
         .and_then(|f| f.sync_all())
         .map_err(|_| Error::Unavailable)
 }
-pub(super) fn prepare_directory(dir: &Path) -> Result<()> {
+pub(in crate::record) fn prepare_directory(dir: &Path) -> Result<()> {
     match fs::symlink_metadata(dir) {
         Ok(m) if !m.is_dir() || m.file_type().is_symlink() => return Err(Error::Invalid),
         Ok(_) => (),
@@ -302,7 +308,7 @@ fn file_new(path: &Path) -> Result<File> {
         .open(path)
         .map_err(|_| Error::Unavailable)
 }
-pub(super) struct Pack<'a> {
+pub(in crate::record) struct Pack<'a> {
     ctx: Context<'a>,
     generation: [u8; 32],
     number: u64,
@@ -485,7 +491,7 @@ fn load(ctx: &Context<'_>, r: &Reference) -> Result<Node> {
     }
     Ok(node)
 }
-pub(super) struct Builder<'a> {
+pub(in crate::record) struct Builder<'a> {
     pack: Pack<'a>,
     leaf: Vec<Entry>,
     levels: Vec<Vec<Reference>>,
@@ -579,7 +585,7 @@ impl<'a> Builder<'a> {
         Ok(root)
     }
 }
-pub(super) struct Cursor<'a> {
+pub(in crate::record) struct Cursor<'a> {
     ctx: Context<'a>,
     stack: Vec<(Reference, usize)>,
     leaf: VecDeque<Entry>,
@@ -666,7 +672,7 @@ impl<'a> Cursor<'a> {
         }
     }
 }
-pub(super) fn visit_pages(
+pub(in crate::record) fn visit_pages(
     ctx: Context<'_>,
     root: &Root,
     mut visit: impl FnMut(&Reference) -> Result<()>,
@@ -691,15 +697,15 @@ pub(super) fn visit_pages(
     }
     Ok(())
 }
-pub(super) fn get(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
+pub(in crate::record) fn get(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
     let mut c = Cursor::seek(ctx, root, key)?;
     Ok(c.next()?.filter(|e| e.key == key).map(|e| e.value))
 }
-pub(super) fn get_ancestor(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
+pub(in crate::record) fn get_ancestor(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
     let mut c = Cursor::seek_ancestor(ctx, root, key)?;
     Ok(c.next()?.filter(|e| e.key == key).map(|e| e.value))
 }
-pub(super) fn validate_ancestor_root(ctx: &Context<'_>, root: &Root) -> Result<()> {
+pub(in crate::record) fn validate_ancestor_root(ctx: &Context<'_>, root: &Root) -> Result<()> {
     ctx.check()?;
     if root.format != 1
         || root.purpose != ctx.purpose
@@ -710,7 +716,7 @@ pub(super) fn validate_ancestor_root(ctx: &Context<'_>, root: &Root) -> Result<(
     ctx.authority
         .validate_birth(&root.binding, ctx.sort_of.unwrap_or(ctx.purpose), ctx.class)
 }
-pub(super) struct Editor<'a> {
+pub(in crate::record) struct Editor<'a> {
     pack: Pack<'a>,
     root: Root,
 }
@@ -970,7 +976,7 @@ fn decode_node(bytes: &[u8], level: u8) -> Result<Node> {
 mod tests;
 
 #[cfg(test)]
-pub(super) fn test_phase(at: &str) {
+pub(in crate::record) fn test_phase(at: &str) {
     if std::env::var("OOJURO_DIRECTORY_CRASH_PHASE").as_deref() == Ok(at) {
         println!("DIRECTORY_BOUNDARY_READY");
         std::io::stdout().flush().unwrap();

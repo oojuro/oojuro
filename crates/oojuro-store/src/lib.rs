@@ -6,6 +6,7 @@
 pub mod corpus;
 pub mod crypto;
 pub mod format;
+pub mod managed_pack;
 mod pack;
 mod reader;
 pub mod run;
