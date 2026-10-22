@@ -71,4 +71,10 @@ canonical fingerprint/negative zero and chunked survivor rewrite.
 The full 16 MiB NUL case passed in 86.46 seconds: actual multi-pack append,
 internal incremental read, unchanged public-output refusal, reopen, prune,
 signed original IDs, and exact original receipt-only retry.
-Final regression and strict lint evidence will be recorded at the frozen source.
+The managed regression gate passed 66 tests (two intentional subprocess helpers
+ignored) in 56.97 seconds; the separately proven large case was excluded.
+After a lint-only named PackConfig change, seven affected codec cases passed
+in 15.61 seconds and engine lib/tests strict lint (-D warnings, --no-deps)
+passed in 3.90 seconds. Existing dependency-crate dead-code warnings remain
+visible; there were no owned engine diagnostics. Independent source review
+found no new concrete P1/P2 in the complete new codec/control/driver delta.
