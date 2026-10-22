@@ -82,6 +82,15 @@ Test process death after each upload/manifest step, duplicate requests, competin
 objects, erased-writer recovery, and snapshots during writes. Do not assume S3 alone supplies writer ordering or a database
 transaction. AWS provides [conditional creates and compare-and-swap writes](https://docs.aws.amazon.com/AmazonS3/latest/userguide/conditional-writes.html) through `If-None-Match` and `If-Match`. Applying them to the manifest protocol is a proposed design, not an implemented transaction. KMS authority, conflict handling and recovery still require implementation review and fault tests. This review did not query live AWS state.
 
+## Current blockers for primary agent storage
+
+The cloud review found limits beyond the fixed defects. Writer/record deletions can reappear after restoring an older
+archive because no deletion replay ledger is implemented. Project deletion acknowledges before remote key/version cleanup
+finishes; stale offsite wraps can still decrypt until cleanup succeeds. Idempotency is bounded to the latest 262,144 keys,
+and append can still acknowledge after a seen-file write failure. Shared mutable blobs have no compare-and-swap conflict
+check. Resolve these contracts with tests before treating the service as the main store; changing the deployment location
+alone does not resolve them. The detailed evidence is in cloud PR #1's `docs/PRIMARY_STORAGE_REVIEW.md`.
+
 ## Executable gates delivered for review
 
 Cloud PR #1 adds a synthetic real-process gate: a writer-restricted agent writes a transcript, explicit memory note and exact binary blob;
