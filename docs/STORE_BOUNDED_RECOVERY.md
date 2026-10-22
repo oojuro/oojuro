@@ -23,3 +23,9 @@ Four focused synthetic regressions passed (5.17 s compile,4.78 s runtime): diffe
 No provider, AWS, Notion, customer data, package installation, merge or deployment. Heavy verification uses an isolated target and shared flock outside actual bounded steps.
 
 Final non-exhaustive suite passed: seven library tests,13encrypted,5run and11non-tailStore tests (36total, zero failures); the exhaustive cut test is separately sharded over all residue classes with default unsharded behavior preserved. Strict lint first exposed one preexisting iterator-loop style diagnostic in run.rs; its one-line equivalent for-loop correction is included.
+
+All eight disjoint exhaustive shards passed: residues0-6 each131cases and residue7 has130cases, summing exactly1047 original byte cuts. Every offset satisfies exactly one `(cut-before)%8` residue; default0/1 still runs every cut. Each shard runtime was23.54-23.80 s; aggregate test execution189.36 s explains why an unsharded180 s bound is insufficient for this existing fixture. No case was sampled or omitted. Final strict Store lib/tests lint passed after the mechanical correction (0.51 s), with a final test-only measurement lint repeat recorded below.
+
+An ignored, explicitly invoked LOCAL matched CRC-only warm-file scan processed50x1,040,000 bytes/100,000 frames: old whole-file scanner127.803 ms,64 KiB window130.852 ms (about2.4% overhead in this one debug-build run). It excludes AEAD/decode and measures neither the full old recovery test nor provider/large-store throughput. The structural memory change is a fixed lookahead plus one existing bounded frame rather than a whole hot-file buffer. No performance superiority claim follows.
+
+Independent source re-review of the byte-block/backoff/window fix found no new P1/P2 and confirmed persisted formats/write+sync ordering unchanged. It did not rerun tests. Remaining FrameRef/file/dictionary populations are still explicitly next-stage code.
