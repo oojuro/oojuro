@@ -124,16 +124,26 @@ with six tests and explicit per-writer tmpfs caches. [Cloud PR #10](https://gith
 S3 Standard CLI adapter with seven fake-transport/CLI tests. Each remains governed by the unimplemented key/control/runtime gates below.
 
 [Cloud PR #8](https://github.com/oojuro/cloud/pull/8) implements authenticated human timeline/search/provenance detail/export;
-its 43 tests pass. [Cloud PR #11](https://github.com/oojuro/cloud/pull/11) composes the current hosted storage repairs with that
-review surface and passes 47 relevant integration checks, but stays draft pending current-authority API-key revocation replay
-and browser credential rollback correction. A restored control database must not revive revoked API keys or logged-out sessions.
-The new credential-aware authority requires a schema fence; legacy history is not silently upgraded or represented as complete. None is a declaration that the new core or commercial hosted product is finished.
+its 43 tests pass. [Cloud PR #11](https://github.com/oojuro/cloud/pull/11) is the ready runnable hosted review slice,
+combining storage repairs, agent handoff/provenance and human review. Evidence is deliberately separate: the storage base passed
+117 tests (two opt-in load tests ignored), the first product composition passed 47 checks, and the final authentication composition
+passed 23 affected checks. These are not a claimed fresh aggregate/full-suite run.
+
+[Cloud PR #13](https://github.com/oojuro/cloud/pull/13) persists current-authority revoked-key intent before control-DB mutation,
+replays it before loading keys, rechecks cached authentication, and enforces a service/offline-admin lifecycle lock. Browser
+sessions and magic links are invalidated on boot/restore; service restart requires new sign-in/link. Its 58 unique focused checks
+pass. The credential-aware authority requires strict format 3 with no implicit legacy migration; unknown historical revocations,
+incomplete retry history and earliest nonvalidating binaries are not represented as protected by a version field.
+
+[Cloud PR #12](https://github.com/oojuro/cloud/pull/12) is the separately ready inactive S3-adapter/shared-lexical composition.
+Its cross-component synthetic story covers real lexical IDs/scores, record/memory/blob, exact recovered retries and revoked-key
+refusal through the actual adapter with fake S3 transport. It does not switch the runnable product to S3 or prove live provider durability. None is a declaration that the new core or commercial hosted product is finished.
 
 ## Current blockers for primary agent storage
 
 The initial cloud review found deletion resurrection from old archives, asynchronous remote key cleanup, bounded retry-key
 retention with possible acknowledgement after retry-state failure, and mutable blob lost updates. PRs #2/#3/#4/#6 now implement
-reviewable repairs with passing component/composed gates. The additional credential/session rollback fix and its final composition remain required. Hosted deletion freshness at startup and
+reviewable repairs with passing component/composed gates. PR #13 and product PR #11 add tested current-key revocation replay and ephemeral browser credential rollback protection. Hosted deletion freshness at startup and
 conditional publisher updates are interim protection, not a continuously fenced replicated authority. An obsolete publisher
 with broad overwrite/version-delete IAM can bypass new-script protections until the reviewed policy and credential boundary
 are deployed and verified. Logical record/writer restore revocation does not cryptographically erase retained backup bytes
