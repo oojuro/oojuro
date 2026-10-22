@@ -123,9 +123,22 @@ Nine/Trace/Core exists; those remain test-only differential oracles.
 
 ## Verification
 
-Pending final bounded gates; synthetic tests cover codec adversarial refusal,
+The full engine gate passed 37 tests and one fixture-only assertion was then
+corrected to use exact phrase semantics; its focused rerun passed, giving evidence
+for all 38 nonignored tests. Three ignored tests are two subprocess/measurement
+helpers plus the existing raw subprocess helper; actual SIGKILL drivers are run.
+Synthetic tests cover codec adversarial refusal,
 exact reopen/delta/merge scores and provenance, no valid-cache retokenization,
 copied-origin fork and equal-high-water rejection, corruption/loss/ahead rebuild,
 publication failure after acknowledged capture commit, multi-segment row
 boundaries, encrypted file scan, exclusive scope and actual process SIGKILL.
 Local 1000-row measurement is opt-in and not a large-corpus performance claim.
+
+
+Local debug-build measurement on Rocket2, synthetic 1000 rows: one segment,
+32940 total cache bytes, 65.087ms rebuild and 25.388ms median /26.081ms maximum
+reopen over ten opens. Every measured reopen performed zero tokenizations.
+This measures local CPU/encryption/filesystem operations with warm OS caches;
+it excludes independent CaptureLog startup and establishes neither launch-scale
+latency/throughput nor hosted/provider/AZ durability. Ordinary no-deps Clippy
+found one mechanical new warning, corrected before final strict lint.

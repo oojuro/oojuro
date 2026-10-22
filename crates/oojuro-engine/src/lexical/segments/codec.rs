@@ -251,11 +251,7 @@ impl<'a> Bits<'a> {
 }
 fn rice_k(rows: u32, df: u32) -> u32 {
     let q = rows / df.max(1);
-    if q <= 1 {
-        0
-    } else {
-        31 - q.leading_zeros()
-    }
+    if q <= 1 { 0 } else { 31 - q.leading_zeros() }
 }
 fn prefix(a: &[u8], b: &[u8]) -> usize {
     a.iter().zip(b).take_while(|(a, b)| a == b).count()
@@ -568,10 +564,10 @@ pub(super) fn decode(bytes: &[u8]) -> Result<Segment> {
     let mut count = 0u64;
     for i in 0..terms {
         let block_start = i % DICT_BLOCK == 0;
-        if block_start {
-            if index.u32()? as usize != dictionary.pos || dictionary.u32()? as usize != post_pos {
-                return invalid();
-            }
+        if block_start
+            && (index.u32()? as usize != dictionary.pos || dictionary.u32()? as usize != post_pos)
+        {
+            return invalid();
         }
         let p = usize_of(dictionary.var()?)?;
         let suffix_len = usize_of(dictionary.var()?)?;
