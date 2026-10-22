@@ -7,6 +7,7 @@ import {
   type Outcome,
   type Read,
   type TraceRecord,
+  type UsageFact,
 } from "../index.js";
 const project = "1".repeat(64),
   writer = "2".repeat(64);
@@ -50,3 +51,17 @@ new PreparedCommit(() => {});
 void authority;
 
 new OojuroClient({baseUrl:"http://localhost",project:"1".repeat(64),token:"ojv2_"+"A".repeat(43)}).prepareSearch({requestId:"explicit-search",query:"words",k:1,minGeneration:0}).send();
+
+
+// Usage is server receipt data, with tags required for public data mutations.
+const usage: Promise<UsageFact> = outcome.then((receipt) => receipt.usage);
+void usage;
+client.prepareCommit({
+  requestId: "no-usage-authority", scope: writer, mutations: input.mutations,
+  // @ts-expect-error Server usage tags cannot be supplied as commit authority.
+  usage: { request_tag: writer },
+});
+// @ts-expect-error Control-only null usage tags are outside the data commit response.
+const controlOnlyUsage: UsageFact = { request_tag: null, intent_fingerprint: writer, scope_tag: writer,
+  committed_at_us: 0, recorded_bytes: 0, kept_bytes: 0 };
+void controlOnlyUsage;

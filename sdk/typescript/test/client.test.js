@@ -33,6 +33,10 @@ function response(value, generation = 7, type = "application/json") {
 }
 const envelope = (value, generation = 7) =>
   response({ watermark: watermark(generation), value }, generation);
+const usage = () => ({
+  request_tag: R, intent_fingerprint: B, scope_tag: W,
+  committed_at_us: 1767323045001000, recorded_bytes: 3, kept_bytes: 700,
+});
 const ack = () => ({
   outcome: {
     generation: 7,
@@ -41,6 +45,7 @@ const ack = () => ({
     writer: null,
     key: null,
     destruction: null,
+    usage: usage(),
   },
 });
 const input = () => ({
@@ -559,4 +564,62 @@ test("blob current CAS revision is validated without inventing one for old repli
   const sdk=client(async()=>streaming(stream([new Uint8Array([0,255])]),"application/octet-stream",{"x-oojuro-blob-revision":R}));
   assert.equal((await sdk.blob(W,"file")).revision,R);
   await assert.rejects(client(async()=>streaming(stream([new Uint8Array([0])]),"application/octet-stream",{"x-oojuro-blob-revision":"invalid"})).blob(W,"file"),e=>safe(e,"invalid_response"));
+});
+
+
+test("current cloud usage receipt is required and returned unchanged for data commits and deletes", async () => {
+  const expected = ack();
+  const sent = [];
+  const sdk = client(async (_url, init) => { sent.push(JSON.parse(init.body)); return response(expected); });
+  const request = { ...input(), usage: { request_tag: PRIVATE + TOKEN } };
+  const result = await sdk.prepareCommit(request).send();
+  assert.deepEqual(result.usage, expected.outcome.usage);
+  assert.deepEqual(Object.keys(sent[0]).sort(), ["mutations", "request_id", "scope"]);
+  assert.equal(Object.hasOwn(sent[0], "usage"), false);
+  const deletionAck = { outcome: { ...ack().outcome, record_ids: {}, blob_revisions: {},
+    usage: { ...usage(), committed_at_us: -1, recorded_bytes: 0, kept_bytes: 500 } } };
+  const deleted = await client(async () => response(deletionAck)).prepareCommit({
+    requestId: "selected-delete", scope: W,
+    mutations: [{ kind: "DeleteBlob", writer: W, name: "selected-file", expected: B }],
+  }).send();
+  assert.deepEqual(deleted.usage, deletionAck.outcome.usage);
+});
+
+test("usage receipt refuses absent fields, control-only null tags, malformed tags and extra schema", async () => {
+  const edits = [
+    (v) => { delete v.usage; }, (v) => { v.usage = null; }, (v) => { v.usage = []; },
+    (v) => { v.usage.extra = PRIVATE + TOKEN; },
+    ...["request_tag", "intent_fingerprint", "scope_tag", "committed_at_us", "recorded_bytes", "kept_bytes"]
+      .map((key) => (v) => { delete v.usage[key]; }),
+    ...["request_tag", "intent_fingerprint", "scope_tag"].flatMap((key) => [
+      (v) => { v.usage[key] = null; }, (v) => { v.usage[key] = PRIVATE + TOKEN; },
+      (v) => { v.usage[key] = "A".repeat(64); },
+    ]),
+    (v) => { v.usage.predecessor = B; },
+    (v) => { v.usage.recorded_bytes = -1; }, (v) => { v.usage.kept_bytes = -1; },
+  ];
+  for (const edit of edits) {
+    const value = ack(); edit(value.outcome);
+    await assert.rejects(client(async () => response(value)).prepareCommit(input()).send(),
+      (error) => safe(error, "invalid_response", "unknown"));
+  }
+});
+
+test("usage receipt numeric source lexemes retain exact signed and unsigned safe-integer boundaries", async () => {
+  for (const key of ["committed_at_us", "recorded_bytes", "kept_bytes"]) {
+    for (const lexeme of ["1.0", "1e0", "1.0000000000000001", "9007199254740992", "-9007199254740992"]) {
+      const value = ack(); value.outcome.usage[key] = 123;
+      const wire = JSON.stringify(value).replace('"' + key + '":123', '"' + key + '":' + lexeme);
+      await assert.rejects(client(async () => response(wire)).prepareCommit(input()).send(),
+        (error) => safe(error, "invalid_response", "unknown"));
+    }
+  }
+  for (const sign of [-1, 1]) {
+    const value = ack();
+    value.outcome.usage.committed_at_us = sign * Number.MAX_SAFE_INTEGER;
+    value.outcome.usage.recorded_bytes = 0;
+    value.outcome.usage.kept_bytes = Number.MAX_SAFE_INTEGER;
+    const result = await client(async () => response(value)).prepareCommit(input()).send();
+    assert.deepEqual(result.usage, value.outcome.usage);
+  }
 });

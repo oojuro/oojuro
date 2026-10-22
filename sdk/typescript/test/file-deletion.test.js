@@ -36,7 +36,7 @@ function client(state) {
         else if (item.kind === "DeleteBlob" && row) state.blobs.delete(item.name);
         else return new Response(null, { status: 409 });
         const generation = ++state.generation;
-        response = { outcome: { generation, record_ids: {}, blob_revisions: item.kind === "Blob" ? { 0: state.blobs.get(item.name).revision } : {}, writer: null, key: null, destruction: null } };
+        response = { outcome: { generation, record_ids: {}, blob_revisions: item.kind === "Blob" ? { 0: state.blobs.get(item.name).revision } : {}, writer: null, key: null, destruction: null, usage: { request_tag: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", intent_fingerprint: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", scope_tag: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", committed_at_us: 1, recorded_bytes: 0, kept_bytes: 0 } } };
         state.requests.set(input.request_id, { body: init.body, response });
       }
       if (state.after) await state.after(input, state);

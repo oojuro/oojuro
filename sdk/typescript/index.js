@@ -194,7 +194,7 @@ function mutation(value) {
     fail();
 }
 function outcome(value, generation, mutations) {
-  keys(value, ["generation", "record_ids", "blob_revisions", "writer", "key", "destruction"]);
+  keys(value, ["generation", "record_ids", "blob_revisions", "writer", "key", "destruction", "usage"]);
   integer(value, "generation");
   if (
     value.generation !== generation ||
@@ -203,6 +203,14 @@ function outcome(value, generation, mutations) {
     value.destruction !== null
   )
     fail();
+  // Public commits contain only data writes/deletes. Current cloud control-only
+  // null tags cannot appear here; these opaque receipts grant no caller authority.
+  keys(value.usage, ["request_tag", "intent_fingerprint", "scope_tag",
+    "committed_at_us", "recorded_bytes", "kept_bytes"]);
+  for (const field of ["request_tag", "intent_fingerprint", "scope_tag"]) id(value.usage[field]);
+  integer(value.usage, "committed_at_us", -Number.MAX_SAFE_INTEGER);
+  integer(value.usage, "recorded_bytes");
+  integer(value.usage, "kept_bytes");
   for (const [field, kinds] of [
     ["record_ids", ["Record", "Memory"]],
     ["blob_revisions", ["Blob"]],

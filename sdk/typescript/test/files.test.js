@@ -38,7 +38,7 @@ function client(state) {
           const revision = sha(init.body);
           state.blobs.set(part.name, { bytes: Uint8Array.from(part.bytes), revision });
           const generation = ++state.generation;
-          response = { outcome: { generation, record_ids: {}, blob_revisions: { 0: revision }, writer: null, key: null, destruction: null } };
+          response = { outcome: { generation, record_ids: {}, blob_revisions: { 0: revision }, writer: null, key: null, destruction: null, usage: { request_tag: "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", intent_fingerprint: "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb", scope_tag: "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc", committed_at_us: 1, recorded_bytes: 0, kept_bytes: 0 } } };
           state.requests.set(input.request_id, { body: init.body, response });
         }
         if (state.after) await state.after(input, state);

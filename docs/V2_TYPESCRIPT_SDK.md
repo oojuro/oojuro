@@ -50,6 +50,25 @@ it from the original durable inputs; never invent a new ID to resolve uncertaint
 server HTTP status is retained as `status`, without copying its body. Preparation errors happen
 before transport and have outcome `none`.
 
+## Committed usage receipts
+
+Current cloud data commits include a required `Outcome.usage` with exactly
+`request_tag`, `intent_fingerprint`, `scope_tag`, `committed_at_us`,
+`recorded_bytes` and `kept_bytes`. The three tags are opaque lowercase
+64-character hex strings for every data write/delete this SDK can prepare.
+Control-only commits can use null tags in the server protocol; this SDK has no
+control mutation API and refuses those responses.
+
+The server supplies these observations. They do not authorize a caller, admit a
+write, replace the mandatory UsageBridge, or verify ledger/provider durability.
+The client accepts no usage authority in its commit input. `committed_at_us` is a
+logical signed server timestamp, not provider CAS wall-clock evidence.
+`recorded_bytes` is newly recorded data in that commit; `kept_bytes` is the
+post-commit retained total and may exceed it. All numbers must have plain integer
+source lexemes and fit the exact signed/nonnegative JavaScript safe-integer
+ranges. Missing, malformed or extra usage fields reject the entire ACK with an
+unknown commit outcome, preserving the original request identity for retry.
+
 ## Actual wire coverage and limits
 
 - `/v2/projects/{opaque-project}/commits`: Record, Memory, Blob and their corresponding deletes.

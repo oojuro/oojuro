@@ -71,6 +71,19 @@ export interface CommitInput {
   scope: OpaqueId;
   mutations: readonly Mutation[];
 }
+/** Server-assigned committed usage observation; never a client-supplied admission/grant.
+ * Tags are required for every data mutation supported by this client. */
+export interface UsageFact {
+  request_tag: OpaqueId;
+  intent_fingerprint: OpaqueId;
+  scope_tag: OpaqueId;
+  /** Logical server observation time, not provider CAS wall-clock evidence. */
+  committed_at_us: WireInteger;
+  /** Newly recorded bytes in this commit. */
+  recorded_bytes: WireInteger;
+  /** Authoritative total retained bytes after this commit; may exceed recorded_bytes. */
+  kept_bytes: WireInteger;
+}
 export interface Outcome {
   generation: WireInteger;
   record_ids: Readonly<Record<string, OpaqueId>>;
@@ -78,6 +91,7 @@ export interface Outcome {
   writer: null;
   key: null;
   destruction: null;
+  usage: UsageFact;
 }
 export interface Watermark {
   generation: WireInteger;
