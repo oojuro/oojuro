@@ -139,6 +139,42 @@ incomplete retry history and earliest nonvalidating binaries are not represented
 Its cross-component synthetic story covers real lexical IDs/scores, record/memory/blob, exact recovered retries and revoked-key
 refusal through the actual adapter with fake S3 transport. It does not switch the runnable product to S3 or prove live provider durability. None is a declaration that the new core or commercial hosted product is finished.
 
+## Composed review entrypoints and readiness
+
+These levels are separate; passing a component's unit tests does not complete the
+commercial product or the consolidated engine specification.
+
+| Level | Review entrypoint and current evidence | Remaining acceptance |
+|---|---|---|
+| Runnable App candidate | [Cloud PR #14](https://github.com/oojuro/cloud/pull/14), ready: storage safety fixes, scoped agent handoff, other registered-human read-only trace review. Complete current-source suite **131 passed, 0 failed, 2 intentional load tests ignored**; independent source review cleared the HTTP runtime blocking issue. Runtime source `81fa312`; later commit only records evidence. | Local durability/offsite-pending ACK is still distinct from replicated hosted ACK. Deliberate authority format4 migration, deployment review and actual customer acceptance remain. |
+| Local core candidate | [Engine PR #16](https://github.com/oojuro/oojuro/pull/16), draft: atomic sealed raw bytes + parsed/policy/context/ID outcomes, explicit Codex source adapter, real tmpfs lexical projection. | Independent review identified missing/defaulted resume-state and unresolved-call/lookup eviction gaps; strict complete context and fail-closed unresolved capacity regressions are being finalized. Do not infer final current-head success from earlier tests. This is not the consolidated query/index port. |
+| Inactive hosted v2 experiment | New namespace separates retained control authentication from writer/project payload DEKs, logical tombstones before external terminal-scope destruction and verifiable status. Based on inactive S3/serving composition PR12; library compilation passes. | Lifecycle regressions, exact-scope retries and real lexical/fake-S3 composition are still gating. No production key service, deployed App integration or human grants in v2 yet. |
+| AWS provider acceptance | Prior adapter and composition use actual adapter code with fake transport; no live AWS operations were performed. | Independently current anti-rollback authority; provider key-service durability and irreversible destruction; IAM/obsolete binary exclusion; S3 semantics/faults; process/host/AZ drills, throughput/latency/cost and region DR evidence. |
+| Complete specification | Section18 milestones below are the intended build order; the oracle remains the working product engine. | Full new format/log/chain, store/index/query differential port, erase/audit/retention, ranker integration, all edges and scale/security/launch gates remain incomplete. |
+
+PR14 extends PR11/PR13/PR6 and is the current composed working-product review.
+Its required live authority **format4** supersedes the credential-only format3
+boundary described for historical PR13 above. Snapshot container format3 is a
+separate version. Older live authorities need explicit trustworthy migration or
+a fresh namespace; no missing review history becomes an empty confirmed ACL.
+
+### Concrete next specification milestones
+
+1. Finish format/log sealing and integrity-chain recovery, using the proven Store
+   append boundary and preserving exact raw/parsed policy receipts.
+2. Port store/index segments, dedupe and merge; measure size/ingest at equal
+   hardware. Then port lexical query to bit-identical ranked IDs and score bits
+   on the declared differential corpus. The temporary old-engine projection is
+   an oracle-backed bridge, not proof that this port is done.
+3. Implement native erase/retention and verifiable audit receipts, with old
+   backup/key/cache recovery tests. Connect the already separate ranker seam
+   only after the lexical gate and held-out adoption requirements pass.
+4. Complete the remaining adapters, local protocol/CLI/MCP/daemon/forwarder and
+   hosted wiring. A single explicit Codex adapter does not fulfill every edge.
+5. Run the section14 correctness/performance/size/round-trip/audit gates and
+   section18 10M/100M record, security and launch acceptance. Historic reference
+   measurements are not measurements of the new candidate.
+
 ## Current blockers for primary agent storage
 
 The initial cloud review found deletion resurrection from old archives, asynchronous remote key cleanup, bounded retry-key

@@ -1,7 +1,7 @@
-# Oojuro engine specification (review draft 0.2, 2026-10-22)
+# Oojuro engine specification (review draft 0.3, 2026-10-22)
 
 Status: **draft for the owner's review; no launch or migration approval.** This specifies a proposed foundation.
-The sealed raw journal and explicit file adapter are implemented review slices; the complete consolidated engine and hosted
+The sealed raw journal, explicit file adapter and atomic Codex capture candidate are bounded review slices; the complete consolidated engine and hosted
 primary-store contract remain unfinished. See REVIEW.md for current code and verification. The old engine (`oojuro/oojuro` at `3a17d1d`, called "the oracle" below) is the working reference
 implementation and the source of every measured number quoted here.
 
@@ -114,10 +114,16 @@ approved encrypted raw-upload design exists. Redaction is defense in depth and i
 * **Project** = one journal = one trust boundary = one hosted API key space. Nothing in a request can reach another project.
 * **Writer** = erasure and retention unit inside a project. Many agents write into one writer. Dedupe and dictionaries never
   cross writers.
-* **Agent** = a running instance; trees of agents are computed at query time.
+* **Agent** = a running instance; query-time causal trees are proposed. Current hosted parent/source/tool links are
+  recorded caller claims, not a verified causal graph; scoped keys enforce only their configured agent identity.
+* **Human reviewer** = another registered account explicitly granted whole-project read-only trace access by the owner.
+  Timeline, search, detail and export share the same redacted authorized records. No anonymous/public shares or credentials
+  in share URLs; mutation, key, retention, billing and grant management remain owner-only. Grants and revocations belong in
+  independently current authority and must survive old account-database restore. The working App implementation and strict
+  authority-format migration are in [cloud PR #14](https://github.com/oojuro/cloud/pull/14); inactive v2 integration remains a gate.
 * Reads that name no writer look at every writer the key may read.
 
-Limits at launch (hosted): 10 projects per account, 20 keys per project, an account is one person.
+Limits at launch (hosted): 10 projects per account, 20 keys per project, an account is one person; the current review slice allows at most 20 active human reviewers per project.
 
 ## 3. Architecture
 
@@ -509,8 +515,7 @@ The oracle stays as a differential-test target and as the dogfood engine until t
 ## 16. Non-goals
 
 SQL or a user-defined schema; embeddings or any model call in the write path; being a message queue or an event bus; a
-stand-alone vector database; real-time stream processing; team roles, SSO and organisations (one person per account at
-launch); zero-knowledge hosting (the privacy promise is local-first, hardened hosted, and run-it-yourself with the Apache
+stand-alone vector database; real-time stream processing; SSO and organization hierarchies (accounts remain individual; explicit owner grants allow registered-human read-only review); zero-knowledge hosting (the privacy promise is local-first, hardened hosted, and run-it-yourself with the Apache
 engine; customer-held keys come after launch).
 
 ## 17. Open decisions
