@@ -223,3 +223,94 @@ fn paged_store_repairs_only_last_torn_tail_refuses_misuse_and_keeps_metadata_enc
     std::os::unix::fs::symlink(f.source(), f.root.join("link")).unwrap();
     assert!(PagedStore::open(&f.root.join("link"), f.opts(), &f.cache()).is_err());
 }
+
+#[test]
+#[ignore]
+fn paged_store_crash_child() {
+    let root = PathBuf::from(std::env::var("OOJURO_PAGED_STORE_CRASH_ROOT").unwrap());
+    let f = Fixture { root };
+    let _reader = f.reader();
+    panic!("boundary not reached");
+}
+#[test]
+fn paged_store_sigkill_table_and_root_publication_never_changes_original_ack() {
+    use std::{
+        io::{BufRead, BufReader},
+        process::{Command, Stdio},
+        sync::mpsc,
+        time::Duration,
+    };
+    for phase in [
+        "TableTemp",
+        "TablePublished",
+        "RootTemp",
+        "RootPublished",
+        "RootDurable",
+    ] {
+        let f = Fixture::new();
+        let mut source = f.writer();
+        append(&mut source, 0, 6);
+        drop(source);
+        drop(f.reader());
+        let mut child = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "store::paged::tests::paged_store_crash_child",
+                "--ignored",
+                "--exact",
+                "--nocapture",
+            ])
+            .env("OOJURO_PAGED_STORE_CRASH_ROOT", &f.root)
+            .env("OOJURO_PAGED_STORE_CRASH_PHASE", phase)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .unwrap();
+        let out = child.stdout.take().unwrap();
+        let (tx, rx) = mpsc::channel();
+        let listener = std::thread::spawn(move || {
+            for line in BufReader::new(out).lines() {
+                if line.unwrap().contains("PAGED_STORE_BOUNDARY_READY") {
+                    let _ = tx.send(());
+                    break;
+                }
+            }
+        });
+        let reached = rx.recv_timeout(Duration::from_secs(8));
+        let _ = child.kill();
+        let status = child.wait().unwrap();
+        listener.join().unwrap();
+        assert!(reached.is_ok(), "{phase}");
+        use std::os::unix::process::ExitStatusExt;
+        assert_eq!(status.signal(), Some(9));
+        let reader = f.reader();
+        check(&reader, 0, 6);
+        drop(reader);
+        let mut source = f.writer();
+        append(&mut source, 6, 7);
+    }
+}
+#[test]
+fn paged_store_refuses_oversized_source_metadata_before_decrypted_population_allocation() {
+    let f = Fixture::new();
+    let mut opts = f.opts();
+    opts.dict_bytes = 0;
+    opts.hot_level = 0;
+    let mut source = Store::open(&f.source(), opts.clone()).unwrap();
+    let row = NewRecord {
+        kind: 0,
+        valid_at: 0,
+        recorded_at: 0,
+        key: b"",
+        attrs: b"",
+        text: b"",
+    };
+    let rows = (0..131073).map(|_| NewRecord { ..row }).collect::<Vec<_>>();
+    assert_eq!(source.append(&rows).unwrap(), 0);
+    drop(source);
+    assert!(matches!(
+        PagedStore::open(&f.source(), opts, &f.cache()),
+        Err(Error::Invalid(
+            "paged frame metadata exceeds bounded read window"
+        ))
+    ));
+}

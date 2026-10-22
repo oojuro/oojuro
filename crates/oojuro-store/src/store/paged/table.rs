@@ -85,6 +85,8 @@ impl Builder {
             &self.buffer,
         );
         self.file.write_all(&sealed)?;
+        #[cfg(test)]
+        super::test_phase("TableTemp");
         self.pages += 1;
         self.pending = 0;
         self.buffer.fill(0);
@@ -100,6 +102,8 @@ impl Builder {
             &final_path,
         )?;
         File::open(&self.directory)?.sync_all()?;
+        #[cfg(test)]
+        super::test_phase("TablePublished");
         Ok(Table {
             file: Arc::new(self.file),
             cipher: self.cipher,
