@@ -44,6 +44,14 @@ pub(super) struct State {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub paged: Option<super::paged::schema::Anchor>,
 }
+impl State {
+    pub(super) fn validate_layout(&self) -> Result<()> {
+        if let Some(anchor) = &self.paged {
+            anchor.validate(self.origin, self.identity, self.generation)?;
+        }
+        Ok(())
+    }
+}
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct PruneEvidence {
@@ -281,6 +289,28 @@ impl RetainedControl {
         witness: FileWitness,
         identity: [u8; 32],
     ) -> Result<Self> {
+        Self::create_paged_mode(directory, key, signer, authority, witness, identity, 1)
+    }
+    /// Fresh streaming storage layout; no existing-root conversion.
+    pub fn create_paged_streaming(
+        directory: &Path,
+        key: &[u8; 32],
+        signer: Signer,
+        authority: [u8; 32],
+        witness: FileWitness,
+        identity: [u8; 32],
+    ) -> Result<Self> {
+        Self::create_paged_mode(directory, key, signer, authority, witness, identity, 2)
+    }
+    fn create_paged_mode(
+        directory: &Path,
+        key: &[u8; 32],
+        signer: Signer,
+        authority: [u8; 32],
+        witness: FileWitness,
+        identity: [u8; 32],
+        layout: u32,
+    ) -> Result<Self> {
         if witness.current()?.is_some() {
             return Err(Error::Authority);
         }
@@ -305,12 +335,13 @@ impl RetainedControl {
             audit: None,
             paged: None,
         };
-        let root = super::paged::checkpoint::genesis(
+        let root = super::paged::checkpoint::genesis_mode(
             &directory,
             &cipher,
             &witness.directory,
             state.origin,
             identity,
+            layout,
         )?;
         let anchor = root.stage(&directory, &cipher)?;
         state.physical = anchor.ciphertext_digest;
@@ -653,6 +684,7 @@ impl Inner {
         public_receipt(&envelope).ok_or(Error::Authority)
     }
     fn current(&self) -> Result<()> {
+        self.state.validate_layout()?;
         if self.failed
             || self.witness.current()? != Some(self.checkpoint.floor().map_err(audit_error)?)
         {
@@ -663,6 +695,12 @@ impl Inner {
     }
     pub fn advance(&mut self, mut state: State) -> Result<SignedCheckpoint> {
         self.current()?;
+        state.validate_layout()?;
+        if self.state.paged.as_ref().map(|a| a.layout()).transpose()?
+            != state.paged.as_ref().map(|a| a.layout()).transpose()?
+        {
+            return Err(Error::Authority);
+        }
         if self.store.is_paged() {
             let verified = self.store.verified()?;
             if state.paged == self.state.paged {

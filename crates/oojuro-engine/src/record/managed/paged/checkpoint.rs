@@ -92,13 +92,18 @@ impl tree::Authority for Fresh<'_> {
         Ok(())
     }
 }
-pub(in crate::record::managed) fn genesis(
+pub(in crate::record::managed) fn genesis_mode(
     directory: &Path,
     cipher: &FrameCipher,
     witness: &Path,
     origin: [u8; 32],
     identity: [u8; 32],
+    layout: u32,
 ) -> Result<schema::CommitRoot> {
+    if !matches!(layout, 1 | 2) {
+        return Err(Error::Bounds);
+    }
+
     let birth = Birth {
         format: 1,
         stable_origin: origin,
@@ -130,7 +135,7 @@ pub(in crate::record::managed) fn genesis(
         .finish()
     };
     Ok(schema::CommitRoot {
-        format: 1,
+        format: layout,
         intent: oojuro_store::crypto::random_key(),
         birth: birth.encode().map_err(io)?,
         data_key_version: None,
@@ -336,7 +341,15 @@ pub(in crate::record::managed) fn check_prepared(
         return Err(Error::Authority);
     }
     let previous = schema::load(directory, cipher, verified.state())?;
-    if root.intent != previous.intent
+    if root.format != previous.format
+        || next.paged.as_ref().ok_or(Error::Authority)?.layout()?
+            != verified
+                .state()
+                .paged
+                .as_ref()
+                .ok_or(Error::Authority)?
+                .layout()?
+        || root.intent != previous.intent
         || previous
             .enrollment_digest
             .is_some_and(|d| root.enrollment_digest != Some(d))

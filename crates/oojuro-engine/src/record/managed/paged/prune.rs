@@ -2,12 +2,10 @@
 use super::*;
 use crate::audit::EventKind;
 use driver::{
-    ManagedPagedLog, RowRef, advance_index, candidate_row, commitment, data_directory, next_birth,
+    ManagedPagedLog, advance_index, candidate_row, commitment, data_directory, next_birth,
     read_assigned,
 };
-use oojuro_store::managed_pack::{Reservation, Stage as PackStage};
 use schema::RootName as N;
-const CHUNK: usize = 4 << 20;
 #[derive(Clone, Copy)]
 pub struct PruneLimits {
     pub bytes: u64,
@@ -189,8 +187,17 @@ impl ManagedPagedLog {
         let mut selected_bytes = 0u64;
         let mut live_records = 0u64;
         let mut live_bytes = 0u64;
-        let mut physical_seq = 0u64;
-        let mut file_id = root.next_file;
+        let mut packs = codec::Packs::new(
+            target.join("packs"),
+            data_birth,
+            self.cipher.clone(),
+            root.format,
+            &mut physical,
+            &mut segments,
+            root.next_file,
+            0,
+            true,
+        );
         while let Some(e) = cursor.next()? {
             self.witness_current(&owner)?;
             work.charge_rows(1)?;
@@ -198,43 +205,17 @@ impl ManagedPagedLog {
             let Some(row) = read_assigned(&source, &self.directory, id)? else {
                 continue;
             };
-            let bytes = json(&row, MAX_BATCH_BYTES)?;
-            work.charge_bytes(bytes.len() as u64)?;
+            let bytes = codec::encoded_len(&row, root.format)?;
+            work.charge_bytes(bytes as u64)?;
             if matches(&row, selection) {
                 selected_count = selected_count.checked_add(1).ok_or(Error::Bounds)?;
                 selected_bytes = selected_bytes
-                    .checked_add(bytes.len() as u64)
+                    .checked_add(bytes as u64)
                     .ok_or(Error::Bounds)?;
                 erased.insert_immutable(tree::Entry::new(id_key(id), tag.to_vec())?)?;
                 continue;
             }
-            let reference = RowRef {
-                first: physical_seq,
-                chunks: bytes.len().div_ceil(CHUNK) as u32,
-                bytes: bytes.len() as u32,
-            };
-            let mut pack = PackStage::new(
-                &target.join("packs"),
-                data_birth.clone(),
-                Reservation {
-                    file_id,
-                    first_physical_seq: physical_seq,
-                },
-                self.cipher.clone(),
-                oojuro_store::managed_pack::Options::default(),
-            )
-            .map_err(io)?;
-            for chunk in bytes.chunks(CHUNK) {
-                pack.push(&[carrier(chunk)], &mut |l| {
-                    physical
-                        .insert_frame(&l)
-                        .map_err(|_| oojuro_store::Error::Corrupt("rewrite locator failed"))
-                })
-                .map_err(io)?;
-                physical_seq = physical_seq.checked_add(1).ok_or(Error::Bounds)?;
-            }
-            let pack = pack.finish().map_err(io)?;
-            physical.insert_pack(&pack)?;
+            let reference = packs.row(row.id, row.recorded_at, &row.input)?;
             records.insert_immutable(tree::Entry::new(
                 id.to_be_bytes().to_vec(),
                 json(&reference, 1024)?,
@@ -245,16 +226,10 @@ impl ManagedPagedLog {
                 k.extend(id.to_be_bytes());
                 keys.insert_immutable(tree::Entry::new(k, id.to_be_bytes().to_vec())?)?;
             }
-            segments.insert_immutable(tree::Entry::new(
-                id.to_be_bytes().to_vec(),
-                file_id.to_be_bytes().to_vec(),
-            )?)?;
-            file_id = file_id.checked_add(1).ok_or(Error::Bounds)?;
             live_records = live_records.checked_add(1).ok_or(Error::Bounds)?;
-            live_bytes = live_bytes
-                .checked_add(bytes.len() as u64)
-                .ok_or(Error::Bounds)?;
+            live_bytes = live_bytes.checked_add(bytes as u64).ok_or(Error::Bounds)?;
         }
+        let (file_id, physical_seq) = packs.finish()?;
         root.data = Some(schema::DataRoots {
             record: records.finish()?,
             key_version: keys.finish()?,
@@ -293,8 +268,7 @@ impl ManagedPagedLog {
         let mut ids = blake3::Hasher::new();
         ids.update(b"oojuro/managed/opaque-record-ids/v1\0");
         ids.update(&selected_count.to_le_bytes());
-        let metadata =
-            serde_json::json!({"identity":self.identity,"format":"oojuro-managed-record-paged-3"});
+        let metadata = serde_json::json!({"identity":self.identity,"format":std::str::from_utf8(driver::marker(root.format)?).map_err(|_|Error::Authority)?});
         let mut decoded = 0u64;
         let mut encoded = 0u64;
         let mut cursor = tree::Cursor::seek_ancestor(
@@ -348,7 +322,9 @@ impl ManagedPagedLog {
                 && !matches(&row, selection)
             {
                 let actual = candidate_row(self, &owner, &root, &data_stage, id)?;
-                if json(&actual, MAX_BATCH_BYTES)? != json(&row, MAX_BATCH_BYTES)? {
+                if codec::digest(&actual, &root.intent, root.format)?
+                    != codec::digest(&row, &root.intent, root.format)?
+                {
                     return Err(Error::Authority);
                 }
             }
