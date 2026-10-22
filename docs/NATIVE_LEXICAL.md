@@ -81,8 +81,12 @@ engine **dev-dependency only** for differential testing. The existing capture cr
 still depends on trace for its unchanged legacy lane; its opt-in local module does
 not import it. Oracle fixtures use isolated tmpfs only for oracle files.
 
-Bounded native authority limits remain 100k stored events and 128 MiB parsed text,
-plus existing raw/line/context/receipt bounds. Queries allow 64 KiB and up to 10k
+Bounded native authority limits remain 100k stored events and 128 MiB aggregate serialized replay metadata
+(registrations, complete events including args, policy receipts, and sealed contexts;
+raw bytes excluded),
+plus existing raw/line/context/receipt bounds. This is an encoded-state bound,
+not an exact process RSS bound. Reopen applies the same bound and refuses older
+candidate logs that exceed it; no automatic truncation or migration occurs. Queries allow 64 KiB and up to 10k
 requested hits. This is an in-memory derived index: no persistent segments/Rice
 codec, parallel chunk scan/skip tables, compaction/merge, history/key versions,
 learned outcomes, packing/excerpts, native erase/audit/retention, shared-log port,

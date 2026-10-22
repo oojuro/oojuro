@@ -14,7 +14,7 @@ use oojuro_engine::{
     file_capture::open_authorized_file,
     lexical::{self, Index, Query},
 };
-use std::{fs, io::Read, path::Path};
+use std::{io::Read, path::Path};
 
 const ADAPTER: &str = "codex-buffer-1/redact-escaped-1/context-1";
 #[derive(Clone)]

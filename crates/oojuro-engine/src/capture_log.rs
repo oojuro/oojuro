@@ -11,6 +11,8 @@ pub const MAX_LINE_BYTES: usize = 1 << 20;
 pub const MAX_CONTEXT_BYTES: usize = 128 << 10;
 pub const MAX_BATCH_BYTES: usize = 8 << 20;
 pub const MAX_EVENTS: usize = 100_000;
+/// Aggregate serialized registration and parsed-receipt metadata; raw bytes excluded.
+/// This bounds replay state, not the process's exact resident memory.
 pub const MAX_PARSED_BYTES: usize = 128 << 20;
 pub type Source = [u8; 16];
 
@@ -140,7 +142,7 @@ pub struct CaptureLog {
     batches: Vec<ParsedBatch>,
     ids: BTreeMap<u64, (usize, usize)>,
     next_id: u64,
-    parsed_bytes: usize,
+    metadata_bytes: usize,
     failed: bool,
 }
 impl CaptureLog {
@@ -187,7 +189,7 @@ impl CaptureLog {
             sources: BTreeMap::new(),
             batches: Vec::new(),
             ids: BTreeMap::new(),
-            parsed_bytes: 0,
+            metadata_bytes: 0,
             failed: false,
         };
         let mut header = FORMAT.to_vec();
@@ -293,6 +295,7 @@ impl CaptureLog {
         bytes.extend(
             serde_json::to_vec(&record).map_err(|_| Error::Invalid("source registration"))?,
         );
+        self.metadata_end(bytes.len() - 1)?;
         let seq = self.write(&bytes)?;
         if let Err(e) = self.replay(seq, &bytes) {
             self.failed = true;
@@ -332,12 +335,12 @@ impl CaptureLog {
     /// Native authority commit: one bounded sealed Store frame; no cache side effects.
     pub fn commit(&mut self, batch: Batch) -> Result<Outcome> {
         self.healthy()?;
-        self.validate(&batch.parsed, &batch.raw)?;
         let meta = serde_json::to_vec(&batch.parsed)
             .map_err(|_| Error::Invalid("capture batch encoding"))?;
         if meta.len() > MAX_BATCH_BYTES {
             return Err(Error::Invalid("parsed batch bound"));
         }
+        self.validate(&batch.parsed, &batch.raw, meta.len())?;
         let mut bytes = Vec::with_capacity(5 + meta.len() + batch.raw.len());
         bytes.push(2);
         bytes.extend_from_slice(&(meta.len() as u32).to_le_bytes());
@@ -350,7 +353,17 @@ impl CaptureLog {
         }
         Ok(batch.parsed.outcome)
     }
-    fn validate(&self, p: &ParsedBatch, raw: &[u8]) -> Result<()> {
+    fn metadata_end(&self, additional: usize) -> Result<usize> {
+        let end = self
+            .metadata_bytes
+            .checked_add(additional)
+            .ok_or(Error::Invalid("capture metadata size overflow"))?;
+        if end > MAX_PARSED_BYTES {
+            return Err(Error::Invalid("capture replay metadata capacity"));
+        }
+        Ok(end)
+    }
+    fn validate(&self, p: &ParsedBatch, raw: &[u8], encoded_len: usize) -> Result<()> {
         valid_context(&p.context)?;
         let s = self
             .sources
@@ -442,18 +455,15 @@ impl CaptureLog {
         if self.ids.len() + p.events.len() > MAX_EVENTS {
             return Err(Error::Invalid("parsed event capacity"));
         }
-        let bytes = p.events.iter().try_fold(self.parsed_bytes, |n, e| {
-            n.checked_add(e.text.len())
-                .ok_or(Error::Invalid("parsed size overflow"))
-        })?;
-        if bytes > MAX_PARSED_BYTES {
-            return Err(Error::Invalid("parsed text capacity"));
-        }
+        self.metadata_end(encoded_len)?;
         Ok(())
     }
     fn replay(&mut self, seq: u64, bytes: &[u8]) -> Result<()> {
         match bytes.first() {
             Some(1) => {
+                let metadata_end = self
+                    .metadata_end(bytes.len() - 1)
+                    .map_err(|_| Error::Corrupt("capture replay metadata capacity"))?;
                 let r: Registration = serde_json::from_slice(&bytes[1..])
                     .map_err(|_| Error::Corrupt("source registration"))?;
                 valid_context(&r.context).map_err(|_| Error::Corrupt("source context"))?;
@@ -476,6 +486,7 @@ impl CaptureLog {
                         blocks: Vec::new(),
                     },
                 );
+                self.metadata_bytes = metadata_end;
             }
             Some(2) if bytes.len() >= 5 => {
                 let len = u32::from_le_bytes(bytes[1..5].try_into().unwrap()) as usize;
@@ -485,7 +496,7 @@ impl CaptureLog {
                 let p: ParsedBatch = serde_json::from_slice(&bytes[5..5 + len])
                     .map_err(|_| Error::Corrupt("missing capture policy/context/output"))?;
                 let raw = &bytes[5 + len..];
-                self.validate(&p, raw)
+                self.validate(&p, raw, len)
                     .map_err(|_| Error::Corrupt("capture receipt validation"))?;
                 let s = self.sources.get_mut(&p.source).unwrap();
                 if !raw.is_empty() {
@@ -502,8 +513,8 @@ impl CaptureLog {
                 s.context = p.context.clone();
                 for (e, event) in p.events.iter().enumerate() {
                     self.ids.insert(event.id, (self.batches.len(), e));
-                    self.parsed_bytes += event.text.len();
                 }
+                self.metadata_bytes += len;
                 self.next_id = p.outcome.next_id;
                 self.batches.push(p);
             }
@@ -638,6 +649,124 @@ mod tests {
                 );
             }
         }
+    }
+    #[test]
+    fn capture_capacity_counts_args_context_policy_and_preserves_committed_prefix() {
+        for stored in [false, true] {
+            let t = Temp::new();
+            let mut log = open(&t.0);
+            log.register(SOURCE, b"synthetic", br#"{"seq":0}"#).unwrap();
+            let initial_bytes = log.metadata_bytes;
+            let initial_len = log.store.len();
+            assert_eq!(initial_bytes, log.store.get(1).unwrap().len() - 1);
+            let mut b = batch();
+            b.parsed.context = serde_json::to_vec(&serde_json::json!({
+                "synthetic_state": "c".repeat(4096)
+            }))
+            .unwrap();
+            if stored {
+                b.parsed.events.push(Event {
+                    id: 9,
+                    session: 1,
+                    parent_session: 0,
+                    agent: 1,
+                    turn: 0,
+                    seq: 0,
+                    parent: 0,
+                    revises: 0,
+                    kind: 0,
+                    status: 0,
+                    exit_code: None,
+                    tokens_in: 0,
+                    tokens_out: 0,
+                    ts_us: 1,
+                    duration_us: 0,
+                    tool: "synthetic-tool".into(),
+                    args: serde_json::json!({"input": "a".repeat(8192)}).to_string(),
+                    text: String::new(),
+                    indexed: true,
+                    line_start: 0,
+                    line_end: 3,
+                    emission: 0,
+                });
+                b.parsed.policy.lines[0].emissions = vec![Decision::Stored {
+                    id: 9,
+                    indexed: true,
+                }];
+                b.parsed.outcome.first_id = Some(9);
+                b.parsed.outcome.stored = 1;
+                b.parsed.outcome.next_id = 10;
+            }
+            let encoded = serde_json::to_vec(&b.parsed).unwrap();
+            assert!(b.parsed.events.iter().all(|e| e.text.is_empty()));
+            // Place this small synthetic fixture at the capacity boundary without
+            // allocating 128 MiB. Its non-text metadata must still refuse pre-append.
+            log.metadata_bytes = MAX_PARSED_BYTES - encoded.len() + 1;
+            let candidate = Batch {
+                parsed: b.parsed.clone(),
+                raw: b.raw.clone(),
+            };
+            assert!(matches!(log.commit(candidate), Err(Error::Invalid(_))));
+            assert_eq!(log.store.len(), initial_len);
+            assert_eq!(log.progress(SOURCE).unwrap().raw_end, 0);
+            assert_eq!(log.progress(SOURCE).unwrap().context, br#"{"seq":0}"#);
+            assert!(log.batches().unwrap().is_empty());
+            assert_eq!(log.next_id(), 9);
+            log.metadata_bytes = initial_bytes;
+            let expected = log.commit(b).unwrap();
+            assert_eq!(log.metadata_bytes, initial_bytes + encoded.len());
+            drop(log);
+            let log = open(&t.0);
+            assert_eq!(log.metadata_bytes, initial_bytes + encoded.len());
+            assert_eq!(log.progress(SOURCE).unwrap().parsed_end, 3);
+            assert_eq!(log.read_raw(SOURCE, 0, 3).unwrap(), b"{}\n");
+            assert_eq!(log.batches().unwrap()[0].outcome, expected);
+            assert_eq!(log.event(9).unwrap().is_some(), stored);
+        }
+    }
+    #[test]
+    fn capture_registration_capacity_refuses_before_append_and_replay_publication() {
+        let t = Temp::new();
+        let mut log = open(&t.0);
+        let context = br#"{"seq":0}"#;
+        log.register(SOURCE, b"synthetic", context).unwrap();
+        let initial_bytes = log.metadata_bytes;
+        let initial_len = log.store.len();
+        let source = [7; 16];
+        log.metadata_bytes = MAX_PARSED_BYTES;
+        assert!(log.register(source, b"other-source", context).is_err());
+        assert_eq!(log.store.len(), initial_len);
+        assert_eq!(log.sources().count(), 1);
+        let registration = log.store.get(1).unwrap();
+        assert!(matches!(
+            log.replay(2, &registration),
+            Err(Error::Corrupt(_))
+        ));
+        assert_eq!(log.sources().count(), 1);
+        log.metadata_bytes = initial_bytes;
+        drop(log);
+        let log = open(&t.0);
+        assert_eq!(log.sources().count(), 1);
+        assert_eq!(log.metadata_bytes, initial_bytes);
+    }
+    #[test]
+    fn capture_replay_capacity_rejects_before_exposing_raw_or_parsed_output() {
+        let a = Temp::new();
+        let mut written = open(&a.0);
+        written
+            .register(SOURCE, b"synthetic", br#"{"seq":0}"#)
+            .unwrap();
+        written.commit(batch()).unwrap();
+        let encoded = written.store.get(2).unwrap();
+        let t = Temp::new();
+        let mut log = open(&t.0);
+        log.register(SOURCE, b"synthetic", br#"{"seq":0}"#).unwrap();
+        log.metadata_bytes = MAX_PARSED_BYTES;
+        assert!(matches!(log.replay(2, &encoded), Err(Error::Corrupt(_))));
+        assert_eq!(log.progress(SOURCE).unwrap().raw_end, 0);
+        assert_eq!(log.progress(SOURCE).unwrap().parsed_end, 0);
+        assert_eq!(log.next_id(), 9);
+        assert!(log.batches().unwrap().is_empty());
     }
     #[test]
     fn capture_authority_torn_or_uncertain_write_never_advances_acknowledged_memory() {

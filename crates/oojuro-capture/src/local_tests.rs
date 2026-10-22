@@ -2,7 +2,7 @@
 use super::*;
 use serde_json::{Value, json};
 use std::{
-    fs::OpenOptions,
+    fs::{self, OpenOptions},
     io::Write,
     os::unix::{fs::DirBuilderExt, process::ExitStatusExt},
     process::Command,

@@ -115,7 +115,9 @@ Matched completions retire state and permit subsequent ID reuse, so this does no
 the total calls in a session. No raw/cursor/allocator progress is acknowledged for
 the refused batch; original suffix bytes remain available for an explicit decision.
 The current projection limits are
-100,000 stored events and 128 MiB parsed text. Source/descriptor bounds also apply.
+100,000 stored events and 128 MiB aggregate serialized replay metadata
+(registrations, complete events including args, policy receipts, and sealed contexts;
+raw bytes excluded). Source/descriptor bounds also apply.
 A limit error does not advance that batch or discard its provenance. Earlier
 blocks may already be committed; original files and remaining suffixes stay intact.
 Many tiny lines can hit the serialized-receipt bound before the raw-byte bound;
