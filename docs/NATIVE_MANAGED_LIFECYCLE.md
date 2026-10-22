@@ -107,3 +107,14 @@ Capture/raw prune, provider destruction authority, production audit commands and
 checkpoints, and paged/incremental managed writer remain separate requirements. Authenticated
 rank-view/derived-sealing integration is coordinated with rank table ownership; an unrelated
 RecordLog cannot stand in for managed authority. None is inferred complete from snapshot tests.
+
+## Frozen local verification
+
+The complete engine suite on runtime a5c6ed0 passed 103 tests; five existing/subprocess
+helpers were ignored. Strict package library-and-test Clippy and diff checks passed.
+Thirteen active managed tests include actual SIGKILL at five publication boundaries,
+sparse original IDs/times/retry lineage, stale data/control and missing-witness refusal,
+active-owner denial, honest primitive backup decryption, key separation, corrupt/foreign
+data, unknown residue, shared one-byte strings, complete root-marker scanning, original
+recorded-at retention, and independently verifiable public receipt metadata mutation.
+This is local synthetic filesystem evidence, not live provider/backup-destruction acceptance.
