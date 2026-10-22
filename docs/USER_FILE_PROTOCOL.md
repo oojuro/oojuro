@@ -123,6 +123,13 @@ identity. Lifecycle and erasure remain the existing writer/Blob operations and
 separately authorized policy. Aborting releases client/iterator/response resources
 and calls the local sink's abort; it does not erase remote objects.
 
+## Explicit selected-revision deletion
+
+The separate opt-in [file deletion helper](USER_FILE_DELETION.md) plans a durable
+selected manifest/part descriptor, removes that manifest with exact CAS, and
+requires a separate explicit selected-part cleanup stage. It adds no automatic
+orphan GC, retention or erasure claim.
+
 ## Verified download completion
 
 `downloadFileTo` is the primary safe path. It reads and validates the manifest,
