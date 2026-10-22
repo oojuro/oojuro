@@ -398,10 +398,10 @@ impl Reader {
         if r.input.valid_at > s.as_of.valid_at || r.recorded_at > s.as_of.known_at {
             return Ok(false);
         }
-        if let Some(key) = &r.input.key {
-            if self.winner(s, key)? != Some(r.id) {
-                return Ok(false);
-            }
+        if let Some(key) = &r.input.key
+            && self.winner(s, key)? != Some(r.id)
+        {
+            return Ok(false);
         }
         Ok(r.input.valid_at >= s.as_of.from
             && filter.kind.is_none_or(|v| v == r.input.kind)
@@ -606,7 +606,9 @@ fn unhex(s: &str) -> Result<Vec<u8>> {
         _ => Err(Error::Invalid),
     };
     s.as_bytes()
-        .chunks_exact(2)
+        .as_chunks::<2>()
+        .0
+        .iter()
         .map(|p| Ok(digit(p[0])? * 16 + digit(p[1])?))
         .collect()
 }
