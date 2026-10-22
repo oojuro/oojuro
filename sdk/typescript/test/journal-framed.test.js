@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import { test } from "node:test";
 import { inspect } from "node:util";
 import { readFileSync } from "node:fs";
+import { runInNewContext } from "node:vm";
 import { OojuroClient, OojuroError } from "../index.js";
 const P = "1".repeat(64),
   W = "2".repeat(64),
@@ -571,4 +572,47 @@ test("framed collector refuses empty and SharedArrayBuffer chunks before a compl
     );
     assert.equal(calls, 1);
   }
+});
+
+test("framed chunk intrinsic brands refuse cross-realm shared buffers without invoking spoofed getters", async () => {
+  const encoded = readFrame(PRIVATE),
+    shared = runInNewContext("new SharedArrayBuffer(" + encoded.length + ")");
+  const view = new Uint8Array(shared);
+  view.set(encoded);
+  assert.equal(shared instanceof SharedArrayBuffer, false);
+  const body = new ReadableStream({
+    start(c) {
+      c.enqueue(view);
+      c.close();
+    },
+  });
+  await assert.rejects(
+    sdk(async () => response(body, MEDIA)).journalRecordFramed({ expectedRoot: root(), id: I }),
+    safe("invalid_response"),
+  );
+  let getters = 0;
+  const ordinary = encoded.slice();
+  for (const name of ["buffer", "length", "byteOffset"])
+    Object.defineProperty(ordinary, name, {
+      get() {
+        getters++;
+        throw Error(PRIVATE);
+      },
+    });
+  const ownedBody = new ReadableStream({
+    start(c) {
+      c.enqueue(ordinary);
+      c.close();
+    },
+  });
+  assert.equal(
+    (
+      await sdk(async () => response(ownedBody, MEDIA)).journalRecordFramed({
+        expectedRoot: root(),
+        id: I,
+      })
+    ).value.record.text,
+    PRIVATE,
+  );
+  assert.equal(getters, 0);
 });

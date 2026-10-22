@@ -8,6 +8,11 @@ const recordMedia = "application/vnd.oojuro.record.v1";
 const recordMetadataLimit = 64 * 1024;
 const recordTextLimit = 16 * MiB;
 const recordWireLimit = 4 + recordMetadataLimit + recordTextLimit;
+const typedArrayPrototype = Object.getPrototypeOf(Uint8Array.prototype);
+const typedArrayBuffer = Object.getOwnPropertyDescriptor(typedArrayPrototype, "buffer").get;
+const typedArrayLength = Object.getOwnPropertyDescriptor(typedArrayPrototype, "length").get;
+const typedArrayOffset = Object.getOwnPropertyDescriptor(typedArrayPrototype, "byteOffset").get;
+const arrayBufferLength = Object.getOwnPropertyDescriptor(ArrayBuffer.prototype, "byteLength").get;
 
 export class OojuroError extends Error {
   constructor(code, { status, outcome = "none" } = {}) {
@@ -641,16 +646,30 @@ async function* chunks(response, limit, signal, ownedTarget) {
         ended = true;
         return;
       }
-      if (!(part.value instanceof Uint8Array) || (bytes += part.value.length) > limit)
-        fail("response_too_large");
       if (ownedTarget) {
-        if (!part.value.length || (typeof SharedArrayBuffer !== "undefined" &&
-            part.value.buffer instanceof SharedArrayBuffer)) fail();
-        ownedTarget.set(part.value, bytes - part.value.length);
+        let length;
+        try {
+          if (!(part.value instanceof Uint8Array)) fail();
+          const buffer = typedArrayBuffer.call(part.value);
+          // Intrinsic ArrayBuffer branding rejects SharedArrayBuffer across realms.
+          arrayBufferLength.call(buffer);
+          length = typedArrayLength.call(part.value);
+          if (!length) fail();
+          if (length > limit - bytes) fail("response_too_large");
+          ownedTarget.set(new Uint8Array(buffer, typedArrayOffset.call(part.value), length), bytes);
+        } catch (error) {
+          if (error instanceof OojuroError) throw error;
+          fail();
+        }
+        bytes += length;
         // Do not retain the borrowed view/backing buffer across the generator yield.
         part = null;
         yield bytes;
-      } else yield part.value;
+      } else {
+        if (!(part.value instanceof Uint8Array) || (bytes += part.value.length) > limit)
+          fail("response_too_large");
+        yield part.value;
+      }
     }
   } finally {
     signal?.removeEventListener("abort", stop);
