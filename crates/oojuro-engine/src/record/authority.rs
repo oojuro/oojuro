@@ -9,7 +9,7 @@ use std::{
     sync::Arc,
     time::{SystemTime, UNIX_EPOCH},
 };
-const FORMAT: &[u8] = b"oojuro-record-2\n";
+pub(super) const FORMAT: &[u8] = b"oojuro-record-2\n";
 const PREFIX_AAD: &[u8] = b"oojuro/record-prefix/v1\0";
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -30,19 +30,19 @@ pub struct Commit {
 }
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-struct Batch {
-    schema: u32,
-    request: [u8; 32],
-    fingerprint: [u8; 32],
-    assigned: Vec<Assigned>,
-    watermark: Watermark,
+pub(super) struct Batch {
+    pub(super) schema: u32,
+    pub(super) request: [u8; 32],
+    pub(super) fingerprint: [u8; 32],
+    pub(super) assigned: Vec<Assigned>,
+    pub(super) watermark: Watermark,
 }
 #[derive(Serialize)]
-struct Unsigned<'a> {
-    schema: u32,
-    request: [u8; 32],
-    fingerprint: [u8; 32],
-    assigned: &'a [Assigned],
+pub(super) struct Unsigned<'a> {
+    pub(super) schema: u32,
+    pub(super) request: [u8; 32],
+    pub(super) fingerprint: [u8; 32],
+    pub(super) assigned: &'a [Assigned],
 }
 struct Prefix {
     digest: [u8; 32],
@@ -440,14 +440,14 @@ fn carrier(bytes: &[u8]) -> NewRecord<'_> {
         text: bytes,
     }
 }
-fn chain(previous: [u8; 32], bytes: &[u8]) -> [u8; 32] {
+pub(super) fn chain(previous: [u8; 32], bytes: &[u8]) -> [u8; 32] {
     let mut h = blake3::Hasher::new();
     h.update(b"oojuro/record-chain/v1\0");
     h.update(&previous);
     h.update(bytes);
     *h.finalize().as_bytes()
 }
-fn aad(w: &Watermark) -> Result<Vec<u8>> {
+pub(super) fn aad(w: &Watermark) -> Result<Vec<u8>> {
     let mut bytes = PREFIX_AAD.to_vec();
     bytes.extend(
         serde_json::to_vec(&(w.schema, w.origin, w.identity, w.sequence, w.records))
