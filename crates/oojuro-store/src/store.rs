@@ -1090,7 +1090,6 @@ impl CompactionJob {
         let mut dctx = HashMap::new();
         let first_seq = self.hot.first().map(|f| f.first_seq).ok_or(Error::Invalid("nothing to compact"))?;
         let hot_raw: u64 = self.hot.iter().map(|f| f.raw_len as u64).sum();
-        let records: u64 = self.hot.iter().map(|f| f.count as u64).sum();
         let mut new_dict = None;
         if self.retrain {
             let size = dict_size(&self.opts, hot_raw);
