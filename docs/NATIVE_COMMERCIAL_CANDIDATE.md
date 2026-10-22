@@ -1,13 +1,35 @@
 # Native commercial candidate: cumulative review
 
-Oojuro is a standalone commercial flight recorder and retrieval product. Soft Axiom is the first intended customer. Agents need self-recovery, authorized agent handoff, and authorized human review. Native local durability and hosted authority are separate implementations.
+Oojuro is a standalone commercial flight recorder, retrieval and storage product. Soft Axiom is the first intended customer. Self-recovery, authorized agent handoff and authorized human review are requirements. Local durability and hosted replicated authority remain separate implementations.
 
-Implemented: sealed consented Codex/Claude raw+parsed capture with exact resume; native lexical retrieval and encrypted binary capture-index cache; scoped receipt timeline/get/export with authenticated cursors; explicit protected Linux CLI; fresh durable Record IDs/time/key/version model with exact retry, winner-before-filter scoring and source-adapter provenance; inactive JS/TypeScript hosted SDK with frozen original requests and unknown-ACK handling. Reported provenance is not independently verified causal truth.
+## Current assembled implementation
 
-Evidence: joined candidate before Record follow-ups passed 61 capture +61 engine +7 actual CLI subprocess +19 SDK tests (148 active), with strict owned Rust lint. Stored-only punctuation phrase correction then passed 13 Record +3 legacy lexical tests after actual old-source failure. Source-adapter follow-up passed 14 Record +3 legacy lexical tests and strict engine lint. These are separate checks; final cumulative verification follows the next composed slices. No hosted failure drill was run.
+- Explicit consented Codex, Claude and Pi capture: byte-exact sealed raw source plus atomic parsed receipts, immutable policy/source generation, crash recovery and restart-safe withholding. Pi is explicit current-v3 capture; observed branch history is not a reconstruction of active model context.
+- Native lexical retrieval; encrypted capture and Record caches; scoped receipt timeline/get/export; protected Linux capture and direct-Record CLI.
+- Durable Record IDs, first ingestion time, key/version/as-of semantics, exact retry identity, winner-before-filter scoring and source-adapter provenance. Stored-only punctuation literals remain excluded from content search.
+- First paged Record reader/cache with authenticated source-prefix witnesses, bounded payload decoding and historical scoring parity. Metadata, key-winner rescans and source Store still retain material whole-population or quadratic costs; this slice is not complete external-memory storage.
+- Pinned Ed25519 audit/checkpoint/export wire with explicit externally configured scope, authority/public key and independently current witness. Signature verification alone proves neither freshness nor physical erasure.
+- Inactive hosted JS/TypeScript SDK: frozen original commits/searches, explicit status-only search retries, exact blob revisions, bounded file manifests/parts/digests and explicit selected cleanup. Raw capture forwarding remains off.
 
-Actual code still being built: persistent Record index; direct Record CLI/time/history; harness-receipt to versioned Record integration; native hosted query adapter; full external-memory scale/compaction/retention/erasure; remaining capture adapters; native daemon/API; enrollment and complete commercial lifecycle. Bounded capacities refuse rather than truncate. These are implementation gaps, not merely account permission gates.
+## Current joined evidence
 
-The cloud candidate owns fresh committed authority, grants/read permits, human/agent review, durable usage admission, key-service transport and provider/IAM composition. A joined native/SDK to hosted API, restart and authorized review/export flow is required. Local labels do not authorize remote sharing.
+The assembled source passes **101 engine tests (6 ignored helpers), 75 capture tests, 13 actual CLI subprocess stories, 55 SDK tests and all 3 strict TypeScript declaration smokes**. Strict engine/capture lib+test and CLI/test lint then passes after a test-only redundant-clone correction. Tests run serially at the harness level to avoid unrelated crash-driver fork descriptors temporarily inheriting Store locks; meaningful concurrency inside individual tests remains active. The raw wrong-key test still requires the exact WrongKey result after the inherited lock owner exits.
 
-No resources, paid calls, live secrets, deployments or migration occurred. Actual AWS separate-task permissions, KMS deletion audit, acknowledged-write failure drills, stale-leader fencing, AZ recovery, regional recovery objectives, availability/latency/cost require measured acceptance. S3 provider durability is not proof that the application already meets Temporal's explicit three-zone write-ACK contract. No public SLA or equivalence is claimed.
+These are local synthetic correctness and subprocess results, not hosted failure drills, production-corpus relevance evidence or launch scale proof.
+
+## Actual implementation still in progress
+
+| Track | Remaining code |
+| --- | --- |
+| Storage/query scale | Bounded disk metadata/dedupe/visibility directories, paged writer/control integration, Store memory/training bounds and background compaction; current 100k/128MiB limits are not raised |
+| Lifecycle | Independently retained current control, managed erasure/retention/rewrite, sparse original IDs/time/retry lineage, verified local prune and actual derived-table retirement |
+| Audit | Durable event producers/timers, operational verification/export and paged lifelong audit history |
+| Retrieval | Frozen ranker hooks/table lifecycle/receipts and whole-record token/min-bits context packing; optional ranker adoption remains off |
+| Capture/API | Temporal, native OTel/proxy/daemon/MCP, harness-receipt to versioned Record integration, current+previous reader compatibility/upgrade tooling |
+| Commercial integration | Actual SDK-to-hosted restart/review/audit/file flow, operator enrollment and full customer setup/lifecycle |
+
+The separate cloud candidate owns current committed authority, grants/read permits, human review, durable account admission, isolated key-service transport and provider/IAM source. Local labels and reported agent/run/parent values never authorize sharing or establish causal truth.
+
+The SPEC's immediate irreversible destruction of all backup wraps remains an architecture gap under caller-owned keys or cancellable KMS scheduling. Logical denial/local prune/pending permanent destruction must remain distinct. Real corpus quality, 10M/100M records, 10k writers, throughput/RSS/latency and declared process/host/AZ/regional failure objectives still require measured acceptance. No public Temporal/Kafka equivalence or SLA is claimed.
+
+No provider resources, paid calls, live secrets, deployments or migrations occurred.
