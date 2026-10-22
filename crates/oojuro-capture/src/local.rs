@@ -1,9 +1,9 @@
-//! Opt-in native raw/parsed capture with explicitly selected Codex or Claude adapters.
-//! No recorder, CLI, cloud or discovery selects it.
+//! Opt-in native raw/parsed capture with explicitly selected Codex, Claude or Pi adapters.
+//! No legacy recorder, socket or cloud path selects it automatically.
 //! Raw consent precedes file inspection. Native derived postings live only in memory;
 //! this is not a production swap, confidentiality or key-lifecycle claim.
 use crate::{
-    FileCtx, Format, ParseCounts, Rec, claude, codex,
+    FileCtx, ParseCounts, Rec, claude, codex,
     ingest::{Decision, Policy},
     kind, redact, sink,
 };
@@ -19,7 +19,16 @@ use std::{io::Read, path::Path};
 
 #[path = "local_claude.rs"]
 mod claude_adapter;
+#[path = "local_pi.rs"]
+mod pi_adapter;
+#[derive(Clone, Copy)]
+enum Adapter {
+    Codex,
+    ClaudeCode,
+    Pi,
+}
 const ADAPTER: &str = "codex-buffer-1/redact-escaped-1/context-1";
+const PI_ADAPTER: &str = "pi-session-v3/raw-policy-1/redact-escaped-1/context-1";
 const CLAUDE_ADAPTER: &str = "claude-buffer-1/no-sidefiles-1/redact-escaped-1/context-1";
 #[derive(Clone)]
 pub struct Options {
@@ -106,7 +115,7 @@ pub struct Report {
 pub struct LocalCapture {
     log: CaptureLog,
     options: Options,
-    format: Format,
+    format: Adapter,
     policy: Box<dyn Policy>,
     redactor: redact::Redactor,
     projection: Option<Index>,
@@ -122,7 +131,7 @@ impl LocalCapture {
         options: Options,
         policy: Box<dyn Policy>,
     ) -> Result<Self> {
-        Self::open_adapter(dir, key, options, policy, Format::Codex)
+        Self::open_adapter(dir, key, options, policy, Adapter::Codex)
     }
     /// Explicit Claude transcript lane. Referenced tool-result files are never inspected.
     pub fn open_claude(
@@ -131,14 +140,23 @@ impl LocalCapture {
         options: Options,
         policy: Box<dyn Policy>,
     ) -> Result<Self> {
-        Self::open_adapter(dir, key, options, policy, Format::ClaudeCode)
+        Self::open_adapter(dir, key, options, policy, Adapter::ClaudeCode)
+    }
+    /// Explicit Pi session v3 source; no discovery or secondary file reads.
+    pub fn open_pi(
+        dir: &Path,
+        key: &[u8; 32],
+        options: Options,
+        policy: Box<dyn Policy>,
+    ) -> Result<Self> {
+        Self::open_adapter(dir, key, options, policy, Adapter::Pi)
     }
     fn open_adapter(
         dir: &Path,
         key: &[u8; 32],
         options: Options,
         policy: Box<dyn Policy>,
-        format: Format,
+        format: Adapter,
     ) -> Result<Self> {
         if options.chunk_bytes == 0
             || options.chunk_bytes > MAX_BLOCK_BYTES
@@ -154,8 +172,9 @@ impl LocalCapture {
             agent: options.agent,
             first_id: options.first_id,
             adapter: match format {
-                Format::Codex => ADAPTER,
-                Format::ClaudeCode => CLAUDE_ADAPTER,
+                Adapter::Codex => ADAPTER,
+                Adapter::ClaudeCode => CLAUDE_ADAPTER,
+                Adapter::Pi => PI_ADAPTER,
             }
             .into(),
         };
@@ -252,8 +271,9 @@ impl LocalCapture {
         };
         self.policy.refresh();
         let initial = encode_context(&match self.format {
-            Format::Codex => codex::new_ctx(path),
-            Format::ClaudeCode => claude_adapter::new_ctx(path),
+            Adapter::Codex => codex::new_ctx(path),
+            Adapter::ClaudeCode => claude_adapter::new_ctx(path),
+            Adapter::Pi => pi_adapter::new_ctx(path),
         })?;
         self.log
             .register(source, &opened.descriptor, &initial)
@@ -396,23 +416,37 @@ impl LocalCapture {
             let bad = pc.bad_lines;
             let blank = line.iter().all(u8::is_ascii_whitespace);
             if !blank {
-                match self.format {
-                    Format::Codex => check_call_state(&context, line)?,
-                    Format::ClaudeCode => claude_adapter::check_call_state(&context, line)?,
+                if matches!(self.format, Adapter::Pi) {
+                    pi_adapter::parse_line(
+                        &mut context,
+                        line,
+                        from,
+                        &self.redactor,
+                        &mut rc,
+                        &mut pc,
+                        &mut recs,
+                    )?;
+                } else {
+                    match self.format {
+                        Adapter::Codex => check_call_state(&context, line)?,
+                        Adapter::ClaudeCode => claude_adapter::check_call_state(&context, line)?,
+                        Adapter::Pi => unreachable!(),
+                    }
+                    let parse = match self.format {
+                        Adapter::Codex => codex::parse_line,
+                        Adapter::ClaudeCode => claude::parse_line,
+                        Adapter::Pi => unreachable!(),
+                    };
+                    parse(
+                        &mut context,
+                        line,
+                        from,
+                        &self.redactor,
+                        &mut rc,
+                        &mut pc,
+                        &mut recs,
+                    );
                 }
-                let parse = match self.format {
-                    Format::Codex => codex::parse_line,
-                    Format::ClaudeCode => claude::parse_line,
-                };
-                parse(
-                    &mut context,
-                    line,
-                    from,
-                    &self.redactor,
-                    &mut rc,
-                    &mut pc,
-                    &mut recs,
-                );
             }
             let mut emissions = Vec::new();
             for mut rec in recs {
@@ -449,6 +483,13 @@ impl LocalCapture {
                             owned(&rec, id, self.options.agent, parent, args, indexed, through);
                         // Tool/metadata strings cross the same parsed-output boundary as text.
                         // Resume context retains original linking state only inside the sealed authority.
+                        if matches!(self.format, Adapter::Pi) {
+                            event.exit_code = rec
+                                .meta
+                                .iter()
+                                .find(|(name, _)| *name == "exit_code")
+                                .and_then(|(_, value)| value.parse().ok());
+                        }
                         event.tool = self.redactor.redact(&event.tool, &mut rc);
                         event.args = self.redactor.redact(&event.args, &mut rc);
                         events.push(event);
@@ -693,3 +734,7 @@ mod tests;
 #[cfg(test)]
 #[path = "local_claude_tests.rs"]
 mod claude_tests;
+
+#[cfg(test)]
+#[path = "local_pi_tests.rs"]
+mod pi_tests;
