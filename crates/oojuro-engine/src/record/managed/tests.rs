@@ -5,12 +5,12 @@ use std::sync::atomic::{AtomicU64, Ordering};
 const DATA_KEY: [u8; 32] = [51; 32];
 const CONTROL_KEY: [u8; 32] = [52; 32];
 const AUTHORITY: [u8; 32] = [53; 32];
-struct Fixture {
-    root: PathBuf,
+pub(super) struct Fixture {
+    pub(super) root: PathBuf,
     pkcs8: Vec<u8>,
 }
 impl Fixture {
-    fn new() -> Self {
+    pub(super) fn new() -> Self {
         static N: AtomicU64 = AtomicU64::new(0);
         let root = std::env::current_dir()
             .unwrap()
@@ -28,10 +28,10 @@ impl Fixture {
         write_new(&root.join("test-only-signing.pk8"), &pkcs8).unwrap();
         Self { root, pkcs8 }
     }
-    fn signer(&self) -> Signer {
+    pub(super) fn signer(&self) -> Signer {
         Signer::from_pkcs8(AUTHORITY, Domain::NativeLifecycle, &self.pkcs8).unwrap()
     }
-    fn control(&self) -> Arc<RetainedControl> {
+    pub(super) fn control(&self) -> Arc<RetainedControl> {
         Arc::new(
             RetainedControl::open(
                 &self.root.join("control"),
@@ -44,7 +44,7 @@ impl Fixture {
             .unwrap(),
         )
     }
-    fn log(&self, control: Arc<RetainedControl>) -> ManagedLog {
+    pub(super) fn log(&self, control: Arc<RetainedControl>) -> ManagedLog {
         if self.root.join("data").exists() {
             ManagedLog::open(&self.root.join("data"), &DATA_KEY, identity(), control).unwrap()
         } else {
@@ -57,7 +57,7 @@ impl Drop for Fixture {
         let _ = fs::remove_dir_all(&self.root);
     }
 }
-fn identity() -> Identity {
+pub(super) fn identity() -> Identity {
     Identity {
         writer: "synthetic-managed-owner".into(),
         agent: 7,
@@ -65,7 +65,7 @@ fn identity() -> Identity {
         adapter: "explicit-direct-fixture".into(),
     }
 }
-fn input(agent: &str, text: &str) -> Input {
+pub(super) fn input(agent: &str, text: &str) -> Input {
     Input {
         agent_id: agent.into(),
         parent_id: None,
