@@ -199,6 +199,18 @@ pub fn rescore<'a>(
     stages: &[Stage<'_>],
     limits: Limits,
 ) -> Result<Ranked<'a>, InputError> {
+    rescore_checked(writer, query, lexical, stages, limits, || Ok(()))
+}
+/// Caller-owned freshness check at the actual callback boundary, after identity/work declarations.
+/// The callback is local to this dispatch; it need not be stored inside a Send+Sync plugin.
+pub fn rescore_checked<'a>(
+    writer: &str,
+    query: &[Term<'_>],
+    lexical: &[Candidate<'a>],
+    stages: &[Stage<'_>],
+    limits: Limits,
+    check: impl Fn() -> Result<(), Skip>,
+) -> Result<Ranked<'a>, InputError> {
     if lexical.len() > limits.max_candidates
         || query.len() > limits.max_query_terms
         || stages.len() > limits.max_stages
@@ -273,7 +285,10 @@ pub fn rescore<'a>(
                 remaining: declared,
                 exhausted: false,
             };
-            let deltas = stage.ranker.rescore(query, lexical, &mut work)?;
+            check()?;
+            let output = stage.ranker.rescore(query, lexical, &mut work);
+            check()?;
+            let deltas = output?;
             if work.exhausted {
                 return Err(Skip::WorkBudget);
             }
