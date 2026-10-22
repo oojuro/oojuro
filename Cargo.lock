@@ -4666,6 +4666,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "oojuro-engine"
+version = "0.1.0"
+dependencies = [
+ "oojuro-store",
+]
+
+[[package]]
 name = "oojuro-nine"
 version = "0.1.0"
 dependencies = [

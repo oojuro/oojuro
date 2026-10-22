@@ -1,5 +1,6 @@
 [workspace]
 members = [
+    "crates/oojuro-engine",
     "crates/oojuro",
     "crates/oojuro-bench",
     "crates/oojuro-capture",

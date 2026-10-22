@@ -81,6 +81,9 @@ pub struct Options {
     /// Seal every new frame and dictionary with this key (compress first, then encrypt). A store that
     /// holds sealed data opens only with its key.
     pub cipher: Option<std::sync::Arc<FrameCipher>>,
+    /// Reject plaintext frames/dictionaries instead of permitting a legacy plaintext upgrade.
+    /// Requires `cipher`; used for stores that must have been sealed from their first byte.
+    pub require_sealed: bool,
 }
 
 impl Default for Options {
@@ -100,6 +103,7 @@ impl Default for Options {
             dedupe_window: 1 << 30,
             compact_threads: 4,
             cipher: None,
+            require_sealed: false,
         }
     }
 }
@@ -158,6 +162,9 @@ impl Frames for Store {
     }
     fn cipher(&self) -> Option<&FrameCipher> {
         self.opts.cipher.as_deref()
+    }
+    fn require_sealed(&self) -> bool {
+        self.opts.require_sealed
     }
 }
 
@@ -319,6 +326,15 @@ impl Store {
     }
 
     pub fn open(dir: &Path, opts: Options) -> Result<Self> {
+        if opts.require_sealed {
+            if opts.cipher.is_none() {
+                return Err(Error::KeyRequired);
+            }
+            // Refuse an unmarked existing store before creating/upgrading its marker.
+            if dir.join("MANIFEST").exists() && !dir.join(ENC_MARKER).exists() {
+                return Err(Error::Crypto("strict sealed store has no encryption marker"));
+            }
+        }
         let cache_bytes = opts.cache_bytes;
         std::fs::create_dir_all(dir)?;
         let lock = OpenOptions::new().create(true).truncate(false).write(true).open(dir.join("LOCK"))?;
@@ -338,6 +354,9 @@ impl Store {
         for &id in &man.dicts {
             let b = std::fs::read(dict_path(dir, id))?;
             let sealed = b.len() >= 8 && &b[..8] == DICT_MAGIC_SEALED;
+            if opts.require_sealed && !sealed {
+                return Err(Error::Crypto("plaintext dictionary in strict sealed store"));
+            }
             if b.len() < 20 || !(sealed || &b[..8] == DICT_MAGIC) || u32::from_le_bytes(b[8..12].try_into().unwrap()) != id {
                 return Err(Error::Corrupt("dictionary header"));
             }
@@ -1064,7 +1083,7 @@ impl CompactionJob {
             let step = (records * size as u64 * 100).checked_div(hot_raw.max(1)).map_or(1, |per| (records / per.max(1)).max(1));
             let (mut texts, mut n) = (Vec::new(), 0u64);
             for f in &self.hot {
-                let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx, self.opts.cipher.as_deref())?;
+                let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx, self.opts.cipher.as_deref(), self.opts.require_sealed)?;
                 for r in 0..meta.records.len() {
                     if n % step == 0 {
                         texts.push(body[meta.text_start[r] as usize..meta.text_start[r + 1] as usize].to_vec());
@@ -1089,7 +1108,7 @@ impl CompactionJob {
         let mut packer = Packer::new(opts, first_seq, dict_id, dict_bytes.as_deref());
         // Chunks of the newest cold data (within the window) that new frames may reference.
         for f in &self.window {
-            let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx, self.opts.cipher.as_deref())?;
+            let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx, self.opts.cipher.as_deref(), self.opts.require_sealed)?;
             packer.register(f.first_seq, &meta, &body);
         }
         let path = cold_path(&self.dir, self.seg_id);
@@ -1105,7 +1124,7 @@ impl CompactionJob {
             Ok(())
         };
         for f in &self.hot {
-            let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx, self.opts.cipher.as_deref())?;
+            let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx, self.opts.cipher.as_deref(), self.opts.require_sealed)?;
             for r in 0..meta.records.len() {
                 if meta.pieces[r].0 != meta.pieces[r].1 {
                     return Err(Error::Corrupt("hot frame holds a deduplicated record"));
