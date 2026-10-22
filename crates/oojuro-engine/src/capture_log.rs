@@ -530,6 +530,23 @@ fn valid_context(context: &[u8]) -> Result<()> {
     Ok(())
 }
 
+// An in-memory projection may only follow this particular open authority handle.
+// Reopening (including the same path/key) requires rebuilding from receipts.
+fn next_instance() -> Result<u64> {
+    use std::sync::atomic::{AtomicU64, Ordering};
+    static NEXT: AtomicU64 = AtomicU64::new(1);
+    let mut current = NEXT.load(Ordering::Relaxed);
+    loop {
+        let next = current
+            .checked_add(1)
+            .ok_or(Error::Invalid("authority instance exhaustion"))?;
+        match NEXT.compare_exchange_weak(current, next, Ordering::Relaxed, Ordering::Relaxed) {
+            Ok(value) => return Ok(value),
+            Err(observed) => current = observed,
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -690,23 +707,6 @@ mod tests {
                 CaptureLog::open(&t.0, &KEY, identity()),
                 Err(Error::Corrupt(_))
             ));
-        }
-    }
-}
-
-// An in-memory projection may only follow this particular open authority handle.
-// Reopening (including the same path/key) requires rebuilding from receipts.
-fn next_instance() -> Result<u64> {
-    use std::sync::atomic::{AtomicU64, Ordering};
-    static NEXT: AtomicU64 = AtomicU64::new(1);
-    let mut current = NEXT.load(Ordering::Relaxed);
-    loop {
-        let next = current
-            .checked_add(1)
-            .ok_or(Error::Invalid("authority instance exhaustion"))?;
-        match NEXT.compare_exchange_weak(current, next, Ordering::Relaxed, Ordering::Relaxed) {
-            Ok(value) => return Ok(value),
-            Err(observed) => current = observed,
         }
     }
 }

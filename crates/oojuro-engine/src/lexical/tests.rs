@@ -223,6 +223,61 @@ fn compare(index: &Index, oracle: &TraceDb) {
         }
     }
 }
+fn compare_all_get(log: &CaptureLog, oracle: &TraceDb) {
+    for batch in log.batches().unwrap() {
+        for original in &batch.events {
+            let (_, native) = log.event(original.id).unwrap().unwrap();
+            let reference = oracle.get(original.id).unwrap().unwrap();
+            // Compare all EventOut fields, including duplicate-specific args,
+            // not just the host's text. Native-only receipt fields stay in authority.
+            assert_eq!(
+                (
+                    native.id,
+                    native.session,
+                    native.agent,
+                    native.turn,
+                    native.seq,
+                    native.parent,
+                    native.kind,
+                    native.status
+                ),
+                (
+                    reference.id,
+                    reference.session,
+                    reference.agent,
+                    reference.turn,
+                    reference.seq,
+                    reference.parent,
+                    reference.kind,
+                    reference.status
+                )
+            );
+            assert_eq!(
+                (
+                    native.exit_code,
+                    native.tokens_in,
+                    native.tokens_out,
+                    native.ts_us,
+                    native.duration_us,
+                    &native.tool,
+                    &native.args,
+                    &native.text
+                ),
+                (
+                    reference.exit_code,
+                    reference.tokens_in,
+                    reference.tokens_out,
+                    reference.ts_us,
+                    reference.duration_us,
+                    &reference.tool,
+                    &reference.args,
+                    &reference.text
+                )
+            );
+        }
+    }
+}
+
 #[test]
 fn native_bitwise_oracle_port_covers_time_phrases_identifiers_dedupe_filters_and_pruning() {
     let f = Fixture::new();
@@ -271,6 +326,11 @@ fn native_bitwise_oracle_port_covers_time_phrases_identifiers_dedupe_filters_and
         if i % 7 == 0 {
             e.tool = "shell".into();
         }
+        e.status = (i % 3) as u8;
+        e.exit_code = (i % 4 == 0).then_some((i % 5) as i32);
+        e.tokens_in = i as u32;
+        e.tokens_out = (i * 2) as u32;
+        e.duration_us = i as i64 - 180;
         if i % 19 == 0 {
             e.args = r#"{"src":"1:99:0","rt":101,"keep":"different"}"#.into();
         }
@@ -284,6 +344,7 @@ fn native_bitwise_oracle_port_covers_time_phrases_identifiers_dedupe_filters_and
         index.refresh(&log).unwrap();
     }
     compare(&index, &oracle);
+    compare_all_get(&log, &oracle);
     for text in ["battery", "lookup_needle battery", "\"the\"", ""] {
         for k in [1, 3, 10] {
             let q = Query {
@@ -318,6 +379,7 @@ fn native_bitwise_oracle_port_covers_time_phrases_identifiers_dedupe_filters_and
     let log = f.open();
     let index = Index::rebuild(&log).unwrap();
     compare(&index, &oracle);
+    compare_all_get(&log, &oracle);
     let q = Query {
         writer: "other-writer",
         agent: 1,
