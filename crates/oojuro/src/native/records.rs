@@ -140,6 +140,23 @@ fn options(args: &Arguments) -> Result<()> {
             values.extend(FILTERS);
             values.extend(["--entries", "--versions"]);
         }
+        "record-context" => {
+            values.extend(TIMES);
+            values.extend(FILTERS);
+            values.extend([
+                "--query",
+                "--k",
+                "--top-k",
+                "--tokens",
+                "--context-bytes",
+                "--min-bits",
+                "--turn-start-us",
+                "--session",
+                "--turn",
+                "--measure",
+                "--format",
+            ]);
+        }
         "record-search" => {
             values.extend(TIMES);
             values.extend(FILTERS);
@@ -248,6 +265,85 @@ pub(super) fn run(root: &Path, args: &Arguments) -> Result<i32> {
                     &map(view.range(&log, versions(args)?, filter(args)?, bounds))?,
                     cap,
                 )?,
+            }
+        }
+        "record-context" => {
+            use record::context;
+            // Explicit command and explicit measurement selection; no automatic injection.
+            if args.required("--measure")? != "chars4-estimate" {
+                return Err(Error::Usage);
+            }
+            let cap = bytes(args)?;
+            let k = args.number("--k", 100)?;
+            if !(1..=context::MAX_CANDIDATES).contains(&k) {
+                return Err(Error::Bounds);
+            }
+            let turn_start: i64 = args
+                .required("--turn-start-us")?
+                .parse()
+                .map_err(|_| Error::Usage)?;
+            let cutoff = turn_start.checked_sub(1).ok_or(Error::Bounds)?;
+            let mut cuts = as_of(args)?;
+            cuts.valid_at = cuts.valid_at.min(cutoff);
+            cuts.known_at = cuts.known_at.min(cutoff);
+            let query = record::Query {
+                scope: cfg.scope(),
+                as_of: cuts,
+                text: args.required("--query")?,
+                k,
+                filter: filter(args)?,
+                max_bytes: record::MAX_OUTPUT_BYTES,
+            };
+            let index = map(record::Index::rebuild(&log))?;
+            let search = map(index.search(&log, &query))?;
+            let candidates = search
+                .hits
+                .iter()
+                .map(context::Candidate::lexical)
+                .collect::<Vec<_>>();
+            struct Estimate;
+            impl context::TokenMeasure for Estimate {
+                fn id(&self) -> &str {
+                    "unicode-chars-div4-estimate-v1"
+                }
+                fn precision(&self) -> context::Precision {
+                    context::Precision::Estimated
+                }
+                fn measure(&self, s: &str) -> std::result::Result<u64, context::MeasureError> {
+                    Ok((s.chars().count() as u64).div_ceil(4))
+                }
+            }
+            let options = context::Options {
+                enabled: true,
+                min_text_bits: args.number("--min-bits", 8.0)?,
+                top_k: args.number("--top-k", 20)?,
+                max_tokens: args.number("--tokens", 2500)?,
+                max_bytes: args.number("--context-bytes", context::MAX_CONTEXT_BYTES)?,
+                bits_per_turn: 0.0,
+            };
+            let turn = context::Turn {
+                session: args.value("--session").unwrap_or(""),
+                number: args.number("--turn", 0)?,
+                started_us: turn_start,
+                prompt: query.text,
+            };
+            let packed = map(context::pack(&candidates, options, &turn, &Estimate))?;
+            match args.value("--format").unwrap_or("context") {
+                "context" => emit(
+                    &json!({"context":packed.as_ref().map(|p|p.json.as_str()),
+                    "items":packed.as_ref().map_or(0,|p|p.items.len()),
+                    "estimated_tokens":packed.as_ref().map_or(0,|p|p.measured_tokens),
+                    "measurement":"unicode-chars-div4-estimate-v1","hard_provider_token_cap":false,
+                    "watermark":search.watermark}),
+                    cap,
+                )?,
+                "claude-hook" => emit(
+                    &json!({"hookSpecificOutput":{"hookEventName":"UserPromptSubmit",
+                    "additionalContext":packed.as_ref().map_or("",|p|p.json.as_str())},
+                    "measurement":"unicode-chars-div4-estimate-v1","hard_provider_token_cap":false}),
+                    cap,
+                )?,
+                _ => return Err(Error::Usage),
             }
         }
         "record-search" => {
