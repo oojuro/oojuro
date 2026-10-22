@@ -133,10 +133,11 @@ export function prepareFileUpload(client, input) { return new PreparedFileUpload
 
 function readOptions(input) {
   if (!input || typeof input !== "object" || Array.isArray(input) ||
-      Object.keys(input).some((k) => !["writer", "name", "minGeneration", "signal"].includes(k))) fail();
-  const value = { writer: input.writer, name: input.name, minGeneration: input.minGeneration ?? 0, signal: input.signal };
+      Object.keys(input).some((k) => !["writer", "name", "minGeneration", "signal", "expectedRevision"].includes(k))) fail();
+  const value = { writer: input.writer, name: input.name, minGeneration: input.minGeneration ?? 0, signal: input.signal, expectedRevision: input.expectedRevision };
   opaque(value.writer); label(value.name);
   size(value.minGeneration, Number.MAX_SAFE_INTEGER);
+  if (value.expectedRevision !== undefined) opaque(value.expectedRevision);
   return value;
 }
 
@@ -147,6 +148,7 @@ export async function downloadFile(client, supplied) {
     abort(input.signal);
     const manifestName = fileManifestName(input.name);
     const initial = await client.blob(input.writer, manifestName, input);
+    if (input.expectedRevision !== undefined && initial.revision !== input.expectedRevision) fail("file_integrity");
     const manifest = manifestOf(initial.bytes, input);
     let resolve, reject;
     const completion = new Promise((yes, no) => { resolve = yes; reject = no; });
@@ -168,7 +170,8 @@ export async function downloadFile(client, supplied) {
               abort(readSignal);
               const read = await client.blob(input.writer, part.name, { minGeneration: generation, signal: readSignal });
               generation = Math.max(generation, read.generation);
-              if (read.bytes.length !== part.bytes || hash(read.bytes) !== part.sha256) fail("file_integrity");
+              if (read.bytes.length !== part.bytes || hash(read.bytes) !== part.sha256 ||
+                  (input.expectedRevision !== undefined && read.revision !== part.revision)) fail("file_integrity");
               full.update(read.bytes); total += read.bytes.length;
               yield read.bytes;
             }
@@ -176,7 +179,8 @@ export async function downloadFile(client, supplied) {
             abort(readSignal);
             // Recheck the logical pointer and current authorization before declaring completion.
             const final = await client.blob(input.writer, manifestName, { minGeneration: generation, signal: readSignal });
-            if (final.bytes.length !== initial.bytes.length || hash(final.bytes) !== hash(initial.bytes)) fail("file_integrity");
+            if (final.bytes.length !== initial.bytes.length || hash(final.bytes) !== hash(initial.bytes) ||
+                (input.expectedRevision !== undefined && final.revision !== input.expectedRevision)) fail("file_integrity");
             const result = Object.freeze({ writer: input.writer, name: input.name, uploadId: manifest.upload_id,
               size: total, sha256: manifest.sha256, generation: Math.max(generation, final.generation), manifestName });
             complete = true;
