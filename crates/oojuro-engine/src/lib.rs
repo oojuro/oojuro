@@ -13,3 +13,6 @@ pub mod lexical;
 
 /// Scoped original committed-receipt timeline and bounded export (opt-in).
 pub mod receipts;
+
+/// Direct flat-record/time namespace; never an implicit harness-format conversion.
+pub mod record;
