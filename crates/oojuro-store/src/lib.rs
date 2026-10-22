@@ -4,6 +4,7 @@
 //! [`Store::get`] / [`Store::get_range`] by sequence number, [`Store::scan_time`],
 //! and [`Store::compact`] to rewrite the hot per-turn log into the cold tier.
 pub mod corpus;
+pub mod crypto;
 pub mod format;
 mod pack;
 mod reader;
@@ -21,6 +22,12 @@ pub enum Error {
     /// The caller passed an invalid argument or the store is in use.
     Invalid(&'static str),
     Codec(&'static str),
+    /// Encryption failed to authenticate: a wrong key, or damaged or forged bytes.
+    Crypto(&'static str),
+    /// The store holds encrypted data and no key was given.
+    KeyRequired,
+    /// The key given is not the key of the store.
+    WrongKey,
     NotFound,
 }
 
@@ -31,6 +38,9 @@ impl std::fmt::Display for Error {
             Error::Corrupt(m) => write!(f, "corrupt store: {m}"),
             Error::Invalid(m) => write!(f, "invalid: {m}"),
             Error::Codec(m) => write!(f, "codec: {m}"),
+            Error::Crypto(m) => write!(f, "crypto: {m}"),
+            Error::KeyRequired => write!(f, "the store is encrypted and no key was given"),
+            Error::WrongKey => write!(f, "the key does not match the store (key id differs)"),
             Error::NotFound => write!(f, "no such record"),
         }
     }

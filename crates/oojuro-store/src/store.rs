@@ -21,6 +21,7 @@
 //! zstd frames are written magicless, without content size or dictionary id
 //! (the frame head already carries both), so small per-turn frames stay small.
 
+use crate::crypto::FrameCipher;
 use crate::format::*;
 use crate::pack::{PackOpts, Packer, Row, new_cctx, pack_body};
 use crate::reader::{self, Frames, Loc, ReadState};
@@ -37,6 +38,11 @@ const COLD_MAGIC: &[u8; 8] = b"OJCOLD01";
 const COLD_END: &[u8; 8] = b"OJCEND01";
 const MAN_MAGIC: &[u8; 8] = b"OJMAN001";
 const DICT_MAGIC: &[u8; 8] = b"OJDICT01";
+/// Dictionary file whose body is sealed with the store key.
+const DICT_MAGIC_SEALED: &[u8; 8] = b"OJDICT02";
+/// Marker file of a store that holds sealed data: `OJENC001 | key id (8 B)`.
+const ENC_MARKER: &str = "ENCRYPTED";
+const ENC_MAGIC: &[u8; 8] = b"OJENC001";
 /// magic | id | len | crc (over trained_at_raw + bytes) | trained_at_raw
 const DICT_HEAD: usize = 28;
 const FILE_HEAD: usize = 32;
@@ -72,6 +78,9 @@ pub struct Options {
     pub dedupe_window: u64,
     /// Threads compressing compacted frames (output is identical for any value).
     pub compact_threads: usize,
+    /// Seal every new frame and dictionary with this key (compress first, then encrypt). A store that
+    /// holds sealed data opens only with its key.
+    pub cipher: Option<std::sync::Arc<FrameCipher>>,
 }
 
 impl Default for Options {
@@ -90,6 +99,7 @@ impl Default for Options {
             dedupe_chunk: 1024,
             dedupe_window: 1 << 30,
             compact_threads: 4,
+            cipher: None,
         }
     }
 }
@@ -145,6 +155,9 @@ impl Frames for Store {
     }
     fn read_state(&self) -> &ReadState {
         &self.read
+    }
+    fn cipher(&self) -> Option<&FrameCipher> {
+        self.opts.cipher.as_deref()
     }
 }
 
@@ -257,9 +270,13 @@ fn build_payload(
     first_seq: u64,
     records: &[RecordIn],
     digest: bool,
+    cipher: Option<&FrameCipher>,
 ) -> Result<(Vec<u8>, Vec<u8>, usize)> {
     let (body, meta_len) = encode_body(records);
-    let payload = pack_body(cctx, dict, first_seq, records.len(), &body, meta_len, digest)?;
+    let mut payload = pack_body(cctx, dict, first_seq, records.len(), &body, meta_len, digest)?;
+    if let Some(c) = cipher {
+        payload = crate::pack::encrypt_payload(c, &payload)?;
+    }
     Ok((payload, body, meta_len))
 }
 
@@ -268,6 +285,39 @@ fn valid_range(records: &[RecordIn]) -> (i64, i64) {
 }
 
 impl Store {
+    /// A store that holds sealed data says so in `ENCRYPTED` (the key id, never the key): opening it
+    /// without a key, or with another key, fails before anything is read. A key given to a store
+    /// without the marker creates it, so frames appended from now on are sealed (older ones stay as they are).
+    fn check_marker(dir: &Path, cipher: Option<&FrameCipher>) -> Result<()> {
+        let path = dir.join(ENC_MARKER);
+        match std::fs::read(&path) {
+            Ok(b) => {
+                if b.len() != 16 || &b[..8] != ENC_MAGIC {
+                    return Err(Error::Corrupt("encryption marker"));
+                }
+                let c = cipher.ok_or(Error::KeyRequired)?;
+                if b[8..16] != c.key_id() {
+                    return Err(Error::WrongKey);
+                }
+                Ok(())
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                if let Some(c) = cipher {
+                    let mut b = Vec::with_capacity(16);
+                    b.extend_from_slice(ENC_MAGIC);
+                    b.extend_from_slice(&c.key_id());
+                    let tmp = dir.join("ENCRYPTED.tmp");
+                    std::fs::write(&tmp, &b)?;
+                    File::open(&tmp)?.sync_all()?;
+                    std::fs::rename(&tmp, &path)?;
+                    sync_dir(dir)?;
+                }
+                Ok(())
+            }
+            Err(e) => Err(e.into()),
+        }
+    }
+
     pub fn open(dir: &Path, opts: Options) -> Result<Self> {
         let cache_bytes = opts.cache_bytes;
         std::fs::create_dir_all(dir)?;
@@ -282,19 +332,30 @@ impl Store {
             }
             Err(e) => return Err(e.into()),
         };
+        Self::check_marker(dir, opts.cipher.as_deref())?;
         let mut dicts = BTreeMap::new();
         let mut dict_trained = BTreeMap::new();
         for &id in &man.dicts {
             let b = std::fs::read(dict_path(dir, id))?;
-            if b.len() < DICT_HEAD || &b[..8] != DICT_MAGIC || u32::from_le_bytes(b[8..12].try_into().unwrap()) != id {
+            let sealed = b.len() >= 8 && &b[..8] == DICT_MAGIC_SEALED;
+            if b.len() < 20 || !(sealed || &b[..8] == DICT_MAGIC) || u32::from_le_bytes(b[8..12].try_into().unwrap()) != id {
                 return Err(Error::Corrupt("dictionary header"));
             }
             let len = u32::from_le_bytes(b[12..16].try_into().unwrap()) as usize;
-            if b.len() != DICT_HEAD + len || crc(&b[20..]) != u32::from_le_bytes(b[16..20].try_into().unwrap()) {
+            if crc(&b[20..]) != u32::from_le_bytes(b[16..20].try_into().unwrap()) {
                 return Err(Error::Corrupt("dictionary checksum"));
             }
-            dict_trained.insert(id, u64::from_le_bytes(b[20..28].try_into().unwrap()));
-            dicts.insert(id, b[DICT_HEAD..].to_vec());
+            let tail = if sealed {
+                let c = opts.cipher.as_deref().ok_or(Error::KeyRequired)?;
+                c.open_dict(&b[8..16], &b[20..])?
+            } else {
+                b[20..].to_vec()
+            };
+            if tail.len() != 8 + len {
+                return Err(Error::Corrupt("dictionary length"));
+            }
+            dict_trained.insert(id, u64::from_le_bytes(tail[..8].try_into().unwrap()));
+            dicts.insert(id, tail[8..].to_vec());
         }
         let mut store = Store {
             dir: dir.into(),
@@ -593,7 +654,7 @@ impl Store {
         }
         let first = self.next_seq;
         let cctx = (self.opts.hot_level != 0).then_some(&mut self.hot_cctx);
-        let (payload, body, _) = build_payload(cctx, self.hot_dict, first, batch, false)?;
+        let (payload, body, _) = build_payload(cctx, self.hot_dict, first, batch, false, self.opts.cipher.as_deref())?;
         let frame = seal_frame(&payload);
         let id = self.hot_id();
         let f = &self.files[&id];
@@ -647,10 +708,16 @@ impl Store {
         let mut tail = Vec::with_capacity(dict.len() + 8);
         tail.extend_from_slice(&trained_at.to_le_bytes());
         tail.extend_from_slice(&dict);
-        let mut b = Vec::with_capacity(dict.len() + DICT_HEAD);
-        b.extend_from_slice(DICT_MAGIC);
-        b.extend_from_slice(&id.to_le_bytes());
-        b.extend_from_slice(&(dict.len() as u32).to_le_bytes());
+        let mut head = Vec::with_capacity(16);
+        head.extend_from_slice(&id.to_le_bytes());
+        head.extend_from_slice(&(dict.len() as u32).to_le_bytes());
+        if let Some(c) = self.opts.cipher.as_deref() {
+            // a dictionary holds sample text of the store: sealed like a frame
+            tail = c.seal_dict(&head, &tail);
+        }
+        let mut b = Vec::with_capacity(tail.len() + DICT_HEAD);
+        b.extend_from_slice(if self.opts.cipher.is_some() { DICT_MAGIC_SEALED } else { DICT_MAGIC });
+        b.extend_from_slice(&head);
         b.extend_from_slice(&crc(&tail).to_le_bytes());
         b.extend_from_slice(&tail);
         let mut f = File::create(dict_path(&self.dir, id))?;
@@ -997,7 +1064,7 @@ impl CompactionJob {
             let step = (records * size as u64 * 100).checked_div(hot_raw.max(1)).map_or(1, |per| (records / per.max(1)).max(1));
             let (mut texts, mut n) = (Vec::new(), 0u64);
             for f in &self.hot {
-                let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx)?;
+                let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx, self.opts.cipher.as_deref())?;
                 for r in 0..meta.records.len() {
                     if n % step == 0 {
                         texts.push(body[meta.text_start[r] as usize..meta.text_start[r + 1] as usize].to_vec());
@@ -1017,11 +1084,12 @@ impl CompactionJob {
             frame_bytes: self.opts.cold_frame_bytes,
             dedupe_chunk: self.opts.dedupe_chunk,
             threads: self.opts.compact_threads,
+            cipher: self.opts.cipher.clone(),
         };
         let mut packer = Packer::new(opts, first_seq, dict_id, dict_bytes.as_deref());
         // Chunks of the newest cold data (within the window) that new frames may reference.
         for f in &self.window {
-            let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx)?;
+            let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx, self.opts.cipher.as_deref())?;
             packer.register(f.first_seq, &meta, &body);
         }
         let path = cold_path(&self.dir, self.seg_id);
@@ -1037,7 +1105,7 @@ impl CompactionJob {
             Ok(())
         };
         for f in &self.hot {
-            let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx)?;
+            let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx, self.opts.cipher.as_deref())?;
             for r in 0..meta.records.len() {
                 if meta.pieces[r].0 != meta.pieces[r].1 {
                     return Err(Error::Corrupt("hot frame holds a deduplicated record"));

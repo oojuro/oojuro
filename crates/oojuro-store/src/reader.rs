@@ -33,6 +33,10 @@ pub(crate) trait Frames {
         None
     }
     fn read_state(&self) -> &ReadState;
+    /// The key sealed frames are opened with.
+    fn cipher(&self) -> Option<&crate::crypto::FrameCipher> {
+        None
+    }
 }
 
 pub(crate) struct Decoded {
@@ -132,7 +136,14 @@ fn meta_of(head: &FrameHead, body: &[u8]) -> Result<Meta> {
 /// Decode the meta section, then body bytes up to `need(&meta)` (all when
 /// `need` is None or asks for more). Returns (meta, body prefix).
 pub(crate) fn decode_payload<F: Frames + ?Sized>(fs: &F, payload: &[u8], head: &FrameHead, need: Option<&dyn Fn(&Meta) -> usize>) -> Result<(Meta, Vec<u8>)> {
-    let packed = &payload[head.body_at as usize..];
+    let opened;
+    let packed: &[u8] = if head.encrypted {
+        let c = fs.cipher().ok_or(Error::KeyRequired)?;
+        opened = c.open_frame(&payload[..head.body_at as usize], &payload[head.body_at as usize..])?;
+        &opened
+    } else {
+        &payload[head.body_at as usize..]
+    };
     let raw_len = head.raw_len as usize;
     let meta_len = head.meta_len as usize;
     let (meta, body) = match head.codec {
@@ -317,10 +328,17 @@ pub(crate) fn read_frame_body(
     f: &Loc,
     dicts: &BTreeMap<u32, Vec<u8>>,
     dctx: &mut HashMap<u32, zstd_safe::DCtx<'static>>,
+    cipher: Option<&crate::crypto::FrameCipher>,
 ) -> Result<(Meta, Vec<u8>)> {
     let payload = read_payload(file, f)?;
     let head = check_head(f, &payload)?;
-    let packed = &payload[head.body_at as usize..];
+    let opened;
+    let packed: &[u8] = if head.encrypted {
+        opened = cipher.ok_or(Error::KeyRequired)?.open_frame(&payload[..head.body_at as usize], &payload[head.body_at as usize..])?;
+        &opened
+    } else {
+        &payload[head.body_at as usize..]
+    };
     let body = match head.codec {
         CODEC_RAW => packed.to_vec(),
         CODEC_LZ4 => lz4_flex::block::decompress(packed, head.raw_len as usize).map_err(|_| Error::Corrupt("lz4 frame"))?,
