@@ -211,8 +211,9 @@ pub(crate) fn decode_payload<F: Frames + ?Sized>(fs: &F, payload: &[u8], head: &
             fill(target, &mut out, &mut pos, &mut input)?;
             out.truncate(target);
             let mut rc = fs.read_state().ctx.lock().unwrap();
-            if !rc.dctx.contains_key(&head.dict) && rc.dctx.len()>=fs.read_state().idle_dicts {
-                if let Some(id)=rc.dctx.keys().next().copied(){rc.dctx.remove(&id);}
+            if !rc.dctx.contains_key(&head.dict) && rc.dctx.len()>=fs.read_state().idle_dicts
+                && let Some(id)=rc.dctx.keys().next().copied() {
+                rc.dctx.remove(&id);
             }
             let idle = rc.dctx.entry(head.dict).or_default();
             if idle.len() < fs.read_state().idle_per_dict {

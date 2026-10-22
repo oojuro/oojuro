@@ -365,6 +365,7 @@ struct Replay {
     origin: Option<[u8; 32]>,
 }
 impl Replay {
+    #[allow(clippy::too_many_arguments)] // Mirrors the existing Store frame-verification columns.
     fn frame(
         &mut self,
         decoder: &Bootstrap<'_>,
@@ -394,17 +395,16 @@ impl Replay {
             .fold((i64::MAX, i64::MIN), |(lo, hi), r| {
                 (lo.min(r.valid_at), hi.max(r.valid_at))
             });
-        if let Some((count, raw, dict, wantlo, wanthi)) = expected {
-            if count != head.count
+        if let Some((count, raw, dict, wantlo, wanthi)) = expected
+            && (count != head.count
                 || raw != head.raw_len
                 || dict != head.dict
                 || wantlo != lo
-                || wanthi != hi
-            {
-                return Err(Error::Corrupt(
-                    "cold source index differs from verified frame",
-                ));
-            }
+                || wanthi != hi)
+        {
+            return Err(Error::Corrupt(
+                "cold source index differs from verified frame",
+            ));
         }
         let text = meta
             .records
@@ -600,13 +600,14 @@ fn next_hot(source: &Path, manifest: &ManifestSource, after: u64) -> Result<Opti
         let item = item?;
         let name = item.file_name();
         let Some(name) = name.to_str() else { continue };
-        if let Some(id) = parse_id(name, "hot-", ".ojl") {
-            if id >= manifest.hot_from && id > after {
-                if id >= manifest.next_file {
-                    return Err(Error::Corrupt("hot file beyond manifest"));
-                }
-                next = Some(next.map_or(id, |n: u64| n.min(id)));
+        if let Some(id) = parse_id(name, "hot-", ".ojl")
+            && id >= manifest.hot_from
+            && id > after
+        {
+            if id >= manifest.next_file {
+                return Err(Error::Corrupt("hot file beyond manifest"));
             }
+            next = Some(next.map_or(id, |n: u64| n.min(id)));
         }
     }
     Ok(next)
@@ -624,15 +625,15 @@ fn next_file(source: &Path, manifest: &ManifestSource, after: u64) -> Result<Opt
         } else {
             None
         };
-        if let Some((id, cold)) = candidate {
-            if id > after {
-                match next {
-                    Some((n, c)) if n == id && c != cold => {
-                        return Err(Error::Corrupt("duplicate source file id"));
-                    }
-                    Some((n, _)) if n < id => {}
-                    _ => next = Some((id, cold)),
+        if let Some((id, cold)) = candidate
+            && id > after
+        {
+            match next {
+                Some((n, c)) if n == id && c != cold => {
+                    return Err(Error::Corrupt("duplicate source file id"));
                 }
+                Some((n, _)) if n < id => {}
+                _ => next = Some((id, cold)),
             }
         }
     }
