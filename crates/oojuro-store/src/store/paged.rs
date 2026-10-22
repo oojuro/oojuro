@@ -30,6 +30,7 @@ pub struct CacheUsage {
     pub open_files: usize,
     pub dictionaries: usize,
     pub dictionary_bytes: usize,
+    /// Maximum resident metadata-page slots, not warmed-page count or RSS.
     pub metadata_pages: usize,
 }
 impl PagedStore {
