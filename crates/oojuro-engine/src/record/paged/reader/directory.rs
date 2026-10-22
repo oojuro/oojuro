@@ -706,10 +706,9 @@ fn known(name: &str) -> bool {
         if let Some(s) = name
             .strip_prefix(prefix)
             .and_then(|s| s.strip_suffix(".bin"))
+            && let Some((generation, file)) = s.split_once('-')
         {
-            if let Some((generation, file)) = s.split_once('-') {
-                return valid_hex(generation, 64) && valid_hex(file, 16);
-            }
+            return valid_hex(generation, 64) && valid_hex(file, 16);
         }
     }
     false
