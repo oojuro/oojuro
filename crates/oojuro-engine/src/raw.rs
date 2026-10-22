@@ -320,6 +320,30 @@ mod tests {
     const A: SourceId = SourceId([1; 16]);
     const B: SourceId = SourceId([2; 16]);
 
+    // flock follows the open file description: a concurrently spawning test can inherit
+    // this fixture's FD until exec, retaining its lock after the parent drops Store.
+    // This private-fixture assertion must wait for that ownership window before checking
+    // the key. Only the exact lock refusal is retried; corruption/I/O/key errors return
+    // immediately, the deadline is bounded, and runtime open remains fail-fast.
+    fn open_after_spawn_window(
+        dir: &Path,
+        key: &[u8; 32],
+        mut on_locked: impl FnMut(),
+    ) -> Result<RawJournal> {
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(2);
+        loop {
+            match RawJournal::open(dir, key) {
+                Err(Error::Invalid("store is locked by another writer"))
+                    if std::time::Instant::now() < deadline =>
+                {
+                    on_locked();
+                    std::thread::yield_now();
+                }
+                result => return result,
+            }
+        }
+    }
+
     #[test]
     fn reopen_retries_parent_sync_after_format_committed_but_sync_failed() {
         let dir = Temp::new();
@@ -429,7 +453,7 @@ mod tests {
         assert!(RawJournal::open(&dir.0, &key()).is_err()); // process lock
         drop(j);
         assert!(matches!(
-            RawJournal::open(&dir.0, &[0x42; 32]),
+            open_after_spawn_window(&dir.0, &[0x42; 32], || {}),
             Err(Error::WrongKey)
         ));
     }
@@ -562,5 +586,100 @@ mod tests {
         assert!(!dir.0.join("MANIFEST").exists());
         assert!(RawJournal::open(&dir.0.join("missing").join("raw"), &key()).is_err());
         assert!(!dir.0.join("missing").exists());
+    }
+    #[cfg(unix)]
+    #[test]
+    #[ignore = "subprocess fixture invoked by inherited_spawn_lock_still_requires_wrong_key"]
+    fn inherited_spawn_lock_process_child() {
+        use std::{
+            io::Read,
+            os::{fd::AsRawFd, unix::net::UnixStream},
+        };
+        if std::env::var_os("OOJURO_SYNTHETIC_RAW_LOCK_CHILD").is_none() {
+            return;
+        }
+        struct Child(libc::pid_t);
+        impl Drop for Child {
+            fn drop(&mut self) {
+                if self.0 > 0 {
+                    unsafe {
+                        libc::kill(self.0, libc::SIGKILL);
+                        libc::waitpid(self.0, std::ptr::null_mut(), 0);
+                    }
+                }
+            }
+        }
+        let dir = Temp::new();
+        let mut journal = RawJournal::open(&dir.0, &key()).unwrap();
+        journal
+            .register(A, b"synthetic inherited-lock source")
+            .unwrap();
+        journal.append(A, 0, b"unchanged sealed bytes").unwrap();
+        let (mut parent, child) = UnixStream::pair().unwrap();
+        let parent_fd = parent.as_raw_fd();
+        let child_fd = child.as_raw_fd();
+        // This test runs in its own process, so the fork cannot retain another test's stores.
+        // The child performs only async-signal-safe syscalls and deliberately never uses Store.
+        let pid = unsafe { libc::fork() };
+        assert!(pid >= 0);
+        if pid == 0 {
+            unsafe {
+                libc::close(parent_fd);
+                let ready = [1u8];
+                if libc::write(child_fd, ready.as_ptr().cast(), 1) != 1 {
+                    libc::_exit(1);
+                }
+                let mut release = [0u8];
+                if libc::read(child_fd, release.as_mut_ptr().cast(), 1) != 1 {
+                    libc::_exit(1);
+                }
+                libc::_exit(0);
+            }
+        }
+        let mut child_guard = Child(pid);
+        drop(child);
+        let mut ready = [0u8];
+        parent.read_exact(&mut ready).unwrap();
+        assert_eq!(ready, [1]);
+        drop(journal);
+        assert!(matches!(
+            RawJournal::open(&dir.0, &[0x42; 32]),
+            Err(Error::Invalid("store is locked by another writer"))
+        ));
+        let mut saw_locked = false;
+        let result = open_after_spawn_window(&dir.0, &[0x42; 32], || {
+            assert!(!saw_locked);
+            saw_locked = true;
+            parent.write_all(&[1]).unwrap();
+            let mut status = 0;
+            assert_eq!(unsafe { libc::waitpid(pid, &mut status, 0) }, pid);
+            child_guard.0 = 0;
+            assert!(libc::WIFEXITED(status));
+            assert_eq!(libc::WEXITSTATUS(status), 0);
+        });
+        assert!(saw_locked);
+        assert!(matches!(result, Err(Error::WrongKey)));
+        let journal = RawJournal::open(&dir.0, &key()).unwrap();
+        let mut bytes = Vec::new();
+        journal.restore(A, &mut bytes).unwrap();
+        assert_eq!(bytes, b"unchanged sealed bytes");
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn inherited_spawn_lock_still_requires_wrong_key() {
+        let output = std::process::Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--ignored",
+                "--exact",
+                "raw::tests::inherited_spawn_lock_process_child",
+            ])
+            .env("OOJURO_SYNTHETIC_RAW_LOCK_CHILD", "1")
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "isolated inherited-lock regression failed"
+        );
     }
 }
