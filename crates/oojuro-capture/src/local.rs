@@ -391,7 +391,7 @@ impl LocalCapture {
             let bad = pc.bad_lines;
             let blank = line.iter().all(u8::is_ascii_whitespace);
             if !blank {
-                check_lookup_capacity(&context, line)?;
+                check_call_state(&context, line)?;
                 codex::parse_line(
                     &mut context,
                     line,
@@ -536,6 +536,13 @@ fn decode_context(bytes: &[u8]) -> Result<FileCtx> {
     if c.version != 1
         || c.calls.len() > FileCtx::MAX_OPEN_CALLS
         || c.lookups.len() > FileCtx::MAX_OPEN_CALLS
+        || c.calls.iter().enumerate().any(|(i, call)| {
+            call.0.is_empty() || c.calls[..i].iter().any(|prior| prior.0 == call.0)
+        })
+        || c.lookups
+            .iter()
+            .enumerate()
+            .any(|(i, id)| id.is_empty() || c.lookups[..i].contains(id))
     {
         return Err(Error::Corrupt);
     }
@@ -558,10 +565,10 @@ fn decode_context(bytes: &[u8]) -> Result<FileCtx> {
     })
 }
 // The legacy parser opens lookup markers before emitting a Rec (an empty body may
-// emit none). At the bound refuse any new tool call before that parser mutation.
+// emit none). Refuse overflow and ambiguous unresolved IDs before that mutation.
 // Results/noise remain consumable, allowing outstanding markers to close normally.
-fn check_lookup_capacity(context: &FileCtx, line: &[u8]) -> Result<()> {
-    if context.lookups.len() < FileCtx::MAX_OPEN_CALLS {
+fn check_call_state(context: &FileCtx, line: &[u8]) -> Result<()> {
+    if context.lookups.is_empty() && context.calls.is_empty() {
         return Ok(());
     }
     let Ok(v) = serde_json::from_slice::<serde_json::Value>(line) else {
@@ -582,13 +589,24 @@ fn check_lookup_capacity(context: &FileCtx, line: &[u8]) -> Result<()> {
         )
         && p["call_id"].as_str().is_some_and(|id| !id.is_empty())
     {
-        return Err(Error::Invalid("outstanding lookup capacity"));
+        let id = p["call_id"].as_str().unwrap();
+        if context.calls.iter().any(|call| call.0 == id)
+            || context.lookups.iter().any(|lookup| lookup == id)
+        {
+            return Err(Error::Invalid("duplicate unresolved call ID"));
+        }
+        if context.lookups.len() >= FileCtx::MAX_OPEN_CALLS {
+            return Err(Error::Invalid("outstanding lookup capacity"));
+        }
     }
     Ok(())
 }
 fn links(context: &mut FileCtx, rec: &mut Rec, id: u64) -> Result<u64> {
     Ok(match rec.kind {
         kind::TOOL_CALL => {
+            if !rec.call_id.is_empty() && context.calls.iter().any(|c| c.0 == rec.call_id) {
+                return Err(Error::Invalid("duplicate unresolved call ID"));
+            }
             if !rec.call_id.is_empty() && context.calls.len() >= FileCtx::MAX_OPEN_CALLS {
                 return Err(Error::Invalid("outstanding call capacity"));
             }

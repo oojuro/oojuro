@@ -986,3 +986,116 @@ fn more_than_64_sequential_completed_calls_and_lookups_do_not_exhaust_context() 
             .is_empty()
     );
 }
+
+#[test]
+fn duplicate_unresolved_call_or_empty_lookup_cannot_shadow_denial_after_restart() {
+    for lookup in [false, true] {
+        let f = Fixture::new();
+        let original = if lookup {
+            call("mcp__oojuro__search", "C0", "")
+        } else {
+            call("blocked_tool", "C0", "DENIED")
+        };
+        let bytes = [meta(), original].concat();
+        fs::write(&f.file, &bytes).unwrap();
+        let mut c = f.open(Mode::Strict);
+        let report = c.capture_file(SOURCE, &f.file, |_| true).unwrap().unwrap();
+        assert!(report.event_ids.is_empty());
+        let before = c.log.progress(SOURCE).unwrap();
+        f.append(&call("shell", "C0", "allowed duplicate"));
+        drop(c);
+        let mut options = f.options();
+        options.policy_id = "relaxed-v2".into();
+        let mut c = LocalCapture::open(
+            &f.root.join("authority"),
+            &KEY,
+            &f.ram,
+            options.clone(),
+            Box::new(Mode::Allow),
+        )
+        .unwrap();
+        assert!(matches!(
+            c.capture_file(SOURCE, &f.file, |_| true),
+            Err(Error::Invalid(_))
+        ));
+        assert_eq!(c.report(SOURCE).unwrap(), report);
+        assert_eq!(c.log.progress(SOURCE).unwrap().context, before.context);
+        assert_eq!(c.log.read_raw(SOURCE, 0, bytes.len()).unwrap(), bytes);
+        assert_eq!(c.log.next_id(), 1);
+        drop(c);
+        let mut c = LocalCapture::open(
+            &f.root.join("authority"),
+            &KEY,
+            &f.ram,
+            options,
+            Box::new(Mode::Allow),
+        )
+        .unwrap();
+        assert!(matches!(
+            c.capture_file(SOURCE, &f.file, |_| true),
+            Err(Error::Invalid(_))
+        ));
+        assert_eq!(c.report(SOURCE).unwrap(), report);
+        OpenOptions::new()
+            .write(true)
+            .open(&f.file)
+            .unwrap()
+            .set_len(before.raw_end)
+            .unwrap();
+        f.append(&result("C0", "ORIGINALDENIEDRESULTMARKER"));
+        c.capture_file(SOURCE, &f.file, |_| true).unwrap();
+        assert!(
+            c.search("ORIGINALDENIEDRESULTMARKER", 0, i64::MAX, 10)
+                .unwrap()
+                .is_empty()
+        );
+        assert_eq!(c.log.next_id(), if lookup { 2 } else { 1 });
+        let before_reuse = c.log.next_id();
+        // Reuse is unambiguous only after the original matched completion.
+        f.append(
+            &[
+                call("shell", "C0", "new completed reuse"),
+                result("C0", "reused result"),
+            ]
+            .concat(),
+        );
+        c.capture_file(SOURCE, &f.file, |_| true).unwrap();
+        assert_eq!(c.log.next_id(), before_reuse + 2);
+        assert_eq!(
+            c.get(before_reuse + 1).unwrap().unwrap().0.parent,
+            before_reuse
+        );
+        let ctx = decode_context(&c.log.progress(SOURCE).unwrap().context).unwrap();
+        assert!(ctx.calls.is_empty());
+        assert!(ctx.lookups.is_empty());
+    }
+}
+#[test]
+fn sealed_duplicate_unresolved_context_is_rejected_on_replay() {
+    for field in ["calls", "lookups"] {
+        let f = Fixture::new();
+        fs::write(
+            &f.file,
+            [meta(), call("mcp__oojuro__search", "C0", "lookup")].concat(),
+        )
+        .unwrap();
+        let mut c = f.open(Mode::Allow);
+        c.capture_file(SOURCE, &f.file, |_| true).unwrap();
+        let mut value: Value =
+            serde_json::from_slice(&c.log.progress(SOURCE).unwrap().context).unwrap();
+        let list = value[field].as_array_mut().unwrap();
+        list.push(list[0].clone());
+        commit_context(&mut c, serde_json::to_vec(&value).unwrap());
+        drop(c);
+        assert!(matches!(
+            LocalCapture::open(
+                &f.root.join("authority"),
+                &KEY,
+                &f.ram,
+                f.options(),
+                Box::new(Mode::Allow)
+            ),
+            Err(Error::Corrupt)
+        ));
+    }
+}

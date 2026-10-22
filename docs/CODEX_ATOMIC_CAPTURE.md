@@ -104,7 +104,9 @@ Per append: at most 256 KiB new raw, 1 MiB per complete/partial line, 128 KiB se
 context and 8 MiB serialized parsed receipt. At most 64 unresolved calls and 64
 unresolved Oojuro lookup markers are retained. A new call that could evict unresolved
 state refuses the candidate batch before commit, including empty-body lookup calls
-that emit no parsed record. Matched completions retire state, so this does not bound
+that emit no parsed record. Reusing an unresolved nonempty call ID is also refused
+before parser mutation, so a newer allowed call cannot shadow an older denied call.
+Matched completions retire state and permit subsequent ID reuse, so this does not bound
 the total calls in a session. No raw/cursor/allocator progress is acknowledged for
 the refused batch; original suffix bytes remain available for an explicit decision.
 The current projection limits are
