@@ -164,8 +164,141 @@ export class PreparedSearch {
   /** Exactly one attempt. Status-only retries never execute or return earlier result bytes. */
   send(options?: { signal?: AbortSignal }): Promise<Read<SearchHit[]>>;
 }
+/** Fresh hosted flat-record namespace; never enrolls or migrates legacy Trace data. */
+export interface JournalRoot {
+  schema: 1;
+  minimum_reader: 1;
+  project: OpaqueId;
+  namespace: OpaqueId;
+}
+export type JournalKind =
+  | "input"
+  | "output"
+  | "thinking"
+  | "tool_call"
+  | "tool_result"
+  | "system"
+  | "explicit"
+  | "raw";
+/** Explicit caller data. No redaction or independent provenance verification is performed. */
+export interface JournalInput {
+  agent_id: string;
+  parent_id: string | null;
+  valid_at: WireInteger;
+  kind: JournalKind;
+  tool: string | null;
+  status: "ok" | "error" | null;
+  exit: number | null;
+  /** Required even when unkeyed. Key versions are scoped to writer. */
+  key: string | null;
+  text: string;
+  attrs: Readonly<Record<string, Json>>;
+  indexed: boolean;
+}
+export interface JournalRecord {
+  id: OpaqueId;
+  record: JournalInput & {
+    schema: 1;
+    id: WireInteger;
+    writer: OpaqueId;
+    adapter: string;
+    recorded_at: WireInteger;
+  };
+}
+export interface JournalQuery {
+  as_of: { from: WireInteger; valid_at: WireInteger; known_at: WireInteger };
+  generation: WireInteger | null;
+  writer: OpaqueId | null;
+  mode:
+    | {
+        mode: "Range";
+        versions: "current" | "all";
+        filter: {
+          kind?: JournalKind | null;
+          tool?: string | null;
+          status?: "ok" | "error" | null;
+          agent_id?: string | null;
+        };
+      }
+    | { mode: "History"; key: string }
+    | { mode: "Id"; id: OpaqueId };
+}
+export interface JournalRecordInput {
+  requestId: string;
+  consent: "intentional-user-file";
+  expectedRoot: JournalRoot;
+  writer: OpaqueId;
+  adapter: string;
+  input: JournalInput;
+}
+export interface JournalDeleteInput {
+  requestId: string;
+  expectedRoot: JournalRoot;
+  writer: OpaqueId;
+  id: OpaqueId;
+}
+export interface JournalForgetInput {
+  requestId: string;
+  expectedRoot: JournalRoot;
+  writer: OpaqueId;
+  key: string;
+}
+export interface JournalViewInput {
+  expectedRoot: JournalRoot;
+  query: JournalQuery;
+}
+export interface JournalPageInput extends JournalViewInput {
+  /** Resume using the EXACT original root/query. Later appends are excluded. */
+  cursor?: string | null;
+  maxRecords?: number;
+  maxBytes?: number;
+}
+export interface JournalPage {
+  /** Snapshot watermark; envelope watermark is current and can be later. */
+  watermark: Watermark;
+  records: JournalRecord[];
+  next: string | null;
+}
+export interface JournalStats {
+  records: WireInteger;
+  text_bytes: WireInteger;
+  kinds: Partial<Record<JournalKind, WireInteger>>;
+  first_valid_at: WireInteger | null;
+  last_valid_at: WireInteger | null;
+}
+export interface JournalPeriod {
+  start_us: WireInteger;
+  records: WireInteger;
+  text_bytes: WireInteger;
+}
+export interface JournalPeriodsInput extends JournalViewInput {
+  requestId: string;
+  widthUs: WireInteger;
+  maxPeriods: number;
+  minGeneration?: WireInteger;
+}
+export class PreparedJournalWrite {
+  private constructor();
+  /** No automatic retry. A missing validated ACK always leaves the original outcome unknown. */
+  send(options?: { signal?: AbortSignal }): Promise<Outcome>;
+}
+export class PreparedJournalPeriods {
+  private constructor();
+  /** Billed search. Original identity/body are frozen; retries return status, never recompute. */
+  send(options?: { signal?: AbortSignal }): Promise<Read<JournalPeriod[]>>;
+}
 export class OojuroClient {
   constructor(options: ClientOptions);
+  journalRoot(options?: ReadOptions): Promise<Read<JournalRoot>>;
+  /** Encoded Journal POSTs are capped at 1 MiB, or the lower configured request limit.
+   * Native 16 MiB text support does not imply equivalent HTTP capacity. */
+  prepareJournalRecord(input: JournalRecordInput): PreparedJournalWrite;
+  prepareJournalDelete(input: JournalDeleteInput): PreparedJournalWrite;
+  /** Tombstones existing key versions; does not forbid future key reuse. */
+  prepareJournalForget(input: JournalForgetInput): PreparedJournalWrite;
+  journalPage(input: JournalPageInput, options?: ReadOptions): Promise<Read<JournalPage>>;
+  journalStats(input: JournalViewInput, options?: ReadOptions): Promise<Read<JournalStats>>;
+  prepareJournalPeriods(input: JournalPeriodsInput): PreparedJournalPeriods;
   prepareCommit(input: CommitInput): PreparedCommit;
   access(options?: ReadOptions): Promise<Read<AuthorizationGrant>>;
   records(options?: ReadOptions): Promise<Read<TraceRecord[]>>;
