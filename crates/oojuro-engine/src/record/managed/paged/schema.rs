@@ -51,7 +51,6 @@ pub(in crate::record::managed) struct DataRoots {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub(in crate::record::managed) enum PrunePhase {
-    DeniedPendingRewrite,
     RewrittenPendingCleanup,
     Completed,
 }
@@ -69,6 +68,10 @@ pub(in crate::record::managed) struct Prune {
     pub encoded_occurrences: u64,
     pub operation_sequence: u64,
     pub verified_generation: u64,
+    pub source_sequence: u64,
+    pub files: Option<tree::Root>,
+    pub file_count: u64,
+    pub file_bytes: u64,
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -79,6 +82,8 @@ pub(in crate::record::managed) struct CommitRoot {
     /// CONTROL birth, not DATA-key material and not a final checkpoint hash.
     pub birth: Vec<u8>,
     pub data_key_version: Option<[u8; 32]>,
+    pub data_namespace: Option<[u8; 32]>,
+    pub enrollment_digest: Option<[u8; 32]>,
     pub next_id: u64,
     pub last_at: Option<i64>,
     pub append_sequence: u64,
@@ -106,6 +111,7 @@ pub(in crate::record::managed) enum RootName {
     Frame,
     File,
     Dictionary,
+    PruneFiles,
 }
 impl RootName {
     pub fn name(self) -> &'static str {
@@ -120,12 +126,14 @@ impl RootName {
             Self::Frame => "frame",
             Self::File => "file",
             Self::Dictionary => "dictionary",
+            Self::PruneFiles => "prune-files",
         }
     }
     pub fn purpose(self) -> tree::Purpose {
         match self {
             Self::Checkpoint | Self::Prefix => tree::Purpose::Prefix,
             Self::Request | Self::Erased => tree::Purpose::Request,
+            Self::PruneFiles => tree::Purpose::Prefix,
             Self::Record => tree::Purpose::Record,
             Self::KeyVersion => tree::Purpose::KeyVersion,
             Self::Segment => tree::Purpose::Segment,
@@ -136,7 +144,7 @@ impl RootName {
     }
     pub fn class(self) -> tree::KeyClass {
         match self {
-            Self::Checkpoint | Self::Prefix | Self::Request | Self::Erased => {
+            Self::Checkpoint | Self::Prefix | Self::Request | Self::Erased | Self::PruneFiles => {
                 tree::KeyClass::RetainedControl
             }
             _ => tree::KeyClass::Data,
@@ -187,14 +195,43 @@ impl CommitRoot {
             || self.live_records != state.live_records
             || self.live_bytes != state.live_bytes
             || self.next_file == 0
-            || self.original_records > MAX_RECORDS as u64
-            || self.original_bytes > MAX_STATE_BYTES as u64
             || self.live_records > self.original_records
         {
             return Err(Error::Authority);
         }
+        if self.control.checkpoint.count != birth.generation
+            || self.control.request.count != self.append_sequence
+            || self.control.prefix.count != self.append_sequence
+            || self.append_sequence > self.original_records
+            || self.live_bytes > self.original_bytes
+            || self.last_at.is_some() != (self.original_records != 0)
+        {
+            return Err(Error::Authority);
+        }
+        if let Some(p) = &self.prune {
+            let files = p.files.as_ref().ok_or(Error::Authority)?;
+            if p.selected_count > self.original_records
+                || p.selected_bytes > self.original_bytes
+                || p.source_sequence == 0
+                || p.operation_sequence != p.source_sequence.checked_add(1).ok_or(Error::Bounds)?
+                || p.verified_generation != p.source_sequence
+                || p.verified_generation > birth.generation
+                || files.format != 1
+                || files.purpose != tree::Purpose::Prefix
+                || files.count != p.file_count
+                || state.pruned != (p.phase == PrunePhase::Completed)
+            {
+                return Err(Error::Authority);
+            }
+        } else if state.pruned && state.status == control::Status::Active {
+            return Err(Error::Authority);
+        }
         let enrolled = self.data_key_version.is_some();
-        if enrolled != self.physical.is_some()
+        if enrolled != self.enrollment_digest.is_some()
+            || self.enrollment_digest == Some([0; 32])
+            || enrolled != self.data_namespace.is_some()
+            || self.data_namespace == Some([0; 32])
+            || enrolled != self.physical.is_some()
             || enrolled != self.data.is_some()
             || self.data_key_version == Some([0; 32])
             || (!enrolled
@@ -212,8 +249,20 @@ impl CommitRoot {
                 return Err(Error::Authority);
             }
         }
+        if let Some(data) = &self.data {
+            if data.record.count != self.live_records
+                || data.key_version.count > self.live_records
+                || data.segment.count > self.live_records
+            {
+                return Err(Error::Authority);
+            }
+        }
         if let Some(physical) = &self.physical {
-            if physical.format != 1 {
+            if physical.format != 1
+                || physical.file.count > self.live_records
+                || (physical.file.count == 0) != (self.live_records == 0)
+                || physical.frame.count > self.next_physical
+            {
                 return Err(Error::Authority);
             }
         }
@@ -303,6 +352,8 @@ mod tests {
             intent: [95; 32],
             birth: birth.encode().unwrap(),
             data_key_version: None,
+            data_namespace: None,
+            enrollment_digest: None,
             next_id: 0,
             last_at: None,
             append_sequence: 0,

@@ -18,6 +18,9 @@ use std::{
 /// Trusted managed-control adapter. Implementations must independently resolve
 /// current authority on every call; prepared/orphan roots cannot implement it.
 /// cipher() must freshly validate DATA-key lifecycle, without a warm-key fallback.
+/// A private non-exported candidate verifier may check exact staged bytes under a
+/// freshly held predecessor, but cannot serve/yield them or issue an ACK. Its
+/// caller must verify original typed IDs/times/Input before durable publication.
 pub trait Catalog {
     fn current(&self) -> Result<Vec<u8>>;
     fn validate_birth(&self, birth: &Birth) -> Result<()>;

@@ -134,6 +134,8 @@ pub(in crate::record::managed) fn genesis(
         intent: oojuro_store::crypto::random_key(),
         birth: birth.encode().map_err(io)?,
         data_key_version: None,
+        data_namespace: None,
+        enrollment_digest: None,
         next_id: 0,
         last_at: None,
         append_sequence: 0,
@@ -330,6 +332,35 @@ pub(in crate::record::managed) fn check_prepared(
         || birth.predecessor_logical != verified.state().logical
         || next.origin != verified.state().origin
         || next.identity != verified.state().identity
+    {
+        return Err(Error::Authority);
+    }
+    let previous = schema::load(directory, cipher, verified.state())?;
+    if root.intent != previous.intent
+        || previous
+            .enrollment_digest
+            .is_some_and(|d| root.enrollment_digest != Some(d))
+        || birth.key_version != Birth::decode(&previous.birth).map_err(io)?.key_version
+        || root.next_id < previous.next_id
+        || root.original_records < previous.original_records
+        || root.original_bytes < previous.original_bytes
+        || root.append_sequence < previous.append_sequence
+        || root.append_sequence
+            > previous
+                .append_sequence
+                .checked_add(1)
+                .ok_or(Error::Bounds)?
+        || root.next_file < previous.next_file
+        || (root.append_sequence == previous.append_sequence && root.logical != previous.logical)
+        || previous
+            .data_key_version
+            .is_some_and(|k| root.data_key_version != Some(k))
+        || (previous.data_namespace.is_some()
+            && previous.data_namespace != root.data_namespace
+            && !root
+                .prune
+                .as_ref()
+                .is_some_and(|p| p.phase == schema::PrunePhase::RewrittenPendingCleanup))
     {
         return Err(Error::Authority);
     }

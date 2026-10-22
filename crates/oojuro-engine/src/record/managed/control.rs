@@ -625,6 +625,25 @@ impl Inner {
             after,
         })
     }
+    pub(super) fn receipt_at(&self, sequence: u64) -> Result<LifecycleReceipt> {
+        self.current()?;
+        if sequence == 0 || sequence > self.checkpoint.body.sequence {
+            return Err(Error::Bounds);
+        }
+        let bytes = self.store.get(sequence - 1)?;
+        let envelope: Envelope = serde_json::from_slice(&bytes).map_err(|_| Error::Authority)?;
+        let receipt = public_receipt(&envelope).ok_or(Error::Authority)?;
+        receipt.verify(
+            &Verifier::new(
+                self.authority,
+                Domain::NativeLifecycle,
+                self.signer.public_key(),
+            ),
+            self.state.identity,
+        )?;
+        self.current()?;
+        Ok(receipt)
+    }
     pub fn receipt(&self) -> Result<LifecycleReceipt> {
         let bytes = self
             .store
