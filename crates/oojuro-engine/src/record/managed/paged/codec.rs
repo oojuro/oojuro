@@ -191,6 +191,15 @@ impl Write for Chunks<'_> {
         Ok(())
     }
 }
+pub(super) struct PackConfig {
+    pub directory: PathBuf,
+    pub birth: Birth,
+    pub cipher: Arc<FrameCipher>,
+    pub layout: u32,
+    pub file: u64,
+    pub seq: u64,
+    pub row_packs: bool,
+}
 pub(super) struct Packs<'a, 'c> {
     directory: PathBuf,
     birth: Birth,
@@ -208,16 +217,19 @@ pub(super) struct Packs<'a, 'c> {
 }
 impl<'a, 'c> Packs<'a, 'c> {
     pub fn new(
-        directory: PathBuf,
-        birth: Birth,
-        cipher: Arc<FrameCipher>,
-        layout: u32,
+        config: PackConfig,
         physical: &'a mut physical::Editor<'c>,
         segments: &'a mut tree::Editor<'c>,
-        file: u64,
-        seq: u64,
-        row_packs: bool,
     ) -> Self {
+        let PackConfig {
+            directory,
+            birth,
+            cipher,
+            layout,
+            file,
+            seq,
+            row_packs,
+        } = config;
         Self {
             directory,
             birth,

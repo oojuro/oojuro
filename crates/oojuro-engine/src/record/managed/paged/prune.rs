@@ -188,15 +188,17 @@ impl ManagedPagedLog {
         let mut live_records = 0u64;
         let mut live_bytes = 0u64;
         let mut packs = codec::Packs::new(
-            target.join("packs"),
-            data_birth,
-            self.cipher.clone(),
-            root.format,
+            codec::PackConfig {
+                directory: target.join("packs"),
+                birth: data_birth,
+                cipher: self.cipher.clone(),
+                layout: root.format,
+                file: root.next_file,
+                seq: 0,
+                row_packs: true,
+            },
             &mut physical,
             &mut segments,
-            root.next_file,
-            0,
-            true,
         );
         while let Some(e) = cursor.next()? {
             self.witness_current(&owner)?;

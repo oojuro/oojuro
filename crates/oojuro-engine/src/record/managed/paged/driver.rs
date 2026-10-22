@@ -470,15 +470,17 @@ impl ManagedPagedLog {
             data.segment.clone(),
         )?;
         let mut packs = codec::Packs::new(
-            data_directory.join("packs"),
-            data_birth,
-            self.cipher.clone(),
-            root.format,
+            codec::PackConfig {
+                directory: data_directory.join("packs"),
+                birth: data_birth,
+                cipher: self.cipher.clone(),
+                layout: root.format,
+                file: root.next_file,
+                seq: root.next_physical,
+                row_packs: false,
+            },
             &mut physical,
             &mut segments,
-            root.next_file,
-            root.next_physical,
-            false,
         );
         let first_id = root.next_id;
         let first_at = match root.last_at {
