@@ -107,31 +107,41 @@ transaction. AWS provides [conditional creates and compare-and-swap writes](http
 ## Implementation continuation
 
 [Engine PR #5](https://github.com/oojuro/oojuro/pull/5) implements the first sealed byte-exact raw-source journal slice,
-with cursors reconstructed from its existing Store journal. Its first eight active raw tests plus four strict-sealing regressions
-passed; review then fixed a failed-initial-directory-sync retry gap, so final isolated-build validation is pending.
+with cursors reconstructed from its existing Store journal. Nine active raw tests and four strict-sealing regressions pass,
+including the independently reviewed failed-initial-directory-sync retry gap; application compatibility and scoped strict clippy pass.
 [Engine PR #15](https://github.com/oojuro/oojuro/pull/15) adds an explicit per-source-policy file adapter with sealed provenance,
-full retained-prefix validation and caller-owned generation identity. It remains draft pending its focused tests.
+full retained-prefix validation and caller-owned generation identity. All five file tests and scoped strict clippy pass,
+including an independently reviewed final-component symlink-swap race fixed by atomic no-follow open. Both engine slices are ready for review.
 Cloud PRs [#2](https://github.com/oojuro/cloud/pull/2), [#3](https://github.com/oojuro/cloud/pull/3) and
 [#4](https://github.com/oojuro/cloud/pull/4) continue exact retry authority, conditional blob revisions and current deletion authority.
 [Cloud PR #6](https://github.com/oojuro/cloud/pull/6) composes exact retry state and deletion authority so an old archive cannot
-recreate erased records on retry. Its five focused restore tests pass, including archives before project-journal creation and
-after the append; final composed validation is pending. [Cloud PR #7](https://github.com/oojuro/cloud/pull/7) adds the isolated
-committed-prefix protocol prototype. These are active code reviews; their draft status and validation limits govern acceptance.
-Authenticated human timeline/search/drilldown/export is also implemented on a separate review branch; focused browser tests
-pass, and compatibility checks are pending. None is a declaration that the new core or commercial hosted product is finished.
+recreate erased records on retry. Its full current-source suite passes 117 tests with two deliberate load tests ignored, including archives before
+project-journal creation and after the append, key-save-failure status, startup freshness and restart. [Cloud PR #7](https://github.com/oojuro/cloud/pull/7) adds the isolated
+committed-prefix protocol prototype: twelve tests plus a bounded local CPU/crypto/fsync measurement pass. Warm record/memory/one-blob
+batches measured approximately 165–177 commits/s on the development filesystem; this is not S3 latency or an AZ survival result.
+[Cloud PR #9](https://github.com/oojuro/cloud/pull/9) supplies inactive shared real lexical materialization over committed rows,
+with six tests and explicit per-writer tmpfs caches. [Cloud PR #10](https://github.com/oojuro/cloud/pull/10) supplies an inactive
+S3 Standard CLI adapter with seven fake-transport/CLI tests. Each remains governed by the unimplemented key/control/runtime gates below.
+
+[Cloud PR #8](https://github.com/oojuro/cloud/pull/8) implements authenticated human timeline/search/provenance detail/export;
+its 43 tests pass. [Cloud PR #11](https://github.com/oojuro/cloud/pull/11) composes the current hosted storage repairs with that
+review surface and passes 47 relevant integration checks, but stays draft pending current-authority API-key revocation replay
+and browser credential rollback correction. A restored control database must not revive revoked API keys or logged-out sessions.
+The new credential-aware authority requires a schema fence; legacy history is not silently upgraded or represented as complete. None is a declaration that the new core or commercial hosted product is finished.
 
 ## Current blockers for primary agent storage
 
 The initial cloud review found deletion resurrection from old archives, asynchronous remote key cleanup, bounded retry-key
 retention with possible acknowledgement after retry-state failure, and mutable blob lost updates. PRs #2/#3/#4/#6 now implement
-reviewable repairs with focused tests; the final combined gates remain required. Hosted deletion freshness at startup and
+reviewable repairs with passing component/composed gates. The additional credential/session rollback fix and its final composition remain required. Hosted deletion freshness at startup and
 conditional publisher updates are interim protection, not a continuously fenced replicated authority. An obsolete publisher
 with broad overwrite/version-delete IAM can bypass new-script protections until the reviewed policy and credential boundary
 are deployed and verified. Logical record/writer restore revocation does not cryptographically erase retained backup bytes
 while their project DEK remains usable.
 
 The commercial primary-store blockers are now the unimplemented production replicated commit backend/serving path,
-binding key-wrap/deletion authority to that same prefix, independent host/AZ failure acceptance, and the remaining consolidated
+binding key-wrap/deletion authority and independently current authentication to that same prefix, excluding obsolete binaries/endpoints
+and legacy storage credentials, independent host/AZ failure acceptance, and the remaining consolidated
 engine/adapters/query/erasure/audit milestones. Test-backend success cannot substitute for those. See cloud PR #1's
 `docs/PRIMARY_STORAGE_REVIEW.md` for the original baseline and the follow-up PRs for current source/evidence.
 
