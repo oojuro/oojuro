@@ -18,7 +18,7 @@ The draft is preserved in its original checkout; no stores, services or customer
 | Byte-exact raw capture | `lossless-exp`, commit `c7bae21`, `docs/LOSSLESS_EXPERIMENT.md`; prototype examples, not the default daemon |
 | Store sealing | [PR #4](https://github.com/oojuro/oojuro/pull/4): preserved sealing implementation plus regression review; 27 store tests and application compilation pass; low-level prototype, no capture integration |
 | Ranker seam | [PR #2](https://github.com/oojuro/oojuro/pull/2): separately reviewed standalone crate, 8 synthetic conformance tests; no shipped semantic ranker or live query integration |
-| New consolidated engine | [PR #5](https://github.com/oojuro/oojuro/pull/5): real sealed raw journal; [PR #15](https://github.com/oojuro/oojuro/pull/15): explicit policy-gated file adapter; remaining store/index/query and section 14 gates unfinished |
+| New consolidated engine | [PR #5](https://github.com/oojuro/oojuro/pull/5): sealed raw journal; [PR #15](https://github.com/oojuro/oojuro/pull/15): explicit file adapter; [PR #16](https://github.com/oojuro/oojuro/pull/16): atomic Codex raw/parsed capture; [PR #17](https://github.com/oojuro/oojuro/pull/17): ready bounded native lexical port. Persistent segments/merge, complete format/audit/erase/adapters and section14 gates remain unfinished. |
 | Information-theory methods | [PR #3](https://github.com/oojuro/oojuro/pull/3): reproducible aggregate of cached exploratory runs; exposed evaluation set, no clean adoption verdict |
 | Hosted API | [cloud PR #1](https://github.com/oojuro/cloud/pull/1): durable control commits, tenant-bound restore and atomic blob authorization; 86 tests pass, 2 intentional load tests ignored |
 
@@ -41,7 +41,9 @@ Accounts, permissions, billing, workflow scheduling and transactional applicatio
 systems of record until a separate correctness contract and migration are approved. An append-only journal cannot implement
 arbitrary multi-record application transactions merely because it can store JSON.
 
-| Requirement | Present design / evidence | Gate before primary agent storage |
+The following table describes the legacy hosting baseline; the inactive protocol and composed candidates are distinguished in the readiness matrix below.
+
+| Requirement | Legacy design / evidence | Gate before primary agent storage |
 |---|---|---|
 | Acknowledgement | local fsync journal plus SQLite/blob stores; S3 backup is asynchronous | kill/power-loss tests prove all acknowledged records, idempotency state and metadata recover consistently |
 | Multi-agent writes | one owning service process serializes engine mutation | concurrent retry tests, stable per-writer ordering, documented read-after-write scope |
@@ -148,7 +150,10 @@ commercial product or the consolidated engine specification.
 |---|---|---|
 | Runnable App candidate | [Cloud PR #14](https://github.com/oojuro/cloud/pull/14), ready: storage safety fixes, scoped agent handoff, other registered-human read-only trace review. Complete current-source suite **131 passed, 0 failed, 2 intentional load tests ignored**; independent source review cleared the HTTP runtime blocking issue. Runtime source `81fa312`; later commit only records evidence. | Local durability/offsite-pending ACK is still distinct from replicated hosted ACK. Deliberate authority format4 migration, deployment review and actual customer acceptance remain. |
 | Local core candidate | [Engine PR #16](https://github.com/oojuro/oojuro/pull/16), ready at `45b6b07`: atomic sealed raw bytes + parsed/policy/context/ID outcomes, explicit Codex source adapter, real tmpfs lexical projection. Final **43 capture + 18 engine tests pass**, one pre-existing helper ignored; strict scoped lib/tests clippy passes. Independent source review cleared complete resume-state, unresolved-call/lookup and duplicate-ID policy fixes. Earlier nine legacy-ingest tests pass separately. | This is a Linux local-durability candidate with explicit unresolved-context bounds; it is not the consolidated query/index port, all-adapter support, hosted key authority or multi-AZ ACK implementation. |
-| Inactive hosted v2 experiment | New namespace separates retained control authentication from writer/project payload DEKs, logical tombstones before external terminal-scope destruction and verifiable status. Based on inactive S3/serving composition PR12; library compilation passes. | Lifecycle regressions, exact-scope retries and real lexical/fake-S3 composition are still gating. No production key service, deployed App integration or human grants in v2 yet. |
+| Native lexical candidate | [Engine PR #17](https://github.com/oojuro/oojuro/pull/17), ready at `1afbc51`: native postings/query over committed receipts, no nine/trace production dependency in engine and no oracle/tmpfs projection in opt-in LocalCapture. **43 capture +24 engine tests pass**, one existing helper ignored; scoped strict lint passes. Above-floor/pruning/long-ID bitwise differential fixtures and complete replay-metadata capacity refusal/reopen are covered. | In-memory derived view only. Persistent native segments/codec/merge are being implemented separately; full section14 corpus/size/performance and remaining SPEC work are not complete. |
+| Inactive v2 key-control candidate | [Cloud PR #15](https://github.com/oojuro/cloud/pull/15), ready: independently current control prefix, separate writer/project DEKs, exact original outcomes, logical tombstones before terminal-scope destruction. **22 lifecycle regressions +1 actual-S3Backend/fake-transport/real-lexical composition story pass**. | Test key service is volatile/synthetic. Durable production scope-key/authentication/proof adapters, immutable key provisioning, recovery and irreversible destruction remain code work. Local timings/operation counts are not S3 benchmarks. |
+| Explicit v2 App draft | [Cloud PR #16](https://github.com/oojuro/cloud/pull/16): actual API/browser and registered-human review, scoped redacted exports, current-prefix permissions, old-DB recovery and lifecycle transitions. Actual HTTP story and seven paused-body checks covered; root review added per-frame authorization after return. | Draft correction of API-host redirect, original typed retry binding before redaction and oversized provenance rendering is underway. Current exact-Mark guard conservatively aborts on unrelated ingest; transaction-bound grant identity and snapshot read permits remain commercial concurrency work. Default CLI does not select v2. |
+| AWS adapter/IaC source in progress | Separate isolated branches implement an inert-constructor SecretsManager root loader (explicit fullARN/version/AWSCURRENT fetch, no local fallback or automatic election) and new storage/IAM/KMS/empty-root Terraform with no secret values. | Offline gates pending at this update. Real per-scope key provider, root transition/enrollment, practical v2 grant/account administration, billing reconciliation, runtime/CLI composition and production topology are still implementation tasks. No AWS API/resource operation occurred. |
 | AWS provider acceptance | Prior adapter and composition use actual adapter code with fake transport; no live AWS operations were performed. | Independently current anti-rollback authority; provider key-service durability and irreversible destruction; IAM/obsolete binary exclusion; S3 semantics/faults; process/host/AZ drills, throughput/latency/cost and region DR evidence. |
 | Complete specification | Section18 milestones below are the intended build order; the oracle remains the working product engine. | Full new format/log/chain, store/index/query differential port, erase/audit/retention, ranker integration, all edges and scale/security/launch gates remain incomplete. |
 
@@ -160,12 +165,13 @@ a fresh namespace; no missing review history becomes an empty confirmed ACL.
 
 ### Concrete next specification milestones
 
-1. Finish format/log sealing and integrity-chain recovery, using the proven Store
+1. Finish the consolidated format/log and integrity-chain recovery, using the proven Store
    append boundary and preserving exact raw/parsed policy receipts.
-2. Port store/index segments, dedupe and merge; measure size/ingest at equal
-   hardware. Then port lexical query to bit-identical ranked IDs and score bits
-   on the declared differential corpus. The temporary old-engine projection is
-   an oracle-backed bridge, not proof that this port is done.
+2. Implement persistent native index segments/codec/merge and measure size/ingest
+   at equal hardware. PR17 already supplies a bounded in-memory lexical/dedupe port
+   with bitwise oracle fixtures; complete the declared differential corpus and
+   persistence/crash/rebuild gates. Frozen PR16 retains its oracle bridge; PR17
+   explicitly removes that bridge from its opt-in lane.
 3. Implement native erase/retention and verifiable audit receipts, with old
    backup/key/cache recovery tests. Connect the already separate ranker seam
    only after the lexical gate and held-out adoption requirements pass.
@@ -185,10 +191,15 @@ with broad overwrite/version-delete IAM can bypass new-script protections until 
 are deployed and verified. Logical record/writer restore revocation does not cryptographically erase retained backup bytes
 while their project DEK remains usable.
 
-The commercial primary-store blockers are now the unimplemented production replicated commit backend/serving path,
-binding key-wrap/deletion authority and independently current authentication to that same prefix, excluding obsolete binaries/endpoints
-and legacy storage credentials, independent host/AZ failure acceptance, and the remaining consolidated
-engine/adapters/query/erasure/audit milestones. Test-backend success cannot substitute for those. See cloud PR #1's
+The commercial primary-store blockers include unfinished production key/auth-root
+transition/provider/destruction code, practical grant/account enrollment, durable
+billing reconciliation, runtime/CLI wiring and topology, and the remaining native
+format/index/merge/erasure/audit/retention/adapters milestones. The S3 adapter and v2
+App draft are concrete source progress, not a completed commercial primary store.
+Excluding obsolete binaries/endpoints and legacy storage credentials, validating
+real IAM/provider semantics, and independent process/host/AZ/region failure drills
+remain separate deployment acceptance. Test-backend success substitutes for none
+of those code or external evidence requirements. See cloud PR #1's
 `docs/PRIMARY_STORAGE_REVIEW.md` for the original baseline and the follow-up PRs for current source/evidence.
 
 ## Executable gates delivered for review
