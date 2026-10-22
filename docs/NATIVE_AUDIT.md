@@ -32,7 +32,8 @@ protection. Authority unavailability must be handled fail-closed by the producti
 
 A checkpoint scope identifies the audited project/log. An event scope identifies its target
 writer/read scope and may differ; the authenticated producer owns that authorization mapping.
-Native `AuditExport::verify` recomputes every event and signed checkpoint from genesis,
+Native `AuditExport::verify` requires an explicit externally configured expected project scope,
+then recomputes every event and signed checkpoint from genesis,
 checks every checkpoint against the actual event prefix, and refuses uncheckpointed tails.
 Export encode/decode is bounded to 100,000 entries/checkpoints and 16 MiB. Unknown fields,
 domains and versions fail closed on verification. Producers must authenticate actors/scopes and
