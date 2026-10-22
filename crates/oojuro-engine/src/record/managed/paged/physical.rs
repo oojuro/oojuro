@@ -81,7 +81,12 @@ impl Roots {
             return Err(Error::Invalid);
         }
         let p = self.pack(c, l.file_id)?;
-        if l.frame_ordinal >= p.frame_count
+        if l.offset < 304
+            || l.dictionary_id != 0
+                && p.dictionary
+                    .as_ref()
+                    .is_none_or(|d| d.id != l.dictionary_id)
+            || l.frame_ordinal >= p.frame_count
             || l.first_physical_seq < p.first_physical_seq
             || l.first_physical_seq + u64::from(l.count) > p.first_physical_seq + p.record_count
             || l.offset + 8 + u64::from(l.payload_len) > p.byte_len
@@ -101,6 +106,11 @@ impl Roots {
         if p.file_id != file_id {
             return Err(Error::Authority);
         }
+        c.file.authority.validate_birth(
+            &p.birth.encode().map_err(|_| Error::Authority)?,
+            Purpose::File,
+            KeyClass::Data,
+        )?;
         if c.check()? != b {
             return Err(Error::Conflict);
         }
@@ -114,6 +124,13 @@ impl Roots {
         if out.as_ref().is_some_and(|d| d.id != id) {
             return Err(Error::Authority);
         }
+        if let Some(d) = &out {
+            c.dictionary.authority.validate_birth(
+                &d.birth.encode().map_err(|_| Error::Authority)?,
+                Purpose::Dictionary,
+                KeyClass::Data,
+            )?;
+        }
         if c.check()? != b {
             return Err(Error::Conflict);
         }
@@ -124,7 +141,7 @@ impl Roots {
     pub fn inventory(
         &self,
         c: &Contexts<'_>,
-        visit: &mut dyn FnMut(Inventory) -> Result<()>,
+        visit: &mut dyn FnMut(Inventory<'_>) -> Result<()>,
     ) -> Result<()> {
         let b = self.check(c)?;
         let mut cursor = tree::Cursor::seek_ancestor(c.file.clone(), &self.file, &[])?;
@@ -133,7 +150,12 @@ impl Roots {
             if e.key != p.file_id.to_be_bytes() {
                 return Err(Error::Authority);
             }
-            visit(Inventory::Pack(p))?;
+            c.file.authority.validate_birth(
+                &p.birth.encode().map_err(|_| Error::Authority)?,
+                Purpose::File,
+                KeyClass::Data,
+            )?;
+            visit(Inventory::Pack(&p))?;
         }
         let mut cursor = tree::Cursor::seek_ancestor(c.dictionary.clone(), &self.dictionary, &[])?;
         while let Some(e) = cursor.next()? {
@@ -141,7 +163,12 @@ impl Roots {
             if e.key != d.id.to_be_bytes() {
                 return Err(Error::Authority);
             }
-            visit(Inventory::Dictionary(d))?;
+            c.dictionary.authority.validate_birth(
+                &d.birth.encode().map_err(|_| Error::Authority)?,
+                Purpose::Dictionary,
+                KeyClass::Data,
+            )?;
+            visit(Inventory::Dictionary(&d))?;
         }
         if c.check()? != b {
             return Err(Error::Conflict);
@@ -170,9 +197,9 @@ impl Roots {
         Ok(())
     }
 }
-pub(in crate::record) enum Inventory {
-    Pack(PackRef),
-    Dictionary(DictionaryRef),
+pub(in crate::record) enum Inventory<'a> {
+    Pack(&'a PackRef),
+    Dictionary(&'a DictionaryRef),
 }
 pub(in crate::record) struct Editor<'a> {
     contexts: Contexts<'a>,
@@ -227,12 +254,12 @@ impl<'a> Editor<'a> {
             } else if l.frame_ordinal != 0 || l.offset != 304 {
                 return Err(Error::Conflict);
             }
-            if self.pending.is_none() {
-                if let Some(e) = self.frame.lookup_floor(&u64::MAX.to_be_bytes())? {
-                    let last = Locator::decode(&e.value).map_err(|_| Error::Authority)?;
-                    if l.first_physical_seq < last.first_physical_seq + u64::from(last.count) {
-                        return Err(Error::Conflict);
-                    }
+            if self.pending.is_none()
+                && let Some(e) = self.frame.lookup_floor(&u64::MAX.to_be_bytes())?
+            {
+                let last = Locator::decode(&e.value).map_err(|_| Error::Authority)?;
+                if l.first_physical_seq < last.first_physical_seq + u64::from(last.count) {
+                    return Err(Error::Conflict);
                 }
             }
             if self
@@ -267,6 +294,9 @@ impl<'a> Editor<'a> {
         let result = (|| {
             self.check()?;
             p.validate().map_err(|_| Error::Bounds)?;
+            if p.birth.encode().map_err(|_| Error::Authority)? != self.binding {
+                return Err(Error::Authority);
+            }
             let pending = self.pending.as_ref().ok_or(Error::Conflict)?;
             if pending.file != p.file_id
                 || pending.first != p.first_physical_seq
@@ -276,12 +306,11 @@ impl<'a> Editor<'a> {
             {
                 return Err(Error::Conflict);
             }
-            if let Some(d) = &p.dictionary {
-                if self.dictionary.lookup(&d.id.to_be_bytes())?.as_deref()
+            if let Some(d) = &p.dictionary
+                && self.dictionary.lookup(&d.id.to_be_bytes())?.as_deref()
                     != Some(d.encode().map_err(|_| Error::Bounds)?.as_slice())
-                {
-                    return Err(Error::Authority);
-                }
+            {
+                return Err(Error::Authority);
             }
             self.file.insert_immutable(Entry::new(
                 p.file_id.to_be_bytes().to_vec(),
@@ -298,10 +327,22 @@ impl<'a> Editor<'a> {
     pub fn insert_dictionary(&mut self, d: &DictionaryRef) -> Result<()> {
         let result = (|| {
             self.check()?;
-            self.dictionary.insert_immutable(Entry::new(
-                d.id.to_be_bytes().to_vec(),
-                d.encode().map_err(|_| Error::Bounds)?,
-            )?)
+            let bytes = d.encode().map_err(|_| Error::Bounds)?;
+            match self.dictionary.lookup(&d.id.to_be_bytes())? {
+                Some(old) if old == bytes => self.contexts.dictionary.authority.validate_birth(
+                    &d.birth.encode().map_err(|_| Error::Authority)?,
+                    Purpose::Dictionary,
+                    KeyClass::Data,
+                ),
+                Some(_) => Err(Error::Conflict),
+                None => {
+                    if d.birth.encode().map_err(|_| Error::Authority)? != self.binding {
+                        return Err(Error::Authority);
+                    }
+                    self.dictionary
+                        .insert_immutable(Entry::new(d.id.to_be_bytes().to_vec(), bytes)?)
+                }
+            }
         })();
         if result.is_err() {
             self.poisoned = true;

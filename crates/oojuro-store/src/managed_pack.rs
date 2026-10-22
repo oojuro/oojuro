@@ -35,8 +35,7 @@ impl Birth {
                 self.epoch,
                 self.key_version,
             ]
-            .iter()
-            .any(|v| *v == [0; 32])
+            .contains(&[0; 32])
         {
             return Err(Error::Invalid("invalid managed pack birth"));
         }
