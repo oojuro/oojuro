@@ -10,6 +10,7 @@ use std::{
     sync::Arc,
 };
 mod control;
+mod id_stream;
 mod paged;
 mod rank_view;
 use crate::audit::{RetainedFloor, SignedCheckpoint};
@@ -17,6 +18,11 @@ use control::State;
 pub use control::{
     ControlAuditEntry, ControlAuditPage, ControlStatus, FileWitness, LifecycleReceipt,
     ReceiptDetails, RetainedControl, Status,
+};
+pub use id_stream::RecordIdsVerifier;
+pub use paged::{
+    DeniedCleanup, ManagedPagedLog, PagedPruneReport, PagedRecords, PruneLimits, PrunedIds,
+    ReadLimits,
 };
 pub use rank_view::ManagedRankView;
 const FORMAT: &[u8] = b"oojuro-managed-record-3\n";
