@@ -95,13 +95,28 @@ no retention/erase yet; this cache adds no such promise or key-destruction proof
 No 10M/100M, full-corpus relevance/performance, full SPEC/format freeze, raw-harness
 migration, hosted/provider/AZ or commercial-readiness claim is established.
 
-## Verification (pending current-source gate)
+## Verification
 
-Synthetic regression source covers exact f64/provenance/key/known-time parity
+Nine new executed synthetic regressions cover exact f64/provenance/key/known-time parity
 across reopen/tail/merge, duplicate text original IDs, stored-only punctuation,
 zero-tokenization valid load and tail-only tokenization, exact retry no new
 segment, loss/corruption/ahead/malformed/foreign rebuild, same-origin equal-count
 fork/truncation, ghost row refusal, lock/symlink/authority-directory/privacy scan,
 post-ACK publication failure and actual SIGKILL at all five durable segment/
 manifest boundaries. SIGKILL/fsync tests are local process evidence, not disk
-power-loss or distributed durability. Gates/results will be recorded after run.
+power-loss or distributed durability. Current full engine lib tests passed **72 tests,0 failed,4 ignored helpers**
+(11.45s compile,3.56s test runtime). This includes all nine new Record cache tests,
+including the real five-boundary SIGKILL driver, plus previous native CaptureLog,
+segments/codec, receipt, Record/version and dev-only Nine bitwise regressions.
+Ignored helpers are deliberately launched by their active subprocess drivers or
+reserved for optional measurement. Test executables/paths were verified from
+this worktree's own `.scratch/target`.
+
+Strict `cargo clippy -p oojuro-engine --lib --tests --no-deps -- -D warnings`
+passed in4.81s; only existing dev-oracle dependency warnings were emitted. Both
+commands acquired the shared verification lock outside their actual-step timeout
+(180s tests,120s lint) and used an isolated target. Logs are ignored local
+`.scratch/record-segments-test.txt` and `.scratch/record-segments-lint.txt`.
+Independent source review of runtime c87464e found no concrete new P1/P2 in this
+bounded slice; it did not execute duplicate tests. The evidence follow-up changes
+documentation only; no broad hosted/customer/provider claim follows.
