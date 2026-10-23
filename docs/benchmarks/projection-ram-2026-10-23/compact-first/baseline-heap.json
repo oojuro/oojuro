@@ -1,0 +1,133 @@
+{
+  "binary_sha256": "37e431e33f73266a6f6f9e3a81a70051fcb9c909244b3e09b2e6f92b5b9bebc8",
+  "label": "baseline-heap",
+  "memory_profiled": true,
+  "samples": [
+    {
+      "phase": "initial",
+      "VmHWM": 5210112,
+      "VmRSS": 5210112,
+      "RssAnon": 688128
+    },
+    {
+      "phase": "after_open",
+      "VmHWM": 52568064,
+      "VmRSS": 50843648,
+      "RssAnon": 44675072
+    },
+    {
+      "phase": "query_0",
+      "VmHWM": 86003712,
+      "VmRSS": 86003712,
+      "RssAnon": 79589376
+    },
+    {
+      "phase": "query_1",
+      "VmHWM": 94965760,
+      "VmRSS": 94965760,
+      "RssAnon": 88551424
+    },
+    {
+      "phase": "query_2",
+      "VmHWM": 95973376,
+      "VmRSS": 95973376,
+      "RssAnon": 89559040
+    },
+    {
+      "phase": "query_3",
+      "VmHWM": 96215040,
+      "VmRSS": 96215040,
+      "RssAnon": 89800704
+    },
+    {
+      "phase": "query_4",
+      "VmHWM": 96272384,
+      "VmRSS": 96272384,
+      "RssAnon": 89858048
+    },
+    {
+      "phase": "query_5",
+      "VmHWM": 96296960,
+      "VmRSS": 96296960,
+      "RssAnon": 89882624
+    },
+    {
+      "phase": "query_6",
+      "VmHWM": 96296960,
+      "VmRSS": 96296960,
+      "RssAnon": 89882624
+    },
+    {
+      "phase": "query_7",
+      "VmHWM": 96301056,
+      "VmRSS": 96301056,
+      "RssAnon": 89886720
+    },
+    {
+      "phase": "query_8",
+      "VmHWM": 96301056,
+      "VmRSS": 96301056,
+      "RssAnon": 89886720
+    },
+    {
+      "phase": "query_9",
+      "VmHWM": 96313344,
+      "VmRSS": 96313344,
+      "RssAnon": 89899008
+    },
+    {
+      "phase": "query_10",
+      "VmHWM": 96313344,
+      "VmRSS": 96313344,
+      "RssAnon": 89899008
+    },
+    {
+      "phase": "query_11",
+      "VmHWM": 96329728,
+      "VmRSS": 96329728,
+      "RssAnon": 89915392
+    },
+    {
+      "phase": "query_12",
+      "VmHWM": 96329728,
+      "VmRSS": 96329728,
+      "RssAnon": 89915392
+    },
+    {
+      "phase": "query_13",
+      "VmHWM": 96346112,
+      "VmRSS": 96346112,
+      "RssAnon": 89931776
+    },
+    {
+      "phase": "query_14",
+      "VmHWM": 96387072,
+      "VmRSS": 96387072,
+      "RssAnon": 89972736
+    },
+    {
+      "phase": "after_close",
+      "VmHWM": 95682560,
+      "VmRSS": 94502912,
+      "RssAnon": 88023040
+    }
+  ],
+  "ranked_id_scores_sha256": [
+    "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+    "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+    "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+    "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+    "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+    "f230f54d89c08c9678fc1a2c87ae2578e6ef949902ffd5559cb5764b67f93e07",
+    "ac9b8a94a62cde41dc2458bf863c23dce69cfa7a639024bcfc19e1ff291449c7",
+    "8fffcfd72681b08c57253f95434b2af271c89142ee9d32427d364794fcf81725",
+    "0104eeac8b20e8a356eb827fc62d46359a701b14fc7fdbfc85c7c7815aba160d",
+    "ba578113d6192a16ce0ff39f41a3cda318bd59a7f58f8170bd50828ca172be27",
+    "3a69c02f739a086bb1344eb541d9f1c3ab3a3c162c439f66658bc110b3db3500",
+    "878f1611df16bc34319f06d7fa111925e5a2e9ec14aaf688bf2222d9fe4c8154",
+    "f044d459995d4de5c88275a9ea1d20d9e3400d03e88b50e4f2991568e32a7d5d",
+    "13d2740efc26d3ae722796aa2de5ff6858bff7fa9a082d7383592869862705a7",
+    "5cbfe89382ee39bf924b31336434210e65c55f9358edff464cad7e96e2551d20"
+  ],
+  "scope": "copied immutable fixture, phase/RSS diagnostic, not latency benchmark"
+}

@@ -1,0 +1,32 @@
+{
+  "baseline": "6cec2064aba3c4a6e96ebf587d0d1cad651e266a",
+  "compact_source": "7d81635",
+  "diagnostic_source": "8c4835b",
+  "full_hit_samples_identical": 45,
+  "preserved_local_bundle": "work/projection-ram",
+  "files_sha256": {
+    "baseline-full-hits.jsonl": "572aa1f9d94657d9bfb8feeeba35c069ef7621b4dd4be025182d8726b792f9e5",
+    "baseline-heap.json": "76ee1ba934042b93911ec00ed7e34049f89cb9825e9886ecc08235c13d9631b0",
+    "baseline-heap.stderr": "2d074633a446a58111f047e681bf7e9661a2a02f0282dbcc1facb61eb858a7df",
+    "baseline-phase.json": "1dd02a6471a6b7e13d95c870dc03d250c6f188f16f798060b974f87ae5928696",
+    "beir-host-before.json": "44144b203573fe12b7c5856785ba528d44e61432d791e5d7b3bd757817ddb15c",
+    "beir.json": "f0df2d305feae2ea9323ebc5683a36f5a9336184ac286a0beeb3e74b3391fa6f",
+    "compact-full-hits.jsonl": "04aa39f8b6147259aeca24eb50b0432c82f9e762dfdb4d6af2023b1315fec7b6",
+    "compact-lexical-tests.log": "93fd137fb2e23ca6a7c57ae1dc5702fd7ce0d86cd608bba0d9dfca3b1622de04",
+    "compact-record-tests.log": "3f2baa78c157b8edb4711ecb3ca1f43ca3880905536e91383e51c15208bc7157",
+    "diagnostic-baseline.log": "f07a83c15e0737150ee6603abb72a831a8419445c595ed0b545d45b09cf2f2e0",
+    "diagnostic-compact.log": "7014bce3ed29d2c936bbd4869531bf66ca8158742fbab292a97319d01b8ada12",
+    "gates-host-before.json": "ebe9c163f22b8da429423b475e32f30bf1f812582aa47765052540c133b52a50",
+    "gates.json": "600c84d8e45b731cc9ca141adf9f9b9fdebe22d7d1eeeac41223417024b4d047",
+    "spec.json": "3680c931309e5b9d9c8a1b79f775d34e9b1f1c63d013eb9b7f68e309db567c64"
+  },
+  "failed_setup_log": {
+    "path": "work/projection-ram/diagnostic-build-first.log",
+    "reason": "explicit ignored diagnostic first invoked without required copied corpus environment path; no pass counted; fixed invocation retained separately"
+  },
+  "notes": [
+    "capacity counts are not total allocator/RSS accounting",
+    "heap-intercept run is allocation diagnostic only, not latency evidence",
+    "original compact artifact retained before text-move change"
+  ]
+}
