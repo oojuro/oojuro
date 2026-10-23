@@ -1,0 +1,856 @@
+{
+  "schema": "oojuro-scorecard-v1",
+  "created_at": "2026-10-23T20:33:50Z",
+  "harness": {
+    "args": [
+      "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/query-candidate-mask/oojuro-bench-baseline",
+      "beir",
+      "--dataset",
+      "beir-arguana",
+      "--split",
+      "dev",
+      "--limit-queries",
+      "15",
+      "--k",
+      "100",
+      "--batch",
+      "100",
+      "--runs",
+      "3",
+      "--mem-max",
+      "3G",
+      "--keep",
+      "--data",
+      "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/local-efficiency-20261023a/inputs/data",
+      "--work",
+      "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/query-candidate-mask/matrix/stores/beir",
+      "--out",
+      "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/query-candidate-mask/matrix/beir.json",
+      "--arm",
+      "baseline=cmd:/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/query-candidate-mask/oojuro-bench-baseline serve --arm native-record",
+      "--arm",
+      "mask=cmd:/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/query-candidate-mask/oojuro-bench-mask serve --arm native-record"
+    ],
+    "binary": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/query-candidate-mask/oojuro-bench-baseline",
+    "commit": "59ac5a9f6036"
+  },
+  "hardware": {
+    "build_profile": "release",
+    "cpu": "AMD Ryzen 7 8845HS w/ Radeon 780M Graphics",
+    "kernel": "7.0.0-34-generic",
+    "load_avg": "3.18 3.02 2.82 4/4808 3566627",
+    "logical_cpus": 16,
+    "mem_total": "29062768 kB",
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "swap_total": "8388604 kB",
+    "work_filesystem": {
+      "device": "/dev/nvme0n1p2",
+      "fstype": "ext4",
+      "mount": "/"
+    }
+  },
+  "suite": "beir",
+  "dataset": "beir-arguana",
+  "split": "dev",
+  "settings": {
+    "averaging": "mean over every labelled split query; an empty result scores 0",
+    "batch_docs": 100,
+    "bench_lock": "held for the whole run",
+    "build_time_included": "reported separately as build_s; not in query latency",
+    "cache": "warm: queries run in the build process right after the last append",
+    "documents": 8674,
+    "identical_ids": "a hit whose id equals the query id is dropped before scoring (BEIR ignore_identical_ids)",
+    "isolation": "child process per run in a systemd --user scope, MemoryMax=3G, MemorySwapMax=0",
+    "k": 100,
+    "queries": 15,
+    "returned_content": "search_get includes search, top-k ID filtering and byte-exact original get for every returned hit; IDs-only search remains separate",
+    "runs": 3
+  },
+  "arms": [
+    {
+      "label": "baseline",
+      "spec": "cmd:/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/query-candidate-mask/oojuro-bench-baseline serve --arm native-record",
+      "info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "59ac5a9f6036",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "gates": {
+        "byte_exact": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "checked": 1500,
+              "first": null,
+              "mismatched": 0
+            },
+            "runs": 3
+          }
+        },
+        "determinism": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "identical_rankings": 15,
+              "queries": 15
+            },
+            "runs": 2
+          }
+        }
+      },
+      "quality": {
+        "mrr@10": {
+          "median": 0.42962962962962964,
+          "min": 0.42962962962962964,
+          "max": 0.42962962962962964,
+          "n": 3,
+          "runs": [
+            0.42962962962962964,
+            0.42962962962962964,
+            0.42962962962962964
+          ]
+        },
+        "ndcg@10": {
+          "median": 0.5036781581683427,
+          "min": 0.5036781581683427,
+          "max": 0.5036781581683427,
+          "n": 3,
+          "runs": [
+            0.5036781581683427,
+            0.5036781581683427,
+            0.5036781581683427
+          ]
+        },
+        "recall@10": {
+          "median": 0.7333333333333333,
+          "min": 0.7333333333333333,
+          "max": 0.7333333333333333,
+          "n": 3,
+          "runs": [
+            0.7333333333333333,
+            0.7333333333333333,
+            0.7333333333333333
+          ]
+        },
+        "recall@100": {
+          "median": 1.0,
+          "min": 1.0,
+          "max": 1.0,
+          "n": 3,
+          "runs": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "storage": {
+        "disk_alloc_bytes": {
+          "median": 3538944.0,
+          "min": 3538944.0,
+          "max": 3543040.0,
+          "n": 3,
+          "runs": [
+            3538944.0,
+            3538944.0,
+            3543040.0
+          ]
+        },
+        "disk_bytes": {
+          "median": 3517556.0,
+          "min": 3516724.0,
+          "max": 3518706.0,
+          "n": 3,
+          "runs": [
+            3517556.0,
+            3516724.0,
+            3518706.0
+          ]
+        },
+        "disk_ratio": {
+          "median": 0.39150258693667656,
+          "min": 0.3914099856668371,
+          "max": 0.3916305814803248,
+          "n": 3,
+          "runs": [
+            0.39150258693667656,
+            0.3914099856668371,
+            0.3916305814803248
+          ]
+        },
+        "raw_text_bytes": {
+          "median": 8984758.0,
+          "min": 8984758.0,
+          "max": 8984758.0,
+          "n": 3,
+          "runs": [
+            8984758.0,
+            8984758.0,
+            8984758.0
+          ]
+        }
+      },
+      "memory": {
+        "peak_cgroup_bytes": {
+          "median": 80326656.0,
+          "min": 80039936.0,
+          "max": 81158144.0,
+          "n": 3,
+          "runs": [
+            80326656.0,
+            81158144.0,
+            80039936.0
+          ]
+        },
+        "peak_cgroup_ratio": {
+          "median": 8.94032493696547,
+          "min": 8.908413114743881,
+          "max": 9.032869221408077,
+          "n": 3,
+          "runs": [
+            8.94032493696547,
+            9.032869221408077,
+            8.908413114743881
+          ]
+        },
+        "peak_rss_bytes": {
+          "median": 82468864.0,
+          "min": 82468864.0,
+          "max": 82632704.0,
+          "n": 3,
+          "runs": [
+            82468864.0,
+            82632704.0,
+            82468864.0
+          ]
+        },
+        "peak_rss_ratio": {
+          "median": 9.178751837278199,
+          "min": 9.178751837278199,
+          "max": 9.196987164261964,
+          "n": 3,
+          "runs": [
+            9.178751837278199,
+            9.196987164261964,
+            9.178751837278199
+          ]
+        },
+        "steady_anon_bytes": {
+          "median": 27516928.0,
+          "min": 27496448.0,
+          "max": 27623424.0,
+          "n": 3,
+          "runs": [
+            27516928.0,
+            27623424.0,
+            27496448.0
+          ]
+        },
+        "steady_anon_ratio": {
+          "median": 3.062623166923361,
+          "min": 3.06034375105039,
+          "max": 3.074476129462808,
+          "n": 3,
+          "runs": [
+            3.062623166923361,
+            3.074476129462808,
+            3.06034375105039
+          ]
+        },
+        "steady_cgroup_bytes": {
+          "median": 32100352.0,
+          "min": 31952896.0,
+          "max": 32219136.0,
+          "n": 3,
+          "runs": [
+            31952896.0,
+            32219136.0,
+            32100352.0
+          ]
+        },
+        "steady_cgroup_ratio": {
+          "median": 3.5727564392941913,
+          "min": 3.5563446450088025,
+          "max": 3.585977051357421,
+          "n": 3,
+          "runs": [
+            3.5563446450088025,
+            3.585977051357421,
+            3.5727564392941913
+          ]
+        },
+        "steady_rss_bytes": {
+          "median": 34254848.0,
+          "min": 34164736.0,
+          "max": 34635776.0,
+          "n": 3,
+          "runs": [
+            34254848.0,
+            34635776.0,
+            34164736.0
+          ]
+        },
+        "steady_rss_ratio": {
+          "median": 3.8125509891307034,
+          "min": 3.8025215592896324,
+          "max": 3.8549481243679575,
+          "n": 3,
+          "runs": [
+            3.8125509891307034,
+            3.8549481243679575,
+            3.8025215592896324
+          ]
+        }
+      },
+      "speed": {
+        "build_docs_per_s": {
+          "median": 29790.827724925522,
+          "min": 28905.476439430746,
+          "max": 30688.436266413708,
+          "n": 3,
+          "runs": [
+            28905.476439430746,
+            29790.827724925522,
+            30688.436266413708
+          ]
+        },
+        "build_s": {
+          "median": 0.291163444,
+          "min": 0.282647181,
+          "max": 0.300081544,
+          "n": 3,
+          "runs": [
+            0.300081544,
+            0.291163444,
+            0.282647181
+          ]
+        },
+        "qps_serial": {
+          "median": 10.810693938443908,
+          "min": 10.794962638634308,
+          "max": 10.816252067706852,
+          "n": 3,
+          "runs": [
+            10.794962638634308,
+            10.810693938443908,
+            10.816252067706852
+          ]
+        },
+        "returned_original_bytes": {
+          "median": 1036320.0,
+          "min": 1036320.0,
+          "max": 1036320.0,
+          "n": 3,
+          "runs": [
+            1036320.0,
+            1036320.0,
+            1036320.0
+          ]
+        },
+        "search_get_p50_us": {
+          "median": 68106.51,
+          "min": 66145.63399999999,
+          "max": 69727.774,
+          "n": 3,
+          "runs": [
+            68106.51,
+            69727.774,
+            66145.63399999999
+          ]
+        },
+        "search_get_p99_us": {
+          "median": 464760.35500000004,
+          "min": 449820.87,
+          "max": 469224.315,
+          "n": 3,
+          "runs": [
+            464760.35500000004,
+            469224.315,
+            449820.87
+          ]
+        },
+        "search_get_qps_serial": {
+          "median": 10.71860763297474,
+          "min": 10.70058210553154,
+          "max": 10.72485706800663,
+          "n": 3,
+          "runs": [
+            10.70058210553154,
+            10.71860763297474,
+            10.72485706800663
+          ]
+        },
+        "search_p50_us": {
+          "median": 67234.0,
+          "min": 65216.0,
+          "max": 68818.0,
+          "n": 3,
+          "runs": [
+            67234.0,
+            68818.0,
+            65216.0
+          ]
+        },
+        "search_p99_us": {
+          "median": 463889.0,
+          "min": 449019.0,
+          "max": 468352.0,
+          "n": 3,
+          "runs": [
+            463889.0,
+            468352.0,
+            449019.0
+          ]
+        },
+        "search_roundtrip_p50_us": {
+          "median": 67301.0,
+          "min": 65314.0,
+          "max": 68885.0,
+          "n": 3,
+          "runs": [
+            67301.0,
+            68885.0,
+            65314.0
+          ]
+        },
+        "search_roundtrip_p99_us": {
+          "median": 463972.0,
+          "min": 449094.0,
+          "max": 468447.0,
+          "n": 3,
+          "runs": [
+            463972.0,
+            468447.0,
+            449094.0
+          ]
+        }
+      },
+      "breakdown": {},
+      "error": null
+    },
+    {
+      "label": "mask",
+      "spec": "cmd:/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/query-candidate-mask/oojuro-bench-mask serve --arm native-record",
+      "info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "2679653fa83d",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "gates": {
+        "byte_exact": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "checked": 1500,
+              "first": null,
+              "mismatched": 0
+            },
+            "runs": 3
+          }
+        },
+        "determinism": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "identical_rankings": 15,
+              "queries": 15
+            },
+            "runs": 2
+          }
+        }
+      },
+      "quality": {
+        "mrr@10": {
+          "median": 0.42962962962962964,
+          "min": 0.42962962962962964,
+          "max": 0.42962962962962964,
+          "n": 3,
+          "runs": [
+            0.42962962962962964,
+            0.42962962962962964,
+            0.42962962962962964
+          ]
+        },
+        "ndcg@10": {
+          "median": 0.5036781581683427,
+          "min": 0.5036781581683427,
+          "max": 0.5036781581683427,
+          "n": 3,
+          "runs": [
+            0.5036781581683427,
+            0.5036781581683427,
+            0.5036781581683427
+          ]
+        },
+        "recall@10": {
+          "median": 0.7333333333333333,
+          "min": 0.7333333333333333,
+          "max": 0.7333333333333333,
+          "n": 3,
+          "runs": [
+            0.7333333333333333,
+            0.7333333333333333,
+            0.7333333333333333
+          ]
+        },
+        "recall@100": {
+          "median": 1.0,
+          "min": 1.0,
+          "max": 1.0,
+          "n": 3,
+          "runs": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        }
+      },
+      "storage": {
+        "disk_alloc_bytes": {
+          "median": 3538944.0,
+          "min": 3538944.0,
+          "max": 3538944.0,
+          "n": 3,
+          "runs": [
+            3538944.0,
+            3538944.0,
+            3538944.0
+          ]
+        },
+        "disk_bytes": {
+          "median": 3517133.0,
+          "min": 3516727.0,
+          "max": 3517429.0,
+          "n": 3,
+          "runs": [
+            3517133.0,
+            3516727.0,
+            3517429.0
+          ]
+        },
+        "disk_ratio": {
+          "median": 0.3914555072045346,
+          "min": 0.39141031956564665,
+          "max": 0.39148845188707365,
+          "n": 3,
+          "runs": [
+            0.3914555072045346,
+            0.39141031956564665,
+            0.39148845188707365
+          ]
+        },
+        "raw_text_bytes": {
+          "median": 8984758.0,
+          "min": 8984758.0,
+          "max": 8984758.0,
+          "n": 3,
+          "runs": [
+            8984758.0,
+            8984758.0,
+            8984758.0
+          ]
+        }
+      },
+      "memory": {
+        "peak_cgroup_bytes": {
+          "median": 80404480.0,
+          "min": 80363520.0,
+          "max": 80732160.0,
+          "n": 3,
+          "runs": [
+            80732160.0,
+            80404480.0,
+            80363520.0
+          ]
+        },
+        "peak_cgroup_ratio": {
+          "median": 8.948986717282759,
+          "min": 8.944427885536816,
+          "max": 8.98545737125029,
+          "n": 3,
+          "runs": [
+            8.98545737125029,
+            8.948986717282759,
+            8.944427885536816
+          ]
+        },
+        "peak_rss_bytes": {
+          "median": 82178048.0,
+          "min": 82149376.0,
+          "max": 82321408.0,
+          "n": 3,
+          "runs": [
+            82321408.0,
+            82178048.0,
+            82149376.0
+          ]
+        },
+        "peak_rss_ratio": {
+          "median": 9.146384131882016,
+          "min": 9.143192949659857,
+          "max": 9.162340042992811,
+          "n": 3,
+          "runs": [
+            9.162340042992811,
+            9.146384131882016,
+            9.143192949659857
+          ]
+        },
+        "steady_anon_bytes": {
+          "median": 27541504.0,
+          "min": 27463680.0,
+          "max": 27549696.0,
+          "n": 3,
+          "runs": [
+            27541504.0,
+            27549696.0,
+            27463680.0
+          ]
+        },
+        "steady_anon_ratio": {
+          "median": 3.065358465970925,
+          "min": 3.056696685653637,
+          "max": 3.0662702323201136,
+          "n": 3,
+          "runs": [
+            3.065358465970925,
+            3.0662702323201136,
+            3.056696685653637
+          ]
+        },
+        "steady_cgroup_bytes": {
+          "median": 32264192.0,
+          "min": 32006144.0,
+          "max": 32829440.0,
+          "n": 3,
+          "runs": [
+            32829440.0,
+            32006144.0,
+            32264192.0
+          ]
+        },
+        "steady_cgroup_ratio": {
+          "median": 3.5909917662779565,
+          "min": 3.5622711262785263,
+          "max": 3.653903644371946,
+          "n": 3,
+          "runs": [
+            3.653903644371946,
+            3.5622711262785263,
+            3.5909917662779565
+          ]
+        },
+        "steady_rss_bytes": {
+          "median": 34033664.0,
+          "min": 33849344.0,
+          "max": 34131968.0,
+          "n": 3,
+          "runs": [
+            34131968.0,
+            34033664.0,
+            33849344.0
+          ]
+        },
+        "steady_rss_ratio": {
+          "median": 3.7879332977026205,
+          "min": 3.7674185548458845,
+          "max": 3.7988744938928796,
+          "n": 3,
+          "runs": [
+            3.7988744938928796,
+            3.7879332977026205,
+            3.7674185548458845
+          ]
+        }
+      },
+      "speed": {
+        "build_docs_per_s": {
+          "median": 29350.463979436674,
+          "min": 27754.96408683955,
+          "max": 30473.827759958087,
+          "n": 3,
+          "runs": [
+            27754.96408683955,
+            30473.827759958087,
+            29350.463979436674
+          ]
+        },
+        "build_s": {
+          "median": 0.295531955,
+          "min": 0.284637692,
+          "max": 0.312520671,
+          "n": 3,
+          "runs": [
+            0.312520671,
+            0.284637692,
+            0.295531955
+          ]
+        },
+        "qps_serial": {
+          "median": 12.16243170794596,
+          "min": 11.99707271425772,
+          "max": 12.302927604652803,
+          "n": 3,
+          "runs": [
+            12.16243170794596,
+            11.99707271425772,
+            12.302927604652803
+          ]
+        },
+        "returned_original_bytes": {
+          "median": 1036320.0,
+          "min": 1036320.0,
+          "max": 1036320.0,
+          "n": 3,
+          "runs": [
+            1036320.0,
+            1036320.0,
+            1036320.0
+          ]
+        },
+        "search_get_p50_us": {
+          "median": 58033.532999999996,
+          "min": 56303.475999999995,
+          "max": 58512.733,
+          "n": 3,
+          "runs": [
+            56303.475999999995,
+            58512.733,
+            58033.532999999996
+          ]
+        },
+        "search_get_p99_us": {
+          "median": 435560.93,
+          "min": 412488.875,
+          "max": 457995.498,
+          "n": 3,
+          "runs": [
+            435560.93,
+            457995.498,
+            412488.875
+          ]
+        },
+        "search_get_qps_serial": {
+          "median": 12.049009239048551,
+          "min": 11.884494201536265,
+          "max": 12.186464894619972,
+          "n": 3,
+          "runs": [
+            12.049009239048551,
+            11.884494201536265,
+            12.186464894619972
+          ]
+        },
+        "search_p50_us": {
+          "median": 57146.0,
+          "min": 55524.0,
+          "max": 57595.0,
+          "n": 3,
+          "runs": [
+            55524.0,
+            57595.0,
+            57146.0
+          ]
+        },
+        "search_p99_us": {
+          "median": 434424.0,
+          "min": 411630.0,
+          "max": 457152.0,
+          "n": 3,
+          "runs": [
+            434424.0,
+            457152.0,
+            411630.0
+          ]
+        },
+        "search_roundtrip_p50_us": {
+          "median": 57253.0,
+          "min": 55582.0,
+          "max": 57689.0,
+          "n": 3,
+          "runs": [
+            55582.0,
+            57689.0,
+            57253.0
+          ]
+        },
+        "search_roundtrip_p99_us": {
+          "median": 434513.0,
+          "min": 411716.0,
+          "max": 457235.0,
+          "n": 3,
+          "runs": [
+            434513.0,
+            457235.0,
+            411716.0
+          ]
+        }
+      },
+      "breakdown": {},
+      "error": null
+    }
+  ],
+  "references": [
+    {
+      "dataset": "beir-arguana",
+      "metric": "ndcg@10",
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-arguana.flat.md",
+      "split": "test",
+      "system": "Anserini BM25 flat",
+      "uses_llm": false,
+      "value": 0.397
+    },
+    {
+      "dataset": "beir-arguana",
+      "metric": "recall@100",
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-arguana.flat.md",
+      "split": "test",
+      "system": "Anserini BM25 flat",
+      "uses_llm": false,
+      "value": 0.9324
+    },
+    {
+      "dataset": "beir-arguana",
+      "metric": "ndcg@10",
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-arguana.multifield.md",
+      "split": "test",
+      "system": "Anserini BM25 multifield",
+      "uses_llm": false,
+      "value": 0.4142
+    },
+    {
+      "dataset": "beir-arguana",
+      "metric": "recall@100",
+      "published": true,
+      "source": "Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-arguana.multifield.md",
+      "split": "test",
+      "system": "Anserini BM25 multifield",
+      "uses_llm": false,
+      "value": 0.9431
+    }
+  ],
+  "notes": [
+    "Published references use the full BEIR test split; this run uses a frozen subset."
+  ]
+}

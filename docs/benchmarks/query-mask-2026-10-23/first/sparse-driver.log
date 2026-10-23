@@ -1,0 +1,6 @@
+baseline 0 [('literal_miss', 270), ('first_direct', 361), ('current_first_direct', 341)]
+mask 0 [('literal_miss', 1272), ('first_direct', 1372), ('current_first_direct', 1373)]
+mask 1 [('literal_miss', 1292), ('first_direct', 1392), ('current_first_direct', 2224)]
+baseline 1 [('literal_miss', 270), ('first_direct', 361), ('current_first_direct', 340)]
+baseline 2 [('literal_miss', 270), ('first_direct', 351), ('current_first_direct', 331)]
+mask 2 [('literal_miss', 1272), ('first_direct', 1363), ('current_first_direct', 1372)]

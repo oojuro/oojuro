@@ -1,0 +1,93 @@
+warning: associated function `of` is never used
+   --> crates/oojuro-nine/src/segment.rs:135:12
+    |
+126 | impl Span {
+    | --------- associated function in this implementation
+...
+135 |     pub fn of(meta: &[RowMeta]) -> Self {
+    |            ^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `terms` and `total_length` are never read
+   --> crates/oojuro-nine/src/segment.rs:277:9
+    |
+273 | pub(crate) struct DiskSegment {
+    |                   ----------- fields in this struct
+...
+277 |     pub terms: u64,
+    |         ^^^^^
+278 |     pub total_length: u64,
+    |         ^^^^^^^^^^^^
+
+warning: methods `file_bytes` and `version` are never used
+   --> crates/oojuro-nine/src/segment.rs:597:12
+    |
+467 | impl DiskSegment {
+    | ---------------- methods in this implementation
+...
+597 |     pub fn file_bytes(&self) -> u64 {
+    |            ^^^^^^^^^^
+...
+917 |     pub fn version(&self) -> u32 {
+    |            ^^^^^^^
+
+warning: method `bytes` is never used
+   --> crates/oojuro-nine/src/wal.rs:245:19
+    |
+122 | impl Journal {
+    | ------------ method in this implementation
+...
+245 |     pub(crate) fn bytes(&self) -> u64 {
+    |                   ^^^^^
+
+warning: `oojuro-nine` (lib) generated 4 warnings
+warning: associated function `new` is never used
+   --> crates/oojuro-trace/src/columns.rs:480:12
+    |
+479 | impl ColStore {
+    | ------------- associated function in this implementation
+480 |     pub fn new(seal: bool) -> Self {
+    |            ^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `oojuro-trace` (lib) generated 1 warning
+   Compiling oojuro-engine v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-query-candidate-mask/crates/oojuro-engine)
+warning: linker stderr: ignoring deprecated linker optimization setting '1'
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `oojuro-engine` (lib test) generated 1 warning
+    Finished `release` profile [optimized] target(s) in 18.79s
+     Running unittests src/lib.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/projection-memory-next/target/release/deps/oojuro_engine-7c84a6376e108617)
+
+running 25 tests
+test lexical::passage::tests::composite_components_and_short_inputs_are_exact ... ok
+test lexical::passage::tests::literal_evidence_keeps_priority_over_a_shorter_variant_only_span ... ok
+test lexical::passage::tests::selects_distant_exact_evidence_with_unicode_and_bounded_ranges ... ok
+test lexical::passage::tests::word_cache_overflow_keeps_normalized_hits_and_original_offsets ... ok
+test lexical::segments::codec::tests::oracle_posting_bit_order_and_crc_vector ... ok
+test lexical::segments::codec::tests::rejects_all_truncations_and_single_bit_corruption ... ok
+test lexical::segments::codec::tests::rejects_authenticated_structural_corruption ... ok
+test lexical::segments::codec::tests::rejects_invalid_inputs_and_expansion ... ok
+test lexical::segments::codec::tests::rejects_padding_overflow_and_invalid_utf8 ... ok
+test lexical::segments::codec::tests::roundtrip_blocks_full_width_ids_and_gamma_tf ... ok
+test lexical::segments::tests::actual_multisegment_row_boundaries_keep_native_score_bits ... ok
+test lexical::segments::tests::authenticated_malformed_cache_cannot_add_ghost_rows_or_plaintext ... ok
+test lexical::segments::tests::copied_origin_fork_with_equal_highwater_rebuilds_exact_receipt_branch ... ok
+test lexical::segments::tests::crash_publication_child ... ignored
+test lexical::segments::tests::encrypted_disk_scope_lock_bounds_and_failed_publication_preserve_authority_ack ... ok
+test lexical::segments::tests::local_native_segment_measurement ... ignored
+test lexical::segments::tests::lost_corrupt_missing_ahead_forked_and_compacted_cache_rebuilds_without_ghosts ... ok
+test lexical::segments::tests::reopen_without_tokenization_extend_dedupe_and_merge_exact_scores ... ok
+test lexical::segments::tests::sigkill_segment_and_manifest_publication_never_loses_authoritative_rows ... ok
+test lexical::segments::tests::stale_cache_extends_only_committed_receipts_and_registration_is_a_watermark ... ok
+test lexical::tests::native_above_floor_large_candidate_pruning_and_full_decimal_prefix_ties_match_oracle ... ok
+test lexical::tests::native_bitwise_oracle_port_covers_time_phrases_identifiers_dedupe_filters_and_pruning ... ok
+test lexical::tests::rejected_authority_commit_does_not_project_and_reopen_requires_fresh_binding ... ok
+test lexical::tests::sparse_candidates_cover_word_boundaries_and_the_full_row_limit ... ok
+test lexical::tests::streamed_analysis_matches_original_features_with_a_bounded_temporary_stem_cache ... ok
+
+test result: ok. 23 passed; 0 failed; 2 ignored; 0 measured; 150 filtered out; finished in 1.02s
+

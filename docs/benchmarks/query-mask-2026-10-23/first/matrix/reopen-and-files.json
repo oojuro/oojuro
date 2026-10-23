@@ -1,0 +1,708 @@
+{
+  "checks": [
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 0,
+      "records": 8674,
+      "all_fields_exact": true,
+      "canonical_sha256": "7c2001c5e2d3c190fd8d1097b5869ea31c97277e118267ded02ce404563b152d",
+      "footprint_matches": true
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 1,
+      "records": 8674,
+      "all_fields_exact": true,
+      "canonical_sha256": "7c2001c5e2d3c190fd8d1097b5869ea31c97277e118267ded02ce404563b152d",
+      "footprint_matches": true
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 2,
+      "records": 8674,
+      "all_fields_exact": true,
+      "canonical_sha256": "7c2001c5e2d3c190fd8d1097b5869ea31c97277e118267ded02ce404563b152d",
+      "footprint_matches": true
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 0,
+      "records": 8674,
+      "all_fields_exact": true,
+      "canonical_sha256": "7c2001c5e2d3c190fd8d1097b5869ea31c97277e118267ded02ce404563b152d",
+      "footprint_matches": true
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 1,
+      "records": 8674,
+      "all_fields_exact": true,
+      "canonical_sha256": "7c2001c5e2d3c190fd8d1097b5869ea31c97277e118267ded02ce404563b152d",
+      "footprint_matches": true
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 2,
+      "records": 8674,
+      "all_fields_exact": true,
+      "canonical_sha256": "7c2001c5e2d3c190fd8d1097b5869ea31c97277e118267ded02ce404563b152d",
+      "footprint_matches": true
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 0,
+      "records": 1136,
+      "all_fields_exact": true,
+      "canonical_sha256": "d11d8f7d3da3336decfdbb0fc9aed33ddc143202f9d9fca7bbd1560c0efac343",
+      "footprint_matches": true
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 1,
+      "records": 1136,
+      "all_fields_exact": true,
+      "canonical_sha256": "d11d8f7d3da3336decfdbb0fc9aed33ddc143202f9d9fca7bbd1560c0efac343",
+      "footprint_matches": true
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 2,
+      "records": 1136,
+      "all_fields_exact": true,
+      "canonical_sha256": "d11d8f7d3da3336decfdbb0fc9aed33ddc143202f9d9fca7bbd1560c0efac343",
+      "footprint_matches": true
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 0,
+      "records": 1136,
+      "all_fields_exact": true,
+      "canonical_sha256": "d11d8f7d3da3336decfdbb0fc9aed33ddc143202f9d9fca7bbd1560c0efac343",
+      "footprint_matches": true
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 1,
+      "records": 1136,
+      "all_fields_exact": true,
+      "canonical_sha256": "d11d8f7d3da3336decfdbb0fc9aed33ddc143202f9d9fca7bbd1560c0efac343",
+      "footprint_matches": true
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 2,
+      "records": 1136,
+      "all_fields_exact": true,
+      "canonical_sha256": "d11d8f7d3da3336decfdbb0fc9aed33ddc143202f9d9fca7bbd1560c0efac343",
+      "footprint_matches": true
+    }
+  ],
+  "files": [
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 0,
+      "path": "records/ENCRYPTED",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 0,
+      "path": "records/LOCK",
+      "apparent": 0,
+      "allocated": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 0,
+      "path": "records/MANIFEST",
+      "apparent": 40,
+      "allocated": 4096,
+      "sha256": "fafd89c5f2319a566305a86e438fa85324dd39b754fc74f4c9c96063af4a0c00"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 0,
+      "path": "records/RECORD_FORMAT",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 0,
+      "path": "records/dict-00000001.ojd",
+      "apparent": 16477,
+      "allocated": 20480,
+      "sha256": "59cfb539825d7d0df76b82e11534104b172f8223e3771dcbbef648e467835a2f"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 0,
+      "path": "records/hot-00000001.ojl",
+      "apparent": 3501007,
+      "allocated": 3506176,
+      "sha256": "36786fe40fafbd5bb057e9ce4b1a3e045ed1c557a130f731576db0624d23488d"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 1,
+      "path": "records/ENCRYPTED",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 1,
+      "path": "records/LOCK",
+      "apparent": 0,
+      "allocated": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 1,
+      "path": "records/MANIFEST",
+      "apparent": 40,
+      "allocated": 4096,
+      "sha256": "fafd89c5f2319a566305a86e438fa85324dd39b754fc74f4c9c96063af4a0c00"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 1,
+      "path": "records/RECORD_FORMAT",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 1,
+      "path": "records/dict-00000001.ojd",
+      "apparent": 16477,
+      "allocated": 20480,
+      "sha256": "873a05349b04221c6d52231d0e31907e23bb76325a3acb8da7ff5b74834c8a73"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 1,
+      "path": "records/hot-00000001.ojl",
+      "apparent": 3500175,
+      "allocated": 3506176,
+      "sha256": "ecaa0e22575a4159b982c59170b4be40a23eecdc9f2d0b994c236d3c3209599f"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 2,
+      "path": "records/ENCRYPTED",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 2,
+      "path": "records/LOCK",
+      "apparent": 0,
+      "allocated": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 2,
+      "path": "records/MANIFEST",
+      "apparent": 40,
+      "allocated": 4096,
+      "sha256": "fafd89c5f2319a566305a86e438fa85324dd39b754fc74f4c9c96063af4a0c00"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 2,
+      "path": "records/RECORD_FORMAT",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 2,
+      "path": "records/dict-00000001.ojd",
+      "apparent": 16477,
+      "allocated": 20480,
+      "sha256": "7647d8b0901b24bc5dc325387cfee6d829cbc3a1dc651196de45f0360bd935c1"
+    },
+    {
+      "suite": "beir",
+      "regime": "baseline",
+      "run": 2,
+      "path": "records/hot-00000001.ojl",
+      "apparent": 3502157,
+      "allocated": 3510272,
+      "sha256": "25df619cda447bcfc482d3aacaa54bc6700b8a2c7ed81500259185271ceceec3"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 0,
+      "path": "records/ENCRYPTED",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 0,
+      "path": "records/LOCK",
+      "apparent": 0,
+      "allocated": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 0,
+      "path": "records/MANIFEST",
+      "apparent": 40,
+      "allocated": 4096,
+      "sha256": "fafd89c5f2319a566305a86e438fa85324dd39b754fc74f4c9c96063af4a0c00"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 0,
+      "path": "records/RECORD_FORMAT",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 0,
+      "path": "records/dict-00000001.ojd",
+      "apparent": 16477,
+      "allocated": 20480,
+      "sha256": "2e4466bd512152dd39e0542dd83452b61ce7b083a9aec001e4005ba883b3fcb1"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 0,
+      "path": "records/hot-00000001.ojl",
+      "apparent": 3500584,
+      "allocated": 3506176,
+      "sha256": "78019de3b3d3e6a2b8e3176354bd1fe7c086067eb6342ab1678e5dca8e7c96a6"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 1,
+      "path": "records/ENCRYPTED",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 1,
+      "path": "records/LOCK",
+      "apparent": 0,
+      "allocated": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 1,
+      "path": "records/MANIFEST",
+      "apparent": 40,
+      "allocated": 4096,
+      "sha256": "fafd89c5f2319a566305a86e438fa85324dd39b754fc74f4c9c96063af4a0c00"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 1,
+      "path": "records/RECORD_FORMAT",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 1,
+      "path": "records/dict-00000001.ojd",
+      "apparent": 16478,
+      "allocated": 20480,
+      "sha256": "811c5b9b5209a6bc71c72c486969b3f552e25dfb505ff17409cfe0ac815a32c0"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 1,
+      "path": "records/hot-00000001.ojl",
+      "apparent": 3500177,
+      "allocated": 3506176,
+      "sha256": "d18cca44d9302c26a7d6863fb16ebf372da2a7669c0eb9652057007e95652cb1"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 2,
+      "path": "records/ENCRYPTED",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 2,
+      "path": "records/LOCK",
+      "apparent": 0,
+      "allocated": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 2,
+      "path": "records/MANIFEST",
+      "apparent": 40,
+      "allocated": 4096,
+      "sha256": "fafd89c5f2319a566305a86e438fa85324dd39b754fc74f4c9c96063af4a0c00"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 2,
+      "path": "records/RECORD_FORMAT",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 2,
+      "path": "records/dict-00000001.ojd",
+      "apparent": 16477,
+      "allocated": 20480,
+      "sha256": "05f2b4de9234b18fb0f280719ef8cb4f61256d48edc6c965327607a2081ff73b"
+    },
+    {
+      "suite": "beir",
+      "regime": "mask",
+      "run": 2,
+      "path": "records/hot-00000001.ojl",
+      "apparent": 3500880,
+      "allocated": 3506176,
+      "sha256": "5ffbde6bba7309ab8d1cea1ae57717bfc0bde60d47380dbb49126200aa50881e"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 0,
+      "path": "records/ENCRYPTED",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 0,
+      "path": "records/LOCK",
+      "apparent": 0,
+      "allocated": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 0,
+      "path": "records/MANIFEST",
+      "apparent": 36,
+      "allocated": 4096,
+      "sha256": "3fbad9e0f6d9ead6350c0b412619adebf4838b4e01b4c9b51debd3fd378a480d"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 0,
+      "path": "records/RECORD_FORMAT",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 0,
+      "path": "records/hot-00000001.ojl",
+      "apparent": 226176,
+      "allocated": 233472,
+      "sha256": "5ccc447042b307a3e958753220bd5a6c81afb5ba8ad18cd41cc1f24337b36660"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 1,
+      "path": "records/ENCRYPTED",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 1,
+      "path": "records/LOCK",
+      "apparent": 0,
+      "allocated": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 1,
+      "path": "records/MANIFEST",
+      "apparent": 36,
+      "allocated": 4096,
+      "sha256": "3fbad9e0f6d9ead6350c0b412619adebf4838b4e01b4c9b51debd3fd378a480d"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 1,
+      "path": "records/RECORD_FORMAT",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 1,
+      "path": "records/hot-00000001.ojl",
+      "apparent": 226509,
+      "allocated": 229376,
+      "sha256": "8dc751b85da45d39f424d36740704a12f53d94f9a540bd2e4bb10cd19c854202"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 2,
+      "path": "records/ENCRYPTED",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 2,
+      "path": "records/LOCK",
+      "apparent": 0,
+      "allocated": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 2,
+      "path": "records/MANIFEST",
+      "apparent": 36,
+      "allocated": 4096,
+      "sha256": "3fbad9e0f6d9ead6350c0b412619adebf4838b4e01b4c9b51debd3fd378a480d"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 2,
+      "path": "records/RECORD_FORMAT",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+    },
+    {
+      "suite": "history",
+      "regime": "baseline",
+      "run": 2,
+      "path": "records/hot-00000001.ojl",
+      "apparent": 226255,
+      "allocated": 229376,
+      "sha256": "412ca08b9da95e0cecd38c4d7f9a518014c826535dcb94470e11805ab49784ae"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 0,
+      "path": "records/ENCRYPTED",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 0,
+      "path": "records/LOCK",
+      "apparent": 0,
+      "allocated": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 0,
+      "path": "records/MANIFEST",
+      "apparent": 36,
+      "allocated": 4096,
+      "sha256": "3fbad9e0f6d9ead6350c0b412619adebf4838b4e01b4c9b51debd3fd378a480d"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 0,
+      "path": "records/RECORD_FORMAT",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 0,
+      "path": "records/hot-00000001.ojl",
+      "apparent": 226511,
+      "allocated": 229376,
+      "sha256": "e12558e368e811127906de9176cd4648c586d35c580ac72fbcfc41ee94f2a42f"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 1,
+      "path": "records/ENCRYPTED",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 1,
+      "path": "records/LOCK",
+      "apparent": 0,
+      "allocated": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 1,
+      "path": "records/MANIFEST",
+      "apparent": 36,
+      "allocated": 4096,
+      "sha256": "3fbad9e0f6d9ead6350c0b412619adebf4838b4e01b4c9b51debd3fd378a480d"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 1,
+      "path": "records/RECORD_FORMAT",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 1,
+      "path": "records/hot-00000001.ojl",
+      "apparent": 226332,
+      "allocated": 229376,
+      "sha256": "2281c656959427a660c820ec4472bd90a3a23e2426701c0396af25b78c05fe0f"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 2,
+      "path": "records/ENCRYPTED",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 2,
+      "path": "records/LOCK",
+      "apparent": 0,
+      "allocated": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 2,
+      "path": "records/MANIFEST",
+      "apparent": 36,
+      "allocated": 4096,
+      "sha256": "3fbad9e0f6d9ead6350c0b412619adebf4838b4e01b4c9b51debd3fd378a480d"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 2,
+      "path": "records/RECORD_FORMAT",
+      "apparent": 16,
+      "allocated": 4096,
+      "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+    },
+    {
+      "suite": "history",
+      "regime": "mask",
+      "run": 2,
+      "path": "records/hot-00000001.ojl",
+      "apparent": 226319,
+      "allocated": 233472,
+      "sha256": "94cd8788e70b4e9f353dd74947ff5b90104a8e77dfd6c8ad1a182fa18ac1cb99"
+    }
+  ]
+}
