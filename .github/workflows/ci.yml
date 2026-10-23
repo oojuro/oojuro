@@ -69,9 +69,45 @@ jobs:
         env:
           TMPDIR: ${{ runner.temp }}/oojuro-tests
         run: cargo +"$RUST_TOOLCHAIN" test --locked --no-default-features --lib --tests -p oojuro-trace -p oojuro-capture -p oojuro-proxy -p oojuro
+      - name: Test capture and project setup without real agent configuration
+        env:
+          TMPDIR: ${{ runner.temp }}/oojuro-tests
+        run: |
+          python3 scripts/test-connect-agent.py
+          python3 scripts/test-connect-project.py
       # Also included by the complete runtime suite above; keep historical-format
       # acceptance visible as a separate named gate without enumerating every trace target.
       - name: Reopen, append and merge the frozen legacy-format fixture
         env:
           TMPDIR: ${{ runner.temp }}/oojuro-tests
         run: cargo +"$RUST_TOOLCHAIN" test --locked --no-default-features -p oojuro-trace --test compat
+
+  sdk:
+    name: Session SDK runtime, declarations and local package
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version: 24.20.0
+          package-manager-cache: false
+      - name: Prepare private test scratch
+        run: mkdir -p -m 700 "$RUNNER_TEMP/oojuro-tests"
+      - name: Install locked development-only declaration checker
+        env:
+          NPM_CONFIG_CACHE: ${{ runner.temp }}/npm-cache
+        run: npm ci --prefix scripts/ci-sdk --ignore-scripts --no-audit --no-fund
+      - name: Test TypeScript SDK runtime and durable session spool
+        env:
+          TMPDIR: ${{ runner.temp }}/oojuro-tests
+        run: node --test sdk/typescript/test/*.test.js
+      - name: Check all TypeScript SDK declaration smoke cases
+        run: node scripts/ci-sdk/node_modules/typescript/bin/tsc --strict --noEmit --target ES2023 --module NodeNext --moduleResolution NodeNext sdk/typescript/test/*.ts
+      - name: Pack, install and import private SDK offline
+        env:
+          TMPDIR: ${{ runner.temp }}/oojuro-tests
+          NPM_CONFIG_CACHE: ${{ runner.temp }}/npm-cache
+        run: python3 scripts/test-sdk-package.py
