@@ -71,6 +71,9 @@ cargo clippy --workspace --all-targets
 The benchmark harnesses (`oojuro-bench`, `oojuro-tracebench`) build many competitor engines and fetch public
 datasets; see `docs/BENCH_HARNESS.md` and `docs/TRACEBENCH.md`. They are not needed to work on the engine.
 
+See [CI and build policy](docs/CI_AND_BUILDS.md) for runner isolation, release artifacts and
+prebuilt-only hosting. Builds run on our compute; public PRs cannot use persistent private runners.
+
 ## What a good change looks like
 
 - **Small and focused.** One idea per pull request, with tests. Bug fixes come with a test that fails without
