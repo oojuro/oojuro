@@ -57,19 +57,33 @@ By making a contribution to this project, I certify that:
 Forgot to sign? Amend the last commit with `git commit --amend -s`, or sign a series with
 `git rebase --signoff main`.
 
-## Build and test
+## Branches and pull requests
 
-You need a recent stable Rust toolchain (the workspace uses edition 2024) and a C compiler (the storage path
-builds zstd and SQLite). Linux is the first-class platform.
+Create a topic branch from current `main`; keep unrelated changes in separate branches. An isolated worktree is useful when another change is in progress:
 
 ```bash
-cargo build --workspace
-cargo test --workspace
-cargo clippy --workspace --all-targets
+git fetch origin main
+git worktree add -b your-topic ../oojuro-your-topic origin/main
 ```
 
-The benchmark harnesses (`oojuro-bench`, `oojuro-tracebench`) build many competitor engines and fetch public
-datasets; see `docs/BENCH_HARNESS.md` and `docs/TRACEBENCH.md`. They are not needed to work on the engine.
+Open a draft pull request while the change is being developed. Include what changed, the exact tests run and any remaining limits. Use `git commit -s` for each commit. Maintainers may review their own work; a draft PR does not authorize a main-branch merge, binary/package release or deployment.
+
+## Build and test
+
+You need stable Rust (edition 2024) and a C compiler for the standard zstd codec. Linux is the first-class platform. CI pins Rust 1.99.1 on disposable GitHub-hosted Ubuntu 24.04 runners.
+
+The normal checks select runtime packages explicitly, without benchmark comparison features:
+
+```bash
+cargo test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro-store -p oojuro-nine
+cargo test --locked --no-default-features --lib --tests -p oojuro-trace -p oojuro-capture -p oojuro-proxy -p oojuro
+```
+
+The second command includes real local CLI, daemon, mock proxy and stdio MCP integration tests. They use synthetic data and local test servers. Current `main` has no separate Node/Python SDK tree. Add checks for a new runtime crate or SDK in the same PR that introduces it; this explicit package list does not discover new packages automatically.
+
+The benchmark harnesses (`oojuro-bench`, `oojuro-tracebench`) build competitor engines and fetch public datasets. `oojuro-store`'s `baselines` and `codecs` features are also comparison tools. They are not part of normal CI. Run them deliberately for the change being measured; see `docs/BENCH_HARNESS.md` and `docs/TRACEBENCH.md`. Do not use `--workspace` or `--all-features` as a substitute for the runtime checks above.
+
+GitHub Actions is currently disabled at repository level. This PR proposes the workflow; an owner must review and enable Actions before remote check results exist. The workflow does not configure branch protection, require another reviewer, publish packages or deploy services. Keep trusted signing and release credentials outside PR jobs; see [publication boundaries](docs/PUBLICATION.md).
 
 ## What a good change looks like
 

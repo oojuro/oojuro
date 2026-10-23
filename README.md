@@ -41,10 +41,12 @@ sign-off (`git commit -s`). There is no CLA.
 You need a recent stable Rust toolchain (edition 2024) and a C compiler. Linux is the first-class platform.
 
 ```bash
-cargo build --release -p oojuro        # builds the `oojuro` CLI and the `oojurod` recorder
-cargo test --workspace                 # all unit and integration tests
-cargo clippy --workspace --all-targets
+cargo build --locked --release -p oojuro # builds the `oojuro` CLI and the `oojurod` recorder
+cargo test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro-store -p oojuro-nine -p oojuro-trace -p oojuro-capture -p oojuro-proxy -p oojuro
 ```
+
+These tests select the runtime packages and leave benchmark comparison features disabled.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the two CI jobs and topic-branch workflow.
 
 The workspace crates:
 
