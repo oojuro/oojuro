@@ -49,9 +49,9 @@ pub(crate) fn snapshot(index: &Index, start: usize, count: usize) -> Result<code
     for (term, list) in &index.postings {
         let selected: Vec<_> = list
             .iter()
-            .skip_while(|(r, _)| *r < start)
-            .take_while(|(r, _)| *r < end)
-            .map(|(r, tf)| ((*r - start) as u32, *tf))
+            .skip_while(|(r, _)| (*r as usize) < start)
+            .take_while(|(r, _)| (*r as usize) < end)
+            .map(|(r, tf)| ((*r as usize - start) as u32, *tf))
             .collect();
         if !selected.is_empty() {
             postings.insert(term.clone(), selected);
@@ -92,7 +92,7 @@ pub(crate) fn hydrate(index: &mut Index, segment: codec::Segment) -> Result<()> 
                 .checked_add(u64::from(tf))
                 .ok_or(Error::Invalid)?;
             scopes[offset] = scopes[offset].checked_add(1).ok_or(Error::Invalid)?;
-            output.push((start + offset, tf));
+            output.push((u32::try_from(start + offset).map_err(|_| Error::Invalid)?, tf));
         }
     }
     for (offset, doc) in index.documents[start..end].iter().enumerate() {

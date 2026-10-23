@@ -648,7 +648,7 @@ fn retained_allocation_diagnostic() {
         "document_array_bytes": index.documents.capacity()*std::mem::size_of::<Document>(),
         "original_text_capacity_bytes": index.documents.iter().map(|d|d.event.text.capacity()).sum::<usize>(),
         "postings_entries": index.postings.values().map(Vec::len).sum::<usize>(),
-        "postings_capacity_bytes": index.postings.values().map(|p|p.capacity()*std::mem::size_of::<(usize,u32)>()).sum::<usize>(),
+        "postings_capacity_bytes": index.postings.values().map(|p|p.capacity()*p.first().map_or(0,std::mem::size_of_val)).sum::<usize>(),
         "vocabulary_entries": index.postings.len(),
         "vocabulary_string_capacity_bytes": index.postings.keys().map(String::capacity).sum::<usize>(),
         "note":"capacity byte estimates exclude BTree nodes, allocator overhead, RecordLog/view and caller metadata"});
