@@ -4,7 +4,8 @@ Private candidate, Node 24.4+ on POSIX. This extends the existing
 `sdk/typescript` package; it is not published. Hosted append-only capture uses
 `OojuroCaptureClient` with an `ojc_` key. The older `OojuroClient` and its
 `ojv2_` project protocol remain explicitly separate versions. Capture keys cannot
-read or administer projects.
+read or administer projects. Use the separate [project read adapter](PROJECT_READ_SDK.md)
+with an `ojp_` key for common metadata pages and exact content.
 
 The server must support discovery of `producer_id` alongside journal, agent and
 key IDs. This producer is stable across **Replace**, while a newly created

@@ -382,3 +382,32 @@ export class OojuroCaptureClient {
   discover(options?: { signal?: AbortSignal }): Promise<CaptureDiscovery>;
   prepareBatch(input: { requestId: string; events: readonly CaptureEvent[] }): PreparedCapture;
 }
+
+export interface ProjectRecordsInput {
+  /** Inclusive activity-time bounds in exact, safe integer microseconds. Omit for no bound. */
+  from?: WireInteger;
+  through?: WireInteger;
+  agentId?: OpaqueId;
+  /** 1–1,000; default 100. May change between continuation pages. */
+  limit?: number;
+  /** Retain the original selection and key. Rotation/expiry/authority changes require a fresh query. */
+  cursor?: string | null;
+}
+export interface ProjectRecordRow {
+  journal: OpaqueId;
+  record: JournalDescriptor & { capture?: { event_id: OpaqueId; run_id: OpaqueId } };
+}
+export interface ProjectRecordsPage {
+  /** Opaque vector of source snapshots; not an atomic cross-source watermark. */
+  snapshot: OpaqueId;
+  records: ProjectRecordRow[];
+  next: string | null;
+}
+/** Hosted shared-project read API. Accepts ojp_ keys only; cannot append/administer. */
+export class OojuroProjectClient {
+  constructor(options: { baseUrl: string; project: OpaqueId; token: string; fetch?: typeof globalThis.fetch });
+  /** Form POST keeps opaque cursors out of request URLs. Bounded 4 MiB; clean EOF required. */
+  records(input?: ProjectRecordsInput, options?: { signal?: AbortSignal }): Promise<ProjectRecordsPage>;
+  /** Exact UTF-8 including leading BOM/NUL, at most 16 MiB; returned only after clean EOF. */
+  content(input: { journal: OpaqueId; recordId: OpaqueId }, options?: { signal?: AbortSignal }): Promise<string>;
+}

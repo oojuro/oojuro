@@ -1,4 +1,4 @@
-// Experimental current-v2 wire client and explicit append-only hosted capture adapter.
+// Experimental versioned native, hosted capture and shared-project read adapters.
 const encoder = new TextEncoder();
 const opaquePattern = /^[0-9a-f]{64}$/;
 const sources = new WeakMap();
@@ -1542,5 +1542,116 @@ export class OojuroCaptureClient {
         } catch (error) { throw safeError(error, true); }
       });
     } catch { fail("invalid_request"); }
+  }
+}
+
+/** Shared-project read adapter; ojp_ credentials never authorize capture or administration. */
+export class OojuroProjectClient {
+  #base;
+  #token;
+  #fetch;
+  constructor(configuration) {
+    try {
+      const { baseUrl, project, token, fetch: transport = globalThis.fetch } = configuration;
+      const url = new URL(baseUrl);
+      const local = url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+      if ((!local && url.protocol !== "https:") || url.username || url.password ||
+          url.search || url.hash || url.pathname !== "/" || typeof transport !== "function" ||
+          typeof token !== "string" || !/^ojp_[A-Za-z0-9_-]{32,100}$/.test(token)) fail();
+      id(project);
+      this.#base = `${url.origin}/api/projects/${project}/`;
+      this.#token = token;
+      this.#fetch = transport;
+    } catch { fail("invalid_configuration"); }
+  }
+  toJSON() { return { type: "OojuroProjectClient" }; }
+  [inspect]() { return "OojuroProjectClient {}"; }
+  async #request(path, body, signal) {
+    abort(signal);
+    const response = await this.#fetch(this.#base + path, {
+      method: body === undefined ? "GET" : "POST",
+      headers: { authorization: `Bearer ${this.#token}`,
+        ...(body === undefined ? {} : { "content-type": "application/x-www-form-urlencoded" }) },
+      ...(body === undefined ? {} : { body }),
+      signal, redirect: "error", cache: "no-store", credentials: "omit", referrerPolicy: "no-referrer",
+    });
+    if (response.status !== 200) {
+      await cancel(response.body);
+      if (!Number.isInteger(response.status) || response.status < 100 || response.status > 599) fail();
+      throw new OojuroError("http", { status: response.status });
+    }
+    return response;
+  }
+  async records(input = {}, { signal } = {}) {
+    let body, selection;
+    try {
+      selection = journalSnapshot(input, 2 * MiB);
+      if (!object(selection) || Object.keys(selection).some(k => !["from", "through", "agentId", "limit", "cursor"].includes(k))) fail();
+      const form = new URLSearchParams();
+      for (const key of ["from", "through"]) if (selection[key] !== undefined) {
+        integer(selection, key, -Number.MAX_SAFE_INTEGER);
+        form.set(key, String(selection[key]));
+      }
+      if (selection.from !== undefined && selection.through !== undefined && selection.from > selection.through) fail();
+      if (selection.agentId !== undefined) { id(selection.agentId); form.set("agent_id", selection.agentId); }
+      if (selection.limit !== undefined) { integer(selection, "limit", 1, 1000); form.set("limit", String(selection.limit)); }
+      if (selection.cursor !== undefined && selection.cursor !== null) {
+        string(selection.cursor, 2 * MiB, true);
+        if (!/^[A-Za-z0-9_-]+$/.test(selection.cursor)) fail();
+        form.set("cursor", selection.cursor);
+      }
+      body = form.toString();
+      if (encoder.encode(body).length > 2 * MiB) fail();
+    } catch { fail("invalid_request"); }
+    try {
+      const response = await this.#request("records", body, signal);
+      contentType(response, "application/json");
+      const value = frameMetadata(new TextDecoder("utf-8", { fatal: true }).decode(await bytes(response, 4 * MiB, signal, true)));
+      keys(value, ["snapshot", "records", "next"]);
+      id(value.snapshot);
+      if (!Array.isArray(value.records) || value.records.length > (selection.limit ?? 100)) fail();
+      if (value.next !== null) {
+        string(value.next, 2 * MiB, true);
+        if (!/^[A-Za-z0-9_-]+$/.test(value.next) || value.records.length === 0) fail();
+      }
+      const seen = new Set();
+      for (const row of value.records) {
+        keys(row, ["journal", "record"]);
+        id(row.journal);
+        const descriptor = row.record;
+        if (!object(descriptor)) fail();
+        if (Object.hasOwn(descriptor, "capture")) {
+          keys(descriptor, ["id", "record", "text_bytes", "generation", "capture"]);
+          keys(descriptor.capture, ["event_id", "run_id"]);
+          id(descriptor.capture.event_id); id(descriptor.capture.run_id);
+          // Keep the numeric source lexemes when validating the common descriptor.
+          const native = { ...descriptor }; delete native.capture;
+          sources.set(native, sources.get(descriptor));
+          journalDescriptor(native);
+        } else journalDescriptor(descriptor);
+        const record = descriptor.record;
+        id(record.agent_id);
+        if ((selection.agentId !== undefined && record.agent_id !== selection.agentId) ||
+            (selection.from !== undefined && record.valid_at < selection.from) ||
+            (selection.through !== undefined && record.valid_at > selection.through)) fail();
+        const identity = row.journal + descriptor.id;
+        if (seen.has(identity)) fail();
+        seen.add(identity);
+      }
+      return value;
+    } catch (error) { throw safeError(error, false); }
+  }
+  async content(input, { signal } = {}) {
+    let path;
+    try {
+      const { journal, recordId } = ownFields(input, ["journal", "recordId"]);
+      id(journal); id(recordId);
+      path = `journals/${journal}/records/${recordId}/content`;
+    } catch { fail("invalid_request"); }
+    try {
+      const response = await this.#request(path, undefined, signal);
+      contentType(response, "text/plain");
+      return new TextDecoder("utf-8", { fatal: true, ignoreBOM: true }).decode(await bytes(response, recordTextLimit, signal, true));
+    } catch (error) { throw safeError(error, false); }
   }
 }
