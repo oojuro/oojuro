@@ -1,0 +1,72 @@
+   Compiling oojuro-bench v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-benchmark-campaign/crates/oojuro-bench)
+   Compiling oojuro-engine v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-benchmark-campaign/crates/oojuro-engine)
+warning: associated function `of` is never used
+   --> crates/oojuro-nine/src/segment.rs:135:12
+    |
+126 | impl Span {
+    | --------- associated function in this implementation
+...
+135 |     pub fn of(meta: &[RowMeta]) -> Self {
+    |            ^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `terms` and `total_length` are never read
+   --> crates/oojuro-nine/src/segment.rs:277:9
+    |
+273 | pub(crate) struct DiskSegment {
+    |                   ----------- fields in this struct
+...
+277 |     pub terms: u64,
+    |         ^^^^^
+278 |     pub total_length: u64,
+    |         ^^^^^^^^^^^^
+
+warning: methods `file_bytes` and `version` are never used
+   --> crates/oojuro-nine/src/segment.rs:597:12
+    |
+467 | impl DiskSegment {
+    | ---------------- methods in this implementation
+...
+597 |     pub fn file_bytes(&self) -> u64 {
+    |            ^^^^^^^^^^
+...
+917 |     pub fn version(&self) -> u32 {
+    |            ^^^^^^^
+
+warning: method `bytes` is never used
+   --> crates/oojuro-nine/src/wal.rs:245:19
+    |
+122 | impl Journal {
+    | ------------ method in this implementation
+...
+245 |     pub(crate) fn bytes(&self) -> u64 {
+    |                   ^^^^^
+
+warning: `oojuro-nine` (lib) generated 4 warnings
+warning: non-local `impl` definition, `impl` blocks should be written at the same level as their item
+   --> crates/oojuro-engine/src/record.rs:195:5
+    |
+190 | / fn bounded_json<T: Serialize + ?Sized>(
+191 | |     value: &T,
+192 | |     limit: usize,
+193 | |     collect: bool,
+194 | | ) -> Result<BoundedJson> {
+    | |________________________- move the `impl` block outside of this function `bounded_json`
+195 |       impl std::io::Write for BoundedJson {
+    |       ^^^^^--------------^^^^^-----------
+    |            |                  |
+    |            |                  `BoundedJson` is not local
+    |            `Write` is not local
+    |
+    = note: an `impl` is never scoped, even when it is nested inside an item, as it may impact type checking outside of that item, which can be the case if neither the trait or the self type are at the same nesting level as the `impl`
+    = note: `#[warn(non_local_definitions)]` on by default
+
+warning: `oojuro-engine` (lib) generated 1 warning
+warning: linker stderr: ignoring deprecated linker optimization setting '1'
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `oojuro-bench` (example "profile_native") generated 1 warning
+warning: `oojuro-bench` (bin "oojuro-bench") generated 1 warning (1 duplicate)
+    Finished `release` profile [optimized] target(s) in 21.37s

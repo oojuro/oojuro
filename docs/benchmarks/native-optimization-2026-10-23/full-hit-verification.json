@@ -1,0 +1,7 @@
+{
+  "queries": 5,
+  "repetitions": 3,
+  "samples_per_source": 15,
+  "exact_ids_score_bits_continuation_times_utf8_excerpt_offsets_and_bytes": true,
+  "timing_excluded": "signature verification overlaps unrelated builds; accepted timings are paired-io-profile only"
+}

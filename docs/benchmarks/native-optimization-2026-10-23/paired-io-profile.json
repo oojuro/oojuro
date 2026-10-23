@@ -1,0 +1,2541 @@
+{
+  "scope": "local same-machine diagnostic; native fsync single host, warm OS cache; no hosted/AWS/SOTA or pricing claim",
+  "records": 8674,
+  "text_bytes": 8984758,
+  "batch_size": 100,
+  "corpus_sha256": "0627982cec4ee896df6dc98604ef6b499c83fd87a19eaaeb3f23b88bbef6cbce",
+  "runs": [
+    {
+      "label": "ab460dc",
+      "run": 0,
+      "info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "ab460dc324a1-dirty",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "append_service_us": [
+        3924,
+        2864,
+        3436,
+        3053,
+        3394,
+        3329,
+        3460,
+        2863,
+        2983,
+        2709,
+        3009,
+        2771,
+        3403,
+        2767,
+        3141,
+        2700,
+        2654,
+        2482,
+        3222,
+        2802,
+        2549,
+        2483,
+        3195,
+        3093,
+        2475,
+        2732,
+        3132,
+        2570,
+        3695,
+        36661,
+        3002,
+        3177,
+        3892,
+        2717,
+        2898,
+        2829,
+        2897,
+        2884,
+        2709,
+        2611,
+        2830,
+        2523,
+        2698,
+        2484,
+        2801,
+        2592,
+        2912,
+        2794,
+        3122,
+        3020,
+        2768,
+        2749,
+        2828,
+        2890,
+        2767,
+        3189,
+        2784,
+        3016,
+        3614,
+        3399,
+        2619,
+        2791,
+        2878,
+        2519,
+        3406,
+        2711,
+        2547,
+        2626,
+        2786,
+        2906,
+        2670,
+        3100,
+        2905,
+        2885,
+        2616,
+        3056,
+        3037,
+        3305,
+        3138,
+        2826,
+        3040,
+        2864,
+        2860,
+        2676,
+        3773,
+        2914,
+        3234
+      ],
+      "append_roundtrip_us": [
+        4157.63,
+        3037.867,
+        3606.435,
+        3256.033,
+        3573.454,
+        3535.964,
+        3692.825,
+        3023.581,
+        3159.403,
+        2912.164,
+        3216.89,
+        2923.615,
+        3600.373,
+        2914.087,
+        3323.97,
+        2907.996,
+        2812.458,
+        2629.468,
+        3426.671,
+        2970.462,
+        2675.003,
+        2682.477,
+        3407.875,
+        3249.2,
+        2632.204,
+        2875.095,
+        3288.995,
+        2734.544,
+        3911.733,
+        36846.713,
+        3208.244,
+        3354.797,
+        4097.417,
+        2856.38,
+        3064.146,
+        2962.838,
+        3048.067,
+        3057.745,
+        2830.803,
+        2747.408,
+        2992.763,
+        2667.67,
+        2848.726,
+        2618.468,
+        2963.039,
+        2744.783,
+        3083.944,
+        2978.307,
+        3312.408,
+        3203.706,
+        2914.779,
+        2928.314,
+        3009.786,
+        3059.598,
+        2911.934,
+        3370.386,
+        2964.722,
+        3219.215,
+        3797.861,
+        3580.787,
+        2763.829,
+        2958.881,
+        3010.036,
+        2637.524,
+        3548.638,
+        2885.824,
+        2685.783,
+        2744.432,
+        2969.43,
+        3046.323,
+        2832.065,
+        3270.009,
+        3099.061,
+        3021.267,
+        2735.606,
+        3260.232,
+        3261.573,
+        3501.039,
+        3328.227,
+        3006.88,
+        3211.691,
+        3040.913,
+        3032.187,
+        2817.939,
+        4019.182,
+        3110.152,
+        3445.305
+      ],
+      "search": [
+        {
+          "service_us": 632101,
+          "roundtrip_us": 632277.705
+        },
+        {
+          "service_us": 67472,
+          "roundtrip_us": 67613.672
+        },
+        {
+          "service_us": 65366,
+          "roundtrip_us": 65505.573
+        },
+        {
+          "service_us": 63344,
+          "roundtrip_us": 63535.23
+        },
+        {
+          "service_us": 72296,
+          "roundtrip_us": 72458.109
+        },
+        {
+          "service_us": 64052,
+          "roundtrip_us": 64235.192
+        },
+        {
+          "service_us": 59448,
+          "roundtrip_us": 59627.775
+        },
+        {
+          "service_us": 66318,
+          "roundtrip_us": 66459.156
+        },
+        {
+          "service_us": 64597,
+          "roundtrip_us": 64712.809
+        },
+        {
+          "service_us": 66720,
+          "roundtrip_us": 66846.476
+        },
+        {
+          "service_us": 66259,
+          "roundtrip_us": 66415.405
+        },
+        {
+          "service_us": 64742,
+          "roundtrip_us": 64866.274
+        },
+        {
+          "service_us": 67825,
+          "roundtrip_us": 67995.291
+        },
+        {
+          "service_us": 65533,
+          "roundtrip_us": 65715.673
+        },
+        {
+          "service_us": 71242,
+          "roundtrip_us": 71403.027
+        }
+      ],
+      "get": [
+        {
+          "service_us": 662,
+          "roundtrip_us": 838.78
+        },
+        {
+          "service_us": 686,
+          "roundtrip_us": 903.049
+        },
+        {
+          "service_us": 708,
+          "roundtrip_us": 890.676
+        },
+        {
+          "service_us": 710,
+          "roundtrip_us": 952.942
+        },
+        {
+          "service_us": 681,
+          "roundtrip_us": 1063.818
+        },
+        {
+          "service_us": 694,
+          "roundtrip_us": 981.645
+        },
+        {
+          "service_us": 702,
+          "roundtrip_us": 1027.3
+        },
+        {
+          "service_us": 656,
+          "roundtrip_us": 843.207
+        },
+        {
+          "service_us": 680,
+          "roundtrip_us": 867.453
+        },
+        {
+          "service_us": 700,
+          "roundtrip_us": 976.956
+        },
+        {
+          "service_us": 1430,
+          "roundtrip_us": 1736.218
+        },
+        {
+          "service_us": 712,
+          "roundtrip_us": 940.959
+        },
+        {
+          "service_us": 677,
+          "roundtrip_us": 939.937
+        },
+        {
+          "service_us": 728,
+          "roundtrip_us": 1001.301
+        },
+        {
+          "service_us": 683,
+          "roundtrip_us": 1037.298
+        }
+      ],
+      "endtoend_roundtrip_us": [
+        633116.485,
+        68516.721,
+        66396.249,
+        64488.172000000006,
+        73521.927,
+        65216.837,
+        60655.075000000004,
+        67302.363,
+        65580.262,
+        67823.432,
+        68151.62299999999,
+        65807.233,
+        68935.228,
+        66716.974,
+        72440.325
+      ],
+      "ranked_ids_scores_sha256": [
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697"
+      ],
+      "memory": {
+        "VmHWM": "98508 kB",
+        "VmRSS": "98508 kB"
+      },
+      "memory_before_search": {
+        "VmHWM": "33348 kB",
+        "VmRSS": "33348 kB"
+      },
+      "memory_after_cold": {
+        "VmHWM": "79692 kB",
+        "VmRSS": "79692 kB"
+      },
+      "store_files": [
+        {
+          "path": "records/ENCRYPTED",
+          "apparent": 16,
+          "allocated": 4096
+        },
+        {
+          "path": "records/LOCK",
+          "apparent": 0,
+          "allocated": 0
+        },
+        {
+          "path": "records/MANIFEST",
+          "apparent": 40,
+          "allocated": 4096
+        },
+        {
+          "path": "records/RECORD_FORMAT",
+          "apparent": 16,
+          "allocated": 4096
+        },
+        {
+          "path": "records/dict-00000001.ojd",
+          "apparent": 16477,
+          "allocated": 20480
+        },
+        {
+          "path": "records/hot-00000001.ojl",
+          "apparent": 3500612,
+          "allocated": 3506176
+        }
+      ],
+      "store_apparent_bytes": 3517161,
+      "store_allocated_bytes": 3538944,
+      "all_8674_reopened_documents_exact": true
+    },
+    {
+      "label": "14c7881",
+      "run": 0,
+      "info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "14c78815b1ce",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "append_service_us": [
+        3485,
+        2644,
+        3049,
+        2983,
+        2558,
+        2585,
+        2899,
+        2553,
+        2542,
+        2401,
+        3259,
+        3356,
+        3493,
+        3283,
+        2796,
+        2646,
+        2752,
+        2639,
+        3041,
+        3215,
+        3435,
+        3309,
+        3517,
+        2972,
+        2612,
+        2675,
+        3213,
+        2488,
+        2749,
+        32891,
+        3054,
+        3021,
+        3124,
+        3125,
+        3249,
+        3503,
+        3150,
+        3478,
+        2706,
+        2736,
+        2699,
+        2579,
+        2669,
+        2543,
+        2786,
+        2762,
+        2718,
+        2905,
+        3070,
+        3414,
+        2658,
+        2949,
+        2896,
+        2791,
+        3228,
+        2972,
+        2925,
+        2942,
+        3157,
+        4364,
+        3148,
+        3342,
+        3246,
+        3178,
+        3863,
+        2941,
+        2799,
+        2733,
+        2920,
+        2726,
+        3360,
+        3105,
+        3857,
+        2803,
+        2946,
+        3023,
+        2909,
+        2933,
+        3045,
+        3298,
+        3146,
+        2877,
+        2964,
+        3075,
+        3622,
+        3195,
+        2814
+      ],
+      "append_roundtrip_us": [
+        3750.463,
+        2803.452,
+        3243.901,
+        3187.396,
+        2678.199,
+        2737.179,
+        3061.361,
+        2678.31,
+        2700.46,
+        2529.372,
+        3416.181,
+        3538.939,
+        3665.324,
+        3439.955,
+        2968.93,
+        2846.823,
+        2927.633,
+        2841.402,
+        3259.259,
+        3443.611,
+        3611.314,
+        3496.401,
+        3785.057,
+        3199.448,
+        2788.834,
+        2855.057,
+        3401.934,
+        2660.096,
+        2926.971,
+        33081.283,
+        3207.463,
+        3203.757,
+        3307.71,
+        3295.516,
+        3466.785,
+        3681.925,
+        3345.7,
+        3697.093,
+        2895.113,
+        2897.537,
+        2850.198,
+        2740.996,
+        2805.315,
+        2710.159,
+        2984.198,
+        2947.841,
+        2885.744,
+        3090.837,
+        3243.881,
+        3596.686,
+        2784.416,
+        3122.375,
+        3087.94,
+        2955.264,
+        3419.698,
+        3152.922,
+        3106.976,
+        3119.23,
+        3334.88,
+        4569.435,
+        3315.835,
+        3527.058,
+        3431.73,
+        3328.198,
+        4109.65,
+        3105.524,
+        2946.729,
+        2882.159,
+        3077.271,
+        2862.702,
+        3477.776,
+        3297.06,
+        4052.464,
+        2972.066,
+        3047.686,
+        3208.575,
+        3034.522,
+        3080.427,
+        3206.341,
+        3456.366,
+        3320.433,
+        3040.572,
+        3121.714,
+        3243.49,
+        3802.239,
+        3364.435,
+        2938.823
+      ],
+      "search": [
+        {
+          "service_us": 482323,
+          "roundtrip_us": 482502.444
+        },
+        {
+          "service_us": 67016,
+          "roundtrip_us": 67193.011
+        },
+        {
+          "service_us": 66241,
+          "roundtrip_us": 66389.727
+        },
+        {
+          "service_us": 59516,
+          "roundtrip_us": 59687.898
+        },
+        {
+          "service_us": 66273,
+          "roundtrip_us": 66463.775
+        },
+        {
+          "service_us": 65643,
+          "roundtrip_us": 65814.157
+        },
+        {
+          "service_us": 59793,
+          "roundtrip_us": 59919.808
+        },
+        {
+          "service_us": 66907,
+          "roundtrip_us": 67048.913
+        },
+        {
+          "service_us": 63187,
+          "roundtrip_us": 63354.424
+        },
+        {
+          "service_us": 65303,
+          "roundtrip_us": 65477.612
+        },
+        {
+          "service_us": 61003,
+          "roundtrip_us": 61161.617
+        },
+        {
+          "service_us": 63302,
+          "roundtrip_us": 63428.531
+        },
+        {
+          "service_us": 63107,
+          "roundtrip_us": 63260.91
+        },
+        {
+          "service_us": 58222,
+          "roundtrip_us": 58368.615
+        },
+        {
+          "service_us": 70660,
+          "roundtrip_us": 70833.739
+        }
+      ],
+      "get": [
+        {
+          "service_us": 671,
+          "roundtrip_us": 852.485
+        },
+        {
+          "service_us": 625,
+          "roundtrip_us": 839.841
+        },
+        {
+          "service_us": 654,
+          "roundtrip_us": 874.416
+        },
+        {
+          "service_us": 678,
+          "roundtrip_us": 885.726
+        },
+        {
+          "service_us": 621,
+          "roundtrip_us": 884.945
+        },
+        {
+          "service_us": 823,
+          "roundtrip_us": 1038.39
+        },
+        {
+          "service_us": 787,
+          "roundtrip_us": 1015.628
+        },
+        {
+          "service_us": 639,
+          "roundtrip_us": 785.33
+        },
+        {
+          "service_us": 788,
+          "roundtrip_us": 1033.621
+        },
+        {
+          "service_us": 663,
+          "roundtrip_us": 985.883
+        },
+        {
+          "service_us": 634,
+          "roundtrip_us": 783.797
+        },
+        {
+          "service_us": 819,
+          "roundtrip_us": 1040.484
+        },
+        {
+          "service_us": 632,
+          "roundtrip_us": 822.158
+        },
+        {
+          "service_us": 669,
+          "roundtrip_us": 890.114
+        },
+        {
+          "service_us": 678,
+          "roundtrip_us": 993.868
+        }
+      ],
+      "endtoend_roundtrip_us": [
+        483354.929,
+        68032.852,
+        67264.143,
+        60573.624,
+        67348.72,
+        66852.547,
+        60935.435999999994,
+        67834.243,
+        64388.045,
+        66463.495,
+        61945.414,
+        64469.015,
+        64083.06800000001,
+        59258.729,
+        71827.607
+      ],
+      "ranked_ids_scores_sha256": [
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697"
+      ],
+      "memory": {
+        "VmHWM": "99924 kB",
+        "VmRSS": "99924 kB"
+      },
+      "memory_before_search": {
+        "VmHWM": "33204 kB",
+        "VmRSS": "33204 kB"
+      },
+      "memory_after_cold": {
+        "VmHWM": "82468 kB",
+        "VmRSS": "82468 kB"
+      },
+      "store_files": [
+        {
+          "path": "records/ENCRYPTED",
+          "apparent": 16,
+          "allocated": 4096
+        },
+        {
+          "path": "records/LOCK",
+          "apparent": 0,
+          "allocated": 0
+        },
+        {
+          "path": "records/MANIFEST",
+          "apparent": 40,
+          "allocated": 4096
+        },
+        {
+          "path": "records/RECORD_FORMAT",
+          "apparent": 16,
+          "allocated": 4096
+        },
+        {
+          "path": "records/dict-00000001.ojd",
+          "apparent": 16477,
+          "allocated": 20480
+        },
+        {
+          "path": "records/hot-00000001.ojl",
+          "apparent": 3500897,
+          "allocated": 3506176
+        }
+      ],
+      "store_apparent_bytes": 3517446,
+      "store_allocated_bytes": 3538944,
+      "all_8674_reopened_documents_exact": true
+    },
+    {
+      "label": "14c7881",
+      "run": 1,
+      "info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "14c78815b1ce",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "append_service_us": [
+        3360,
+        2822,
+        3294,
+        3348,
+        2692,
+        3237,
+        2697,
+        2798,
+        2645,
+        2841,
+        4106,
+        3532,
+        2881,
+        2879,
+        3060,
+        2791,
+        2848,
+        2869,
+        3237,
+        3893,
+        3566,
+        2940,
+        3545,
+        3205,
+        2741,
+        3418,
+        3865,
+        3047,
+        3417,
+        37042,
+        3364,
+        3085,
+        3744,
+        3315,
+        4110,
+        3109,
+        3847,
+        3518,
+        3222,
+        3203,
+        3237,
+        2927,
+        3321,
+        2962,
+        3321,
+        3142,
+        3379,
+        2942,
+        3003,
+        3338,
+        3446,
+        2932,
+        2824,
+        3378,
+        2823,
+        2905,
+        2917,
+        3184,
+        3077,
+        3002,
+        3122,
+        3159,
+        2765,
+        2596,
+        4346,
+        3504,
+        3012,
+        2623,
+        2800,
+        2627,
+        2655,
+        3127,
+        3172,
+        3031,
+        2687,
+        2990,
+        3224,
+        3061,
+        3592,
+        2886,
+        3363,
+        3244,
+        3250,
+        2811,
+        3511,
+        4279,
+        3190
+      ],
+      "append_roundtrip_us": [
+        3562.192,
+        2958.921,
+        3461.254,
+        3503.143,
+        2840.131,
+        3413.176,
+        2836.143,
+        2958.66,
+        2804.875,
+        2989.487,
+        4314.612,
+        3724.314,
+        3052.846,
+        3030.855,
+        3260.312,
+        2942.1,
+        3039.912,
+        3008.153,
+        3403.347,
+        4116.122,
+        3754.521,
+        3120.942,
+        3747.407,
+        3383.751,
+        2870.978,
+        3584.254,
+        4077.941,
+        3289.836,
+        3601.025,
+        37216.56,
+        3563.945,
+        3274.288,
+        3967.606,
+        3488.385,
+        4315.583,
+        3327.035,
+        4078.272,
+        3706.942,
+        3394.872,
+        3349.256,
+        3429.497,
+        3110.943,
+        3484.849,
+        3130.269,
+        3506.439,
+        3344.748,
+        3570.588,
+        3112.467,
+        3167.198,
+        3533.228,
+        3636.631,
+        3140.489,
+        2985.991,
+        3547.195,
+        2985.371,
+        3073.333,
+        3082.26,
+        3375.035,
+        3274.678,
+        3186.244,
+        3323.739,
+        3371.949,
+        2926.24,
+        2715.869,
+        4520.975,
+        3673.119,
+        3197.485,
+        2754.782,
+        2980.31,
+        2757.987,
+        2776.622,
+        3290.858,
+        3338.357,
+        3208.024,
+        2816.516,
+        3160.766,
+        3400.292,
+        3255.502,
+        3773.546,
+        3043.087,
+        3556.041,
+        3404.169,
+        3406.784,
+        2968.98,
+        3725.666,
+        4464.82,
+        3363.063
+      ],
+      "search": [
+        {
+          "service_us": 475928,
+          "roundtrip_us": 476120.499
+        },
+        {
+          "service_us": 62630,
+          "roundtrip_us": 62761.281
+        },
+        {
+          "service_us": 68403,
+          "roundtrip_us": 68546.196
+        },
+        {
+          "service_us": 53824,
+          "roundtrip_us": 53971.81
+        },
+        {
+          "service_us": 61646,
+          "roundtrip_us": 61810.464
+        },
+        {
+          "service_us": 57713,
+          "roundtrip_us": 57863.015
+        },
+        {
+          "service_us": 53329,
+          "roundtrip_us": 53514.66
+        },
+        {
+          "service_us": 61483,
+          "roundtrip_us": 61633.365
+        },
+        {
+          "service_us": 53484,
+          "roundtrip_us": 53639.974
+        },
+        {
+          "service_us": 64522,
+          "roundtrip_us": 64664.79
+        },
+        {
+          "service_us": 56662,
+          "roundtrip_us": 56788.687
+        },
+        {
+          "service_us": 52813,
+          "roundtrip_us": 52951.904
+        },
+        {
+          "service_us": 60080,
+          "roundtrip_us": 60221.339
+        },
+        {
+          "service_us": 51428,
+          "roundtrip_us": 51617.023
+        },
+        {
+          "service_us": 62516,
+          "roundtrip_us": 62701.961
+        }
+      ],
+      "get": [
+        {
+          "service_us": 689,
+          "roundtrip_us": 897.709
+        },
+        {
+          "service_us": 613,
+          "roundtrip_us": 855.691
+        },
+        {
+          "service_us": 632,
+          "roundtrip_us": 838.158
+        },
+        {
+          "service_us": 661,
+          "roundtrip_us": 860.239
+        },
+        {
+          "service_us": 662,
+          "roundtrip_us": 945.839
+        },
+        {
+          "service_us": 655,
+          "roundtrip_us": 877.702
+        },
+        {
+          "service_us": 624,
+          "roundtrip_us": 918.949
+        },
+        {
+          "service_us": 631,
+          "roundtrip_us": 1037.108
+        },
+        {
+          "service_us": 669,
+          "roundtrip_us": 906.134
+        },
+        {
+          "service_us": 633,
+          "roundtrip_us": 872.021
+        },
+        {
+          "service_us": 666,
+          "roundtrip_us": 860.129
+        },
+        {
+          "service_us": 620,
+          "roundtrip_us": 854.489
+        },
+        {
+          "service_us": 624,
+          "roundtrip_us": 860.69
+        },
+        {
+          "service_us": 664,
+          "roundtrip_us": 947.401
+        },
+        {
+          "service_us": 644,
+          "roundtrip_us": 945.278
+        }
+      ],
+      "endtoend_roundtrip_us": [
+        477018.208,
+        63616.972,
+        69384.35399999999,
+        54832.049,
+        62756.303,
+        58740.717,
+        54433.609000000004,
+        62670.473,
+        54546.108,
+        65536.811,
+        57648.816,
+        53806.393000000004,
+        61082.029,
+        52564.424,
+        63647.239
+      ],
+      "ranked_ids_scores_sha256": [
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697"
+      ],
+      "memory": {
+        "VmHWM": "99776 kB",
+        "VmRSS": "99776 kB"
+      },
+      "memory_before_search": {
+        "VmHWM": "33212 kB",
+        "VmRSS": "33212 kB"
+      },
+      "memory_after_cold": {
+        "VmHWM": "82324 kB",
+        "VmRSS": "82324 kB"
+      },
+      "store_files": [
+        {
+          "path": "records/ENCRYPTED",
+          "apparent": 16,
+          "allocated": 4096
+        },
+        {
+          "path": "records/LOCK",
+          "apparent": 0,
+          "allocated": 0
+        },
+        {
+          "path": "records/MANIFEST",
+          "apparent": 40,
+          "allocated": 4096
+        },
+        {
+          "path": "records/RECORD_FORMAT",
+          "apparent": 16,
+          "allocated": 4096
+        },
+        {
+          "path": "records/dict-00000001.ojd",
+          "apparent": 16477,
+          "allocated": 20480
+        },
+        {
+          "path": "records/hot-00000001.ojl",
+          "apparent": 3500591,
+          "allocated": 3506176
+        }
+      ],
+      "store_apparent_bytes": 3517140,
+      "store_allocated_bytes": 3538944,
+      "all_8674_reopened_documents_exact": true
+    },
+    {
+      "label": "ab460dc",
+      "run": 1,
+      "info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "ab460dc324a1-dirty",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "append_service_us": [
+        3707,
+        2688,
+        2914,
+        3407,
+        2606,
+        2713,
+        2721,
+        2528,
+        2582,
+        2623,
+        3406,
+        2811,
+        3075,
+        3147,
+        3353,
+        2836,
+        3020,
+        2826,
+        2879,
+        2897,
+        2704,
+        2710,
+        3127,
+        2876,
+        2504,
+        2636,
+        3210,
+        2607,
+        2787,
+        29484,
+        2878,
+        3130,
+        3460,
+        3127,
+        3783,
+        2862,
+        3022,
+        3092,
+        2761,
+        2728,
+        3062,
+        3167,
+        2682,
+        2558,
+        2828,
+        2702,
+        2580,
+        2800,
+        2840,
+        2852,
+        2734,
+        2653,
+        2564,
+        2614,
+        2987,
+        2916,
+        2937,
+        2893,
+        3063,
+        3193,
+        2845,
+        3432,
+        2905,
+        2763,
+        4114,
+        2896,
+        2723,
+        2746,
+        2842,
+        2664,
+        2633,
+        2928,
+        3119,
+        2577,
+        2395,
+        2790,
+        2705,
+        2737,
+        2925,
+        2616,
+        2850,
+        2812,
+        3179,
+        2741,
+        3321,
+        2810,
+        2888
+      ],
+      "append_roundtrip_us": [
+        3926.429,
+        2848.115,
+        3046.935,
+        3569.446,
+        2731.428,
+        2854.667,
+        2876.257,
+        2661.959,
+        2726.95,
+        2758.659,
+        3621.923,
+        3007.571,
+        3273.015,
+        3348.585,
+        3587.76,
+        3006.95,
+        3183.269,
+        2968.168,
+        3031.126,
+        3066.691,
+        2877.42,
+        2836.283,
+        3305.565,
+        3066.641,
+        2624.689,
+        2782.743,
+        3366.859,
+        2755.282,
+        2949.934,
+        29679.278,
+        3097.679,
+        3336.052,
+        3738.16,
+        3361.519,
+        4020.795,
+        3053.777,
+        3240.856,
+        3292.501,
+        2935.317,
+        2899.741,
+        3238.24,
+        3319.521,
+        2868.743,
+        2698.297,
+        3001.871,
+        2903.598,
+        2777.133,
+        2978.758,
+        3044.46,
+        3077.672,
+        2886.657,
+        2803.443,
+        2709.437,
+        2756.014,
+        3135.028,
+        3078.283,
+        3120.531,
+        3081.52,
+        3236.016,
+        3388.72,
+        3028.28,
+        3680.752,
+        3052.034,
+        2910.461,
+        4304.903,
+        3085.185,
+        2874.043,
+        2904.49,
+        2987.995,
+        2806.388,
+        2746.987,
+        3066.25,
+        3304.262,
+        2755.593,
+        2545.823,
+        2931.079,
+        2847.844,
+        2885.354,
+        3089.393,
+        2779.678,
+        3003.384,
+        2975.752,
+        3335.761,
+        2889.402,
+        3546.403,
+        2968.91,
+        3053.507
+      ],
+      "search": [
+        {
+          "service_us": 666182,
+          "roundtrip_us": 666339.88
+        },
+        {
+          "service_us": 71393,
+          "roundtrip_us": 71555.14
+        },
+        {
+          "service_us": 65904,
+          "roundtrip_us": 66086.784
+        },
+        {
+          "service_us": 64344,
+          "roundtrip_us": 64497.729
+        },
+        {
+          "service_us": 69763,
+          "roundtrip_us": 69934.948
+        },
+        {
+          "service_us": 65096,
+          "roundtrip_us": 65240.12
+        },
+        {
+          "service_us": 60788,
+          "roundtrip_us": 60930.227
+        },
+        {
+          "service_us": 70386,
+          "roundtrip_us": 70569.197
+        },
+        {
+          "service_us": 64480,
+          "roundtrip_us": 64655.813
+        },
+        {
+          "service_us": 70967,
+          "roundtrip_us": 71095.035
+        },
+        {
+          "service_us": 67333,
+          "roundtrip_us": 67471.037
+        },
+        {
+          "service_us": 67831,
+          "roundtrip_us": 67975.966
+        },
+        {
+          "service_us": 65239,
+          "roundtrip_us": 65408.714
+        },
+        {
+          "service_us": 64792,
+          "roundtrip_us": 64968.966
+        },
+        {
+          "service_us": 72144,
+          "roundtrip_us": 72262.094
+        }
+      ],
+      "get": [
+        {
+          "service_us": 672,
+          "roundtrip_us": 887.069
+        },
+        {
+          "service_us": 666,
+          "roundtrip_us": 968.791
+        },
+        {
+          "service_us": 719,
+          "roundtrip_us": 971.366
+        },
+        {
+          "service_us": 742,
+          "roundtrip_us": 970.504
+        },
+        {
+          "service_us": 681,
+          "roundtrip_us": 1008.044
+        },
+        {
+          "service_us": 957,
+          "roundtrip_us": 1192.958
+        },
+        {
+          "service_us": 671,
+          "roundtrip_us": 966.697
+        },
+        {
+          "service_us": 667,
+          "roundtrip_us": 924.108
+        },
+        {
+          "service_us": 712,
+          "roundtrip_us": 930.64
+        },
+        {
+          "service_us": 763,
+          "roundtrip_us": 1143.877
+        },
+        {
+          "service_us": 677,
+          "roundtrip_us": 881.809
+        },
+        {
+          "service_us": 689,
+          "roundtrip_us": 1001.913
+        },
+        {
+          "service_us": 671,
+          "roundtrip_us": 945.117
+        },
+        {
+          "service_us": 703,
+          "roundtrip_us": 895.985
+        },
+        {
+          "service_us": 857,
+          "roundtrip_us": 1202.155
+        }
+      ],
+      "endtoend_roundtrip_us": [
+        667226.949,
+        72523.931,
+        67058.15,
+        65468.233,
+        70942.992,
+        66433.07800000001,
+        61896.924,
+        71493.305,
+        65586.45300000001,
+        72238.912,
+        68352.84599999999,
+        68977.879,
+        66353.831,
+        65864.951,
+        73464.249
+      ],
+      "ranked_ids_scores_sha256": [
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697"
+      ],
+      "memory": {
+        "VmHWM": "98112 kB",
+        "VmRSS": "98112 kB"
+      },
+      "memory_before_search": {
+        "VmHWM": "32904 kB",
+        "VmRSS": "32904 kB"
+      },
+      "memory_after_cold": {
+        "VmHWM": "79296 kB",
+        "VmRSS": "79296 kB"
+      },
+      "store_files": [
+        {
+          "path": "records/ENCRYPTED",
+          "apparent": 16,
+          "allocated": 4096
+        },
+        {
+          "path": "records/LOCK",
+          "apparent": 0,
+          "allocated": 0
+        },
+        {
+          "path": "records/MANIFEST",
+          "apparent": 40,
+          "allocated": 4096
+        },
+        {
+          "path": "records/RECORD_FORMAT",
+          "apparent": 16,
+          "allocated": 4096
+        },
+        {
+          "path": "records/dict-00000001.ojd",
+          "apparent": 16477,
+          "allocated": 20480
+        },
+        {
+          "path": "records/hot-00000001.ojl",
+          "apparent": 3500630,
+          "allocated": 3506176
+        }
+      ],
+      "store_apparent_bytes": 3517179,
+      "store_allocated_bytes": 3538944,
+      "all_8674_reopened_documents_exact": true
+    },
+    {
+      "label": "ab460dc",
+      "run": 2,
+      "info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "ab460dc324a1-dirty",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "append_service_us": [
+        3385,
+        2925,
+        2948,
+        3515,
+        3504,
+        2933,
+        2775,
+        2642,
+        2836,
+        3092,
+        3312,
+        2988,
+        2700,
+        2660,
+        2964,
+        2730,
+        2706,
+        2587,
+        3023,
+        2782,
+        2844,
+        2495,
+        3294,
+        2753,
+        2801,
+        2838,
+        3253,
+        2757,
+        3010,
+        38160,
+        3017,
+        2984,
+        3427,
+        3018,
+        3426,
+        3302,
+        3229,
+        3111,
+        2774,
+        2536,
+        2810,
+        2685,
+        2592,
+        2452,
+        3061,
+        2581,
+        2500,
+        2677,
+        2749,
+        2693,
+        2560,
+        2549,
+        3162,
+        2796,
+        2643,
+        2874,
+        2702,
+        2786,
+        3144,
+        3026,
+        2678,
+        2793,
+        2859,
+        2861,
+        3661,
+        2713,
+        2620,
+        2935,
+        2774,
+        2634,
+        2649,
+        2941,
+        2857,
+        2619,
+        2372,
+        2863,
+        2759,
+        2702,
+        3059,
+        2927,
+        2918,
+        2733,
+        2771,
+        2694,
+        3361,
+        2697,
+        2493
+      ],
+      "append_roundtrip_us": [
+        3608.65,
+        3095.725,
+        3134.948,
+        3706.631,
+        3677.667,
+        3099.433,
+        2918.385,
+        2793.563,
+        2978.978,
+        3285.618,
+        3509.615,
+        3128.045,
+        2827.336,
+        2795.477,
+        3116.033,
+        2853.265,
+        2846.662,
+        2707.945,
+        3179.942,
+        2960.575,
+        3011.969,
+        2633.326,
+        3470.482,
+        2894.531,
+        2993.605,
+        3022.318,
+        3408.868,
+        2902.626,
+        3183.398,
+        38337.524,
+        3185.562,
+        3149.195,
+        3642.713,
+        3176.194,
+        3660.194,
+        3507.622,
+        3409.508,
+        3271.472,
+        2916.011,
+        2662.5,
+        2932.832,
+        2835.231,
+        2737.299,
+        2575.388,
+        3206.702,
+        2740.024,
+        2629.729,
+        2840.841,
+        2937.582,
+        2842.324,
+        2696.553,
+        2705.079,
+        3376.406,
+        2994.798,
+        2811.086,
+        3063.866,
+        2887.629,
+        2976.954,
+        3347.454,
+        3215.799,
+        2902.967,
+        2981.362,
+        3043.729,
+        3028.711,
+        3885.284,
+        2901.194,
+        2783.444,
+        3116.144,
+        2947.099,
+        2767.766,
+        2815.153,
+        3126.933,
+        3039.17,
+        2779.658,
+        2504.025,
+        3043.628,
+        2936.56,
+        2874.454,
+        3243.389,
+        3121.754,
+        3121.012,
+        2921.882,
+        2949.022,
+        2860.077,
+        3540.432,
+        2838.728,
+        2627.825
+      ],
+      "search": [
+        {
+          "service_us": 621974,
+          "roundtrip_us": 622107.056
+        },
+        {
+          "service_us": 65921,
+          "roundtrip_us": 66066.786
+        },
+        {
+          "service_us": 65092,
+          "roundtrip_us": 65232.185
+        },
+        {
+          "service_us": 65949,
+          "roundtrip_us": 66080.412
+        },
+        {
+          "service_us": 72897,
+          "roundtrip_us": 73032.177
+        },
+        {
+          "service_us": 64227,
+          "roundtrip_us": 64365.524
+        },
+        {
+          "service_us": 64443,
+          "roundtrip_us": 64607.384
+        },
+        {
+          "service_us": 69522,
+          "roundtrip_us": 69671.408
+        },
+        {
+          "service_us": 63721,
+          "roundtrip_us": 63895.42
+        },
+        {
+          "service_us": 72076,
+          "roundtrip_us": 72234.312
+        },
+        {
+          "service_us": 65837,
+          "roundtrip_us": 66004.34
+        },
+        {
+          "service_us": 67257,
+          "roundtrip_us": 67379.848
+        },
+        {
+          "service_us": 70956,
+          "roundtrip_us": 71113.569
+        },
+        {
+          "service_us": 70416,
+          "roundtrip_us": 70553.388
+        },
+        {
+          "service_us": 70178,
+          "roundtrip_us": 70360.319
+        }
+      ],
+      "get": [
+        {
+          "service_us": 725,
+          "roundtrip_us": 930.861
+        },
+        {
+          "service_us": 711,
+          "roundtrip_us": 991.885
+        },
+        {
+          "service_us": 705,
+          "roundtrip_us": 922.114
+        },
+        {
+          "service_us": 713,
+          "roundtrip_us": 948.814
+        },
+        {
+          "service_us": 750,
+          "roundtrip_us": 1115.774
+        },
+        {
+          "service_us": 691,
+          "roundtrip_us": 887.61
+        },
+        {
+          "service_us": 703,
+          "roundtrip_us": 1038.12
+        },
+        {
+          "service_us": 725,
+          "roundtrip_us": 986.354
+        },
+        {
+          "service_us": 744,
+          "roundtrip_us": 975.233
+        },
+        {
+          "service_us": 676,
+          "roundtrip_us": 962.349
+        },
+        {
+          "service_us": 708,
+          "roundtrip_us": 932.904
+        },
+        {
+          "service_us": 981,
+          "roundtrip_us": 1270.512
+        },
+        {
+          "service_us": 673,
+          "roundtrip_us": 903.751
+        },
+        {
+          "service_us": 705,
+          "roundtrip_us": 913.969
+        },
+        {
+          "service_us": 701,
+          "roundtrip_us": 1117.127
+        }
+      ],
+      "endtoend_roundtrip_us": [
+        623037.917,
+        67058.67099999999,
+        66154.299,
+        67029.226,
+        74147.951,
+        65253.134,
+        65645.504,
+        70657.762,
+        64870.653,
+        73196.66100000001,
+        66937.24399999999,
+        68650.36,
+        72017.32,
+        71467.357,
+        71477.446
+      ],
+      "ranked_ids_scores_sha256": [
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697"
+      ],
+      "memory": {
+        "VmHWM": "98188 kB",
+        "VmRSS": "98188 kB"
+      },
+      "memory_before_search": {
+        "VmHWM": "33072 kB",
+        "VmRSS": "33072 kB"
+      },
+      "memory_after_cold": {
+        "VmHWM": "79364 kB",
+        "VmRSS": "79364 kB"
+      },
+      "store_files": [
+        {
+          "path": "records/ENCRYPTED",
+          "apparent": 16,
+          "allocated": 4096
+        },
+        {
+          "path": "records/LOCK",
+          "apparent": 0,
+          "allocated": 0
+        },
+        {
+          "path": "records/MANIFEST",
+          "apparent": 40,
+          "allocated": 4096
+        },
+        {
+          "path": "records/RECORD_FORMAT",
+          "apparent": 16,
+          "allocated": 4096
+        },
+        {
+          "path": "records/dict-00000001.ojd",
+          "apparent": 16477,
+          "allocated": 20480
+        },
+        {
+          "path": "records/hot-00000001.ojl",
+          "apparent": 3500855,
+          "allocated": 3506176
+        }
+      ],
+      "store_apparent_bytes": 3517404,
+      "store_allocated_bytes": 3538944,
+      "all_8674_reopened_documents_exact": true
+    },
+    {
+      "label": "14c7881",
+      "run": 2,
+      "info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "14c78815b1ce",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "append_service_us": [
+        3827,
+        3351,
+        3384,
+        3739,
+        2930,
+        2855,
+        2727,
+        2620,
+        2764,
+        2457,
+        3052,
+        2791,
+        2605,
+        2510,
+        4108,
+        2970,
+        3505,
+        2844,
+        2902,
+        3085,
+        2996,
+        2861,
+        3245,
+        3122,
+        2643,
+        2852,
+        3253,
+        2938,
+        2743,
+        30071,
+        2782,
+        2654,
+        2796,
+        2812,
+        3239,
+        2812,
+        3334,
+        3136,
+        2581,
+        2718,
+        2856,
+        2744,
+        2797,
+        2787,
+        3109,
+        2774,
+        2639,
+        2877,
+        3417,
+        2862,
+        2984,
+        2781,
+        3028,
+        2790,
+        3126,
+        2894,
+        2545,
+        2555,
+        2796,
+        3204,
+        2717,
+        2801,
+        3110,
+        2733,
+        3637,
+        3248,
+        2785,
+        3049,
+        3155,
+        2782,
+        2768,
+        3092,
+        2852,
+        2600,
+        2392,
+        2708,
+        2730,
+        2741,
+        2875,
+        2791,
+        2772,
+        2752,
+        2618,
+        2511,
+        3112,
+        2679,
+        3168
+      ],
+      "append_roundtrip_us": [
+        4046.563,
+        3541.133,
+        3532.938,
+        3988.716,
+        3071.711,
+        3029.212,
+        2870.086,
+        2769.94,
+        2904.901,
+        2573.475,
+        3211.391,
+        2958.71,
+        2775.25,
+        2658.733,
+        4254.53,
+        3128.066,
+        3697.374,
+        3007.511,
+        3087.24,
+        3273.676,
+        3169.031,
+        3025.315,
+        3454.722,
+        3283.064,
+        2790.467,
+        3038.61,
+        3432.131,
+        3074.836,
+        2883.56,
+        30257.954,
+        2978.728,
+        2821.817,
+        2989.187,
+        2981.252,
+        3482.064,
+        3023.621,
+        3527.859,
+        3360.176,
+        2761.223,
+        2887.959,
+        3017.961,
+        2908.407,
+        2979.66,
+        2958.169,
+        3290.798,
+        2967.878,
+        2802.36,
+        3016.568,
+        3631.651,
+        3042.026,
+        3115.722,
+        2901.555,
+        3153.372,
+        2919.789,
+        3255.672,
+        3070.148,
+        2679.682,
+        2699.018,
+        2940.377,
+        3396.625,
+        2866.299,
+        2946.639,
+        3244.241,
+        2877.69,
+        3811.606,
+        3393.508,
+        2922.794,
+        3209.106,
+        3379.503,
+        2942.972,
+        2911.052,
+        3251.245,
+        2989.257,
+        2744.733,
+        2499.858,
+        2849.417,
+        2846.702,
+        2873.542,
+        3023.231,
+        2939.495,
+        2937.512,
+        2883.751,
+        2737.029,
+        2616.524,
+        3259.871,
+        2813.301,
+        3372.059
+      ],
+      "search": [
+        {
+          "service_us": 501107,
+          "roundtrip_us": 501277.769
+        },
+        {
+          "service_us": 71158,
+          "roundtrip_us": 71331.955
+        },
+        {
+          "service_us": 64059,
+          "roundtrip_us": 64230.633
+        },
+        {
+          "service_us": 57982,
+          "roundtrip_us": 58155.058
+        },
+        {
+          "service_us": 65485,
+          "roundtrip_us": 65658.648
+        },
+        {
+          "service_us": 58813,
+          "roundtrip_us": 58983.839
+        },
+        {
+          "service_us": 62381,
+          "roundtrip_us": 62507.198
+        },
+        {
+          "service_us": 68077,
+          "roundtrip_us": 68245.247
+        },
+        {
+          "service_us": 64823,
+          "roundtrip_us": 64991.437
+        },
+        {
+          "service_us": 68183,
+          "roundtrip_us": 68359.78
+        },
+        {
+          "service_us": 63087,
+          "roundtrip_us": 63261.932
+        },
+        {
+          "service_us": 48975,
+          "roundtrip_us": 49132.944
+        },
+        {
+          "service_us": 58828,
+          "roundtrip_us": 59002.713
+        },
+        {
+          "service_us": 58421,
+          "roundtrip_us": 58622.397
+        },
+        {
+          "service_us": 64180,
+          "roundtrip_us": 64420.386
+        }
+      ],
+      "get": [
+        {
+          "service_us": 905,
+          "roundtrip_us": 1110.104
+        },
+        {
+          "service_us": 636,
+          "roundtrip_us": 951.7
+        },
+        {
+          "service_us": 696,
+          "roundtrip_us": 938.134
+        },
+        {
+          "service_us": 683,
+          "roundtrip_us": 939.417
+        },
+        {
+          "service_us": 658,
+          "roundtrip_us": 1027.32
+        },
+        {
+          "service_us": 669,
+          "roundtrip_us": 916.364
+        },
+        {
+          "service_us": 663,
+          "roundtrip_us": 915.082
+        },
+        {
+          "service_us": 945,
+          "roundtrip_us": 1122.637
+        },
+        {
+          "service_us": 735,
+          "roundtrip_us": 1007.303
+        },
+        {
+          "service_us": 652,
+          "roundtrip_us": 1039.453
+        },
+        {
+          "service_us": 618,
+          "roundtrip_us": 805.968
+        },
+        {
+          "service_us": 859,
+          "roundtrip_us": 1129.56
+        },
+        {
+          "service_us": 660,
+          "roundtrip_us": 849.41
+        },
+        {
+          "service_us": 671,
+          "roundtrip_us": 913.849
+        },
+        {
+          "service_us": 743,
+          "roundtrip_us": 1227.513
+        }
+      ],
+      "endtoend_roundtrip_us": [
+        502387.87299999996,
+        72283.655,
+        65168.767,
+        59094.475,
+        66685.96800000001,
+        59900.203,
+        63422.28,
+        69367.884,
+        65998.74,
+        69399.233,
+        64067.9,
+        50262.504,
+        59852.12300000001,
+        59536.246,
+        65647.899
+      ],
+      "ranked_ids_scores_sha256": [
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+        "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+        "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+        "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+        "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+        "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697"
+      ],
+      "memory": {
+        "VmHWM": "99692 kB",
+        "VmRSS": "99692 kB"
+      },
+      "memory_before_search": {
+        "VmHWM": "33044 kB",
+        "VmRSS": "33044 kB"
+      },
+      "memory_after_cold": {
+        "VmHWM": "82252 kB",
+        "VmRSS": "82252 kB"
+      },
+      "store_files": [
+        {
+          "path": "records/ENCRYPTED",
+          "apparent": 16,
+          "allocated": 4096
+        },
+        {
+          "path": "records/LOCK",
+          "apparent": 0,
+          "allocated": 0
+        },
+        {
+          "path": "records/MANIFEST",
+          "apparent": 40,
+          "allocated": 4096
+        },
+        {
+          "path": "records/RECORD_FORMAT",
+          "apparent": 16,
+          "allocated": 4096
+        },
+        {
+          "path": "records/dict-00000001.ojd",
+          "apparent": 16477,
+          "allocated": 20480
+        },
+        {
+          "path": "records/hot-00000001.ojl",
+          "apparent": 3500845,
+          "allocated": 3506176
+        }
+      ],
+      "store_apparent_bytes": 3517394,
+      "store_allocated_bytes": 3538944,
+      "all_8674_reopened_documents_exact": true
+    }
+  ],
+  "summaries": {
+    "ab460dc": {
+      "append_service": {
+        "n": 261,
+        "p50_us": 2844,
+        "p99_us": 29484,
+        "max_us": 38160,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "append_roundtrip": {
+        "n": 261,
+        "p50_us": 3011.969,
+        "p99_us": 29679.278,
+        "max_us": 38337.524,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "records_per_append_service_second": 30489.862489806248,
+      "cold_search_plus_get": {
+        "n": 3,
+        "p50_us": 633116.485,
+        "p99_us": 667226.949,
+        "max_us": 667226.949,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "reused_search_plus_get": {
+        "n": 42,
+        "p50_us": 67180.51699999999,
+        "p99_us": 74147.951,
+        "max_us": 74147.951,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "get_service": {
+        "n": 45,
+        "p50_us": 703,
+        "p99_us": 1430,
+        "max_us": 1430,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "store_apparent_bytes": [
+        3517161,
+        3517179,
+        3517404
+      ],
+      "store_allocated_bytes": [
+        3538944,
+        3538944,
+        3538944
+      ],
+      "memory": [
+        {
+          "VmHWM": "98508 kB",
+          "VmRSS": "98508 kB"
+        },
+        {
+          "VmHWM": "98112 kB",
+          "VmRSS": "98112 kB"
+        },
+        {
+          "VmHWM": "98188 kB",
+          "VmRSS": "98188 kB"
+        }
+      ]
+    },
+    "14c7881": {
+      "append_service": {
+        "n": 261,
+        "p50_us": 2972,
+        "p99_us": 30071,
+        "max_us": 37042,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "append_roundtrip": {
+        "n": 261,
+        "p50_us": 3140.489,
+        "p99_us": 30257.954,
+        "max_us": 37216.56,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "records_per_append_service_second": 29461.380479995652,
+      "cold_search_plus_get": {
+        "n": 3,
+        "p50_us": 483354.929,
+        "p99_us": 502387.87299999996,
+        "max_us": 502387.87299999996,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "reused_search_plus_get": {
+        "n": 42,
+        "p50_us": 63632.105500000005,
+        "p99_us": 72283.655,
+        "max_us": 72283.655,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "get_service": {
+        "n": 45,
+        "p50_us": 663,
+        "p99_us": 945,
+        "max_us": 945,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "store_apparent_bytes": [
+        3517446,
+        3517140,
+        3517394
+      ],
+      "store_allocated_bytes": [
+        3538944,
+        3538944,
+        3538944
+      ],
+      "memory": [
+        {
+          "VmHWM": "99924 kB",
+          "VmRSS": "99924 kB"
+        },
+        {
+          "VmHWM": "99776 kB",
+          "VmRSS": "99776 kB"
+        },
+        {
+          "VmHWM": "99692 kB",
+          "VmRSS": "99692 kB"
+        }
+      ]
+    }
+  }
+}
