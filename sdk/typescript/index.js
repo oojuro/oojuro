@@ -1,4 +1,4 @@
-// Experimental current-v2 wire client. No lifecycle/admin, capture, forwarding or raw-file adapter.
+// Experimental current-v2 wire client and explicit append-only hosted capture adapter.
 const encoder = new TextEncoder();
 const opaquePattern = /^[0-9a-f]{64}$/;
 const sources = new WeakMap();
@@ -1406,5 +1406,141 @@ export class OojuroClient {
     } catch (error) {
       throw safeError(error, false);
     }
+  }
+}
+
+/** Snapshot one original capture event before persistence or delivery. */
+export function captureEvent(input) {
+  try {
+    const event = ownFields(input, ["eventId", "runId", "adapter", "input"]);
+    const fields = ownFields(event.input, nativeFields);
+    utf8Length(fields.text, recordTextLimit);
+    const text = fields.text;
+    fields.text = "";
+    const meta = journalSnapshot({ ...event, input: fields }, recordMetadataLimit - 128);
+    id(meta.eventId);
+    id(meta.runId);
+    label(meta.adapter, 256);
+    nativeInput(meta.input);
+    id(meta.input.agent_id);
+    meta.input.text = text;
+    return meta;
+  } catch {
+    fail("invalid_request");
+  }
+}
+export class PreparedCapture extends PreparedCommit {
+  toJSON() { return { type: "PreparedCapture" }; }
+  [inspect]() { return "PreparedCapture {}"; }
+}
+/** Append-only hosted capture adapter in the existing SDK. It accepts no read/admin key. */
+export class OojuroCaptureClient {
+  #origin;
+  #token;
+  #fetch;
+  constructor(configuration) {
+    try {
+      const { baseUrl, token, fetch: transport = globalThis.fetch } = configuration;
+      const url = new URL(baseUrl);
+      const local = url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+      if ((!local && url.protocol !== "https:") || url.username || url.password ||
+          url.search || url.hash || url.pathname !== "/" || typeof transport !== "function" ||
+          typeof token !== "string" || !/^ojc_[0-9a-f]{64}_[A-Za-z0-9_-]{43}$/.test(token) ||
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_".indexOf(token.at(-1)) % 4 !== 0) fail();
+      this.#origin = url.origin;
+      this.#token = token;
+      this.#fetch = transport;
+    } catch { fail("invalid_configuration"); }
+  }
+  get origin() { return this.#origin; }
+  toJSON() { return { type: "OojuroCaptureClient" }; }
+  [inspect]() { return "OojuroCaptureClient {}"; }
+  async #request(body, signal) {
+    abort(signal);
+    const response = await this.#fetch(this.#origin + "/api/capture" + (body ? "/events" : ""), {
+      method: body ? "POST" : "GET",
+      headers: { authorization: `Bearer ${this.#token}`,
+        ...(body ? { "content-type": "application/vnd.oojuro.capture.v1",
+          "content-length": String(body.byteLength), "content-encoding": "identity" } : {}) },
+      ...(body ? { body } : {}), signal, redirect: "error", cache: "no-store",
+      credentials: "omit", referrerPolicy: "no-referrer",
+    });
+    if (response.status !== 200) {
+      await cancel(response.body);
+      if (!Number.isInteger(response.status) || response.status < 100 || response.status > 599) fail();
+      throw new OojuroError("http", { status: response.status });
+    }
+    contentType(response, "application/json");
+    return frameMetadata(new TextDecoder("utf-8", { fatal: true }).decode(
+      await bytes(response, recordMetadataLimit, signal, true)));
+  }
+  async discover({ signal } = {}) {
+    try {
+      const value = await this.#request(undefined, signal);
+      keys(value, ["format", "journal", "agent_id", "key_id", "producer_id", "label", "expires_us", "limits"]);
+      integer(value, "format", 1, 1);
+      for (const name of ["journal", "agent_id", "key_id", "producer_id"]) id(value[name]);
+      label(value.label, 128);
+      integer(value, "expires_us", 1);
+      keys(value.limits, ["events", "metadata_bytes", "text_bytes"]);
+      integer(value.limits, "events", 100, 100);
+      integer(value.limits, "metadata_bytes", recordMetadataLimit, recordMetadataLimit);
+      integer(value.limits, "text_bytes", recordTextLimit, recordTextLimit);
+      return value;
+    } catch (error) { throw safeError(error, false); }
+  }
+  prepareBatch(input) {
+    try {
+      const original = ownFields(input, ["requestId", "events"]);
+      if (typeof original.requestId !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(original.requestId) ||
+          !Array.isArray(original.events) || original.events.length < 1 || original.events.length > 100) fail();
+      const events = [];
+      const texts = [];
+      const ids = [];
+      let total = 0;
+      for (let index = 0; index < original.events.length; index++) {
+        const descriptor = Object.getOwnPropertyDescriptor(original.events, String(index));
+        if (!descriptor || !Object.hasOwn(descriptor, "value")) fail();
+        const event = captureEvent(descriptor.value);
+        if (ids.includes(event.eventId)) fail();
+        ids.push(event.eventId);
+        const length = utf8Length(event.input.text, recordTextLimit - total);
+        total += length;
+        texts.push(event.input.text);
+        event.input.text = "";
+        events.push({ event_id: event.eventId, run_id: event.runId, adapter: event.adapter,
+          input: event.input, text_length: length });
+      }
+      const metadata = journalSnapshot({ format: 1, request_id: original.requestId, events }, recordMetadataLimit);
+      const meta = encoder.encode(encode(metadata));
+      const wire = new Uint8Array(4 + meta.length + total);
+      new DataView(wire.buffer).setUint32(0, meta.length, false);
+      wire.set(meta, 4);
+      let at = 4 + meta.length;
+      for (const text of texts) {
+        const length = utf8Length(text, recordTextLimit);
+        const written = encoder.encodeInto(text, wire.subarray(at, at + length));
+        if (written.read !== text.length || written.written !== length) fail();
+        at += length;
+      }
+      return new PreparedCapture(async (signal) => {
+        try {
+          const receipt = await this.#request(wire.slice(), signal);
+          keys(receipt, ["request_id", "generation", "recorded_bytes", "records"]);
+          if (receipt.request_id !== original.requestId || !Array.isArray(receipt.records) || receipt.records.length !== ids.length) fail();
+          integer(receipt, "generation", 1);
+          integer(receipt, "recorded_bytes", 0, total);
+          const records = new Set();
+          receipt.records.forEach((row, i) => {
+            keys(row, ["event_id", "record_id", "replayed"]);
+            if (row.event_id !== ids[i] || typeof row.replayed !== "boolean") fail();
+            id(row.record_id);
+            if (records.has(row.record_id)) fail();
+            records.add(row.record_id);
+          });
+          return receipt;
+        } catch (error) { throw safeError(error, true); }
+      });
+    } catch { fail("invalid_request"); }
   }
 }

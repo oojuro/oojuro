@@ -20,6 +20,10 @@
     "./file-deletion": {
       "types": "./file-deletion.d.ts",
       "import": "./file-deletion.js"
+    },
+    "./capture": {
+      "types": "./capture.d.ts",
+      "import": "./capture.js"
     }
   },
   "scripts": {

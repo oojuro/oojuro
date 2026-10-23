@@ -346,3 +346,39 @@ export class OojuroClient {
     options?: ReadOptions,
   ): Promise<{ generation: WireInteger; records: TraceRecord[] }>;
 }
+
+/** Immutable event/run IDs and all original input must survive retries and repacking. */
+export interface CaptureEvent {
+  eventId: OpaqueId;
+  runId: OpaqueId;
+  adapter: string;
+  input: JournalInput;
+}
+export interface CaptureDiscovery {
+  format: 1;
+  journal: OpaqueId;
+  agent_id: OpaqueId;
+  key_id: OpaqueId;
+  producer_id: OpaqueId;
+  label: string;
+  expires_us: WireInteger;
+  limits: { events: number; metadata_bytes: number; text_bytes: number };
+}
+export interface CaptureReceipt {
+  request_id: string;
+  generation: WireInteger;
+  recorded_bytes: WireInteger;
+  records: { event_id: OpaqueId; record_id: OpaqueId; replayed: boolean }[];
+}
+export function captureEvent(input: CaptureEvent): CaptureEvent;
+export class PreparedCapture {
+  private constructor();
+  /** Transport/invalid/truncated acknowledgments remain unknown. Retry this same prepared body. */
+  send(options?: { signal?: AbortSignal }): Promise<CaptureReceipt>;
+}
+export class OojuroCaptureClient {
+  constructor(options: { baseUrl: string; token: string; fetch?: typeof globalThis.fetch });
+  readonly origin: string;
+  discover(options?: { signal?: AbortSignal }): Promise<CaptureDiscovery>;
+  prepareBatch(input: { requestId: string; events: readonly CaptureEvent[] }): PreparedCapture;
+}
