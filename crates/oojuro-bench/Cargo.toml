@@ -9,7 +9,7 @@ description = "Shared benchmark harness: engine arms, BEIR, turn-loop replay, me
 [features]
 default = ["tantivy-arm", "sqlite-arm"]
 tantivy-arm = ["dep:tantivy"]
-sqlite-arm = ["dep:rusqlite"]
+sqlite-arm = ["dep:rusqlite", "dep:zstd"]
 
 [dependencies]
 oojuro-core.workspace = true
@@ -19,3 +19,4 @@ serde_json.workspace = true
 blake3.workspace = true
 tantivy = { version = "=0.27.0", default-features = false, features = ["mmap", "lz4-compression", "stemmer"], optional = true }
 rusqlite = { version = "0.40.2", features = ["bundled"], optional = true }
+zstd = { version = "0.13", default-features = false, optional = true }

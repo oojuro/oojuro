@@ -8,13 +8,15 @@ pub mod nine_maxdf;
 pub mod nine_v3;
 #[cfg(feature = "sqlite-arm")]
 pub mod sqlite;
+#[cfg(feature = "sqlite-arm")]
+pub mod jsonl;
 #[cfg(feature = "tantivy-arm")]
 pub mod tantivy;
 
 /// Commit of the source tree this binary was built from (see build.rs).
 pub const COMMIT: &str = env!("OOJURO_BENCH_COMMIT");
 
-pub const BUILTIN: &[&str] = &["nine", "nine-v3", "tantivy", "sqlite"];
+pub const BUILTIN: &[&str] = &["nine", "nine-v3", "tantivy", "sqlite", "jsonl", "jsonl-zstd"];
 
 pub fn builtin(name: &str) -> Result<Box<dyn Arm>> {
     match name {
@@ -28,6 +30,10 @@ pub fn builtin(name: &str) -> Result<Box<dyn Arm>> {
         "tantivy" => Ok(Box::new(tantivy::TantivyArm::default())),
         #[cfg(feature = "sqlite-arm")]
         "sqlite" | "sqlite-fts5" => Ok(Box::new(sqlite::SqliteArm::default())),
+        #[cfg(feature = "sqlite-arm")]
+        "jsonl" => Ok(Box::new(jsonl::JsonlArm::new(false))),
+        #[cfg(feature = "sqlite-arm")]
+        "jsonl-zstd" => Ok(Box::new(jsonl::JsonlArm::new(true))),
         _ => Err(format!("unknown built-in arm {name:?}; known: {BUILTIN:?}, nine-maxdf:<frac> or cmd:<argv>").into()),
     }
 }

@@ -4642,6 +4642,7 @@ dependencies = [
  "serde",
  "serde_json",
  "tantivy",
+ "zstd 0.13.3",
 ]
 
 [[package]]

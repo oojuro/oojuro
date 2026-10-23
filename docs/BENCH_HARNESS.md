@@ -30,7 +30,7 @@ $B memqa --set longmemeval --split dev
 $B report bench-results/*.json --baseline nine > report.md
 ```
 
-Defaults: arms `nine tantivy sqlite`, `--runs 3`, every run in a fresh child
+Defaults: arms `nine nine-v3 tantivy sqlite jsonl jsonl-zstd`, `--runs 3`, every run in a fresh child
 process inside a `systemd-run --user --scope` with `MemoryMax=3G` and
 `MemorySwapMax=0`, stores under `$TMPDIR/oojuro-bench/` (on disk, never /tmp),
 scorecard in `bench-results/<suite>-<dataset>-<split>-<utc>.json`.
@@ -44,6 +44,50 @@ Flags: `--arm [label=]spec` (repeat), `--runs N`, `--out FILE`, `--work DIR`,
 `--data DIR` (default `$OOJURO_DATA`, else `~/.cache/oojuro-data`), `--mem-max 3G`,
 `--in-process` (no isolation, no cgroup memory; quick iteration),
 `--keep` (keep stores), `--no-lock`.
+
+## Indexed JSONL and JSONL + Zstd baselines
+
+The `jsonl` and `jsonl-zstd` arms are built by `sqlite-arm`. Both retain the exact
+same serialized `Doc` records as JSON lines, one immutable file per appended
+batch. `jsonl-zstd` compresses the batch with Zstd level 3 (no dictionary or
+cross-batch deduplication); the arm's hello records the actual codec version.
+SQLite holds IDs, two-clock/revision metadata, frame offsets and a **contentless**
+FTS5 index. Original text and attributes are in the payload frame, with no second
+plain-text copy in the database. Search uses the same Porter/unicode61 tokens,
+OR query, BM25 ordering and SQL latest-visible-revision filter as the `sqlite`
+arm. It therefore performs indexed search rather than silently omitting that
+work from a compression-only baseline. Ranking still differs from Nine.
+
+A batch is acknowledged only after its payload file and payload directory have
+been fsynced, followed by the index transaction's WAL `synchronous=FULL` commit.
+After interruption, uncommitted payload frames are harmless orphans. They remain
+on disk and **count** in the complete footprint; no automatic reclamation hides
+them. Reopen retains the original codec and refuses a mismatched arm. Reads
+verify the selected frame's BLAKE3 checksum, decode it once per get/range call,
+and return byte-exact original text and attributes. There is no persistent
+decoded-payload cache. Frame size follows the actual suite batch, so record that
+batch configuration when reporting results.
+
+The ordinary footprint recursively counts **all** payload files, SQLite index,
+WAL/SHM, metadata and orphan frames, with both apparent and allocated bytes.
+`stats` additionally separates payload bytes and referenced/orphan frame counts.
+These are local, single-host baselines with no encryption, replication or backup;
+they do not match the hosted AWS failure domain or full cost. This harness has no
+delete/purge contract; deletion/retention comparisons need their separate gates.
+
+```sh
+cargo build --locked -p oojuro-bench --no-default-features --features sqlite-arm
+B=target/debug/oojuro-bench
+timeout --kill-after=5s 180 "$B" gates --arm jsonl --arm jsonl-zstd --arm sqlite --runs 1
+# Timed suites use a release binary, the shared lock and identical frozen input.
+# Pass the required arms explicitly when the binary omits other default features.
+```
+
+Run these gates before recording quality, speed or storage claims: exact text
+before/after reopen, nine two-clock cases, immediate search freshness,
+determinism, and three SIGKILL interruptions with acknowledged-write recovery.
+The extra arm unit check covers attributes, codec mismatch, duplicate/atomic
+index refusal, orphan accounting and payload corruption.
 
 ## Plugging in an engine
 
