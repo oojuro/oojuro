@@ -1,0 +1,575 @@
+{
+  "schema": "oojuro-scorecard-v1",
+  "created_at": "2026-10-23T12:39:07Z",
+  "harness": {
+    "args": [
+      "/var/lib/oojuro-bench/campaign/bin/oojuro-bench",
+      "turnloop",
+      "--set",
+      "swe-agent",
+      "--split",
+      "dev",
+      "--trajectories",
+      "10",
+      "--background",
+      "20000",
+      "--k",
+      "20",
+      "--batch",
+      "1000",
+      "--runs",
+      "3",
+      "--mem-max",
+      "3G",
+      "--keep",
+      "--data",
+      "/var/lib/oojuro-bench/campaign/data",
+      "--work",
+      "/var/lib/oojuro-bench/campaign/stores/swe-dev-bg20000-nine",
+      "--out",
+      "/var/lib/oojuro-bench/campaign/results/swe-dev-bg20000-nine.json",
+      "--arm",
+      "nine"
+    ],
+    "binary": "/var/lib/oojuro-bench/campaign/bin/oojuro-bench",
+    "commit": "27a1fb80231f"
+  },
+  "hardware": {
+    "build_profile": "release",
+    "cpu": "AMD EPYC 9R14",
+    "kernel": "7.0.0-1014-aws",
+    "load_avg": "1.00 1.00 0.82 1/211 6382",
+    "logical_cpus": 2,
+    "mem_total": "7917808 kB",
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "swap_total": "0 kB",
+    "work_filesystem": {
+      "device": "/dev/root",
+      "fstype": "ext4",
+      "mount": "/"
+    }
+  },
+  "suite": "turnloop",
+  "dataset": "swe-agent",
+  "split": "dev",
+  "settings": {
+    "arm_config": {},
+    "background_target_records": 20000,
+    "bench_lock": "held for the whole run",
+    "build_time_included": "prefill reported as prefill_s; per-turn overhead = turn search + turn append",
+    "cache": "warm: one process per run; prefill, then measured replay",
+    "isolation": "child process per run in a systemd --user scope, MemoryMax=3G, MemorySwapMax=0",
+    "k": 20,
+    "labelled_steps": 52,
+    "pool": 20,
+    "returned_content": "search_get includes search, top-k source exclusion and original get for every returned hit; all originals checked byte-exact; native projection also computes excerpts",
+    "runs": 3,
+    "self_exclusion": "the turn input's own record is dropped from results before scoring; requested k+1",
+    "steps": 201,
+    "thinking": "index",
+    "trajectories": 10
+  },
+  "arms": [
+    {
+      "label": "nine",
+      "spec": "nine",
+      "info": {
+        "name": "nine",
+        "version": "dirichlet-scope-128-v1:scope-scaled-raw-frequency-v1:english-snowball-1.2.0-v1",
+        "commit": "27a1fb80231f",
+        "durability": "v4: one journal write + sync_data per append_batch (group commit); query receipts buffered (synced on close)",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "search_refs(from=i64::MIN); max_context_bytes unbounded; in-engine query cache on"
+        ]
+      },
+      "gates": {
+        "byte_exact": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "checked": 4623,
+              "mismatched": 0
+            },
+            "runs": 3
+          }
+        },
+        "determinism": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "identical_rankings": 201,
+              "steps": 201
+            },
+            "runs": 2
+          }
+        },
+        "freshness": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "readable": 201,
+              "rule": "the previous turn's result (this turn's input) reads back exactly at the next turn; search visibility is the freshness_self_hit@21 metric",
+              "search_self_hits": 201,
+              "turns_with_source": 201
+            },
+            "runs": 3
+          }
+        },
+        "no_future_leak": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "leaked_hits": 0,
+              "unknown_ids": 0
+            },
+            "runs": 3
+          }
+        }
+      },
+      "quality": {
+        "freshness_self_hit@21": {
+          "median": 1.0,
+          "min": 1.0,
+          "max": 1.0,
+          "n": 3,
+          "runs": [
+            1.0,
+            1.0,
+            1.0
+          ]
+        },
+        "hit@20": {
+          "median": 0.6923076923076923,
+          "min": 0.6923076923076923,
+          "max": 0.6923076923076923,
+          "n": 3,
+          "runs": [
+            0.6923076923076923,
+            0.6923076923076923,
+            0.6923076923076923
+          ]
+        },
+        "mrr@10": {
+          "median": 0.34809981684981683,
+          "min": 0.34809981684981683,
+          "max": 0.34809981684981683,
+          "n": 3,
+          "runs": [
+            0.34809981684981683,
+            0.34809981684981683,
+            0.34809981684981683
+          ]
+        },
+        "ndcg@10": {
+          "median": 0.3533611470039944,
+          "min": 0.3533611470039944,
+          "max": 0.3533611470039944,
+          "n": 3,
+          "runs": [
+            0.3533611470039944,
+            0.3533611470039944,
+            0.3533611470039944
+          ]
+        },
+        "ndcg@20": {
+          "median": 0.3681546610306343,
+          "min": 0.3681546610306343,
+          "max": 0.3681546610306343,
+          "n": 3,
+          "runs": [
+            0.3681546610306343,
+            0.3681546610306343,
+            0.3681546610306343
+          ]
+        },
+        "recall@20": {
+          "median": 0.5932692307692308,
+          "min": 0.5932692307692308,
+          "max": 0.5932692307692308,
+          "n": 3,
+          "runs": [
+            0.5932692307692308,
+            0.5932692307692308,
+            0.5932692307692308
+          ]
+        }
+      },
+      "storage": {
+        "disk_alloc_bytes": {
+          "median": 16322560.0,
+          "min": 16322560.0,
+          "max": 16322560.0,
+          "n": 3,
+          "runs": [
+            16322560.0,
+            16322560.0,
+            16322560.0
+          ]
+        },
+        "disk_bytes": {
+          "median": 16310557.0,
+          "min": 16310557.0,
+          "max": 16310557.0,
+          "n": 3,
+          "runs": [
+            16310557.0,
+            16310557.0,
+            16310557.0
+          ]
+        },
+        "disk_ratio": {
+          "median": 1.108490084857421,
+          "min": 1.108490084857421,
+          "max": 1.108490084857421,
+          "n": 3,
+          "runs": [
+            1.108490084857421,
+            1.108490084857421,
+            1.108490084857421
+          ]
+        },
+        "raw_text_bytes": {
+          "median": 14714211.0,
+          "min": 14714211.0,
+          "max": 14714211.0,
+          "n": 3,
+          "runs": [
+            14714211.0,
+            14714211.0,
+            14714211.0
+          ]
+        }
+      },
+      "memory": {
+        "peak_cgroup_bytes": {
+          "median": 85630976.0,
+          "min": 85590016.0,
+          "max": 85884928.0,
+          "n": 3,
+          "runs": [
+            85884928.0,
+            85590016.0,
+            85630976.0
+          ]
+        },
+        "peak_cgroup_ratio": {
+          "median": 5.819610443264678,
+          "min": 5.816826739809563,
+          "max": 5.836869404686395,
+          "n": 3,
+          "runs": [
+            5.836869404686395,
+            5.816826739809563,
+            5.819610443264678
+          ]
+        },
+        "peak_rss_bytes": {
+          "median": 74899456.0,
+          "min": 74772480.0,
+          "max": 75145216.0,
+          "n": 3,
+          "runs": [
+            75145216.0,
+            74899456.0,
+            74772480.0
+          ]
+        },
+        "peak_rss_ratio": {
+          "median": 5.09028013802439,
+          "min": 5.081650657313531,
+          "max": 5.106982358755084,
+          "n": 3,
+          "runs": [
+            5.106982358755084,
+            5.09028013802439,
+            5.081650657313531
+          ]
+        },
+        "steady_anon_bytes": {
+          "median": 65552384.0,
+          "min": 65519616.0,
+          "max": 65601536.0,
+          "n": 3,
+          "runs": [
+            65519616.0,
+            65601536.0,
+            65552384.0
+          ]
+        },
+        "steady_anon_ratio": {
+          "median": 4.45503900956701,
+          "min": 4.452812046802917,
+          "max": 4.458379453713149,
+          "n": 3,
+          "runs": [
+            4.452812046802917,
+            4.458379453713149,
+            4.45503900956701
+          ]
+        },
+        "steady_cgroup_bytes": {
+          "median": 82292736.0,
+          "min": 82288640.0,
+          "max": 82292736.0,
+          "n": 3,
+          "runs": [
+            82288640.0,
+            82292736.0,
+            82292736.0
+          ]
+        },
+        "steady_cgroup_ratio": {
+          "median": 5.592738611672757,
+          "min": 5.592460241327244,
+          "max": 5.592738611672757,
+          "n": 3,
+          "runs": [
+            5.592460241327244,
+            5.592738611672757,
+            5.592738611672757
+          ]
+        },
+        "steady_rss_bytes": {
+          "median": 71413760.0,
+          "min": 71380992.0,
+          "max": 71462912.0,
+          "n": 3,
+          "runs": [
+            71380992.0,
+            71413760.0,
+            71462912.0
+          ]
+        },
+        "steady_rss_ratio": {
+          "median": 4.853386973994052,
+          "min": 4.85116001122996,
+          "max": 4.856727418140191,
+          "n": 3,
+          "runs": [
+            4.85116001122996,
+            4.853386973994052,
+            4.856727418140191
+          ]
+        }
+      },
+      "speed": {
+        "append_p50_us": {
+          "median": 3045.0,
+          "min": 3020.0,
+          "max": 3098.0,
+          "n": 3,
+          "runs": [
+            3020.0,
+            3098.0,
+            3045.0
+          ]
+        },
+        "append_p99_us": {
+          "median": 3841.0,
+          "min": 3623.0,
+          "max": 3870.0,
+          "n": 3,
+          "runs": [
+            3623.0,
+            3870.0,
+            3841.0
+          ]
+        },
+        "append_roundtrip_p50_us": {
+          "median": 3065.0,
+          "min": 3038.0,
+          "max": 3119.0,
+          "n": 3,
+          "runs": [
+            3038.0,
+            3119.0,
+            3065.0
+          ]
+        },
+        "append_roundtrip_p99_us": {
+          "median": 3882.0,
+          "min": 3662.0,
+          "max": 3898.0,
+          "n": 3,
+          "runs": [
+            3662.0,
+            3898.0,
+            3882.0
+          ]
+        },
+        "prefill_records": {
+          "median": 20000.0,
+          "min": 20000.0,
+          "max": 20000.0,
+          "n": 3,
+          "runs": [
+            20000.0,
+            20000.0,
+            20000.0
+          ]
+        },
+        "prefill_records_per_s": {
+          "median": 17989.736515311994,
+          "min": 17815.5641617914,
+          "max": 17997.08073312786,
+          "n": 3,
+          "runs": [
+            17989.736515311994,
+            17997.08073312786,
+            17815.5641617914
+          ]
+        },
+        "prefill_s": {
+          "median": 1.111745021,
+          "min": 1.111291342,
+          "max": 1.1226139019999999,
+          "n": 3,
+          "runs": [
+            1.111745021,
+            1.111291342,
+            1.1226139019999999
+          ]
+        },
+        "returned_original_bytes": {
+          "median": 4944282.0,
+          "min": 4944282.0,
+          "max": 4944282.0,
+          "n": 3,
+          "runs": [
+            4944282.0,
+            4944282.0,
+            4944282.0
+          ]
+        },
+        "search_get_p50_us": {
+          "median": 1768.747,
+          "min": 1750.356,
+          "max": 1817.496,
+          "n": 3,
+          "runs": [
+            1750.356,
+            1768.747,
+            1817.496
+          ]
+        },
+        "search_get_p99_us": {
+          "median": 6959.947999999999,
+          "min": 6861.0779999999995,
+          "max": 7149.437,
+          "n": 3,
+          "runs": [
+            6861.0779999999995,
+            6959.947999999999,
+            7149.437
+          ]
+        },
+        "search_p50_us": {
+          "median": 1680.0,
+          "min": 1649.0,
+          "max": 1708.0,
+          "n": 3,
+          "runs": [
+            1649.0,
+            1680.0,
+            1708.0
+          ]
+        },
+        "search_p99_us": {
+          "median": 6802.0,
+          "min": 6699.0,
+          "max": 6940.0,
+          "n": 3,
+          "runs": [
+            6699.0,
+            6802.0,
+            6940.0
+          ]
+        },
+        "search_roundtrip_p50_us": {
+          "median": 1704.0,
+          "min": 1679.0,
+          "max": 1734.0,
+          "n": 3,
+          "runs": [
+            1679.0,
+            1704.0,
+            1734.0
+          ]
+        },
+        "search_roundtrip_p99_us": {
+          "median": 6845.0,
+          "min": 6740.0,
+          "max": 6991.0,
+          "n": 3,
+          "runs": [
+            6740.0,
+            6845.0,
+            6991.0
+          ]
+        },
+        "store_records_end": {
+          "median": 20623.0,
+          "min": 20623.0,
+          "max": 20623.0,
+          "n": 3,
+          "runs": [
+            20623.0,
+            20623.0,
+            20623.0
+          ]
+        },
+        "turn_content_overhead_p50_us": {
+          "median": 4838.308,
+          "min": 4781.397,
+          "max": 4880.107,
+          "n": 3,
+          "runs": [
+            4781.397,
+            4880.107,
+            4838.308
+          ]
+        },
+        "turn_content_overhead_p99_us": {
+          "median": 10836.068,
+          "min": 10430.908,
+          "max": 11022.886999999999,
+          "n": 3,
+          "runs": [
+            10430.908,
+            10836.068,
+            11022.886999999999
+          ]
+        },
+        "turn_overhead_p50_us": {
+          "median": 4736.0,
+          "min": 4686.0,
+          "max": 4774.0,
+          "n": 3,
+          "runs": [
+            4686.0,
+            4774.0,
+            4736.0
+          ]
+        },
+        "turn_overhead_p99_us": {
+          "median": 10668.0,
+          "min": 10286.0,
+          "max": 10830.0,
+          "n": 3,
+          "runs": [
+            10286.0,
+            10668.0,
+            10830.0
+          ]
+        }
+      },
+      "breakdown": {},
+      "error": null
+    }
+  ],
+  "references": [],
+  "notes": [
+    "Quality is averaged over labelled steps only; every step is timed."
+  ]
+}

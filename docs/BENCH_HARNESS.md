@@ -83,6 +83,47 @@ tokenization still differ across native/Nine and FTS5/Tantivy; quality metrics
 and the exact returned-byte workload accompany speed. A result with a failed gate
 or arm error cannot support a performance claim.
 
+## AWS development comparison, 23 October 2026
+
+Frozen source `27a1fb80231f38d5175ad75a99b6bed7880da4d6`, six arms and three
+fresh processes/stores per workload ran on a dedicated 2-vCPU `m7a.large`, with
+3 GiB cgroup memory and no swap. The native engine/projection source matches
+the hosted `a4b2f9d` pin. This is a local API comparison on AWS, not hosted
+HTTP/S3/KMS performance, heldout evaluation or a pricing/SOTA acceptance.
+
+| Development workload | Native store MiB | Indexed JSONL+Zstd store MiB | Native search+originals p50 ms | JSONL+Zstd p50 ms |
+| --- | ---: | ---: | ---: | ---: |
+| SWE-agent, 1k background + 10 trajectories | 0.489 | 1.224 | 61.018 | 9.050 |
+| SWE-agent, 4k background + 10 trajectories | 0.788 | 3.075 | 188.389 | 22.445 |
+| SWE-agent, 20k background + 10 trajectories | 2.608 | 12.354 | 1015.470 | 102.725 |
+| ArguAna, 8,674 documents, frozen dev queries | 3.055 | 9.734 | 785.199 | 110.821 |
+
+Values are medians across three runs. Complete file footprints include payloads
+and indexes; allocated sizes are retained separately. The indexed compressed
+baseline uses **2.50–4.74× native's file space**, while native's search plus
+original retrieval p50 is **6.74–9.89× slower**. It also returns different rankings:
+ArguAna nDCG@10 is 0.5367 native versus 0.4368 JSONL+Zstd. SWE-agent labels are
+lexically generated, not independent relevance judgments. The archived raw-text
+denominator excludes synthetic canary text; complete store sizes include it.
+
+All six arms and all 24 performance scorecards, including failures, are retained
+in [the evidence directory](benchmarks/native-aws-2026-10-23/campaign.json).
+The 20k-background Tantivy card fails repeated-ranking determinism and is excluded
+from performance claims; byte preservation and visibility still pass. Nine's
+retained-index arm reaches 1.769 ms p50 there, with a 15.555 MiB store and matching
+native nDCG@10. It is a separate API/storage implementation; it does not establish
+hosted native performance. Snapshot materialization and projection rebuild are
+explicit next profiling targets.
+
+Independent qualification verified 5,973 archived store files, 144 per-run
+apparent/allocated footprint values, all 72 off-host store reopens with every
+original field, and 24 ArguAna metrics against pytrec_eval. Fresh-process reopen
+checks integrity, not cold OS-cache latency. A real Scheduler stop attributed in
+CloudTrail preceded workloads. The exact private result archive was downloaded
+and SHA-256 verified before the instance, disk, stack, roles and schedule were
+deleted. Existing product/key/trial instances remained running. Full provenance,
+input hashes, gates, measurements and cleanup evidence are in the directory.
+
 ## Indexed JSONL and JSONL + Zstd baselines
 
 The `jsonl` and `jsonl-zstd` arms are built by `sqlite-arm`. Both retain the exact
