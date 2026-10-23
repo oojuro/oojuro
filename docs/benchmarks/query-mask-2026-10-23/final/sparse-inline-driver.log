@@ -1,0 +1,6 @@
+baseline 0 [('literal_miss', 280), ('first_direct', 331), ('current_first_direct', 331)]
+inline 0 [('literal_miss', 260), ('first_direct', 320), ('current_first_direct', 321)]
+inline 1 [('literal_miss', 261), ('first_direct', 320), ('current_first_direct', 330)]
+baseline 1 [('literal_miss', 261), ('first_direct', 350), ('current_first_direct', 340)]
+baseline 2 [('literal_miss', 261), ('first_direct', 341), ('current_first_direct', 340)]
+inline 2 [('literal_miss', 260), ('first_direct', 310), ('current_first_direct', 320)]

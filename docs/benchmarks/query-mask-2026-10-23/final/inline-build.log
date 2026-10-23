@@ -1,0 +1,53 @@
+   Compiling oojuro-bench v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-query-candidate-mask/crates/oojuro-bench)
+   Compiling oojuro-engine v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-query-candidate-mask/crates/oojuro-engine)
+warning: associated function `of` is never used
+   --> crates/oojuro-nine/src/segment.rs:135:12
+    |
+126 | impl Span {
+    | --------- associated function in this implementation
+...
+135 |     pub fn of(meta: &[RowMeta]) -> Self {
+    |            ^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `terms` and `total_length` are never read
+   --> crates/oojuro-nine/src/segment.rs:277:9
+    |
+273 | pub(crate) struct DiskSegment {
+    |                   ----------- fields in this struct
+...
+277 |     pub terms: u64,
+    |         ^^^^^
+278 |     pub total_length: u64,
+    |         ^^^^^^^^^^^^
+
+warning: methods `file_bytes` and `version` are never used
+   --> crates/oojuro-nine/src/segment.rs:597:12
+    |
+467 | impl DiskSegment {
+    | ---------------- methods in this implementation
+...
+597 |     pub fn file_bytes(&self) -> u64 {
+    |            ^^^^^^^^^^
+...
+917 |     pub fn version(&self) -> u32 {
+    |            ^^^^^^^
+
+warning: method `bytes` is never used
+   --> crates/oojuro-nine/src/wal.rs:245:19
+    |
+122 | impl Journal {
+    | ------------ method in this implementation
+...
+245 |     pub(crate) fn bytes(&self) -> u64 {
+    |                   ^^^^^
+
+warning: `oojuro-nine` (lib) generated 4 warnings
+warning: linker stderr: ignoring deprecated linker optimization setting '1'
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `oojuro-bench` (example "profile_native") generated 1 warning
+warning: `oojuro-bench` (bin "oojuro-bench") generated 1 warning (1 duplicate)
+    Finished `release` profile [optimized] target(s) in 33.88s
