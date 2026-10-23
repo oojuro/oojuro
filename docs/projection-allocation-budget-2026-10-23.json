@@ -1,0 +1,50 @@
+{
+  "status": "private draft candidate; not deployed",
+  "runtime_source": "d72f879484655c758c474b43b7c38dc81b902c0d",
+  "runtime_base": "f01345f92a2570ddce7a9577b7703fddfc8eaee7",
+  "change": "Add Index::estimated_heap_bytes; storage, wire, ranking, authorization and durability behavior unchanged. No dependencies added.",
+  "accounting": {
+    "included": [
+      "String and Vec backing capacities including unused slots",
+      "source metadata, IDs, key strings, lexical carrier originals and normalized arguments",
+      "posting vectors and vocabulary string capacities",
+      "hash table capacity plus alignment/control policy charge",
+      "1024 bytes for nonempty postings BTree and256 bytes per entry structural policy charge"
+    ],
+    "excluded": [
+      "allocator headers and fragmentation",
+      "OS page cache",
+      "temporary build/search/view materialization",
+      "process/runtime/authority/key-service memory"
+    ],
+    "caution": "This is an allocation estimate for cache policy, not a hard allocator or RSS bound. std collection internals are not public."
+  },
+  "measurements": [
+    {
+      "estimate_ns_p50": 1633,
+      "estimate_ns_p95": 1653,
+      "estimate_ns_p99": 1903,
+      "estimated_heap_bytes": 326966,
+      "rows": 32,
+      "samples": 101,
+      "scope": "synthetic owned capacities plus structural charge; not RSS or hosted capacity",
+      "source_text_bytes": 9130
+    },
+    {
+      "estimate_ns_p50": 2712813,
+      "estimate_ns_p95": 3278555,
+      "estimate_ns_p99": 3551572,
+      "estimated_heap_bytes": 42314666,
+      "rows": 4096,
+      "samples": 101,
+      "scope": "synthetic owned capacities plus structural charge; not RSS or hosted capacity",
+      "source_text_bytes": 1461754
+    }
+  ],
+  "checks": [
+    "8 projection tests passed incl exact score bits, identity, UTF8 passages, refresh and metadata capacity",
+    "23 lexical tests passed;2 ignored; includes new posting/document/text spare-capacity check"
+  ],
+  "measurement_log_sha256": "96d72aec8100ab5abac66c9ccf60402cc7bdd24be2ad8661ce7d3fefcab62459",
+  "host": "shared remote workspace, x86_64 Linux, portable baseline CPU build, release profile; no AWS/hosted or SOTA claim"
+}
