@@ -29,7 +29,11 @@ jobs:
           persist-credentials: false
       - name: Install pinned Rust
         run: rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --no-self-update
+      - name: Prepare private test scratch
+        run: mkdir -p -m 700 "$RUNNER_TEMP/oojuro-tests"
       - name: Test storage and engine without comparison features
+        env:
+          TMPDIR: ${{ runner.temp }}/oojuro-tests
         run: cargo +"$RUST_TOOLCHAIN" test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro-store -p oojuro-nine
 
   runtime:
@@ -42,5 +46,9 @@ jobs:
           persist-credentials: false
       - name: Install pinned Rust
         run: rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --no-self-update
+      - name: Prepare private test scratch
+        run: mkdir -p -m 700 "$RUNNER_TEMP/oojuro-tests"
       - name: Test runtime and local protocol clients
+        env:
+          TMPDIR: ${{ runner.temp }}/oojuro-tests
         run: cargo +"$RUST_TOOLCHAIN" test --locked --no-default-features --lib --tests -p oojuro-trace -p oojuro-capture -p oojuro-proxy -p oojuro
