@@ -1,0 +1,285 @@
+{
+  "schema": "oojuro-scorecard-v1",
+  "created_at": "2026-10-23T20:06:27Z",
+  "harness": {
+    "args": [
+      "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/projection-memory-next/oojuro-bench-baseline",
+      "gates",
+      "--runs",
+      "3",
+      "--mem-max",
+      "3G",
+      "--keep",
+      "--data",
+      "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/local-efficiency-20261023a/inputs/data",
+      "--work",
+      "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/projection-memory-next/trimmed/stores/gates",
+      "--out",
+      "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/projection-memory-next/trimmed/gates.json",
+      "--arm",
+      "baseline=cmd:/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/projection-memory-next/oojuro-bench-baseline serve --arm native-record",
+      "--arm",
+      "trimmed=cmd:/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/projection-memory-next/oojuro-bench-trimmed serve --arm native-record"
+    ],
+    "binary": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/projection-memory-next/oojuro-bench-baseline",
+    "commit": "5197b8ca4dac"
+  },
+  "hardware": {
+    "build_profile": "release",
+    "cpu": "AMD Ryzen 7 8845HS w/ Radeon 780M Graphics",
+    "kernel": "7.0.0-34-generic",
+    "load_avg": "4.67 3.60 2.63 9/4814 3354776",
+    "logical_cpus": 16,
+    "mem_total": "29062768 kB",
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "swap_total": "8388604 kB",
+    "work_filesystem": {
+      "device": "/dev/nvme0n1p2",
+      "fstype": "ext4",
+      "mount": "/"
+    }
+  },
+  "suite": "gates",
+  "dataset": "synthetic",
+  "split": "all",
+  "settings": {
+    "bench_lock": "held for the whole run",
+    "cases": "byte_exact(+after reopen), get_range_order, as_of_visibility, freshness, determinism, crash_recovery (SIGKILL x3)",
+    "isolation": "child process per run in a systemd --user scope, MemoryMax=3G, MemorySwapMax=0",
+    "runs": 3
+  },
+  "arms": [
+    {
+      "label": "baseline",
+      "spec": "cmd:/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/projection-memory-next/oojuro-bench-baseline serve --arm native-record",
+      "info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "5197b8ca4dac",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "gates": {
+        "as_of_visibility": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 9,
+              "failures": []
+            },
+            "runs": 3
+          }
+        },
+        "byte_exact": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 3
+          }
+        },
+        "byte_exact_after_reopen": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 3
+          }
+        },
+        "crash_recovery": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "acked_records": 600,
+              "failures": [],
+              "inflight": [
+                {
+                  "delay_ms": 0,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 5,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 30,
+                  "inflight_present": 2000,
+                  "of": 2000
+                }
+              ],
+              "note": "inflight_present strictly between 0 and the batch size means the batch was not atomic",
+              "trials": 3
+            },
+            "runs": 3
+          }
+        },
+        "determinism": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "identical": 60,
+              "queries": 60
+            },
+            "runs": 3
+          }
+        },
+        "freshness": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "misses": 0,
+              "trials": 20
+            },
+            "runs": 3
+          }
+        },
+        "get_range_order": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "expected": 12,
+              "got": 12
+            },
+            "runs": 3
+          }
+        }
+      },
+      "quality": {},
+      "storage": {},
+      "memory": {},
+      "speed": {},
+      "breakdown": {},
+      "error": null
+    },
+    {
+      "label": "trimmed",
+      "spec": "cmd:/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/projection-memory-next/oojuro-bench-trimmed serve --arm native-record",
+      "info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "59ac5a9f6036",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "gates": {
+        "as_of_visibility": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 9,
+              "failures": []
+            },
+            "runs": 3
+          }
+        },
+        "byte_exact": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 3
+          }
+        },
+        "byte_exact_after_reopen": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 3
+          }
+        },
+        "crash_recovery": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "acked_records": 600,
+              "failures": [],
+              "inflight": [
+                {
+                  "delay_ms": 0,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 5,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 30,
+                  "inflight_present": 2000,
+                  "of": 2000
+                }
+              ],
+              "note": "inflight_present strictly between 0 and the batch size means the batch was not atomic",
+              "trials": 3
+            },
+            "runs": 3
+          }
+        },
+        "determinism": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "identical": 60,
+              "queries": 60
+            },
+            "runs": 3
+          }
+        },
+        "freshness": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "misses": 0,
+              "trials": 20
+            },
+            "runs": 3
+          }
+        },
+        "get_range_order": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "expected": 12,
+              "got": 12
+            },
+            "runs": 3
+          }
+        }
+      },
+      "quality": {},
+      "storage": {},
+      "memory": {},
+      "speed": {},
+      "breakdown": {},
+      "error": null
+    }
+  ],
+  "references": [],
+  "notes": []
+}
