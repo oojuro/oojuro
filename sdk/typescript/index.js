@@ -351,12 +351,18 @@ function label(value, max) {
   if (/\p{Cc}/u.test(value)) fail();
 }
 function journalRoot(value, project) {
-  keys(value, ["schema", "minimum_reader", "project", "namespace"]);
-  integer(value, "schema", 1, 1);
-  integer(value, "minimum_reader", 1, 1);
-  id(value.project);
-  id(value.namespace);
+  const owned = value?.schema === 2 || value?.schema === 3;
+  keys(value, ["schema", "minimum_reader", "project", "namespace", ...(owned ? ["ownership"] : [])]);
+  integer(value, "schema", 1, 3);
+  integer(value, "minimum_reader", value.schema, value.schema);
+  id(value.project); id(value.namespace);
   if (value.project !== project) fail();
+  if (owned) {
+    keys(value.ownership, ["account", "agent"]);
+    string(value.ownership.account, 128, true);
+    if (!/^[A-Za-z0-9_-]+$/.test(value.ownership.account)) fail();
+    id(value.ownership.agent);
+  }
 }
 function nativeInput(value) {
   keys(value, nativeFields);
@@ -842,6 +848,8 @@ export class OojuroClient {
       fail("invalid_configuration");
     }
   }
+  /** Public destination metadata; never the bearer token. */
+  get origin() { return new URL(this.#base).origin; }
   toJSON() {
     return { type: "OojuroClient" };
   }
@@ -1586,11 +1594,12 @@ export class OojuroProjectClient {
   }
   toJSON() { return { type: "OojuroProjectClient" }; }
   [inspect]() { return "OojuroProjectClient {}"; }
-  async #request(path, body, signal) {
+  async #request(path, body, signal, minimum) {
     abort(signal);
     const response = await this.#fetch(this.#base + path, {
       method: body === undefined ? "GET" : "POST",
       headers: { authorization: `Bearer ${this.#token}`,
+        ...(minimum === undefined ? {} : { "x-oojuro-min-generation": String(minimum) }),
         ...(body === undefined ? {} : { "content-type": "application/x-www-form-urlencoded" }) },
       ...(body === undefined ? {} : { body }),
       signal, redirect: "error", cache: "no-store", credentials: "omit", referrerPolicy: "no-referrer",
@@ -1681,6 +1690,30 @@ export class OojuroProjectClient {
       }
       return value;
     } catch (error) { throw safeError(error, true); }
+  }
+  /** One event-linked manifest or part; arbitrary Blob names are not accepted. */
+  async attachmentPart(input, { signal, minGeneration = 0 } = {}) {
+    let path, limit;
+    try {
+      const selected = journalSnapshot(input, 4096);
+      if (!object(selected) || Object.keys(selected).some(k => !["journal", "recordId", "part"].includes(k))) fail();
+      id(selected.journal); id(selected.recordId);
+      if (!Number.isSafeInteger(minGeneration) || minGeneration < 0) fail();
+      let suffix = "manifest"; limit = 512 * 1024;
+      if (selected.part !== undefined) {
+        integer(selected, "part", 0, 63);
+        suffix = `parts/${selected.part}`; limit = 256 * 1024;
+      }
+      path = `journals/${selected.journal}/records/${selected.recordId}/attachment/${suffix}`;
+    } catch { fail("invalid_request"); }
+    let response;
+    try {
+      response = await this.#request(path, undefined, signal, minGeneration);
+      contentType(response, "application/octet-stream");
+      const mark = generation(response, minGeneration);
+      const revision = response.headers.get("x-oojuro-blob-revision"); id(revision);
+      return { generation: mark, revision, bytes: await bytes(response, limit, signal, true) };
+    } catch (error) { await cancel(response?.body); throw safeError(error, false); }
   }
   async content(input, { signal } = {}) {
     let path;
