@@ -187,31 +187,31 @@ struct BoundedJson {
     limit: usize,
     full: bool,
 }
+impl std::io::Write for BoundedJson {
+    fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
+        if self
+            .size
+            .checked_add(buf.len())
+            .is_none_or(|n| n > self.limit)
+        {
+            self.full = true;
+            return Err(std::io::Error::other("serialized bound"));
+        }
+        self.size += buf.len();
+        if let Some(bytes) = &mut self.bytes {
+            bytes.extend_from_slice(buf);
+        }
+        Ok(buf.len())
+    }
+    fn flush(&mut self) -> std::io::Result<()> {
+        Ok(())
+    }
+}
 fn bounded_json<T: Serialize + ?Sized>(
     value: &T,
     limit: usize,
     collect: bool,
 ) -> Result<BoundedJson> {
-    impl std::io::Write for BoundedJson {
-        fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
-            if self
-                .size
-                .checked_add(buf.len())
-                .is_none_or(|n| n > self.limit)
-            {
-                self.full = true;
-                return Err(std::io::Error::other("serialized bound"));
-            }
-            self.size += buf.len();
-            if let Some(bytes) = &mut self.bytes {
-                bytes.extend_from_slice(buf);
-            }
-            Ok(buf.len())
-        }
-        fn flush(&mut self) -> std::io::Result<()> {
-            Ok(())
-        }
-    }
     let mut out = BoundedJson {
         bytes: collect.then(Vec::new),
         size: 0,

@@ -272,6 +272,17 @@ fn refreshed_projection_matches_fresh_build_for_growth_reorder_replacement_and_r
     let mut rows: Vec<_> = (1..1000).rev().filter(|i| i % 2 == 0).map(make).collect();
     let mut current = binding();
     let mut index = Index::build(current.clone(), rows.clone()).unwrap();
+    assert_eq!(index.row_count(), rows.len());
+    assert_eq!(
+        index.text_bytes(),
+        rows.iter().map(|r| r.text.len()).sum::<usize>()
+    );
+    assert!(
+        index
+            .rows
+            .iter()
+            .all(|r| r.text.is_empty() && r.text.capacity() == 0)
+    );
     // New IDs interleave old IDs; private posting order must not break ties.
     rows.extend((0..1000).filter(|i| i % 2 == 1 || *i == 0).map(make));
     rows.reverse();
@@ -296,6 +307,17 @@ fn refreshed_projection_matches_fresh_build_for_growth_reorder_replacement_and_r
             _ => {}
         }
         index = index.refresh(current.clone(), rows.clone()).unwrap();
+        assert_eq!(index.row_count(), rows.len());
+        assert_eq!(
+            index.text_bytes(),
+            rows.iter().map(|r| r.text.len()).sum::<usize>()
+        );
+        assert!(
+            index
+                .rows
+                .iter()
+                .all(|r| r.text.is_empty() && r.text.capacity() == 0)
+        );
         assert!(matches!(
             index.search(&previous, &query("battery", 1)),
             Err(Error::Scope)

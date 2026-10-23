@@ -48,7 +48,9 @@ pub struct Hit {
 /// every reuse and before delivering each response frame; this API cannot do so.
 pub struct Index {
     binding: Binding,
+    // Text is owned once by inner; these rows retain the other source fields.
     rows: Vec<Row>,
+    text_bytes: usize,
     ids: Vec<String>,
     inner: lexical::Index,
 }
@@ -59,7 +61,7 @@ impl Index {
     }
     /// Retained source text bytes; posting/allocation overhead is additional.
     pub fn text_bytes(&self) -> usize {
-        self.rows.iter().map(|row| row.text.len()).sum()
+        self.text_bytes
     }
     fn validate(binding: &Binding, rows: &[Row]) -> Result<()> {
         if !name(&binding.writer, 256) || rows.len() > MAX_RECORDS {
@@ -87,8 +89,9 @@ impl Index {
         }
         Ok(())
     }
-    pub fn build(binding: Binding, rows: Vec<Row>) -> Result<Self> {
+    pub fn build(binding: Binding, mut rows: Vec<Row>) -> Result<Self> {
         Self::validate(&binding, &rows)?;
+        let text_bytes = rows.iter().map(|row| row.text.len()).sum();
         let ids = rows.iter().map(|r| r.id.clone()).collect();
         // Ordinals are private posting handles, never public source identities.
         let inner = lexical::Index::from_record_rows(
@@ -99,9 +102,14 @@ impl Index {
                 .map(|(i, r)| ((i + 1) as u64, r.valid_at, r.text.as_str(), r.indexed)),
         )
         .map_err(|_| Error::Unavailable)?;
+        // Lexical carriers own the exact originals; retain metadata here once.
+        for row in &mut rows {
+            row.text = String::new();
+        }
         Ok(Self {
             binding,
             rows,
+            text_bytes,
             ids,
             inner,
         })
@@ -110,29 +118,46 @@ impl Index {
     /// snapshot again. Only byte/metadata-identical retained rows reuse postings.
     /// Replacements, deletions and filter changes rebuild; errors consume the old
     /// value. This is derived work reuse, never a current-authority substitute.
-    pub fn refresh(mut self, binding: Binding, rows: Vec<Row>) -> Result<Self> {
+    pub fn refresh(mut self, binding: Binding, mut rows: Vec<Row>) -> Result<Self> {
         if binding.namespace != self.binding.namespace || binding.writer != self.binding.writer {
             return Err(Error::Scope);
         }
         Self::validate(&binding, &rows)?;
+        let texts: Vec<_> = rows
+            .iter_mut()
+            .map(|row| std::mem::take(&mut row.text))
+            .collect();
         let unchanged = {
-            let incoming: std::collections::BTreeMap<_, _> =
-                rows.iter().map(|row| (row.id.as_str(), row)).collect();
-            self.rows
+            let incoming: std::collections::BTreeMap<_, _> = rows
                 .iter()
-                .all(|old| incoming.get(old.id.as_str()).is_some_and(|row| *row == old))
+                .enumerate()
+                .map(|(i, row)| (row.id.as_str(), (i, row)))
+                .collect();
+            self.rows.iter().enumerate().all(|(old_i, old)| {
+                incoming.get(old.id.as_str()).is_some_and(|(i, row)| {
+                    *row == old && self.inner.record_text(old_i) == Some(texts[*i].as_str())
+                })
+            })
         };
         if binding.view == self.binding.view && (!unchanged || rows.len() != self.rows.len()) {
             return Err(Error::Conflict);
         }
         if !unchanged {
             drop(self);
+            for (row, text) in rows.iter_mut().zip(texts) {
+                row.text = text;
+            }
             return Self::build(binding, rows);
         }
         let old_ids: BTreeSet<_> = self.ids.iter().map(String::as_str).collect();
-        let added: Vec<_> = rows
+        let mut added: Vec<_> = rows
             .into_iter()
-            .filter(|row| !old_ids.contains(row.id.as_str()))
+            .zip(texts)
+            .filter(|(row, _)| !old_ids.contains(row.id.as_str()))
+            .map(|(mut row, text)| {
+                row.text = text;
+                row
+            })
             .collect();
         drop(old_ids);
         let start = self.rows.len();
@@ -150,6 +175,10 @@ impl Index {
             )
             .map_err(|_| Error::Unavailable)?;
         self.ids.extend(added.iter().map(|row| row.id.clone()));
+        self.text_bytes += added.iter().map(|row| row.text.len()).sum::<usize>();
+        for row in &mut added {
+            row.text = String::new();
+        }
         self.rows.extend(added);
         self.binding = binding;
         Ok(self)
@@ -215,18 +244,15 @@ impl Index {
             .map_err(|_| Error::Unavailable)?;
         let mut output = vec![];
         for h in hits {
-            let row = self
-                .rows
-                .get(
-                    usize::try_from(h.id.checked_sub(1).ok_or(Error::Authority)?)
-                        .map_err(|_| Error::Authority)?,
-                )
-                .ok_or(Error::Authority)?;
-            let (start, end) = match passage::extract_passage(&row.text, q.text, q.excerpt_bytes)? {
+            let at = usize::try_from(h.id.checked_sub(1).ok_or(Error::Authority)?)
+                .map_err(|_| Error::Authority)?;
+            let row = self.rows.get(at).ok_or(Error::Authority)?;
+            let text = self.inner.record_text(at).ok_or(Error::Authority)?;
+            let (start, end) = match passage::extract_passage(text, q.text, q.excerpt_bytes)? {
                 Some(p) => (p.start, p.end),
                 None => {
-                    let mut end = row.text.len().min(q.excerpt_bytes);
-                    while !row.text.is_char_boundary(end) {
+                    let mut end = text.len().min(q.excerpt_bytes);
+                    while !text.is_char_boundary(end) {
                         end -= 1;
                     }
                     (0, end)
@@ -240,7 +266,7 @@ impl Index {
                 reported_recorded_at: row.reported_recorded_at,
                 start,
                 end,
-                excerpt: row.text[start..end].into(),
+                excerpt: text[start..end].into(),
             });
         }
         json_size(&output, q.max_bytes)?;

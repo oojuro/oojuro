@@ -198,6 +198,9 @@ impl Index {
     pub fn applied_batches(&self) -> usize {
         self.applied
     }
+    pub(crate) fn record_text(&self, row: usize) -> Option<&str> {
+        self.documents.get(row).map(|d| d.event.text.as_str())
+    }
     fn apply(&mut self, batch: &ParsedBatch) -> Result<()> {
         self.apply_mode(batch, true)
     }
