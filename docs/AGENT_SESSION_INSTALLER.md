@@ -1,6 +1,6 @@
 # API-key session installer (private review candidate)
 
-This implements the CLI/installer step of the session-journal contract. The paired hosted integration-session API is a separate private candidate, not a deployed capability. Do not advertise production setup as ready until the real hosted composition is qualified and approved.
+This implements the CLI/installer step of the session-journal contract. The paired hosted integration-session API is a separate private candidate. Its synthetic joined CLI/HTTP/PostgreSQL journey now passes; production activation and actual owner agent/service acceptance remain unfinished.
 
 ## One local setup
 
@@ -37,6 +37,26 @@ Existing transcript bytes are excluded when the protected spool is initialized. 
 The installer reports discovery/connection status separately from accepted transcript events. In session mode it does not publish a setup marker as evidence of real capture. `waiting for new transcript activity` means exactly that. A later capture report with accepted new transcript events is required before claiming real-history verification. The setup receipt includes `local_status_command`: `cloud capture-local-status --connection FILE --state DIR` reads atomically saved acknowledgement counters while the service holds its lock, after matching current discovery identity. It does not grant project/server-history reads. Linux user-service installation is the initial background mode; Unix CLI foreground capture remains explicit. Synthetic installer tests do not prove a real systemd/agent installation.
 
 Capture authority does not grant reads. Optional project read credentials and MCP configuration remain separate until the one-setup bundle is completed. Reading prior sessions uses current project authority and attached journals. This step does not change file/attachment privileges, enable original-history import, publish a package, or deploy a hosted API.
+
+### Synthetic joined acceptance
+
+The unchanged frozen runtime `f6429cae9b6d4c594c39bd634ac210706aeb38b6`
+(binary SHA256 `0e093079e4a7b8f9194a48ba857bffc0f60ff7a1d26604dec2d6c51cfa17b142`)
+passes the actual hosted HTTP/native session/PostgreSQL journey in the paired
+[o-cloud draft74](https://github.com/oojuro/o-cloud/pull/74), runtime
+`d61cdc99919550c4c33e20c295b2ad2cef8fb0be`. The 14-test PostgreSQL/TLS/HTTP suite
+includes one actual frozen CLI journey: old bytes excluded, two new synthetic
+provider sessions create two journals, three transcript events accepted, fresh
+process/spool reopen preserves the first journal, a separate project read key
+finds and opens previous context exactly, and the capture key receives404 for
+project reads. A strict acknowledgement extra-field mismatch found by this
+journey was corrected in the hosted candidate; the frozen CLI remained unchanged.
+
+This supplements the original 38 Rust and two installer subprocess tests. It
+does not qualify a real Codex/Claude installation, systemd, owner history, AWS
+activation/recovery, installed MCP client or SDK setup. Source/binary identity
+and the historical local checks are preserved in
+[the qualification report](session-installer-qualification-2026-10-23.json).
 
 ## Copy-paste agent prompt
 

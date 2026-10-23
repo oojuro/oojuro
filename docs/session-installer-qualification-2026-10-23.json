@@ -58,7 +58,6 @@
   ],
   "pr": "https://github.com/oojuro/oojuro/pull/70",
   "remaining_gates": [
-    "actual hosted PostgreSQL/native bound-session API + installed real CLI journey",
     "actual Codex/Claude/user-service installation and newly accepted transcript event",
     "project history/read/MCP one-setup bundle after installer qualification",
     "optional explicit logical-journal reuse preferences beyond existing fixed-journal clients",
@@ -76,7 +75,8 @@
     "scripts/connect-agent.py": "c8e7e970898759df81f28695bc68c953926a33f0aaa7c3c9a5321e7a3297aa58",
     "scripts/test-connect-agent.py": "4bcc2291836fe4c9e0ca0c6a3b28c45afaeea18e465ea42ce4b5e821c3ecfc71"
   },
-  "status": "private draft; local/client qualification passed; joined hosted/installed-agent qualification pending",
+  "source_sha256_note": "Preserved original local qualification snapshot at client docs commit246efd6; runtime f6429cae9b6d4c594c39bd634ac210706aeb38b6 and frozen binary unchanged. This follow-up adds existing hosted evidence without rerunning or replacing local measurements.",
+  "status": "private draft; local/client and synthetic joined hosted CLI qualification passed; actual owner agent/service acceptance and production activation pending",
   "verification": {
     "build": {
       "command": "cargo build --locked -p oojuro --bin oojuro",
@@ -88,6 +88,29 @@
       "command": "python3 scripts/test-connect-agent.py",
       "failed": 0,
       "passed": 2
+    },
+    "joined_hosted": {
+      "authority": "actual frozen CLI processes, real HTTP/native session authority, disposable PostgreSQL/TLS and synthetic provider transcripts; not an owner or systemd installation",
+      "frozen_cli": {
+        "accepted_transcript_events": 3,
+        "actual_agent_installation": false,
+        "actual_systemd": false,
+        "capture_read_denied": true,
+        "cli_sha256": "0e093079e4a7b8f9194a48ba857bffc0f60ff7a1d26604dec2d6c51cfa17b142",
+        "cli_source": "f6429cae9b6d4c594c39bd634ac210706aeb38b6",
+        "fixture": "actual-frozen-cli-http-postgresql-synthetic-source",
+        "journals": 2,
+        "old_history_excluded": true,
+        "production": false,
+        "project_read_prior_context": true,
+        "resume_reopened_same_journal": true
+      },
+      "pr": "https://github.com/oojuro/o-cloud/pull/74",
+      "qualification_artifact": "oojuro-integration-sessions-qualification.json",
+      "qualification_artifact_sha256": "2ceeed25e41063e73b0d6a08962325c75bc659ea835fb29232e523fb531c9e92",
+      "real_pg_tls_http_suite_passed": 14,
+      "repository": "oojuro/o-cloud",
+      "runtime_source_commit": "d61cdc99919550c4c33e20c295b2ad2cef8fb0be"
     },
     "rust_library": {
       "binary_target_tests": 0,
