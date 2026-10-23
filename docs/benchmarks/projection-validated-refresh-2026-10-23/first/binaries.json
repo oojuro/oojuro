@@ -1,0 +1,14 @@
+{
+  "baseline_source": "c42c10d32364d692bccc97030c447dc05ceb85b0",
+  "candidate_source": "bfd4d8bdabce1c06eec46074889d012f76cdc068",
+  "binary_sha256": {
+    "profile-native-baseline": "08751a1d797077430df44cabc0e45f354ad321f2ffcc89ba8b55e718194881b3",
+    "oojuro-bench-baseline": "a4fc53dd5f9f215d4bc3ee6e6e1765f8da95dfe5a059f42fcbc6581fb5edc0a0",
+    "profile-native-validate": "61dc486341916108f5fd92d04543bce7237361fd6f1d2f953418551fb10d0b2d",
+    "oojuro-bench-validate": "abf9e8b36c2c976a49a91b8ef5624373541bf1081e3020dafd580bfe7866f83a"
+  },
+  "runtime_files_sha256": {
+    "work/oojuro-projection-validate/crates/oojuro-engine/src/record/projection.rs": "ca13fafacd654bf2ba11dd37b58cd5a797e8219ee57453b486ab96bb99e358e0",
+    "work/oojuro-projection-validate/crates/oojuro-engine/src/record/projection_tests.rs": "38cfd010bf39b83006595f82853889cf4b079732b3baec9703bd7f04f5a4a4e0"
+  }
+}
