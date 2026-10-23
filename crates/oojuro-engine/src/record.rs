@@ -176,18 +176,18 @@ fn present_option<'de, D: serde::Deserializer<'de>, T: Deserialize<'de>>(
 
 // All caller-derived serialization is bounded before copying/allocating a batch.
 fn json<T: Serialize + ?Sized>(value: &T, limit: usize) -> Result<Vec<u8>> {
-    bounded_json(value, limit, true).map(|out| out.bytes.unwrap())
+    bounded_json(value, limit, Vec::new()).map(|out| out.writer)
 }
 fn json_size<T: Serialize + ?Sized>(value: &T, limit: usize) -> Result<usize> {
-    bounded_json(value, limit, false).map(|out| out.size)
+    bounded_json(value, limit, std::io::sink()).map(|out| out.size)
 }
-struct BoundedJson {
-    bytes: Option<Vec<u8>>,
+struct BoundedJson<W> {
+    writer: W,
     size: usize,
     limit: usize,
     full: bool,
 }
-impl std::io::Write for BoundedJson {
+impl<W: std::io::Write> std::io::Write for BoundedJson<W> {
     fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
         if self
             .size
@@ -198,22 +198,20 @@ impl std::io::Write for BoundedJson {
             return Err(std::io::Error::other("serialized bound"));
         }
         self.size += buf.len();
-        if let Some(bytes) = &mut self.bytes {
-            bytes.extend_from_slice(buf);
-        }
+        self.writer.write_all(buf)?;
         Ok(buf.len())
     }
     fn flush(&mut self) -> std::io::Result<()> {
         Ok(())
     }
 }
-fn bounded_json<T: Serialize + ?Sized>(
+fn bounded_json<T: Serialize + ?Sized, W: std::io::Write>(
     value: &T,
     limit: usize,
-    collect: bool,
-) -> Result<BoundedJson> {
+    writer: W,
+) -> Result<BoundedJson<W>> {
     let mut out = BoundedJson {
-        bytes: collect.then(Vec::new),
+        writer,
         size: 0,
         limit,
         full: false,
@@ -230,3 +228,7 @@ fn bounded_json<T: Serialize + ?Sized>(
 
 /// Explicit opt-in retained-control lifecycle namespace; no implicit v2 conversion.
 pub mod managed;
+
+#[cfg(test)]
+#[path = "record/tag_stream_tests.rs"]
+mod tag_stream_tests;

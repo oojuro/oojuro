@@ -180,12 +180,12 @@ impl RecordLog {
         }
     }
     fn tag<T: Serialize + ?Sized>(&self, domain: &str, value: &T) -> Result<[u8; 32]> {
-        let mut bytes = json(&(domain, value), MAX_BATCH_BYTES)?;
-        let hash = *blake3::keyed_hash(&self.intent.0, &bytes).as_bytes();
-        for b in &mut bytes {
-            unsafe { std::ptr::write_volatile(b, 0) }
-        }
-        Ok(hash)
+        let encoded = bounded_json(
+            &(domain, value),
+            MAX_BATCH_BYTES,
+            blake3::Hasher::new_keyed(&self.intent.0),
+        )?;
+        Ok(*encoded.writer.finalize().as_bytes())
     }
     pub fn append(&mut self, request: &str, inputs: &[Input]) -> Result<Commit> {
         self.healthy()?;
