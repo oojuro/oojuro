@@ -1,0 +1,7 @@
+
+running 1 test
+test record::tests::record_append_phase_probe ... {"all_assigned_signature":"240a5f368f71a1648ff2406765da0adb9495b55046e59d5a23a3ce2e08bd3da7","append_and_reopen_peak_rss_bytes":231927808,"append_peak_rss_bytes":231927808,"batch":1000,"case":"large","diagnostic":"record-tag-append","exact_reopen":true,"max_source_text_bytes_per_row":16384,"rounds":6,"samples":[{"prepare_us":61164.416,"replay_us":42337.633,"store_us":19591.143,"total_us":124927.833},{"prepare_us":46804.157,"replay_us":30533.728,"store_us":26665.686,"total_us":105940.421},{"prepare_us":39277.793999999994,"replay_us":31487.48,"store_us":11657.233,"total_us":84401.84700000001},{"prepare_us":46720.712,"replay_us":47691.657,"store_us":53056.612,"total_us":149405.53100000002},{"prepare_us":52483.085,"replay_us":39462.448,"store_us":11947.893,"total_us":103987.38},{"prepare_us":36526.318,"replay_us":38346.182,"store_us":6054.156,"total_us":82780.663}],"scope":"local synthetic durable append phase diagnostic; no provider or hosted claim","source_text_bytes_per_batch":16383100}
+ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 174 filtered out; finished in 1.15s
+

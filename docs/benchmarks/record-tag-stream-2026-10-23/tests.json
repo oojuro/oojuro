@@ -1,0 +1,48 @@
+{
+  "source": "dc0e9a593ee19009126a6626a94049ffca1d9359",
+  "record_tests": {
+    "passed": 101,
+    "existing_ignored": 5,
+    "profile": "debug serial"
+  },
+  "release_diagnostic": {
+    "baseline_source": "c42c10d32364d692bccc97030c447dc05ceb85b0",
+    "final_probe": "work/record-tag-stream/append-probe.rs",
+    "temporary_test_restored": true
+  },
+  "source_files_sha256": {
+    "crates/oojuro-engine/src/record.rs": "a99a9f2ad8456f0cbcfc00daa7ca9caab454c3d78fca73507498ca8edd3ec115",
+    "crates/oojuro-engine/src/record/authority.rs": "cfe13a5f47db1b4b830cf37c6dfd85593d8bff1c795d44dc509e20c79625503b",
+    "crates/oojuro-engine/src/record/tag_stream_tests.rs": "5160993a6832523efb75a896b7d76bb6547ddfcb211ef0425846a9d05694931f"
+  },
+  "measurement_status": "terminal, all18 exact reopen/signatures pass; not recommended after small/escaped latency regressions",
+  "diagnostic_design": {
+    "cases": {
+      "small": {
+        "commits": 64,
+        "records_per_commit": 8,
+        "max_text_bytes_per_record": 1024
+      },
+      "large": {
+        "commits": 6,
+        "records_per_commit": 1000,
+        "max_text_bytes_per_record": 16384
+      },
+      "escaped": {
+        "commits": 4,
+        "records_per_commit": 1,
+        "text_bytes_per_record": 4194304
+      }
+    },
+    "fixed_clock": 100,
+    "identity": "synthetic direct-record-v1",
+    "sync": true,
+    "phase_hooks": [
+      "BeforeStore",
+      "AfterStore",
+      "BeforeAck"
+    ],
+    "fresh_processes_per_arm_case": 3,
+    "source_every_input_exact_after_reopen": true
+  }
+}
