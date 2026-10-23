@@ -1,0 +1,7 @@
+   Compiling oojuro-core v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-record-buffer-lifetime/crates/oojuro-core)
+   Compiling oojuro-store v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-record-buffer-lifetime/crates/oojuro-store)
+   Compiling oojuro-nine v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-record-buffer-lifetime/crates/oojuro-nine)
+   Compiling oojuro-trace v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-record-buffer-lifetime/crates/oojuro-trace)
+   Compiling oojuro-rank v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-record-buffer-lifetime/crates/oojuro-rank)
+   Compiling oojuro-engine v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-record-buffer-lifetime/crates/oojuro-engine)
+    Finished `release` profile [optimized] target(s) in 30.31s

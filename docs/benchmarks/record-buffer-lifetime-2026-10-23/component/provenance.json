@@ -1,0 +1,42 @@
+{
+  "baseline_source": "c42c10d32364d692bccc97030c447dc05ceb85b0",
+  "candidate_source": "d204189450f4c2fc86cbdf77266aa895734b2d3f",
+  "runtime_file_sha256": "9075572fac28f17bd832aa3c25707b4926e7d6f847110d54e3c121bb6e39cd6c",
+  "scope": "Frozen first synthetic component measurement; same probe/baseline as tag experiment; no tag-stream changes. Lower reported large/escaped peakRSS, mixed latency. No full pipeline/default/hosted claim yet.",
+  "checks": {
+    "record_tests_passed": 100,
+    "record_tests_existing_ignored": 5,
+    "exact_reopen_processes": 18,
+    "cross_source_assigned_signatures": 3
+  },
+  "measurement_limit": "VmHWM is an approximate kernel RSS reading, not exact live heap or capacity. Three candidate large cases have later VmHWM readings0.07\u20130.18MB lower than earlier samples; retain raw values rather than impose monotonicity.",
+  "sha256": {
+    "binaries.json": "6db7783dfdf0974e332307aafd16d4a871d7860baff74f25cdd5d8ea1929aa4c",
+    "lifetime-build.log": "79b6ed188b60c5560db027a15af181cd6a21acc0ed9cdafed3bf968bd2b891c9",
+    "phases/escaped-baseline-0.log": "5a7a3bfdc9acdb0494038f3edd3ebfbf4c83796acf032b9478e5db865f415f2c",
+    "phases/escaped-baseline-1.log": "d9fa251f83b266d96f2b9183239675869eef4f407d69e86dbfa65d3e753b8e33",
+    "phases/escaped-baseline-2.log": "751294bb84a26c5cb483a6e349ab327da474a419a9dff04eddf96d25b48af5ad",
+    "phases/escaped-lifetime-0.log": "1b3a2a6b07574e0abc9a9d35b156a4bb06c81e02f0d98965f2c341753f70e033",
+    "phases/escaped-lifetime-1.log": "c7906462b48a6e2addd58d73d44dbe2ced1fb30b3c428f0e47a6697dcdac1d4d",
+    "phases/escaped-lifetime-2.log": "6092daabf7d7a11508c101f9c8fc3cc02d46212597cbbc5a0352c66c6cdbe9dc",
+    "phases/large-baseline-0.log": "7f64377c7f944b2023f629089b3502cac7fe4f62d9195bc2e79d25e383d84baa",
+    "phases/large-baseline-1.log": "8c9184c62f299879edf4e793c8d47927f335943cc485aa09a4dbc6a6f897540d",
+    "phases/large-baseline-2.log": "255e05f691d27c178a1d2117327b79a16d41de9da3291cc6790407800a25be5c",
+    "phases/large-lifetime-0.log": "cb71e7526183bbe75f77b6f0110dbb0e8fa658d51dcbdd74959184e0aedb117b",
+    "phases/large-lifetime-1.log": "7f5cc1d37cb2206e9ef5ac73a2781861860db469dda45903ad0e5acac41d5283",
+    "phases/large-lifetime-2.log": "420bf7f01205aebf6440a3f4a2439af32bd23de29e4c020918764a14d7993095",
+    "phases/matrix.json": "23267e371bb369157240977afd545cd516480ff00dcbb2702fdf7c6917713089",
+    "phases/partial.json": "c79bb28e237146dd98da528e66a1a5be085c984cbb18f45c3dcc8ffbf18016ee",
+    "phases/small-baseline-0.log": "226b80e6b4bb915b7cbd1f0e308702045161e02c794184f1ffbaae48e4440bd3",
+    "phases/small-baseline-1.log": "2dd043361f8c877718155eaa315af01b69b5eda464ea018df200e86bc55141f9",
+    "phases/small-baseline-2.log": "ab3934f48544e2d87531e39c7b14053a5c3538f39a4e3ad3f3ebcbde2d4242a8",
+    "phases/small-lifetime-0.log": "19e28ee420e2fee8fd51f27d24601e71ab0f5588b12367fbdb8aaf31d67833c8",
+    "phases/small-lifetime-1.log": "baa9f14ac0b94512e629811286e8d762cc28597b01ae84b00e440faa574a9c3a",
+    "phases/small-lifetime-2.log": "1aa8aec50477655873422da620a0abdfbd2f8d5621b58d4323ce98526aa4dbde",
+    "phases-driver.log": "587058aca835817e1d24e7b2f05fad81f12fdccfe363edb0ac0837e03038b309",
+    "record-tests.log": "963cae446e9a45587d830d04ce0f2c60fc78d969fb5f8140ebcd50ba53ae5877",
+    "tools/append-probe.rs": "f635e9e3d84109727f948ef2da0849170a59115f376cbeeda788eafbc5180f43",
+    "tools/run-engine.sh": "171f7bc18f1be8f2a5f0335698cf8fb492067f1ff0282f3ce481f2266045b3d9",
+    "tools/run-phases.py": "465eff429b5fccd543ac88c92645c071167886ee335ddd9ddc6e3abe1d223229"
+  }
+}

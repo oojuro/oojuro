@@ -1,0 +1,3080 @@
+[
+  {
+    "all_assigned_signature": "c01e0902bfa55a6bbb2bc2bf52bc1501d99766c950a292641c4d1f8d30fdf9d3",
+    "append_and_reopen_peak_rss_bytes": 8220672,
+    "append_peak_rss_bytes": 7327744,
+    "batch": 8,
+    "case": "small",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 1024,
+    "rounds": 64,
+    "samples": [
+      {
+        "prepare_us": 96.92999999999999,
+        "replay_us": 60.393,
+        "store_us": 1415.492,
+        "total_us": 1573.736
+      },
+      {
+        "prepare_us": 41.006,
+        "replay_us": 64.74,
+        "store_us": 1079.2969999999998,
+        "total_us": 1185.7949999999998
+      },
+      {
+        "prepare_us": 58.899,
+        "replay_us": 48.07,
+        "store_us": 1204.599,
+        "total_us": 1312.299
+      },
+      {
+        "prepare_us": 41.397,
+        "replay_us": 59.089999999999996,
+        "store_us": 1510.729,
+        "total_us": 1612.128
+      },
+      {
+        "prepare_us": 42.96,
+        "replay_us": 70.872,
+        "store_us": 1026.428,
+        "total_us": 1141.3120000000001
+      },
+      {
+        "prepare_us": 68.427,
+        "replay_us": 56.75599999999999,
+        "store_us": 988.1270000000001,
+        "total_us": 1114.231
+      },
+      {
+        "prepare_us": 41.647999999999996,
+        "replay_us": 40.004,
+        "store_us": 1112.9689999999998,
+        "total_us": 1195.162
+      },
+      {
+        "prepare_us": 39.783,
+        "replay_us": 77.985,
+        "store_us": 1110.305,
+        "total_us": 1228.984
+      },
+      {
+        "prepare_us": 58.980000000000004,
+        "replay_us": 65.812,
+        "store_us": 970.134,
+        "total_us": 1095.858
+      },
+      {
+        "prepare_us": 58.67,
+        "replay_us": 46.006,
+        "store_us": 988.9479999999999,
+        "total_us": 1094.165
+      },
+      {
+        "prepare_us": 40.145,
+        "replay_us": 68.587,
+        "store_us": 1151.551,
+        "total_us": 1261.175
+      },
+      {
+        "prepare_us": 58.859,
+        "replay_us": 49.362,
+        "store_us": 1039.0919999999999,
+        "total_us": 1147.9940000000001
+      },
+      {
+        "prepare_us": 40.716,
+        "replay_us": 57.808,
+        "store_us": 1020.1260000000001,
+        "total_us": 1119.271
+      },
+      {
+        "prepare_us": 57.427,
+        "replay_us": 67.386,
+        "store_us": 998.746,
+        "total_us": 1124.3500000000001
+      },
+      {
+        "prepare_us": 58.068,
+        "replay_us": 43.211,
+        "store_us": 1467.047,
+        "total_us": 1568.9969999999998
+      },
+      {
+        "prepare_us": 40.094,
+        "replay_us": 68.848,
+        "store_us": 1298.564,
+        "total_us": 1408.1779999999999
+      },
+      {
+        "prepare_us": 63.067,
+        "replay_us": 84.66799999999999,
+        "store_us": 1252.298,
+        "total_us": 1400.995
+      },
+      {
+        "prepare_us": 58.980000000000004,
+        "replay_us": 38.922,
+        "store_us": 1136.984,
+        "total_us": 1235.4969999999998
+      },
+      {
+        "prepare_us": 39.663000000000004,
+        "replay_us": 59.56,
+        "store_us": 1276.624,
+        "total_us": 1376.709
+      },
+      {
+        "prepare_us": 59.751,
+        "replay_us": 75.17999999999999,
+        "store_us": 1134.76,
+        "total_us": 1270.693
+      },
+      {
+        "prepare_us": 58.368,
+        "replay_us": 41.526999999999994,
+        "store_us": 1132.035,
+        "total_us": 1232.391
+      },
+      {
+        "prepare_us": 39.583,
+        "replay_us": 60.482,
+        "store_us": 1109.874,
+        "total_us": 1210.911
+      },
+      {
+        "prepare_us": 58.449000000000005,
+        "replay_us": 46.426,
+        "store_us": 1148.816,
+        "total_us": 1254.2720000000002
+      },
+      {
+        "prepare_us": 39.463,
+        "replay_us": 58.228,
+        "store_us": 1134.0790000000002,
+        "total_us": 1232.5210000000002
+      },
+      {
+        "prepare_us": 57.788000000000004,
+        "replay_us": 61.665,
+        "store_us": 1102.329,
+        "total_us": 1222.573
+      },
+      {
+        "prepare_us": 51.876999999999995,
+        "replay_us": 50.053,
+        "store_us": 1085.3880000000001,
+        "total_us": 1188.089
+      },
+      {
+        "prepare_us": 51.826,
+        "replay_us": 55.594,
+        "store_us": 1111.2559999999999,
+        "total_us": 1219.507
+      },
+      {
+        "prepare_us": 55.203,
+        "replay_us": 61.034,
+        "store_us": 1105.124,
+        "total_us": 1222.042
+      },
+      {
+        "prepare_us": 57.757000000000005,
+        "replay_us": 51.126,
+        "store_us": 1098.632,
+        "total_us": 1208.186
+      },
+      {
+        "prepare_us": 51.345,
+        "replay_us": 60.412,
+        "store_us": 1098.623,
+        "total_us": 1211.232
+      },
+      {
+        "prepare_us": 52.668,
+        "replay_us": 58.598,
+        "store_us": 1297.262,
+        "total_us": 1409.31
+      },
+      {
+        "prepare_us": 51.885999999999996,
+        "replay_us": 59.842,
+        "store_us": 1121.615,
+        "total_us": 1234.004
+      },
+      {
+        "prepare_us": 57.166000000000004,
+        "replay_us": 80.94,
+        "store_us": 1109.974,
+        "total_us": 1249.122
+      },
+      {
+        "prepare_us": 52.969,
+        "replay_us": 52.097,
+        "store_us": 1166.98,
+        "total_us": 1272.837
+      },
+      {
+        "prepare_us": 52.327000000000005,
+        "replay_us": 52.528000000000006,
+        "store_us": 1114.171,
+        "total_us": 1219.7969999999998
+      },
+      {
+        "prepare_us": 51.896,
+        "replay_us": 50.113,
+        "store_us": 1114.052,
+        "total_us": 1216.682
+      },
+      {
+        "prepare_us": 57.537,
+        "replay_us": 51.736000000000004,
+        "store_us": 1147.513,
+        "total_us": 1257.568
+      },
+      {
+        "prepare_us": 51.635999999999996,
+        "replay_us": 39.003,
+        "store_us": 1052.868,
+        "total_us": 1144.068
+      },
+      {
+        "prepare_us": 38.372,
+        "replay_us": 59.531000000000006,
+        "store_us": 1062.7250000000001,
+        "total_us": 1161.3990000000001
+      },
+      {
+        "prepare_us": 51.766,
+        "replay_us": 37.851,
+        "store_us": 1103.201,
+        "total_us": 1193.3390000000002
+      },
+      {
+        "prepare_us": 38.932,
+        "replay_us": 66.454,
+        "store_us": 1177.249,
+        "total_us": 1283.546
+      },
+      {
+        "prepare_us": 55.152,
+        "replay_us": 43.940999999999995,
+        "store_us": 1038.1209999999999,
+        "total_us": 1137.785
+      },
+      {
+        "prepare_us": 38.992000000000004,
+        "replay_us": 49.372,
+        "store_us": 1058.448,
+        "total_us": 1147.4530000000002
+      },
+      {
+        "prepare_us": 51.415,
+        "replay_us": 39.975,
+        "store_us": 1111.927,
+        "total_us": 1203.9080000000001
+      },
+      {
+        "prepare_us": 38.562,
+        "replay_us": 57.106,
+        "store_us": 1182.018,
+        "total_us": 1278.567
+      },
+      {
+        "prepare_us": 51.596,
+        "replay_us": 54.251,
+        "store_us": 1049.4409999999998,
+        "total_us": 1155.94
+      },
+      {
+        "prepare_us": 64.19,
+        "replay_us": 68.017,
+        "store_us": 1083.654,
+        "total_us": 1216.7320000000002
+      },
+      {
+        "prepare_us": 53.458999999999996,
+        "replay_us": 78.365,
+        "store_us": 1196.735,
+        "total_us": 1329.6409999999998
+      },
+      {
+        "prepare_us": 60.322,
+        "replay_us": 50.834999999999994,
+        "store_us": 1131.814,
+        "total_us": 1243.9930000000002
+      },
+      {
+        "prepare_us": 41.457,
+        "replay_us": 53.429,
+        "store_us": 1107.94,
+        "total_us": 1203.7079999999999
+      },
+      {
+        "prepare_us": 40.746,
+        "replay_us": 71.603,
+        "store_us": 1107.3990000000001,
+        "total_us": 1220.96
+      },
+      {
+        "prepare_us": 60.672,
+        "replay_us": 66.06299999999999,
+        "store_us": 1102.72,
+        "total_us": 1231.369
+      },
+      {
+        "prepare_us": 59.701,
+        "replay_us": 51.236000000000004,
+        "store_us": 1056.333,
+        "total_us": 1168.021
+      },
+      {
+        "prepare_us": 43.19,
+        "replay_us": 58.518,
+        "store_us": 1076.061,
+        "total_us": 1179.0520000000001
+      },
+      {
+        "prepare_us": 40.586,
+        "replay_us": 48.42,
+        "store_us": 1018.824,
+        "total_us": 1108.572
+      },
+      {
+        "prepare_us": 41.727000000000004,
+        "replay_us": 69.099,
+        "store_us": 1146.3809999999999,
+        "total_us": 1258.4689999999998
+      },
+      {
+        "prepare_us": 60.032,
+        "replay_us": 81.481,
+        "store_us": 1069.3580000000002,
+        "total_us": 1212.584
+      },
+      {
+        "prepare_us": 63.02700000000001,
+        "replay_us": 65.09100000000001,
+        "store_us": 1019.5149999999999,
+        "total_us": 1148.875
+      },
+      {
+        "prepare_us": 52.347,
+        "replay_us": 55.062000000000005,
+        "store_us": 1020.618,
+        "total_us": 1128.7179999999998
+      },
+      {
+        "prepare_us": 41.897000000000006,
+        "replay_us": 50.734,
+        "store_us": 1094.315,
+        "total_us": 1188.209
+      },
+      {
+        "prepare_us": 42.719,
+        "replay_us": 61.495000000000005,
+        "store_us": 1116.3049999999998,
+        "total_us": 1221.871
+      },
+      {
+        "prepare_us": 45.775,
+        "replay_us": 78.566,
+        "store_us": 1084.075,
+        "total_us": 1210.019
+      },
+      {
+        "prepare_us": 60.612,
+        "replay_us": 66.484,
+        "store_us": 1241.8290000000002,
+        "total_us": 1370.518
+      },
+      {
+        "prepare_us": 73.256,
+        "replay_us": 58.939,
+        "store_us": 1057.336,
+        "total_us": 1190.483
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 8192,
+    "arm": "baseline",
+    "run": 0,
+    "phase_medians_us": {
+      "prepare_us": 52.11150000000001,
+      "replay_us": 58.558,
+      "store_us": 1108.9070000000002,
+      "total_us": 1218.1195000000002
+    }
+  },
+  {
+    "all_assigned_signature": "c01e0902bfa55a6bbb2bc2bf52bc1501d99766c950a292641c4d1f8d30fdf9d3",
+    "append_and_reopen_peak_rss_bytes": 8728576,
+    "append_peak_rss_bytes": 7905280,
+    "batch": 8,
+    "case": "small",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 1024,
+    "rounds": 64,
+    "samples": [
+      {
+        "prepare_us": 85.68,
+        "replay_us": 65.08099999999999,
+        "store_us": 1421.9530000000002,
+        "total_us": 1573.766
+      },
+      {
+        "prepare_us": 47.468,
+        "replay_us": 66.06299999999999,
+        "store_us": 1012.6930000000001,
+        "total_us": 1127.095
+      },
+      {
+        "prepare_us": 61.294,
+        "replay_us": 53.139,
+        "store_us": 1404.451,
+        "total_us": 1519.785
+      },
+      {
+        "prepare_us": 44.523,
+        "replay_us": 73.807,
+        "store_us": 1095.016,
+        "total_us": 1214.3480000000002
+      },
+      {
+        "prepare_us": 63.809,
+        "replay_us": 43.471,
+        "store_us": 990.992,
+        "total_us": 1098.953
+      },
+      {
+        "prepare_us": 48.751000000000005,
+        "replay_us": 50.894,
+        "store_us": 1040.825,
+        "total_us": 1141.432
+      },
+      {
+        "prepare_us": 42.99,
+        "replay_us": 68.798,
+        "store_us": 1011.9510000000001,
+        "total_us": 1124.8709999999999
+      },
+      {
+        "prepare_us": 62.23500000000001,
+        "replay_us": 54.1,
+        "store_us": 1060.893,
+        "total_us": 1177.86
+      },
+      {
+        "prepare_us": 40.937,
+        "replay_us": 76.191,
+        "store_us": 1246.698,
+        "total_us": 1364.738
+      },
+      {
+        "prepare_us": 70.641,
+        "replay_us": 42.789,
+        "store_us": 984.611,
+        "total_us": 1098.743
+      },
+      {
+        "prepare_us": 42.238,
+        "replay_us": 79.548,
+        "store_us": 1091.76,
+        "total_us": 1214.528
+      },
+      {
+        "prepare_us": 61.364000000000004,
+        "replay_us": 50.834999999999994,
+        "store_us": 1129.931,
+        "total_us": 1242.951
+      },
+      {
+        "prepare_us": 47.208,
+        "replay_us": 46.977000000000004,
+        "store_us": 1022.541,
+        "total_us": 1117.4279999999999
+      },
+      {
+        "prepare_us": 41.918,
+        "replay_us": 65.231,
+        "store_us": 1033.6209999999999,
+        "total_us": 1141.8120000000001
+      },
+      {
+        "prepare_us": 62.226,
+        "replay_us": 48.489999999999995,
+        "store_us": 1009.677,
+        "total_us": 1121.365
+      },
+      {
+        "prepare_us": 42.459,
+        "replay_us": 61.634,
+        "store_us": 1077.834,
+        "total_us": 1183.0790000000002
+      },
+      {
+        "prepare_us": 60.943000000000005,
+        "replay_us": 47.367999999999995,
+        "store_us": 994.71,
+        "total_us": 1103.8319999999999
+      },
+      {
+        "prepare_us": 46.367,
+        "replay_us": 63.719,
+        "store_us": 1023.4720000000001,
+        "total_us": 1134.66
+      },
+      {
+        "prepare_us": 61.524,
+        "replay_us": 50.895,
+        "store_us": 1011.2299999999999,
+        "total_us": 1124.48
+      },
+      {
+        "prepare_us": 43.019999999999996,
+        "replay_us": 60.933,
+        "store_us": 1073.386,
+        "total_us": 1178.692
+      },
+      {
+        "prepare_us": 62.04500000000001,
+        "replay_us": 66.784,
+        "store_us": 1009.5169999999999,
+        "total_us": 1139.699
+      },
+      {
+        "prepare_us": 52.248,
+        "replay_us": 44.723,
+        "store_us": 1017.4610000000001,
+        "total_us": 1115.2340000000002
+      },
+      {
+        "prepare_us": 41.918,
+        "replay_us": 45.194,
+        "store_us": 1033.692,
+        "total_us": 1121.555
+      },
+      {
+        "prepare_us": 41.937999999999995,
+        "replay_us": 62.897000000000006,
+        "store_us": 1103.8619999999999,
+        "total_us": 1209.8790000000001
+      },
+      {
+        "prepare_us": 68.01599999999999,
+        "replay_us": 44.773,
+        "store_us": 983.4889999999999,
+        "total_us": 1097.3
+      },
+      {
+        "prepare_us": 41.407,
+        "replay_us": 47.097,
+        "store_us": 1067.695,
+        "total_us": 1157.001
+      },
+      {
+        "prepare_us": 41.106,
+        "replay_us": 44.221999999999994,
+        "store_us": 1040.8049999999998,
+        "total_us": 1127.1950000000002
+      },
+      {
+        "prepare_us": 40.926,
+        "replay_us": 62.775999999999996,
+        "store_us": 1099.194,
+        "total_us": 1204.088
+      },
+      {
+        "prepare_us": 59.44,
+        "replay_us": 61.434999999999995,
+        "store_us": 1003.215,
+        "total_us": 1125.3319999999999
+      },
+      {
+        "prepare_us": 60.593,
+        "replay_us": 47.749,
+        "store_us": 1049.581,
+        "total_us": 1158.685
+      },
+      {
+        "prepare_us": 42.429,
+        "replay_us": 52.348,
+        "store_us": 1027.6000000000001,
+        "total_us": 1123.308
+      },
+      {
+        "prepare_us": 47.097,
+        "replay_us": 41.878,
+        "store_us": 1059.3799999999999,
+        "total_us": 1148.916
+      },
+      {
+        "prepare_us": 39.694,
+        "replay_us": 87.493,
+        "store_us": 1023.964,
+        "total_us": 1152.2430000000002
+      },
+      {
+        "prepare_us": 53.599,
+        "replay_us": 60.312000000000005,
+        "store_us": 1005.179,
+        "total_us": 1120.182
+      },
+      {
+        "prepare_us": 54.330999999999996,
+        "replay_us": 39.634,
+        "store_us": 987.7959999999999,
+        "total_us": 1082.332
+      },
+      {
+        "prepare_us": 39.293,
+        "replay_us": 59.45,
+        "store_us": 1112.2079999999999,
+        "total_us": 1212.154
+      },
+      {
+        "prepare_us": 55.513000000000005,
+        "replay_us": 61.11299999999999,
+        "store_us": 995.4309999999999,
+        "total_us": 1113.8210000000001
+      },
+      {
+        "prepare_us": 55.553000000000004,
+        "replay_us": 44.323,
+        "store_us": 1952.76,
+        "total_us": 2053.547
+      },
+      {
+        "prepare_us": 40.926,
+        "replay_us": 38.181,
+        "store_us": 1028.022,
+        "total_us": 1107.57
+      },
+      {
+        "prepare_us": 42.109,
+        "replay_us": 67.716,
+        "store_us": 1080.4479999999999,
+        "total_us": 1191.075
+      },
+      {
+        "prepare_us": 59.370999999999995,
+        "replay_us": 46.847,
+        "store_us": 1321.366,
+        "total_us": 1428.135
+      },
+      {
+        "prepare_us": 39.975,
+        "replay_us": 44.632999999999996,
+        "store_us": 1028.752,
+        "total_us": 1113.961
+      },
+      {
+        "prepare_us": 41.096000000000004,
+        "replay_us": 57.525999999999996,
+        "store_us": 1035.476,
+        "total_us": 1134.84
+      },
+      {
+        "prepare_us": 59.24,
+        "replay_us": 62.265,
+        "store_us": 1129.47,
+        "total_us": 1251.727
+      },
+      {
+        "prepare_us": 58.408,
+        "replay_us": 58.028,
+        "store_us": 1031.688,
+        "total_us": 1148.9460000000001
+      },
+      {
+        "prepare_us": 58.709,
+        "replay_us": 41.357,
+        "store_us": 996.022,
+        "total_us": 1096.5790000000002
+      },
+      {
+        "prepare_us": 40.886,
+        "replay_us": 61.495000000000005,
+        "store_us": 1030.085,
+        "total_us": 1133.207
+      },
+      {
+        "prepare_us": 59.26,
+        "replay_us": 65.211,
+        "store_us": 1085.869,
+        "total_us": 1211.342
+      },
+      {
+        "prepare_us": 58.178,
+        "replay_us": 39.141999999999996,
+        "store_us": 1396.567,
+        "total_us": 1494.4279999999999
+      },
+      {
+        "prepare_us": 39.934,
+        "replay_us": 37.369,
+        "store_us": 1032.5600000000002,
+        "total_us": 1110.3039999999999
+      },
+      {
+        "prepare_us": 39.173,
+        "replay_us": 56.755,
+        "store_us": 1042.819,
+        "total_us": 1139.5890000000002
+      },
+      {
+        "prepare_us": 58.328,
+        "replay_us": 55.864,
+        "store_us": 1086.36,
+        "total_us": 1201.223
+      },
+      {
+        "prepare_us": 58.509,
+        "replay_us": 53.961,
+        "store_us": 994.799,
+        "total_us": 1107.87
+      },
+      {
+        "prepare_us": 58.549,
+        "replay_us": 61.054,
+        "store_us": 1002.644,
+        "total_us": 1123.259
+      },
+      {
+        "prepare_us": 58.437999999999995,
+        "replay_us": 54.04,
+        "store_us": 994.359,
+        "total_us": 1107.5690000000002
+      },
+      {
+        "prepare_us": 61.624,
+        "replay_us": 59.861999999999995,
+        "store_us": 1082.663,
+        "total_us": 1205.02
+      },
+      {
+        "prepare_us": 59.160000000000004,
+        "replay_us": 55.503,
+        "store_us": 995.6909999999999,
+        "total_us": 1111.145
+      },
+      {
+        "prepare_us": 58.007999999999996,
+        "replay_us": 37.73,
+        "store_us": 1005.269,
+        "total_us": 1101.6380000000001
+      },
+      {
+        "prepare_us": 38.831999999999994,
+        "replay_us": 41.407,
+        "store_us": 1087.8120000000001,
+        "total_us": 1168.7430000000002
+      },
+      {
+        "prepare_us": 39.573,
+        "replay_us": 54.992,
+        "store_us": 1090.798,
+        "total_us": 1186.115
+      },
+      {
+        "prepare_us": 58.078,
+        "replay_us": 54.601,
+        "store_us": 1001.112,
+        "total_us": 1114.463
+      },
+      {
+        "prepare_us": 57.587,
+        "replay_us": 55.102000000000004,
+        "store_us": 999.098,
+        "total_us": 1112.6490000000001
+      },
+      {
+        "prepare_us": 63.828,
+        "replay_us": 60.232,
+        "store_us": 1028.683,
+        "total_us": 1153.735
+      },
+      {
+        "prepare_us": 60.742999999999995,
+        "replay_us": 42.589999999999996,
+        "store_us": 1053.047,
+        "total_us": 1157.1509999999998
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 8192,
+    "arm": "lifetime",
+    "run": 0,
+    "phase_medians_us": {
+      "prepare_us": 54.922,
+      "replay_us": 54.796499999999995,
+      "store_us": 1033.0905,
+      "total_us": 1139.6440000000002
+    }
+  },
+  {
+    "all_assigned_signature": "240a5f368f71a1648ff2406765da0adb9495b55046e59d5a23a3ce2e08bd3da7",
+    "append_and_reopen_peak_rss_bytes": 232595456,
+    "append_peak_rss_bytes": 232595456,
+    "batch": 1000,
+    "case": "large",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 16384,
+    "rounds": 6,
+    "samples": [
+      {
+        "prepare_us": 63196.342000000004,
+        "replay_us": 42614.917,
+        "store_us": 19130.557,
+        "total_us": 126979.74500000001
+      },
+      {
+        "prepare_us": 47264.280999999995,
+        "replay_us": 31086.895,
+        "store_us": 30055.919,
+        "total_us": 110440.235
+      },
+      {
+        "prepare_us": 39033.359,
+        "replay_us": 32223.377999999997,
+        "store_us": 7144.783,
+        "total_us": 80423.95
+      },
+      {
+        "prepare_us": 47272.717,
+        "replay_us": 46599.917,
+        "store_us": 61057.325000000004,
+        "total_us": 156906.513
+      },
+      {
+        "prepare_us": 51444.994,
+        "replay_us": 38570.448,
+        "store_us": 12383.152,
+        "total_us": 102475.618
+      },
+      {
+        "prepare_us": 36303.143000000004,
+        "replay_us": 38274.587999999996,
+        "store_us": 6202.7119999999995,
+        "total_us": 82770.193
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 16383100,
+    "arm": "baseline",
+    "run": 0,
+    "phase_medians_us": {
+      "prepare_us": 47268.498999999996,
+      "replay_us": 38422.518,
+      "store_us": 15756.854500000001,
+      "total_us": 106457.9265
+    }
+  },
+  {
+    "all_assigned_signature": "240a5f368f71a1648ff2406765da0adb9495b55046e59d5a23a3ce2e08bd3da7",
+    "append_and_reopen_peak_rss_bytes": 215797760,
+    "append_peak_rss_bytes": 215982080,
+    "batch": 1000,
+    "case": "large",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 16384,
+    "rounds": 6,
+    "samples": [
+      {
+        "prepare_us": 58777.576,
+        "replay_us": 42023.578,
+        "store_us": 21495.022999999997,
+        "total_us": 125157.988
+      },
+      {
+        "prepare_us": 35653.836,
+        "replay_us": 42840.907999999996,
+        "store_us": 31936.104,
+        "total_us": 110504.134
+      },
+      {
+        "prepare_us": 35927.915,
+        "replay_us": 31093.598,
+        "store_us": 4772.613,
+        "total_us": 71861.952
+      },
+      {
+        "prepare_us": 47048.891,
+        "replay_us": 30656.295,
+        "store_us": 37020.326,
+        "total_us": 116749.745
+      },
+      {
+        "prepare_us": 52943.651,
+        "replay_us": 34739.755999999994,
+        "store_us": 12193.089,
+        "total_us": 99955.663
+      },
+      {
+        "prepare_us": 37732.25,
+        "replay_us": 34968.973,
+        "store_us": 8961.079,
+        "total_us": 81729.367
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 16383100,
+    "arm": "lifetime",
+    "run": 0,
+    "phase_medians_us": {
+      "prepare_us": 42390.5705,
+      "replay_us": 34854.364499999996,
+      "store_us": 16844.055999999997,
+      "total_us": 105229.89850000001
+    }
+  },
+  {
+    "all_assigned_signature": "11934d4706000c0a866da5d14b45f754b49d8b4f17db170f0036853d4b90565a",
+    "append_and_reopen_peak_rss_bytes": 145092608,
+    "append_peak_rss_bytes": 145092608,
+    "batch": 1,
+    "case": "escaped",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 4194304,
+    "rounds": 4,
+    "samples": [
+      {
+        "prepare_us": 107505.81,
+        "replay_us": 99038.217,
+        "store_us": 49040.82399999999,
+        "total_us": 258434.369
+      },
+      {
+        "prepare_us": 107401.486,
+        "replay_us": 100014.60299999999,
+        "store_us": 19372.225,
+        "total_us": 229672.35499999998
+      },
+      {
+        "prepare_us": 108973.158,
+        "replay_us": 99528.90000000001,
+        "store_us": 81949.526,
+        "total_us": 293315.889
+      },
+      {
+        "prepare_us": 108686.474,
+        "replay_us": 98536.765,
+        "store_us": 24458.492,
+        "total_us": 234626.686
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 4194304,
+    "arm": "baseline",
+    "run": 0,
+    "phase_medians_us": {
+      "prepare_us": 108096.14199999999,
+      "replay_us": 99283.55850000001,
+      "store_us": 36749.657999999996,
+      "total_us": 246530.5275
+    }
+  },
+  {
+    "all_assigned_signature": "11934d4706000c0a866da5d14b45f754b49d8b4f17db170f0036853d4b90565a",
+    "append_and_reopen_peak_rss_bytes": 120094720,
+    "append_peak_rss_bytes": 119775232,
+    "batch": 1,
+    "case": "escaped",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 4194304,
+    "rounds": 4,
+    "samples": [
+      {
+        "prepare_us": 106774.86,
+        "replay_us": 104523.074,
+        "store_us": 46667.282,
+        "total_us": 259397.02799999996
+      },
+      {
+        "prepare_us": 108845.46,
+        "replay_us": 104649.159,
+        "store_us": 19330.118,
+        "total_us": 234258.622
+      },
+      {
+        "prepare_us": 110573.504,
+        "replay_us": 104152.30500000001,
+        "store_us": 76716.05600000001,
+        "total_us": 292866.203
+      },
+      {
+        "prepare_us": 111081.74799999999,
+        "replay_us": 103499.361,
+        "store_us": 12972.478000000001,
+        "total_us": 228998.88400000002
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 4194304,
+    "arm": "lifetime",
+    "run": 0,
+    "phase_medians_us": {
+      "prepare_us": 109709.482,
+      "replay_us": 104337.68950000001,
+      "store_us": 32998.7,
+      "total_us": 246827.82499999998
+    }
+  },
+  {
+    "all_assigned_signature": "c01e0902bfa55a6bbb2bc2bf52bc1501d99766c950a292641c4d1f8d30fdf9d3",
+    "append_and_reopen_peak_rss_bytes": 8691712,
+    "append_peak_rss_bytes": 7782400,
+    "batch": 8,
+    "case": "small",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 1024,
+    "rounds": 64,
+    "samples": [
+      {
+        "prepare_us": 76.182,
+        "replay_us": 70.582,
+        "store_us": 8578.228000000001,
+        "total_us": 8726.002999999999
+      },
+      {
+        "prepare_us": 54.111,
+        "replay_us": 55.773,
+        "store_us": 1763.338,
+        "total_us": 1873.824
+      },
+      {
+        "prepare_us": 52.879,
+        "replay_us": 151.231,
+        "store_us": 11087.193000000001,
+        "total_us": 11294.419
+      },
+      {
+        "prepare_us": 76.282,
+        "replay_us": 108.922,
+        "store_us": 15141.911,
+        "total_us": 15328.909
+      },
+      {
+        "prepare_us": 62.055,
+        "replay_us": 89.867,
+        "store_us": 5426.308,
+        "total_us": 5580.845
+      },
+      {
+        "prepare_us": 91.079,
+        "replay_us": 90.548,
+        "store_us": 8440.082,
+        "total_us": 8622.981
+      },
+      {
+        "prepare_us": 65.231,
+        "replay_us": 83.275,
+        "store_us": 5955.352,
+        "total_us": 6105.491
+      },
+      {
+        "prepare_us": 66.113,
+        "replay_us": 82.08300000000001,
+        "store_us": 8557.91,
+        "total_us": 8707.749000000002
+      },
+      {
+        "prepare_us": 65.772,
+        "replay_us": 83.224,
+        "store_us": 6171.313999999999,
+        "total_us": 6322.204
+      },
+      {
+        "prepare_us": 66.273,
+        "replay_us": 85.739,
+        "store_us": 8566.517,
+        "total_us": 8720.523000000001
+      },
+      {
+        "prepare_us": 72.154,
+        "replay_us": 89.627,
+        "store_us": 5933.231,
+        "total_us": 6097.466
+      },
+      {
+        "prepare_us": 66.203,
+        "replay_us": 83.63499999999999,
+        "store_us": 12698.390000000001,
+        "total_us": 12850.382
+      },
+      {
+        "prepare_us": 63.096999999999994,
+        "replay_us": 69.089,
+        "store_us": 7710.3240000000005,
+        "total_us": 7844.3330000000005
+      },
+      {
+        "prepare_us": 47.739,
+        "replay_us": 137.676,
+        "store_us": 14143.475,
+        "total_us": 14332.006
+      },
+      {
+        "prepare_us": 69.729,
+        "replay_us": 88.916,
+        "store_us": 5045.58,
+        "total_us": 5207.691000000001
+      },
+      {
+        "prepare_us": 53.229,
+        "replay_us": 109.34400000000001,
+        "store_us": 15835.670999999998,
+        "total_us": 16002.211
+      },
+      {
+        "prepare_us": 69.89,
+        "replay_us": 77.164,
+        "store_us": 3917.2720000000004,
+        "total_us": 4065.949
+      },
+      {
+        "prepare_us": 65.312,
+        "replay_us": 91.36,
+        "store_us": 8583.497000000001,
+        "total_us": 8742.424
+      },
+      {
+        "prepare_us": 69.20800000000001,
+        "replay_us": 81.091,
+        "store_us": 5887.867,
+        "total_us": 6039.659000000001
+      },
+      {
+        "prepare_us": 66.113,
+        "replay_us": 88.56400000000001,
+        "store_us": 8451.964,
+        "total_us": 8608.875
+      },
+      {
+        "prepare_us": 69.249,
+        "replay_us": 80.71000000000001,
+        "store_us": 5925.035000000001,
+        "total_us": 6076.748
+      },
+      {
+        "prepare_us": 65.021,
+        "replay_us": 87.172,
+        "store_us": 8478.183,
+        "total_us": 8633.101
+      },
+      {
+        "prepare_us": 67.515,
+        "replay_us": 88.875,
+        "store_us": 5911.3,
+        "total_us": 6069.8640000000005
+      },
+      {
+        "prepare_us": 67.59599999999999,
+        "replay_us": 96.15899999999999,
+        "store_us": 11505.971,
+        "total_us": 11672.1
+      },
+      {
+        "prepare_us": 62.406,
+        "replay_us": 136.50300000000001,
+        "store_us": 8354.644,
+        "total_us": 8558.332
+      },
+      {
+        "prepare_us": 74.398,
+        "replay_us": 106.047,
+        "store_us": 14489.559000000001,
+        "total_us": 14674.753
+      },
+      {
+        "prepare_us": 69.229,
+        "replay_us": 118.04899999999999,
+        "store_us": 12621.536,
+        "total_us": 12812.371
+      },
+      {
+        "prepare_us": 53.76,
+        "replay_us": 90.929,
+        "store_us": 8484.653999999999,
+        "total_us": 8632.098
+      },
+      {
+        "prepare_us": 68.30699999999999,
+        "replay_us": 92.342,
+        "store_us": 6112.804,
+        "total_us": 6275.767
+      },
+      {
+        "prepare_us": 67.115,
+        "replay_us": 106.49799999999999,
+        "store_us": 8488.652,
+        "total_us": 8664.619
+      },
+      {
+        "prepare_us": 73.046,
+        "replay_us": 83.015,
+        "store_us": 5835.709,
+        "total_us": 5993.513
+      },
+      {
+        "prepare_us": 65.973,
+        "replay_us": 117.99900000000001,
+        "store_us": 8583.488,
+        "total_us": 8769.955
+      },
+      {
+        "prepare_us": 68.277,
+        "replay_us": 104.835,
+        "store_us": 3878.5009999999997,
+        "total_us": 4053.376
+      },
+      {
+        "prepare_us": 64.83999999999999,
+        "replay_us": 88.705,
+        "store_us": 8691.249,
+        "total_us": 8847.168000000001
+      },
+      {
+        "prepare_us": 68.117,
+        "replay_us": 115.174,
+        "store_us": 6379.9310000000005,
+        "total_us": 6565.766
+      },
+      {
+        "prepare_us": 62.096,
+        "replay_us": 106.71900000000001,
+        "store_us": 12611.318,
+        "total_us": 12784.04
+      },
+      {
+        "prepare_us": 68.127,
+        "replay_us": 177.93099999999998,
+        "store_us": 16906.75,
+        "total_us": 17157.567
+      },
+      {
+        "prepare_us": 69.93,
+        "replay_us": 150.94,
+        "store_us": 8832.691,
+        "total_us": 9059.072
+      },
+      {
+        "prepare_us": 78.897,
+        "replay_us": 120.724,
+        "store_us": 7080.134,
+        "total_us": 7282.721
+      },
+      {
+        "prepare_us": 69.138,
+        "replay_us": 85.99,
+        "store_us": 3929.826,
+        "total_us": 4086.407
+      },
+      {
+        "prepare_us": 71.523,
+        "replay_us": 97.241,
+        "store_us": 4269.086,
+        "total_us": 4440.1939999999995
+      },
+      {
+        "prepare_us": 65.342,
+        "replay_us": 82.553,
+        "store_us": 5858.101,
+        "total_us": 6008.09
+      },
+      {
+        "prepare_us": 67.075,
+        "replay_us": 90.589,
+        "store_us": 5822.474999999999,
+        "total_us": 5981.932
+      },
+      {
+        "prepare_us": 65.982,
+        "replay_us": 83.415,
+        "store_us": 5778.614,
+        "total_us": 5929.804
+      },
+      {
+        "prepare_us": 65.281,
+        "replay_us": 89.406,
+        "store_us": 5864.724,
+        "total_us": 6022.236
+      },
+      {
+        "prepare_us": 66.57300000000001,
+        "replay_us": 90.758,
+        "store_us": 5879.692,
+        "total_us": 6039.237
+      },
+      {
+        "prepare_us": 65.802,
+        "replay_us": 86.11999999999999,
+        "store_us": 6853.522,
+        "total_us": 7007.838
+      },
+      {
+        "prepare_us": 67.325,
+        "replay_us": 76.302,
+        "store_us": 6041.833,
+        "total_us": 6187.384
+      },
+      {
+        "prepare_us": 63.849000000000004,
+        "replay_us": 64.39,
+        "store_us": 6950.281,
+        "total_us": 7080.404
+      },
+      {
+        "prepare_us": 44.783,
+        "replay_us": 71.35300000000001,
+        "store_us": 1868.7540000000001,
+        "total_us": 1986.443
+      },
+      {
+        "prepare_us": 64.73,
+        "replay_us": 48.581,
+        "store_us": 1778.7269999999999,
+        "total_us": 1892.8490000000002
+      },
+      {
+        "prepare_us": 42.689,
+        "replay_us": 82.222,
+        "store_us": 1871.5400000000002,
+        "total_us": 1997.7540000000001
+      },
+      {
+        "prepare_us": 63.41799999999999,
+        "replay_us": 47.589,
+        "store_us": 1610.424,
+        "total_us": 1722.3220000000001
+      },
+      {
+        "prepare_us": 43.13999999999999,
+        "replay_us": 75.53999999999999,
+        "store_us": 1129.43,
+        "total_us": 1249.232
+      },
+      {
+        "prepare_us": 60.964,
+        "replay_us": 60.322,
+        "store_us": 1648.8449999999998,
+        "total_us": 1770.862
+      },
+      {
+        "prepare_us": 60.151,
+        "replay_us": 42.019,
+        "store_us": 1680.4940000000001,
+        "total_us": 1783.4850000000001
+      },
+      {
+        "prepare_us": 41.006,
+        "replay_us": 66.06299999999999,
+        "store_us": 1555.3319999999999,
+        "total_us": 1663.463
+      },
+      {
+        "prepare_us": 59.44,
+        "replay_us": 68.15700000000001,
+        "store_us": 1679.8329999999999,
+        "total_us": 1808.3120000000001
+      },
+      {
+        "prepare_us": 59.811,
+        "replay_us": 59.419999999999995,
+        "store_us": 1676.056,
+        "total_us": 1796.289
+      },
+      {
+        "prepare_us": 60.112,
+        "replay_us": 48.35,
+        "store_us": 1777.0539999999999,
+        "total_us": 1886.4170000000001
+      },
+      {
+        "prepare_us": 41.007000000000005,
+        "replay_us": 60.532000000000004,
+        "store_us": 1222.8129999999999,
+        "total_us": 1325.174
+      },
+      {
+        "prepare_us": 60.803,
+        "replay_us": 47.439,
+        "store_us": 4588.851,
+        "total_us": 4698.305
+      },
+      {
+        "prepare_us": 41.446999999999996,
+        "replay_us": 50.63399999999999,
+        "store_us": 1158.283,
+        "total_us": 1251.0259999999998
+      },
+      {
+        "prepare_us": 41.387,
+        "replay_us": 70.27000000000001,
+        "store_us": 1144.107,
+        "total_us": 1256.7959999999998
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 8192,
+    "arm": "lifetime",
+    "run": 1,
+    "phase_medians_us": {
+      "prepare_us": 65.787,
+      "replay_us": 86.05499999999999,
+      "store_us": 5944.291499999999,
+      "total_us": 6101.4785
+    }
+  },
+  {
+    "all_assigned_signature": "c01e0902bfa55a6bbb2bc2bf52bc1501d99766c950a292641c4d1f8d30fdf9d3",
+    "append_and_reopen_peak_rss_bytes": 8728576,
+    "append_peak_rss_bytes": 7831552,
+    "batch": 8,
+    "case": "small",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 1024,
+    "rounds": 64,
+    "samples": [
+      {
+        "prepare_us": 84.006,
+        "replay_us": 73.136,
+        "store_us": 7048.785,
+        "total_us": 7207.139
+      },
+      {
+        "prepare_us": 53.199,
+        "replay_us": 65.142,
+        "store_us": 5760.7,
+        "total_us": 5880.072
+      },
+      {
+        "prepare_us": 53.81,
+        "replay_us": 65.181,
+        "store_us": 1821.9270000000001,
+        "total_us": 1941.92
+      },
+      {
+        "prepare_us": 67.706,
+        "replay_us": 61.80499999999999,
+        "store_us": 1804.855,
+        "total_us": 1935.068
+      },
+      {
+        "prepare_us": 58.659,
+        "replay_us": 58.288000000000004,
+        "store_us": 1832.1970000000001,
+        "total_us": 1950.1760000000002
+      },
+      {
+        "prepare_us": 52.728,
+        "replay_us": 58.629,
+        "store_us": 1099.474,
+        "total_us": 1211.482
+      },
+      {
+        "prepare_us": 51.746,
+        "replay_us": 37.49,
+        "store_us": 1672.9399999999998,
+        "total_us": 1762.777
+      },
+      {
+        "prepare_us": 38.672,
+        "replay_us": 51.355,
+        "store_us": 1157.723,
+        "total_us": 1248.471
+      },
+      {
+        "prepare_us": 52.227,
+        "replay_us": 37.89,
+        "store_us": 1112.759,
+        "total_us": 1203.437
+      },
+      {
+        "prepare_us": 39.183,
+        "replay_us": 49.152,
+        "store_us": 1132.485,
+        "total_us": 1221.421
+      },
+      {
+        "prepare_us": 52.427,
+        "replay_us": 37.910999999999994,
+        "store_us": 1131.183,
+        "total_us": 1222.042
+      },
+      {
+        "prepare_us": 39.263,
+        "replay_us": 64.38000000000001,
+        "store_us": 1144.929,
+        "total_us": 1249.323
+      },
+      {
+        "prepare_us": 58.429,
+        "replay_us": 60.512,
+        "store_us": 1943.393,
+        "total_us": 2063.336
+      },
+      {
+        "prepare_us": 59.852000000000004,
+        "replay_us": 62.226,
+        "store_us": 1735.496,
+        "total_us": 1858.7259999999999
+      },
+      {
+        "prepare_us": 67.074,
+        "replay_us": 47.499,
+        "store_us": 1705.371,
+        "total_us": 1820.915
+      },
+      {
+        "prepare_us": 42.028,
+        "replay_us": 69.25800000000001,
+        "store_us": 1143.3960000000002,
+        "total_us": 1255.554
+      },
+      {
+        "prepare_us": 60.071,
+        "replay_us": 66.173,
+        "store_us": 1724.2259999999999,
+        "total_us": 1852.013
+      },
+      {
+        "prepare_us": 61.38399999999999,
+        "replay_us": 48.28,
+        "store_us": 1665.827,
+        "total_us": 1776.643
+      },
+      {
+        "prepare_us": 43.561,
+        "replay_us": 66.493,
+        "store_us": 1738.012,
+        "total_us": 1849.3190000000002
+      },
+      {
+        "prepare_us": 62.645999999999994,
+        "replay_us": 62.456,
+        "store_us": 1666.088,
+        "total_us": 1792.5829999999999
+      },
+      {
+        "prepare_us": 59.491,
+        "replay_us": 63.408,
+        "store_us": 1679.362,
+        "total_us": 1803.493
+      },
+      {
+        "prepare_us": 59.731,
+        "replay_us": 46.306,
+        "store_us": 1683.019,
+        "total_us": 1790.2079999999999
+      },
+      {
+        "prepare_us": 40.716,
+        "replay_us": 61.284000000000006,
+        "store_us": 1143.095,
+        "total_us": 1246.147
+      },
+      {
+        "prepare_us": 60.803,
+        "replay_us": 46.897999999999996,
+        "store_us": 1670.566,
+        "total_us": 1779.469
+      },
+      {
+        "prepare_us": 42.309,
+        "replay_us": 69.339,
+        "store_us": 1132.295,
+        "total_us": 1245.135
+      },
+      {
+        "prepare_us": 58.839999999999996,
+        "replay_us": 45.926,
+        "store_us": 1688.929,
+        "total_us": 1794.817
+      },
+      {
+        "prepare_us": 45.265,
+        "replay_us": 63.678,
+        "store_us": 1135.17,
+        "total_us": 1245.4160000000002
+      },
+      {
+        "prepare_us": 61.795,
+        "replay_us": 70.651,
+        "store_us": 1673.7220000000002,
+        "total_us": 1807.5610000000001
+      },
+      {
+        "prepare_us": 43.13,
+        "replay_us": 67.856,
+        "store_us": 1993.055,
+        "total_us": 2106.085
+      },
+      {
+        "prepare_us": 61.375,
+        "replay_us": 58.87,
+        "store_us": 1817.308,
+        "total_us": 1938.715
+      },
+      {
+        "prepare_us": 43.381,
+        "replay_us": 68.757,
+        "store_us": 1773.6480000000001,
+        "total_us": 1887.339
+      },
+      {
+        "prepare_us": 67.09400000000001,
+        "replay_us": 51.885999999999996,
+        "store_us": 1729.6360000000002,
+        "total_us": 1849.889
+      },
+      {
+        "prepare_us": 51.856,
+        "replay_us": 105.71600000000001,
+        "store_us": 1745.2150000000001,
+        "total_us": 1904.45
+      },
+      {
+        "prepare_us": 61.354,
+        "replay_us": 98.463,
+        "store_us": 7006.125999999999,
+        "total_us": 7168.5070000000005
+      },
+      {
+        "prepare_us": 68.688,
+        "replay_us": 92.001,
+        "store_us": 7356.306,
+        "total_us": 7519.39
+      },
+      {
+        "prepare_us": 67.776,
+        "replay_us": 106.518,
+        "store_us": 12907.277,
+        "total_us": 13085.308
+      },
+      {
+        "prepare_us": 70.491,
+        "replay_us": 80.219,
+        "store_us": 6830.759,
+        "total_us": 6983.612999999999
+      },
+      {
+        "prepare_us": 65.72200000000001,
+        "replay_us": 91.691,
+        "store_us": 10029.036999999998,
+        "total_us": 10189.195
+      },
+      {
+        "prepare_us": 67.927,
+        "replay_us": 127.637,
+        "store_us": 5207.581,
+        "total_us": 5407.203
+      },
+      {
+        "prepare_us": 81.34100000000001,
+        "replay_us": 95.588,
+        "store_us": 8620.958,
+        "total_us": 8800.091
+      },
+      {
+        "prepare_us": 48.951,
+        "replay_us": 92.642,
+        "store_us": 5841.61,
+        "total_us": 5985.788
+      },
+      {
+        "prepare_us": 91.35,
+        "replay_us": 111.17699999999999,
+        "store_us": 6806.454,
+        "total_us": 7011.456
+      },
+      {
+        "prepare_us": 67.074,
+        "replay_us": 97.73100000000001,
+        "store_us": 5982.363,
+        "total_us": 6149.402
+      },
+      {
+        "prepare_us": 67.655,
+        "replay_us": 95.85900000000001,
+        "store_us": 6833.364,
+        "total_us": 6999.242
+      },
+      {
+        "prepare_us": 67.947,
+        "replay_us": 98.51299999999999,
+        "store_us": 6170.331,
+        "total_us": 6339.376
+      },
+      {
+        "prepare_us": 66.06299999999999,
+        "replay_us": 96.85,
+        "store_us": 6878.629,
+        "total_us": 7044.0470000000005
+      },
+      {
+        "prepare_us": 82.27300000000001,
+        "replay_us": 101.639,
+        "store_us": 5706.158,
+        "total_us": 5892.014
+      },
+      {
+        "prepare_us": 67.065,
+        "replay_us": 109.564,
+        "store_us": 7072.027,
+        "total_us": 7251.311
+      },
+      {
+        "prepare_us": 67.946,
+        "replay_us": 71.834,
+        "store_us": 5702.181,
+        "total_us": 5843.263
+      },
+      {
+        "prepare_us": 65.782,
+        "replay_us": 56.315,
+        "store_us": 1759.872,
+        "total_us": 1882.81
+      },
+      {
+        "prepare_us": 59.029,
+        "replay_us": 81.91199999999999,
+        "store_us": 1839.17,
+        "total_us": 1981.323
+      },
+      {
+        "prepare_us": 62.806999999999995,
+        "replay_us": 69.81,
+        "store_us": 6921.157,
+        "total_us": 7055.227
+      },
+      {
+        "prepare_us": 62.376,
+        "replay_us": 74.128,
+        "store_us": 1802.972,
+        "total_us": 1940.548
+      },
+      {
+        "prepare_us": 58.729,
+        "replay_us": 75.95100000000001,
+        "store_us": 1774.4289999999999,
+        "total_us": 1910.3110000000001
+      },
+      {
+        "prepare_us": 56.355,
+        "replay_us": 46.627,
+        "store_us": 1793.414,
+        "total_us": 1897.1770000000001
+      },
+      {
+        "prepare_us": 41.467,
+        "replay_us": 73.697,
+        "store_us": 1218.535,
+        "total_us": 1334.8410000000001
+      },
+      {
+        "prepare_us": 57.156,
+        "replay_us": 66.765,
+        "store_us": 1660.6970000000001,
+        "total_us": 1785.79
+      },
+      {
+        "prepare_us": 57.056,
+        "replay_us": 53.359,
+        "store_us": 1747.9189999999999,
+        "total_us": 1859.136
+      },
+      {
+        "prepare_us": 42.109,
+        "replay_us": 80.32000000000001,
+        "store_us": 5771.139,
+        "total_us": 5895.241
+      },
+      {
+        "prepare_us": 89.947,
+        "replay_us": 86.631,
+        "store_us": 7095.5419999999995,
+        "total_us": 7273.793
+      },
+      {
+        "prepare_us": 63.306999999999995,
+        "replay_us": 69.269,
+        "store_us": 2084.3250000000003,
+        "total_us": 2218.0730000000003
+      },
+      {
+        "prepare_us": 74.93,
+        "replay_us": 60.342,
+        "store_us": 1764.721,
+        "total_us": 1900.854
+      },
+      {
+        "prepare_us": 42.74,
+        "replay_us": 74.94,
+        "store_us": 1895.353,
+        "total_us": 2014.2350000000001
+      },
+      {
+        "prepare_us": 70.22999999999999,
+        "replay_us": 88.37400000000001,
+        "store_us": 1745.466,
+        "total_us": 1905.332
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 8192,
+    "arm": "baseline",
+    "run": 1,
+    "phase_medians_us": {
+      "prepare_us": 59.9615,
+      "replay_us": 68.3065,
+      "store_us": 1783.9215,
+      "total_us": 1907.8215
+    }
+  },
+  {
+    "all_assigned_signature": "240a5f368f71a1648ff2406765da0adb9495b55046e59d5a23a3ce2e08bd3da7",
+    "append_and_reopen_peak_rss_bytes": 216023040,
+    "append_peak_rss_bytes": 216141824,
+    "batch": 1000,
+    "case": "large",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 16384,
+    "rounds": 6,
+    "samples": [
+      {
+        "prepare_us": 59497.655000000006,
+        "replay_us": 42539.697,
+        "store_us": 30991.157,
+        "total_us": 136029.489
+      },
+      {
+        "prepare_us": 35684.663,
+        "replay_us": 43383.846,
+        "store_us": 42152.218,
+        "total_us": 121279.046
+      },
+      {
+        "prepare_us": 34661.321,
+        "replay_us": 31852.468,
+        "store_us": 10895.376,
+        "total_us": 77471.872
+      },
+      {
+        "prepare_us": 47287.034,
+        "replay_us": 30924.012000000002,
+        "store_us": 45023.125,
+        "total_us": 125214.63299999999
+      },
+      {
+        "prepare_us": 52197.964,
+        "replay_us": 35345.663,
+        "store_us": 16700.377999999997,
+        "total_us": 104308.245
+      },
+      {
+        "prepare_us": 36640.941000000006,
+        "replay_us": 35559.861,
+        "store_us": 13547.407,
+        "total_us": 85833.407
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 16383100,
+    "arm": "lifetime",
+    "run": 1,
+    "phase_medians_us": {
+      "prepare_us": 41963.9875,
+      "replay_us": 35452.762,
+      "store_us": 23845.767499999998,
+      "total_us": 112793.6455
+    }
+  },
+  {
+    "all_assigned_signature": "240a5f368f71a1648ff2406765da0adb9495b55046e59d5a23a3ce2e08bd3da7",
+    "append_and_reopen_peak_rss_bytes": 232603648,
+    "append_peak_rss_bytes": 232603648,
+    "batch": 1000,
+    "case": "large",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 16384,
+    "rounds": 6,
+    "samples": [
+      {
+        "prepare_us": 61224.746,
+        "replay_us": 41659.722,
+        "store_us": 27227.620000000003,
+        "total_us": 132139.427
+      },
+      {
+        "prepare_us": 45903.381,
+        "replay_us": 31155.102,
+        "store_us": 27912.794,
+        "total_us": 107013.334
+      },
+      {
+        "prepare_us": 38752.346,
+        "replay_us": 31726.214000000004,
+        "store_us": 10168.435,
+        "total_us": 82750.62599999999
+      },
+      {
+        "prepare_us": 46389.695,
+        "replay_us": 46690.966,
+        "store_us": 55421.316999999995,
+        "total_us": 150437.95700000002
+      },
+      {
+        "prepare_us": 51711.179000000004,
+        "replay_us": 39214.235,
+        "store_us": 13082.893,
+        "total_us": 104094.618
+      },
+      {
+        "prepare_us": 36363.936,
+        "replay_us": 38079.175,
+        "store_us": 12832.738,
+        "total_us": 89308.027
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 16383100,
+    "arm": "baseline",
+    "run": 1,
+    "phase_medians_us": {
+      "prepare_us": 46146.538,
+      "replay_us": 38646.705,
+      "store_us": 20155.256500000003,
+      "total_us": 105553.976
+    }
+  },
+  {
+    "all_assigned_signature": "11934d4706000c0a866da5d14b45f754b49d8b4f17db170f0036853d4b90565a",
+    "append_and_reopen_peak_rss_bytes": 119947264,
+    "append_peak_rss_bytes": 119508992,
+    "batch": 1,
+    "case": "escaped",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 4194304,
+    "rounds": 4,
+    "samples": [
+      {
+        "prepare_us": 106800.30799999999,
+        "replay_us": 103171.973,
+        "store_us": 47867.823,
+        "total_us": 259251.978
+      },
+      {
+        "prepare_us": 106739.93599999999,
+        "replay_us": 103495.92300000001,
+        "store_us": 26123.879,
+        "total_us": 237782.333
+      },
+      {
+        "prepare_us": 109211.491,
+        "replay_us": 103898.51299999999,
+        "store_us": 81370.45,
+        "total_us": 295921.002
+      },
+      {
+        "prepare_us": 109460.764,
+        "replay_us": 103143.019,
+        "store_us": 9304.338,
+        "total_us": 223342.718
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 4194304,
+    "arm": "lifetime",
+    "run": 1,
+    "phase_medians_us": {
+      "prepare_us": 108005.8995,
+      "replay_us": 103333.948,
+      "store_us": 36995.850999999995,
+      "total_us": 248517.1555
+    }
+  },
+  {
+    "all_assigned_signature": "11934d4706000c0a866da5d14b45f754b49d8b4f17db170f0036853d4b90565a",
+    "append_and_reopen_peak_rss_bytes": 144728064,
+    "append_peak_rss_bytes": 144728064,
+    "batch": 1,
+    "case": "escaped",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 4194304,
+    "rounds": 4,
+    "samples": [
+      {
+        "prepare_us": 104718.007,
+        "replay_us": 98563.154,
+        "store_us": 49429.916999999994,
+        "total_us": 256292.63600000003
+      },
+      {
+        "prepare_us": 110744.811,
+        "replay_us": 101512.748,
+        "store_us": 18588.93,
+        "total_us": 233704.702
+      },
+      {
+        "prepare_us": 109926.37,
+        "replay_us": 99708.82400000001,
+        "store_us": 75514.423,
+        "total_us": 287991.63
+      },
+      {
+        "prepare_us": 107979.981,
+        "replay_us": 98115.341,
+        "store_us": 15425.628999999999,
+        "total_us": 224333.891
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 4194304,
+    "arm": "baseline",
+    "run": 1,
+    "phase_medians_us": {
+      "prepare_us": 108953.1755,
+      "replay_us": 99135.989,
+      "store_us": 34009.4235,
+      "total_us": 244998.669
+    }
+  },
+  {
+    "all_assigned_signature": "c01e0902bfa55a6bbb2bc2bf52bc1501d99766c950a292641c4d1f8d30fdf9d3",
+    "append_and_reopen_peak_rss_bytes": 8675328,
+    "append_peak_rss_bytes": 7778304,
+    "batch": 8,
+    "case": "small",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 1024,
+    "rounds": 64,
+    "samples": [
+      {
+        "prepare_us": 79.899,
+        "replay_us": 76.181,
+        "store_us": 5741.364,
+        "total_us": 5898.826999999999
+      },
+      {
+        "prepare_us": 58.458999999999996,
+        "replay_us": 82.293,
+        "store_us": 7529.208,
+        "total_us": 7671.042
+      },
+      {
+        "prepare_us": 61.273999999999994,
+        "replay_us": 43.050000000000004,
+        "store_us": 1781.222,
+        "total_us": 1886.167
+      },
+      {
+        "prepare_us": 46.406000000000006,
+        "replay_us": 63.067,
+        "store_us": 1338.459,
+        "total_us": 1448.663
+      },
+      {
+        "prepare_us": 52.668,
+        "replay_us": 60.382,
+        "store_us": 1800.1670000000001,
+        "total_us": 1914.179
+      },
+      {
+        "prepare_us": 52.809000000000005,
+        "replay_us": 60.853,
+        "store_us": 1095.126,
+        "total_us": 1209.279
+      },
+      {
+        "prepare_us": 38.672,
+        "replay_us": 49.641999999999996,
+        "store_us": 1113.149,
+        "total_us": 1202.105
+      },
+      {
+        "prepare_us": 52.017,
+        "replay_us": 61.605000000000004,
+        "store_us": 1159.165,
+        "total_us": 1273.428
+      },
+      {
+        "prepare_us": 52.688,
+        "replay_us": 44.492,
+        "store_us": 1092.291,
+        "total_us": 1190.032
+      },
+      {
+        "prepare_us": 38.923,
+        "replay_us": 39.423,
+        "store_us": 1886.367,
+        "total_us": 1965.204
+      },
+      {
+        "prepare_us": 39.303,
+        "replay_us": 51.205000000000005,
+        "store_us": 1187.538,
+        "total_us": 1278.647
+      },
+      {
+        "prepare_us": 53.038000000000004,
+        "replay_us": 56.175,
+        "store_us": 1171.738,
+        "total_us": 1281.682
+      },
+      {
+        "prepare_us": 53.62,
+        "replay_us": 59.1,
+        "store_us": 1099.7540000000001,
+        "total_us": 1213.115
+      },
+      {
+        "prepare_us": 57.166999999999994,
+        "replay_us": 50.615,
+        "store_us": 1109.452,
+        "total_us": 1217.865
+      },
+      {
+        "prepare_us": 51.576,
+        "replay_us": 52.338,
+        "store_us": 1704.699,
+        "total_us": 1809.314
+      },
+      {
+        "prepare_us": 52.418,
+        "replay_us": 51.235,
+        "store_us": 1104.473,
+        "total_us": 1208.657
+      },
+      {
+        "prepare_us": 51.956,
+        "replay_us": 50.894,
+        "store_us": 1119.372,
+        "total_us": 1222.894
+      },
+      {
+        "prepare_us": 52.297,
+        "replay_us": 60.452999999999996,
+        "store_us": 1110.3039999999999,
+        "total_us": 1223.655
+      },
+      {
+        "prepare_us": 63.798,
+        "replay_us": 50.985,
+        "store_us": 1693.3880000000001,
+        "total_us": 1808.8819999999998
+      },
+      {
+        "prepare_us": 52.688,
+        "replay_us": 54.792,
+        "store_us": 1109.313,
+        "total_us": 1217.414
+      },
+      {
+        "prepare_us": 52.237,
+        "replay_us": 49.571999999999996,
+        "store_us": 1098.562,
+        "total_us": 1201.012
+      },
+      {
+        "prepare_us": 51.576,
+        "replay_us": 48.61,
+        "store_us": 1111.968,
+        "total_us": 1212.805
+      },
+      {
+        "prepare_us": 51.536,
+        "replay_us": 51.907000000000004,
+        "store_us": 1150.669,
+        "total_us": 1255.244
+      },
+      {
+        "prepare_us": 42.459,
+        "replay_us": 50.243,
+        "store_us": 1117.748,
+        "total_us": 1211.172
+      },
+      {
+        "prepare_us": 51.816,
+        "replay_us": 49.041,
+        "store_us": 1104.033,
+        "total_us": 1205.471
+      },
+      {
+        "prepare_us": 51.065,
+        "replay_us": 36.959,
+        "store_us": 1156.56,
+        "total_us": 1245.125
+      },
+      {
+        "prepare_us": 38.833,
+        "replay_us": 50.203,
+        "store_us": 1144.9279999999999,
+        "total_us": 1234.536
+      },
+      {
+        "prepare_us": 52.067,
+        "replay_us": 54.522,
+        "store_us": 1126.454,
+        "total_us": 1233.644
+      },
+      {
+        "prepare_us": 51.896,
+        "replay_us": 54.521,
+        "store_us": 1109.503,
+        "total_us": 1216.511
+      },
+      {
+        "prepare_us": 51.536,
+        "replay_us": 54.131,
+        "store_us": 1123.619,
+        "total_us": 1230.067
+      },
+      {
+        "prepare_us": 56.445,
+        "replay_us": 49.342000000000006,
+        "store_us": 1063.076,
+        "total_us": 1169.524
+      },
+      {
+        "prepare_us": 51.786,
+        "replay_us": 61.744,
+        "store_us": 1092.602,
+        "total_us": 1206.754
+      },
+      {
+        "prepare_us": 57.678,
+        "replay_us": 80.539,
+        "store_us": 1065.1000000000001,
+        "total_us": 1204.289
+      },
+      {
+        "prepare_us": 52.438,
+        "replay_us": 41.407,
+        "store_us": 1654.256,
+        "total_us": 1748.832
+      },
+      {
+        "prepare_us": 39.253,
+        "replay_us": 51.184999999999995,
+        "store_us": 1092.01,
+        "total_us": 1183.19
+      },
+      {
+        "prepare_us": 51.737,
+        "replay_us": 39.433,
+        "store_us": 1091.1580000000001,
+        "total_us": 1182.889
+      },
+      {
+        "prepare_us": 38.772,
+        "replay_us": 50.985,
+        "store_us": 1153.154,
+        "total_us": 1243.702
+      },
+      {
+        "prepare_us": 52.147,
+        "replay_us": 36.448,
+        "store_us": 1067.615,
+        "total_us": 1156.691
+      },
+      {
+        "prepare_us": 38.541000000000004,
+        "replay_us": 52.217,
+        "store_us": 1100.336,
+        "total_us": 1191.7849999999999
+      },
+      {
+        "prepare_us": 51.296,
+        "replay_us": 45.064,
+        "store_us": 1091.318,
+        "total_us": 1188.269
+      },
+      {
+        "prepare_us": 39.083,
+        "replay_us": 57.698,
+        "store_us": 1141.331,
+        "total_us": 1238.863
+      },
+      {
+        "prepare_us": 58.599,
+        "replay_us": 60.873,
+        "store_us": 1596.669,
+        "total_us": 1716.903
+      },
+      {
+        "prepare_us": 52.567,
+        "replay_us": 50.013,
+        "store_us": 1075.6200000000001,
+        "total_us": 1178.861
+      },
+      {
+        "prepare_us": 51.616,
+        "replay_us": 36.266999999999996,
+        "store_us": 1311.3580000000002,
+        "total_us": 1399.702
+      },
+      {
+        "prepare_us": 38.491,
+        "replay_us": 58.369,
+        "store_us": 1367.8729999999998,
+        "total_us": 1465.6039999999998
+      },
+      {
+        "prepare_us": 51.916999999999994,
+        "replay_us": 55.674,
+        "store_us": 1193.619,
+        "total_us": 1301.8809999999999
+      },
+      {
+        "prepare_us": 58.147999999999996,
+        "replay_us": 61.273999999999994,
+        "store_us": 987.4359999999999,
+        "total_us": 1107.619
+      },
+      {
+        "prepare_us": 51.866,
+        "replay_us": 46.867,
+        "store_us": 1136.062,
+        "total_us": 1235.417
+      },
+      {
+        "prepare_us": 39.07299999999999,
+        "replay_us": 52.387,
+        "store_us": 1129.901,
+        "total_us": 1222.0720000000001
+      },
+      {
+        "prepare_us": 52.037,
+        "replay_us": 43.772,
+        "store_us": 1105.385,
+        "total_us": 1201.745
+      },
+      {
+        "prepare_us": 38.882,
+        "replay_us": 56.485,
+        "store_us": 1022.411,
+        "total_us": 1118.4389999999999
+      },
+      {
+        "prepare_us": 51.846,
+        "replay_us": 52.587,
+        "store_us": 1752.779,
+        "total_us": 1858.054
+      },
+      {
+        "prepare_us": 52.057,
+        "replay_us": 62.135,
+        "store_us": 1101.087,
+        "total_us": 1216.051
+      },
+      {
+        "prepare_us": 54.201,
+        "replay_us": 59.009,
+        "store_us": 1090.0269999999998,
+        "total_us": 1203.989
+      },
+      {
+        "prepare_us": 51.635999999999996,
+        "replay_us": 49.542,
+        "store_us": 995.7909999999999,
+        "total_us": 1097.61
+      },
+      {
+        "prepare_us": 51.675999999999995,
+        "replay_us": 54.632,
+        "store_us": 1149.116,
+        "total_us": 1256.326
+      },
+      {
+        "prepare_us": 51.896,
+        "replay_us": 56.684999999999995,
+        "store_us": 1097.28,
+        "total_us": 1206.603
+      },
+      {
+        "prepare_us": 51.546,
+        "replay_us": 52.438,
+        "store_us": 1626.864,
+        "total_us": 1731.459
+      },
+      {
+        "prepare_us": 51.405,
+        "replay_us": 58.268,
+        "store_us": 1308.954,
+        "total_us": 1419.308
+      },
+      {
+        "prepare_us": 51.675999999999995,
+        "replay_us": 51.656,
+        "store_us": 1813.121,
+        "total_us": 1917.2849999999999
+      },
+      {
+        "prepare_us": 52.397,
+        "replay_us": 57.907,
+        "store_us": 1116.266,
+        "total_us": 1227.362
+      },
+      {
+        "prepare_us": 55.763999999999996,
+        "replay_us": 64.259,
+        "store_us": 1095.9769999999999,
+        "total_us": 1216.7720000000002
+      },
+      {
+        "prepare_us": 57.236,
+        "replay_us": 49.802,
+        "store_us": 1687.7179999999998,
+        "total_us": 1795.528
+      },
+      {
+        "prepare_us": 57.226,
+        "replay_us": 60.864,
+        "store_us": 1104.964,
+        "total_us": 1223.885
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 8192,
+    "arm": "baseline",
+    "run": 2,
+    "phase_medians_us": {
+      "prepare_us": 51.906499999999994,
+      "replay_us": 52.3625,
+      "store_us": 1118.56,
+      "total_us": 1223.77
+    }
+  },
+  {
+    "all_assigned_signature": "c01e0902bfa55a6bbb2bc2bf52bc1501d99766c950a292641c4d1f8d30fdf9d3",
+    "append_and_reopen_peak_rss_bytes": 8712192,
+    "append_peak_rss_bytes": 7811072,
+    "batch": 8,
+    "case": "small",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 1024,
+    "rounds": 64,
+    "samples": [
+      {
+        "prepare_us": 74.949,
+        "replay_us": 56.936,
+        "store_us": 1719.146,
+        "total_us": 1852.023
+      },
+      {
+        "prepare_us": 39.744,
+        "replay_us": 55.603,
+        "store_us": 1182.388,
+        "total_us": 1278.406
+      },
+      {
+        "prepare_us": 52.298,
+        "replay_us": 74.589,
+        "store_us": 7588.989,
+        "total_us": 7716.677
+      },
+      {
+        "prepare_us": 61.504,
+        "replay_us": 46.807,
+        "store_us": 1883.812,
+        "total_us": 1992.634
+      },
+      {
+        "prepare_us": 39.223,
+        "replay_us": 56.445,
+        "store_us": 1331.596,
+        "total_us": 1427.945
+      },
+      {
+        "prepare_us": 67.085,
+        "replay_us": 64.39,
+        "store_us": 1850.8909999999998,
+        "total_us": 1982.9769999999999
+      },
+      {
+        "prepare_us": 58.32899999999999,
+        "replay_us": 60.853,
+        "store_us": 1658.443,
+        "total_us": 1778.236
+      },
+      {
+        "prepare_us": 57.637,
+        "replay_us": 65.992,
+        "store_us": 1700.402,
+        "total_us": 1824.602
+      },
+      {
+        "prepare_us": 57.547000000000004,
+        "replay_us": 64.009,
+        "store_us": 1653.413,
+        "total_us": 1775.661
+      },
+      {
+        "prepare_us": 67.49600000000001,
+        "replay_us": 56.394999999999996,
+        "store_us": 1645.248,
+        "total_us": 1769.79
+      },
+      {
+        "prepare_us": 58.328,
+        "replay_us": 58.178,
+        "store_us": 1749.182,
+        "total_us": 1866.31
+      },
+      {
+        "prepare_us": 52.477,
+        "replay_us": 54.832,
+        "store_us": 1100.7169999999999,
+        "total_us": 1208.557
+      },
+      {
+        "prepare_us": 56.465,
+        "replay_us": 58.859,
+        "store_us": 1097.6709999999998,
+        "total_us": 1213.617
+      },
+      {
+        "prepare_us": 56.715,
+        "replay_us": 54.722,
+        "store_us": 1428.155,
+        "total_us": 1540.213
+      },
+      {
+        "prepare_us": 51.927,
+        "replay_us": 59.952,
+        "store_us": 1715.509,
+        "total_us": 1828.0690000000002
+      },
+      {
+        "prepare_us": 52.317,
+        "replay_us": 57.727,
+        "store_us": 1112.8290000000002,
+        "total_us": 1223.384
+      },
+      {
+        "prepare_us": 52.318000000000005,
+        "replay_us": 62.446000000000005,
+        "store_us": 1107.699,
+        "total_us": 1223.124
+      },
+      {
+        "prepare_us": 52.397,
+        "replay_us": 65.942,
+        "store_us": 1099.2440000000001,
+        "total_us": 1218.114
+      },
+      {
+        "prepare_us": 52.668,
+        "replay_us": 54.682,
+        "store_us": 1701.7340000000002,
+        "total_us": 1809.865
+      },
+      {
+        "prepare_us": 53.77,
+        "replay_us": 63.44800000000001,
+        "store_us": 1105.895,
+        "total_us": 1223.775
+      },
+      {
+        "prepare_us": 53.458999999999996,
+        "replay_us": 41.547,
+        "store_us": 1094.9460000000001,
+        "total_us": 1190.493
+      },
+      {
+        "prepare_us": 38.872,
+        "replay_us": 57.657000000000004,
+        "store_us": 1124.641,
+        "total_us": 1221.771
+      },
+      {
+        "prepare_us": 52.318000000000005,
+        "replay_us": 58.859,
+        "store_us": 1775.461,
+        "total_us": 1887.289
+      },
+      {
+        "prepare_us": 51.965999999999994,
+        "replay_us": 40.496,
+        "store_us": 1663.8029999999999,
+        "total_us": 1756.755
+      },
+      {
+        "prepare_us": 38.902,
+        "replay_us": 50.63399999999999,
+        "store_us": 1126.956,
+        "total_us": 1217.213
+      },
+      {
+        "prepare_us": 51.706,
+        "replay_us": 49.352,
+        "store_us": 1139.799,
+        "total_us": 1241.488
+      },
+      {
+        "prepare_us": 52.197,
+        "replay_us": 53.098,
+        "store_us": 1110.004,
+        "total_us": 1215.9409999999998
+      },
+      {
+        "prepare_us": 51.826,
+        "replay_us": 49.472,
+        "store_us": 1104.543,
+        "total_us": 1206.5430000000001
+      },
+      {
+        "prepare_us": 80.39,
+        "replay_us": 52.086999999999996,
+        "store_us": 1650.599,
+        "total_us": 1783.867
+      },
+      {
+        "prepare_us": 52.067,
+        "replay_us": 59.891,
+        "store_us": 1148.385,
+        "total_us": 1261.155
+      },
+      {
+        "prepare_us": 53.049,
+        "replay_us": 49.853,
+        "store_us": 1109.5420000000001,
+        "total_us": 1213.045
+      },
+      {
+        "prepare_us": 52.067,
+        "replay_us": 49.983,
+        "store_us": 1121.194,
+        "total_us": 1223.875
+      },
+      {
+        "prepare_us": 52.257,
+        "replay_us": 50.694,
+        "store_us": 1114.2420000000002,
+        "total_us": 1217.875
+      },
+      {
+        "prepare_us": 51.965999999999994,
+        "replay_us": 50.595,
+        "store_us": 1145.239,
+        "total_us": 1248.521
+      },
+      {
+        "prepare_us": 52.568000000000005,
+        "replay_us": 49.192,
+        "store_us": 1103.1100000000001,
+        "total_us": 1205.4209999999998
+      },
+      {
+        "prepare_us": 51.295,
+        "replay_us": 48.79,
+        "store_us": 1094.896,
+        "total_us": 1195.532
+      },
+      {
+        "prepare_us": 51.366,
+        "replay_us": 65.852,
+        "store_us": 1113.981,
+        "total_us": 1232.141
+      },
+      {
+        "prepare_us": 58.129,
+        "replay_us": 38.010999999999996,
+        "store_us": 1625.361,
+        "total_us": 1721.982
+      },
+      {
+        "prepare_us": 38.602000000000004,
+        "replay_us": 65.31099999999999,
+        "store_us": 1113.51,
+        "total_us": 1218.335
+      },
+      {
+        "prepare_us": 66.964,
+        "replay_us": 51.044999999999995,
+        "store_us": 1630.992,
+        "total_us": 1749.713
+      },
+      {
+        "prepare_us": 52.998000000000005,
+        "replay_us": 51.085,
+        "store_us": 1112.188,
+        "total_us": 1217.002
+      },
+      {
+        "prepare_us": 52.237,
+        "replay_us": 53.259,
+        "store_us": 1088.914,
+        "total_us": 1195.001
+      },
+      {
+        "prepare_us": 52.939,
+        "replay_us": 53.389,
+        "store_us": 1103.05,
+        "total_us": 1209.9299999999998
+      },
+      {
+        "prepare_us": 52.277,
+        "replay_us": 60.232,
+        "store_us": 1091.6299999999999,
+        "total_us": 1204.75
+      },
+      {
+        "prepare_us": 51.736000000000004,
+        "replay_us": 40.214,
+        "store_us": 1670.7569999999998,
+        "total_us": 1763.238
+      },
+      {
+        "prepare_us": 39.053,
+        "replay_us": 57.177,
+        "store_us": 1122.396,
+        "total_us": 1219.2069999999999
+      },
+      {
+        "prepare_us": 54.261,
+        "replay_us": 36.628,
+        "store_us": 1098.1409999999998,
+        "total_us": 1189.5810000000001
+      },
+      {
+        "prepare_us": 38.751999999999995,
+        "replay_us": 65.762,
+        "store_us": 1172.36,
+        "total_us": 1277.7459999999999
+      },
+      {
+        "prepare_us": 57.948,
+        "replay_us": 50.364000000000004,
+        "store_us": 1636.342,
+        "total_us": 1745.325
+      },
+      {
+        "prepare_us": 57.126000000000005,
+        "replay_us": 56.474999999999994,
+        "store_us": 1069.689,
+        "total_us": 1185.1940000000002
+      },
+      {
+        "prepare_us": 52.478,
+        "replay_us": 56.846,
+        "store_us": 996.4019999999999,
+        "total_us": 1106.467
+      },
+      {
+        "prepare_us": 51.275,
+        "replay_us": 50.954,
+        "store_us": 1603.622,
+        "total_us": 1706.472
+      },
+      {
+        "prepare_us": 52.066,
+        "replay_us": 41.948,
+        "store_us": 1005.8510000000001,
+        "total_us": 1100.416
+      },
+      {
+        "prepare_us": 38.382,
+        "replay_us": 48.43,
+        "store_us": 1051.635,
+        "total_us": 1139.028
+      },
+      {
+        "prepare_us": 50.644,
+        "replay_us": 57.787,
+        "store_us": 1006.451,
+        "total_us": 1115.654
+      },
+      {
+        "prepare_us": 52.788,
+        "replay_us": 37.229,
+        "store_us": 1608.521,
+        "total_us": 1699.049
+      },
+      {
+        "prepare_us": 38.681,
+        "replay_us": 59.580999999999996,
+        "store_us": 1030.076,
+        "total_us": 1128.949
+      },
+      {
+        "prepare_us": 51.095,
+        "replay_us": 39.042,
+        "store_us": 1028.582,
+        "total_us": 1119.2
+      },
+      {
+        "prepare_us": 38.381,
+        "replay_us": 57.437,
+        "store_us": 1069.629,
+        "total_us": 1166.198
+      },
+      {
+        "prepare_us": 51.897,
+        "replay_us": 55.293,
+        "store_us": 998.045,
+        "total_us": 1105.846
+      },
+      {
+        "prepare_us": 51.556,
+        "replay_us": 36.307,
+        "store_us": 1001.2319999999999,
+        "total_us": 1089.586
+      },
+      {
+        "prepare_us": 38.260999999999996,
+        "replay_us": 57.025999999999996,
+        "store_us": 1070.7710000000002,
+        "total_us": 1166.6789999999999
+      },
+      {
+        "prepare_us": 51.455,
+        "replay_us": 50.694,
+        "store_us": 1609.262,
+        "total_us": 1712.163
+      },
+      {
+        "prepare_us": 51.776,
+        "replay_us": 63.237,
+        "store_us": 1010.5190000000001,
+        "total_us": 1126.2340000000002
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 8192,
+    "arm": "lifetime",
+    "run": 2,
+    "phase_medians_us": {
+      "prepare_us": 52.266999999999996,
+      "replay_us": 55.0625,
+      "store_us": 1117.718,
+      "total_us": 1223.254
+    }
+  },
+  {
+    "all_assigned_signature": "240a5f368f71a1648ff2406765da0adb9495b55046e59d5a23a3ce2e08bd3da7",
+    "append_and_reopen_peak_rss_bytes": 232300544,
+    "append_peak_rss_bytes": 232300544,
+    "batch": 1000,
+    "case": "large",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 16384,
+    "rounds": 6,
+    "samples": [
+      {
+        "prepare_us": 60815.065,
+        "replay_us": 41796.466,
+        "store_us": 29762.342,
+        "total_us": 134349.175
+      },
+      {
+        "prepare_us": 46179.675,
+        "replay_us": 30272.310999999998,
+        "store_us": 37233.873,
+        "total_us": 115656.243
+      },
+      {
+        "prepare_us": 38222.221,
+        "replay_us": 32089.589,
+        "store_us": 14343.918000000001,
+        "total_us": 86760.792
+      },
+      {
+        "prepare_us": 47081.331999999995,
+        "replay_us": 45975.405,
+        "store_us": 60757.778,
+        "total_us": 155756.86599999998
+      },
+      {
+        "prepare_us": 51286.449,
+        "replay_us": 39058.455,
+        "store_us": 17529.751,
+        "total_us": 107944.966
+      },
+      {
+        "prepare_us": 36857.814000000006,
+        "replay_us": 38747.326,
+        "store_us": 12217.185,
+        "total_us": 89883.68800000001
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 16383100,
+    "arm": "baseline",
+    "run": 2,
+    "phase_medians_us": {
+      "prepare_us": 46630.5035,
+      "replay_us": 38902.8905,
+      "store_us": 23646.0465,
+      "total_us": 111800.6045
+    }
+  },
+  {
+    "all_assigned_signature": "240a5f368f71a1648ff2406765da0adb9495b55046e59d5a23a3ce2e08bd3da7",
+    "append_and_reopen_peak_rss_bytes": 215867392,
+    "append_peak_rss_bytes": 215937024,
+    "batch": 1000,
+    "case": "large",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 16384,
+    "rounds": 6,
+    "samples": [
+      {
+        "prepare_us": 59527.31,
+        "replay_us": 42150.664,
+        "store_us": 24556.474,
+        "total_us": 129176.74900000001
+      },
+      {
+        "prepare_us": 35979.331000000006,
+        "replay_us": 43359.251000000004,
+        "store_us": 37512.161,
+        "total_us": 116916.50600000001
+      },
+      {
+        "prepare_us": 35055.494,
+        "replay_us": 31166.643,
+        "store_us": 12170.136,
+        "total_us": 78462.524
+      },
+      {
+        "prepare_us": 47505.13,
+        "replay_us": 31501.977,
+        "store_us": 38040.443,
+        "total_us": 119118.42
+      },
+      {
+        "prepare_us": 51938.281,
+        "replay_us": 35731.841,
+        "store_us": 19858.68,
+        "total_us": 107598.462
+      },
+      {
+        "prepare_us": 36606.818,
+        "replay_us": 35906.565,
+        "store_us": 16263.577000000001,
+        "total_us": 88865.38500000001
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 16383100,
+    "arm": "lifetime",
+    "run": 2,
+    "phase_medians_us": {
+      "prepare_us": 42055.974,
+      "replay_us": 35819.203,
+      "store_us": 22207.576999999997,
+      "total_us": 112257.484
+    }
+  },
+  {
+    "all_assigned_signature": "11934d4706000c0a866da5d14b45f754b49d8b4f17db170f0036853d4b90565a",
+    "append_and_reopen_peak_rss_bytes": 144912384,
+    "append_peak_rss_bytes": 144912384,
+    "batch": 1,
+    "case": "escaped",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 4194304,
+    "rounds": 4,
+    "samples": [
+      {
+        "prepare_us": 105253.25200000001,
+        "replay_us": 97907.124,
+        "store_us": 53587.968,
+        "total_us": 259630.45200000002
+      },
+      {
+        "prepare_us": 106746.829,
+        "replay_us": 101882.755,
+        "store_us": 15870.115,
+        "total_us": 227364.746
+      },
+      {
+        "prepare_us": 109432.241,
+        "replay_us": 100352.13,
+        "store_us": 75608.91799999999,
+        "total_us": 288224.573
+      },
+      {
+        "prepare_us": 108713.795,
+        "replay_us": 99391.885,
+        "store_us": 8180.078,
+        "total_us": 219274.524
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 4194304,
+    "arm": "baseline",
+    "run": 2,
+    "phase_medians_us": {
+      "prepare_us": 107730.312,
+      "replay_us": 99872.0075,
+      "store_us": 34729.0415,
+      "total_us": 243497.59900000002
+    }
+  },
+  {
+    "all_assigned_signature": "11934d4706000c0a866da5d14b45f754b49d8b4f17db170f0036853d4b90565a",
+    "append_and_reopen_peak_rss_bytes": 119861248,
+    "append_peak_rss_bytes": 119476224,
+    "batch": 1,
+    "case": "escaped",
+    "diagnostic": "record-tag-append",
+    "exact_reopen": true,
+    "max_source_text_bytes_per_row": 4194304,
+    "rounds": 4,
+    "samples": [
+      {
+        "prepare_us": 107589.014,
+        "replay_us": 104011.363,
+        "store_us": 47122.788,
+        "total_us": 260140.80000000002
+      },
+      {
+        "prepare_us": 107558.848,
+        "replay_us": 105616.216,
+        "store_us": 15566.361,
+        "total_us": 230147.86000000002
+      },
+      {
+        "prepare_us": 110588.64,
+        "replay_us": 103967.862,
+        "store_us": 80451.492,
+        "total_us": 296457.078
+      },
+      {
+        "prepare_us": 109648.102,
+        "replay_us": 103686.128,
+        "store_us": 10484.342,
+        "total_us": 225259.38100000002
+      }
+    ],
+    "scope": "local synthetic durable append phase diagnostic; no provider or hosted claim",
+    "source_text_bytes_per_batch": 4194304,
+    "arm": "lifetime",
+    "run": 2,
+    "phase_medians_us": {
+      "prepare_us": 108618.55799999999,
+      "replay_us": 103989.61249999999,
+      "store_us": 31344.574500000002,
+      "total_us": 245144.33000000002
+    }
+  }
+]
