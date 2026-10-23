@@ -1086,3 +1086,22 @@ fn record_time_outputs_keep_header_bound_adapter_through_reopen() {
     drop(log);let mut changed=identity();changed.adapter="different-bound-source".into();
     assert!(RecordLog::open(&f.root.join("authority"),&KEY,changed).is_err());
 }
+
+#[test]
+fn counted_json_preserves_exact_escaped_wire_bounds() {
+    let values = [
+        serde_json::json!(null),
+        serde_json::json!({"a": ["quote\"slash\\line\n", "λ🦀\u{0000}", "", "é"], "b": [0, -1, 1.25, true]}),
+        serde_json::json!({"text": "λ\"\\\n".repeat(1024)}),
+    ];
+    for value in values {
+        let expected = serde_json::to_vec(&value).unwrap();
+        for limit in [0, 1, expected.len() - 1, expected.len(), expected.len() + 1] {
+            assert_eq!(
+                json(&value, limit).map(|bytes| bytes.len()),
+                json_size(&value, limit)
+            );
+        }
+        assert_eq!(json_size(&value, expected.len()).unwrap(), expected.len());
+    }
+}

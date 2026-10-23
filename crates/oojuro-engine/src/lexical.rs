@@ -5,17 +5,15 @@
 //! Retention/erasure, learned outcomes and launch scale are
 //! deliberately outside this slice. Each index is bound to one open writer log.
 mod args;
-pub(crate) mod passage;
 pub(crate) mod paged;
+pub(crate) mod passage;
 pub(crate) mod prepared;
 pub(crate) mod record_cache;
 pub mod segments;
 mod text;
 use crate::capture_log::{CaptureLog, Event, ParsedBatch};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
-use text::{
-    literal_probability, literal_query, normalize_word, phrase_start, query_terms, retrieval_terms,
-};
+use text::{literal_probability, literal_query, normalize_word, phrase_start, query_terms};
 
 const MU: f64 = 128.0;
 const FLOOR_RECORDS: f64 = 64.0;
@@ -144,12 +142,14 @@ impl Index {
         if self.authority != 0 || self.failed {
             return Err(Error::Authority);
         }
+        // Temporary build work only: never retain corpus vocabulary after return.
+        let mut stems = HashMap::new();
         for (id, valid_at, text, indexed) in rows {
             if self.documents.last().is_some_and(|old| old.event.id >= id) {
                 return Err(Error::Authority);
             }
             let terms = if tokenize && indexed && !text.is_empty() {
-                analyze(text)?
+                analyze_with_stems(text, &mut stems)?
             } else {
                 vec![]
             };
@@ -197,6 +197,9 @@ impl Index {
     }
     pub fn applied_batches(&self) -> usize {
         self.applied
+    }
+    pub(crate) fn record_text(&self, row: usize) -> Option<&str> {
+        self.documents.get(row).map(|d| d.event.text.as_str())
     }
     fn apply(&mut self, batch: &ParsedBatch) -> Result<()> {
         self.apply_mode(batch, true)
@@ -359,21 +362,59 @@ impl Index {
         view: Option<&RecordVisibility<'_>>,
         original_ids: Option<&[String]>,
     ) -> (Vec<(usize, Hit)>, bool) {
-        prepared::rank(self,q,k,prepared::Options{split,prune,view,original_ids,plan:None})
+        prepared::rank(
+            self,
+            q,
+            k,
+            prepared::Options {
+                split,
+                prune,
+                view,
+                original_ids,
+                plan: None,
+            },
+        )
     }
 }
 #[cfg(test)]
 thread_local! { static ANALYSES: std::cell::Cell<usize> = const { std::cell::Cell::new(0) }; }
 fn analyze(text: &str) -> Result<Vec<(String, u32)>> {
+    analyze_with_stems(text, &mut HashMap::new())
+}
+fn analyze_with_stems(
+    text: &str,
+    stems: &mut HashMap<String, String>,
+) -> Result<Vec<(String, u32)>> {
     #[cfg(test)]
     ANALYSES.with(|n| n.set(n.get() + 1));
-    let mut raw = HashMap::<String, usize>::new();
-    for token in retrieval_terms(text) {
+    let mut raw = HashMap::<std::borrow::Cow<'_, str>, usize>::new();
+    text::for_each_retrieval_term(text, |token| {
+        let token = if token
+            .bytes()
+            .all(|c| c.is_ascii() && !c.is_ascii_uppercase())
+        {
+            std::borrow::Cow::Borrowed(token)
+        } else {
+            std::borrow::Cow::Owned(token.to_lowercase())
+        };
         *raw.entry(token).or_default() += 1;
-    }
+    });
     let mut terms = BTreeMap::<String, usize>::new();
     for (term, count) in raw {
-        *terms.entry(normalize_word(&term).into_owned()).or_default() += count;
+        let normalized = if term.len() <= 256 && term.bytes().all(|c| c.is_ascii_alphabetic()) {
+            if let Some(stem) = stems.get(term.as_ref()) {
+                stem.clone()
+            } else {
+                let stem = normalize_word(&term).into_owned();
+                if stems.len() < 65536 {
+                    stems.insert(term.into_owned(), stem.clone());
+                }
+                stem
+            }
+        } else {
+            normalize_word(&term).into_owned()
+        };
+        *terms.entry(normalized).or_default() += count;
     }
     terms
         .into_iter()

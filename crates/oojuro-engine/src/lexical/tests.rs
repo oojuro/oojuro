@@ -570,3 +570,53 @@ fn native_above_floor_large_candidate_pruning_and_full_decimal_prefix_ties_match
         assert_eq!(native_sig(index.search(&q).unwrap()), expected);
     }
 }
+#[test]
+fn streamed_analysis_matches_original_features_with_a_bounded_temporary_stem_cache() {
+    let vocabulary = [
+        "battery",
+        "BATTERIES",
+        "running",
+        "runs",
+        "repair_shadow_page",
+        "__",
+        "_a__b_",
+        "café",
+        "CAFÉ",
+        "İstanbul",
+        "Straße",
+        "漢字",
+        "λ_Δ",
+        "🦀",
+        "1_2_3",
+        "dying",
+        "a\u{301}b",
+    ];
+    let mut cache = HashMap::new();
+    for seed in 0..1000usize {
+        let text = (0..32)
+            .map(|i| vocabulary[(seed * 17 + i * (seed % 13 + 1)) % vocabulary.len()])
+            .collect::<Vec<_>>()
+            .join(if seed % 2 == 0 { " !\n" } else { "-" });
+        let mut expected = BTreeMap::<String, u32>::new();
+        for term in text::retrieval_terms(&text) {
+            *expected
+                .entry(normalize_word(&term).into_owned())
+                .or_default() += 1;
+        }
+        assert_eq!(
+            analyze_with_stems(&text, &mut cache).unwrap(),
+            expected.into_iter().collect::<Vec<_>>()
+        );
+        assert!(cache.len() <= 65536);
+    }
+    for i in 0..66000 {
+        cache.insert(format!("word{i}"), "stem".into());
+    }
+    let before = cache.len();
+    assert!(
+        !analyze_with_stems("uncachedword", &mut cache)
+            .unwrap()
+            .is_empty()
+    );
+    assert_eq!(cache.len(), before);
+}

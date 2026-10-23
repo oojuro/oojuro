@@ -10,7 +10,7 @@ pub struct Binding {
     pub writer: String,
     pub view: [u8; 32],
 }
-#[derive(Clone, Serialize)]
+#[derive(Clone, PartialEq, Serialize)]
 pub struct Row {
     pub id: String,
     pub key: Option<String>,
@@ -23,6 +23,32 @@ pub struct Row {
     pub status: Option<Status>,
     pub agent_id: String,
     pub indexed: bool,
+}
+impl Row {
+    fn same_metadata(&self, other: &Self) -> bool {
+        // Exhaustive destructuring requires new source fields to join this check.
+        let Self {
+            id,
+            key,
+            text: _,
+            valid_at,
+            reported_recorded_at,
+            kind,
+            tool,
+            status,
+            agent_id,
+            indexed,
+        } = self;
+        id == &other.id
+            && key == &other.key
+            && valid_at == &other.valid_at
+            && reported_recorded_at == &other.reported_recorded_at
+            && kind == &other.kind
+            && tool == &other.tool
+            && status == &other.status
+            && agent_id == &other.agent_id
+            && indexed == &other.indexed
+    }
 }
 pub struct Query<'a> {
     pub text: &'a str,
@@ -48,19 +74,29 @@ pub struct Hit {
 /// every reuse and before delivering each response frame; this API cannot do so.
 pub struct Index {
     binding: Binding,
+    // Text is owned once by inner; these rows retain the other source fields.
     rows: Vec<Row>,
+    text_bytes: usize,
     ids: Vec<String>,
     inner: lexical::Index,
 }
 impl Index {
-    pub fn build(binding: Binding, rows: Vec<Row>) -> Result<Self> {
+    /// Source rows retained by this disposable projection, including unindexed rows.
+    pub fn row_count(&self) -> usize {
+        self.rows.len()
+    }
+    /// Retained source text bytes; posting/allocation overhead is additional.
+    pub fn text_bytes(&self) -> usize {
+        self.text_bytes
+    }
+    fn validate(binding: &Binding, rows: &[Row]) -> Result<()> {
         if !name(&binding.writer, 256) || rows.len() > MAX_RECORDS {
             return Err(Error::Bounds);
         }
         let mut ids = BTreeSet::new();
         let mut keys = BTreeSet::new();
         let mut bytes = 0usize;
-        for r in &rows {
+        for r in rows {
             if !name(&r.id, 1024)
                 || r.key.as_ref().is_some_and(|k| !name(k, 1024))
                 || r.text.len() > MAX_TEXT_BYTES
@@ -71,12 +107,17 @@ impl Index {
                 return Err(Error::Conflict);
             }
             bytes = bytes
-                .checked_add(json(r, MAX_BATCH_BYTES)?.len())
+                .checked_add(json_size(r, MAX_BATCH_BYTES)?)
                 .ok_or(Error::Bounds)?;
             if bytes > MAX_STATE_BYTES {
                 return Err(Error::Bounds);
             }
         }
+        Ok(())
+    }
+    pub fn build(binding: Binding, mut rows: Vec<Row>) -> Result<Self> {
+        Self::validate(&binding, &rows)?;
+        let text_bytes = rows.iter().map(|row| row.text.len()).sum();
         let ids = rows.iter().map(|r| r.id.clone()).collect();
         // Ordinals are private posting handles, never public source identities.
         let inner = lexical::Index::from_record_rows(
@@ -87,12 +128,72 @@ impl Index {
                 .map(|(i, r)| ((i + 1) as u64, r.valid_at, r.text.as_str(), r.indexed)),
         )
         .map_err(|_| Error::Unavailable)?;
+        // Lexical carriers own the exact originals; retain metadata here once.
+        for row in &mut rows {
+            row.text = String::new();
+        }
         Ok(Self {
             binding,
             rows,
+            text_bytes,
             ids,
             inner,
         })
+    }
+    /// Consume the old projection and resolve the complete caller-supplied live
+    /// snapshot again. Only byte/metadata-identical retained rows reuse postings.
+    /// Replacements, deletions and filter changes rebuild; errors consume the old
+    /// value. This is derived work reuse, never a current-authority substitute.
+    pub fn refresh(mut self, binding: Binding, rows: Vec<Row>) -> Result<Self> {
+        if binding.namespace != self.binding.namespace || binding.writer != self.binding.writer {
+            return Err(Error::Scope);
+        }
+        Self::validate(&binding, &rows)?;
+        let unchanged = {
+            let incoming: std::collections::BTreeMap<_, _> =
+                rows.iter().map(|row| (row.id.as_str(), row)).collect();
+            self.rows.iter().enumerate().all(|(old_i, old)| {
+                incoming.get(old.id.as_str()).is_some_and(|row| {
+                    old.same_metadata(row)
+                        && self.inner.record_text(old_i) == Some(row.text.as_str())
+                })
+            })
+        };
+        if binding.view == self.binding.view && (!unchanged || rows.len() != self.rows.len()) {
+            return Err(Error::Conflict);
+        }
+        if !unchanged {
+            drop(self);
+            return Self::build(binding, rows);
+        }
+        let old_ids: BTreeSet<_> = self.ids.iter().map(String::as_str).collect();
+        let mut added: Vec<_> = rows
+            .into_iter()
+            .filter(|row| !old_ids.contains(row.id.as_str()))
+            .collect();
+        drop(old_ids);
+        let start = self.rows.len();
+        self.inner
+            .append_record_rows(
+                added.iter().enumerate().map(|(i, row)| {
+                    (
+                        (start + i + 1) as u64,
+                        row.valid_at,
+                        row.text.as_str(),
+                        row.indexed,
+                    )
+                }),
+                true,
+            )
+            .map_err(|_| Error::Unavailable)?;
+        self.ids.extend(added.iter().map(|row| row.id.clone()));
+        self.text_bytes += added.iter().map(|row| row.text.len()).sum::<usize>();
+        for row in &mut added {
+            row.text = String::new();
+        }
+        self.rows.extend(added);
+        self.binding = binding;
+        Ok(self)
     }
     pub fn search(&self, binding: &Binding, q: &Query<'_>) -> Result<Vec<Hit>> {
         if binding != &self.binding {
@@ -155,18 +256,15 @@ impl Index {
             .map_err(|_| Error::Unavailable)?;
         let mut output = vec![];
         for h in hits {
-            let row = self
-                .rows
-                .get(
-                    usize::try_from(h.id.checked_sub(1).ok_or(Error::Authority)?)
-                        .map_err(|_| Error::Authority)?,
-                )
-                .ok_or(Error::Authority)?;
-            let (start, end) = match passage::extract_passage(&row.text, q.text, q.excerpt_bytes)? {
+            let at = usize::try_from(h.id.checked_sub(1).ok_or(Error::Authority)?)
+                .map_err(|_| Error::Authority)?;
+            let row = self.rows.get(at).ok_or(Error::Authority)?;
+            let text = self.inner.record_text(at).ok_or(Error::Authority)?;
+            let (start, end) = match passage::extract_passage(text, q.text, q.excerpt_bytes)? {
                 Some(p) => (p.start, p.end),
                 None => {
-                    let mut end = row.text.len().min(q.excerpt_bytes);
-                    while !row.text.is_char_boundary(end) {
+                    let mut end = text.len().min(q.excerpt_bytes);
+                    while !text.is_char_boundary(end) {
                         end -= 1;
                     }
                     (0, end)
@@ -180,10 +278,10 @@ impl Index {
                 reported_recorded_at: row.reported_recorded_at,
                 start,
                 end,
-                excerpt: row.text[start..end].into(),
+                excerpt: text[start..end].into(),
             });
         }
-        json(&output, q.max_bytes)?;
+        json_size(&output, q.max_bytes)?;
         Ok(output)
     }
 }

@@ -7,14 +7,14 @@ use oojuro_bench::{
 use std::{collections::BTreeMap, path::PathBuf};
 
 const USAGE: &str = "usage: oojuro-bench <command> [flags]
-  serve    --arm nine|tantivy|sqlite            JSON-lines arm server on stdin/stdout
+  serve    --arm native-record|nine|tantivy|sqlite|jsonl|jsonl-zstd  JSON-lines arm server on stdin/stdout
   beir     --dataset beir-scifact [--split dev|heldout|test] [--k 100] [--config key=value]...
   turnloop --set swe-agent [--split dev] [--trajectories 50] [--background 20000] [--k 20]
            [--thinking index|drop] [--config key=value]... [--pool 200 --dump-pools FILE]
   memqa    --set longmemeval [--split dev] [--k 50] [--limit N] [--dump-pools FILE]
   gates                                         byte-exact, as-of, freshness, crash, determinism
   report   SCORECARD.json... [--baseline LABEL] [--out report.md]
-common: --arm [label=]nine|tantivy|sqlite|cmd:<argv> (repeat)  --runs 3  --out FILE
+common: --arm [label=]native-record|nine|tantivy|sqlite|jsonl|jsonl-zstd|cmd:<argv> (repeat)  --runs 3  --out FILE
         --data DIR (default $OOJURO_DATA or ~/.cache/oojuro-data)  --work DIR  --mem-max 3G  --in-process  --keep  --no-lock (smoke tests only)";
 
 struct Args {

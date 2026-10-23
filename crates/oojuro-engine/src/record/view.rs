@@ -270,13 +270,13 @@ impl View {
         // the FINAL page: an intermediate cursor may exceed a budget that the
         // complete cursor-free page fits. Never skip an oversized first row.
         let stop = rows.len().min(start + limits.entries);
+        let mut records: Vec<_> = rows[start..stop]
+            .iter()
+            .map(|row| row.record(&self.context.writer, &log.identity().adapter))
+            .collect();
         let mut sizes = vec![0usize];
-        for row in &rows[start..stop] {
-            let length = json(
-                &row.record(&self.context.writer, &log.identity().adapter),
-                MAX_OUTPUT_BYTES,
-            )?
-            .len();
+        for record in &records {
+            let length = json_size(record, MAX_OUTPUT_BYTES)?;
             sizes.push(
                 sizes
                     .last()
@@ -299,8 +299,7 @@ impl View {
                 next: next.clone(),
             };
             let count = end - start;
-            let length = json(&empty, limits.bytes)?
-                .len()
+            let length = json_size(&empty, limits.bytes)?
                 .checked_add(sizes[count])
                 .and_then(|n| n.checked_add(count.saturating_sub(1)))
                 .ok_or(Error::Bounds)?;
@@ -315,12 +314,10 @@ impl View {
                 return Err(Error::Bounds);
             }
         };
+        records.truncate(end - start);
         let page = Page {
             watermark: self.context.watermark.clone(),
-            records: rows[start..end]
-                .iter()
-                .map(|r| r.record(&self.context.writer, &log.identity().adapter))
-                .collect(),
+            records,
             next,
         };
         sized(&page, limits.bytes)?;
@@ -365,7 +362,7 @@ fn check_bytes(bytes: usize) -> Result<()> {
     }
 }
 fn sized<T: Serialize>(value: &T, bytes: usize) -> Result<()> {
-    json(value, bytes).map(|_| ())
+    json_size(value, bytes).map(|_| ())
 }
 fn hex(bytes: &[u8]) -> String {
     const HEX: &[u8] = b"0123456789abcdef";

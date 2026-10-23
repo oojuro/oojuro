@@ -128,6 +128,7 @@ pub fn run(ctx: &Ctx, o: &Options) -> Result<Scorecard> {
     card.settings.insert("build_time_included".into(), json!("reported separately as build_s; not in query latency"));
     card.settings.insert("identical_ids".into(), json!("a hit whose id equals the query id is dropped before scoring (BEIR ignore_identical_ids)"));
     card.settings.insert("averaging".into(), json!("mean over every labelled split query; an empty result scores 0"));
+    card.settings.insert("returned_content".into(), json!("search_get includes search, top-k ID filtering and byte-exact original get for every returned hit; IDs-only search remains separate"));
     card.references = references(&o.dataset);
     if o.split != "test" {
         card.notes.push("Published references use the full BEIR test split; this run uses a frozen subset.".into());
@@ -151,10 +152,12 @@ pub fn run(ctx: &Ctx, o: &Options) -> Result<Scorecard> {
                 runs.add("speed", "build_docs_per_s", data.docs.len() as f64 / build);
                 let steady = s.arm.memory();
                 let mut per_metric: BTreeMap<&str, Vec<f64>> = BTreeMap::new();
-                let (mut arm_us, mut total_us) = (Vec::new(), Vec::new());
+                let (mut arm_us, mut total_us, mut content_us) = (Vec::new(), Vec::new(), Vec::new());
                 let mut lists = Vec::with_capacity(qids.len());
                 let mut run_lines = String::new();
-                let mut check = BTreeSet::new();
+                let mut checked = 0usize;
+                let mut returned_bytes = 0usize;
+                let mut bad = BTreeSet::new();
                 for qid in &qids {
                     let query = SearchReq {
                         text: data.queries[*qid].clone(),
@@ -163,14 +166,24 @@ pub fn run(ctx: &Ctx, o: &Options) -> Result<Scorecard> {
                         k: o.k + 1,
                         context: BTreeMap::new(),
                     };
+                    let started = Instant::now();
                     let (hits, t) = s.arm.search(query)?;
                     arm_us.push(t.arm_us as f64);
                     total_us.push(t.total_us as f64);
                     let ranked: Vec<String> = hits.into_iter().map(|h| h.id).filter(|id| id != *qid).take(o.k).collect();
+                    let texts = s.arm.get(ranked.clone())?;
+                    content_us.push(started.elapsed().as_secs_f64() * 1e6);
+                    if texts.len() != ranked.len() { return Err("get returned a different number of originals".into()); }
+                    for (id, text) in ranked.iter().zip(texts) {
+                        checked += 1;
+                        returned_bytes += text.as_ref().map_or(0, String::len);
+                        if !digests.contains_key(id.as_str()) || text.as_ref().map(|t| blake3::hash(t.as_bytes())) != digests.get(id.as_str()).copied() {
+                            bad.insert(id.clone());
+                        }
+                    }
                     for (name, value) in metrics::standard(&ranked, &data.qrels[*qid]) {
                         per_metric.entry(name).or_default().push(value);
                     }
-                    check.extend(ranked.iter().take(10).cloned());
                     if run == 0 && o.run_file.is_some() {
                         for (rank, id) in ranked.iter().enumerate() {
                             run_lines.push_str(&format!("{qid} Q0 {id} {} {} {}\n", rank + 1, o.k - rank, spec.label));
@@ -186,16 +199,11 @@ pub fn run(ctx: &Ctx, o: &Options) -> Result<Scorecard> {
                 runs.add("speed", "search_roundtrip_p50_us", sys::percentile(&total_us, 50.0));
                 runs.add("speed", "search_roundtrip_p99_us", sys::percentile(&total_us, 99.0));
                 runs.add("speed", "qps_serial", qids.len() as f64 / (total_us.iter().sum::<f64>() / 1e6));
-                // Gate: every top-10 hit reads back byte-identical to its source.
-                let ids: Vec<String> = check.into_iter().collect();
-                let texts = s.arm.get(ids.clone())?;
-                let bad: Vec<&String> = ids
-                    .iter()
-                    .zip(&texts)
-                    .filter(|(id, t)| t.as_ref().map(|t| blake3::hash(t.as_bytes())) != digests.get(id.as_str()).copied())
-                    .map(|(id, _)| id)
-                    .collect();
-                runs.gate("byte_exact", bad.is_empty(), json!({"checked": ids.len(), "mismatched": bad.len(), "first": bad.first()}));
+                runs.add("speed", "search_get_p50_us", sys::percentile(&content_us, 50.0));
+                runs.add("speed", "search_get_p99_us", sys::percentile(&content_us, 99.0));
+                runs.add("speed", "search_get_qps_serial", qids.len() as f64 / (content_us.iter().sum::<f64>() / 1e6));
+                runs.add("speed", "returned_original_bytes", returned_bytes as f64);
+                runs.gate("byte_exact", bad.is_empty(), json!({"checked": checked, "mismatched": bad.len(), "first": bad.first()}));
                 match &first {
                     None => first = Some(lists),
                     Some(base) => {
