@@ -77,6 +77,7 @@ pub struct Index {
     // Text is owned once by inner; these rows retain the other source fields.
     rows: Vec<Row>,
     text_bytes: usize,
+    serialized_bytes: usize,
     ids: Vec<String>,
     inner: lexical::Index,
 }
@@ -89,13 +90,12 @@ impl Index {
     pub fn text_bytes(&self) -> usize {
         self.text_bytes
     }
-    fn validate(binding: &Binding, rows: &[Row]) -> Result<()> {
+    fn validate_shape(binding: &Binding, rows: &[Row]) -> Result<()> {
         if !name(&binding.writer, 256) || rows.len() > MAX_RECORDS {
             return Err(Error::Bounds);
         }
         let mut ids = BTreeSet::new();
         let mut keys = BTreeSet::new();
-        let mut bytes = 0usize;
         for r in rows {
             if !name(&r.id, 1024)
                 || r.key.as_ref().is_some_and(|k| !name(k, 1024))
@@ -106,6 +106,11 @@ impl Index {
             if !ids.insert(&r.id) || r.key.as_ref().is_some_and(|k| !keys.insert(k)) {
                 return Err(Error::Conflict);
             }
+        }
+        Ok(())
+    }
+    fn serialized_size(rows: &[Row], mut bytes: usize) -> Result<usize> {
+        for r in rows {
             bytes = bytes
                 .checked_add(json_size(r, MAX_BATCH_BYTES)?)
                 .ok_or(Error::Bounds)?;
@@ -113,10 +118,11 @@ impl Index {
                 return Err(Error::Bounds);
             }
         }
-        Ok(())
+        Ok(bytes)
     }
     pub fn build(binding: Binding, mut rows: Vec<Row>) -> Result<Self> {
-        Self::validate(&binding, &rows)?;
+        Self::validate_shape(&binding, &rows)?;
+        let serialized_bytes = Self::serialized_size(&rows, 0)?;
         let text_bytes = rows.iter().map(|row| row.text.len()).sum();
         let ids = rows.iter().map(|r| r.id.clone()).collect();
         // Ordinals are private posting handles, never public source identities.
@@ -136,6 +142,7 @@ impl Index {
             binding,
             rows,
             text_bytes,
+            serialized_bytes,
             ids,
             inner,
         })
@@ -148,7 +155,7 @@ impl Index {
         if binding.namespace != self.binding.namespace || binding.writer != self.binding.writer {
             return Err(Error::Scope);
         }
-        Self::validate(&binding, &rows)?;
+        Self::validate_shape(&binding, &rows)?;
         let unchanged = {
             let incoming: std::collections::BTreeMap<_, _> =
                 rows.iter().map(|row| (row.id.as_str(), row)).collect();
@@ -160,6 +167,7 @@ impl Index {
             })
         };
         if binding.view == self.binding.view && (!unchanged || rows.len() != self.rows.len()) {
+            Self::serialized_size(&rows, 0)?;
             return Err(Error::Conflict);
         }
         if !unchanged {
@@ -172,6 +180,8 @@ impl Index {
             .filter(|row| !old_ids.contains(row.id.as_str()))
             .collect();
         drop(old_ids);
+        // Exact original/metadata matches retain their validated byte budget.
+        let serialized_bytes = Self::serialized_size(&added, self.serialized_bytes)?;
         let start = self.rows.len();
         self.inner
             .append_record_rows(
@@ -192,6 +202,7 @@ impl Index {
             row.text = String::new();
         }
         self.rows.extend(added);
+        self.serialized_bytes = serialized_bytes;
         self.binding = binding;
         Ok(self)
     }

@@ -400,6 +400,50 @@ fn every_source_field_change_requires_a_new_view() {
     }
 }
 #[test]
+fn refreshed_projection_keeps_escaped_json_bounds_after_reuse_replacement_and_removal() {
+    let large = |id: usize| {
+        let mut r = row(&id.to_string(), &"\0".repeat(4 << 20), 1);
+        r.indexed = false;
+        r
+    };
+    // Each row expands to over 24 MiB in JSON, despite 4 MiB of source text.
+    let mut rows: Vec<_> = (0..5).map(large).collect();
+    let mut current = binding();
+    let mut index = Index::build(current.clone(), rows.clone()).unwrap();
+    rows.reverse();
+    index = index.refresh(current.clone(), rows.clone()).unwrap();
+
+    for r in &mut rows[1..] {
+        r.text = "small replacement".into();
+    }
+    current.view[0] = 1;
+    index = index.refresh(current.clone(), rows.clone()).unwrap();
+    // A rebuild must release the previous serialized-byte budget.
+    rows.extend((5..9).map(large));
+    current.view[0] = 2;
+    index = index.refresh(current.clone(), rows.clone()).unwrap();
+    rows.truncate(5);
+    current.view[0] = 3;
+    index = index.refresh(current.clone(), rows.clone()).unwrap();
+    rows.extend((9..13).map(large));
+    current.view[0] = 4;
+    index = index.refresh(current.clone(), rows.clone()).unwrap();
+    rows.push(large(13));
+    current.view[0] = 5;
+    assert!(matches!(index.refresh(current, rows), Err(Error::Bounds)));
+
+    let mut oversized = row("oversized", &"\0".repeat(6 << 20), 1);
+    oversized.indexed = false;
+    let mut next = binding();
+    next.view[0] ^= 1;
+    assert!(matches!(
+        Index::build(binding(), vec![])
+            .unwrap()
+            .refresh(next, vec![oversized]),
+        Err(Error::Bounds)
+    ));
+}
+#[test]
 fn projected_query_exact_utf8_passages_match_dev_oracle() {
     let text = format!(
         "{}\nThe garnet job uses resolved_epoch=91; workers were running efficiently. café.\n{}",
