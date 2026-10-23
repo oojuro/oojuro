@@ -25,8 +25,10 @@ provisioned `session` descriptor for integration keys: the journal/run/agent and
 physical source must match before selected bytes are consumed, then the event
 uses the exact bound session route. Missing/foreign descriptors refuse before
 upload. Legacy descriptors and fixed-journal behavior remain compatible. This
-new path requires its own actual Node/HTTP/PostgreSQL qualification before
-advertising it as the default session setup.
+new path now passes its dedicated actual Node/HTTP/PostgreSQL fixture, including
+exact bound download, lost part/link ACK retries and current project/key refusal
+through retained EOF. This synthetic joined result does not qualify actual
+owner setup, process restart, automatic attachment spooling or deployment.
 
 All MIME types are opaque original bytes. PDF/Office parsing, OCR, image understanding, audio/video transcription, executable preview and derived-content search are unsupported here. Optional future extractors must stay outside the core engine and link their output to the exact source version. Never claim arbitrary binary bytes become natively understood.
 

@@ -1,8 +1,9 @@
 # Session capture SDK setup (review candidate)
 
 This source candidate adds the integration-key session contract to the existing
-TypeScript/JavaScript client. The package remains `private: true`; no package
-release or production activation is included. Node 24.4+ on a POSIX filesystem
+TypeScript/JavaScript client. Core repository source and review topics are public;
+the npm package remains `private: true`, with no package release or production
+activation included. Node 24.4+ on a POSIX filesystem
 is required for the optional durable `node:sqlite` spool. The core engine gains
 no dependencies.
 
@@ -26,7 +27,7 @@ with the adapter/domain if necessary, and keep it stable across restart/resume;
 a genuinely new session uses a new run ID. Persist the source event identity and
 selected content before treating them as captured. `enqueue` atomically saves
 the original event plus its first run/label intent; it returns local queueing,
-not a server receipt. For example, using the private source checkout:
+not a server receipt. For example, using the source checkout:
 
 ```js
 import { OojuroCaptureClient } from "./sdk/typescript/index.js";
@@ -145,9 +146,20 @@ label is indexed; parsing/OCR/transcription/preview remain unsupported.
 
 ## Qualification
 
-This new source candidate requires its focused Node tests, strict declaration
-checks, offline package-export checks and actual Node/HTTP/PostgreSQL session+
-attachment journey before joined acceptance is claimed. Earlier CLI/MCP/physical
-attachment qualifications do not substitute for that gate. Real owner history,
-installed model-driven agent tool calls, systemd and production activation remain
-separate acceptance steps.
+Runtime `e42553d885f76552928e447ce4999efcb98d982b` passes 111 Node tests, strict
+declaration checks and offline npm pack/install/export checks. The dedicated
+actual Node/HTTP/PostgreSQL fixture also passes: two logical journals, three
+transcript events, stable resumed routing, exact prior context, a bound selected
+262145-byte file over two parts, and accepted setup/event/part/link ACK losses
+retried without changing original intent. Capture read/file access and mixed-run
+dispatch refuse. Project detachment and key revocation refuse fresh downloads
+and retained part bodies through clean EOF. This is disposable PostgreSQL with
+TLS/SCRAM, native test authority and real loopback HTTP; no provider deployment.
+
+The source/SDK subtree and module digests are pinned in the dedicated hosted
+fixture. SQLite handles reopen twice in one Node process; actual process/host
+restart is not claimed. Earlier CLI/MCP/physical attachment gates remain separate
+evidence. Real owner history, model-driven agent calls, systemd, owner-friendly
+pending-key replacement and production activation remain acceptance steps.
+The [dated qualification report](session-sdk-qualification-2026-10-23.json)
+records identities, checks and limitations.
