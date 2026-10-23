@@ -509,6 +509,7 @@ impl Redactor {
                 0,
                 has_body,
             ),
+            rule("oojuro", r"\b(?:ojc_[a-f0-9]{64}_[A-Za-z0-9_-]{43}|ojp_[A-Za-z0-9_-]{32,100})", 0, always),
             rule("jwt", r"\beyJ[A-Za-z0-9_-]{10,}\.eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{16,}", 0, always),
             rule("aws_key_id", r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b", 0, always),
             rule("github", r"\b(?:gh[pousr]_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{50,})", 0, always),

@@ -27,6 +27,9 @@ const USAGE: &str =
            [--window 5m|1h|1d] [--writer W]... [-k N] [--samples N] [--include-waiting] [--from T] [--to T]
                                                            stretches of activity ranked by how they looked
   forget   --id ID | --key K | --older-than T | --last DUR   [--writer W] [--no-proof] [--yes]
+  cloud connect --connection FILE --source ID --journal ID --label NAME [--base-url URL]
+  cloud connection | capture-status | capture-check --connection FILE
+  cloud capture --connection FILE --state DIR --source-root DIR --adapter codex|claude-code --accept-local-capture [--once]
   cloud records --connection FILE [--from T] [--through T] [--agent ID] [--limit N] [--cursor-file FILE]
   cloud search --connection FILE --request-id ID --query-file FILE [--from T] [--through T] [--agent ID] [--k N]
   cloud get --connection FILE --journal ID --id ID          hosted project metadata / exact text
@@ -235,6 +238,9 @@ fn open(cli: &Cli) -> Oojuro {
 }
 
 fn cloud(cli: &Cli) -> Result<()> {
+    if cli.args.first().is_some_and(|c| matches!(c.as_str(), "connect" | "connection" | "capture-status" | "capture-check" | "capture")) {
+        return capture_command(cli);
+    }
     use oojuro::hosted::{Error, ProjectClient, Selection, read_private};
     let o = Opts::parse(
         &cli.args,
@@ -322,6 +328,78 @@ fn cloud(cli: &Cli) -> Result<()> {
         }
     };
     std::io::stdout().lock().write_all(&output)?;
+    Ok(())
+}
+
+fn capture_command(cli: &Cli) -> Result<()> {
+    use oojuro::hosted_capture as capture;
+    let o = Opts::parse(
+        &cli.args,
+        &[
+            "--connection",
+            "--base-url",
+            "--source",
+            "--journal",
+            "--label",
+            "--state",
+            "--source-root",
+            "--adapter",
+        ],
+        &["--once", "--accept-local-capture"],
+    )?;
+    let names: std::collections::BTreeSet<_> = o.vals.iter().map(|(k, _)| k).collect();
+    if names.len() != o.vals.len() || o.rest.len() != 1 {
+        return Err("invalid_capture_arguments".into());
+    }
+    let command = o.rest[0].as_str();
+    let allowed: &[&str] = match command {
+        "connect" => &[
+            "--connection",
+            "--base-url",
+            "--source",
+            "--journal",
+            "--label",
+        ],
+        "connection" | "capture-status" | "capture-check" => &["--connection"],
+        "capture" => &["--connection", "--state", "--source-root", "--adapter"],
+        _ => return Err("invalid_capture_command".into()),
+    };
+    if o.vals.iter().any(|(k, _)| !allowed.contains(&k.as_str()))
+        || command != "capture" && !o.switches.is_empty()
+    {
+        return Err("invalid_capture_arguments".into());
+    }
+    let val = |name: &str| o.one(name).ok_or("missing_capture_argument");
+    let connection = std::path::Path::new(val("--connection")?);
+    let value = match command {
+        "connect" => serde_json::to_value(capture::connect(
+            connection,
+            o.one("--base-url").unwrap_or("https://oojuro.com"),
+            val("--source")?,
+            val("--journal")?,
+            val("--label")?,
+        )?)?,
+        "connection" => serde_json::to_value(capture::resume_approval(connection)?)?,
+        "capture-status" => serde_json::to_value(capture::status(connection)?)?,
+        "capture-check" => {
+            capture::verify_delivery(connection)?;
+            serde_json::json!({"connection_check_accepted":true,"real_history_verified":false})
+        }
+        "capture" => {
+            if !o.has("--accept-local-capture") {
+                return Err("explicit_local_capture_consent_required".into());
+            }
+            serde_json::to_value(capture::capture(
+                connection,
+                std::path::Path::new(val("--state")?),
+                std::path::Path::new(val("--source-root")?),
+                val("--adapter")?,
+                o.has("--once"),
+            )?)?
+        }
+        _ => unreachable!(),
+    };
+    println!("{}", serde_json::to_string(&value)?);
     Ok(())
 }
 

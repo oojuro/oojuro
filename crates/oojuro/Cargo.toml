@@ -19,6 +19,7 @@ name = "oojuro-native"
 path = "src/bin/oojuro-native.rs"
 
 [dependencies]
+base64 = "0.22"
 oojuro-engine = { path = "../oojuro-engine" }
 blake3.workspace = true
 oojuro-capture = { path = "../oojuro-capture" }
