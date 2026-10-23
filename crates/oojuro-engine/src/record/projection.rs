@@ -10,7 +10,7 @@ pub struct Binding {
     pub writer: String,
     pub view: [u8; 32],
 }
-#[derive(Clone, Serialize)]
+#[derive(Clone, PartialEq, Serialize)]
 pub struct Row {
     pub id: String,
     pub key: Option<String>,
@@ -53,14 +53,14 @@ pub struct Index {
     inner: lexical::Index,
 }
 impl Index {
-    pub fn build(binding: Binding, rows: Vec<Row>) -> Result<Self> {
+    fn validate(binding: &Binding, rows: &[Row]) -> Result<()> {
         if !name(&binding.writer, 256) || rows.len() > MAX_RECORDS {
             return Err(Error::Bounds);
         }
         let mut ids = BTreeSet::new();
         let mut keys = BTreeSet::new();
         let mut bytes = 0usize;
-        for r in &rows {
+        for r in rows {
             if !name(&r.id, 1024)
                 || r.key.as_ref().is_some_and(|k| !name(k, 1024))
                 || r.text.len() > MAX_TEXT_BYTES
@@ -77,6 +77,10 @@ impl Index {
                 return Err(Error::Bounds);
             }
         }
+        Ok(())
+    }
+    pub fn build(binding: Binding, rows: Vec<Row>) -> Result<Self> {
+        Self::validate(&binding, &rows)?;
         let ids = rows.iter().map(|r| r.id.clone()).collect();
         // Ordinals are private posting handles, never public source identities.
         let inner = lexical::Index::from_record_rows(
@@ -93,6 +97,54 @@ impl Index {
             ids,
             inner,
         })
+    }
+    /// Consume the old projection and resolve the complete caller-supplied live
+    /// snapshot again. Only byte/metadata-identical retained rows reuse postings.
+    /// Replacements, deletions and filter changes rebuild; errors consume the old
+    /// value. This is derived work reuse, never a current-authority substitute.
+    pub fn refresh(mut self, binding: Binding, rows: Vec<Row>) -> Result<Self> {
+        if binding.namespace != self.binding.namespace || binding.writer != self.binding.writer {
+            return Err(Error::Scope);
+        }
+        Self::validate(&binding, &rows)?;
+        let unchanged = {
+            let incoming: std::collections::BTreeMap<_, _> =
+                rows.iter().map(|row| (row.id.as_str(), row)).collect();
+            self.rows
+                .iter()
+                .all(|old| incoming.get(old.id.as_str()).is_some_and(|row| *row == old))
+        };
+        if binding.view == self.binding.view && (!unchanged || rows.len() != self.rows.len()) {
+            return Err(Error::Conflict);
+        }
+        if !unchanged {
+            drop(self);
+            return Self::build(binding, rows);
+        }
+        let old_ids: BTreeSet<_> = self.ids.iter().map(String::as_str).collect();
+        let added: Vec<_> = rows
+            .into_iter()
+            .filter(|row| !old_ids.contains(row.id.as_str()))
+            .collect();
+        drop(old_ids);
+        let start = self.rows.len();
+        self.inner
+            .append_record_rows(
+                added.iter().enumerate().map(|(i, row)| {
+                    (
+                        (start + i + 1) as u64,
+                        row.valid_at,
+                        row.text.as_str(),
+                        row.indexed,
+                    )
+                }),
+                true,
+            )
+            .map_err(|_| Error::Unavailable)?;
+        self.ids.extend(added.iter().map(|row| row.id.clone()));
+        self.rows.extend(added);
+        self.binding = binding;
+        Ok(self)
     }
     pub fn search(&self, binding: &Binding, q: &Query<'_>) -> Result<Vec<Hit>> {
         if binding != &self.binding {

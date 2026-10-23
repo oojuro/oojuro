@@ -209,6 +209,142 @@ fn projected_query_binding_duplicate_and_budget_fail_closed() {
     assert!(matches!(index.search(&binding(), &q), Err(Error::Bounds)));
     assert!(index.search(&binding(), &query("", 5)).is_err());
 }
+
+fn assert_same_projection(a: &Index, b: &Index, binding: &Binding) {
+    for text in [
+        "battery",
+        "battery battery electrode",
+        "lookup_needle battery",
+        "\"battery electrode\"",
+        "key:0003",
+    ] {
+        for k in [1, 5, 100] {
+            for (from, to) in [(i64::MIN, i64::MAX), (0, 2), (4, 7)] {
+                for kind in [None, Some(Kind::ToolResult)] {
+                    let mut q = query(text, k);
+                    q.from = from;
+                    q.to = to;
+                    q.filter.kind = kind;
+                    let signature = |hits: Vec<Hit>| {
+                        hits.into_iter()
+                            .map(|h| {
+                                (
+                                    h.id,
+                                    h.bits.to_bits(),
+                                    h.continued,
+                                    h.valid_at,
+                                    h.reported_recorded_at,
+                                    h.start,
+                                    h.end,
+                                    h.excerpt,
+                                )
+                            })
+                            .collect::<Vec<_>>()
+                    };
+                    assert_eq!(
+                        signature(a.search(binding, &q).unwrap()),
+                        signature(b.search(binding, &q).unwrap()),
+                        "{text}: {k}, {from}..{to}, {kind:?}"
+                    );
+                }
+            }
+        }
+    }
+}
+
+#[test]
+fn refreshed_projection_matches_fresh_build_for_growth_reorder_replacement_and_removal() {
+    let make = |i: usize| {
+        let mut r = row(
+            &format!("{i:04}"),
+            if i % 3 == 0 {
+                "lookup_needle battery electrode"
+            } else {
+                "battery electrode"
+            },
+            (i % 7) as i64,
+        );
+        if i % 5 == 0 {
+            r.kind = Kind::ToolResult;
+        }
+        r
+    };
+    let mut rows: Vec<_> = (1..1000).rev().filter(|i| i % 2 == 0).map(make).collect();
+    let mut current = binding();
+    let mut index = Index::build(current.clone(), rows.clone()).unwrap();
+    // New IDs interleave old IDs; private posting order must not break ties.
+    rows.extend((0..1000).filter(|i| i % 2 == 1 || *i == 0).map(make));
+    rows.reverse();
+    for phase in 0..5 {
+        let previous = current.clone();
+        current.view[0] = phase + 1;
+        match phase {
+            1 => rows.reverse(),
+            2 => {
+                rows[3].text = "changed original battery".into();
+                rows[4].indexed = false;
+                rows[5].kind = Kind::ToolResult;
+                rows[6].reported_recorded_at += 1;
+            }
+            3 => {
+                rows.remove(4);
+                rows[2].valid_at = 99;
+                rows[2].agent_id = "another-agent".into();
+                rows[7].id = "replacement-record".into();
+            }
+            4 => rows.clear(),
+            _ => {}
+        }
+        index = index.refresh(current.clone(), rows.clone()).unwrap();
+        assert!(matches!(
+            index.search(&previous, &query("battery", 1)),
+            Err(Error::Scope)
+        ));
+        let fresh = Index::build(current.clone(), rows.clone()).unwrap();
+        assert_same_projection(&index, &fresh, &current);
+    }
+}
+
+#[test]
+fn refreshed_projection_refuses_scope_duplicates_and_invalid_rows() {
+    let rows = vec![row("a", "battery", 1)];
+    for change in [0, 1] {
+        let mut foreign = binding();
+        if change == 0 {
+            foreign.namespace[0] ^= 1;
+        } else {
+            foreign.writer = "another-writer".into();
+        }
+        assert!(matches!(
+            Index::build(binding(), rows.clone())
+                .unwrap()
+                .refresh(foreign, rows.clone()),
+            Err(Error::Scope)
+        ));
+    }
+    assert!(matches!(
+        Index::build(binding(), rows.clone())
+            .unwrap()
+            .refresh(binding(), vec![rows[0].clone(), rows[0].clone()]),
+        Err(Error::Conflict)
+    ));
+    let mut invalid = rows.clone();
+    invalid[0].id.clear();
+    assert!(matches!(
+        Index::build(binding(), rows)
+            .unwrap()
+            .refresh(binding(), invalid),
+        Err(Error::Bounds)
+    ));
+    let original = vec![row("a", "battery", 1)];
+    let changed = vec![row("a", "different original", 1)];
+    assert!(matches!(
+        Index::build(binding(), original)
+            .unwrap()
+            .refresh(binding(), changed),
+        Err(Error::Conflict)
+    ));
+}
 #[test]
 fn projected_query_exact_utf8_passages_match_dev_oracle() {
     let text = format!(

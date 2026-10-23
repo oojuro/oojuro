@@ -48,13 +48,22 @@ Flags: `--arm [label=]spec` (repeat), `--runs N`, `--out FILE`, `--work DIR`,
 ## Current native record arm and returned originals
 
 `native-record` measures the current `oojuro-engine` public `RecordLog` and the
-same `record::projection` API used by hosted captured-record search. It does not
-use Nine or Trace as its query implementation. Every search materializes the
-sealed log through the public paged view, resolves the latest imported version
-per key at the requested two clocks, and builds a fresh native projection with
-the actual source-origin/watermark binding. Its normal excerpt extraction is
-included. There is no retained search index. This includes the public view's
-pagination/materialization overhead, which is different from hosted blob reads.
+same `record::projection` family used by hosted captured-record search. It does
+not use Nine or Trace as its query implementation. Every search materializes the
+sealed log through the public paged view and resolves the latest imported version
+per key at the requested two clocks. It then refreshes derived in-memory postings
+using the complete fresh row set. Identical retained rows reuse analyzed postings;
+new IDs append; replacements, removals or changed projection fields rebuild.
+Normal excerpts, row validation and public pagination/materialization remain in
+the measured call. There is no disk index. This materialization differs from
+hosted blob reads; hosted integration of refresh requires a separate qualification.
+
+`projection::Index::refresh` consumes the old value, verifies scope and all row
+bounds/unique IDs/keys, and binds the returned value to the supplied new view.
+Changing rows under an unchanged view is refused. A failed refresh consumes the
+old projection. Caller-side current authority, payload-key and response checks
+remain mandatory. The frozen AWS measurement below used the earlier always-rebuild
+implementation at `27a1fb8`; it is not a measurement of this refresh change.
 
 The harness's arbitrary source IDs, keys, known-at timestamps and metadata are
 stored as explicit **benchmark import attributes**. Native IDs and ingest clocks

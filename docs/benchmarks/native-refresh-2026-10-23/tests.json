@@ -1,0 +1,9 @@
+{
+  "projection_tests": 6,
+  "projection_failures": 0,
+  "cases": "fresh vs refreshed ranked IDs, exact score bits, continuation, time/metadata, UTF-8 excerpts; interleaved growth, reorder, replacement, removal; scope/bounds/duplicate/stale-view refusal",
+  "native_arm_gate": "pending",
+  "hosted_integration_complete": false,
+  "native_arm_unit_tests": 1,
+  "native_arm_unit_failures": 0
+}

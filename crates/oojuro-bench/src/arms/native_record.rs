@@ -22,6 +22,7 @@ const KEY: [u8; 32] = [42; 32];
 pub struct NativeRecordArm {
     log: Option<RecordLog>,
     ids: BTreeMap<String, u64>,
+    projection: Option<projection::Index>,
 }
 
 fn native<T>(result: record::Result<T>) -> Result<T> {
@@ -100,11 +101,11 @@ impl Arm for NativeRecordArm {
             commit: COMMIT.into(), protocol: PROTOCOL.into(),
             durability: "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups".into(),
             notes: vec![
-                "actual native RecordLog and production projection; snapshot resolution, original reads, projection rebuild and excerpts are inside each search".into(),
+                "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search".into(),
                 "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged".into(),
                 "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim".into(),
                 "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm".into(),
-                "no persistent/warm search index; native 100k-record/128MiB state bounds apply; >1000 input batches split into native commits and can recover partially before ACK".into(),
+                "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK".into(),
             ],
         }
     }
@@ -205,7 +206,12 @@ impl Arm for NativeRecordArm {
         let binding = projection::Binding {
             namespace: view.watermark().origin,
             writer: WRITER.into(),
-            view: *blake3::hash(&serde_json::to_vec(view.watermark())?).as_bytes(),
+            view: *blake3::hash(&serde_json::to_vec(&(
+                view.watermark(),
+                query.valid_at,
+                query.known_at,
+            ))?)
+            .as_bytes(),
         };
         let rows = winners
             .into_values()
@@ -224,7 +230,10 @@ impl Arm for NativeRecordArm {
                 })
             })
             .collect::<Result<_>>()?;
-        let index = native(projection::Index::build(binding.clone(), rows))?;
+        let index = native(match self.projection.take() {
+            Some(index) => index.refresh(binding.clone(), rows),
+            None => projection::Index::build(binding.clone(), rows),
+        })?;
         let hits = native(index.search(
             &binding,
             &projection::Query {
@@ -237,6 +246,7 @@ impl Arm for NativeRecordArm {
                 max_bytes: record::MAX_OUTPUT_BYTES,
             },
         ))?;
+        self.projection = Some(index);
         Ok(hits
             .into_iter()
             .map(|h| Hit {
@@ -269,10 +279,11 @@ impl Arm for NativeRecordArm {
     fn stats(&mut self) -> Result<serde_json::Value> {
         let view = native(View::open(self.log()?, scope(), AsOf::default()))?;
         Ok(
-            serde_json::json!({"records":view.watermark().records,"projection_rebuilt_per_search":true}),
+            serde_json::json!({"records":view.watermark().records,"projection_refreshed_from_current_view":true}),
         )
     }
     fn close(&mut self) -> Result<()> {
+        self.projection = None;
         self.log = None;
         self.ids.clear();
         Ok(())
