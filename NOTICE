@@ -12,3 +12,10 @@ Third-party content in the starter dictionary (crates/oojuro-store/dict):
   NousResearch/hermes-function-calling-v1 (Apache-2.0) and
   open-thoughts/OpenThoughts-114k (Apache-2.0).
 See crates/oojuro-store/dict/README.md for details.
+
+Additional source links for the same transformed dictionary material:
+- https://huggingface.co/datasets/SWE-Gym/OpenHands-SFT-Trajectories (MIT)
+- https://huggingface.co/datasets/NousResearch/hermes-function-calling-v1 (Apache-2.0)
+- https://huggingface.co/datasets/open-thoughts/OpenThoughts-114k (Apache-2.0)
+Supplied license terms and source evidence are preserved in licenses/README.md.
+Native distributions also retain dependency notices under licenses/ in the release bundle.
