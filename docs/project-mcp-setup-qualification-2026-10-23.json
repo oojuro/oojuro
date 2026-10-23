@@ -15,7 +15,7 @@
     "sha256": "0e093079e4a7b8f9194a48ba857bffc0f60ff7a1d26604dec2d6c51cfa17b142",
     "source": "f6429cae9b6d4c594c39bd634ac210706aeb38b6"
   },
-  "cli_runtime_source": "e74a740",
+  "cli_runtime_source": "e74a740d333ebda55832d6ac992b4552fba46226",
   "credential_contract": {
     "capture_changes": false,
     "capture_key_refused": true,
@@ -52,12 +52,16 @@
     "Production capacity, latency, RAM, cost, recovery or durability."
   ],
   "performance_gain_claim": false,
-  "pr": null,
+  "pr": "https://github.com/oojuro/oojuro/pull/72",
   "production_changed": false,
   "publication": {
-    "awaiting_user_scope_confirmation": true,
-    "new_mcp_branch_pushed": false,
-    "new_mcp_pull_request_created": false,
+    "draft": true,
+    "merged": false,
+    "new_mcp_branch_pushed": true,
+    "new_mcp_pull_request_created": true,
+    "owner_authorized_workflow": "Public core topic branches and draft PRs allowed; main changes require PR/CI/review; merges, releases, packages and deployment still need owner approval",
+    "package_release": false,
+    "production_activation": false,
     "repository_visibility": "PUBLIC, confirmed gh repo view and GitHub REST repos/oojuro/oojuro"
   },
   "registration": {
@@ -80,7 +84,7 @@
     "scripts/connect-project.py": "b6773235083fb64d3ac4034776e71158e60e5ed8fd27574a47b2f1bd07ef62de",
     "scripts/test-connect-project.py": "e660e0b01a4ec6c3f5457771399c74dafc0de9081f47e40bc77468e43906f215"
   },
-  "status": "local review candidate; project metadata/stdio/isolated installed-client registration passed; joined hosted fixture pending",
+  "status": "public core draft; local project metadata/stdio/isolated installed-client registration passed; joined hosted fixture pending",
   "verification": {
     "capture_installer_subprocess": {
       "command": "python3 scripts/test-connect-agent.py",
