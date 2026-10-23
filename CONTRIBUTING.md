@@ -79,7 +79,7 @@ cargo test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro
 cargo test --locked --no-default-features --lib --tests -p oojuro-trace -p oojuro-capture -p oojuro-proxy -p oojuro
 ```
 
-The second command includes real local CLI, daemon, mock proxy and stdio MCP integration tests. They use synthetic data and local test servers. Current `main` has no separate Node/Python SDK tree. Add checks for a new runtime crate or SDK in the same PR that introduces it; this explicit package list does not discover new packages automatically.
+The second command includes real local CLI, daemon, mock proxy and stdio MCP integration tests. They use synthetic data and local test servers. Give fixtures a short private `TMPDIR` with enough disk space; the daemon rejects socket paths longer than 103 bytes. CI creates private scratch under `runner.temp`. Current `main` has no separate Node/Python SDK tree. Add checks for a new runtime crate or SDK in the same PR that introduces it; this explicit package list does not discover new packages automatically.
 
 The benchmark harnesses (`oojuro-bench`, `oojuro-tracebench`) build competitor engines and fetch public datasets. `oojuro-store`'s `baselines` and `codecs` features are also comparison tools. They are not part of normal CI. Run them deliberately for the change being measured; see `docs/BENCH_HARNESS.md` and `docs/TRACEBENCH.md`. Do not use `--workspace` or `--all-features` as a substitute for the runtime checks above.
 
