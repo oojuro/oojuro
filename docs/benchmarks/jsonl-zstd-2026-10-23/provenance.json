@@ -1,0 +1,18 @@
+{
+  "source": "81f11fb61eb51b5ff7460974e5c5d1c89c40d40b",
+  "binary_sha256": "14b4560de3ffedd8d5b7348363c3bfe5cdf8b80fd709531a98c45cea8cb48db2",
+  "build": "cargo build --locked --offline -p oojuro-bench --no-default-features --features sqlite-arm",
+  "profile": "debug; correctness only",
+  "gate_command": "timeout --kill-after=5s 180 oojuro-bench gates --arm jsonl --arm jsonl-zstd --arm sqlite --runs 1 --work <private-work> --out gates.json",
+  "gates_sha256": "141a1e78c42b396464060b0d8d71eb24b471f6f7dad607f63d21a6866bf40203",
+  "gate_assertions": 21,
+  "sigkill_interruptions": 9,
+  "acknowledged_records_checked_per_arm": 600,
+  "unit_tests": 1,
+  "new_clippy_diagnostics": 0,
+  "limits": [
+    "local synthetic correctness only",
+    "no throughput/quality/storage win or hosted durability claim",
+    "no AWS benchmark resources allocated"
+  ]
+}

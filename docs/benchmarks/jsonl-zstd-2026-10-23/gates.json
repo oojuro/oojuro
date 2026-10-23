@@ -1,0 +1,391 @@
+{
+  "schema": "oojuro-scorecard-v1",
+  "created_at": "2026-10-23T08:52:27Z",
+  "harness": {
+    "args": [
+      "/home/rocket2/.cache/oojuro-canary-verification/target/debug/oojuro-bench",
+      "gates",
+      "--arm",
+      "jsonl",
+      "--arm",
+      "jsonl-zstd",
+      "--arm",
+      "sqlite",
+      "--runs",
+      "1",
+      "--work",
+      "../jsonl-pinned-gates",
+      "--out",
+      "../jsonl-pinned-gates.json"
+    ],
+    "binary": "/home/rocket2/.cache/oojuro-canary-verification/target/debug/oojuro-bench",
+    "commit": "81f11fb61eb5"
+  },
+  "hardware": {
+    "build_profile": "debug",
+    "cpu": "AMD Ryzen 7 8845HS w/ Radeon 780M Graphics",
+    "kernel": "7.0.0-34-generic",
+    "load_avg": "1.13 0.97 0.94 1/3975 292422",
+    "logical_cpus": 16,
+    "mem_total": "29062768 kB",
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "swap_total": "8388604 kB",
+    "work_filesystem": {
+      "device": "/dev/nvme0n1p2",
+      "fstype": "ext4",
+      "mount": "/"
+    }
+  },
+  "suite": "gates",
+  "dataset": "synthetic",
+  "split": "all",
+  "settings": {
+    "bench_lock": "held for the whole run",
+    "cases": "byte_exact(+after reopen), get_range_order, as_of_visibility, freshness, determinism, crash_recovery (SIGKILL x3)",
+    "isolation": "child process per run in a systemd --user scope, MemoryMax=3G, MemorySwapMax=0",
+    "runs": 1
+  },
+  "arms": [
+    {
+      "label": "jsonl",
+      "spec": "jsonl",
+      "info": {
+        "name": "jsonl-fts5",
+        "version": "Zstd 1.5.7; SQLite 3.53.2 contentless FTS5 porter unicode61 bm25",
+        "commit": "81f11fb61eb5",
+        "durability": "immutable batch file fsync + directory fsync, then SQLite WAL synchronous=FULL commit; one host, no replication/backups/encryption",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "one JSONL frame per batch; no dictionary or deduplication; level 3 when compressed",
+          "same OR-token query/ranking and two-clock SQL visibility as sqlite arm; FTS5 stores no original text",
+          "all payloads, index, WAL/SHM and uncommitted orphan frames count toward footprint; no automatic orphan reclamation",
+          "get decodes each selected batch frame once per request; no retained payload cache"
+        ]
+      },
+      "gates": {
+        "as_of_visibility": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 9,
+              "failures": []
+            },
+            "runs": 1
+          }
+        },
+        "byte_exact": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 1
+          }
+        },
+        "byte_exact_after_reopen": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 1
+          }
+        },
+        "crash_recovery": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "acked_records": 600,
+              "failures": [],
+              "inflight": [
+                {
+                  "delay_ms": 0,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 5,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 30,
+                  "inflight_present": 0,
+                  "of": 2000
+                }
+              ],
+              "note": "inflight_present strictly between 0 and the batch size means the batch was not atomic",
+              "trials": 3
+            },
+            "runs": 1
+          }
+        },
+        "determinism": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "identical": 60,
+              "queries": 60
+            },
+            "runs": 1
+          }
+        },
+        "freshness": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "misses": 0,
+              "trials": 20
+            },
+            "runs": 1
+          }
+        },
+        "get_range_order": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "expected": 12,
+              "got": 12
+            },
+            "runs": 1
+          }
+        }
+      },
+      "quality": {},
+      "storage": {},
+      "memory": {},
+      "speed": {},
+      "breakdown": {},
+      "error": null
+    },
+    {
+      "label": "jsonl-zstd",
+      "spec": "jsonl-zstd",
+      "info": {
+        "name": "jsonl-zstd-fts5",
+        "version": "Zstd 1.5.7; SQLite 3.53.2 contentless FTS5 porter unicode61 bm25",
+        "commit": "81f11fb61eb5",
+        "durability": "immutable batch file fsync + directory fsync, then SQLite WAL synchronous=FULL commit; one host, no replication/backups/encryption",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "one JSONL frame per batch; no dictionary or deduplication; level 3 when compressed",
+          "same OR-token query/ranking and two-clock SQL visibility as sqlite arm; FTS5 stores no original text",
+          "all payloads, index, WAL/SHM and uncommitted orphan frames count toward footprint; no automatic orphan reclamation",
+          "get decodes each selected batch frame once per request; no retained payload cache"
+        ]
+      },
+      "gates": {
+        "as_of_visibility": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 9,
+              "failures": []
+            },
+            "runs": 1
+          }
+        },
+        "byte_exact": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 1
+          }
+        },
+        "byte_exact_after_reopen": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 1
+          }
+        },
+        "crash_recovery": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "acked_records": 600,
+              "failures": [],
+              "inflight": [
+                {
+                  "delay_ms": 0,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 5,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 30,
+                  "inflight_present": 0,
+                  "of": 2000
+                }
+              ],
+              "note": "inflight_present strictly between 0 and the batch size means the batch was not atomic",
+              "trials": 3
+            },
+            "runs": 1
+          }
+        },
+        "determinism": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "identical": 60,
+              "queries": 60
+            },
+            "runs": 1
+          }
+        },
+        "freshness": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "misses": 0,
+              "trials": 20
+            },
+            "runs": 1
+          }
+        },
+        "get_range_order": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "expected": 12,
+              "got": 12
+            },
+            "runs": 1
+          }
+        }
+      },
+      "quality": {},
+      "storage": {},
+      "memory": {},
+      "speed": {},
+      "breakdown": {},
+      "error": null
+    },
+    {
+      "label": "sqlite",
+      "spec": "sqlite",
+      "info": {
+        "name": "sqlite-fts5",
+        "version": "sqlite 3.53.2 fts5 porter unicode61 bm25",
+        "commit": "81f11fb61eb5",
+        "durability": "one transaction per batch; WAL + synchronous=FULL (fsync at commit)",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "query = OR of distinct tokens; latest-revision filter in SQL"
+        ]
+      },
+      "gates": {
+        "as_of_visibility": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 9,
+              "failures": []
+            },
+            "runs": 1
+          }
+        },
+        "byte_exact": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 1
+          }
+        },
+        "byte_exact_after_reopen": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 1
+          }
+        },
+        "crash_recovery": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "acked_records": 600,
+              "failures": [],
+              "inflight": [
+                {
+                  "delay_ms": 0,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 5,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 30,
+                  "inflight_present": 0,
+                  "of": 2000
+                }
+              ],
+              "note": "inflight_present strictly between 0 and the batch size means the batch was not atomic",
+              "trials": 3
+            },
+            "runs": 1
+          }
+        },
+        "determinism": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "identical": 60,
+              "queries": 60
+            },
+            "runs": 1
+          }
+        },
+        "freshness": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "misses": 0,
+              "trials": 20
+            },
+            "runs": 1
+          }
+        },
+        "get_range_order": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "expected": 12,
+              "got": 12
+            },
+            "runs": 1
+          }
+        }
+      },
+      "quality": {},
+      "storage": {},
+      "memory": {},
+      "speed": {},
+      "breakdown": {},
+      "error": null
+    }
+  ],
+  "references": [],
+  "notes": []
+}

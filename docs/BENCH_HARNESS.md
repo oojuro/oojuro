@@ -89,6 +89,15 @@ determinism, and three SIGKILL interruptions with acknowledged-write recovery.
 The extra arm unit check covers attributes, codec mismatch, duplicate/atomic
 index refusal, orphan accounting and payload corruption.
 
+The [23 October 2026 correctness scorecard](benchmarks/jsonl-zstd-2026-10-23/gates.json)
+records one run of all three baseline arms at source `81f11fb61eb5`: **21 gate
+assertions pass**, including nine total SIGKILL interruptions and 600
+acknowledged records checked per arm. The one extra arm unit test passes for
+both codecs. Ordinary scoped Clippy succeeds with inherited diagnostics and
+none in the new arm. [Provenance](benchmarks/jsonl-zstd-2026-10-23/provenance.json)
+pins the source, debug binary and scorecard hashes. Inputs are synthetic; no
+throughput, quality, representative storage or hosted AWS result is claimed.
+
 ## Plugging in an engine
 
 There are three ways, all measured identically:
