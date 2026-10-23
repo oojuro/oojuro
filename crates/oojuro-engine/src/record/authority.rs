@@ -160,6 +160,8 @@ impl RecordLog {
             let encoded = log.store.get(sequence).map_err(|_| Error::Unavailable)?;
             log.replay(sequence, &encoded)?;
         }
+        // Typed originals are retained above; replay's decoded frames are never read again.
+        log.store.clear_read_cache();
         // Also on retry after an interrupted initialization, before acknowledging open.
         fs::File::open(dir)
             .and_then(|f| f.sync_all())

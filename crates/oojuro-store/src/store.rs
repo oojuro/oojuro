@@ -785,6 +785,12 @@ impl Store {
         self.get_range(seq, 0, usize::MAX)
     }
 
+    /// Drop decoded-frame cache ownership without changing stored bytes or decoder contexts.
+    /// Caller-owned records remain valid; subsequent reads decode and authenticate on demand.
+    pub fn clear_read_cache(&mut self) {
+        self.read.clear_cache();
+    }
+
     fn materialize(&self, i: usize, d: &reader::Decoded, r: usize) -> Result<Record> {
         let m = d.meta.records[r];
         let (ks, kl, al) = d.meta.side[r];

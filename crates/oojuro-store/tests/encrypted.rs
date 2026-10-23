@@ -121,6 +121,32 @@ fn forged_frames_are_refused_even_with_a_valid_checksum() {
         append(&mut s, &recs, 0);
         s.compact().unwrap();
     }
+    forge_first_cold_frame(&dir);
+    let s = Store::open(&dir, opts(Some(c))).unwrap();
+    let r = s.get(0);
+    assert!(matches!(r, Err(Error::Crypto(_))), "got {r:?}");
+}
+
+#[test]
+fn cleared_read_cache_preserves_reads_and_reauthenticates_frames() {
+    let dir = temp("clear-cache");
+    let c = Arc::new(FrameCipher::new(&random_key()));
+    let recs = records(20, 17);
+    let mut s = Store::open(&dir, opts(Some(c))).unwrap();
+    append(&mut s, &recs, 0);
+    s.compact().unwrap();
+    check(&s, &recs);
+    let original = s.get(0).unwrap();
+    s.clear_read_cache();
+    check(&s, &recs);
+    assert_eq!(original, recs[0]);
+    forge_first_cold_frame(&dir);
+    s.clear_read_cache();
+    assert!(matches!(s.get(0), Err(Error::Crypto(_))));
+    assert_eq!(original, recs[0]);
+}
+
+fn forge_first_cold_frame(dir: &Path) {
     let cold: Vec<PathBuf> = all_files(&dir).into_iter().filter(|p| p.extension().is_some_and(|e| e == "ojc")).collect();
     assert_eq!(cold.len(), 1);
     let mut b = std::fs::read(&cold[0]).unwrap();
@@ -134,9 +160,6 @@ fn forged_frames_are_refused_even_with_a_valid_checksum() {
     let crc = h.finalize();
     b[at + 4..at + 8].copy_from_slice(&crc.to_le_bytes()); // a forger recomputes the checksum
     std::fs::write(&cold[0], &b).unwrap();
-    let s = Store::open(&dir, opts(Some(c))).unwrap();
-    let r = s.get(0);
-    assert!(matches!(r, Err(Error::Crypto(_))), "got {r:?}");
 }
 
 #[test]
