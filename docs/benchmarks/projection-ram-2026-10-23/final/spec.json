@@ -1,0 +1,18 @@
+{
+  "scope": "same-machine warm-cache local diagnostic; exact returned-work gate; no hosted/SOTA/cost claim",
+  "stage": "final",
+  "runs": 3,
+  "binary_sha256": {
+    "baseline": "37e431e33f73266a6f6f9e3a81a70051fcb9c909244b3e09b2e6f92b5b9bebc8",
+    "compact": "3a35de0ce295714cd8c6d608794616f563102ee8d6f720cd948dbf23e1786d2b",
+    "compact_move": "7f777b4065803b7f0e6b31a307831854e4d98f8fd46b02904079d7c6881bad8e"
+  },
+  "frozen_input_spec_sha256": "7b0209a64ee89529c5dea7eb5b2817a5817ed9c7eab4b5ccc10b7bc4990df6ec",
+  "arms": {
+    "baseline": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/native-profile/bin/oojuro-bench-6cec206",
+    "compact": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/projection-ram/oojuro-bench-compact-final",
+    "compact_move": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/projection-ram/oojuro-bench-compact-move"
+  },
+  "memory_max": "3G",
+  "swap_max": 0
+}

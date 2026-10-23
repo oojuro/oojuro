@@ -1,0 +1,39 @@
+{
+  "scope": "same frozen corpus/queries/topK/originals, no hosted/API/RAM-capacity/SOTA/pricing claim",
+  "baseline_source": "6cec2064aba3c4a6e96ebf587d0d1cad651e266a",
+  "compact_source": "7d81635c2e199507748ace1b668210925913a82b",
+  "compact_move_source": "6610d0d5667818fdd772cbb6b9770c2c27648093",
+  "recommended_runtime_source": "compact only; owned move has no additional observed full-pipeline RAM benefit",
+  "compact_runtime_sha256": {
+    "crates/oojuro-engine/src/lexical.rs": "d8f924226e63f06a0e0c25e89e882fecab767f0427a1b32e122750a76c0caaaf",
+    "crates/oojuro-engine/src/lexical/prepared.rs": "3776a3001b1856bb4e640fed1239eb92c1925a31b2a0c7f7035a37018948cabc",
+    "crates/oojuro-engine/src/lexical/record_cache.rs": "b38cb3e52a1de38a32fa7ab4f9422ff365878ddebaf4d6147aaeeaff3f745e84",
+    "crates/oojuro-engine/src/lexical/segments.rs": "20345fba33c699de0d11eb6ffc15cb7d2828e776cdffd9a8c0cd8618a105ed65"
+  },
+  "full_hit_samples_per_regime": 45,
+  "all_three_full_hit_signatures_identical": true,
+  "fresh_store_reopens": 18,
+  "store_files": 99,
+  "footprint_values_matched": 36,
+  "wrapper_source_commit_for_inputs": "o-cloud6e5b116562429ce71d7d4ef801e12681edca9a52",
+  "raw_bundle": "work/projection-ram",
+  "frozen_input_bundle": "work/local-efficiency-20261023a",
+  "files_sha256": {
+    "beir-host-before.json": "0e61d3522160918b2f8acb34dcaffa1827dcbbe62af7a4357a6d9c9a54a7d411",
+    "beir.json": "ee14ba2ce45669026e1ad3af1f0b1ddb989e9b8f9ef80be0f416bd0fb2a11b31",
+    "compact_move-full-hits.jsonl": "b1be274cd78c00e2b25d2049a52401710b852ddc1037e412a84c2cb0efa76f89",
+    "gates-host-before.json": "d9fc19d1c4e8b1d538111a8be3db10835a13f6f61a7a926ca478af4b3ce6f284",
+    "gates.json": "149f10843110e875caf60dc5cfc5d70c335407a710aa840e631267f974cbf580",
+    "history-host-before.json": "292bc9a5919d003fbbf8db4302090a10f30db1f6daa9cda57ce5f9fa6a0ab1bb",
+    "history.json": "d51f5c512e77a263fbd7940b992c6798b04b8389ef808bd053a75308a12e1549",
+    "move-final-lexical-tests.log": "14a43128a7510cb86d80f577541c880f9da9289005a58ac0c4bc7f287527034a",
+    "move-final-record-tests.log": "22b72200145d6a016831d921ae9443c2cce5d9c4488bab1da0c96b1d9bed809c",
+    "reopen-and-files.json": "7e69075211904bd589dbf387a2580d9aa0d0e0f5969e00d3808473e5e9a5c406",
+    "spec.json": "fb53ba82c0df403db30792924486d292cad84bdadfab5e44366795947640fc42",
+    "tools/memory-phases.py": "9d852d48dbab812fffb064f7030f70f3b97e5d024d9e6954d10fa292ad3dfc0c",
+    "tools/run-engine.sh": "a5707a83aaa72712921967674568e3ddf9fc7e2337c9edaaca2b16cbb6ffc20e",
+    "tools/run-stage.py": "ab63a8a5ef4f8a5d2f0e612a766267a41e9a01b3ca7706632ce0f67449978020",
+    "tools/verify-final-stores.py": "e220cd6ec12a5a90895aa9fafd14f4efc96de24ca0b5405886988820385ba2ac",
+    "tools/verify-full-hits.py": "bf59be8bf375f435753ed90bcfaed234fccb07d0b2b8204abf648fb117e1edb5"
+  }
+}
