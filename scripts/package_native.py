@@ -59,11 +59,13 @@ def package(binary_dir, out, target):
             for f in files:
                 put(f, dest / f.name)
         else:
+            checksums = json.loads((directory / ".cargo-checksum.json").read_text())
             for f in files:
+                assert sha(f) == checksums["files"][str(f.relative_to(directory))], "registry notice changed"
                 put(f, dest / f.relative_to(directory))
         allowed = {"0BSD", "MIT", "MIT-0", "Apache-2.0", "LLVM-exception", "CC0-1.0", "BSD-3-Clause", "ISC", "Unlicense", "Zlib", "Unicode-3.0", "CDLA-Permissive-2.0", "OR", "AND", "WITH"}
         assert p["license"] and set(re.findall(r"[\w.-]+", p["license"])) <= allowed, "unreviewed license: " + p["name"]
-        dependencies.append({"name": p["name"], "version": p["version"], "license": p["license"], "repository": p["repository"]})
+        dependencies.append({"name": p["name"], "version": p["version"], "license": p["license"], "repository": p["repository"], "registryChecksum": json.loads((directory / ".cargo-checksum.json").read_text())["package"]})
     for name in ["LICENSE", "NOTICE", "Cargo.lock"]:
         put(ROOT / name, out / name)
     shutil.copytree(ROOT / "licenses", out / "licenses" / "project-supplements")
