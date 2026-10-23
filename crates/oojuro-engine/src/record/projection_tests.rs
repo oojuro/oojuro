@@ -296,6 +296,9 @@ fn refreshed_projection_matches_fresh_build_for_growth_reorder_replacement_and_r
                 rows[4].indexed = false;
                 rows[5].kind = Kind::ToolResult;
                 rows[6].reported_recorded_at += 1;
+                rows[8].tool = Some("changed-tool".into());
+                rows[9].status = Some(Status::Error);
+                rows[10].key = Some("changed-key".into());
             }
             3 => {
                 rows.remove(4);
@@ -366,6 +369,35 @@ fn refreshed_projection_refuses_scope_duplicates_and_invalid_rows() {
             .refresh(binding(), changed),
         Err(Error::Conflict)
     ));
+}
+#[test]
+fn every_source_field_change_requires_a_new_view() {
+    let original = row("a", "battery", 1);
+    for field in 0..10 {
+        let mut changed = original.clone();
+        match field {
+            0 => changed.id = "b".into(),
+            1 => changed.key = Some("b".into()),
+            2 => changed.text = "another original".into(),
+            3 => changed.valid_at += 1,
+            4 => changed.reported_recorded_at += 1,
+            5 => changed.kind = Kind::Raw,
+            6 => changed.tool = Some("tool".into()),
+            7 => changed.status = Some(Status::Error),
+            8 => changed.agent_id = "agent".into(),
+            9 => changed.indexed = false,
+            _ => unreachable!(),
+        }
+        assert!(
+            matches!(
+                Index::build(binding(), vec![original.clone()])
+                    .unwrap()
+                    .refresh(binding(), vec![changed]),
+                Err(Error::Conflict)
+            ),
+            "field {field}"
+        );
+    }
 }
 #[test]
 fn projected_query_exact_utf8_passages_match_dev_oracle() {

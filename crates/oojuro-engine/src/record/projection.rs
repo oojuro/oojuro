@@ -24,6 +24,32 @@ pub struct Row {
     pub agent_id: String,
     pub indexed: bool,
 }
+impl Row {
+    fn same_metadata(&self, other: &Self) -> bool {
+        // Exhaustive destructuring requires new source fields to join this check.
+        let Self {
+            id,
+            key,
+            text: _,
+            valid_at,
+            reported_recorded_at,
+            kind,
+            tool,
+            status,
+            agent_id,
+            indexed,
+        } = self;
+        id == &other.id
+            && key == &other.key
+            && valid_at == &other.valid_at
+            && reported_recorded_at == &other.reported_recorded_at
+            && kind == &other.kind
+            && tool == &other.tool
+            && status == &other.status
+            && agent_id == &other.agent_id
+            && indexed == &other.indexed
+    }
+}
 pub struct Query<'a> {
     pub text: &'a str,
     pub k: usize,
@@ -118,24 +144,18 @@ impl Index {
     /// snapshot again. Only byte/metadata-identical retained rows reuse postings.
     /// Replacements, deletions and filter changes rebuild; errors consume the old
     /// value. This is derived work reuse, never a current-authority substitute.
-    pub fn refresh(mut self, binding: Binding, mut rows: Vec<Row>) -> Result<Self> {
+    pub fn refresh(mut self, binding: Binding, rows: Vec<Row>) -> Result<Self> {
         if binding.namespace != self.binding.namespace || binding.writer != self.binding.writer {
             return Err(Error::Scope);
         }
         Self::validate(&binding, &rows)?;
-        let texts: Vec<_> = rows
-            .iter_mut()
-            .map(|row| std::mem::take(&mut row.text))
-            .collect();
         let unchanged = {
-            let incoming: std::collections::BTreeMap<_, _> = rows
-                .iter()
-                .enumerate()
-                .map(|(i, row)| (row.id.as_str(), (i, row)))
-                .collect();
+            let incoming: std::collections::BTreeMap<_, _> =
+                rows.iter().map(|row| (row.id.as_str(), row)).collect();
             self.rows.iter().enumerate().all(|(old_i, old)| {
-                incoming.get(old.id.as_str()).is_some_and(|(i, row)| {
-                    *row == old && self.inner.record_text(old_i) == Some(texts[*i].as_str())
+                incoming.get(old.id.as_str()).is_some_and(|row| {
+                    old.same_metadata(row)
+                        && self.inner.record_text(old_i) == Some(row.text.as_str())
                 })
             })
         };
@@ -144,20 +164,12 @@ impl Index {
         }
         if !unchanged {
             drop(self);
-            for (row, text) in rows.iter_mut().zip(texts) {
-                row.text = text;
-            }
             return Self::build(binding, rows);
         }
         let old_ids: BTreeSet<_> = self.ids.iter().map(String::as_str).collect();
         let mut added: Vec<_> = rows
             .into_iter()
-            .zip(texts)
-            .filter(|(row, _)| !old_ids.contains(row.id.as_str()))
-            .map(|(mut row, text)| {
-                row.text = text;
-                row
-            })
+            .filter(|row| !old_ids.contains(row.id.as_str()))
             .collect();
         drop(old_ids);
         let start = self.rows.len();
