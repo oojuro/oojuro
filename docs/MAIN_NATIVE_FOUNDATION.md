@@ -71,12 +71,39 @@ lockfile is not evidence that the CI jobs build them. No `--workspace` or
 
 ## Qualification status
 
-At source freeze, only workflow syntax (`actionlint` 1.7.12), source ancestry,
-selected dependency graph resolution and new-source whitespace checks have run.
-**The composed runtime has not yet been built or tested.** CI73's earlier main-only
-local results do not qualify this native composition. The exact workflow commands
-must run on the composed commit before a passing local result can be reported.
-SDK validation and later cloud composition require their own gates.
+The exact selected commands passed locally on frozen source
+`5fbf73150036625136f9f2b89281491c031d2af7` (see the machine-readable receipt for the verified full SHA),
+using task-local Rust 1.99.1 and the portable Zig C wrapper on local Linux. This is
+not a GitHub-hosted Ubuntu VM result and establishes no remote status check.
+
+| Gate | Passed | Failed | Existing ignored | Test binaries |
+| --- | ---: | ---: | ---: | ---: |
+| Legacy engine and shared storage | 141 | 0 | 1 | 8 |
+| Native engine and rank | 175 | 0 | 10 | 3 |
+| Capture, proxy, CLI and MCP | 215 | 0 | 3 | 29 |
+| Explicit legacy-format repeat | 4 | 0 | 1 | 1 |
+
+There are 531 distinct passing tests and 14 ignored entries in the three complete
+suites. The explicit legacy-format gate repeats four passes and one ignored fixture
+generator already counted in runtime: do not add that repeat to unique coverage.
+The native ignored entries include subprocess-only helpers invoked by parent tests
+and two opt-in measurements; the shared-storage ignored entry is a local scan
+measurement. Runtime leaves its proxy/column speed measurements and fixture writer
+ignored. No ignored measurement was enabled. SDK JavaScript/type/package checks and
+later cloud composition require their own gates; CI73's earlier main-only results
+are separate evidence.
+
+The first runtime attempt used CI73's local short-path symlink workaround and
+failed the inherited hosted private-file checks: those correctly reject symlink
+ancestors. Mock HTTP accept threads then waited, so only that owned test process
+was terminated. A focused reproduction returned `private_hosted_file_required`.
+The complete runtime and explicit compatibility commands then passed with a short,
+owned mode-0700 real directory under disk-backed `/var/tmp`, which was removed
+when the tests finished. Storage/native had passed using the earlier scratch;
+those paths did not exercise private credential loading. The actual workflow uses
+a private real directory under `runner.temp`; no guard or test was weakened.
+Diagnostic logs remain in the local qualification workspace. See
+[the qualification receipt](MAIN_NATIVE_FOUNDATION_QUALIFICATION.json) for hashes.
 
 Repository Actions remains disabled pending owner review. No admin setting, branch
 rule, token permission, required-review count, package/release job or deployment is
