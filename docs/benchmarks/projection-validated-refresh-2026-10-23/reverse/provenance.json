@@ -1,0 +1,16 @@
+{
+  "baseline_source": "c42c10d32364d692bccc97030c447dc05ceb85b0",
+  "candidate_source": "bfd4d8bdabce1c06eec46074889d012f76cdc068",
+  "purpose": "One reversed-order follow-up for concrete write/order risk. Append tail remains worse; no default recommendation, write gain or tail claim.",
+  "first_frozen_evidence_commit": "d43b4aa",
+  "sha256": {
+    "beir-host-before.json": "e29eb661939e63b687b0bb265ce73641ebf2e925a81415c14cbad030a18d535b",
+    "beir.json": "14a11df61f17dbe327746db800f5fb3ef5de4ce07ded871d740eacbb6f00d7ca",
+    "beir.log": "d1599da861f33926c076287a0c90806b129d310e5f3dee2fbb5c1515217f9bb1",
+    "driver.log": "f52525a6c4a885f35dc7fade6fb84d4f2a7993592711668613cf77fa6a48660e",
+    "history-host-before.json": "7554d01c6948b6c6350df311aae01c04bb96bbdb4db0d40838cf0c585829d14e",
+    "history.json": "664877f7339969f94775777be011909f13b5994f9b8141b95dac3d461c5a5db0",
+    "history.log": "8f044a02c53d1a746f9ba3540a55781fbaa724025197b2b8d5efa16fd5a56e27",
+    "spec.json": "c9f1b295f4e31722c219d87431160bf1d658033842a1ac42ba554e4bc43de4df"
+  }
+}
