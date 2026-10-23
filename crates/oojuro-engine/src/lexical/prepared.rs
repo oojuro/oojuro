@@ -103,13 +103,31 @@ pub(super) fn rank(
                     phrase_start(&index.documents[row].event.text, phrase).is_some()
                 })
     };
-    let mut candidates = BTreeSet::new();
+    // Public authorities cap rows at 100k: this union mask uses at most 12,504 bytes.
+    let mut candidates = Vec::<u64>::new();
+    let mut singleton = None;
+    let mut insert = |row: usize| {
+        if candidates.is_empty() {
+            let Some(first) = singleton else {
+                singleton = Some(row);
+                return;
+            };
+            if row == first {
+                return;
+            }
+            candidates.resize(index.documents.len().div_ceil(64), 0);
+            candidates[first / 64] |= 1u64 << (first % 64);
+        }
+        candidates[row / 64] |= 1u64 << (row % 64);
+    };
     if let Some(row) = direct {
         if let Some(row) = row.filter(|row| eligible(*row)) {
-            candidates.insert(row);
+            insert(row);
         }
     } else if scan_time {
-        candidates.extend((0..index.documents.len()).filter(|row| eligible(*row)));
+        for row in (0..index.documents.len()).filter(|row| eligible(*row)) {
+            insert(row);
+        }
     } else {
         let rarest = literal.and_then(|_| {
             terms
@@ -128,11 +146,13 @@ pub(super) fn rank(
                 |r| r == i,
             );
             if first && let Some(list) = index.postings.get(term.as_str()) {
-                candidates.extend(
-                    list.iter()
-                        .map(|(row, _)| *row as usize)
-                        .filter(|row| eligible(*row)),
-                );
+                for row in list
+                    .iter()
+                    .map(|(row, _)| *row as usize)
+                    .filter(|row| eligible(*row))
+                {
+                    insert(row);
+                }
             }
         }
     }
@@ -147,11 +167,32 @@ pub(super) fn rank(
                         })
                     }))
             {
-                candidates.insert(row);
+                insert(row);
             }
         }
     }
-    let rows: Vec<_> = candidates.into_iter().collect();
+    let rows = if candidates.is_empty() {
+        singleton.into_iter().collect()
+    } else {
+        let count = candidates.iter().map(|word| word.count_ones() as usize).sum();
+        let mut rows = Vec::with_capacity(count);
+        rows.extend(
+            candidates
+                .into_iter()
+                .enumerate()
+                .flat_map(|(word, mut bits)| {
+                    std::iter::from_fn(move || {
+                        if bits == 0 {
+                            return None;
+                        }
+                        let offset = bits.trailing_zeros() as usize;
+                        bits &= bits - 1;
+                        Some(word * 64 + offset)
+                    })
+                }),
+        );
+        rows
+    };
     // Fixed term order then canonical row order reproduces v4 ChunkOut runs.
     let hits: Vec<Vec<(usize, u32)>> = if direct.is_some() || scan_time {
         vec![vec![]; terms.len()]

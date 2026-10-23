@@ -620,3 +620,51 @@ fn streamed_analysis_matches_original_features_with_a_bounded_temporary_stem_cac
     );
     assert_eq!(cache.len(), before);
 }
+
+#[test]
+fn sparse_candidates_cover_word_boundaries_and_the_full_row_limit() {
+    for n in [0, 1, 63, 64, 65, 100_000] {
+        let index = Index::from_record_rows(
+            "mask",
+            1,
+            (1..=n).map(|id| {
+                (
+                    id,
+                    0,
+                    if id == 1 || id == n {
+                        "needle common"
+                    } else {
+                        "common"
+                    },
+                    true,
+                )
+            }),
+        )
+        .unwrap();
+        let mut q = Query {
+            writer: "mask",
+            agent: 1,
+            text: "needle",
+            from: 0,
+            to: 1,
+            k: 10,
+        };
+        for text in ["needle", "needle needle", "\"needle common\""] {
+            q.text = text;
+            let hits = index.search(&q).unwrap();
+            assert_eq!(
+                hits.iter().map(|h| h.id).collect::<Vec<_>>(),
+                match n {
+                    0 => vec![],
+                    1 => vec![1],
+                    _ => vec![1, n],
+                }
+            );
+        }
+        q.text = "key:1";
+        assert_eq!(index.search(&q).unwrap().len(), usize::from(n > 0));
+        q.text = "needle";
+        q.from = 1;
+        assert!(index.search(&q).unwrap().is_empty());
+    }
+}
