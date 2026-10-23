@@ -106,6 +106,11 @@ ArguAna nDCG@10 is 0.5367 native versus 0.4368 JSONL+Zstd. SWE-agent labels are
 lexically generated, not independent relevance judgments. The archived raw-text
 denominator excludes synthetic canary text; complete store sizes include it.
 
+At 20k background records, native durable batch append service time is
+3.105 ms p50 / 3.498 ms p99, versus 6.702 / 15.846 ms for JSONL+Zstd.
+Prefill is 31,216 versus 28,485 records/s. These are local single-host durability
+measurements; the complete protocol/turn timings are retained in the scorecards.
+
 All six arms and all 24 performance scorecards, including failures, are retained
 in [the evidence directory](benchmarks/native-aws-2026-10-23/campaign.json).
 The 20k-background Tantivy card fails repeated-ranking determinism and is excluded
