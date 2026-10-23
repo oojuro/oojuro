@@ -13,6 +13,7 @@ codecs = ["dep:brotli", "dep:liblzma", "dep:bzip2", "dep:libdeflater", "dep:snap
 
 [dependencies]
 blake3.workspace = true
+chacha20poly1305 = "0.10"
 crc32fast.workspace = true
 lz4_flex.workspace = true
 zstd = { version = "0.13", default-features = false, features = ["experimental", "zdict_builder"] }

@@ -25,6 +25,7 @@ pub mod client;
 pub mod config;
 pub mod exclude;
 pub mod hook;
+pub mod hosted;
 pub mod journal;
 pub mod mcp;
 pub mod otel;

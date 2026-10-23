@@ -8,6 +8,9 @@ description = "Oojuro v1 capture layer: attach-and-record ingestion of agent log
 
 [dependencies]
 oojuro-trace = { path = "../oojuro-trace" }
+oojuro-engine = { path = "../oojuro-engine" }
+oojuro-store = { path = "../oojuro-store" }
+libc = "0.2"
 serde.workspace = true
 serde_json = { workspace = true, features = ["raw_value"] }
 blake3.workspace = true

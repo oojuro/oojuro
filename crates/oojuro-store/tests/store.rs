@@ -126,6 +126,12 @@ fn hot_logs(dir: &Path) -> Vec<PathBuf> {
 
 #[test]
 fn torn_tail_inside_compressed_frame_recovers_every_cut() {
+    // Optional disjoint test sharding preserves exhaustive coverage under bounded gates.
+    let shard = std::env::var("OOJURO_TORN_SHARD").unwrap_or_else(|_| "0/1".into());
+    let (part, count) = shard.split_once('/').expect("shard must be index/count");
+    let (part, count) = (part.parse::<usize>().unwrap(), count.parse::<usize>().unwrap());
+    assert!(count > 0 && count <= 256 && part < count);
+    let mut tested = 0;
     let dir = temp("torn-src");
     let recs = records(400, 2);
     let mut s = Store::open(&dir, opts()).unwrap();
@@ -138,6 +144,8 @@ fn torn_tail_inside_compressed_frame_recovers_every_cut() {
     assert!(full.len() > before + 16);
     // Every cut inside the final frame (header, zstd body, last byte).
     for cut in before..full.len() {
+        if (cut - before) % count != part { continue; }
+        tested += 1;
         let d = temp("torn-case");
         copy_dir(&dir, &d);
         std::fs::write(d.join(log.file_name().unwrap()), &full[..cut]).unwrap();
@@ -154,6 +162,8 @@ fn torn_tail_inside_compressed_frame_recovers_every_cut() {
     }
     let s = Store::open(&dir, opts()).unwrap();
     check_all(&s, &recs);
+    assert!(tested > 0);
+    eprintln!("torn shard {part}/{count}: {tested} disjoint cases of {} total", full.len() - before);
     let _ = std::fs::remove_dir_all(&dir);
 }
 

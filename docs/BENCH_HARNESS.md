@@ -30,7 +30,7 @@ $B memqa --set longmemeval --split dev
 $B report bench-results/*.json --baseline nine > report.md
 ```
 
-Defaults: arms `nine tantivy sqlite`, `--runs 3`, every run in a fresh child
+Defaults: arms `native-record nine nine-v3 tantivy sqlite jsonl jsonl-zstd`, `--runs 3`, every run in a fresh child
 process inside a `systemd-run --user --scope` with `MemoryMax=3G` and
 `MemorySwapMax=0`, stores under `$TMPDIR/oojuro-bench/` (on disk, never /tmp),
 scorecard in `bench-results/<suite>-<dataset>-<split>-<utc>.json`.
@@ -44,6 +44,152 @@ Flags: `--arm [label=]spec` (repeat), `--runs N`, `--out FILE`, `--work DIR`,
 `--data DIR` (default `$OOJURO_DATA`, else `~/.cache/oojuro-data`), `--mem-max 3G`,
 `--in-process` (no isolation, no cgroup memory; quick iteration),
 `--keep` (keep stores), `--no-lock`.
+
+## Current native record arm and returned originals
+
+`native-record` measures the current `oojuro-engine` public `RecordLog` and the
+same `record::projection` family used by hosted captured-record search. It does
+not use Nine or Trace as its query implementation. Every search materializes the
+sealed log through the public paged view and resolves the latest imported version
+per key at the requested two clocks. It then refreshes derived in-memory postings
+using the complete fresh row set. Identical retained rows reuse analyzed postings;
+new IDs append; replacements, removals or changed projection fields rebuild.
+Normal excerpts, row validation and public pagination/materialization remain in
+the measured call. There is no disk index. This materialization differs from
+hosted blob reads; hosted integration of refresh requires a separate qualification.
+
+`projection::Index::refresh` consumes the old value, verifies scope and all row
+bounds/unique IDs/keys, and binds the returned value to the supplied new view.
+Changing rows under an unchanged view is refused. A failed refresh consumes the
+old projection. Caller-side current authority, payload-key and response checks
+remain mandatory. The frozen AWS measurement below used the earlier always-rebuild
+implementation at `27a1fb8`; it is not a measurement of this refresh change.
+
+The harness's arbitrary source IDs, keys, known-at timestamps and metadata are
+stored as explicit **benchmark import attributes**. Native IDs and ingest clocks
+remain genuinely assigned by RecordLog; imported known-at is never represented
+as a native ingestion timestamp. Harness seconds convert to native microseconds,
+with checked input bounds and exact round trips. This adapter tests the harness's imported
+two-clock contract, not an independently attested source-clock claim. Text and
+attributes must reopen exactly. A public fixed fixture key seals the local
+Store; it supplies no production confidentiality/key-management claim.
+
+RecordLog syncs each native append of at most 1,000 records. Larger harness
+batches use multiple native commits and may recover partially before the harness
+ACK. All acknowledged rows must survive SIGKILL. The native 100k-record/128 MiB
+state and metadata/work bounds apply; refusals are recorded, never silently
+truncated. The local Store's compression/encryption and metadata overhead differ
+from hosted per-object Zstd/S3/KMS and from Trace's dictionary/run archive. Do not
+use this arm's footprint, latency or failure domain for hosted pricing or SOTA.
+
+BEIR and turnloop now time **search plus original get for every returned top-k
+hit**, verify all those originals against the frozen input, and count returned
+original bytes. `search_get_p50_us`/`search_get_p99_us` include both operations and
+their protocol round trips; `turn_content_overhead_*` also includes durable
+append. The older `search_*` metrics remain IDs-only service timings. Native
+projection additionally computes excerpts as its real API requires. Ranking and
+tokenization still differ across native/Nine and FTS5/Tantivy; quality metrics
+and the exact returned-byte workload accompany speed. A result with a failed gate
+or arm error cannot support a performance claim.
+
+## AWS development comparison, 23 October 2026
+
+Frozen source `27a1fb80231f38d5175ad75a99b6bed7880da4d6`, six arms and three
+fresh processes/stores per workload ran on a dedicated 2-vCPU `m7a.large`, with
+3 GiB cgroup memory and no swap. The native engine/projection source matches
+the hosted `a4b2f9d` pin. This is a local API comparison on AWS, not hosted
+HTTP/S3/KMS performance, heldout evaluation or a pricing/SOTA acceptance.
+
+| Development workload | Native store MiB | Indexed JSONL+Zstd store MiB | Native search+originals p50 ms | JSONL+Zstd p50 ms |
+| --- | ---: | ---: | ---: | ---: |
+| SWE-agent, 1k background + 10 trajectories | 0.489 | 1.224 | 61.018 | 9.050 |
+| SWE-agent, 4k background + 10 trajectories | 0.788 | 3.075 | 188.389 | 22.445 |
+| SWE-agent, 20k background + 10 trajectories | 2.608 | 12.354 | 1015.470 | 102.725 |
+| ArguAna, 8,674 documents, frozen dev queries | 3.055 | 9.734 | 785.199 | 110.821 |
+
+Values are medians across three runs. Complete file footprints include payloads
+and indexes; allocated sizes are retained separately. The indexed compressed
+baseline uses **2.50–4.74× native's file space**, while native's search plus
+original retrieval p50 is **6.74–9.89× slower**. It also returns different rankings:
+ArguAna nDCG@10 is 0.5367 native versus 0.4368 JSONL+Zstd. SWE-agent labels are
+lexically generated, not independent relevance judgments. The archived raw-text
+denominator excludes synthetic canary text; complete store sizes include it.
+
+At 20k background records, native durable batch append service time is
+3.105 ms p50 / 3.498 ms p99, versus 6.702 / 15.846 ms for JSONL+Zstd.
+Prefill is 31,216 versus 28,485 records/s. These are local single-host durability
+measurements; the complete protocol/turn timings are retained in the scorecards.
+
+All six arms and all 24 performance scorecards, including failures, are retained
+in [the evidence directory](benchmarks/native-aws-2026-10-23/campaign.json).
+The 20k-background Tantivy card fails repeated-ranking determinism and is excluded
+from performance claims; byte preservation and visibility still pass. Nine's
+retained-index arm reaches 1.769 ms p50 there, with a 15.555 MiB store and matching
+native nDCG@10. It is a separate API/storage implementation; it does not establish
+hosted native performance. Snapshot materialization and projection rebuild are
+explicit next profiling targets.
+
+Independent qualification verified 5,973 archived store files, 144 per-run
+apparent/allocated footprint values, all 72 off-host store reopens with every
+original field, and 24 ArguAna metrics against pytrec_eval. Fresh-process reopen
+checks integrity, not cold OS-cache latency. A real Scheduler stop attributed in
+CloudTrail preceded workloads. The exact private result archive was downloaded
+and SHA-256 verified before the instance, disk, stack, roles and schedule were
+deleted. Existing product/key/trial instances remained running. Full provenance,
+input hashes, gates, measurements and cleanup evidence are in the directory.
+
+## Indexed JSONL and JSONL + Zstd baselines
+
+The `jsonl` and `jsonl-zstd` arms are built by `sqlite-arm`. Both retain the exact
+same serialized `Doc` records as JSON lines, one immutable file per appended
+batch. `jsonl-zstd` compresses the batch with Zstd level 3 (no dictionary or
+cross-batch deduplication); the arm's hello records the actual codec version.
+SQLite holds IDs, two-clock/revision metadata, frame offsets and a **contentless**
+FTS5 index. Original text and attributes are in the payload frame, with no second
+plain-text copy in the database. Search uses the same Porter/unicode61 tokens,
+OR query, BM25 ordering and SQL latest-visible-revision filter as the `sqlite`
+arm. It therefore performs indexed search rather than silently omitting that
+work from a compression-only baseline. Ranking still differs from Nine.
+
+A batch is acknowledged only after its payload file and payload directory have
+been fsynced, followed by the index transaction's WAL `synchronous=FULL` commit.
+After interruption, uncommitted payload frames are harmless orphans. They remain
+on disk and **count** in the complete footprint; no automatic reclamation hides
+them. Reopen retains the original codec and refuses a mismatched arm. Reads
+verify the selected frame's BLAKE3 checksum, decode it once per get/range call,
+and return byte-exact original text and attributes. There is no persistent
+decoded-payload cache. Frame size follows the actual suite batch, so record that
+batch configuration when reporting results.
+
+The ordinary footprint recursively counts **all** payload files, SQLite index,
+WAL/SHM, metadata and orphan frames, with both apparent and allocated bytes.
+`stats` additionally separates payload bytes and referenced/orphan frame counts.
+These are local, single-host baselines with no encryption, replication or backup;
+they do not match the hosted AWS failure domain or full cost. This harness has no
+delete/purge contract; deletion/retention comparisons need their separate gates.
+
+```sh
+cargo build --locked -p oojuro-bench --no-default-features --features sqlite-arm
+B=target/debug/oojuro-bench
+timeout --kill-after=5s 180 "$B" gates --arm jsonl --arm jsonl-zstd --arm sqlite --runs 1
+# Timed suites use a release binary, the shared lock and identical frozen input.
+# Pass the required arms explicitly when the binary omits other default features.
+```
+
+Run these gates before recording quality, speed or storage claims: exact text
+before/after reopen, nine two-clock cases, immediate search freshness,
+determinism, and three SIGKILL interruptions with acknowledged-write recovery.
+The extra arm unit check covers attributes, codec mismatch, duplicate/atomic
+index refusal, orphan accounting and payload corruption.
+
+The [23 October 2026 correctness scorecard](benchmarks/jsonl-zstd-2026-10-23/gates.json)
+records one run of all three baseline arms at source `81f11fb61eb5`: **21 gate
+assertions pass**, including nine total SIGKILL interruptions and 600
+acknowledged records checked per arm. The one extra arm unit test passes for
+both codecs. Ordinary scoped Clippy succeeds with inherited diagnostics and
+none in the new arm. [Provenance](benchmarks/jsonl-zstd-2026-10-23/provenance.json)
+pins the source, debug binary and scorecard hashes. Inputs are synthetic; no
+throughput, quality, representative storage or hosted AWS result is claimed.
 
 ## Plugging in an engine
 

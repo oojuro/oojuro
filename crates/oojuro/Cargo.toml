@@ -14,13 +14,20 @@ path = "src/bin/oojuro.rs"
 name = "oojurod"
 path = "src/bin/oojurod.rs"
 
+[[bin]]
+name = "oojuro-native"
+path = "src/bin/oojuro-native.rs"
+
 [dependencies]
+oojuro-engine = { path = "../oojuro-engine" }
+blake3.workspace = true
 oojuro-capture = { path = "../oojuro-capture" }
 oojuro-proxy = { path = "../oojuro-proxy" }
 oojuro-trace = { path = "../oojuro-trace" }
 oojuro-nine = { path = "../oojuro-nine" }
 serde.workspace = true
 serde_json.workspace = true
+reqwest = { version = "=0.12.28", default-features = false, features = ["blocking", "rustls-tls"] }
 toml = "0.9"
 regex = "1"
 jiff = "0.2"

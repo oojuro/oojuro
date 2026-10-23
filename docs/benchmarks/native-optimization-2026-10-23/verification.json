@@ -1,0 +1,176 @@
+{
+  "created_at": "2026-10-23T14:20:35.595654+00:00",
+  "scope": "local same-machine diagnostic; native fsync single host, warm OS cache; no hosted/AWS/SOTA or pricing claim",
+  "baseline_engine_commit": "ab460dc324a126d81132cb99deaff2e9ed052dfc",
+  "candidate_commit": "14c78815b1ce5020b1d1c616290d1fc93c7b571f",
+  "baseline_only_difference": "Identical diagnostic profiler adds full hit signatures; engine/arm sources exact ab460dc; hello honestly reports -dirty.",
+  "fixture_archive_sha256": "42cd9788fa6afd3176fb33c8fefacf4fcd3c20e12f7ad31928e20f96eab7a6a4",
+  "clean_build_method": "Clean oojuro-engine and oojuro-bench release packages before each build; retain resulting binaries before switching worktrees.",
+  "binary_sha256": {
+    "profile-native-14c7881": "6a10e26a59aeb9ae831cca48cb24536cbeee4d3e861aeec436044acec96a579d",
+    "profile-native-ab460dc": "7f6c2b355c9a6007c5f319e0d77f4d56442be765a9bb0e02011669d722d4a95d",
+    "oojuro-bench-14c7881": "73f3348bbaed67c11c612a4ef14fb136138555bd67ebc9f251bd2e3bb306ef15",
+    "oojuro-bench-ab460dc": "108506c95d19f34d4349737f5c8ad9eba1031807180d9b94091b93af952e34f3"
+  },
+  "hardware": "Architecture:                            x86_64\nCPU op-mode(s):                          32-bit, 64-bit\nAddress sizes:                           48 bits physical, 48 bits virtual\nByte Order:                              Little Endian\nCPU(s):                                  16\nOn-line CPU(s) list:                     0-15\nVendor ID:                               AuthenticAMD\nModel name:                              AMD Ryzen 7 8845HS w/ Radeon 780M Graphics\nCPU family:                              25\nModel:                                   117\nThread(s) per core:                      2\nCore(s) per socket:                      8\nSocket(s):                               1\nStepping:                                2\nFrequency boost:                         enabled\nCPU(s) scaling MHz:                      61%\nCPU max MHz:                             5102.7129\nCPU min MHz:                             416.5480\nBogoMIPS:                                7585.95\nFlags:                                   fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good amd_lbr_v2 nopl xtopology nonstop_tsc cpuid extd_apicid aperfmperf rapl pni pclmulqdq monitor ssse3 fma cx16 sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand lahf_lm cmp_legacy svm extapic cr8_legacy abm sse4a misalignsse 3dnowprefetch osvw ibs skinit wdt tce topoext perfctr_core perfctr_nb bpext perfctr_llc mwaitx cpuid_fault cpb cat_l3 cdp_l3 hw_pstate ssbd mba perfmon_v2 ibrs ibpb stibp ibrs_enhanced vmmcall fsgsbase bmi1 avx2 smep bmi2 erms invpcid cqm rdt_a avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves cqm_llc cqm_occup_llc cqm_mbm_total cqm_mbm_local user_shstk avx512_bf16 clzero irperf xsaveerptr rdpru wbnoinvd cppc arat npt lbrv svm_lock nrip_save tsc_scale vmcb_clean flushbyasid decodeassists pausefilter pfthreshold vgif x2avic v_spec_ctrl vnmi avx512vbmi umip pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid overflow_recov succor smca fsrm flush_l1d\nVirtualization:                          AMD-V\nL1d cache:                               256 KiB (8 instances)\nL1i cache:                               256 KiB (8 instances)\nL2 cache:                                8 MiB (8 instances)\nL3 cache:                                16 MiB (1 instance)\nNUMA node(s):                            1\nNUMA node0 CPU(s):                       0-15\nVulnerability Gather data sampling:      Not affected\nVulnerability Ghostwrite:                Not affected\nVulnerability Indirect target selection: Not affected\nVulnerability Itlb multihit:             Not affected\nVulnerability L1tf:                      Not affected\nVulnerability Mds:                       Not affected\nVulnerability Meltdown:                  Not affected\nVulnerability Mmio stale data:           Not affected\nVulnerability Old microcode:             Not affected\nVulnerability Reg file data sampling:    Not affected\nVulnerability Retbleed:                  Not affected\nVulnerability Spec rstack overflow:      Mitigation; Safe RET\nVulnerability Spec store bypass:         Mitigation; Speculative Store Bypass disabled via prctl\nVulnerability Spectre v1:                Mitigation; usercopy/swapgs barriers and __user pointer sanitization\nVulnerability Spectre v2:                Mitigation; Enhanced / Automatic IBRS; IBPB conditional; STIBP always-on; PBRSB-eIBRS Not affected; BHI Not affected\nVulnerability Srbds:                     Not affected\nVulnerability Tsa:                       Mitigation; Clear CPU buffers\nVulnerability Tsx async abort:           Not affected\nVulnerability Vmscape:                   Mitigation; IBPB before exit to userspace\n",
+  "source_sha256": {
+    "crates/oojuro-engine/src/lexical.rs": "227860b09371c0efb87f8d6d99cee28753ac03738e5d0d444de7e8c97d643012",
+    "crates/oojuro-engine/src/lexical/text.rs": "de100b6cfe0912bdfdd5b16d1e500099dc856614dd3185d6c055c6cc5b72cdd9",
+    "crates/oojuro-engine/src/record.rs": "23f46afee8d525c4b04913970988300991acba52f19fa731ec3c90c88540aa41",
+    "crates/oojuro-engine/src/record/view.rs": "6c4b9a9572fb180208ed784eb697e97eedffe33dbd7fa7b6e3b4870995289b13",
+    "crates/oojuro-engine/src/record/projection.rs": "8a7ca68026eff2da536c2331bae3f622890f11dba34e83bf854262475aaf6728",
+    "crates/oojuro-bench/examples/profile_native.rs": "bb3b60f3b5598e8f9efcc6ecdac2e655d8f538ee357946114b8d80c2f9561011"
+  },
+  "verification": {
+    "lexical_tests": 22,
+    "lexical_ignored": 2,
+    "record_tests_serial": 99,
+    "record_ignored": 5,
+    "native_gates": {
+      "as_of_visibility": true,
+      "byte_exact": true,
+      "byte_exact_after_reopen": true,
+      "crash_recovery": true,
+      "determinism": true,
+      "freshness": true,
+      "get_range_order": true
+    },
+    "full_ranked_hit_signatures": 15,
+    "reopened_exact_records": 52044
+  },
+  "limitations": [
+    "Local single-host fsync, warm OS cache; no hosted/AWS/heldout/SOTA/pricing claim.",
+    "Cold search n3 and reused n42/source: empirical p99 with n<100 is the observed max, not a production tail estimate.",
+    "Append n261/source (100 records/batch) regressed p50/p99 in this sample. No write-throughput gain claimed.",
+    "Process RSS/HWM includes allocator/RecordLog/query state; not exact projection allocation or a no-RAM comparison.",
+    "All store files/manifest/format/lock and blocks counted; no persistent projection index in either arm. Filesystem-global journal/inode costs excluded.",
+    "One parallel99-record-test run had a lock failure; both serial reruns passed99. Pre-existing attribution unproven. Failed output retained.",
+    "Earlier cross-worktree shared-target samples and overlapping-build profile timings discarded after stale artifact detection; only clean-build paired-io profile accepted."
+  ],
+  "summaries": {
+    "ab460dc": {
+      "append_service": {
+        "n": 261,
+        "p50_us": 2844,
+        "p99_us": 29484,
+        "max_us": 38160,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "append_roundtrip": {
+        "n": 261,
+        "p50_us": 3011.969,
+        "p99_us": 29679.278,
+        "max_us": 38337.524,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "records_per_append_service_second": 30489.862489806248,
+      "cold_search_plus_get": {
+        "n": 3,
+        "p50_us": 633116.485,
+        "p99_us": 667226.949,
+        "max_us": 667226.949,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "reused_search_plus_get": {
+        "n": 42,
+        "p50_us": 67180.51699999999,
+        "p99_us": 74147.951,
+        "max_us": 74147.951,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "get_service": {
+        "n": 45,
+        "p50_us": 703,
+        "p99_us": 1430,
+        "max_us": 1430,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "store_apparent_bytes": [
+        3517161,
+        3517179,
+        3517404
+      ],
+      "store_allocated_bytes": [
+        3538944,
+        3538944,
+        3538944
+      ],
+      "memory": [
+        {
+          "VmHWM": "98508 kB",
+          "VmRSS": "98508 kB"
+        },
+        {
+          "VmHWM": "98112 kB",
+          "VmRSS": "98112 kB"
+        },
+        {
+          "VmHWM": "98188 kB",
+          "VmRSS": "98188 kB"
+        }
+      ]
+    },
+    "14c7881": {
+      "append_service": {
+        "n": 261,
+        "p50_us": 2972,
+        "p99_us": 30071,
+        "max_us": 37042,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "append_roundtrip": {
+        "n": 261,
+        "p50_us": 3140.489,
+        "p99_us": 30257.954,
+        "max_us": 37216.56,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "records_per_append_service_second": 29461.380479995652,
+      "cold_search_plus_get": {
+        "n": 3,
+        "p50_us": 483354.929,
+        "p99_us": 502387.87299999996,
+        "max_us": 502387.87299999996,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "reused_search_plus_get": {
+        "n": 42,
+        "p50_us": 63632.105500000005,
+        "p99_us": 72283.655,
+        "max_us": 72283.655,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "get_service": {
+        "n": 45,
+        "p50_us": 663,
+        "p99_us": 945,
+        "max_us": 945,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "store_apparent_bytes": [
+        3517446,
+        3517140,
+        3517394
+      ],
+      "store_allocated_bytes": [
+        3538944,
+        3538944,
+        3538944
+      ],
+      "memory": [
+        {
+          "VmHWM": "99924 kB",
+          "VmRSS": "99924 kB"
+        },
+        {
+          "VmHWM": "99776 kB",
+          "VmRSS": "99776 kB"
+        },
+        {
+          "VmHWM": "99692 kB",
+          "VmRSS": "99692 kB"
+        }
+      ]
+    }
+  }
+}

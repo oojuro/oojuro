@@ -21,6 +21,8 @@
 //! zstd frames are written magicless, without content size or dictionary id
 //! (the frame head already carries both), so small per-turn frames stay small.
 
+mod bounded;
+use crate::crypto::FrameCipher;
 use crate::format::*;
 use crate::pack::{PackOpts, Packer, Row, new_cctx, pack_body};
 use crate::reader::{self, Frames, Loc, ReadState};
@@ -37,6 +39,11 @@ const COLD_MAGIC: &[u8; 8] = b"OJCOLD01";
 const COLD_END: &[u8; 8] = b"OJCEND01";
 const MAN_MAGIC: &[u8; 8] = b"OJMAN001";
 const DICT_MAGIC: &[u8; 8] = b"OJDICT01";
+/// Dictionary file whose body is sealed with the store key.
+const DICT_MAGIC_SEALED: &[u8; 8] = b"OJDICT02";
+/// Marker file of a store that holds sealed data: `OJENC001 | key id (8 B)`.
+const ENC_MARKER: &str = "ENCRYPTED";
+const ENC_MAGIC: &[u8; 8] = b"OJENC001";
 /// magic | id | len | crc (over trained_at_raw + bytes) | trained_at_raw
 const DICT_HEAD: usize = 28;
 const FILE_HEAD: usize = 32;
@@ -72,6 +79,12 @@ pub struct Options {
     pub dedupe_window: u64,
     /// Threads compressing compacted frames (output is identical for any value).
     pub compact_threads: usize,
+    /// Seal every new frame and dictionary with this key (compress first, then encrypt). A store that
+    /// holds sealed data opens only with its key.
+    pub cipher: Option<std::sync::Arc<FrameCipher>>,
+    /// Reject plaintext frames/dictionaries instead of permitting a legacy plaintext upgrade.
+    /// Requires `cipher`; used for stores that must have been sealed from their first byte.
+    pub require_sealed: bool,
 }
 
 impl Default for Options {
@@ -90,6 +103,8 @@ impl Default for Options {
             dedupe_chunk: 1024,
             dedupe_window: 1 << 30,
             compact_threads: 4,
+            cipher: None,
+            require_sealed: false,
         }
     }
 }
@@ -146,6 +161,12 @@ impl Frames for Store {
     fn read_state(&self) -> &ReadState {
         &self.read
     }
+    fn cipher(&self) -> Option<&FrameCipher> {
+        self.opts.cipher.as_deref()
+    }
+    fn require_sealed(&self) -> bool {
+        self.opts.require_sealed
+    }
 }
 
 #[derive(Default, Clone, Debug)]
@@ -193,6 +214,8 @@ pub struct Store {
     hot_cctx: zstd_safe::CCtx<'static>,
     hot_dict: u32,
     hot_raw: usize,
+    /// Nonpersistent geometric retry floor after a failed initial dictionary attempt.
+    hot_train_next: usize,
     next_seq: u64,
     raw_text: u64,
     read: ReadState,
@@ -257,9 +280,13 @@ fn build_payload(
     first_seq: u64,
     records: &[RecordIn],
     digest: bool,
+    cipher: Option<&FrameCipher>,
 ) -> Result<(Vec<u8>, Vec<u8>, usize)> {
     let (body, meta_len) = encode_body(records);
-    let payload = pack_body(cctx, dict, first_seq, records.len(), &body, meta_len, digest)?;
+    let mut payload = pack_body(cctx, dict, first_seq, records.len(), &body, meta_len, digest)?;
+    if let Some(c) = cipher {
+        payload = crate::pack::encrypt_payload(c, &payload)?;
+    }
     Ok((payload, body, meta_len))
 }
 
@@ -268,7 +295,49 @@ fn valid_range(records: &[RecordIn]) -> (i64, i64) {
 }
 
 impl Store {
+    /// A store that holds sealed data says so in `ENCRYPTED` (the key id, never the key): opening it
+    /// without a key, or with another key, fails before anything is read. A key given to a store
+    /// without the marker creates it, so frames appended from now on are sealed (older ones stay as they are).
+    fn check_marker(dir: &Path, cipher: Option<&FrameCipher>) -> Result<()> {
+        let path = dir.join(ENC_MARKER);
+        match std::fs::read(&path) {
+            Ok(b) => {
+                if b.len() != 16 || &b[..8] != ENC_MAGIC {
+                    return Err(Error::Corrupt("encryption marker"));
+                }
+                let c = cipher.ok_or(Error::KeyRequired)?;
+                if b[8..16] != c.key_id() {
+                    return Err(Error::WrongKey);
+                }
+                Ok(())
+            }
+            Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+                if let Some(c) = cipher {
+                    let mut b = Vec::with_capacity(16);
+                    b.extend_from_slice(ENC_MAGIC);
+                    b.extend_from_slice(&c.key_id());
+                    let tmp = dir.join("ENCRYPTED.tmp");
+                    std::fs::write(&tmp, &b)?;
+                    File::open(&tmp)?.sync_all()?;
+                    std::fs::rename(&tmp, &path)?;
+                    sync_dir(dir)?;
+                }
+                Ok(())
+            }
+            Err(e) => Err(e.into()),
+        }
+    }
+
     pub fn open(dir: &Path, opts: Options) -> Result<Self> {
+        if opts.require_sealed {
+            if opts.cipher.is_none() {
+                return Err(Error::KeyRequired);
+            }
+            // Refuse an unmarked existing store before creating/upgrading its marker.
+            if dir.join("MANIFEST").exists() && !dir.join(ENC_MARKER).exists() {
+                return Err(Error::Crypto("strict sealed store has no encryption marker"));
+            }
+        }
         let cache_bytes = opts.cache_bytes;
         std::fs::create_dir_all(dir)?;
         let lock = OpenOptions::new().create(true).truncate(false).write(true).open(dir.join("LOCK"))?;
@@ -282,20 +351,35 @@ impl Store {
             }
             Err(e) => return Err(e.into()),
         };
+        Self::check_marker(dir, opts.cipher.as_deref())?;
         let mut dicts = BTreeMap::new();
         let mut dict_trained = BTreeMap::new();
         for &id in &man.dicts {
             let b = std::fs::read(dict_path(dir, id))?;
-            if b.len() < DICT_HEAD || &b[..8] != DICT_MAGIC || u32::from_le_bytes(b[8..12].try_into().unwrap()) != id {
+            let sealed = b.len() >= 8 && &b[..8] == DICT_MAGIC_SEALED;
+            if opts.require_sealed && !sealed {
+                return Err(Error::Crypto("plaintext dictionary in strict sealed store"));
+            }
+            if b.len() < 20 || !(sealed || &b[..8] == DICT_MAGIC) || u32::from_le_bytes(b[8..12].try_into().unwrap()) != id {
                 return Err(Error::Corrupt("dictionary header"));
             }
             let len = u32::from_le_bytes(b[12..16].try_into().unwrap()) as usize;
-            if b.len() != DICT_HEAD + len || crc(&b[20..]) != u32::from_le_bytes(b[16..20].try_into().unwrap()) {
+            if crc(&b[20..]) != u32::from_le_bytes(b[16..20].try_into().unwrap()) {
                 return Err(Error::Corrupt("dictionary checksum"));
             }
-            dict_trained.insert(id, u64::from_le_bytes(b[20..28].try_into().unwrap()));
-            dicts.insert(id, b[DICT_HEAD..].to_vec());
+            let tail = if sealed {
+                let c = opts.cipher.as_deref().ok_or(Error::KeyRequired)?;
+                c.open_dict(&b[8..16], &b[20..])?
+            } else {
+                b[20..].to_vec()
+            };
+            if tail.len() != 8 + len {
+                return Err(Error::Corrupt("dictionary length"));
+            }
+            dict_trained.insert(id, u64::from_le_bytes(tail[..8].try_into().unwrap()));
+            dicts.insert(id, tail[8..].to_vec());
         }
+        let hot_train_next = opts.dict_train_after.max(1);
         let mut store = Store {
             dir: dir.into(),
             opts,
@@ -305,6 +389,7 @@ impl Store {
             hot_cctx: zstd_safe::CCtx::create(),
             hot_dict: 0,
             hot_raw: 0,
+            hot_train_next,
             next_seq: 0,
             raw_text: 0,
             frames: Vec::new(),
@@ -452,31 +537,34 @@ impl Store {
     fn load_hot(&mut self, id: u64, last: bool) -> Result<()> {
         let path = hot_path(&self.dir, id);
         let f = OpenOptions::new().read(true).write(true).open(&path)?;
-        let data = std::fs::read(&path)?;
-        let first_seq = check_head(&data, HOT_MAGIC, id)?;
+        let size = f.metadata()?.len();
+        let mut header = [0; FILE_HEAD];
+        let head_len = size.min(FILE_HEAD as u64) as usize;
+        f.read_exact_at(&mut header[..head_len], 0)?;
+        let first_seq = check_head(&header[..head_len], HOT_MAGIC, id)?;
         if first_seq != self.next_seq {
             return Err(Error::Corrupt("hot log sequence gap"));
         }
-        let mut at = FILE_HEAD;
-        while at < data.len() {
-            match Self::frame_at(&data, at) {
-                Some(len) => {
-                    let payload = &data[at + 8..at + 8 + len];
-                    let head = get_head(payload)?;
+        let mut at = FILE_HEAD as u64;
+        let mut input = bounded::HotReader::new(&f, size);
+        while at < size {
+            match input.payload(at)? {
+                Some(payload) => {
+                    let head = get_head(&payload)?;
                     if head.first_seq != self.next_seq {
                         return Err(Error::Corrupt("hot frame sequence gap"));
                     }
-                    let (meta, _) = reader::decode_payload(&*self, payload, &head, None)?;
+                    let (meta, _) = reader::decode_payload(&*self, &payload, &head, None)?;
                     let (lo, hi) = meta.records.iter().fold((i64::MAX, i64::MIN), |(lo, hi), r| (lo.min(r.valid_at), hi.max(r.valid_at)));
                     let text: u64 = meta.records.iter().map(|r| r.text_len as u64).sum();
-                    self.push_frame(id, at as u64, len as u32, &head, lo, hi, text);
-                    at += 8 + len;
+                    self.push_frame(id, at, payload.len() as u32, &head, lo, hi, text);
+                    at += 8 + payload.len() as u64;
                 }
                 None => {
-                    if !last || Self::any_frame_after(&data, at + 1) {
+                    if !last || bounded::any_after(&f, size, at + 1)? {
                         return Err(Error::Corrupt("hot log checksum mismatch before its tail"));
                     }
-                    f.set_len(at as u64)?;
+                    f.set_len(at)?;
                     f.sync_all()?;
                     break;
                 }
@@ -485,21 +573,6 @@ impl Store {
         self.files.insert(id, f);
         self.hot_files.push(id);
         Ok(())
-    }
-
-    /// Length of a valid frame starting at `at`, if any.
-    fn frame_at(data: &[u8], at: usize) -> Option<usize> {
-        let len = u32::from_le_bytes(data.get(at..at + 4)?.try_into().ok()?) as usize;
-        let want = u32::from_le_bytes(data.get(at + 4..at + 8)?.try_into().ok()?);
-        if len == 0 || len > MAX_FRAME + 64 {
-            return None;
-        }
-        let payload = data.get(at + 8..at + 8 + len)?;
-        (frame_crc(payload) == want).then_some(len)
-    }
-
-    fn any_frame_after(data: &[u8], from: usize) -> bool {
-        (from..data.len().saturating_sub(8)).any(|i| Self::frame_at(data, i).is_some())
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -593,7 +666,7 @@ impl Store {
         }
         let first = self.next_seq;
         let cctx = (self.opts.hot_level != 0).then_some(&mut self.hot_cctx);
-        let (payload, body, _) = build_payload(cctx, self.hot_dict, first, batch, false)?;
+        let (payload, body, _) = build_payload(cctx, self.hot_dict, first, batch, false, self.opts.cipher.as_deref())?;
         let frame = seal_frame(&payload);
         let id = self.hot_id();
         let f = &self.files[&id];
@@ -613,8 +686,10 @@ impl Store {
         let offset = self.hot_len;
         self.hot_len += frame.len() as u64;
         self.push_frame(id, offset, payload.len() as u32, &head, lo, hi, text);
-        self.hot_raw += body.len();
-        if self.opts.dict_bytes > 0 && self.hot_dict == 0 && self.hot_raw >= self.opts.dict_train_after {
+        self.hot_raw = self.hot_raw.saturating_add(body.len());
+        if self.opts.dict_bytes > 0 && self.hot_dict == 0 && self.hot_train_next != usize::MAX && self.hot_raw >= self.hot_train_next {
+            // A failed/insufficient sample must not rescan all history on every append.
+            self.hot_train_next = self.hot_raw.saturating_mul(2).max(self.hot_raw.saturating_add(1));
             self.train_hot_dict()?;
         }
         Ok(first)
@@ -623,18 +698,21 @@ impl Store {
     /// Train the first dictionary from the hot data appended so far. New hot
     /// frames use it; older frames keep decoding without one.
     fn train_hot_dict(&mut self) -> Result<()> {
-        let mut texts = Vec::new();
+        let mut samples = bounded::Training::new();
+        let mut raw = 0u64;
         for i in 0..self.frames.len() {
             if self.frames[i].cold {
                 continue;
             }
             let d = reader::decoded(self, i, usize::MAX)?;
             for r in 0..d.meta.records.len() {
-                texts.push(d.body[d.meta.text_start[r] as usize..d.meta.text_start[r + 1] as usize].to_vec());
+                let text = &d.body[d.meta.text_start[r] as usize..d.meta.text_start[r + 1] as usize];
+                raw = raw.saturating_add(text.len() as u64);
+                samples.push(text);
             }
         }
-        let size = dict_size(&self.opts, texts.iter().map(|t| t.len() as u64).sum());
-        let Some(dict) = train_dict(&texts, size) else { return Ok(()) };
+        let size = dict_size(&self.opts, raw);
+        let Some(dict) = samples.finish(size) else { return Ok(()) };
         let id = self.next_dict;
         self.next_dict += 1;
         self.publish_dict(id, dict, self.raw_text)?;
@@ -647,10 +725,16 @@ impl Store {
         let mut tail = Vec::with_capacity(dict.len() + 8);
         tail.extend_from_slice(&trained_at.to_le_bytes());
         tail.extend_from_slice(&dict);
-        let mut b = Vec::with_capacity(dict.len() + DICT_HEAD);
-        b.extend_from_slice(DICT_MAGIC);
-        b.extend_from_slice(&id.to_le_bytes());
-        b.extend_from_slice(&(dict.len() as u32).to_le_bytes());
+        let mut head = Vec::with_capacity(16);
+        head.extend_from_slice(&id.to_le_bytes());
+        head.extend_from_slice(&(dict.len() as u32).to_le_bytes());
+        if let Some(c) = self.opts.cipher.as_deref() {
+            // a dictionary holds sample text of the store: sealed like a frame
+            tail = c.seal_dict(&head, &tail);
+        }
+        let mut b = Vec::with_capacity(tail.len() + DICT_HEAD);
+        b.extend_from_slice(if self.opts.cipher.is_some() { DICT_MAGIC_SEALED } else { DICT_MAGIC });
+        b.extend_from_slice(&head);
         b.extend_from_slice(&crc(&tail).to_le_bytes());
         b.extend_from_slice(&tail);
         let mut f = File::create(dict_path(&self.dir, id))?;
@@ -738,6 +822,30 @@ impl Store {
             }
         }
         Ok(())
+    }
+
+    /// Read-only ciphertext incarnation fingerprint for disposable derived caches.
+    /// Requires a healthy, strictly sealed nonempty store. Compaction may change
+    /// it, deliberately invalidating caches; it is not a durable authority ID.
+    pub fn sealed_origin_digest(&self) -> Result<[u8; 32]> {
+        if self.poisoned || !self.opts.require_sealed || self.opts.cipher.is_none() {
+            return Err(Error::Invalid("sealed origin requires healthy sealed store"));
+        }
+        let frame = self.frames.first().ok_or(Error::Invalid("empty sealed store"))?;
+        let mut hash = blake3::Hasher::new();
+        hash.update(b"oojuro/sealed-origin/v1\0");
+        let file = self.files.get(&frame.file).ok_or(Error::Corrupt("origin file"))?;
+        let mut at = frame.offset;
+        let mut left = u64::from(frame.payload_len) + 8;
+        let mut buffer = [0u8; 8192];
+        while left != 0 {
+            let n = left.min(buffer.len() as u64) as usize;
+            file.read_exact_at(&mut buffer[..n], at)?;
+            hash.update(&buffer[..n]);
+            at += n as u64;
+            left -= n as u64;
+        }
+        Ok(*hash.finalize().as_bytes())
     }
 
     pub fn len(&self) -> u64 {
@@ -927,6 +1035,8 @@ impl Store {
             return Err(Error::Corrupt("prepared segment does not match the compacted frames"));
         }
         self.frames.splice(a..b, cold);
+        self.hot_raw = self.frames.iter().filter(|f| !f.cold).fold(0usize, |n, f| n.saturating_add(f.raw_len as usize));
+        self.hot_train_next = self.hot_raw.saturating_add(self.opts.dict_train_after.max(1));
         self.read.clear_cache();
         self.drop_unused_dicts()?;
         Ok(CompactStats {
@@ -989,23 +1099,17 @@ impl CompactionJob {
         let mut dctx = HashMap::new();
         let first_seq = self.hot.first().map(|f| f.first_seq).ok_or(Error::Invalid("nothing to compact"))?;
         let hot_raw: u64 = self.hot.iter().map(|f| f.raw_len as u64).sum();
-        let records: u64 = self.hot.iter().map(|f| f.count as u64).sum();
         let mut new_dict = None;
         if self.retrain {
             let size = dict_size(&self.opts, hot_raw);
-            // Every `step`-th record, about 100x the dictionary size in total.
-            let step = (records * size as u64 * 100).checked_div(hot_raw.max(1)).map_or(1, |per| (records / per.max(1)).max(1));
-            let (mut texts, mut n) = (Vec::new(), 0u64);
+            let mut samples = bounded::Training::new();
             for f in &self.hot {
-                let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx)?;
+                let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx, self.opts.cipher.as_deref(), self.opts.require_sealed)?;
                 for r in 0..meta.records.len() {
-                    if n % step == 0 {
-                        texts.push(body[meta.text_start[r] as usize..meta.text_start[r + 1] as usize].to_vec());
-                    }
-                    n += 1;
+                    samples.push(&body[meta.text_start[r] as usize..meta.text_start[r + 1] as usize]);
                 }
             }
-            new_dict = train_dict(&texts, size);
+            new_dict = samples.finish(size);
         }
         let (dict_id, dict_bytes): (u32, Option<Vec<u8>>) = match (&new_dict, self.reuse) {
             (Some(d), _) => (self.new_dict_id, Some(d.clone())),
@@ -1017,11 +1121,12 @@ impl CompactionJob {
             frame_bytes: self.opts.cold_frame_bytes,
             dedupe_chunk: self.opts.dedupe_chunk,
             threads: self.opts.compact_threads,
+            cipher: self.opts.cipher.clone(),
         };
         let mut packer = Packer::new(opts, first_seq, dict_id, dict_bytes.as_deref());
         // Chunks of the newest cold data (within the window) that new frames may reference.
         for f in &self.window {
-            let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx)?;
+            let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx, self.opts.cipher.as_deref(), self.opts.require_sealed)?;
             packer.register(f.first_seq, &meta, &body);
         }
         let path = cold_path(&self.dir, self.seg_id);
@@ -1037,7 +1142,7 @@ impl CompactionJob {
             Ok(())
         };
         for f in &self.hot {
-            let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx)?;
+            let (meta, body) = reader::read_frame_body(&self.files[&f.file], &f.loc(), &self.dicts, &mut dctx, self.opts.cipher.as_deref(), self.opts.require_sealed)?;
             for r in 0..meta.records.len() {
                 if meta.pieces[r].0 != meta.pieces[r].1 {
                     return Err(Error::Corrupt("hot frame holds a deduplicated record"));
@@ -1096,26 +1201,10 @@ fn dict_size(opts: &Options, raw: u64) -> usize {
     ((raw / opts.dict_scale.max(1)) as usize).clamp(16 << 10, opts.dict_bytes.max(16 << 10))
 }
 
-/// Train a zstd dictionary on a deterministic sample of `texts`
-/// (about 100x the dictionary size). None when there is too little data.
+/// Train from a deterministic bounded priority sample; exact compression bytes can
+/// change across versions, while the persisted dictionary/frame formats remain unchanged.
 pub fn train_dict(texts: &[Vec<u8>], dict_bytes: usize) -> Option<Vec<u8>> {
-    let total: usize = texts.iter().map(|t| t.len()).sum();
-    let usable = texts.iter().filter(|t| t.len() >= 8).count();
-    if total < dict_bytes * 8 || usable < 16 {
-        return None;
-    }
-    let (mut samples, mut sizes) = (Vec::new(), Vec::new());
-    let mut rng = crate::util::Rng::new(0x0dd5_eed5);
-    let budget = (dict_bytes * 100).min(total);
-    let mut tries = 0;
-    while samples.len() < budget && tries < texts.len() * 4 {
-        tries += 1;
-        let t = &texts[rng.below(texts.len())];
-        let s = &t[..t.len().min(128 << 10)];
-        if s.len() >= 8 {
-            samples.extend_from_slice(s);
-            sizes.push(s.len());
-        }
-    }
-    zstd::dict::from_continuous(&samples, &sizes, dict_bytes).ok()
+    let mut samples = bounded::Training::new();
+    for text in texts { samples.push(text); }
+    samples.finish(dict_bytes)
 }
