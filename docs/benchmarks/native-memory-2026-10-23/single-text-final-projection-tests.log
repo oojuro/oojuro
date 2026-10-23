@@ -1,0 +1,70 @@
+warning: associated function `of` is never used
+   --> crates/oojuro-nine/src/segment.rs:135:12
+    |
+126 | impl Span {
+    | --------- associated function in this implementation
+...
+135 |     pub fn of(meta: &[RowMeta]) -> Self {
+    |            ^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `terms` and `total_length` are never read
+   --> crates/oojuro-nine/src/segment.rs:277:9
+    |
+273 | pub(crate) struct DiskSegment {
+    |                   ----------- fields in this struct
+...
+277 |     pub terms: u64,
+    |         ^^^^^
+278 |     pub total_length: u64,
+    |         ^^^^^^^^^^^^
+
+warning: methods `file_bytes` and `version` are never used
+   --> crates/oojuro-nine/src/segment.rs:597:12
+    |
+467 | impl DiskSegment {
+    | ---------------- methods in this implementation
+...
+597 |     pub fn file_bytes(&self) -> u64 {
+    |            ^^^^^^^^^^
+...
+917 |     pub fn version(&self) -> u32 {
+    |            ^^^^^^^
+
+warning: method `bytes` is never used
+   --> crates/oojuro-nine/src/wal.rs:245:19
+    |
+122 | impl Journal {
+    | ------------ method in this implementation
+...
+245 |     pub(crate) fn bytes(&self) -> u64 {
+    |                   ^^^^^
+
+warning: `oojuro-nine` (lib) generated 4 warnings
+warning: associated function `new` is never used
+   --> crates/oojuro-trace/src/columns.rs:480:12
+    |
+479 | impl ColStore {
+    | ------------- associated function in this implementation
+480 |     pub fn new(seal: bool) -> Self {
+    |            ^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `oojuro-trace` (lib) generated 1 warning
+   Compiling oojuro-engine v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-benchmark-campaign/crates/oojuro-engine)
+    Finished `test` profile [unoptimized] target(s) in 1.49s
+     Running unittests src/lib.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/portable-benchmark/target/debug/deps/oojuro_engine-f20c376dddeafa85)
+
+running 7 tests
+test record::projection::tests::refreshed_projection_refuses_scope_duplicates_and_invalid_rows ... ok
+test record::projection::tests::projected_query_binding_duplicate_and_budget_fail_closed ... ok
+test record::projection::tests::every_source_field_change_requires_a_new_view ... ok
+test record::projection::tests::projected_query_filter_precedes_floor_and_stored_only_cannot_reappear ... ok
+test record::projection::tests::projected_query_exact_utf8_passages_match_dev_oracle ... ok
+test record::projection::tests::projected_query_preserves_opaque_ids_bits_time_continuation_and_pre_topk_ties ... ok
+test record::projection::tests::refreshed_projection_matches_fresh_build_for_growth_reorder_replacement_and_removal ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 167 filtered out; finished in 0.80s
+

@@ -1,0 +1,173 @@
+{
+  "created_at": "2026-10-23T14:33:32.622018+00:00",
+  "scope": "local same-machine diagnostic; native fsync single host, warm OS cache; no hosted/AWS/SOTA or pricing claim",
+  "baseline_commit": "14c78815b1ce5020b1d1c616290d1fc93c7b571f",
+  "candidate_commit": "6cec2064aba3c4a6e96ebf587d0d1cad651e266a",
+  "change": "Exact originals retained once in lexical carrier, metadata retained separately. Full incoming rows still bounded/validated; exact metadata+text equality required for reuse; replacements/deletions rebuild and errors consume old value. No API/authority/durable-format change.",
+  "binary_sha256": {
+    "profile-native-14c7881": "6a10e26a59aeb9ae831cca48cb24536cbeee4d3e861aeec436044acec96a579d",
+    "oojuro-bench-14c7881": "73f3348bbaed67c11c612a4ef14fb136138555bd67ebc9f251bd2e3bb306ef15",
+    "oojuro-bench-6cec206": "37e431e33f73266a6f6f9e3a81a70051fcb9c909244b3e09b2e6f92b5b9bebc8",
+    "profile-native-6cec206": "24fc8cb863a854436f2f2b1c26c4a01dc5c1c22bbe20320f95fd4bfec46d69a2"
+  },
+  "original_fixture_archive_sha256": "42cd9788fa6afd3176fb33c8fefacf4fcd3c20e12f7ad31928e20f96eab7a6a4",
+  "source_text_bytes": 8984758,
+  "duplicate_retained_text_bytes_removed": 8984758,
+  "verification": {
+    "projection_tests": 7,
+    "record_tests_serial": 100,
+    "ignored_record_tests": 5,
+    "native_gates": {
+      "as_of_visibility": true,
+      "byte_exact": true,
+      "byte_exact_after_reopen": true,
+      "crash_recovery": true,
+      "determinism": true,
+      "freshness": true,
+      "get_range_order": true
+    },
+    "full_ranked_hit_signatures": 15,
+    "reopened_exact_record_instances": 52044,
+    "individual_source_field_change_cases": 10,
+    "zero_duplicate_text_capacity_and_exact_getters": true
+  },
+  "median_rss_kib": {
+    "14c7881": 99568,
+    "6cec206": 91396
+  },
+  "summaries": {
+    "14c7881": {
+      "append_service": {
+        "n": 261,
+        "p50_us": 2779,
+        "p99_us": 31205,
+        "max_us": 31600,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "append_roundtrip": {
+        "n": 261,
+        "p50_us": 2929.036,
+        "p99_us": 31362.597,
+        "max_us": 31801.583,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "records_per_append_service_second": 30754.72099504322,
+      "cold_search_plus_get": {
+        "n": 3,
+        "p50_us": 426753.33,
+        "p99_us": 433227.207,
+        "max_us": 433227.207,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "reused_search_plus_get": {
+        "n": 42,
+        "p50_us": 55889.78600000001,
+        "p99_us": 63495.977000000006,
+        "max_us": 63495.977000000006,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "get_service": {
+        "n": 45,
+        "p50_us": 626,
+        "p99_us": 723,
+        "max_us": 723,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "store_apparent_bytes": [
+        3519363,
+        3518616,
+        3517162
+      ],
+      "store_allocated_bytes": [
+        3543040,
+        3538944,
+        3538944
+      ],
+      "memory": [
+        {
+          "VmHWM": "99652 kB",
+          "VmRSS": "99652 kB"
+        },
+        {
+          "VmHWM": "99472 kB",
+          "VmRSS": "99472 kB"
+        },
+        {
+          "VmHWM": "99568 kB",
+          "VmRSS": "99568 kB"
+        }
+      ]
+    },
+    "6cec206": {
+      "append_service": {
+        "n": 261,
+        "p50_us": 2749,
+        "p99_us": 28626,
+        "max_us": 31809,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "append_roundtrip": {
+        "n": 261,
+        "p50_us": 2914.919,
+        "p99_us": 28829.739,
+        "max_us": 32032.102,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "records_per_append_service_second": 31741.810827492493,
+      "cold_search_plus_get": {
+        "n": 3,
+        "p50_us": 422128.973,
+        "p99_us": 424492.647,
+        "max_us": 424492.647,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "reused_search_plus_get": {
+        "n": 42,
+        "p50_us": 57180.787,
+        "p99_us": 69890.18500000001,
+        "max_us": 69890.18500000001,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "get_service": {
+        "n": 45,
+        "p50_us": 627,
+        "p99_us": 879,
+        "max_us": 879,
+        "tail_note": "nearest-rank empirical percentile; small local sample, not a production tail estimate"
+      },
+      "store_apparent_bytes": [
+        3517138,
+        3517075,
+        3516139
+      ],
+      "store_allocated_bytes": [
+        3538944,
+        3538944,
+        3534848
+      ],
+      "memory": [
+        {
+          "VmHWM": "91280 kB",
+          "VmRSS": "91280 kB"
+        },
+        {
+          "VmHWM": "91428 kB",
+          "VmRSS": "91428 kB"
+        },
+        {
+          "VmHWM": "91396 kB",
+          "VmRSS": "91396 kB"
+        }
+      ]
+    }
+  },
+  "limitations": [
+    "Local single-host fsync and warm OS cache; no hosted/AWS, pure disk-vs-RAM, pricing, SOTA or heldout claim.",
+    "Three fresh processes/source; cold search n3, reused n42, append n261 (100 documents/batch). Empirical p99 when n<100 is observed maximum, not production tail.",
+    "RSS/HWM includes RecordLog, allocator and query state; it is not exact cache allocation. Native benchmark retains bounded corpus; hosted4k/8MiB selected-text cap is separately enforced by caller.",
+    "Retained-text removal does not change durable format or compression settings. Full store file/metadata allocation varies by one4KiB block in these fresh stores; no storage improvement claimed.",
+    "Append p50/p99 varied substantially between measurement windows. Report within-window observations; no systematic write speedup claimed.",
+    "Earlier54ae168 memory prototype had8% reused-query slowdown. Simplified6cec206 removed extra text-move vector; final trial retains ~2.3% slowdown sample while reducing RSS. Intermediate raw measurement retained.",
+    "Older parallel record-suite lock failure remains disclosed in native-optimization evidence; current100-test serial suite and native crash gates pass."
+  ]
+}
