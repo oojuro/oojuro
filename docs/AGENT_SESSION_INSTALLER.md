@@ -36,7 +36,7 @@ Existing transcript bytes are excluded when the protected spool is initialized. 
 
 The installer reports discovery/connection status separately from accepted transcript events. In session mode it does not publish a setup marker as evidence of real capture. `waiting for new transcript activity` means exactly that. A later capture report with accepted new transcript events is required before claiming real-history verification. The setup receipt includes `local_status_command`: `cloud capture-local-status --connection FILE --state DIR` reads atomically saved acknowledgement counters while the service holds its lock, after matching current discovery identity. It does not grant project/server-history reads. Linux user-service installation is the initial background mode; Unix CLI foreground capture remains explicit. Synthetic installer tests do not prove a real systemd/agent installation.
 
-Capture authority does not grant reads. Optional project read credentials and MCP configuration remain separate until the one-setup bundle is completed. Reading prior sessions uses current project authority and attached journals. This step does not change file/attachment privileges, enable original-history import, publish a package, or deploy a hosted API.
+Capture authority does not grant reads. Optional project read credentials and [guided MCP setup](HOSTED_MCP.md#guided-project-setup) remain a separate grant until the one-setup bundle is completed. Reading prior sessions uses current project authority and attached journals. This step does not change file/attachment privileges, enable original-history import, publish a package, or deploy a hosted API.
 
 ### Synthetic joined acceptance
 

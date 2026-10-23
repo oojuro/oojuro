@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs::{self, OpenOptions},
-    io::Read,
+    io::{Read, Write},
     os::unix::fs::{MetadataExt, OpenOptionsExt},
     path::{Component, Path},
     time::Duration,
@@ -73,7 +73,7 @@ fn present<'de, D: serde::Deserializer<'de>, T: Deserialize<'de>>(
     Option::<T>::deserialize(d)
 }
 /// Protected absolute file, no symlink components, hardlink aliases or writable ancestors.
-pub fn read_private(path: &Path, limit: usize) -> Result<Vec<u8>> {
+fn private_ancestors(path: &Path) -> Result<()> {
     if !path.is_absolute()
         || path
             .components()
@@ -91,6 +91,11 @@ pub fn read_private(path: &Path, limit: usize) -> Result<Vec<u8>> {
             return Err(Error::PrivateFile);
         }
     }
+    Ok(())
+}
+pub fn read_private(path: &Path, limit: usize) -> Result<Vec<u8>> {
+    private_ancestors(path)?;
+    let uid = unsafe { libc::geteuid() };
     let file = OpenOptions::new()
         .read(true)
         .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
@@ -112,13 +117,43 @@ pub fn read_private(path: &Path, limit: usize) -> Result<Vec<u8>> {
     }
     Ok(bytes)
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 struct Connection {
     version: u32,
     base_url: String,
     project: String,
     read_key: String,
+}
+/// Create-only project read setup. The key is never accepted on argv or returned.
+pub fn connect_project(path: &Path, base_url: &str, project: &str, key_file: &Path) -> Result<()> {
+    let key = read_private(key_file, 256)?;
+    let read_key = std::str::from_utf8(&key)
+        .map_err(|_| Error::Connection)?
+        .trim();
+    let c = Connection {
+        version: 1,
+        base_url: base_url.into(),
+        project: project.into(),
+        read_key: read_key.into(),
+    };
+    // Use precisely the same validation as every later hosted read.
+    ProjectClient::from_connection(&c)?;
+    private_ancestors(path)?;
+    let bytes = serde_json::to_vec(&c).map_err(|_| Error::Connection)?;
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(path)
+        .map_err(|_| Error::PrivateFile)?;
+    file.write_all(&bytes)
+        .and_then(|_| file.sync_all())
+        .map_err(|_| Error::PrivateFile)?;
+    fs::File::open(path.parent().ok_or(Error::PrivateFile)?)
+        .and_then(|f| f.sync_all())
+        .map_err(|_| Error::PrivateFile)
 }
 /// No Debug or serialization: a connection never prints its bearer.
 pub struct ProjectClient {
@@ -284,6 +319,9 @@ impl ProjectClient {
     pub fn open(path: &Path) -> Result<Self> {
         let c: Connection =
             serde_json::from_slice(&read_private(path, 8192)?).map_err(|_| Error::Connection)?;
+        Self::from_connection(&c)
+    }
+    fn from_connection(c: &Connection) -> Result<Self> {
         let url = Url::parse(&c.base_url).map_err(|_| Error::Connection)?;
         let local = url.scheme() == "http"
             && matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]"));

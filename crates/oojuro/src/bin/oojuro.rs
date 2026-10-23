@@ -28,6 +28,7 @@ const USAGE: &str =
                                                            stretches of activity ranked by how they looked
   forget   --id ID | --key K | --older-than T | --last DUR   [--writer W] [--no-proof] [--yes]
   cloud connect-api --connection FILE --api-key-file PRIVATE_FILE --label NAME [--base-url URL]
+  cloud connect-project --connection FILE --project ID --read-key-file PRIVATE_FILE [--base-url URL]
   cloud connect --connection FILE --source ID --journal ID --label NAME [--base-url URL]
   cloud connection | capture-status | capture-check --connection FILE
   cloud capture-local-status --connection FILE --state DIR  verified local transcript acknowledgement counters
@@ -241,6 +242,21 @@ fn open(cli: &Cli) -> Oojuro {
 }
 
 fn cloud(cli: &Cli) -> Result<()> {
+    if cli.args.first().is_some_and(|c| c == "connect-project") {
+        let o = Opts::parse(&cli.args, &["--connection", "--project", "--read-key-file", "--base-url"], &[])?;
+        let names: std::collections::BTreeSet<_> = o.vals.iter().map(|(key, _)| key).collect();
+        if names.len() != o.vals.len() || o.rest != ["connect-project"] {
+            return Err("invalid_project_connection_arguments".into());
+        }
+        oojuro::hosted::connect_project(
+            std::path::Path::new(o.one("--connection").ok_or("missing_connection")?),
+            o.one("--base-url").unwrap_or("https://oojuro.com"),
+            o.one("--project").ok_or("missing_project")?,
+            std::path::Path::new(o.one("--read-key-file").ok_or("missing_read_key_file")?),
+        )?;
+        println!("{{\"project_read_connection_saved\":true}}");
+        return Ok(());
+    }
     if cli.args.first().is_some_and(|c| matches!(c.as_str(), "connect-api" | "connect" | "connection" | "capture-status" | "capture-local-status" | "capture-check" | "capture")) {
         return capture_command(cli);
     }

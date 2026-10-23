@@ -248,6 +248,52 @@ fn run(s: &Scratch, path: &Path, args: &[&str]) -> Output {
         .output()
         .unwrap()
 }
+#[test]
+fn hosted_project_setup_protects_secret_and_refuses_replacement_or_capture_credentials() {
+    let s = Scratch::new("hosted-project-setup");
+    fs::set_permissions(&s.0, fs::Permissions::from_mode(0o700)).unwrap();
+    let key = s.path("key");
+    private(&key, format!("{}\n", token()).as_bytes());
+    let path = s.path("project.json");
+    let args = [
+        "connect-project",
+        "--project",
+        &id('2'),
+        "--read-key-file",
+        key.to_str().unwrap(),
+    ];
+    let out = run(&s, &path, &args);
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(!String::from_utf8_lossy(&out.stdout).contains(&token()));
+    assert!(!String::from_utf8_lossy(&out.stderr).contains(&token()));
+    assert_eq!(
+        fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+        0o600
+    );
+    let original = fs::read(&path).unwrap();
+    let cfg: Value = serde_json::from_slice(&original).unwrap();
+    assert_eq!(cfg["project"], id('2'));
+    assert_eq!(cfg["read_key"], token());
+    assert!(!run(&s, &path, &args).status.success());
+    assert_eq!(fs::read(&path).unwrap(), original);
+    private(&key, b"ojc_capture_key_must_never_grant_reads");
+    let refused = s.path("capture.json");
+    assert!(!run(&s, &refused, &args).status.success());
+    assert!(!refused.exists());
+    private(&key, token().as_bytes());
+    fs::set_permissions(&key, fs::Permissions::from_mode(0o644)).unwrap();
+    assert!(!run(&s, &refused, &args).status.success());
+    assert!(!refused.exists());
+    fs::set_permissions(&key, fs::Permissions::from_mode(0o600)).unwrap();
+    symlink(&path, &refused).unwrap();
+    assert!(!run(&s, &refused, &args).status.success());
+    assert_eq!(fs::read(&path).unwrap(), original);
+    assert!(!s.path("unused-local-home").exists());
+}
 fn server(reply: Vec<u8>) -> (String, thread::JoinHandle<Vec<u8>>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
     let url = format!("http://{}", listener.local_addr().unwrap());
