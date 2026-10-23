@@ -120,7 +120,10 @@ and the separate file uploader's physical source/ownership before consuming
 selected byte parts. It then publishes the immutable file version and links a
 small event through that session's exact bound path. A separate ordinary
 file-write grant and `consent: "intentional-user-file"` are still required.
-Capture keys gain no file access. See [attachment limits](JOURNAL_ATTACHMENTS.md).
+That ordinary writer grant can also read and write the producer writer's other
+journal/Blob data; it is not file-only or upload-only. Give it only to the trusted
+uploader that should have that scope. Capture keys gain no file access. See
+[credential scopes and attachment limits](JOURNAL_ATTACHMENTS.md).
 
 The helper has no automatic attachment spool. Persist the full descriptor,
 accepted route and exact selected source version; unknown outcomes require the

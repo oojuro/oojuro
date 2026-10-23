@@ -2,6 +2,21 @@
 
 The Node 24 `@oojuro/v2-client/attachments` module connects the existing user-file protocol to a small journal event. This candidate is not deployed and is not automatic local-file capture. An application must select bytes with the user's consent and provide a separate ordinary native file-write/read credential, a metadata-only capture credential, and a project read credential. Capture keys do not gain file read or write authority.
 
+## Credential scope
+
+| Credential | Current authority |
+| --- | --- |
+| Integration capture key | Discover its producer and provision/append to its bound session journals. No history reads or Blob file reads/writes. |
+| Project read key | Read currently attached journals' complete retained history and their visible linked files, subject to current membership and revocation. |
+| Ordinary native writer grant used by the uploader | Read, write and retry for its granted writer. This includes that writer's journal records and Blob data; it is **not a file-only or upload-only capability**. |
+
+The current helper requires the ordinary writer grant for the capture producer.
+Supply it only to a trusted uploader that may access all data under that writer;
+do not give it to a consumer intended to see only one file or one project. Keep
+it out of agent prompts/configuration unless that broader authority is intended.
+A narrower file-only grant is not implemented. This is a separate explicit
+grant; existing capture credentials are not broadened.
+
 ## Write and read
 
 1. Select one file explicitly. Compute its exact byte count and SHA-256 with bounded reads. Persist its descriptor and the selected source privately before transport. The module never opens or discovers local files.
