@@ -5,6 +5,7 @@
 //! Retention/erasure, learned outcomes and launch scale are
 //! deliberately outside this slice. Each index is bound to one open writer log.
 mod args;
+mod memory;
 pub(crate) mod paged;
 pub(crate) mod passage;
 pub(crate) mod prepared;
