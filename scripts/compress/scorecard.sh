@@ -3,6 +3,7 @@
 # bench lock separately. Output: JSON lines (build + read per rep).
 # Bench stores live under .scratch/stores/score/<corpus> and are removed after
 # each rep (they are rebuilt from .scratch/data/corpus/<corpus>.rec).
+# Build first: cargo build --release -p oojuro-store --features bench-tools --bin store-bench
 set -uo pipefail
 LOCKFILE=${OOJURO_BENCH_LOCK:-$HOME/.cache/oojuro-bench.lock}; mkdir -p "$(dirname "$LOCKFILE")"
 cd "$(dirname "$0")/../.."

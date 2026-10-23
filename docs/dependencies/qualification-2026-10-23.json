@@ -1,0 +1,279 @@
+{
+  "format": 1,
+  "source_before": "f01345f92a2570ddce7a9577b7703fddfc8eaee7",
+  "source_after": "3caa28b47aab4851fa7546b41415e0187a9ec5af",
+  "scope": "Private engine dependency/build isolation candidate; no production deployment, provider change, crypto rewrite or runtime speed/cost claim.",
+  "toolchain": {
+    "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+    "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+    "target": "x86_64-unknown-linux-gnu",
+    "rustflags": "-C target-cpu=x86-64",
+    "c_and_cpp": "Existing workspace Zig cc/c++ wrappers, x86_64-linux-gnu.2.39 -mcpu=baseline",
+    "profile": "release, Cargo workspace defaults; no new default features"
+  },
+  "counts_definition": "Distinct external name/version pairs in selected locked normal+build graph; dev dependencies excluded; exact feature sets/parents/source details in inventories. Selection change is distinct from closure reduction.",
+  "external_counts": {
+    "bench": {
+      "before": 154,
+      "after": 153
+    },
+    "capture": {
+      "before": 57,
+      "after": 56
+    },
+    "cli": {
+      "before": 152,
+      "after": 151
+    },
+    "default": {
+      "before": 302,
+      "after": 49
+    },
+    "engine": {
+      "before": 50,
+      "after": 49
+    },
+    "engine-all-platforms": {
+      "before": 63,
+      "after": 62
+    },
+    "legacy-core": {
+      "before": 22,
+      "after": 21
+    },
+    "legacy-nine": {
+      "before": 25,
+      "after": 24
+    },
+    "legacy-trace": {
+      "before": 49,
+      "after": 48
+    },
+    "proxy": {
+      "before": 95,
+      "after": 94
+    },
+    "rank": {
+      "before": 0,
+      "after": 0
+    },
+    "store": {
+      "before": 40,
+      "after": 34
+    },
+    "store-tools": {
+      "before": 218,
+      "after": 217
+    },
+    "tracebench": {
+      "before": 224,
+      "after": 224
+    }
+  },
+  "build_commands": {
+    "before": "cargo build --locked --release --manifest-path work/oojuro-core-dependencies/Cargo.toml -p oojuro-engine --lib",
+    "after": "cargo build --locked --release --manifest-path work/oojuro-core-dependencies/Cargo.toml"
+  },
+  "build_measurements": {
+    "before": {
+      "compiled_package_lines": 53,
+      "elapsed_wall_clock": "0:12.20",
+      "peak_build_rss_kib": 701052,
+      "rlib_bytes_in_deps_directory": 74072030,
+      "primary_rlibs": [
+        {
+          "package": "oojuro_engine",
+          "bytes": 11513644,
+          "sha256": "8e192e01d1c93ca1aa4ead8b4ce60c6c2036084ed437143a47afa07350e678c0"
+        },
+        {
+          "package": "oojuro_store",
+          "bytes": 1395856,
+          "sha256": "108e66d894443c3c7edf5389f35f4473d331c9e69685e478a6a47c5e604b8522"
+        },
+        {
+          "package": "oojuro_rank",
+          "bytes": 134650,
+          "sha256": "104095c6bb4e2abc76a6e029d5a8f4c18222c5d22d9f015dc76e69ab6daf3d63"
+        }
+      ],
+      "native_archives": [
+        {
+          "file": "libring_core_0_17_14_.a",
+          "bytes": 1626546,
+          "sha256": "be9a2b34ccdec50837ad81e055b3cb6d02c216fb0dbbc6f0e803e839092a42df"
+        },
+        {
+          "file": "libring_core_0_17_14__test.a",
+          "bytes": 14992,
+          "sha256": "f177600fb8955d831e9f5ae675d7bfe2451ed317330bef9b626b5fdfaf18f606"
+        },
+        {
+          "file": "libzstd.a",
+          "bytes": 7313746,
+          "sha256": "b35d51e08175cccb29ad4e3135444c8074827c0bc4510dfff880579eeafcd766"
+        }
+      ],
+      "build_log_sha256": "68cc00757eea5002fcc8975a52ff5fd2641ff6a2efb6fe6cb38e1b61cb38bdbf"
+    },
+    "after": {
+      "compiled_package_lines": 52,
+      "elapsed_wall_clock": "0:12.11",
+      "peak_build_rss_kib": 692088,
+      "rlib_bytes_in_deps_directory": 73725812,
+      "primary_rlibs": [
+        {
+          "package": "oojuro_engine",
+          "bytes": 11513884,
+          "sha256": "022f4fbeac43c3bd94820ef742bd7edc01dc137799fb3e35d2df0b3e9ee56c75"
+        },
+        {
+          "package": "oojuro_store",
+          "bytes": 1397886,
+          "sha256": "88cd81b77706abbdf544bf721fb8ae769b5aa4fac5163eca35bcc7c94eec9426"
+        },
+        {
+          "package": "oojuro_rank",
+          "bytes": 134650,
+          "sha256": "104095c6bb4e2abc76a6e029d5a8f4c18222c5d22d9f015dc76e69ab6daf3d63"
+        }
+      ],
+      "native_archives": [
+        {
+          "file": "libring_core_0_17_14_.a",
+          "bytes": 1626546,
+          "sha256": "be9a2b34ccdec50837ad81e055b3cb6d02c216fb0dbbc6f0e803e839092a42df"
+        },
+        {
+          "file": "libring_core_0_17_14__test.a",
+          "bytes": 14992,
+          "sha256": "f177600fb8955d831e9f5ae675d7bfe2451ed317330bef9b626b5fdfaf18f606"
+        },
+        {
+          "file": "libzstd.a",
+          "bytes": 7313746,
+          "sha256": "b35d51e08175cccb29ad4e3135444c8074827c0bc4510dfff880579eeafcd766"
+        }
+      ],
+      "build_log_sha256": "f37a361f0fb0ca770c297e4994263196c65c4fb12fb2ac0088b19cccd5271dc8"
+    }
+  },
+  "build_measurement_limits": [
+    "Independent initially empty CARGO_TARGET_DIR for each release build; shared machine, OS page cache and Zig compiler cache are uncontrolled.",
+    "Before selects engine closure; after default selects the same engine closure plus its rank/store library roots. No benchmark binary was built for timing.",
+    "Single observations are diagnostics, not a build-speed or runtime-memory benchmark. Rlib metadata sizes can grow while unused packages are removed."
+  ],
+  "tests": [
+    {
+      "command": "cargo test --locked --manifest-path work/oojuro-core-dependencies/Cargo.toml -p oojuro-store --lib --tests",
+      "stage": "after block-only LZ4 change, before benchmark JSON gating",
+      "passed": 37,
+      "ignored": 1,
+      "note": "Existing ignored local CRC-scan measurement. Exhaustive torn final compressed-frame cuts, encryption/authentication/forgery/downgrade, compaction, dictionary/run and reopen gates passed.",
+      "log_sha256": "7ce312398815d5709e924d18463a33233c9a46c354c8ce181b437040384fbd00"
+    },
+    {
+      "command": "cargo test --locked --manifest-path work/oojuro-core-dependencies/Cargo.toml -p oojuro-core --lib",
+      "passed": 8,
+      "ignored": 0,
+      "note": "Includes legacy compressed LZ4 journal roundtrip/exclusion and append/snapshot preservation.",
+      "log_sha256": "25755957709fb1176bef5ec9a3cf97f0795087082e195a00146061a5eb20b76d"
+    },
+    {
+      "command": "cargo check --locked --manifest-path work/oojuro-core-dependencies/Cargo.toml -p oojuro-store --features bench-tools --all-targets",
+      "result": "passed",
+      "note": "Explicit benchmark JSON activation, binary and frame-probe example compile. Other optional benchmark databases/codecs are unchanged and not rebuilt.",
+      "log_sha256": "2c952ccf5324012afc438e38afe17289401a3569c9ce091a80b14c0e3177139d"
+    },
+    {
+      "command": "cargo test --locked --manifest-path work/oojuro-core-dependencies/Cargo.toml -p oojuro-engine --lib -- --test-threads=2",
+      "stage": "final runtime/manifest changes",
+      "passed": 165,
+      "ignored": 9,
+      "note": "Eight ignored entries are subprocess helpers exercised by passing parent crash gates; one is an optional local segment measurement.",
+      "log_sha256": "078be68d8401d9c55e5160b27fff1e1be3ef3b847397d60ddc0f966fecb72f99"
+    },
+    {
+      "command": "python3 scripts/dependency_audit.py --check --output work/dependency-audit.json",
+      "result": "passed",
+      "note": "Actual old default graph refused; provider/internal benchmark injection, LZ4 frame and unsafe-decode changes refused. Partial --check CLI rejected clearly.",
+      "details": "policy-gates.json"
+    }
+  ],
+  "native_observation": {
+    "isolated_linux_engine": "Bundled Zstandard 1.5.7 and ring C/assembly. BLAKE3 pure produced no native archive. Ring builds a separate small test-support archive in addition to main archive.",
+    "store_test_elf_needed": [
+      "libc.so.6",
+      "ld-linux-x86-64.so.2"
+    ],
+    "elf_note": "Observed existing Store test executable; final consumer link requirements depend on platform/toolchain. Cargo package metadata is not proof of dynamic linkage.",
+    "optional_tool_native_links": [
+      "clang",
+      "lz4",
+      "prettyplease03",
+      "rayon-core",
+      "ring_core_0_17_14_",
+      "rocksdb",
+      "sqlite3",
+      "zstd"
+    ],
+    "not_engine_requirements": [
+      "SQLite",
+      "RocksDB",
+      "libclang/bindgen",
+      "native LZ4 comparison codec"
+    ]
+  },
+  "hosted_read_only": {
+    "source": "9de7af06be70b39a844d9c5734342fa31e096002",
+    "audited_checkout_revision": "398059a799d034eeeb169a590a839e62e63fe71b",
+    "same_manifest_and_lock_as_deployed_source": true,
+    "external_name_version_pairs": 177,
+    "two_distinct_oojuro_store_sources": [
+      "https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+      "https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca"
+    ],
+    "recommendation": "Separately qualify consolidation of old legacy capture/trace and new engine git sources in o-cloud; no hosted edit in this PR."
+  },
+  "unperformed": [
+    "No AWS resources changed; no production deployment or pin update.",
+    "No crypto/codec/DB algorithm replacement and no runtime throughput/latency/cost benchmark.",
+    "No cross-platform compilation; all-target conditional graph was audited.",
+    "No full optional codec/database competitor rebuild."
+  ],
+  "artifacts": {
+    "before.json": {
+      "sha256": "752eb4640b6fd708fbe11789bbed845c557d50558bd6d0733951b65dacbe64c6",
+      "bytes": 635251
+    },
+    "after.json": {
+      "sha256": "0e04020a3492ef374f3daac330e75149247882ea3421e3f7b4516af8b5f77381",
+      "bytes": 539190
+    },
+    "hosted-current.json": {
+      "sha256": "547d8c5bcee8c2cd753cc12a25f94702326b9d65e72429ad0a3296312dd5fe32",
+      "bytes": 155325
+    },
+    "policy-gates.json": {
+      "sha256": "2cbf21e9b9e6b7217e0d9d370dfc8cbb0d6e2fa8ee3cfabe772cd41d21b1d075",
+      "bytes": 1022
+    }
+  },
+  "source_files": {
+    "Cargo.toml": {
+      "sha256": "de0c87dde283df3ba3bae8c546562323a7317459ae9b291c0c57b5c307b51f4a"
+    },
+    "Cargo.lock": {
+      "sha256": "4ee6b00d592368adee9cc969b83b4d282e58b9226bd5819d82c94c96a2ec4dbf"
+    },
+    "crates/oojuro-store/Cargo.toml": {
+      "sha256": "ee3d0833457868304cca23bffa4d4111199c83ab2715fee1ef793f24d30ddd8d"
+    },
+    "dependency-policy.json": {
+      "sha256": "87b5017d57330460c0514aba2a913a24e0827500812187bda7d6bc53464e67a2"
+    },
+    "scripts/dependency_audit.py": {
+      "sha256": "406bc050dc46035d1a8e25ca1021e12c159b8a029d8ef9ada1570aaffdd1b217"
+    }
+  }
+}
