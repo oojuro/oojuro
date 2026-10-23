@@ -403,11 +403,33 @@ export interface ProjectRecordsPage {
   records: ProjectRecordRow[];
   next: string | null;
 }
+export interface ProjectSearchInput extends Omit<ProjectRecordsInput, "limit" | "cursor"> {
+  /** Retain this opaque request identity and exact input after any uncertain outcome. */
+  requestId: OpaqueId;
+  query: string;
+  /** 1–100; default 20. Latest visible keyed versions only; no search cursor. */
+  k?: number;
+}
+export interface ProjectSearchHit extends ProjectRecordRow {
+  score_bits: number;
+  continued: boolean;
+  /** UTF-8 byte offsets in the exact original text. */
+  excerpt_start: WireInteger;
+  excerpt_end: WireInteger;
+  excerpt: string;
+}
+export interface ProjectSearchPage {
+  snapshot: OpaqueId;
+  hits: ProjectSearchHit[];
+}
 /** Hosted shared-project read API. Accepts ojp_ keys only; cannot append/administer. */
 export class OojuroProjectClient {
   constructor(options: { baseUrl: string; project: OpaqueId; token: string; fetch?: typeof globalThis.fetch });
   /** Form POST keeps opaque cursors out of request URLs. Bounded 4 MiB; clean EOF required. */
   records(input?: ProjectRecordsInput, options?: { signal?: AbortSignal }): Promise<ProjectRecordsPage>;
+  /** Metered search, no automatic retries. After dispatch errors outcome is unknown;
+   * repeating the original request returns status only (409), never reruns it. */
+  search(input: ProjectSearchInput, options?: { signal?: AbortSignal }): Promise<ProjectSearchPage>;
   /** Exact UTF-8 including leading BOM/NUL, at most 16 MiB; returned only after clean EOF. */
   content(input: { journal: OpaqueId; recordId: OpaqueId }, options?: { signal?: AbortSignal }): Promise<string>;
 }

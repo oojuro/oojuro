@@ -105,6 +105,63 @@ fn denied(out: &Output) {
     assert!(!String::from_utf8_lossy(&out.stderr).contains(&token()));
 }
 #[test]
+fn metered_search_uses_private_query_file_exact_offsets_and_reports_unknown_without_retry() {
+    let s = Scratch::new("hosted-search");
+    let q = s.path("query.txt");
+    private(&q, b"private search words");
+    let record = page()["records"][0]["record"].clone();
+    let expected = json!({"snapshot":id('f'),"hits":[{"journal":id('1'),"record":record,"score_bits":2.5,
+        "continued":false,"excerpt_start":2,"excerpt_end":8,"excerpt":"α🦉"}]});
+    let (base, h) = server(response(
+        "application/json",
+        &serde_json::to_vec(&expected).unwrap(),
+    ));
+    let path = connection(&s, &base);
+    let request = id('3');
+    let args = [
+        "search",
+        "--request-id",
+        &request,
+        "--query-file",
+        q.to_str().unwrap(),
+        "--from",
+        "@1",
+        "--through",
+        "@2",
+        "--k",
+        "1",
+    ];
+    let out = run(&s, &path, &args);
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert_eq!(
+        serde_json::from_slice::<Value>(&out.stdout).unwrap(),
+        expected
+    );
+    let wire = String::from_utf8(h.join().unwrap()).unwrap();
+    let (header, body) = wire.split_once("\r\n\r\n").unwrap();
+    assert!(header.starts_with(&format!("POST /api/projects/{}/search ", id('2'))));
+    assert!(!header.contains("private search words"));
+    assert!(body.contains("q=private+search+words"));
+    assert!(body.contains(&format!("request_id={request}")));
+    let mut broken = expected;
+    broken["hits"][0]["excerpt_end"] = json!(9);
+    let (base, h) = server(response(
+        "application/json",
+        &serde_json::to_vec(&broken).unwrap(),
+    ));
+    let path = connection(&s, &base);
+    let out = run(&s, &path, &args);
+    denied(&out);
+    assert!(String::from_utf8_lossy(&out.stderr).contains("search_outcome_unknown"));
+    h.join().unwrap();
+    fs::set_permissions(&q, fs::Permissions::from_mode(0o644)).unwrap();
+    denied(&run(&s, &path, &args));
+}
+#[test]
 fn hosted_metadata_cursor_is_posted_and_no_local_journal_is_opened() {
     let s = Scratch::new("hosted-page");
     let expected = page();

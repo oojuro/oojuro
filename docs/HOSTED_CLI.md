@@ -6,7 +6,7 @@ Private candidate, not a published release. Build the existing `oojuro` binary:
 cargo build --locked --release -p oojuro --bin oojuro
 ```
 
-`oojuro cloud records` and `oojuro cloud get` use the same common project API as
+`oojuro cloud records`, `oojuro cloud search` and `oojuro cloud get` use the same common project API as
 `OojuroProjectClient`. Local recorder commands retain their existing behavior.
 This read adapter does not register sources, append events or administer accounts.
 Capture still uses its separate append-only credential and durable SDK spool.
@@ -81,6 +81,31 @@ history can refuse continuation. Do not silently restart the query when a
 continuation fails. Separate content reads use current authority and may be
 denied after a detach/delete/revoke.
 
+## Metered full-text search
+
+Save a UTF-8 query in a mode-0600 file under your private directory. The query
+stays out of shell arguments/history and request URLs:
+
+```sh
+oojuro cloud search --connection /private/oojuro/connection.json \
+  --request-id YOUR_RETAINED_64_HEX_REQUEST_ID --query-file /private/oojuro/query.txt \
+  --from @0 --through @2000000000 --k 20
+```
+
+Time/agent selectors have the same meaning as `records`. `--k` is 1–100,
+default 20. Output is complete JSON with an opaque vector snapshot and original
+record descriptors, native scores/continuations and exact UTF-8 excerpt byte
+offsets. There is no search cursor. The server uses current visible keyed versions
+and refuses searches beyond its selected input budget with 413; narrow time or
+agent selection when necessary. See the [shared search contract](PROJECT_READ_SDK.md#full-text-search).
+
+This operation can consume search allowance. Retain the exact request ID and
+query after an unknown outcome. Repeating them returns status only (409), never
+another execution or saved results. A new request ID explicitly starts another
+search. Errors after dispatch say `hosted_search_outcome_unknown`, retain a safe
+HTTP status when available and produce no partial stdout. No automatic retry is
+performed. Connection/query files must remain private.
+
 ## Bounds and failures
 
 Requests are at most 2 MiB, metadata responses 4 MiB, content 16 MiB. Every command
@@ -112,4 +137,4 @@ The cloud joined gate optionally uses
 PostgreSQL/HTTP account/key service and installed SDK fixture. This is not an AWS
 customer source, published install, production recovery or throughput benchmark.
 Hosted capture CLI, automatic framework/harness capture, browser-assisted login,
-common full-text search and full AWS qualification remain required launch work.
+growing-history search and full AWS qualification remain required launch work.

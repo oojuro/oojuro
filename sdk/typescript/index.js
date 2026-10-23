@@ -1546,6 +1546,26 @@ export class OojuroCaptureClient {
 }
 
 /** Shared-project read adapter; ojp_ credentials never authorize capture or administration. */
+function projectRow(row, selection) {
+  keys(row, ["journal", "record"]);
+  id(row.journal);
+  const descriptor = row.record;
+  if (!object(descriptor)) fail();
+  if (Object.hasOwn(descriptor, "capture")) {
+    keys(descriptor, ["id", "record", "text_bytes", "generation", "capture"]);
+    keys(descriptor.capture, ["event_id", "run_id"]);
+    id(descriptor.capture.event_id); id(descriptor.capture.run_id);
+    const native = { ...descriptor }; delete native.capture;
+    sources.set(native, sources.get(descriptor));
+    journalDescriptor(native);
+  } else journalDescriptor(descriptor);
+  const record = descriptor.record;
+  id(record.agent_id);
+  if ((selection.agentId !== undefined && record.agent_id !== selection.agentId) ||
+      (selection.from !== undefined && record.valid_at < selection.from) ||
+      (selection.through !== undefined && record.valid_at > selection.through)) fail();
+  return row.journal + descriptor.id;
+}
 export class OojuroProjectClient {
   #base;
   #token;
@@ -1616,30 +1636,51 @@ export class OojuroProjectClient {
       }
       const seen = new Set();
       for (const row of value.records) {
-        keys(row, ["journal", "record"]);
-        id(row.journal);
-        const descriptor = row.record;
-        if (!object(descriptor)) fail();
-        if (Object.hasOwn(descriptor, "capture")) {
-          keys(descriptor, ["id", "record", "text_bytes", "generation", "capture"]);
-          keys(descriptor.capture, ["event_id", "run_id"]);
-          id(descriptor.capture.event_id); id(descriptor.capture.run_id);
-          // Keep the numeric source lexemes when validating the common descriptor.
-          const native = { ...descriptor }; delete native.capture;
-          sources.set(native, sources.get(descriptor));
-          journalDescriptor(native);
-        } else journalDescriptor(descriptor);
-        const record = descriptor.record;
-        id(record.agent_id);
-        if ((selection.agentId !== undefined && record.agent_id !== selection.agentId) ||
-            (selection.from !== undefined && record.valid_at < selection.from) ||
-            (selection.through !== undefined && record.valid_at > selection.through)) fail();
-        const identity = row.journal + descriptor.id;
+        const identity = projectRow(row, selection);
         if (seen.has(identity)) fail();
         seen.add(identity);
       }
       return value;
     } catch (error) { throw safeError(error, false); }
+  }
+  async search(input, { signal } = {}) {
+    let selection, body;
+    try {
+      selection = journalSnapshot(input, 32 * 1024);
+      if (!object(selection) || Object.keys(selection).some(k => !["requestId", "query", "from", "through", "agentId", "k"].includes(k))) fail();
+      id(selection.requestId); string(selection.query, 4096, true);
+      if (!selection.query.trim()) fail();
+      const form = new URLSearchParams({ request_id: selection.requestId, q: selection.query });
+      for (const key of ["from", "through"]) if (selection[key] !== undefined) {
+        integer(selection, key, -Number.MAX_SAFE_INTEGER); form.set(key, String(selection[key]));
+      }
+      if (selection.from !== undefined && selection.through !== undefined && selection.from > selection.through) fail();
+      if (selection.agentId !== undefined) { id(selection.agentId); form.set("agent_id", selection.agentId); }
+      if (selection.k !== undefined) { integer(selection, "k", 1, 100); form.set("k", String(selection.k)); }
+      body = form.toString();
+      if (encoder.encode(body).length > 32 * 1024) fail();
+    } catch { fail("invalid_request"); }
+    abort(signal);
+    try {
+      const response = await this.#request("search", body, signal);
+      contentType(response, "application/json");
+      const value = frameMetadata(new TextDecoder("utf-8", { fatal: true }).decode(await bytes(response, 4 * MiB, signal, true)));
+      keys(value, ["snapshot", "hits"]); id(value.snapshot);
+      if (!Array.isArray(value.hits) || value.hits.length > (selection.k ?? 20)) fail();
+      const seen = new Set();
+      for (const hit of value.hits) {
+        keys(hit, ["journal", "record", "score_bits", "continued", "excerpt_start", "excerpt_end", "excerpt"]);
+        const identity = projectRow({ journal: hit.journal, record: hit.record }, selection);
+        if (seen.has(identity) || !hit.record.record.indexed || typeof hit.score_bits !== "number" ||
+            !Number.isFinite(hit.score_bits) || typeof hit.continued !== "boolean") fail();
+        seen.add(identity);
+        integer(hit, "excerpt_start", 0, hit.record.text_bytes);
+        integer(hit, "excerpt_end", hit.excerpt_start, hit.record.text_bytes);
+        string(hit.excerpt, 320);
+        if (encoder.encode(hit.excerpt).length !== hit.excerpt_end - hit.excerpt_start) fail();
+      }
+      return value;
+    } catch (error) { throw safeError(error, true); }
   }
   async content(input, { signal } = {}) {
     let path;

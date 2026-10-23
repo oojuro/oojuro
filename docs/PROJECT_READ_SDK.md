@@ -57,6 +57,49 @@ identities, bounds, duplicate keys, exact integer lexemes and selected time/agen
 Legacy descriptors without capture metadata remain valid. No invented native
 watermark header is required by this common project protocol.
 
+## Full-text search
+
+```js
+import { randomBytes } from "node:crypto";
+const request = {
+  requestId: randomBytes(32).toString("hex"),
+  query: "connection timeout",
+  from: Date.now() * 1000 - 3600_000_000,
+  agentId: process.env.OOJURO_AGENT_ID,
+  k: 20,
+};
+// Retain this exact request if its outcome is uncertain.
+const result = await reader.search(request, { signal: AbortSignal.timeout(60_000) });
+for (const hit of result.hits) {
+  // Excerpt offsets are UTF-8 bytes in the exact original text, not JS characters.
+  console.log(hit.journal, hit.record.id, hit.excerpt);
+}
+```
+
+Search accepts a 64-character lowercase hex `requestId`, a nonblank query of at
+most 4,096 UTF-8 bytes, inclusive time/agent selectors and `k` 1–100 (default 20).
+It uses latest visible keyed versions; an unindexed winner does not make an old
+indexed version searchable again. Results carry the original descriptor,
+`score_bits`, `continued`, exact `excerpt_start`/`excerpt_end` byte offsets and
+excerpt. Native per-writer continuation order is preserved when merging heads
+across referenced journals; scores are not calibrated across writers. There is
+no search cursor or invented atomic cross-journal watermark.
+
+Search is a **metered operation**. Keep the original request ID and exact input
+after `outcome: "unknown"`; repeating that request returns retained status only
+(HTTP 409), never another execution or a result replay. A new ID explicitly
+requests another search. The client never retries automatically. Once dispatch
+starts, transport, invalid/partial response and HTTP failures conservatively
+report unknown metering outcome. Query and request ID are in the form body,
+never the URL; raw query text is not retained in the usage or read-audit ledger.
+All results require clean EOF and the same current directory/source guards.
+
+The initial server projection is bounded to 4,000 selected indexed records and
+8 MiB of original text across the project, 128 writers, at most 100 hits and a
+4 MiB complete response. A broader request returns 413 and must narrow its time
+or agent selection. It reads current selected source text to build a disposable
+native projection; no scalable persistent index or throughput claim is made.
+
 ## Content, errors and limits
 
 `content` returns exact UTF-8, including a leading BOM and embedded NUL. Metadata
@@ -83,7 +126,7 @@ credential separation, malformed/ambiguous metadata, exact 16 MiB text, missing
 EOF, cancellation, redaction and legacy descriptors. The cloud joined acceptance
 uses this SDK against its actual HTTP/PostgreSQL server to read captured records,
 continue a stable snapshot and verify read-key replacement/revocation. Production
-source provisioning, full-text query, installed packages and AWS failure/benchmark
+source provisioning, growing-history search, installed packages and AWS failure/benchmark
 acceptance remain separate launch gates.
 
 The same project routes are available in the existing [Oojuro CLI](HOSTED_CLI.md).

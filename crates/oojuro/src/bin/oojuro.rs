@@ -28,6 +28,7 @@ const USAGE: &str =
                                                            stretches of activity ranked by how they looked
   forget   --id ID | --key K | --older-than T | --last DUR   [--writer W] [--no-proof] [--yes]
   cloud records --connection FILE [--from T] [--through T] [--agent ID] [--limit N] [--cursor-file FILE]
+  cloud search --connection FILE --request-id ID --query-file FILE [--from T] [--through T] [--agent ID] [--k N]
   cloud get --connection FILE --journal ID --id ID          hosted project metadata / exact text
   stats                                                    what the journal holds
   export   [--from T] [--to T] [--when PHRASE] [--kind K]... [--writer W]... [--key K]   JSON lines on stdout
@@ -246,6 +247,9 @@ fn cloud(cli: &Cli) -> Result<()> {
             "--cursor-file",
             "--journal",
             "--id",
+            "--request-id",
+            "--query-file",
+            "--k",
         ],
         &[],
     )
@@ -264,6 +268,7 @@ fn cloud(cli: &Cli) -> Result<()> {
             "--cursor-file",
         ],
         "get" => &["--connection", "--journal", "--id"],
+        "search" => &["--connection", "--request-id", "--query-file", "--from", "--through", "--agent", "--k"],
         _ => return Err(Error::Request.into()),
     };
     if o.vals
@@ -296,6 +301,14 @@ fn cloud(cli: &Cli) -> Result<()> {
         let mut bytes = serde_json::to_vec(&page).map_err(|_| Error::Response)?;
         bytes.push(b'\n');
         bytes
+    } else if o.rest[0] == "search" {
+        let request=o.one("--request-id").ok_or(Error::Request)?;
+        let text=String::from_utf8(read_private(std::path::Path::new(o.one("--query-file").ok_or(Error::Request)?),4096)?).map_err(|_|Error::Request)?;
+        let selection=Selection { from:o.time("--from").map_err(|_|Error::Request)?, through:o.time("--through").map_err(|_|Error::Request)?,
+            agent_id:o.one("--agent").map(str::to_owned), ..Selection::default() };
+        let k=o.one("--k").map(|v|v.parse().map_err(|_|Error::Request)).transpose()?.unwrap_or(20);
+        let page=ProjectClient::open(std::path::Path::new(connection))?.search(request,&text,&selection,k)?;
+        let mut bytes=serde_json::to_vec(&page).map_err(|_|Error::Response)?;bytes.push(b'\n');bytes
     } else {
         let journal = o.one("--journal").ok_or(Error::Request)?;
         let id = o.one("--id").ok_or(Error::Request)?;
