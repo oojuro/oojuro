@@ -24,6 +24,10 @@
     "./capture": {
       "types": "./capture.d.ts",
       "import": "./capture.js"
+    },
+    "./attachments": {
+      "types": "./attachments.d.ts",
+      "import": "./attachments.js"
     }
   },
   "scripts": {

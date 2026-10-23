@@ -170,10 +170,12 @@ export class PreparedSearch {
 }
 /** Fresh hosted flat-record namespace; never enrolls or migrates legacy Trace data. */
 export interface JournalRoot {
-  schema: 1;
-  minimum_reader: 1;
+  schema: 1 | 2 | 3;
+  minimum_reader: 1 | 2 | 3;
   project: OpaqueId;
   namespace: OpaqueId;
+  /** Required in validated schema 2/3 roots, absent in schema 1. */
+  ownership?: { account: string; agent: OpaqueId };
 }
 export type JournalKind =
   | "input"
@@ -308,6 +310,7 @@ export class PreparedJournalPeriods {
   send(options?: { signal?: AbortSignal }): Promise<Read<JournalPeriod[]>>;
 }
 export class OojuroClient {
+  readonly origin: string;
   constructor(options: ClientOptions);
   journalRoot(options?: ReadOptions): Promise<Read<JournalRoot>>;
   /** Encoded Journal POSTs are capped at 1 MiB, or the lower configured request limit.
@@ -430,6 +433,11 @@ export class OojuroProjectClient {
   /** Metered search, no automatic retries. After dispatch errors outcome is unknown;
    * repeating the original request returns status only (409), never reruns it. */
   search(input: ProjectSearchInput, options?: { signal?: AbortSignal }): Promise<ProjectSearchPage>;
+  /** One currently visible event-linked manifest/part. Part index is 0..63; no arbitrary Blob names. */
+  attachmentPart(input: { journal: OpaqueId; recordId: OpaqueId; part?: number },
+    options?: { signal?: AbortSignal; minGeneration?: WireInteger }): Promise<{
+      generation: WireInteger; revision: OpaqueId; bytes: Uint8Array;
+    }>;
   /** Exact UTF-8 including leading BOM/NUL, at most 16 MiB; returned only after clean EOF. */
   content(input: { journal: OpaqueId; recordId: OpaqueId }, options?: { signal?: AbortSignal }): Promise<string>;
 }

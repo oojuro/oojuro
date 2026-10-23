@@ -1,11 +1,12 @@
 // Explicit Node24 user-file protocol over the existing encrypted v2 Blob API.
 import { createHash } from "node:crypto";
 import { OojuroClient, OojuroError } from "./index.js";
+import { downloadVia, downloadToVia } from "./file-download.js";
 
 import {
   FILE_PART_BYTES, FILE_MAX_PARTS, MANIFEST_MAX_BYTES, FORMAT,
   encoder, fail, hash, binding, partName, requestId, fileManifestName,
-  opaque, label, fields, size, manifestOf,
+  opaque, label, fields, size,
 } from "./file-format.js";
 export { FILE_PART_BYTES, FILE_MAX_PARTS, FILE_MAX_BYTES, fileManifestName } from "./file-format.js";
 const inspect = Symbol.for("nodejs.util.inspect.custom");
@@ -145,95 +146,17 @@ export async function downloadFile(client, supplied) {
   try {
     if (!(client instanceof OojuroClient)) fail();
     const input = readOptions(supplied);
-    abort(input.signal);
-    const manifestName = fileManifestName(input.name);
-    const initial = await client.blob(input.writer, manifestName, input);
-    if (input.expectedRevision !== undefined && initial.revision !== input.expectedRevision) fail("file_integrity");
-    const manifest = manifestOf(initial.bytes, input);
-    let resolve, reject;
-    const completion = new Promise((yes, no) => { resolve = yes; reject = no; });
-    // Advanced callers may handle iterator failure before awaiting completion.
-    void completion.catch(() => {});
-    let started = false;
-    const controller = new AbortController();
-    const readSignal = input.signal ? AbortSignal.any([input.signal, controller.signal]) : controller.signal;
-    const chunks = {
-      [Symbol.asyncIterator]() {
-        if (started) fail("file_incomplete");
-        started = true;
-        const iterator = (async function* () {
-          let complete = false;
-          try {
-            const full = createHash("sha256");
-            let total = 0, generation = Math.max(input.minGeneration, initial.generation);
-            for (const part of manifest.parts) {
-              abort(readSignal);
-              const read = await client.blob(input.writer, part.name, { minGeneration: generation, signal: readSignal });
-              generation = Math.max(generation, read.generation);
-              if (read.bytes.length !== part.bytes || hash(read.bytes) !== part.sha256 ||
-                  (input.expectedRevision !== undefined && read.revision !== part.revision)) fail("file_integrity");
-              full.update(read.bytes); total += read.bytes.length;
-              yield read.bytes;
-            }
-            if (total !== manifest.total_bytes || full.digest("hex") !== manifest.sha256) fail("file_integrity");
-            abort(readSignal);
-            // Recheck the logical pointer and current authorization before declaring completion.
-            const final = await client.blob(input.writer, manifestName, { minGeneration: generation, signal: readSignal });
-            if (final.bytes.length !== initial.bytes.length || hash(final.bytes) !== hash(initial.bytes) ||
-                (input.expectedRevision !== undefined && final.revision !== input.expectedRevision)) fail("file_integrity");
-            const result = Object.freeze({ writer: input.writer, name: input.name, uploadId: manifest.upload_id,
-              size: total, sha256: manifest.sha256, generation: Math.max(generation, final.generation), manifestName });
-            complete = true;
-            resolve(result);
-          } catch (error) {
-            const failure = safe(error);
-            reject(failure);
-            throw failure;
-          } finally {
-            if (!complete) reject(new OojuroError("file_incomplete"));
-          }
-        })();
-        return {
-          next: (...args) => iterator.next(...args),
-          return(value) {
-            // Async-generator finally does not run if return precedes the first next.
-            reject(new OojuroError("file_incomplete"));
-            controller.abort();
-            return iterator.return(value);
-          },
-          async throw(error) {
-            const failure = safe(error);
-            reject(failure);
-            controller.abort();
-            try { await iterator.return(); } catch { /* Keep caller content out of failures. */ }
-            throw failure;
-          },
-          [Symbol.asyncIterator]() { return this; },
-        };
-      },
-    };
-    return Object.freeze({ chunks, completion });
-  } catch (error) {
-    throw safe(error);
-  }
+    return await downloadVia((name, options) => client.blob(input.writer, name, options), input);
+  } catch (error) { throw safe(error); }
 }
-
-export async function downloadFileTo(client, input, sink) {
-  let stream;
+export async function downloadFileTo(client, supplied, sink) {
+  let input;
   try {
-    if (!sink || ["write", "commit", "abort"].some((method) => typeof sink[method] !== "function")) fail();
-    const configuration = readOptions(input);
-    stream = await downloadFile(client, configuration);
-    for await (const part of stream.chunks) {
-      try { await sink.write(part); } catch { fail("file_sink"); }
-    }
-    const result = await stream.completion;
-    abort(configuration.signal);
-    try { await sink.commit(result); } catch { fail("file_sink"); }
-    return result;
+    if (!(client instanceof OojuroClient)) fail();
+    input = readOptions(supplied);
   } catch (error) {
-    if (stream) void stream.completion.catch(() => {});
-    try { await sink?.abort(); } catch { /* Do not expose sink content or replace the original failure. */ }
+    try { await sink?.abort(); } catch { /* Keep destination errors content-free. */ }
     throw safe(error);
   }
+  return downloadToVia((name, options) => client.blob(input.writer, name, options), input, sink);
 }
