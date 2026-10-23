@@ -232,3 +232,28 @@ test("reuse upgrade preserves v2 pending defaults and v3 per-run targets across 
   assert.deepEqual(creates[0], creates[1], "v2 pending setup never adopts the later reuse target");
   spool.close();
 }));
+
+test("SQLite policy-write fault rolls back v2 schema upgrade and pending defaults atomically", async () => directory(async path => {
+  const c = client(async () => json(info()));
+  let spool = await CaptureSpool.open({ directory: path, client: c });
+  spool.enqueue(event()); spool.close();
+  let db = new DatabaseSync(path + "/capture.sqlite");
+  const original = db.prepare("SELECT body FROM events").get().body;
+  db.exec(`CREATE TRIGGER policy_fault BEFORE UPDATE ON session_settings
+    BEGIN SELECT RAISE(ABORT,'synthetic policy storage fault'); END;`);
+  db.close();
+  await assert.rejects(CaptureSpool.open({ directory: path, client: c, reuseJournal: JOURNAL }));
+  db = new DatabaseSync(path + "/capture.sqlite");
+  assert.equal(db.prepare("PRAGMA user_version").get().user_version, 2);
+  assert.ok(!db.prepare("PRAGMA table_info(sessions)").all().some(column => column.name === "reuse_journal"));
+  assert.ok(!db.prepare("PRAGMA table_info(session_settings)").all().some(column => column.name === "reuse_journal"));
+  assert.equal(db.prepare("SELECT body FROM events").get().body, original);
+  db.exec("DROP TRIGGER policy_fault"); db.close();
+  spool = await CaptureSpool.open({ directory: path, client: c, reuseJournal: JOURNAL });
+  assert.equal(spool.pending().events, 1); spool.close();
+  db = new DatabaseSync(path + "/capture.sqlite");
+  assert.equal(db.prepare("PRAGMA user_version").get().user_version, 3);
+  assert.equal(db.prepare("SELECT reuse_journal FROM session_settings").get().reuse_journal, JOURNAL);
+  assert.equal(db.prepare("SELECT reuse_journal FROM sessions WHERE run=?").get(RUN).reuse_journal, null);
+  assert.equal(db.prepare("SELECT body FROM events").get().body, original); db.close();
+}));

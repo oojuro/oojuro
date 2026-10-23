@@ -135,6 +135,9 @@ export class CaptureSpool {
             db.exec(`ALTER TABLE sessions ADD COLUMN reuse_journal TEXT;
               ALTER TABLE session_settings ADD COLUMN reuse_journal TEXT;
               PRAGMA user_version=3;`);
+            // The selected policy and schema become durable together; a failed
+            // update rolls back both ALTERs and leaves every old run default.
+            db.prepare("UPDATE session_settings SET reuse_journal=? WHERE singleton=1").run(reuseJournal);
             db.exec("COMMIT");
           } catch (error) { db.exec("ROLLBACK"); throw error; }
           sessionSchema = 3;
