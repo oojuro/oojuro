@@ -4625,6 +4625,7 @@ dependencies = [
  "oojuro-trace",
  "prost",
  "regex",
+ "reqwest",
  "serde",
  "serde_json",
  "toml",
@@ -5537,6 +5538,7 @@ dependencies = [
  "base64 0.22.1",
  "bytes",
  "encoding_rs",
+ "futures-channel",
  "futures-core",
  "futures-util",
  "h2",
@@ -5571,6 +5573,7 @@ dependencies = [
  "wasm-bindgen-futures",
  "wasm-streams",
  "web-sys",
+ "webpki-roots",
 ]
 
 [[package]]

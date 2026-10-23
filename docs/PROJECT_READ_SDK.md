@@ -85,3 +85,5 @@ uses this SDK against its actual HTTP/PostgreSQL server to read captured records
 continue a stable snapshot and verify read-key replacement/revocation. Production
 source provisioning, full-text query, installed packages and AWS failure/benchmark
 acceptance remain separate launch gates.
+
+The same project routes are available in the existing [Oojuro CLI](HOSTED_CLI.md).

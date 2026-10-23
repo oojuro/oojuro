@@ -32,6 +32,40 @@ pub fn parse_duration(s: &str) -> Result<i64> {
     Ok(us as i64)
 }
 
+// Decimal microseconds avoid float rounding, NaN-to-zero and saturating casts.
+fn unix_us(secs: &str) -> Option<i64> {
+    let negative = secs.starts_with('-');
+    let unsigned = secs.strip_prefix(['-', '+']).unwrap_or(secs);
+    let (whole, fraction) = unsigned.split_once('.').unwrap_or((unsigned, ""));
+    if (whole.is_empty() && fraction.is_empty())
+        || !whole
+            .bytes()
+            .chain(fraction.bytes())
+            .all(|c| c.is_ascii_digit())
+        || fraction.bytes().skip(6).any(|c| c != b'0')
+    {
+        return None;
+    }
+    let whole = if whole.is_empty() {
+        0
+    } else {
+        whole.parse::<i128>().ok()?
+    };
+    let mut micros = 0i128;
+    for index in 0..6 {
+        micros = micros * 10
+            + i128::from(fraction.as_bytes().get(index).copied().unwrap_or(b'0') - b'0');
+    }
+    let value = whole.checked_mul(1_000_000)?.checked_add(micros)?;
+    (if negative {
+        value.checked_neg()?
+    } else {
+        value
+    })
+    .try_into()
+    .ok()
+}
+
 /// A point in time (see the module docs), relative to `now` (µs).
 pub fn parse_time_at(s: &str, now: i64) -> Result<i64> {
     let t = s.trim();
@@ -39,8 +73,7 @@ pub fn parse_time_at(s: &str, now: i64) -> Result<i64> {
         return Ok(now);
     }
     if let Some(secs) = t.strip_prefix('@') {
-        let v: f64 = secs.parse().map_err(|_| format!("bad unix time {t:?}"))?;
-        return Ok((v * 1e6) as i64);
+        return unix_us(secs).ok_or_else(|| format!("bad or inexact unix time {t:?}").into());
     }
     if let Some(us) = parse_rfc3339_us(t) {
         return Ok(us);
@@ -52,12 +85,17 @@ pub fn parse_time_at(s: &str, now: i64) -> Result<i64> {
     {
         return Ok(us);
     }
-    let rel = t.strip_suffix("ago").map(str::trim).or_else(|| t.strip_prefix('-')).unwrap_or(t);
+    let rel = t
+        .strip_suffix("ago")
+        .map(str::trim)
+        .or_else(|| t.strip_prefix('-'))
+        .unwrap_or(t);
     match parse_duration(rel) {
         Ok(d) => Ok(now - d),
-        Err(_) => {
-            Err(format!("cannot read time {t:?} (now, RFC 3339, YYYY-MM-DD, @unix, or a duration like 1h)").into())
-        }
+        Err(_) => Err(format!(
+            "cannot read time {t:?} (now, RFC 3339, YYYY-MM-DD, @unix, or a duration like 1h)"
+        )
+        .into()),
     }
 }
 
@@ -68,6 +106,34 @@ pub fn parse_time(s: &str) -> Result<i64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn unix_times_are_exact_and_refuse_nonfinite_overflow_or_lost_precision() {
+        for (input, expected) in [
+            ("@0.000015", 15),
+            ("@-0.000001", -1),
+            ("@+.5", 500_000),
+            ("@1791394659.557001", 1_791_394_659_557_001),
+            ("@9223372036854.775807", i64::MAX),
+            ("@-9223372036854.775808", i64::MIN),
+            ("@1.0000000", 1_000_000),
+        ] {
+            assert_eq!(parse_time_at(input, 0).unwrap(), expected, "{input}");
+        }
+        for input in [
+            "@NaN",
+            "@inf",
+            "@-inf",
+            "@9223372036854.775808",
+            "@-9223372036854.775809",
+            "@0.0000001",
+            "@1e100",
+            "@.",
+            "@--1",
+        ] {
+            assert!(parse_time_at(input, 0).is_err(), "{input}");
+        }
+    }
 
     #[test]
     fn durations_and_times() {

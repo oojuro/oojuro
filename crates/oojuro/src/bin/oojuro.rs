@@ -27,6 +27,8 @@ const USAGE: &str =
            [--window 5m|1h|1d] [--writer W]... [-k N] [--samples N] [--include-waiting] [--from T] [--to T]
                                                            stretches of activity ranked by how they looked
   forget   --id ID | --key K | --older-than T | --last DUR   [--writer W] [--no-proof] [--yes]
+  cloud records --connection FILE [--from T] [--through T] [--agent ID] [--limit N] [--cursor-file FILE]
+  cloud get --connection FILE --journal ID --id ID          hosted project metadata / exact text
   stats                                                    what the journal holds
   export   [--from T] [--to T] [--when PHRASE] [--kind K]... [--writer W]... [--key K]   JSON lines on stdout
   pause | resume                                           stop / restart recording
@@ -231,10 +233,90 @@ fn open(cli: &Cli) -> Oojuro {
     if cli.direct { Oojuro::direct(cli.paths.clone()) } else { Oojuro::open(cli.paths.clone()) }
 }
 
+fn cloud(cli: &Cli) -> Result<()> {
+    use oojuro::hosted::{Error, ProjectClient, Selection, read_private};
+    let o = Opts::parse(
+        &cli.args,
+        &[
+            "--connection",
+            "--from",
+            "--through",
+            "--agent",
+            "--limit",
+            "--cursor-file",
+            "--journal",
+            "--id",
+        ],
+        &[],
+    )
+    .map_err(|_| Error::Request)?;
+    let names: std::collections::BTreeSet<_> = o.vals.iter().map(|(key, _)| key).collect();
+    if names.len() != o.vals.len() || o.rest.len() != 1 {
+        return Err(Error::Request.into());
+    }
+    let allowed: &[&str] = match o.rest[0].as_str() {
+        "records" => &[
+            "--connection",
+            "--from",
+            "--through",
+            "--agent",
+            "--limit",
+            "--cursor-file",
+        ],
+        "get" => &["--connection", "--journal", "--id"],
+        _ => return Err(Error::Request.into()),
+    };
+    if o.vals
+        .iter()
+        .any(|(key, _)| !allowed.contains(&key.as_str()))
+    {
+        return Err(Error::Request.into());
+    }
+    let connection = o.one("--connection").ok_or(Error::Request)?;
+    let output = if o.rest[0] == "records" {
+        let cursor = o
+            .one("--cursor-file")
+            .map(|p| {
+                let bytes = read_private(std::path::Path::new(p), 2 * 1024 * 1024 + 1)?;
+                let text = String::from_utf8(bytes).map_err(|_| Error::Request)?;
+                Ok::<_, Error>(text.strip_suffix('\n').unwrap_or(&text).to_owned())
+            })
+            .transpose()?;
+        let selection = Selection {
+            from: o.time("--from").map_err(|_| Error::Request)?,
+            through: o.time("--through").map_err(|_| Error::Request)?,
+            agent_id: o.one("--agent").map(str::to_owned),
+            limit: o
+                .one("--limit")
+                .map(|v| v.parse().map_err(|_| Error::Request))
+                .transpose()?,
+            cursor,
+        };
+        let page = ProjectClient::open(std::path::Path::new(connection))?.records(&selection)?;
+        let mut bytes = serde_json::to_vec(&page).map_err(|_| Error::Response)?;
+        bytes.push(b'\n');
+        bytes
+    } else {
+        let journal = o.one("--journal").ok_or(Error::Request)?;
+        let id = o.one("--id").ok_or(Error::Request)?;
+        let text = ProjectClient::open(std::path::Path::new(connection))?.content(journal, id)?;
+        if cli.json {
+            let mut bytes = serde_json::to_vec(&text).map_err(|_| Error::Response)?;
+            bytes.push(b'\n');
+            bytes
+        } else {
+            text.into_bytes()
+        }
+    };
+    std::io::stdout().lock().write_all(&output)?;
+    Ok(())
+}
+
 fn run() -> Result<i32> {
     let cli = parse()?;
     let a = &cli.args;
     match cli.cmd.as_str() {
+        "cloud" => cloud(&cli)?,
         "remember" | "put" => {
             let o = Opts::parse(a, &["--key", "--writer", "--at"], &[])?;
             let writer = paths::writer(o.one("--writer"), false);
