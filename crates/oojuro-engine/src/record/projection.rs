@@ -53,6 +53,14 @@ pub struct Index {
     inner: lexical::Index,
 }
 impl Index {
+    /// Source rows retained by this disposable projection, including unindexed rows.
+    pub fn row_count(&self) -> usize {
+        self.rows.len()
+    }
+    /// Retained source text bytes; posting/allocation overhead is additional.
+    pub fn text_bytes(&self) -> usize {
+        self.rows.iter().map(|row| row.text.len()).sum()
+    }
     fn validate(binding: &Binding, rows: &[Row]) -> Result<()> {
         if !name(&binding.writer, 256) || rows.len() > MAX_RECORDS {
             return Err(Error::Bounds);
