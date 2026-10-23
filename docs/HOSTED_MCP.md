@@ -179,8 +179,18 @@ directories, using the actual Oojuro CLI, loopback project metadata and local
 stdio. Both preserve unrelated servers, keep secrets out of agent configuration
 and refuse repeated registration without replacing entries. These are
 registration/protocol checks; no model-driven agent tool call or real owner
-configuration was used. Actual hosted joined acceptance and direct SDK setup
-remain separate gates before calling onboarding complete.
+configuration was used.
+
+The paired hosted candidate `310770cde0ce646683287cc4ccb0605f5a538a44`
+also passes its 17-test PostgreSQL/TLS/HTTP composition suite. Its frozen CLI
+journey preserves two session journals and three accepted transcripts, creates
+the project read config with the new CLI, negotiates actual stdio MCP, lists the
+three records across both journals, and opens the first session's original
+context exactly. A capture key is refused by project setup. This uses disposable
+PostgreSQL, real native/HTTP authority and synthetic transcripts; installed
+agent registration is qualified separately above. It does not establish real
+owner history, model-driven agent tool use, systemd, production activation or
+direct SDK setup.
 
 The dated [setup qualification report](project-mcp-setup-qualification-2026-10-23.json)
 records exact source/binary identity, checks and remaining gates. Repository

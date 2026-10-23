@@ -38,6 +38,7 @@
   "date": "2026-10-23",
   "dependencies_added": 0,
   "evidence_hashes": {
+    "hosted-joined-final.log": "d68d748a0b2f44873029a1b269cda83f2ee2c9077216b051a62137428b02f1c1",
     "project-mcp-installed-clients.json": "e53873b6a373e589e78f36fbaeb2e346b361fa0066f4097aa25c2be51b0d01b1",
     "project-mcp-installed-clients.py": "c0a8914f7b29276db34bba2923dcf0dd441312e06f9d9149bda9e96f906eaa8e",
     "project-mcp-python-tests.log": "714cdd7c73136f1a15bb60f605e29a8d8d8d8900afdf8079b3ace4fb33c9ff79",
@@ -45,7 +46,6 @@
   },
   "format": "oojuro-project-mcp-setup-qualification-1",
   "not_qualified": [
-    "Actual hosted PostgreSQL/native session/project read + stdio composition for this new setup binary (parent gate pending).",
     "Real owner project access, model-driven agent tool call, real agent/systemd capture installation.",
     "One combined capture/read setup grant or browser pairing; distinct grants retained.",
     "Direct SDK setup, package release or production activation.",
@@ -84,7 +84,7 @@
     "scripts/connect-project.py": "b6773235083fb64d3ac4034776e71158e60e5ed8fd27574a47b2f1bd07ef62de",
     "scripts/test-connect-project.py": "e660e0b01a4ec6c3f5457771399c74dafc0de9081f47e40bc77468e43906f215"
   },
-  "status": "public core draft; local project metadata/stdio/isolated installed-client registration passed; joined hosted fixture pending",
+  "status": "public core draft; local and actual hosted PostgreSQL/HTTP/session/project/stdio MCP qualification passed; owner activation pending",
   "verification": {
     "capture_installer_subprocess": {
       "command": "python3 scripts/test-connect-agent.py",
@@ -125,9 +125,38 @@
       "setup_script_source": "65938d7e5dfa59e1db594a5e3c6f2cec40c62b36"
     },
     "joined_postgresql_http_mcp": {
-      "opt_in": "OOJURO_PROJECT_MCP_TEST_CLI",
-      "preserved_capture_cli_fixture": true,
-      "status": "pending parent composition gate"
+      "actual_owner_or_agent_model_tool_call": false,
+      "hosted_runtime_source": "310770cde0ce646683287cc4ccb0605f5a538a44",
+      "journey": {
+        "accepted_transcript_events": 3,
+        "actual_agent_installation": false,
+        "actual_systemd": false,
+        "capture_read_denied": true,
+        "cli_sha256": "0e093079e4a7b8f9194a48ba857bffc0f60ff7a1d26604dec2d6c51cfa17b142",
+        "cli_source": "f6429cae9b6d4c594c39bd634ac210706aeb38b6",
+        "fixture": "actual-frozen-cli-http-postgresql-synthetic-source",
+        "journals": 2,
+        "mcp_setup": {
+          "actual_agent_registration": false,
+          "actual_agent_tool_call": false,
+          "capture_key_refused": true,
+          "cli_sha256": "522236a9a2bbfb1289a8be90d646fedd2154b56b4f9503c7520c60fa3f9fad18",
+          "journals": 2,
+          "prior_context_exact_get": true,
+          "protected_config_created": true,
+          "read_only_tools": 3,
+          "records": 3,
+          "stdio_initialize": true
+        },
+        "old_history_excluded": true,
+        "production": false,
+        "project_read_prior_context": true,
+        "resume_reopened_same_journal": true
+      },
+      "raw_report_sha256": "e48a9b4751ca94ed589b71af4538ca2cfbdfe7a661438d835b3ba023ec758bb1",
+      "status": "passed",
+      "suite_passed": 17,
+      "suite_scope": "PostgreSQL/TLS/HTTP session, CLI+stdio MCP, Node attachment and audit-v3/v4 composition; one frozen CLI journey includes the MCP stage"
     },
     "project_setup_subprocess": {
       "command": "python3 scripts/test-connect-project.py",
