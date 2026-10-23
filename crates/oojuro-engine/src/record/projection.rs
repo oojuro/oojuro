@@ -89,6 +89,33 @@ impl Index {
     pub fn text_bytes(&self) -> usize {
         self.text_bytes
     }
+    /// Estimated retained heap allocation, including spare vector/string
+    /// capacity, source metadata, IDs, lexical text and postings. Opaque standard
+    /// collection structure receives a conservative policy charge; allocator
+    /// headers/fragmentation, temporary query work and process RSS are excluded.
+    /// This value is suitable for aggregate cache admission, not a hard RSS cap.
+    pub fn estimated_heap_bytes(&self) -> usize {
+        use std::mem::size_of;
+        let mut bytes = self
+            .binding
+            .writer
+            .capacity()
+            .saturating_add(self.rows.capacity().saturating_mul(size_of::<Row>()))
+            .saturating_add(self.ids.capacity().saturating_mul(size_of::<String>()))
+            .saturating_add(self.inner.estimated_heap_bytes());
+        for row in &self.rows {
+            bytes = bytes
+                .saturating_add(row.id.capacity())
+                .saturating_add(row.key.as_ref().map_or(0, String::capacity))
+                .saturating_add(row.text.capacity())
+                .saturating_add(row.tool.as_ref().map_or(0, String::capacity))
+                .saturating_add(row.agent_id.capacity());
+        }
+        for id in &self.ids {
+            bytes = bytes.saturating_add(id.capacity());
+        }
+        bytes
+    }
     fn validate(binding: &Binding, rows: &[Row]) -> Result<()> {
         if !name(&binding.writer, 256) || rows.len() > MAX_RECORDS {
             return Err(Error::Bounds);
@@ -285,6 +312,9 @@ impl Index {
         Ok(output)
     }
 }
+#[cfg(test)]
+#[path = "projection_memory_tests.rs"]
+mod memory_tests;
 #[cfg(test)]
 #[path = "projection_tests.rs"]
 mod tests;
