@@ -33,7 +33,15 @@ fn scope() -> Scope<'static> {
         owner: 1,
     }
 }
+fn micros(seconds: i64) -> Result<i64> {
+    seconds
+        .checked_mul(1_000_000)
+        .ok_or_else(|| "benchmark timestamp exceeds native microsecond range".into())
+}
 fn document(row: &Record) -> Result<Doc> {
+    if row.valid_at % 1_000_000 != 0 {
+        return Err("invalid imported timestamp units".into());
+    }
     Ok(Doc {
         id: row
             .attrs
@@ -48,7 +56,7 @@ fn document(row: &Record) -> Result<Doc> {
             .ok_or("missing imported key")?
             .into(),
         text: row.text.clone(),
-        valid_at: row.valid_at,
+        valid_at: row.valid_at / 1_000_000,
         recorded_at: row
             .attrs
             .get("benchmark_known_at")
@@ -93,7 +101,7 @@ impl Arm for NativeRecordArm {
             durability: "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups".into(),
             notes: vec![
                 "actual native RecordLog and production projection; snapshot resolution, original reads, projection rebuild and excerpts are inside each search".into(),
-                "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; native assigned IDs/ingest clocks remain genuine and unchanged".into(),
+                "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged".into(),
                 "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim".into(),
                 "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm".into(),
                 "no persistent/warm search index; native 100k-record/128MiB state bounds apply; >1000 input batches split into native commits and can recover partially before ACK".into(),
@@ -113,7 +121,7 @@ impl Arm for NativeRecordArm {
                 writer: WRITER.into(),
                 agent: 1,
                 first_id: 1,
-                adapter: "benchmark-import-v1".into(),
+                adapter: "benchmark-import-v2".into(),
             },
         ))?);
         for row in self.records()? {
@@ -133,10 +141,11 @@ impl Arm for NativeRecordArm {
                 if self.ids.contains_key(&d.id) || !seen.insert(d.id.as_str()) {
                     return Err("duplicate imported ID".into());
                 }
+                micros(d.recorded_at)?;
                 let input = Input {
                     agent_id: "benchmark".into(),
                     parent_id: None,
-                    valid_at: d.valid_at,
+                    valid_at: micros(d.valid_at)?,
                     kind: Kind::Raw,
                     tool: None,
                     status: None,
@@ -200,19 +209,21 @@ impl Arm for NativeRecordArm {
         };
         let rows = winners
             .into_values()
-            .map(|(_, d)| projection::Row {
-                key: Some(d.key().into()),
-                id: d.id,
-                text: d.text,
-                valid_at: d.valid_at,
-                reported_recorded_at: d.recorded_at,
-                kind: Kind::Raw,
-                tool: None,
-                status: None,
-                agent_id: "benchmark".into(),
-                indexed: true,
+            .map(|(_, d)| {
+                Ok(projection::Row {
+                    key: Some(d.key().into()),
+                    id: d.id,
+                    text: d.text,
+                    valid_at: micros(d.valid_at)?,
+                    reported_recorded_at: micros(d.recorded_at)?,
+                    kind: Kind::Raw,
+                    tool: None,
+                    status: None,
+                    agent_id: "benchmark".into(),
+                    indexed: true,
+                })
             })
-            .collect();
+            .collect::<Result<_>>()?;
         let index = native(projection::Index::build(binding.clone(), rows))?;
         let hits = native(index.search(
             &binding,
@@ -220,7 +231,7 @@ impl Arm for NativeRecordArm {
                 text: &query.text,
                 k: query.k,
                 from: i64::MIN,
-                to: query.valid_at,
+                to: query.valid_at.saturating_mul(1_000_000),
                 filter: Filter::default(),
                 excerpt_bytes: 320,
                 max_bytes: record::MAX_OUTPUT_BYTES,
@@ -248,7 +259,10 @@ impl Arm for NativeRecordArm {
     }
     fn get_range(&mut self, from: i64, to: i64, limit: usize) -> Result<Vec<Doc>> {
         let mut rows = self.records()?;
-        rows.retain(|r| r.valid_at >= from && r.valid_at <= to);
+        rows.retain(|r| {
+            r.valid_at >= from.saturating_mul(1_000_000)
+                && r.valid_at <= to.saturating_mul(1_000_000)
+        });
         rows.sort_by_key(|r| (r.valid_at, r.id));
         rows.iter().take(limit).map(document).collect()
     }
@@ -290,6 +304,7 @@ mod tests {
         assert_eq!(rows.len(), 1);
         assert!(rows[0].recorded_at > 0);
         assert_ne!(rows[0].recorded_at, doc.recorded_at);
+        assert_eq!(rows[0].valid_at, doc.valid_at * 1_000_000);
         assert_eq!(document(&rows[0]).unwrap(), doc);
         assert!(arm.append_batch(std::slice::from_ref(&doc)).is_err());
         assert_eq!(arm.records().unwrap().len(), 1);

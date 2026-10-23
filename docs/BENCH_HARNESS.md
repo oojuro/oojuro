@@ -59,7 +59,8 @@ pagination/materialization overhead, which is different from hosted blob reads.
 The harness's arbitrary source IDs, keys, known-at timestamps and metadata are
 stored as explicit **benchmark import attributes**. Native IDs and ingest clocks
 remain genuinely assigned by RecordLog; imported known-at is never represented
-as a native ingestion timestamp. This adapter tests the harness's imported
+as a native ingestion timestamp. Harness seconds convert to native microseconds,
+with checked input bounds and exact round trips. This adapter tests the harness's imported
 two-clock contract, not an independently attested source-clock claim. Text and
 attributes must reopen exactly. A public fixed fixture key seals the local
 Store; it supplies no production confidentiality/key-management claim.
