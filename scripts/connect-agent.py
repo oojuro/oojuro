@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
-"""Private preview: browser-approved capture, then a per-user Linux service.
+"""Private preview: one integration API key, then a per-user Linux service.
 
 No secrets on argv, stdout, in prompts or URLs. Existing history is excluded.
 A setup marker proves delivery; it does not prove real transcript capture.
 """
 import argparse
+import getpass
+import warnings
+import shutil
 import hashlib
 import json
 import os
@@ -55,31 +58,39 @@ def unit_quote(value):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--binary", type=Path, required=True)
-    parser.add_argument("--source", required=True)
-    parser.add_argument("--journal", required=True)
-    parser.add_argument("--name", required=True)
+    parser.add_argument("--binary", type=Path, default=shutil.which("oojuro"))
+    parser.add_argument("--source", help="legacy explicit fixed-journal source")
+    parser.add_argument("--journal", help="legacy explicit fixed journal")
+    parser.add_argument("--api-key-file", type=Path, help="protected plaintext integration API key; otherwise use OOJURO_API_KEY or hidden terminal input")
+    parser.add_argument("--name", help="agent role used in automatic session journal names")
     parser.add_argument("--adapter", choices=("codex", "claude-code"), required=True)
-    parser.add_argument("--directory", type=Path, required=True)
+    parser.add_argument("--directory", type=Path)
     parser.add_argument("--source-root", type=Path)
     parser.add_argument("--base-url", default="https://oojuro.com")
     parser.add_argument("--accept-local-capture", action="store_true")
     parser.add_argument("--no-service", action="store_true", help="connect and verify, leaving capture stopped")
     parser.add_argument("--dry-run", action="store_true")
     args = parser.parse_args()
+    args.name = args.name or args.adapter
+    args.directory = args.directory or Path.home() / ".local/state/oojuro" / args.adapter
+    if not args.binary:
+        raise ValueError("install the CLI first or supply --binary")
+    legacy = args.source is not None or args.journal is not None
+    if legacy and (not args.source or not args.journal or args.api_key_file):
+        raise ValueError("legacy reuse needs both --source and --journal, without an API key file")
     if sys.platform != "linux":
         raise ValueError("preview installer currently supports Linux; use the CLI foreground command on macOS")
     source_root = args.source_root or Path.home() / (".codex/sessions" if args.adapter == "codex" else ".claude/projects")
     if not source_root.is_absolute() or not source_root.is_dir() or source_root.is_symlink():
         raise ValueError("supported transcript root is unavailable; specify --source-root")
-    if any(len(value) != 64 or any(c not in "0123456789abcdef" for c in value) for value in (args.source, args.journal)):
+    if legacy and any(len(value) != 64 or any(c not in "0123456789abcdef" for c in value) for value in (args.source, args.journal)):
         raise ValueError("invalid journal identifiers")
-    binary = args.binary.absolute()
+    binary = Path(args.binary).absolute()
     info = binary.lstat()
     if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o022:
         raise ValueError("owned, non-writable CLI binary required")
     plan = dict(adapter=args.adapter, transcript_root=str(source_root), installation=str(args.directory),
-                journal=args.journal, capture="new activity only", service=not args.no_service,
+                journal=args.journal if legacy else "new journal per provider session", capture="new activity only", service=not args.no_service,
                 excluded="existing history, referenced tool-result files, encrypted reasoning and non-transcript activity")
     print(json.dumps({"plan": plan}), flush=True)
     if args.dry_run:
@@ -98,6 +109,7 @@ def main():
         private_write(installed, binary.read_bytes(), mode=0o700)
     connection = args.directory / "connection.json"
     env = os.environ.copy()
+    env.pop("OOJURO_API_KEY", None)
     # Explicit loopback fixtures need no proxy. HTTPS production retains normal TLS/proxy checks.
     if args.base_url.startswith("http://"):
         for key in ("HTTP_PROXY", "HTTPS_PROXY", "ALL_PROXY", "http_proxy", "https_proxy", "all_proxy"):
@@ -114,9 +126,36 @@ def main():
             raise RuntimeError("CLI setup step failed; inspect the local capture status")
         return json.loads(result.stdout)
 
+    if not legacy and not connection.exists():
+        key_file = args.api_key_file
+        temporary = None
+        if key_file is None:
+            key = os.environ.get("OOJURO_API_KEY")
+            if key is None:
+                if not sys.stdin.isatty():
+                    raise ValueError("provide --api-key-file or OOJURO_API_KEY; never paste the key in agent chat")
+                try:
+                    with warnings.catch_warnings():
+                        warnings.simplefilter("error", getpass.GetPassWarning)
+                        key = getpass.getpass("Oojuro integration API key (hidden): ")
+                except getpass.GetPassWarning:
+                    raise ValueError("hidden terminal input unavailable; use a protected API key file")
+            temporary = args.directory / "setup-api-key"
+            private_write(temporary, key.strip().encode())
+            key = None
+            key_file = temporary
+        try:
+            cli("connect-api", "--base-url", args.base_url, "--api-key-file", str(key_file.absolute()), "--label", args.name)
+        finally:
+            if temporary is not None:
+                temporary.unlink()
+                sync_dir(temporary.parent)
+    env.pop("OOJURO_API_KEY", None)
     connected = None
     if connection.exists():
         connected = cli("capture-status", allow_pending=True)
+    if not connected and not legacy:
+        raise RuntimeError("integration API key is not authorized; preserve the connection and retry after resolving access")
     if not connected:
         approval = (cli("connection") if connection.exists() else
                     cli("connect", "--base-url", args.base_url, "--source", args.source,
@@ -130,17 +169,23 @@ def main():
             time.sleep(3)
         if not connected:
             raise RuntimeError("approval expired; keep the private file and restart with a fresh connection file")
-    if connected["journal"] != args.journal:
+    if legacy and connected["journal"] != args.journal:
         raise ValueError("existing connection is bound to another journal")
+    if not legacy and connected.get("journal_mode") != "session":
+        raise ValueError("existing fixed-journal connection retained; use a new installation directory for session mode")
     spool = args.directory / "spool"
     capture = ["capture", "--state", str(spool), "--source-root", str(source_root),
                "--adapter", args.adapter, "--accept-local-capture"]
     initialized = cli(*capture, "--once", timeout=180)
-    check = cli("capture-check")
-    result = dict(journal=args.journal, adapter=args.adapter, binary_sha256=digest,
+    check = cli("capture-check") if legacy else {"connection_check_accepted": False}
+    result = dict(journal=args.journal if legacy else None, journal_mode="fixed" if legacy else "session",
+                  adapter=args.adapter, binary_sha256=digest,
                   connection_check_accepted=check["connection_check_accepted"],
-                  real_history_verified=False, delivered_transcript_events=initialized["delivered"],
-                  manual_capture_command=[str(installed), "cloud", *capture, "--connection", str(connection)])
+                  real_history_verified=not legacy and initialized["delivered"] > 0,
+                  capture_status="waiting for new transcript activity" if initialized["delivered"] == 0 else "transcript events accepted",
+                  delivered_transcript_events=initialized["delivered"],
+                  manual_capture_command=[str(installed), "cloud", *capture, "--connection", str(connection)],
+                  local_status_command=[str(installed), "cloud", "capture-local-status", "--connection", str(connection), "--state", str(spool)])
     if not args.no_service:
         config_root = Path(os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config")))
         unit_dir = config_root / "systemd/user"
@@ -154,7 +199,8 @@ def main():
             info = parent.lstat()
             if not stat.S_ISDIR(info.st_mode) or info.st_uid not in (0, os.getuid()) or info.st_mode & 0o022:
                 raise ValueError("unsafe user service directory")
-        unit_name = f"oojuro-capture-{args.journal[:16]}-{args.adapter}.service"
+        unit_id = args.journal[:16] if legacy else hashlib.sha256(str(args.directory).encode()).hexdigest()[:16]
+        unit_name = f"oojuro-capture-{unit_id}-{args.adapter}.service"
         argv = [str(installed), "cloud", *capture, "--connection", str(connection)]
         unit = ("[Unit]\nDescription=Oojuro automatic agent history capture\nAfter=network-online.target\n"
                 "StartLimitIntervalSec=300\nStartLimitBurst=10\n[Service]\nType=simple\nExecStart=" +

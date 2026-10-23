@@ -18,6 +18,8 @@ use std::{
     path::{Component, Path, PathBuf},
     time::Duration,
 };
+mod session;
+pub use session::{ApiConnectionInfo, connect_api};
 const MIB: usize = 1 << 20;
 const STATE_LIMIT: usize = 40 * MIB;
 const LINE_LIMIT: usize = 16 * MIB;
@@ -200,6 +202,10 @@ pub struct Discovery {
     pub label: String,
     pub expires_us: i64,
     limits: Limits,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    journal_mode: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    session_endpoint: Option<String>,
 }
 struct CaptureClient {
     cfg: Connection,
@@ -208,14 +214,20 @@ struct CaptureClient {
 }
 impl CaptureClient {
     fn open(path: &Path) -> Result<Self> {
-        let cfg: Connection = serde_json::from_slice(
-            &read_private(path, 16384).map_err(|_| "private_capture_connection_required")?,
-        )
-        .map_err(|_| "invalid_connection")?;
-        if cfg.version != 1
+        let bytes = read_private(path, 16384).map_err(|_| "private_capture_connection_required")?;
+        let version = serde_json::from_slice::<serde_json::Value>(&bytes)
+            .map_err(|_| "invalid_connection")?["version"]
+            .as_u64();
+        let cfg: Connection = if version == Some(2) {
+            session::decode(&bytes)?
+        } else {
+            serde_json::from_slice(&bytes).map_err(|_| "invalid_connection")?
+        };
+        if !matches!(cfg.version, 1 | 2)
             || origin(&cfg.base_url)? != cfg.base_url
             || !opaque(&cfg.source)
-            || !opaque(&cfg.journal)
+            || cfg.version == 1 && !opaque(&cfg.journal)
+            || cfg.version == 2 && !cfg.journal.is_empty()
             || !opaque(&cfg.credential_id)
         {
             return Err("invalid_connection");
@@ -264,7 +276,14 @@ impl CaptureClient {
         let info: Discovery =
             serde_json::from_slice(&response(r)?).map_err(|_| "invalid_capture_discovery")?;
         if info.format != 1
-            || info.journal != self.cfg.journal
+            || self.cfg.version == 1 && info.journal != self.cfg.journal
+            || !opaque(&info.journal)
+            || if self.cfg.version == 2 {
+                info.journal_mode.as_deref() != Some("session")
+                    || info.session_endpoint.as_deref() != Some("/api/capture/sessions")
+            } else {
+                info.journal_mode.is_some() || info.session_endpoint.is_some()
+            }
             || info.key_id != self.cfg.credential_id
             || [&info.agent_id, &info.producer_id]
                 .iter()
@@ -278,11 +297,18 @@ impl CaptureClient {
         }
         Ok(info)
     }
-    fn send(&self, batch: &Batch) -> Result<()> {
+    fn send(&self, batch: &Batch, route: Option<&session::Route>) -> Result<()> {
+        if (self.cfg.version == 2) != route.is_some() {
+            return Err("capture_route_required");
+        }
         let (body, total) = wire(batch)?;
         let r = self
             .http
-            .post(format!("{}/api/capture/events", self.cfg.base_url))
+            .post(format!(
+                "{}{}",
+                self.cfg.base_url,
+                route.map_or("/api/capture/events", |route| route.events_url.as_str())
+            ))
             .header(AUTHORIZATION, self.auth.clone())
             .header("content-type", "application/vnd.oojuro.capture.v1")
             .header("content-encoding", "identity")
@@ -360,7 +386,11 @@ pub fn status(path: &Path) -> Result<Discovery> {
     CaptureClient::open(path)?.discovery()
 }
 pub fn resume_approval(path: &Path) -> Result<Approval> {
-    approval(&CaptureClient::open(path)?.cfg)
+    let client = CaptureClient::open(path)?;
+    if client.cfg.version != 1 {
+        return Err("api_key_connection_has_no_browser_approval");
+    }
+    approval(&client.cfg)
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -413,6 +443,8 @@ struct Source {
     boundary: String,
     skip_partial: bool,
     ctx: FileCtx,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    run: Option<String>,
 }
 #[derive(Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -427,6 +459,8 @@ struct State {
     files: BTreeMap<PathBuf, Source>,
     pending: Option<Batch>,
     delivered: u64,
+    #[serde(default, skip_serializing_if = "BTreeMap::is_empty")]
+    sessions: BTreeMap<String, session::Session>,
 }
 struct Spool {
     dir: PathBuf,
@@ -544,7 +578,7 @@ impl Spool {
             .map_err(|_| "invalid_capture_spool")?
         } else {
             State {
-                version: 1,
+                version: client.cfg.version,
                 base: client.cfg.base_url.clone(),
                 journal: info.journal.clone(),
                 agent: info.agent_id.clone(),
@@ -554,6 +588,7 @@ impl Spool {
                 files: BTreeMap::new(),
                 pending: None,
                 delivered: 0,
+                sessions: BTreeMap::new(),
             }
         };
         let mut spool = Self {
@@ -562,7 +597,9 @@ impl Spool {
             state,
         };
         let s = &spool.state;
-        if s.version != 1
+        if s.version != client.cfg.version
+            || s.sessions.len() > FILE_LIMIT
+            || s.version == 1 && !s.sessions.is_empty()
             || s.base != client.cfg.base_url
             || s.journal != info.journal
             || s.agent != info.agent_id
@@ -598,6 +635,7 @@ impl Spool {
                         boundary: b,
                         skip_partial,
                         ctx: context(format, &p),
+                        run: None,
                     },
                 );
             }
@@ -626,7 +664,41 @@ impl Spool {
             {
                 return Err("capture_spool_binding_mismatch");
             }
-            client.send(batch)?;
+            let route = if client.cfg.version == 2 {
+                let run = batch
+                    .events
+                    .first()
+                    .ok_or("invalid_capture_batch")?
+                    .run_id
+                    .clone();
+                if batch.events.iter().any(|event| event.run_id != run) {
+                    return Err("mixed_session_capture_batch");
+                }
+                let saved = self
+                    .state
+                    .sessions
+                    .get(&run)
+                    .ok_or("missing_durable_session_mapping")?;
+                if saved.route.is_none() {
+                    let route = client.provision(&info, &run, &saved.label)?;
+                    self.state
+                        .sessions
+                        .get_mut(&run)
+                        .ok_or("missing_durable_session_mapping")?
+                        .route = Some(route);
+                    self.save()?;
+                }
+                let route = self.state.sessions[&run]
+                    .route
+                    .clone()
+                    .ok_or("invalid_session_route")?;
+                route.validate(client, &info, &run)?;
+                Some(route)
+            } else {
+                None
+            };
+            let batch = self.state.pending.as_ref().ok_or("invalid_capture_batch")?;
+            client.send(batch, route.as_ref())?;
             self.state.delivered = self
                 .state
                 .delivered
@@ -651,6 +723,7 @@ impl Spool {
                 boundary: blake3::hash(b"").to_hex().to_string(),
                 skip_partial: false,
                 ctx: context(format, &p),
+                run: None,
             });
             if self.state.files.len() > FILE_LIMIT {
                 return Err("capture_file_bound");
@@ -714,24 +787,50 @@ impl Spool {
             source.offset += line.len() as u64;
             let mut current = transcript(&p)?;
             source.boundary = boundary(&mut current, source.offset)?;
-            let run = blake3::hash(
-                format!(
-                    "{}:{}:{}:{}",
-                    self.state.journal,
-                    p.display(),
-                    m.dev(),
-                    m.ino()
+            let run = if client.cfg.version == 2 {
+                match &source.run {
+                    Some(run) if opaque(run) => run.clone(),
+                    Some(_) => return Err("invalid_session_identity"),
+                    None => {
+                        let run = session::run(&p, format, &self.state.agent)?;
+                        source.run = Some(run.clone());
+                        run
+                    }
+                }
+            } else {
+                blake3::hash(
+                    format!(
+                        "{}:{}:{}:{}",
+                        self.state.journal,
+                        p.display(),
+                        m.dev(),
+                        m.ino()
+                    )
+                    .as_bytes(),
                 )
-                .as_bytes(),
-            )
-            .to_hex()
-            .to_string();
+                .to_hex()
+                .to_string()
+            };
             let events = records
                 .into_iter()
                 .enumerate()
                 .map(|(k, r)| event(r, &self.state.agent, &run, offset, k, &line, format))
                 .collect::<Result<Vec<_>>>()?;
             if !events.is_empty() {
+                if client.cfg.version == 2 {
+                    if self.state.sessions.len() >= FILE_LIMIT
+                        && !self.state.sessions.contains_key(&run)
+                    {
+                        return Err("capture_session_bound");
+                    }
+                    self.state
+                        .sessions
+                        .entry(run.clone())
+                        .or_insert_with(|| session::Session {
+                            label: session::name(&client.cfg.label, format.name(), &run),
+                            route: None,
+                        });
+                }
                 let batch = Batch {
                     request: random_id()?,
                     events,
@@ -816,6 +915,9 @@ pub fn verify_delivery(connection: &Path) -> Result<()> {
     use oojuro_engine::record::{Input, Kind};
     let client = CaptureClient::open(connection)?;
     let info = client.discovery()?;
+    if client.cfg.version != 1 {
+        return Err("session_setup_requires_real_transcript_event");
+    }
     let id =
         blake3::hash(format!("oojuro-connect-check-v1:{}", client.cfg.credential_id).as_bytes())
             .to_hex()
@@ -841,7 +943,7 @@ pub fn verify_delivery(connection: &Path) -> Result<()> {
             },
         }],
     };
-    client.send(&batch)
+    client.send(&batch, None)
 }
 #[derive(Serialize)]
 pub struct Report {
@@ -849,6 +951,32 @@ pub struct Report {
     pub pending: usize,
     pub tracked_files: usize,
     pub new_lines: usize,
+}
+/// Read the atomically persisted local acknowledgement counters without taking the service lock.
+pub fn local_status(connection: &Path, state: &Path) -> Result<Report> {
+    let client = CaptureClient::open(connection)?;
+    let info = client.discovery()?;
+    let saved: State = serde_json::from_slice(
+        &read_private(&state.join("state.json"), STATE_LIMIT)
+            .map_err(|_| "private_capture_spool_required")?,
+    )
+    .map_err(|_| "invalid_capture_spool")?;
+    if saved.version != client.cfg.version
+        || saved.base != client.cfg.base_url
+        || saved.journal != info.journal
+        || saved.agent != info.agent_id
+        || saved.producer != info.producer_id
+        || saved.files.len() > FILE_LIMIT
+        || saved.sessions.len() > FILE_LIMIT
+    {
+        return Err("capture_spool_binding_mismatch");
+    }
+    Ok(Report {
+        delivered: saved.delivered,
+        pending: saved.pending.as_ref().map_or(0, |batch| batch.events.len()),
+        tracked_files: saved.files.len(),
+        new_lines: 0,
+    })
 }
 pub fn capture(
     connection: &Path,
@@ -896,6 +1024,8 @@ mod tests {
         stop: Arc<AtomicBool>,
         lost: Arc<AtomicBool>,
         wires: Arc<Mutex<Vec<Vec<u8>>>>,
+        provision_lost: Arc<AtomicBool>,
+        provisions: Arc<Mutex<Vec<serde_json::Value>>>,
         handle: Option<thread::JoinHandle<()>>,
     }
     impl Drop for Fixture {
@@ -917,6 +1047,9 @@ mod tests {
             let stop = Arc::new(AtomicBool::new(false));
             let lost = Arc::new(AtomicBool::new(false));
             let wires = Arc::new(Mutex::new(Vec::new()));
+            let provision_lost = Arc::new(AtomicBool::new(false));
+            let provisions = Arc::new(Mutex::new(Vec::new()));
+            let (pl, ps) = (provision_lost.clone(), provisions.clone());
             let (st, ls, ws, root) = (stop.clone(), lost.clone(), wires.clone(), dir.clone());
             let handle = thread::spawn(move || {
                 while !st.load(Ordering::SeqCst) {
@@ -951,15 +1084,27 @@ mod tests {
                             }
                         }
                     };
-                    let cfg: Connection =
-                        serde_json::from_slice(&fs::read(root.join("connection.json")).unwrap())
-                            .unwrap();
+                    let cfg = CaptureClient::open(&root.join("connection.json"))
+                        .unwrap()
+                        .cfg;
                     assert!(header.to_ascii_lowercase().contains(&format!(
                         "authorization: bearer {}",
                         cfg.capture_key.to_ascii_lowercase()
                     )));
+                    let provisioning = header.starts_with("POST /api/capture/sessions ");
                     let value = if header.starts_with("GET ") {
-                        json!({"format":1,"journal":cfg.journal,"agent_id":"a".repeat(64),"key_id":cfg.credential_id,"producer_id":"b".repeat(64),"label":"Fixture","expires_us":oojuro_capture::time::now_us()+600_000_000,"limits":{"events":100,"metadata_bytes":65536,"text_bytes":16*MIB}})
+                        let mut value = json!({"format":1,"journal":if cfg.version==2 {"2".repeat(64)} else {cfg.journal.clone()},"agent_id":"a".repeat(64),"key_id":cfg.credential_id,"producer_id":"b".repeat(64),"label":"Fixture","expires_us":oojuro_capture::time::now_us()+600_000_000,"limits":{"events":100,"metadata_bytes":65536,"text_bytes":16*MIB}});
+                        if cfg.version == 2 {
+                            value["journal_mode"] = json!("session");
+                            value["session_endpoint"] = json!("/api/capture/sessions");
+                        }
+                        value
+                    } else if provisioning {
+                        let request: serde_json::Value = serde_json::from_slice(&body).unwrap();
+                        let run = request["run_id"].as_str().unwrap();
+                        let journal = blake3::hash(run.as_bytes()).to_hex().to_string();
+                        ps.lock().unwrap().push(request.clone());
+                        json!({"format":1,"journal":journal,"source":cfg.source,"agent_id":"a".repeat(64),"run_id":run,"project":"9".repeat(64),"events_url":format!("/api/capture/journals/{journal}/events")})
                     } else {
                         ws.lock().unwrap().push(body.clone());
                         let n = u32::from_be_bytes(body[..4].try_into().unwrap()) as usize;
@@ -968,7 +1113,11 @@ mod tests {
                         json!({"request_id":meta["request_id"],"generation":1,"recorded_bytes":body.len()-4-n,"records":meta["events"].as_array().unwrap().iter().map(|e|json!({"event_id":e["event_id"],"record_id":e["event_id"],"replayed":false})).collect::<Vec<_>>()})
                     };
                     let bytes = serde_json::to_vec(&value).unwrap();
-                    let truncated = header.starts_with("POST ") && ls.swap(false, Ordering::SeqCst);
+                    let truncated = if provisioning {
+                        pl.swap(false, Ordering::SeqCst)
+                    } else {
+                        header.starts_with("POST ") && ls.swap(false, Ordering::SeqCst)
+                    };
                     write!(s,"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",bytes.len()+usize::from(truncated)).unwrap();
                     s.write_all(&bytes).unwrap();
                 }
@@ -979,8 +1128,26 @@ mod tests {
                 stop,
                 lost,
                 wires,
+                provision_lost,
+                provisions,
                 handle: Some(handle),
             }
+        }
+        fn api_connection(&self) -> PathBuf {
+            let key = self.dir.join("key");
+            create_private(
+                &key,
+                format!(
+                    "ojc_{}_{}",
+                    "1".repeat(64),
+                    URL_SAFE_NO_PAD.encode([7u8; 32])
+                )
+                .as_bytes(),
+            )
+            .unwrap();
+            let path = self.dir.join("connection.json");
+            connect_api(&path, &self.base, &key, "Code reviewer").unwrap();
+            path
         }
         fn connection(&self) -> PathBuf {
             let path = self.dir.join("connection.json");
@@ -1128,5 +1295,243 @@ mod tests {
             &mut records,
         );
         assert!(records[0].text.starts_with("[REDACTED:oojuro:"));
+    }
+    #[test]
+    fn api_session_mapping_and_original_batch_survive_both_lost_acknowledgements() {
+        let f = Fixture::new();
+        let connection = f.api_connection();
+        let root = f.dir.join("sessions");
+        fs::create_dir(&root).unwrap();
+        let source = root.join("rollout-session-one.jsonl");
+        let header = format!(
+            "{}\n",
+            json!({"type":"session_meta","payload":{"id":"provider-session-one","cwd":"/synthetic"}})
+        );
+        fs::write(
+            &source,
+            [header.as_bytes(), &codex("old history excluded")].concat(),
+        )
+        .unwrap();
+        let spool = f.dir.join("spool");
+        assert_eq!(
+            capture(&connection, &spool, &root, "codex", true)
+                .unwrap()
+                .delivered,
+            0
+        );
+        assert!(f.provisions.lock().unwrap().is_empty());
+        OpenOptions::new()
+            .append(true)
+            .open(&source)
+            .unwrap()
+            .write_all(&codex("new selected activity"))
+            .unwrap();
+        f.provision_lost.store(true, Ordering::SeqCst);
+        assert_eq!(
+            capture(&connection, &spool, &root, "codex", true).err(),
+            Some("session_provision_outcome_unknown")
+        );
+        let saved: serde_json::Value =
+            serde_json::from_slice(&fs::read(spool.join("state.json")).unwrap()).unwrap();
+        assert!(saved["pending"].is_object());
+        assert_eq!(saved["sessions"].as_object().unwrap().len(), 1);
+        let mut cfg: serde_json::Value =
+            serde_json::from_slice(&fs::read(&connection).unwrap()).unwrap();
+        cfg["label"] = json!("Changed later");
+        fs::write(&connection, serde_json::to_vec(&cfg).unwrap()).unwrap();
+        f.lost.store(true, Ordering::SeqCst);
+        assert_eq!(
+            capture(&connection, &spool, &root, "codex", true).err(),
+            Some("capture_outcome_unknown")
+        );
+        let report = capture(&connection, &spool, &root, "codex", true).unwrap();
+        assert_eq!(report.delivered, 1);
+        let requests = f.provisions.lock().unwrap();
+        assert_eq!(requests.len(), 2);
+        assert_eq!(requests[0], requests[1]);
+        assert!(
+            requests[0]["label"]
+                .as_str()
+                .unwrap()
+                .starts_with("Code reviewer")
+        );
+        drop(requests);
+        let wires = f.wires.lock().unwrap();
+        assert_eq!(wires.len(), 2);
+        assert_eq!(wires[0], wires[1]);
+        assert!(!String::from_utf8_lossy(&wires[0]).contains("old history excluded"));
+        drop(wires);
+        let second = root.join("rollout-session-two.jsonl");
+        fs::write(
+            second,
+            [
+                format!(
+                    "{}\n",
+                    json!({"type":"session_meta","payload":{"id":"provider-session-two"}})
+                )
+                .as_bytes(),
+                &codex("second fresh session"),
+            ]
+            .concat(),
+        )
+        .unwrap();
+        capture(&connection, &spool, &root, "codex", true).unwrap();
+        capture(&connection, &spool, &root, "codex", true).unwrap();
+        let state: State =
+            serde_json::from_slice(&fs::read(spool.join("state.json")).unwrap()).unwrap();
+        assert_eq!(state.sessions.len(), 2);
+        let journals = state
+            .sessions
+            .values()
+            .map(|saved| saved.route.as_ref().unwrap().journal.as_str())
+            .collect::<BTreeSet<_>>();
+        assert_eq!(journals.len(), 2);
+        assert_eq!(f.provisions.lock().unwrap().len(), 3);
+        assert_eq!(
+            verify_delivery(&connection).err(),
+            Some("session_setup_requires_real_transcript_event")
+        );
+    }
+    #[test]
+    fn provider_session_identity_ignores_resume_path_but_distinguishes_new_sessions() {
+        let f = Fixture::new();
+        let a = f.dir.join("rollout-a.jsonl");
+        let b = f.dir.join("rollout-b.jsonl");
+        let header = |id: &str| {
+            serde_json::to_vec(&json!({"type":"session_meta","payload":{"id":id}})).unwrap()
+        };
+        fs::write(&a, header("same-provider-session")).unwrap();
+        fs::write(&b, header("same-provider-session")).unwrap();
+        let first = session::run(&a, Format::Codex, &"a".repeat(64)).unwrap();
+        assert_eq!(
+            first,
+            session::run(&b, Format::Codex, &"a".repeat(64)).unwrap()
+        );
+        fs::write(&b, header("different-provider-session")).unwrap();
+        assert_ne!(
+            first,
+            session::run(&b, Format::Codex, &"a".repeat(64)).unwrap()
+        );
+    }
+
+    #[test]
+    fn legacy_serialization_keeps_new_session_fields_absent_and_api_files_are_strict() {
+        let f = Fixture::new();
+        let connection = f.connection();
+        let root = f.dir.join("legacy-root");
+        fs::create_dir(&root).unwrap();
+        fs::write(root.join("rollout-old.jsonl"), codex("excluded")).unwrap();
+        let spool = f.dir.join("legacy-spool");
+        capture(&connection, &spool, &root, "codex", true).unwrap();
+        let state: serde_json::Value =
+            serde_json::from_slice(&fs::read(spool.join("state.json")).unwrap()).unwrap();
+        assert_eq!(state["version"], 1);
+        assert!(state.get("sessions").is_none());
+        assert!(
+            state["files"]
+                .as_object()
+                .unwrap()
+                .values()
+                .all(|source| source.get("run").is_none())
+        );
+        let cfg: serde_json::Value =
+            serde_json::from_slice(&fs::read(connection).unwrap()).unwrap();
+        assert_eq!(cfg.as_object().unwrap().len(), 8);
+        assert!(session::decode(br#"{"version":2,"base_url":"https://example.invalid","integration_key":"secret","label":"role"}"#).is_err());
+    }
+
+    #[test]
+    fn api_routes_are_exact_and_claude_sidechains_have_independent_session_identity() {
+        let f = Fixture::new();
+        let connection = f.api_connection();
+        let client = CaptureClient::open(&connection).unwrap();
+        let info = client.discovery().unwrap();
+        let run = "c".repeat(64);
+        let journal = "d".repeat(64);
+        let value = json!({"format":1,"journal":journal,"source":client.cfg.source,"agent_id":info.agent_id,"run_id":run,"project":null,"events_url":format!("/api/capture/journals/{journal}/events")});
+        let route: session::Route = serde_json::from_value(value.clone()).unwrap();
+        route.validate(&client, &info, &run).unwrap();
+        for (key, bad) in [
+            ("events_url", json!("https://foreign.invalid/events")),
+            (
+                "events_url",
+                json!(format!("/api/capture/journals/{journal}/events?x=1")),
+            ),
+            ("source", json!("e".repeat(64))),
+            ("agent_id", json!("f".repeat(64))),
+            ("run_id", json!("a".repeat(64))),
+        ] {
+            let mut changed = value.clone();
+            changed[key] = bad;
+            let route: session::Route = serde_json::from_value(changed).unwrap();
+            assert!(route.validate(&client, &info, &run).is_err());
+        }
+        let root = f.dir.join("claude");
+        directory(&root).unwrap();
+        let path = root.join("main.jsonl");
+        let line = |role: &str, text: &str| {
+            format!(
+                "{}\n",
+                json!({"type":role,"sessionId":"claude-provider-id","timestamp":"2026-10-23T12:00:00Z","message":{"role":role,"content":[{"type":"text","text":text}]}})
+            )
+        };
+        create_private(
+            &path,
+            line("assistant", "old Claude activity excluded").as_bytes(),
+        )
+        .unwrap();
+        let spool = f.dir.join("claude-spool");
+        assert_eq!(
+            capture(&connection, &spool, &root, "claude-code", true)
+                .unwrap()
+                .delivered,
+            0
+        );
+        OpenOptions::new()
+            .append(true)
+            .open(&path)
+            .unwrap()
+            .write_all(line("assistant", "new Claude activity").as_bytes())
+            .unwrap();
+        assert_eq!(
+            capture(&connection, &spool, &root, "claude-code", true)
+                .unwrap()
+                .delivered,
+            1
+        );
+        let main = session::run(&path, Format::ClaudeCode, &info.agent_id).unwrap();
+        let children = root.join("subagents");
+        directory(&children).unwrap();
+        let side = children.join("agent-reviewer.jsonl");
+        create_private(&side, line("assistant", "sidechain metadata").as_bytes()).unwrap();
+        assert_ne!(
+            main,
+            session::run(&side, Format::ClaudeCode, &info.agent_id).unwrap()
+        );
+    }
+    #[test]
+    fn local_status_reads_verified_ack_counters_while_service_holds_spool_lock() {
+        let f = Fixture::new();
+        let connection = f.api_connection();
+        let client = CaptureClient::open(&connection).unwrap();
+        let info = client.discovery().unwrap();
+        let root = f.dir.join("local-status-root");
+        directory(&root).unwrap();
+        let source = root.join("rollout-one.jsonl");
+        create_private(&source, b"").unwrap();
+        let state = f.dir.join("local-status-spool");
+        let mut spool = Spool::open(&state, &client, &info, &root, Format::Codex).unwrap();
+        OpenOptions::new()
+            .append(true)
+            .open(&source)
+            .unwrap()
+            .write_all(&codex("acknowledged new activity"))
+            .unwrap();
+        spool.tick(&client, Format::Codex).unwrap();
+        let report = local_status(&connection, &state).unwrap();
+        assert_eq!(report.delivered, 1);
+        assert_eq!(report.pending, 0);
+        assert_eq!(report.tracked_files, 1);
+        assert!(Spool::open(&state, &client, &info, &root, Format::Codex).is_err());
     }
 }

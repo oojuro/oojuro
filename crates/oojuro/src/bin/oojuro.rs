@@ -27,8 +27,10 @@ const USAGE: &str =
            [--window 5m|1h|1d] [--writer W]... [-k N] [--samples N] [--include-waiting] [--from T] [--to T]
                                                            stretches of activity ranked by how they looked
   forget   --id ID | --key K | --older-than T | --last DUR   [--writer W] [--no-proof] [--yes]
+  cloud connect-api --connection FILE --api-key-file PRIVATE_FILE --label NAME [--base-url URL]
   cloud connect --connection FILE --source ID --journal ID --label NAME [--base-url URL]
   cloud connection | capture-status | capture-check --connection FILE
+  cloud capture-local-status --connection FILE --state DIR  verified local transcript acknowledgement counters
   cloud capture --connection FILE --state DIR --source-root DIR --adapter codex|claude-code --accept-local-capture [--once]
   cloud mcp --connection FILE                              project-scoped hosted history tools over stdio
   cloud records --connection FILE [--from T] [--through T] [--agent ID] [--limit N] [--cursor-file FILE]
@@ -239,7 +241,7 @@ fn open(cli: &Cli) -> Oojuro {
 }
 
 fn cloud(cli: &Cli) -> Result<()> {
-    if cli.args.first().is_some_and(|c| matches!(c.as_str(), "connect" | "connection" | "capture-status" | "capture-check" | "capture")) {
+    if cli.args.first().is_some_and(|c| matches!(c.as_str(), "connect-api" | "connect" | "connection" | "capture-status" | "capture-local-status" | "capture-check" | "capture")) {
         return capture_command(cli);
     }
     if cli.args.first().is_some_and(|c| c == "mcp") {
@@ -346,6 +348,7 @@ fn capture_command(cli: &Cli) -> Result<()> {
     let o = Opts::parse(
         &cli.args,
         &[
+            "--api-key-file",
             "--connection",
             "--base-url",
             "--source",
@@ -363,6 +366,7 @@ fn capture_command(cli: &Cli) -> Result<()> {
     }
     let command = o.rest[0].as_str();
     let allowed: &[&str] = match command {
+        "connect-api" => &["--connection","--api-key-file","--base-url","--label"],
         "connect" => &[
             "--connection",
             "--base-url",
@@ -371,6 +375,7 @@ fn capture_command(cli: &Cli) -> Result<()> {
             "--label",
         ],
         "connection" | "capture-status" | "capture-check" => &["--connection"],
+        "capture-local-status" => &["--connection","--state"],
         "capture" => &["--connection", "--state", "--source-root", "--adapter"],
         _ => return Err("invalid_capture_command".into()),
     };
@@ -382,6 +387,9 @@ fn capture_command(cli: &Cli) -> Result<()> {
     let val = |name: &str| o.one(name).ok_or("missing_capture_argument");
     let connection = std::path::Path::new(val("--connection")?);
     let value = match command {
+        "connect-api" => serde_json::to_value(capture::connect_api(connection,
+            o.one("--base-url").unwrap_or("https://oojuro.com"),
+            std::path::Path::new(val("--api-key-file")?),val("--label")?)?)?,
         "connect" => serde_json::to_value(capture::connect(
             connection,
             o.one("--base-url").unwrap_or("https://oojuro.com"),
@@ -391,6 +399,7 @@ fn capture_command(cli: &Cli) -> Result<()> {
         )?)?,
         "connection" => serde_json::to_value(capture::resume_approval(connection)?)?,
         "capture-status" => serde_json::to_value(capture::status(connection)?)?,
+        "capture-local-status" => serde_json::to_value(capture::local_status(connection,std::path::Path::new(val("--state")?))?)?,
         "capture-check" => {
             capture::verify_delivery(connection)?;
             serde_json::json!({"connection_check_accepted":true,"real_history_verified":false})
