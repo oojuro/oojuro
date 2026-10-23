@@ -1,0 +1,288 @@
+{
+  "status": "local functional gates passed; draft composition only",
+  "tested_source": "b6c029917d2e43e23506ca5c136941d30a6c33cd",
+  "composition_merge": "1639e11c8ac8bee5b872a6b5cf2f420213a5ce3c",
+  "merge_parents": [
+    "5e4b257b72adb8a1c98bbba1229d6573a82ce93d",
+    "99818c3e2c8125d3f8243b36ba880abf31c5004e"
+  ],
+  "toolchains": {
+    "rust": "1.99.1",
+    "node": "24.20.0",
+    "npm": "11.19.0",
+    "typescript": "5.9.3",
+    "environment": "local Linux with portable Zig C wrapper; not GitHub-hosted VM"
+  },
+  "gates": [
+    {
+      "gate": "storage",
+      "command": [
+        "cargo",
+        "+1.99.1",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "--lib",
+        "--tests",
+        "-p",
+        "oojuro-core",
+        "-p",
+        "oojuro-store",
+        "-p",
+        "oojuro-nine"
+      ],
+      "exit": 0,
+      "seconds": 230.226,
+      "test_binaries": 8,
+      "passed": 141,
+      "failed": 0,
+      "ignored": 1
+    },
+    {
+      "gate": "native",
+      "command": [
+        "cargo",
+        "+1.99.1",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "--lib",
+        "--tests",
+        "-p",
+        "oojuro-engine",
+        "-p",
+        "oojuro-rank",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit": 0,
+      "seconds": 39.07,
+      "test_binaries": 3,
+      "passed": 175,
+      "failed": 0,
+      "ignored": 10
+    },
+    {
+      "gate": "runtime",
+      "command": [
+        "cargo",
+        "+1.99.1",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "--lib",
+        "--tests",
+        "-p",
+        "oojuro-trace",
+        "-p",
+        "oojuro-capture",
+        "-p",
+        "oojuro-proxy",
+        "-p",
+        "oojuro"
+      ],
+      "exit": 0,
+      "seconds": 122.23,
+      "test_binaries": 29,
+      "passed": 230,
+      "failed": 0,
+      "ignored": 3
+    },
+    {
+      "gate": "compat",
+      "command": [
+        "cargo",
+        "+1.99.1",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro-trace",
+        "--test",
+        "compat"
+      ],
+      "exit": 0,
+      "seconds": 8.649,
+      "test_binaries": 1,
+      "passed": 4,
+      "failed": 0,
+      "ignored": 1
+    },
+    {
+      "gate": "installer-agent",
+      "command": [
+        "python3",
+        "scripts/test-connect-agent.py"
+      ],
+      "exit": 0,
+      "seconds": 0.275,
+      "passed": 2
+    },
+    {
+      "gate": "installer-project",
+      "command": [
+        "python3",
+        "scripts/test-connect-project.py"
+      ],
+      "exit": 0,
+      "seconds": 0.645,
+      "passed": 3
+    },
+    {
+      "gate": "node-version",
+      "command": [
+        "node",
+        "--version"
+      ],
+      "exit": 0,
+      "seconds": 0.004
+    },
+    {
+      "gate": "npm-ci",
+      "command": [
+        "npm",
+        "ci",
+        "--prefix",
+        "scripts/ci-sdk",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "exit": 0,
+      "seconds": 0.727
+    },
+    {
+      "gate": "node-runtime",
+      "command": [
+        "node",
+        "--test",
+        "sdk/typescript/test/attachments.test.js",
+        "sdk/typescript/test/capture.test.js",
+        "sdk/typescript/test/client.test.js",
+        "sdk/typescript/test/file-deletion.test.js",
+        "sdk/typescript/test/files.test.js",
+        "sdk/typescript/test/journal-framed.test.js",
+        "sdk/typescript/test/journal.test.js",
+        "sdk/typescript/test/project.test.js",
+        "sdk/typescript/test/session-capture.test.js"
+      ],
+      "exit": 0,
+      "seconds": 8.442,
+      "tests": 111,
+      "pass": 111,
+      "fail": 0,
+      "skipped": 0,
+      "cancelled": 0
+    },
+    {
+      "gate": "declarations",
+      "command": [
+        "node",
+        "scripts/ci-sdk/node_modules/typescript/bin/tsc",
+        "--strict",
+        "--noEmit",
+        "--target",
+        "ES2023",
+        "--module",
+        "NodeNext",
+        "--moduleResolution",
+        "NodeNext",
+        "sdk/typescript/test/capture-types.ts",
+        "sdk/typescript/test/file-deletion-types.ts",
+        "sdk/typescript/test/files-types.ts",
+        "sdk/typescript/test/journal-framed-types.ts",
+        "sdk/typescript/test/journal-types.ts",
+        "sdk/typescript/test/project-types.ts",
+        "sdk/typescript/test/session-attachment-types.ts",
+        "sdk/typescript/test/types.ts"
+      ],
+      "exit": 0,
+      "seconds": 0.643
+    },
+    {
+      "gate": "offline-package",
+      "command": [
+        "python3",
+        "scripts/test-sdk-package.py"
+      ],
+      "exit": 0,
+      "seconds": 0.438
+    }
+  ],
+  "distinct_counts": {
+    "rust_passed": 546,
+    "rust_failed": 0,
+    "rust_existing_ignored": 14,
+    "node_passed": 111,
+    "node_failed": 0,
+    "node_skipped": 0,
+    "python_installer_passed": 5,
+    "declaration_smoke_files": 8,
+    "offline_pack_install_export_surfaces": 5
+  },
+  "compat_repeat_already_counted": true,
+  "selected_graph_formatted_entries": 168,
+  "diagnostic": "All gates exit0. Orchestrator final rmdir exited1 after tests left synthetic fixtures and Node compile cache inside owned private scratch; inspected and removed only that owned directory. No runtime/test change or gate rerun needed.",
+  "evidence": {
+    "main-client-sdk-ci-storage.log": {
+      "sha256": "b27ee05084d46092ee78dca37a8f38719e3134d26141581bd855c1c1bdb42a04",
+      "bytes": 15941
+    },
+    "main-client-sdk-ci-declarations.log": {
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes": 0
+    },
+    "main-client-sdk-ci-npm-ci.log": {
+      "sha256": "1edfa4034163f1e1530e292ab4d374857c8a5ad1f866521ef6a765e8c7013485",
+      "bytes": 235
+    },
+    "main-client-sdk-ci-installer-project.log": {
+      "sha256": "73e5d23c3dccda0feb09d3795f6f0d1b3c0decef776d1a5013f085153683a317",
+      "bytes": 101
+    },
+    "main-client-sdk-ci-offline-package.log": {
+      "sha256": "3aedb2959f80478a837596224068ca5a3b8eb134248504ee3267abd089aac683",
+      "bytes": 97
+    },
+    "main-client-sdk-ci-native.log": {
+      "sha256": "415b332f89321e7c9a9d4f06d2475e11e7e7d77ea9736d86a68f9c762abcde93",
+      "bytes": 21657
+    },
+    "main-client-sdk-ci-runtime.log": {
+      "sha256": "2a49a24f3b217256461e6991c1f218d191404f7cae635f0626d4aaf7ae7c9a07",
+      "bytes": 28994
+    },
+    "main-client-sdk-ci-node-version.log": {
+      "sha256": "b67d0ced059f9313d861ddbbe734d2d1f9219106a9e036ae6d88407afa0846e6",
+      "bytes": 9
+    },
+    "main-client-sdk-ci-compat.log": {
+      "sha256": "53480db4f22592c99b3ffe98df213b2b8a9dfb6b975e7ba70dbb0cbc6647cd1f",
+      "bytes": 2457
+    },
+    "main-client-sdk-ci-node-runtime.log": {
+      "sha256": "d35ee92460095ea9eff9a790f1cad046d54549e495435ffbd99dd18f1db7df2f",
+      "bytes": 12042
+    },
+    "main-client-sdk-ci-installer-agent.log": {
+      "sha256": "f636a12652b9626d1eb4dadae86293f98b5ece2dcaeec29bb959c1c96ae37df3",
+      "bytes": 100
+    },
+    "main-client-sdk-ci-cleanup.json": {
+      "sha256": "3b0da175b068f382b6c9d5618e151948d04b57347d20e671ab0d0655fc184b3c",
+      "bytes": 3216
+    },
+    "main-client-sdk-selected-graph.txt": {
+      "sha256": "147e415e34f37d8975102a31a0da48192bc2ffb3541dbd93c1af8f7709bc17e6",
+      "bytes": 4378
+    }
+  },
+  "not_qualified": [
+    "Temporal peer integration",
+    "actual owner CLI configuration or real history",
+    "new main-based SDK-to-hosted joined fixture; older exact SDK74 fixture remains separate",
+    "GitHub-hosted runner or remote CI status",
+    "performance/capacity/AWS recovery",
+    "package publication, release or deployment"
+  ]
+}

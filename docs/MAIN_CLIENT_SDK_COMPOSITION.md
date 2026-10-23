@@ -58,9 +58,41 @@ artifacts are removed. This does not test the inherited Temporal peer integratio
 
 ## Qualification status
 
-At source freeze, no composed runtime/SDK test or build has run. Only automatic
-merge/source comparison, development lock generation, workflow syntax via
-actionlint1.7.12 and source whitespace checks have run. Prior foundation/SDK74
-receipts apply to their exact earlier sources; they do not qualify this composition.
-Functional tests must use this new source after the coordinated CPU window opens.
-Actions remains disabled pending owner review; no remote CI result is claimed.
+The exact selected CI commands passed on source `b6c029917d2e43e23506ca5c136941d30a6c33cd`.
+Local Linux used pinned Rust1.99.1 and the portable Zig C wrapper, Node24.20.0,
+npm11.19.0 and locked TypeScript5.9.3. This is not a GitHub-hosted VM result.
+
+| Gate | Passed | Failed | Existing ignored | Test binaries/files |
+| --- | ---: | ---: | ---: | ---: |
+| Legacy engine/shared storage | 141 | 0 | 1 | 8 binaries |
+| Native engine/rank | 175 | 0 | 10 | 3 binaries |
+| Capture/proxy/CLI/MCP | 230 | 0 | 3 | 29 binaries |
+| Explicit legacy compatibility repeat | 4 | 0 | 1 | 1 binary |
+| Agent/project installer scripts | 2 + 3 | 0 | 0 | 2 scripts |
+| Node client/session/attachment runtime | 111 | 0 | 0 | 9 files |
+| Strict TypeScript declaration smoke | passed | 0 | 0 | 8 files |
+| Local offline package | passed | 0 | 0 | 5 export surfaces |
+
+The complete Rust suites contain **546 distinct passes and 14 existing ignored
+entries**. The explicit legacy-format step repeats four passes and one ignored
+fixture generator already counted in runtime. Node reports no skipped/cancelled
+tests. The Node development install and package gate both passed; there was no
+publication or live service call. The selected Linux normal/build/dev Rust graph
+has 168 unique formatted package entries and no selected comparison databases or
+optional experimental store codecs. Workflow actionlint and new-source whitespace
+checks pass.
+
+All gate processes exited zero. The local orchestration script's final `rmdir`
+then refused the nonempty owned scratch directory because existing fixtures and
+Node's compile cache retained files. Only that owned real private directory was
+inspected and removed. The cleanup receipt and every gate log are retained locally;
+no source guard/test was changed or repeated for cleanup. The
+[machine-readable receipt](MAIN_CLIENT_SDK_QUALIFICATION.json) records commands,
+counts and evidence hashes.
+
+This qualification covers local/mock/offline source composition. The earlier
+SDK74 actual hosted fixture qualifies its pinned earlier SDK/source, not a new
+joined test of this main-based composition. Real owner instrumentation/history,
+Temporal peer integration, hosted/AWS recovery, performance and package release
+remain separate gates. Actions remains disabled pending owner review; no remote
+CI result, main merge, hosted pin change, release or deployment is claimed.
