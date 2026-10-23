@@ -298,13 +298,33 @@ pub(super) fn rank(
         .into_iter()
         .enumerate()
         .filter(|(i, _)| exact[*i])
-        .map(|(i, row)| {
+        .map(|(i, row)| (row, gains[i] + 0.0))
+        .collect();
+    // Selection and final order share the full score/time/textual-ID comparator.
+    let compare = |(ar, a): &(usize, f64), (br, b): &(usize, f64)| {
+        let ae = &index.documents[*ar].event;
+        let be = &index.documents[*br].event;
+        b.total_cmp(a)
+            .then_with(|| be.ts_us.cmp(&ae.ts_us))
+            .then_with(|| match original_ids {
+                Some(ids) => ids[*ar].cmp(&ids[*br]),
+                None => ae.id.to_string().cmp(&be.id.to_string()),
+            })
+    };
+    if result.len() > k {
+        result.select_nth_unstable_by(k, compare);
+        result.truncate(k);
+    }
+    result.sort_by(compare);
+    let result = result
+        .into_iter()
+        .map(|(row, bits)| {
             let e = &index.documents[row].event;
             (
                 row,
                 Hit {
                     id: e.id,
-                    bits: gains[i] + 0.0,
+                    bits,
                     continued: false,
                     time: e.ts_us,
                     row: e.id,
@@ -312,18 +332,6 @@ pub(super) fn rank(
             )
         })
         .collect();
-    // F4 full textual ID order. Coarse prefix selection is an optimization,
-    // not another tie rule; all exact finalists use the full decimal string.
-    result.sort_by(|(ar, a), (br, b)| {
-        b.bits
-            .total_cmp(&a.bits)
-            .then_with(|| b.time.cmp(&a.time))
-            .then_with(|| match original_ids {
-                Some(ids) => ids[*ar].cmp(&ids[*br]),
-                None => a.id.to_string().cmp(&b.id.to_string()),
-            })
-    });
-    result.truncate(k);
     (result, anchored && literal.is_none())
 }
 /// Enabled RAM pipeline only. Uses one candidate-pool F3 model per F2 group.

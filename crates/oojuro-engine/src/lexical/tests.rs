@@ -620,3 +620,53 @@ fn streamed_analysis_matches_original_features_with_a_bounded_temporary_stem_cac
     );
     assert_eq!(cache.len(), before);
 }
+
+#[test]
+fn partial_topk_matches_full_order_for_ties_bounds_and_total_float_order() {
+    let mut index = Index::from_record_rows(
+        "topk",
+        1,
+        (1..=257).map(|id| (id, (id % 3) as i64, "battery", true)),
+    )
+    .unwrap();
+    let ids: Vec<_> = (1..=257)
+        .map(|id| format!("opaque/{:064x}", 258 - id))
+        .collect();
+    let mut q = Query {
+        writer: "topk",
+        agent: 1,
+        text: "battery",
+        from: 0,
+        to: 10,
+        k: 1,
+    };
+    let signature = |hits: Vec<(usize, Hit)>| {
+        hits.into_iter()
+            .map(|(row, h)| (row, h.id, h.bits.to_bits(), h.continued, h.time, h.row))
+            .collect::<Vec<_>>()
+    };
+    for invalid_stats in [false, true] {
+        if invalid_stats {
+            // Public rows cannot supply scores; inject nonfinite internal statistics
+            // to retain the existing total_cmp behavior in the selection path too.
+            index.documents[0].length = 0;
+            index.documents[0].scope = 0;
+            index.documents[1].length = 0;
+        }
+        for original_ids in [None, Some(ids.as_slice())] {
+            let full = signature(index.rank(&q, 300, false, false, None, original_ids).0);
+            if invalid_stats {
+                assert!(full.iter().any(|h| f64::from_bits(h.2).is_nan()));
+                assert!(full.iter().any(|h| f64::from_bits(h.2).is_infinite()));
+            }
+            for k in [0, 1, 2, 5, 64, 128, 256, 257, 258] {
+                let got = signature(index.rank(&q, k, false, false, None, original_ids).0);
+                assert_eq!(got, full[..k.min(full.len())]);
+            }
+        }
+    }
+    q.k = 0;
+    assert!(index.search(&q).unwrap().is_empty());
+    q.k = 10_001;
+    assert!(matches!(index.search(&q), Err(Error::Invalid)));
+}
