@@ -40,11 +40,14 @@
     "Combined capture/read grant or automatic file selection/spooling; grants and user intent remain distinct.",
     "Production latency/RAM/capacity/cost, provider durability drills, package release or deployment."
   ],
-  "pr": null,
+  "pr": "https://github.com/oojuro/oojuro/pull/74",
   "production_changed": false,
   "publication": {
+    "core_draft_pr": 74,
     "core_repository_visibility": "public",
     "deployment": false,
+    "github_actions": "disabled; qualification commands ran locally, no remote CI claim",
+    "hosted_draft_pr": 78,
     "hosted_repository_visibility": "private",
     "main_merge": false,
     "package_release": false,
@@ -63,7 +66,7 @@
       "filtered_out": 618,
       "fixture_base": "65f89019720473d50b60e12293dabcd74f812d48",
       "fixture_branch": "codex/session-sdk-acceptance",
-      "fixture_pr": null,
+      "fixture_pr": "https://github.com/oojuro/o-cloud/pull/78",
       "fixture_repository": "oojuro/o-cloud",
       "fixture_runtime_source": "cd7910e97cbdcb6b72828d6576ffff41cd42220f",
       "passed": 1,
@@ -113,6 +116,7 @@
       "passed": 111,
       "skipped": 0
     },
+    "node_runtime": "24.20.0",
     "offline_package": {
       "pack_install_exports_passed": true,
       "private_package_flag": true,
