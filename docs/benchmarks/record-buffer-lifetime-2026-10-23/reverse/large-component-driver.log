@@ -1,0 +1,6 @@
+large lifetime 0 {'prepare_us': 41915.702, 'replay_us': 37691.134000000005, 'store_us': 18494.624, 'total_us': 108672.27249999999}
+large baseline 0 {'prepare_us': 49462.869, 'replay_us': 38572.1465, 'store_us': 15364.4895, 'total_us': 103920.599}
+large baseline 1 {'prepare_us': 49183.339, 'replay_us': 37708.676, 'store_us': 15832.3305, 'total_us': 109367.26}
+large lifetime 1 {'prepare_us': 44933.1425, 'replay_us': 38366.875, 'store_us': 16836.3815, 'total_us': 109405.7525}
+large lifetime 2 {'prepare_us': 42305.5375, 'replay_us': 35334.943, 'store_us': 16624.442, 'total_us': 104563.5995}
+large baseline 2 {'prepare_us': 46475.2895, 'replay_us': 38295.7525, 'store_us': 16839.5875, 'total_us': 104297.3995}

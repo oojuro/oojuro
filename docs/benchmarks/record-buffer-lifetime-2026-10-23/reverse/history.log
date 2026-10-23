@@ -1,0 +1,48 @@
+turnloop swe-agent baseline run 0 done
+turnloop swe-agent baseline run 1 done
+turnloop swe-agent baseline run 2 done
+turnloop swe-agent lifetime run 0 done
+turnloop swe-agent lifetime run 1 done
+turnloop swe-agent lifetime run 2 done
+# Oojuro benchmark report
+
+## turnloop · swe-agent · dev
+
+- Hardware: AMD Ryzen 7 8845HS w/ Radeon 780M Graphics · 16 logical CPUs · 29062768 kB RAM · store on ext4 · rustc rustc 1.99.0 (b940084d7 2026-09-28)
+- runs: 3
+- cache: warm: one process per run; prefill, then measured replay
+- build_time_included: prefill reported as prefill_s; per-turn overhead = turn search + turn append
+- isolation: child process per run in a systemd --user scope, MemoryMax=3G, MemorySwapMax=0
+- k: 20
+- trajectories: 2
+- steps: 44
+- labelled_steps: 13
+- background_target_records: 1000
+- thinking: index
+- returned_content: search_get includes search, top-k source exclusion and original get for every returned hit; all originals checked byte-exact; native projection also computes excerpts
+- scorecards: 2026-10-23T21:42:39Z
+
+| arm | gates | ndcg@10 | ndcg@20 | recall@20 | hit@20 | mrr@10 | freshness_self_hit@21 | disk/raw | peak mem/raw | steady RSS/raw | prefill_s | turn_content_overhead_p50_us | turn_content_overhead_p99_us | search_get_p50_us | search_get_p99_us | append_p50_us | append_p99_us |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| baseline `native-record` | pass (4) | 0.748 | 0.748 | 0.846 | 0.923 | 0.757 | 1.000 | 0.29× | 16.89× | 14.77× | 0.0 (0.0–0.0) | 6898.8 (6746.0–6914.1) | 25704.5 (25188.9–25826.5) | 5520.3 (5415.8–5716.8) | 24375.5 (23958.9–24599.5) | 1212.0 (1200.0–1313.0) | 1516.0 (1455.0–7828.0) |
+| lifetime `native-record` | pass (4) | 0.748 | 0.748 | 0.846 | 0.923 | 0.757 | 1.000 | 0.29× | 16.72× | 14.91× | 0.0 (0.0–0.0) | 7222.1 (7160.0–7252.1) | 24199.2 (24181.2–26175.9) | 5859.9 (5843.0–5959.6) | 22908.2 (22890.2–24963.9) | 1293.0 (1273.0–1324.0) | 1686.0 (1441.0–1824.0) |
+
+Durability per arm:
+
+- baseline: native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups (RecordLog sealed record-2 + current record::projection; commit 59ac5a9f6036)
+  - actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search
+  - source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged
+  - native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim
+  - RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm
+  - derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK
+- lifetime: native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups (RecordLog sealed record-2 + current record::projection; commit dde9f6a532b7)
+  - actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search
+  - source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged
+  - native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim
+  - RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm
+  - derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK
+
+Note: Quality is averaged over labelled steps only; every step is timed.
+
+
+scorecard: /home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/record-buffer-lifetime/reverse/history.json

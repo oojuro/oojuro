@@ -1,0 +1,28 @@
+{
+  "baseline_source": "c42c10d32364d692bccc97030c447dc05ceb85b0",
+  "candidate_source": "d204189450f4c2fc86cbdf77266aa895734b2d3f",
+  "decision": "Experimental only, no default/pin recommendation: RAM lower in large cases, normal search medians and large append totals worse across both orders. Stop optional timing.",
+  "first_component_frozen": "dde9f6a",
+  "first_pipeline_frozen": "b6911d0",
+  "sha256": {
+    "beir-host-before.json": "2dd840aa50215730fb97d55789cff53a2039891724273c14f26b3140d51d8fd1",
+    "beir.json": "a0cf141edd6c22d3177adac57d5887f9d1e932a6f16aae8c65aa794a79b4eef3",
+    "beir.log": "4efdd9279408970b90c832a2d87103898ab91cc8a0cb187324ed46e71224168b",
+    "driver.log": "d081c21b3aa0b32fc8e729b9b2178504c1b8e98e7612985bb5f60272c1c328d8",
+    "format-check.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "history-host-before.json": "229880d328b55a7f35feb6e93eb6095496a0020555ab2806254623fa70150f84",
+    "history.json": "61f0a7c6b4eb51669f49d0db0902df0b12636eaa7e20c9d869018133a1c21fb9",
+    "history.log": "05c374382179ae431978c5d65af34637a067a8569dc9aa9d5100412cc46e6d88",
+    "large-component/large-baseline-0.log": "4918a2eefd9bde13e24949465edce05c1025a8d9d740e22ad20fe0105a939632",
+    "large-component/large-baseline-1.log": "1dc78448a36dcc1240aaac6384753c635b8c79c87612b93ccae1c755d63637f8",
+    "large-component/large-baseline-2.log": "264e922d39c5335c1566dd4005493c9621b2042cf55ae48be773f5640cb67d74",
+    "large-component/large-lifetime-0.log": "96720d6ba4d7ec08df3bb72811cf25ea5a011d1baf75605f1ba7451798080d7a",
+    "large-component/large-lifetime-1.log": "fb0516751d92c8791daaba9a6eb22a68c2e539476a224b72f21b79d532e89166",
+    "large-component/large-lifetime-2.log": "41ddb533df34fac37802fd609916419664cd84d5d60f9d8f39c74ae0ee19012a",
+    "large-component/matrix.json": "a9ccc695697cf51595f334c91d047220061f5592471d89d0c89c8c69a844c894",
+    "large-component/partial.json": "b04ef64b32c9368351cea010da3826da7193dd660603c064fb867b28951b1b21",
+    "large-component-driver.log": "b3d5d8ae59478a3de419b477233e86840fa695f24c8c1d09f69c9a345cd9dff9",
+    "run-large-reverse.py": "2e41710db2d56d967fb155ddf3ceeb562abf5d462b49e6769af02f623922fa93",
+    "spec.json": "7deb270a0f4669bdbc8d4a9122c2ef187a89395675e06af5f3f1303574f2e733"
+  }
+}
