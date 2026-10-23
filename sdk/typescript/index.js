@@ -1523,10 +1523,13 @@ export class OojuroCaptureClient {
   }
   prepareSession(input) {
     try {
-      const value = ownFields(input, ["runId", "label"]);
+      const hasTarget = object(input) && Object.hasOwn(input, "reuseJournal");
+      const value = ownFields(input, ["runId", "label", ...(hasTarget ? ["reuseJournal"] : [])]);
       id(value.runId); label(value.label, 128);
+      if (hasTarget) id(value.reuseJournal);
       if (value.label !== value.label.trim()) fail();
-      const body = encoder.encode(encode({ format: 1, run_id: value.runId, label: value.label }));
+      const body = encoder.encode(encode({ format: 1, run_id: value.runId, label: value.label,
+        ...(hasTarget ? { reuse_journal: value.reuseJournal } : {}) }));
       return new PreparedCaptureSession(async (signal) => {
         let attempted = false;
         try {
@@ -1535,7 +1538,8 @@ export class OojuroCaptureClient {
           attempted = true;
           const route = sessionRoute(await this.#request(body.slice(), signal, "/api/capture/sessions", "application/json"));
           if (route.source !== this.source ||
-              route.agent_id !== info.agent_id || route.run_id !== value.runId) fail();
+              route.agent_id !== info.agent_id || route.run_id !== value.runId ||
+              hasTarget && route.journal !== value.reuseJournal) fail();
           return route;
         } catch (error) { throw safeError(error, attempted); }
       });

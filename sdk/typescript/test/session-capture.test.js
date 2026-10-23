@@ -152,3 +152,83 @@ test("session mapping retention is bounded and mixed persisted batches refuse be
     assert.throws(() => spool.enqueue(event()), error("session_limit")); assert.equal(spool.pending().events, 0); spool.close();
   });
 });
+
+test("explicit reuse freezes target intent and refuses a different returned journal", async () => {
+  const requests = []; let lose = true;
+  const c = client(async (_url, init) => {
+    if (init.method === "GET") return json(info());
+    requests.push(Buffer.from(init.body));
+    if (lose) { lose = false; throw Error("setup ACK lost"); }
+    return json(route());
+  });
+  const input = { runId: RUN, label: "Continue reviewer", reuseJournal: JOURNAL };
+  const prepared = c.prepareSession(input); input.reuseJournal = id("8");
+  await assert.rejects(prepared.send(), error("transport", "unknown"));
+  assert.equal((await prepared.send()).journal, JOURNAL);
+  assert.deepEqual(requests[0], requests[1]);
+  assert.equal(JSON.parse(requests[1]).reuse_journal, JOURNAL);
+  for (const target of ["display name", "../", id("A"), null, undefined]) {
+    assert.throws(() => c.prepareSession({ runId: RUN, label: "Reviewer", reuseJournal: target }), error("invalid_request"));
+  }
+  let posts = 0;
+  const wrong = client(async (_url, init) => {
+    if (init.method === "GET") return json(info());
+    posts++; return json(route(RUN, id("9")));
+  });
+  await assert.rejects(wrong.prepareSession({ runId: RUN, label: "Reviewer", reuseJournal: JOURNAL }).send(), error("invalid_response", "unknown"));
+  assert.equal(posts, 1, "no event dispatch or fallback after mismatched target");
+});
+
+test("reuse upgrade preserves v2 pending defaults and v3 per-run targets across policy changes and lost ACKs", async () => directory(async path => {
+  const mappings = new Map(), creates = [], wires = [];
+  let loseSetup = true, loseEvent = true;
+  const selected = id("9"), next = id("8"), third = id("b"), defaultRun = id("c");
+  const c = client(async (url, init) => {
+    if (init.method === "GET") return json(info());
+    if (url.endsWith("/sessions")) {
+      const body = JSON.parse(Buffer.from(init.body)); creates.push(body);
+      let saved = mappings.get(body.run_id);
+      if (!saved) {
+        saved = { body, route: route(body.run_id, body.reuse_journal ?? (body.run_id === RUN ? JOURNAL : body.run_id)) };
+        mappings.set(body.run_id, saved);
+      }
+      assert.deepEqual(body, saved.body);
+      if (loseSetup) { loseSetup = false; throw Error("accepted setup ACK lost"); }
+      return json(saved.route);
+    }
+    const wire = Buffer.from(init.body), run = decode(wire).meta.events[0].run_id;
+    assert.equal(url, "https://fixture.invalid" + mappings.get(run).route.events_url);
+    wires.push(wire);
+    if (loseEvent) { loseEvent = false; throw Error("accepted event ACK lost"); }
+    return json(ack(wire));
+  });
+  let spool = await CaptureSpool.open({ directory: path, client: c });
+  spool.enqueue(event());
+  await assert.rejects(spool.flush(), error("transport", "unknown"));
+  spool.close();
+  let db = new DatabaseSync(path + "/capture.sqlite");
+  assert.equal(db.prepare("PRAGMA user_version").get().user_version, 2); db.close();
+  spool = await CaptureSpool.open({ directory: path, client: c, reuseJournal: selected });
+  spool.enqueue(event("b", next)); spool.close();
+  db = new DatabaseSync(path + "/capture.sqlite");
+  assert.equal(db.prepare("PRAGMA user_version").get().user_version, 3);
+  assert.equal(db.prepare("SELECT reuse_journal FROM sessions WHERE run=?").get(RUN).reuse_journal, null);
+  assert.equal(db.prepare("SELECT reuse_journal FROM sessions WHERE run=?").get(next).reuse_journal, selected);
+  db.close();
+  spool = await CaptureSpool.open({ directory: path, client: c });
+  spool.enqueue(event("c", third)); spool.close();
+  spool = await CaptureSpool.open({ directory: path, client: c, reuseJournal: null });
+  spool.enqueue(event("d", defaultRun));
+  await assert.rejects(spool.flush(), error("transport", "unknown"));
+  spool.close(); spool = await CaptureSpool.open({ directory: path, client: c });
+  assert.deepEqual(await spool.flush(), { delivered: 4, remaining: 0 });
+  assert.deepEqual(wires[0], wires[1], "pending request/original wire survives policy changes and reopen");
+  assert.equal(mappings.get(RUN).body.reuse_journal, undefined);
+  assert.equal(mappings.get(next).body.reuse_journal, selected);
+  assert.equal(mappings.get(third).body.reuse_journal, selected, "undefined open retains saved policy");
+  assert.equal(mappings.get(defaultRun).body.reuse_journal, undefined, "null restores unseen runs to default");
+  assert.equal(spool.session(next).journal, spool.session(third).journal);
+  assert.notEqual(spool.session(defaultRun).journal, selected);
+  assert.deepEqual(creates[0], creates[1], "v2 pending setup never adopts the later reuse target");
+  spool.close();
+}));

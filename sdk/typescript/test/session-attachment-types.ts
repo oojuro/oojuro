@@ -16,3 +16,10 @@ prepareJournalAttachment(uploader, capture, { ...descriptor, session }).send(sou
 // @ts-expect-error Capture does not grant native file-write authority.
 prepareJournalAttachment(capture, capture, descriptor);
 void physicalSource;
+
+import { CaptureSpool } from "../capture.js";
+capture.prepareSession({ runId: "a".repeat(64), label: "Continue reviewer", reuseJournal: "b".repeat(64) });
+CaptureSpool.open({ directory: "/private/spool", client: capture, reuseJournal: "b".repeat(64) });
+CaptureSpool.open({ directory: "/private/spool", client: capture, reuseJournal: null });
+// @ts-expect-error Project read authority is not capture session authority.
+project.prepareSession({ runId: "a".repeat(64), label: "Reviewer", reuseJournal: "b".repeat(64) });

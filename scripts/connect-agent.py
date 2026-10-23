@@ -63,6 +63,9 @@ def main():
     parser.add_argument("--journal", help="legacy explicit fixed journal")
     parser.add_argument("--api-key-file", type=Path, help="protected plaintext integration API key; otherwise use OOJURO_API_KEY or hidden terminal input")
     parser.add_argument("--name", help="agent role used in automatic session journal names")
+    policy = parser.add_mutually_exclusive_group()
+    policy.add_argument("--reuse-journal", help="explicit same-integration journal for future new runs")
+    policy.add_argument("--new-journal-per-session", action="store_true", help="return future new runs to the default; retain pending routes")
     parser.add_argument("--adapter", choices=("codex", "claude-code"), required=True)
     parser.add_argument("--directory", type=Path)
     parser.add_argument("--source-root", type=Path)
@@ -76,6 +79,10 @@ def main():
     if not args.binary:
         raise ValueError("install the CLI first or supply --binary")
     legacy = args.source is not None or args.journal is not None
+    if args.reuse_journal is not None and (len(args.reuse_journal) != 64 or any(c not in "0123456789abcdef" for c in args.reuse_journal)):
+        raise ValueError("invalid reuse journal identifier")
+    if legacy and (args.reuse_journal or args.new_journal_per_session):
+        raise ValueError("session journal policy needs an integration key connection")
     if legacy and (not args.source or not args.journal or args.api_key_file):
         raise ValueError("legacy reuse needs both --source and --journal, without an API key file")
     if sys.platform != "linux":
@@ -89,8 +96,9 @@ def main():
     info = binary.lstat()
     if not stat.S_ISREG(info.st_mode) or info.st_uid != os.getuid() or info.st_mode & 0o022:
         raise ValueError("owned, non-writable CLI binary required")
+    selected_policy = args.reuse_journal or ("new journal per provider session" if args.new_journal_per_session or not (args.directory / "connection.json").exists() else "retain saved journal policy")
     plan = dict(adapter=args.adapter, transcript_root=str(source_root), installation=str(args.directory),
-                journal=args.journal if legacy else "new journal per provider session", capture="new activity only", service=not args.no_service,
+                journal=args.journal if legacy else selected_policy, capture="new activity only", service=not args.no_service,
                 excluded="existing history, referenced tool-result files, encrypted reasoning and non-transcript activity")
     print(json.dumps({"plan": plan}), flush=True)
     if args.dry_run:
@@ -108,6 +116,7 @@ def main():
     else:
         private_write(installed, binary.read_bytes(), mode=0o700)
     connection = args.directory / "connection.json"
+    existing_connection = connection.exists()
     env = os.environ.copy()
     env.pop("OOJURO_API_KEY", None)
     # Explicit loopback fixtures need no proxy. HTTPS production retains normal TLS/proxy checks.
@@ -145,12 +154,16 @@ def main():
             key = None
             key_file = temporary
         try:
-            cli("connect-api", "--base-url", args.base_url, "--api-key-file", str(key_file.absolute()), "--label", args.name)
+            policy_args = ["--reuse-journal", args.reuse_journal] if args.reuse_journal else []
+            cli("connect-api", "--base-url", args.base_url, "--api-key-file", str(key_file.absolute()), "--label", args.name, *policy_args)
         finally:
             if temporary is not None:
                 temporary.unlink()
                 sync_dir(temporary.parent)
     env.pop("OOJURO_API_KEY", None)
+    if existing_connection and not legacy and (args.reuse_journal or args.new_journal_per_session):
+        selection = ["--reuse-journal", args.reuse_journal] if args.reuse_journal else ["--new-journal-per-session"]
+        cli("capture-policy", *selection)
     connected = None
     if connection.exists():
         connected = cli("capture-status", allow_pending=True)

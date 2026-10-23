@@ -27,7 +27,8 @@ const USAGE: &str =
            [--window 5m|1h|1d] [--writer W]... [-k N] [--samples N] [--include-waiting] [--from T] [--to T]
                                                            stretches of activity ranked by how they looked
   forget   --id ID | --key K | --older-than T | --last DUR   [--writer W] [--no-proof] [--yes]
-  cloud connect-api --connection FILE --api-key-file PRIVATE_FILE --label NAME [--base-url URL]
+  cloud connect-api --connection FILE --api-key-file PRIVATE_FILE --label NAME [--base-url URL] [--reuse-journal ID]
+  cloud capture-policy --connection FILE (--reuse-journal ID | --new-journal-per-session)
   cloud connect-project --connection FILE --project ID --read-key-file PRIVATE_FILE [--base-url URL]
   cloud connect --connection FILE --source ID --journal ID --label NAME [--base-url URL]
   cloud connection | capture-status | capture-check --connection FILE
@@ -257,7 +258,7 @@ fn cloud(cli: &Cli) -> Result<()> {
         println!("{{\"project_read_connection_saved\":true}}");
         return Ok(());
     }
-    if cli.args.first().is_some_and(|c| matches!(c.as_str(), "connect-api" | "connect" | "connection" | "capture-status" | "capture-local-status" | "capture-check" | "capture")) {
+    if cli.args.first().is_some_and(|c| matches!(c.as_str(), "connect-api" | "capture-policy" | "connect" | "connection" | "capture-status" | "capture-local-status" | "capture-check" | "capture")) {
         return capture_command(cli);
     }
     if cli.args.first().is_some_and(|c| c == "mcp") {
@@ -365,6 +366,7 @@ fn capture_command(cli: &Cli) -> Result<()> {
         &cli.args,
         &[
             "--api-key-file",
+            "--reuse-journal",
             "--connection",
             "--base-url",
             "--source",
@@ -374,7 +376,7 @@ fn capture_command(cli: &Cli) -> Result<()> {
             "--source-root",
             "--adapter",
         ],
-        &["--once", "--accept-local-capture"],
+        &["--once", "--accept-local-capture", "--new-journal-per-session"],
     )?;
     let names: std::collections::BTreeSet<_> = o.vals.iter().map(|(k, _)| k).collect();
     if names.len() != o.vals.len() || o.rest.len() != 1 {
@@ -382,7 +384,8 @@ fn capture_command(cli: &Cli) -> Result<()> {
     }
     let command = o.rest[0].as_str();
     let allowed: &[&str] = match command {
-        "connect-api" => &["--connection","--api-key-file","--base-url","--label"],
+        "connect-api" => &["--connection","--api-key-file","--base-url","--label","--reuse-journal"],
+        "capture-policy" => &["--connection","--reuse-journal"],
         "connect" => &[
             "--connection",
             "--base-url",
@@ -396,16 +399,26 @@ fn capture_command(cli: &Cli) -> Result<()> {
         _ => return Err("invalid_capture_command".into()),
     };
     if o.vals.iter().any(|(k, _)| !allowed.contains(&k.as_str()))
-        || command != "capture" && !o.switches.is_empty()
+        || o.switches.iter().any(|flag| match command {
+            "capture" => !matches!(flag.as_str(), "--once" | "--accept-local-capture"),
+            "capture-policy" => flag != "--new-journal-per-session",
+            _ => true,
+        })
     {
         return Err("invalid_capture_arguments".into());
     }
     let val = |name: &str| o.one(name).ok_or("missing_capture_argument");
     let connection = std::path::Path::new(val("--connection")?);
     let value = match command {
-        "connect-api" => serde_json::to_value(capture::connect_api(connection,
+        "connect-api" => serde_json::to_value(capture::connect_api_reusing(connection,
             o.one("--base-url").unwrap_or("https://oojuro.com"),
-            std::path::Path::new(val("--api-key-file")?),val("--label")?)?)?,
+            std::path::Path::new(val("--api-key-file")?),val("--label")?,o.one("--reuse-journal"))?)?,
+        "capture-policy" => {
+            if o.one("--reuse-journal").is_some() == o.has("--new-journal-per-session") {
+                return Err("choose_one_journal_policy".into());
+            }
+            serde_json::to_value(capture::set_policy(connection, o.one("--reuse-journal"))?)?
+        },
         "connect" => serde_json::to_value(capture::connect(
             connection,
             o.one("--base-url").unwrap_or("https://oojuro.com"),

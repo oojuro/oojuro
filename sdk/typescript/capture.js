@@ -68,15 +68,19 @@ export class CaptureSpool {
   #maxBytes;
   #maxEvents;
   #sessionMode = false;
+  #sessionSchema = 0;
+  #reuseJournal = null;
   #role;
   #flushing = false;
   constructor(key) { if (key !== internal) fail("use_spool_open"); }
-  static async open({ directory, client, maxBytes = 64 * MiB, maxEvents = 10000, sessionLabel: role, signal } = {}) {
+  static async open({ directory, client, maxBytes = 64 * MiB, maxEvents = 10000, sessionLabel: role, reuseJournal, signal } = {}) {
     let db;
     try {
       if (!(client instanceof OojuroCaptureClient) || !Number.isSafeInteger(maxBytes) || maxBytes < 1024 || maxBytes > 256 * MiB ||
           !Number.isSafeInteger(maxEvents) || maxEvents < 1 || maxEvents > 100000) fail("invalid_configuration");
       if (role !== undefined) roleLabel(role);
+      if (reuseJournal !== undefined && reuseJournal !== null &&
+          (typeof reuseJournal !== "string" || !/^[0-9a-f]{64}$/.test(reuseJournal))) fail("invalid_configuration");
       privateDirectory(directory);
       const path = join(directory, "capture.sqlite");
       privateFile(path, true);
@@ -94,7 +98,7 @@ export class CaptureSpool {
             CREATE TABLE events (seq INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE, body TEXT NOT NULL, bytes INTEGER NOT NULL);
             CREATE TABLE batch (singleton INTEGER PRIMARY KEY CHECK(singleton=1), request TEXT NOT NULL, key_id TEXT NOT NULL, through INTEGER NOT NULL);
             PRAGMA user_version=1;`);
-        } else if (version !== 1 && version !== 2) fail("invalid_spool");
+        } else if (version !== 1 && version !== 2 && version !== 3) fail("invalid_spool");
         db.exec("COMMIT");
       } catch (error) { db.exec("ROLLBACK"); throw error; }
       let retained = db.prepare("SELECT binding FROM identity WHERE singleton=1").get()?.binding;
@@ -118,16 +122,35 @@ export class CaptureSpool {
       }
       const identity = JSON.parse(retained);
       const sessionMode = Array.isArray(identity) && identity.length === 6 && identity[4] === "session" && identity[5] === client.source;
+      let sessionSchema = db.prepare("PRAGMA user_version").get().user_version;
       if (!Array.isArray(identity) || identity.length !== (sessionMode ? 6 : 4) || identity[0] !== client.origin ||
           identity.slice(1, 4).some((id) => typeof id !== "string" || !/^[0-9a-f]{64}$/.test(id)) ||
-          db.prepare("PRAGMA user_version").get().user_version !== (sessionMode ? 2 : 1)) fail("spool_binding_mismatch");
+          (sessionMode ? ![2, 3].includes(sessionSchema) : sessionSchema !== 1)) fail("spool_binding_mismatch");
       if (sessionMode) {
         if (db.prepare("SELECT count(*) AS n FROM sessions").get().n > 1024) fail("session_limit");
+        if (sessionSchema === 2 && reuseJournal !== undefined && reuseJournal !== null) {
+          db.exec("BEGIN IMMEDIATE");
+          try {
+            // Old per-run NULL values retain their original default, including pending setup.
+            db.exec(`ALTER TABLE sessions ADD COLUMN reuse_journal TEXT;
+              ALTER TABLE session_settings ADD COLUMN reuse_journal TEXT;
+              PRAGMA user_version=3;`);
+            db.exec("COMMIT");
+          } catch (error) { db.exec("ROLLBACK"); throw error; }
+          sessionSchema = 3;
+        }
         const saved = db.prepare("SELECT role FROM session_settings WHERE singleton=1").get();
         if (!saved) fail("invalid_spool");
         role = roleLabel(role ?? saved.role);
         db.prepare("UPDATE session_settings SET role=? WHERE singleton=1").run(role);
-      } else if (role !== undefined) fail("session_capture_required");
+        if (sessionSchema === 3) {
+          const savedPolicy = db.prepare("SELECT reuse_journal FROM session_settings WHERE singleton=1").get();
+          if (!savedPolicy) fail("invalid_spool");
+          reuseJournal = reuseJournal === undefined ? savedPolicy.reuse_journal : reuseJournal;
+          if (reuseJournal !== null && (typeof reuseJournal !== "string" || !/^[0-9a-f]{64}$/.test(reuseJournal))) fail("invalid_spool");
+          db.prepare("UPDATE session_settings SET reuse_journal=? WHERE singleton=1").run(reuseJournal);
+        }
+      } else if (role !== undefined || reuseJournal !== undefined) fail("session_capture_required");
       const fd = openSync(directory, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
       try { fsyncSync(fd); } finally { closeSync(fd); }
       const spool = new CaptureSpool(internal);
@@ -137,6 +160,8 @@ export class CaptureSpool {
       spool.#maxBytes = maxBytes;
       spool.#maxEvents = maxEvents;
       spool.#sessionMode = sessionMode;
+      spool.#sessionSchema = sessionMode ? sessionSchema : 0;
+      spool.#reuseJournal = reuseJournal ?? null;
       spool.#role = role;
       if (spool.pending().events > maxEvents || spool.pending().bytes > maxBytes) fail("spool_full");
       return spool;
@@ -156,6 +181,10 @@ export class CaptureSpool {
   #route(raw, run) {
     const route = captureSession(JSON.parse(raw)), identity = JSON.parse(this.#binding);
     if (route.source !== identity[5] || route.agent_id !== identity[2] || route.run_id !== run) fail("spool_binding_mismatch");
+    if (this.#sessionSchema === 3) {
+      const intent = this.#db.prepare("SELECT reuse_journal FROM sessions WHERE run=?").get(run);
+      if (!intent || intent.reuse_journal !== null && route.journal !== intent.reuse_journal) fail("spool_binding_mismatch");
+    }
     return route;
   }
   toJSON() { return { type: "CaptureSpool" }; }
@@ -191,7 +220,9 @@ export class CaptureSpool {
         if (pending.events >= this.#maxEvents || pending.bytes + bytes > this.#maxBytes) fail("spool_full");
         if (this.#sessionMode && !this.#db.prepare("SELECT run FROM sessions WHERE run=?").get(event.runId)) {
           if (this.#db.prepare("SELECT count(*) AS n FROM sessions").get().n >= 1024) fail("session_limit");
-          this.#db.prepare("INSERT INTO sessions VALUES(?,?,NULL)").run(event.runId, sessionLabel(this.#role, event.runId));
+          if (this.#sessionSchema === 3) {
+            this.#db.prepare("INSERT INTO sessions VALUES(?,?,NULL,?)").run(event.runId, sessionLabel(this.#role, event.runId), this.#reuseJournal);
+          } else this.#db.prepare("INSERT INTO sessions VALUES(?,?,NULL)").run(event.runId, sessionLabel(this.#role, event.runId));
         }
         this.#db.prepare("INSERT INTO events(id,body,bytes) VALUES(?,?,?)").run(event.eventId, body, bytes);
         return { eventId: event.eventId, queued: true };
@@ -244,12 +275,13 @@ export class CaptureSpool {
         if (this.#sessionMode) {
           const run = batch.events[0].runId;
           if (batch.events.some(event => event.runId !== run || event.input.agent_id !== this.agentId)) fail("spool_binding_mismatch");
-          const intent = this.#db.prepare("SELECT label,route FROM sessions WHERE run=?").get(run);
+          const intent = this.#db.prepare(`SELECT label,route${this.#sessionSchema === 3 ? ",reuse_journal" : ""} FROM sessions WHERE run=?`).get(run);
           if (!intent) fail("invalid_spool");
           roleLabel(intent.label);
           if (intent.route) route = this.#route(intent.route, run);
           else {
-            const accepted = await this.#client.prepareSession({ runId: run, label: intent.label }).send({ signal });
+            const accepted = await this.#client.prepareSession({ runId: run, label: intent.label,
+              ...(intent.reuse_journal ? { reuseJournal: intent.reuse_journal } : {}) }).send({ signal });
             if (accepted.source !== this.#client.source || accepted.agent_id !== this.agentId || accepted.run_id !== run)
               fail("spool_binding_mismatch");
             route = this.#transaction(() => {

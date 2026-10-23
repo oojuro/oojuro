@@ -11,6 +11,9 @@ export class CaptureSpool {
     maxEvents?: number;
     /** Base role for new session labels; existing per-run intent is never renamed. */
     sessionLabel?: string;
+    /** Explicit same-integration target for unseen runs. Undefined retains saved policy; null selects new-session default.
+     * Pending/resumed runs keep their originally persisted target. First opt-in upgrades session schema v2 to v3. */
+    reuseJournal?: OpaqueId | null;
     signal?: AbortSignal;
   }): Promise<CaptureSpool>;
   readonly agentId: string;

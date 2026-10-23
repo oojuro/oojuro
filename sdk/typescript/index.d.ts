@@ -402,7 +402,7 @@ export class OojuroCaptureClient {
   readonly origin: string;
   readonly source: OpaqueId;
   discover(options?: { signal?: AbortSignal }): Promise<CaptureDiscovery>;
-  prepareSession(input: { runId: OpaqueId; label: string }): PreparedCaptureSession;
+  prepareSession(input: { runId: OpaqueId; label: string; reuseJournal?: OpaqueId }): PreparedCaptureSession;
   /** Bound batches contain only the route's single run and agent; mixed inputs refuse before effects. */
   prepareBatch(input: { requestId: string; events: readonly CaptureEvent[]; session?: CaptureSession }): PreparedCapture;
 }

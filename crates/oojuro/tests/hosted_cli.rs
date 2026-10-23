@@ -595,3 +595,36 @@ fn hosted_connection_and_cursor_files_require_private_real_owner_files() {
         &["records", "--cursor-file", cursor.to_str().unwrap()],
     ));
 }
+
+#[test]
+fn local_capture_policy_is_explicit_private_and_does_not_claim_target_authority() {
+    let s = Scratch::new("hosted-local-policy");
+    fs::set_permissions(&s.0, fs::Permissions::from_mode(0o700)).unwrap();
+    let path = s.path("capture.json");
+    let key = format!("ojc_{}_{}", id('1'), "A".repeat(43));
+    let key_file = s.path("integration-key");
+    private(&key_file, key.as_bytes());
+    let target = id('a');
+    let connected = run(&s, &path, &["connect-api", "--api-key-file", key_file.to_str().unwrap(),
+        "--label", "Reviewer", "--base-url", "http://127.0.0.1:9", "--reuse-journal", &target]);
+    assert!(connected.status.success(), "{}", String::from_utf8_lossy(&connected.stderr));
+    assert_eq!(serde_json::from_slice::<Value>(&connected.stdout).unwrap()["reuse_journal"], target);
+    let out = run(&s, &path, &["capture-policy", "--reuse-journal", &target]);
+    assert!(out.status.success(), "{}", String::from_utf8_lossy(&out.stderr));
+    let value: Value = serde_json::from_slice(&out.stdout).unwrap();
+    assert_eq!(value["journal_policy"], "existing");
+    assert_eq!(value["reuse_journal"], target);
+    assert_eq!(value["access_verified"], false);
+    assert!(!String::from_utf8_lossy(&out.stdout).contains(&key));
+    let saved = fs::read(&path).unwrap();
+    assert_eq!(fs::metadata(&path).unwrap().permissions().mode() & 0o777, 0o600);
+    for args in [vec!["capture-policy"], vec!["capture-policy", "--reuse-journal", "name"],
+        vec!["capture-policy", "--reuse-journal", &target, "--new-journal-per-session"]] {
+        assert!(!run(&s, &path, &args).status.success());
+        assert_eq!(fs::read(&path).unwrap(), saved);
+    }
+    let out = run(&s, &path, &["capture-policy", "--new-journal-per-session"]);
+    assert!(out.status.success());
+    assert_eq!(serde_json::from_slice::<Value>(&out.stdout).unwrap()["journal_policy"], "new_session");
+    assert!(serde_json::from_slice::<Value>(&fs::read(&path).unwrap()).unwrap().get("reuse_journal").is_none());
+}

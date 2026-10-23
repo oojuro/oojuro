@@ -19,7 +19,7 @@ use std::{
     time::Duration,
 };
 mod session;
-pub use session::{ApiConnectionInfo, connect_api};
+pub use session::{ApiConnectionInfo, PolicyInfo, connect_api, connect_api_reusing, set_policy};
 const MIB: usize = 1 << 20;
 const STATE_LIMIT: usize = 40 * MIB;
 const LINE_LIMIT: usize = 16 * MIB;
@@ -117,6 +117,8 @@ struct Connection {
     credential_id: String,
     label: String,
     until: i64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    reuse_journal: Option<String>,
 }
 /// Public connection information: never includes the capture secret.
 #[derive(Serialize)]
@@ -161,6 +163,7 @@ pub fn connect(
         credential_id,
         label: label.into(),
         until,
+        reuse_journal: None,
     };
     create_private(
         path,
@@ -226,7 +229,7 @@ impl CaptureClient {
         if !matches!(cfg.version, 1 | 2)
             || origin(&cfg.base_url)? != cfg.base_url
             || !opaque(&cfg.source)
-            || cfg.version == 1 && !opaque(&cfg.journal)
+            || cfg.version == 1 && (!opaque(&cfg.journal) || cfg.reuse_journal.is_some())
             || cfg.version == 2 && !cfg.journal.is_empty()
             || !opaque(&cfg.credential_id)
         {
@@ -599,6 +602,7 @@ impl Spool {
         let s = &spool.state;
         if s.version != client.cfg.version
             || s.sessions.len() > FILE_LIMIT
+            || s.sessions.values().any(|session| session.reuse_journal.as_deref().is_some_and(|id| !opaque(id)))
             || s.version == 1 && !s.sessions.is_empty()
             || s.base != client.cfg.base_url
             || s.journal != info.journal
@@ -680,7 +684,7 @@ impl Spool {
                     .get(&run)
                     .ok_or("missing_durable_session_mapping")?;
                 if saved.route.is_none() {
-                    let route = client.provision(&info, &run, &saved.label)?;
+                    let route = client.provision(&info, &run, &saved.label, saved.reuse_journal.as_deref())?;
                     self.state
                         .sessions
                         .get_mut(&run)
@@ -693,6 +697,9 @@ impl Spool {
                     .clone()
                     .ok_or("invalid_session_route")?;
                 route.validate(client, &info, &run)?;
+                if self.state.sessions[&run].reuse_journal.as_deref().is_some_and(|id| id != route.journal) {
+                    return Err("invalid_session_route");
+                }
                 Some(route)
             } else {
                 None
@@ -829,6 +836,7 @@ impl Spool {
                         .or_insert_with(|| session::Session {
                             label: session::name(&client.cfg.label, format.name(), &run),
                             route: None,
+                            reuse_journal: client.cfg.reuse_journal.clone(),
                         });
                 }
                 let batch = Batch {
@@ -1102,7 +1110,8 @@ mod tests {
                     } else if provisioning {
                         let request: serde_json::Value = serde_json::from_slice(&body).unwrap();
                         let run = request["run_id"].as_str().unwrap();
-                        let journal = blake3::hash(run.as_bytes()).to_hex().to_string();
+                        let journal = request["reuse_journal"].as_str().map(str::to_owned)
+                            .unwrap_or_else(|| blake3::hash(run.as_bytes()).to_hex().to_string());
                         ps.lock().unwrap().push(request.clone());
                         json!({"format":1,"journal":journal,"source":cfg.source,"agent_id":"a".repeat(64),"run_id":run,"project":"9".repeat(64),"events_url":format!("/api/capture/journals/{journal}/events")})
                     } else {
@@ -1296,6 +1305,54 @@ mod tests {
         );
         assert!(records[0].text.starts_with("[REDACTED:oojuro:"));
     }
+    #[test]
+    fn api_reuse_policy_changes_only_unseen_runs_and_retains_unknown_original_intent() {
+        let f = Fixture::new();
+        let connection = f.api_connection();
+        let root = f.dir.join("reuse-sessions");
+        fs::create_dir(&root).unwrap();
+        let first = root.join("rollout-first.jsonl");
+        let header = |run: &str| format!("{}\n", json!({"type":"session_meta","payload":{"id":run}}));
+        fs::write(&first, [header("old-run").as_bytes(), &codex("excluded original history")].concat()).unwrap();
+        let spool = f.dir.join("reuse-spool");
+        capture(&connection, &spool, &root, "codex", true).unwrap();
+        OpenOptions::new().append(true).open(&first).unwrap().write_all(&codex("pending original")).unwrap();
+        f.provision_lost.store(true, Ordering::SeqCst);
+        assert_eq!(capture(&connection, &spool, &root, "codex", true).err(), Some("session_provision_outcome_unknown"));
+        let selected = "9".repeat(64);
+        let policy = set_policy(&connection, Some(&selected)).unwrap();
+        assert!(!policy.access_verified);
+        let before = fs::read(&connection).unwrap();
+        assert!(set_policy(&connection, Some("display name")).is_err());
+        assert_eq!(fs::read(&connection).unwrap(), before);
+        f.lost.store(true, Ordering::SeqCst);
+        assert_eq!(capture(&connection, &spool, &root, "codex", true).err(), Some("capture_outcome_unknown"));
+        let second = root.join("rollout-second.jsonl");
+        fs::write(&second, [header("next-run").as_bytes(), &codex("new selected activity")].concat()).unwrap();
+        capture(&connection, &spool, &root, "codex", true).unwrap();
+        capture(&connection, &spool, &root, "codex", true).unwrap();
+        let state: State = serde_json::from_slice(&fs::read(spool.join("state.json")).unwrap()).unwrap();
+        assert_eq!(state.sessions.len(), 2);
+        assert_eq!(state.sessions.values().filter(|session| session.reuse_journal.is_some()).count(), 1);
+        for session in state.sessions.values().filter(|session| session.reuse_journal.is_some()) {
+            assert_eq!(session.route.as_ref().unwrap().journal, selected);
+        }
+        let requests = f.provisions.lock().unwrap();
+        assert_eq!(requests[0], requests[1], "pending v2 intent never adopts changed local policy");
+        assert!(requests[0].get("reuse_journal").is_none());
+        assert_eq!(requests.last().unwrap()["reuse_journal"], selected);
+        drop(requests);
+        let wires = f.wires.lock().unwrap();
+        assert_eq!(wires[0], wires[1]);
+        drop(wires);
+        assert_eq!(set_policy(&connection, None).unwrap().journal_policy, "new_session");
+        let third = root.join("rollout-third.jsonl");
+        fs::write(&third, [header("default-again").as_bytes(), &codex("new default activity")].concat()).unwrap();
+        capture(&connection, &spool, &root, "codex", true).unwrap();
+        capture(&connection, &spool, &root, "codex", true).unwrap();
+        assert!(f.provisions.lock().unwrap().last().unwrap().get("reuse_journal").is_none());
+    }
+
     #[test]
     fn api_session_mapping_and_original_batch_survive_both_lost_acknowledgements() {
         let f = Fixture::new();

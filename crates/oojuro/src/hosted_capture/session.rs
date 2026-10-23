@@ -1,17 +1,21 @@
 //! Explicit version-2 API-key setup and durable provider-session routing.
 use super::*;
-#[derive(Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct ApiConnection {
     version: u32,
     base_url: String,
     integration_key: String,
     label: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    reuse_journal: Option<String>,
 }
 #[derive(Serialize)]
 pub struct ApiConnectionInfo {
     pub journal_mode: &'static str,
     pub local_key_saved: bool,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reuse_journal: Option<String>,
 }
 fn label(value: &str) -> Result<()> {
     if value.trim() != value
@@ -28,6 +32,9 @@ fn normalized(cfg: ApiConnection) -> Result<Connection> {
         return Err("invalid_connection");
     }
     label(&cfg.label)?;
+    if cfg.reuse_journal.as_deref().is_some_and(|id| !opaque(id)) {
+        return Err("invalid_reuse_journal");
+    }
     let token = cfg
         .integration_key
         .strip_prefix("ojc_")
@@ -58,6 +65,7 @@ fn normalized(cfg: ApiConnection) -> Result<Connection> {
         credential_id: hash.finalize().to_hex().to_string(),
         label: cfg.label,
         until: 0,
+        reuse_journal: cfg.reuse_journal,
     })
 }
 pub(super) fn decode(bytes: &[u8]) -> Result<Connection> {
@@ -70,6 +78,15 @@ pub fn connect_api(
     key_file: &Path,
     name: &str,
 ) -> Result<ApiConnectionInfo> {
+    connect_api_reusing(path, base, key_file, name, None)
+}
+pub fn connect_api_reusing(
+    path: &Path,
+    base: &str,
+    key_file: &Path,
+    name: &str,
+    reuse_journal: Option<&str>,
+) -> Result<ApiConnectionInfo> {
     label(name)?;
     let bytes = read_private(key_file, 4096).map_err(|_| "private_api_key_file_required")?;
     let key = std::str::from_utf8(&bytes)
@@ -80,12 +97,14 @@ pub fn connect_api(
         base_url: origin(base)?,
         integration_key: key.into(),
         label: name.into(),
+        reuse_journal: reuse_journal.map(str::to_owned),
     };
     normalized(ApiConnection {
         version: cfg.version,
         base_url: cfg.base_url.clone(),
         integration_key: cfg.integration_key.clone(),
         label: cfg.label.clone(),
+        reuse_journal: cfg.reuse_journal.clone(),
     })?;
     create_private(
         path,
@@ -94,8 +113,34 @@ pub fn connect_api(
     Ok(ApiConnectionInfo {
         journal_mode: "session",
         local_key_saved: true,
+        reuse_journal: cfg.reuse_journal,
     })
 }
+#[derive(Serialize)]
+pub struct PolicyInfo {
+    pub journal_policy: &'static str,
+    pub reuse_journal: Option<String>,
+    pub access_verified: bool,
+}
+/// Local configuration only; pending per-run intents never change.
+pub fn set_policy(path: &Path, reuse_journal: Option<&str>) -> Result<PolicyInfo> {
+    let mut cfg: ApiConnection = serde_json::from_slice(&read_private(path, 8192)
+        .map_err(|_| "private_connection_required")?).map_err(|_| "invalid_connection")?;
+    normalized(cfg.clone())?;
+    if reuse_journal.is_some_and(|id| !opaque(id)) { return Err("invalid_reuse_journal"); }
+    cfg.reuse_journal = reuse_journal.map(str::to_owned);
+    let parent = path.parent().ok_or("invalid_path")?;
+    let temporary = parent.join(format!("policy-pending-{}", random_id()?));
+    create_private(&temporary, &serde_json::to_vec(&cfg).map_err(|_| "invalid_connection")?)?;
+    if fs::rename(&temporary, path).is_err() {
+        let _ = fs::remove_file(&temporary);
+        return Err("policy_write_outcome_unknown");
+    }
+    File::open(parent).and_then(|file| file.sync_all()).map_err(|_| "policy_write_outcome_unknown")?;
+    Ok(PolicyInfo { journal_policy: if reuse_journal.is_some() { "existing" } else { "new_session" },
+        reuse_journal: cfg.reuse_journal, access_verified: false })
+}
+
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 pub(super) struct Route {
@@ -132,15 +177,21 @@ impl Route {
 pub(super) struct Session {
     pub label: String,
     pub route: Option<Route>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reuse_journal: Option<String>,
 }
 impl CaptureClient {
-    pub(super) fn provision(&self, info: &Discovery, run: &str, name: &str) -> Result<Route> {
+    pub(super) fn provision(&self, info: &Discovery, run: &str, name: &str, reuse_journal: Option<&str>) -> Result<Route> {
         if self.cfg.version != 2 || !opaque(run) {
             return Err("invalid_session_route");
         }
         label(name)?;
-        let bytes = serde_json::to_vec(&json!({"format":1,"run_id":run,"label":name}))
-            .map_err(|_| "invalid_session_route")?;
+        let mut request = json!({"format":1,"run_id":run,"label":name});
+        if let Some(journal) = reuse_journal {
+            if !opaque(journal) { return Err("invalid_reuse_journal"); }
+            request["reuse_journal"] = json!(journal);
+        }
+        let bytes = serde_json::to_vec(&request).map_err(|_| "invalid_session_route")?;
         let reply = self
             .http
             .post(format!("{}/api/capture/sessions", self.cfg.base_url))
@@ -155,6 +206,9 @@ impl CaptureClient {
         }
         let route: Route = serde_json::from_slice(&bytes).map_err(|_| "invalid_session_route")?;
         route.validate(self, info, run)?;
+        if reuse_journal.is_some_and(|journal| journal != route.journal) {
+            return Err("invalid_session_route");
+        }
         Ok(route)
     }
 }

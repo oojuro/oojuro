@@ -30,6 +30,12 @@ if command=="connect-api":
  fd=os.open(path,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600)
  with os.fdopen(fd,"w") as out:json.dump({"version":2,"integration_key":key},out)
  result={"journal_mode":"session","local_key_saved":True}
+elif command=="capture-policy":
+ saved=json.loads(path.read_text())
+ if "--reuse-journal" in args:saved["reuse_journal"]=args[args.index("--reuse-journal")+1]
+ else:saved.pop("reuse_journal",None)
+ path.write_text(json.dumps(saved))
+ result={"journal_policy":"existing" if "reuse_journal" in saved else "new_session","access_verified":False}
 elif command=="capture-status":result={"journal":"a"*64,"journal_mode":"session"}
 elif command=="capture":result={"delivered":0,"pending":0,"tracked_files":1,"new_lines":0}
 else:raise Exception("unexpected command")
@@ -62,6 +68,19 @@ print(json.dumps(result))
             self.assertEqual(second.returncode, 0, second.stderr.decode())
             self.assertEqual(connection.read_bytes(), original)
             self.assertNotIn(key.encode(), second.stdout + second.stderr)
+            target = "b" * 64
+            selected = subprocess.run(command + ["--reuse-journal", target], env=env, capture_output=True, timeout=10)
+            self.assertEqual(selected.returncode, 0, selected.stderr.decode())
+            self.assertEqual(json.loads(connection.read_text())["reuse_journal"], target)
+            retained = connection.read_bytes()
+            restarted = subprocess.run(command, env=env, capture_output=True, timeout=10)
+            self.assertEqual(restarted.returncode, 0, restarted.stderr.decode())
+            self.assertEqual(connection.read_bytes(), retained, "unspecified policy keeps saved choice")
+            cleared = subprocess.run(command + ["--new-journal-per-session"], env=env, capture_output=True, timeout=10)
+            self.assertEqual(cleared.returncode, 0, cleared.stderr.decode())
+            self.assertEqual(connection.read_bytes(), original)
+            self.assertNotIn(key.encode(), selected.stdout + selected.stderr + cleared.stdout + cleared.stderr)
+            self.assertNotIn(key, (directory / "calls.jsonl").read_text())
 
     def test_dry_run_needs_no_secret_or_installation_effects(self):
         with tempfile.TemporaryDirectory(prefix="oojuro-installer-plan-") as temporary:
