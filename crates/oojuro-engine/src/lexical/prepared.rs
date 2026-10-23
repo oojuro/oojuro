@@ -33,7 +33,7 @@ pub(super) fn rank(
             .filter(|term| {
                 term.contains('_')
                     && index.postings.get(term.as_str()).is_some_and(|list| {
-                        list.iter().any(|(row, _)| index.visible(*row, q, view))
+                        list.iter().any(|(row, _)| index.visible(*row as usize, q, view))
                     })
             })
             .cloned()
@@ -49,7 +49,7 @@ pub(super) fn rank(
                 || !index
                     .postings
                     .get(term)
-                    .is_some_and(|list| list.iter().any(|(row, _)| index.visible(*row, q, view))))
+                    .is_some_and(|list| list.iter().any(|(row, _)| index.visible(*row as usize, q, view))))
         {
             backoff.push((term.clone(), *count));
         }
@@ -130,7 +130,7 @@ pub(super) fn rank(
             if first && let Some(list) = index.postings.get(term.as_str()) {
                 candidates.extend(
                     list.iter()
-                        .map(|(row, _)| *row)
+                        .map(|(row, _)| *row as usize)
                         .filter(|row| eligible(*row)),
                 );
             }
@@ -143,7 +143,7 @@ pub(super) fn rank(
                 && (!anchored
                     || original_anchors.iter().any(|term| {
                         index.postings.get(term).is_some_and(|list| {
-                            list.binary_search_by_key(&row, |(r, _)| *r).is_ok()
+                            list.binary_search_by_key(&row, |(r, _)| *r as usize).is_ok()
                         })
                     }))
             {
@@ -164,7 +164,7 @@ pub(super) fn rank(
                     .get(term.as_str())
                     .into_iter()
                     .flatten()
-                    .filter_map(|(row, tf)| rows.binary_search(row).ok().map(|i| (i, *tf)))
+                    .filter_map(|(row, tf)| rows.binary_search(&(*row as usize)).ok().map(|i| (i, *tf)))
                     .collect()
             })
             .collect()
@@ -204,7 +204,7 @@ pub(super) fn rank(
                     .get(term.as_str())
                     .into_iter()
                     .flatten()
-                    .filter(|(row, _)| index.visible(*row, q, view))
+                    .filter(|(row, _)| index.visible(*row as usize, q, view))
                     .map(|(_, tf)| if scope_model { 1 } else { u64::from(*tf) })
                     .sum()
             })

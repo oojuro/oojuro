@@ -65,7 +65,8 @@ pub struct Index {
     applied: usize,
     failed: bool,
     documents: Vec<Document>,
-    postings: BTreeMap<String, Vec<(usize, u32)>>,
+    // Both authorities cap rows at 100k; checked u32 handles avoid tuple padding.
+    postings: BTreeMap<String, Vec<(u32, u32)>>,
     // At most 100k events: below trace's 2^17 half-window rotation threshold.
     seen: HashMap<[u8; 16], usize>,
 }
@@ -157,8 +158,9 @@ impl Index {
                 .map_err(|_| Error::Invalid)?;
             let scope = u32::try_from(terms.len()).map_err(|_| Error::Invalid)?;
             let row = self.documents.len();
+            let posting_row = u32::try_from(row).map_err(|_| Error::Invalid)?;
             for (term, tf) in terms {
-                self.postings.entry(term).or_default().push((row, tf));
+                self.postings.entry(term).or_default().push((posting_row, tf));
             }
             // Internal lexical carrier only. Never a fabricated capture receipt:
             // no harness identity/policy/provenance is exported from this path.
@@ -235,8 +237,9 @@ impl Index {
             let length = u32::try_from(length).map_err(|_| Error::Invalid)?;
             let scope = u32::try_from(terms.len()).map_err(|_| Error::Invalid)?;
             let row = self.documents.len();
+            let posting_row = u32::try_from(row).map_err(|_| Error::Invalid)?;
             for (term, count) in terms {
-                self.postings.entry(term).or_default().push((row, count));
+                self.postings.entry(term).or_default().push((posting_row, count));
             }
             self.documents.push(Document {
                 event: event.clone(),

@@ -304,9 +304,9 @@ impl PersistentIndex {
         for (term, list) in &self.index.postings {
             let selected: Vec<_> = list
                 .iter()
-                .skip_while(|(r, _)| *r < start)
-                .take_while(|(r, _)| *r < end)
-                .map(|(r, tf)| ((*r - start) as u32, *tf))
+                .skip_while(|(r, _)| (*r as usize) < start)
+                .take_while(|(r, _)| (*r as usize) < end)
+                .map(|(r, tf)| ((*r as usize - start) as u32, *tf))
                 .collect();
             if !selected.is_empty() {
                 postings.insert(term.clone(), selected);
@@ -508,7 +508,7 @@ fn load(
                     .checked_add(u64::from(tf))
                     .ok_or(Error::Invalid)?;
                 scopes[row] += 1;
-                output.push((row, tf));
+                output.push((u32::try_from(row).map_err(|_| Error::Invalid)?, tf));
             }
         }
         expected = end;
