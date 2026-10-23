@@ -1,5 +1,6 @@
 //! Tokenization and query parsing shared by the v3 reader and the v4 engine.
 //! Changing any function here changes the derived index of every format.
+#[cfg(test)]
 fn tokens(text: &str) -> Vec<String> {
     text.split(|c: char| !c.is_alphanumeric())
         .filter(|s| !s.is_empty())
@@ -14,6 +15,7 @@ pub const QUERY_STOP_WORDS: &[&str] = &[
     "this", "that", "as", "at", "be", "by",
 ];
 
+#[cfg(test)]
 pub(crate) fn retrieval_terms(text: &str) -> Vec<String> {
     let mut terms = tokens(text);
     // Preserve exact snake_case names alongside their searchable components.
@@ -24,6 +26,20 @@ pub(crate) fn retrieval_terms(text: &str) -> Vec<String> {
             .map(str::to_lowercase),
     );
     terms
+}
+
+/// Same components and snake_case features without allocating every occurrence.
+pub(crate) fn for_each_retrieval_term<'a>(text: &'a str, mut visit: impl FnMut(&'a str)) {
+    for_each_word(text, |word| {
+        let mut any = false;
+        for part in word.split('_').filter(|part| !part.is_empty()) {
+            any = true;
+            visit(part);
+        }
+        if any && word.contains('_') {
+            visit(word);
+        }
+    });
 }
 
 pub(crate) fn literal_query(text: &str) -> Option<&str> {

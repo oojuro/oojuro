@@ -79,7 +79,7 @@ impl Index {
                 return Err(Error::Conflict);
             }
             bytes = bytes
-                .checked_add(json(r, MAX_BATCH_BYTES)?.len())
+                .checked_add(json_size(r, MAX_BATCH_BYTES)?)
                 .ok_or(Error::Bounds)?;
             if bytes > MAX_STATE_BYTES {
                 return Err(Error::Bounds);
@@ -243,7 +243,7 @@ impl Index {
                 excerpt: row.text[start..end].into(),
             });
         }
-        json(&output, q.max_bytes)?;
+        json_size(&output, q.max_bytes)?;
         Ok(output)
     }
 }

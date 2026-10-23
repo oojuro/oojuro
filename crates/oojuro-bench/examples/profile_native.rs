@@ -131,6 +131,25 @@ fn main() -> Result<()> {
                 },
             ))?;
             let query_us = elapsed(start);
+            let signature = blake3::hash(&serde_json::to_vec(
+                &hits
+                    .iter()
+                    .map(|h| {
+                        (
+                            &h.id,
+                            h.bits.to_bits(),
+                            h.continued,
+                            h.valid_at,
+                            h.reported_recorded_at,
+                            h.start,
+                            h.end,
+                            &h.excerpt,
+                        )
+                    })
+                    .collect::<Vec<_>>(),
+            )?)
+            .to_hex()
+            .to_string();
             assert_eq!(
                 actual
                     .iter()
@@ -146,6 +165,7 @@ fn main() -> Result<()> {
                 "records":count,"text_bytes":bytes,"native_search_us":native_search_us,"native_get_us":native_get_us,
                 "public_materialize_us":materialize_us,"row_prepare_us":rows_us,"projection_build_us":build_us,
                 "projection_query_us":query_us,"exact_ranked_ids_and_score_bits":true,"originals_exact":true,
+                "ranked_ids_bits_metadata_excerpt_blake3":signature,
                 "scope":"local diagnostic on copied AWS fixture; not hosted or comparative acceptance"})
             );
         }

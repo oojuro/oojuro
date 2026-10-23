@@ -1,13 +1,13 @@
 //! Explicit flat-record namespace. Harness CaptureLog/receipts remain a separate unchanged format.
 //! Reported agent identities and stored data are not verified truth or instructions.
 mod authority;
+pub mod context;
 mod index;
 pub mod paged;
-pub mod ranking;
-pub mod context;
-pub mod rank_tables;
 pub mod persistent;
 pub mod projection;
+pub mod rank_tables;
+pub mod ranking;
 mod view;
 pub use authority::{Commit, RecordLog, Watermark};
 pub use index::{Hit, Index, Query, Search};
@@ -176,31 +176,45 @@ fn present_option<'de, D: serde::Deserializer<'de>, T: Deserialize<'de>>(
 
 // All caller-derived serialization is bounded before copying/allocating a batch.
 fn json<T: Serialize + ?Sized>(value: &T, limit: usize) -> Result<Vec<u8>> {
-    struct Bounded {
-        bytes: Vec<u8>,
-        limit: usize,
-        full: bool,
-    }
-    impl std::io::Write for Bounded {
+    bounded_json(value, limit, true).map(|out| out.bytes.unwrap())
+}
+fn json_size<T: Serialize + ?Sized>(value: &T, limit: usize) -> Result<usize> {
+    bounded_json(value, limit, false).map(|out| out.size)
+}
+struct BoundedJson {
+    bytes: Option<Vec<u8>>,
+    size: usize,
+    limit: usize,
+    full: bool,
+}
+fn bounded_json<T: Serialize + ?Sized>(
+    value: &T,
+    limit: usize,
+    collect: bool,
+) -> Result<BoundedJson> {
+    impl std::io::Write for BoundedJson {
         fn write(&mut self, buf: &[u8]) -> std::io::Result<usize> {
             if self
-                .bytes
-                .len()
+                .size
                 .checked_add(buf.len())
                 .is_none_or(|n| n > self.limit)
             {
                 self.full = true;
                 return Err(std::io::Error::other("serialized bound"));
             }
-            self.bytes.extend_from_slice(buf);
+            self.size += buf.len();
+            if let Some(bytes) = &mut self.bytes {
+                bytes.extend_from_slice(buf);
+            }
             Ok(buf.len())
         }
         fn flush(&mut self) -> std::io::Result<()> {
             Ok(())
         }
     }
-    let mut out = Bounded {
-        bytes: vec![],
+    let mut out = BoundedJson {
+        bytes: collect.then(Vec::new),
+        size: 0,
         limit,
         full: false,
     };
@@ -211,7 +225,7 @@ fn json<T: Serialize + ?Sized>(value: &T, limit: usize) -> Result<Vec<u8>> {
             Error::Invalid
         });
     }
-    Ok(out.bytes)
+    Ok(out)
 }
 
 /// Explicit opt-in retained-control lifecycle namespace; no implicit v2 conversion.
