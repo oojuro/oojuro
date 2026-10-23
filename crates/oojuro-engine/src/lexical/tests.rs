@@ -620,3 +620,43 @@ fn streamed_analysis_matches_original_features_with_a_bounded_temporary_stem_cac
     );
     assert_eq!(cache.len(), before);
 }
+
+#[test]
+#[ignore = "explicit copied ArguAna corpus allocation diagnostic"]
+fn retained_allocation_diagnostic() {
+    fn memory() -> serde_json::Value {
+        serde_json::json!(std::fs::read_to_string("/proc/self/status").unwrap().lines()
+            .filter(|line| line.starts_with("VmRSS:") || line.starts_with("VmHWM:") || line.starts_with("RssAnon:"))
+            .map(str::to_owned).collect::<Vec<_>>())
+    }
+    let initial = memory();
+    let path = std::env::var_os("OOJURO_RAM_CORPUS").expect("explicit copied public fixture path");
+    let file = std::fs::File::open(path).unwrap();
+    use std::io::BufRead;
+    let docs: Vec<String> = std::io::BufReader::new(file).lines().map(|line| {
+        let d: serde_json::Value = serde_json::from_str(&line.unwrap()).unwrap();
+        let title = d["title"].as_str().unwrap_or("");
+        let text = d["text"].as_str().unwrap();
+        if title.is_empty() { text.to_owned() } else { format!("{title}\n{text}") }
+    }).collect();
+    assert_eq!(docs.len(), 8674);
+    assert_eq!(docs.iter().map(String::len).sum::<usize>(), 8984758);
+    let after_input = memory();
+    let index = Index::from_record_rows("diagnostic", 1, docs.iter().enumerate().map(|(i,text)|((i+1) as u64,0,text.as_str(),true))).unwrap();
+    let after_build = memory();
+    let stats = serde_json::json!({
+        "document_array_bytes": index.documents.capacity()*std::mem::size_of::<Document>(),
+        "original_text_capacity_bytes": index.documents.iter().map(|d|d.event.text.capacity()).sum::<usize>(),
+        "postings_entries": index.postings.values().map(Vec::len).sum::<usize>(),
+        "postings_capacity_bytes": index.postings.values().map(|p|p.capacity()*std::mem::size_of::<(usize,u32)>()).sum::<usize>(),
+        "vocabulary_entries": index.postings.len(),
+        "vocabulary_string_capacity_bytes": index.postings.keys().map(String::capacity).sum::<usize>(),
+        "note":"capacity byte estimates exclude BTree nodes, allocator overhead, RecordLog/view and caller metadata"});
+    let hits = index.search(&Query{writer:"diagnostic",agent:1,text:"art censorship government",from:i64::MIN,to:i64::MAX,k:101}).unwrap();
+    let after_query = memory();
+    assert!(!hits.is_empty());
+    drop(index);
+    let after_drop_index = memory();
+    drop(docs);
+    println!("{}",serde_json::json!({"initial":initial,"after_input":after_input,"after_build":after_build,"after_query":after_query,"after_drop_index":after_drop_index,"after_drop_input":memory(),"retained":stats}));
+}
