@@ -26,6 +26,12 @@ Packaging requires Python 3.11+ and the Cargo registry archives from the build. 
 must match Cargo.lock; license files are extracted from those verified archives, not a mutable
 registry source directory.
 
+Packaging reads only the selected normal/build graph and its checksum-verified archives; it
+does not run workspace-wide metadata resolution or require unused benchmark archives. Crate
+identity/license fields come from each verified archive's normalized Cargo.toml. Validation
+remains active under `python -O`/`PYTHONOPTIMIZE`, and empty or whitespace-only registry notices
+are refused.
+
 Ship the entire output, including LICENSE, NOTICE, `licenses/`, Cargo.lock and manifest. The
 packager retains all legal files found in the selected crates, including nested notices for
 ring/BoringSSL/fiat, zstd, Unicode data, stemmers and webpki root certificates. It also preserves
