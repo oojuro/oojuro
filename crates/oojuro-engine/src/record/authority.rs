@@ -249,6 +249,7 @@ impl RecordLog {
             self.prefixes.last().ok_or(Error::Authority)?.digest,
             &canonical,
         );
+        drop(canonical);
         let watermark = self.seal_prefix(
             sequence,
             (self.records.len() + assigned.len()) as u64,
@@ -344,6 +345,7 @@ impl RecordLog {
             self.prefixes.last().ok_or(Error::Authority)?.digest,
             &canonical,
         );
+        drop(canonical);
         let count = (self.records.len() + batch.assigned.len()) as u64;
         self.check_prefix(&batch.watermark, sequence, count, digest)?;
         let commit = Commit {
