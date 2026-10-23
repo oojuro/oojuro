@@ -39,6 +39,10 @@ cargo test --workspace                 # all unit and integration tests
 cargo clippy --workspace --all-targets
 ```
 
+Storage benchmark tools are explicit: `cargo build --release -p oojuro-store --features bench-tools`
+for `store-bench` (`--example frame_probe` selects the probe); existing `codecs` and `baselines`
+features also enable their JSON reporting dependency. The storage library does not require it.
+
 The workspace crates:
 
 | Crate | What it is |
