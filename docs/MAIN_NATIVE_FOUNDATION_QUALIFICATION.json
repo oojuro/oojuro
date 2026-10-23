@@ -173,7 +173,7 @@
     "proof_commands": [
       "RUSTUP_HOME=<task-local> rustc +1.99.1 --version --verbose",
       "RUSTUP_HOME=<task-local> cargo +1.99.1 --version --verbose",
-      "RUSTUP_HOME=<task-local> rustup which --toolchain1.99.1 rustc"
+      "RUSTUP_HOME=<task-local> rustup which --toolchain 1.99.1 rustc"
     ],
     "no_gate_rerun": true
   }
