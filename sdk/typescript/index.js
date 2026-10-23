@@ -1441,6 +1441,25 @@ export class PreparedCapture extends PreparedCommit {
   toJSON() { return { type: "PreparedCapture" }; }
   [inspect]() { return "PreparedCapture {}"; }
 }
+export class PreparedCaptureSession extends PreparedCommit {
+  toJSON() { return { type: "PreparedCaptureSession" }; }
+  [inspect]() { return "PreparedCaptureSession {}"; }
+}
+function sessionRoute(input) {
+  const names = ["format", "journal", "source", "agent_id", "run_id", "events_url",
+    ...(object(input) && Object.hasOwn(input, "project") ? ["project"] : [])];
+  const route = ownFields(input, names);
+  sources.set(route, sources.get(input));
+  integer(route, "format", 1, 1);
+  for (const name of ["journal", "source", "agent_id", "run_id"]) id(route[name]);
+  if (Object.hasOwn(route, "project") && route.project !== null) id(route.project);
+  if (route.events_url !== `/api/capture/journals/${route.journal}/events`) fail();
+  return Object.freeze(route);
+}
+/** Shape validation only; current server authority is checked on every operation. */
+export function captureSession(input) {
+  try { return sessionRoute(input); } catch { fail("invalid_request"); }
+}
 /** Append-only hosted capture adapter in the existing SDK. It accepts no read/admin key. */
 export class OojuroCaptureClient {
   #origin;
@@ -1461,14 +1480,16 @@ export class OojuroCaptureClient {
     } catch { fail("invalid_configuration"); }
   }
   get origin() { return this.#origin; }
+  /** Physical source project encoded in the capture credential; this is not a read grant. */
+  get source() { return this.#token.slice(4, 68); }
   toJSON() { return { type: "OojuroCaptureClient" }; }
   [inspect]() { return "OojuroCaptureClient {}"; }
-  async #request(body, signal) {
+  async #request(body, signal, path = "/api/capture" + (body ? "/events" : ""), media = "application/vnd.oojuro.capture.v1") {
     abort(signal);
-    const response = await this.#fetch(this.#origin + "/api/capture" + (body ? "/events" : ""), {
+    const response = await this.#fetch(this.#origin + path, {
       method: body ? "POST" : "GET",
       headers: { authorization: `Bearer ${this.#token}`,
-        ...(body ? { "content-type": "application/vnd.oojuro.capture.v1",
+        ...(body ? { "content-type": media,
           "content-length": String(body.byteLength), "content-encoding": "identity" } : {}) },
       ...(body ? { body } : {}), signal, redirect: "error", cache: "no-store",
       credentials: "omit", referrerPolicy: "no-referrer",
@@ -1485,7 +1506,10 @@ export class OojuroCaptureClient {
   async discover({ signal } = {}) {
     try {
       const value = await this.#request(undefined, signal);
-      keys(value, ["format", "journal", "agent_id", "key_id", "producer_id", "label", "expires_us", "limits"]);
+      const session = Object.hasOwn(value, "journal_mode") || Object.hasOwn(value, "session_endpoint");
+      keys(value, ["format", "journal", "agent_id", "key_id", "producer_id", "label", "expires_us", "limits",
+        ...(session ? ["journal_mode", "session_endpoint"] : [])]);
+      if (session && (value.journal_mode !== "session" || value.session_endpoint !== "/api/capture/sessions")) fail();
       integer(value, "format", 1, 1);
       for (const name of ["journal", "agent_id", "key_id", "producer_id"]) id(value[name]);
       label(value.label, 128);
@@ -1497,9 +1521,31 @@ export class OojuroCaptureClient {
       return value;
     } catch (error) { throw safeError(error, false); }
   }
+  prepareSession(input) {
+    try {
+      const value = ownFields(input, ["runId", "label"]);
+      id(value.runId); label(value.label, 128);
+      if (value.label !== value.label.trim()) fail();
+      const body = encoder.encode(encode({ format: 1, run_id: value.runId, label: value.label }));
+      return new PreparedCaptureSession(async (signal) => {
+        let attempted = false;
+        try {
+          const info = await this.discover({ signal });
+          if (info.journal_mode !== "session") fail("session_capture_required");
+          attempted = true;
+          const route = sessionRoute(await this.#request(body.slice(), signal, "/api/capture/sessions", "application/json"));
+          if (route.source !== this.source ||
+              route.agent_id !== info.agent_id || route.run_id !== value.runId) fail();
+          return route;
+        } catch (error) { throw safeError(error, attempted); }
+      });
+    } catch { fail("invalid_request"); }
+  }
   prepareBatch(input) {
     try {
-      const original = ownFields(input, ["requestId", "events"]);
+      const original = ownFields(input, ["requestId", "events", ...(object(input) && Object.hasOwn(input, "session") ? ["session"] : [])]);
+      const session = Object.hasOwn(original, "session") ? sessionRoute(original.session) : undefined;
+      if (session && session.source !== this.#token.slice(4, 68)) fail();
       if (typeof original.requestId !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(original.requestId) ||
           !Array.isArray(original.events) || original.events.length < 1 || original.events.length > 100) fail();
       const events = [];
@@ -1510,6 +1556,7 @@ export class OojuroCaptureClient {
         const descriptor = Object.getOwnPropertyDescriptor(original.events, String(index));
         if (!descriptor || !Object.hasOwn(descriptor, "value")) fail();
         const event = captureEvent(descriptor.value);
+        if (session && (event.runId !== session.run_id || event.input.agent_id !== session.agent_id)) fail();
         if (ids.includes(event.eventId)) fail();
         ids.push(event.eventId);
         const length = utf8Length(event.input.text, recordTextLimit - total);
@@ -1533,7 +1580,7 @@ export class OojuroCaptureClient {
       }
       return new PreparedCapture(async (signal) => {
         try {
-          const receipt = await this.#request(wire.slice(), signal);
+          const receipt = await this.#request(wire.slice(), signal, session?.events_url);
           keys(receipt, ["request_id", "generation", "recorded_bytes", "records"]);
           if (receipt.request_id !== original.requestId || !Array.isArray(receipt.records) || receipt.records.length !== ids.length) fail();
           integer(receipt, "generation", 1);

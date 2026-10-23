@@ -19,7 +19,14 @@ There is no automatic retry or durable spool. On an unknown outcome, retry the e
 
 The existing `@oojuro/v2-client/file-deletion` selected-version protocol can remove that exact logical file manifest and selected part revisions with an ordinary write credential. Removing the manifest makes the linked download fail. Removing a journal event or detaching its journal removes that project's retrieval path; it does not physically purge all originals. There is no automatic orphan collection, retention SLA, or cross-file deduplication in this candidate. Keep failed-upload descriptors for deliberate cleanup.
 
-The initial joined qualification uses an explicitly enrolled physical journal. Integration with the newer session-provisioning credential/run binding must be qualified separately before advertising this as the default session setup.
+The initial joined qualification uses an explicitly enrolled physical journal.
+The [session SDK candidate](SESSION_SDK_SETUP.md) adds an explicit already
+provisioned `session` descriptor for integration keys: the journal/run/agent and
+physical source must match before selected bytes are consumed, then the event
+uses the exact bound session route. Missing/foreign descriptors refuse before
+upload. Legacy descriptors and fixed-journal behavior remain compatible. This
+new path requires its own actual Node/HTTP/PostgreSQL qualification before
+advertising it as the default session setup.
 
 All MIME types are opaque original bytes. PDF/Office parsing, OCR, image understanding, audio/video transcription, executable preview and derived-content search are unsupported here. Optional future extractors must stay outside the core engine and link their output to the exact source version. Never claim arbitrary binary bytes become natively understood.
 

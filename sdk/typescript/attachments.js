@@ -1,6 +1,6 @@
 // Explicit selected bytes -> immutable file version -> small journal event -> project read.
 // No file discovery, local file reads, extraction, OCR, preview or capture-byte grant.
-import { OojuroClient, OojuroCaptureClient, OojuroProjectClient, OojuroError } from "./index.js";
+import { OojuroClient, OojuroCaptureClient, OojuroProjectClient, OojuroError, captureSession } from "./index.js";
 import { prepareFileUpload } from "./files.js";
 import { downloadToVia } from "./file-download.js";
 import { fields, opaque, label, size, fail, encoder, binding, partName, manifestOf, fileManifestName } from "./file-format.js";
@@ -12,12 +12,14 @@ function displayName(name) {
   if (!name.trim() || encoder.encode(name).length > 256) fail();
 }
 function descriptor(input) {
-  const names = ["uploadId", "eventId", "journal", "runId", "writer", "agentId", "displayName", "size", "sha256", "validAt", "consent"];
+  const names = ["uploadId", "eventId", "journal", "runId", "writer", "agentId", "displayName", "size", "sha256", "validAt", "consent",
+    ...(input && Object.hasOwn(input, "session") ? ["session"] : [])];
   fields(input, names);
   const value = Object.fromEntries(names.map(key => [key, input[key]]));
   for (const name of ["uploadId", "eventId", "journal", "runId", "writer", "agentId", "sha256"]) opaque(value[name]);
   displayName(value.displayName); size(value.size, ATTACHMENT_MAX_BYTES);
   if (!Number.isSafeInteger(value.validAt) || value.consent !== "intentional-user-file") fail();
+  if (Object.hasOwn(value, "session")) value.session = captureSession(value.session);
   return Object.freeze(value);
 }
 function reference(input, journal) {
@@ -69,6 +71,11 @@ export class PreparedJournalAttachment {
       if (root.schema !== 3 || root.namespace !== capture.journal ||
           root.ownership?.agent !== input.agentId || capture.agent_id !== input.agentId ||
           capture.producer_id !== input.writer) fail();
+      if (capture.journal_mode === "session") {
+        const route = input.session;
+        if (!route || route.source !== root.project || route.source !== this.#capture.source || route.agent_id !== input.agentId ||
+            route.run_id !== input.runId || route.journal !== input.journal) fail();
+      } else if (input.session) fail();
       const uploaded = await this.#upload.send(source, { signal });
       published = true;
       const file = Object.freeze({ format: "oojuro-attachment-1", journal: input.journal,
@@ -76,6 +83,7 @@ export class PreparedJournalAttachment {
         manifest_name: uploaded.manifestName, manifest_revision: uploaded.revision,
         total_bytes: uploaded.size, sha256: uploaded.sha256 });
       const result = await this.#capture.prepareBatch({ requestId: `attachment_${input.uploadId}`,
+        ...(input.session ? { session: input.session } : {}),
         events: [{ eventId: input.eventId, runId: input.runId, adapter: "oojuro-attachment-v1",
           input: { agent_id: input.agentId, parent_id: null, valid_at: input.validAt,
             kind: "output", tool: null, status: null, exit: null, key: null,

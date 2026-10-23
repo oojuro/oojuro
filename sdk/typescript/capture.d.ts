@@ -1,4 +1,4 @@
-import type { CaptureEvent, OojuroCaptureClient } from "./index.js";
+import type { CaptureEvent, CaptureSession, OpaqueId, OojuroCaptureClient } from "./index.js";
 /** Node 24.4+ POSIX private local SQLite spool. Plaintext inputs are retained until ACK.
  * Enqueue is synchronous and durable on a correctly functioning fsync-capable filesystem.
  * A local enqueue is not a server acknowledgment. */
@@ -9,9 +9,13 @@ export class CaptureSpool {
     client: OojuroCaptureClient;
     maxBytes?: number;
     maxEvents?: number;
+    /** Base role for new session labels; existing per-run intent is never renamed. */
+    sessionLabel?: string;
     signal?: AbortSignal;
   }): Promise<CaptureSpool>;
   readonly agentId: string;
+  /** Accepted route from the durable mapping, after flush. No network or grant. */
+  session(runId: OpaqueId): CaptureSession | undefined;
   pending(): { events: number; bytes: number };
   enqueue(event: CaptureEvent): { eventId: string; queued: true };
   /** Keeps originals after every HTTP, timeout, invalid-ACK or unknown failure.

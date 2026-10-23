@@ -1,4 +1,4 @@
-import type { OojuroClient, OojuroCaptureClient, OojuroProjectClient, OpaqueId, WireInteger } from "./index.js";
+import type { OojuroClient, OojuroCaptureClient, OojuroProjectClient, CaptureSession, OpaqueId, WireInteger } from "./index.js";
 import type { FileSink, FileReceipt } from "./files.js";
 /** Initial linked-attachment bound; not a hosted-capacity promise. Generic files have a separate bound. */
 export const ATTACHMENT_MAX_BYTES: 16777216;
@@ -16,6 +16,9 @@ export interface JournalAttachmentDescriptor {
   sha256: string;
   validAt: WireInteger;
   consent: "intentional-user-file";
+  /** Required for an integration key: already provisioned route matching this journal, run and agent.
+   * A route is not a grant. The separate file-write credential still authorizes selected bytes. */
+  session?: CaptureSession;
 }
 export interface JournalAttachmentReference {
   readonly format: "oojuro-attachment-1";

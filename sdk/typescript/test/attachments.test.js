@@ -50,7 +50,7 @@ function fixture() {
       state.projectCalls = (state.projectCalls ?? 0) + 1;
       assert.equal(init.credentials, "omit"); assert.equal(init.redirect, "error");
       const path = new URL(url).pathname.split("/"), journal = path[5], record = path[7];
-      if (!state.visible || journal !== J || !state.events.has(record)) return new Response(null, { status: 404 });
+      if (!state.visible || journal !== (state.logicalJournal ?? J) || !state.events.has(record)) return new Response(null, { status: 404 });
       const event = state.events.get(record), file = event.input.attrs.oojuro_attachment;
       const manifest = state.blobs.get(file.manifest_name);
       if (!manifest) return new Response(null, { status: 404 });
@@ -66,6 +66,39 @@ function sink(extra = {}) {
     async write(bytes) { this.chunks.push(bytes.slice()); },
     async commit() { this.committed++; }, async abort() { this.aborted++; this.chunks = []; }, ...extra };
 }
+test("integration attachments require a matching provisioned logical route before bytes and link through that route", async () => {
+  const f = fixture(), logical = id("7"), run = id("c"), bytes = payload(262145);
+  f.state.logicalJournal = logical;
+  const selected = { format: 1, journal: logical, source: P, agent_id: A, run_id: run,
+    project: id("9"), events_url: `/api/capture/journals/${logical}/events` };
+  let provisions = 0, events = 0;
+  const capture = new OojuroCaptureClient({ baseUrl: "https://synthetic.invalid", token: `ojc_${P}_${"A".repeat(43)}`,
+    fetch: async (url, init) => {
+      if (init.method === "GET") return json({ format: 1, journal: J, agent_id: A, key_id: id("f"), producer_id: W,
+        label: "Reviewer", expires_us: 999999999999999, limits: { events: 100, metadata_bytes: 65536, text_bytes: 16777216 },
+        journal_mode: "session", session_endpoint: "/api/capture/sessions" });
+      if (url.endsWith("/sessions")) { provisions++; return json(selected); }
+      assert.equal(new URL(url).pathname, selected.events_url); events++;
+      const wire = Buffer.from(init.body), n = wire.readUInt32BE(0), event = JSON.parse(wire.subarray(4, 4+n)).events[0];
+      assert.equal(event.run_id, run); assert.equal(event.input.attrs.oojuro_attachment.journal, logical);
+      const record = sha(Buffer.from(event.event_id)); event.text = wire.subarray(4+n).toString(); f.state.events.set(record, event);
+      return json({ request_id: `attachment_${id("a")}`, generation: ++f.state.generation, recorded_bytes: 0,
+        records: [{ event_id: event.event_id, record_id: record, replayed: false }] });
+    } });
+  const route = await capture.prepareSession({ runId: run, label: "Reviewer" }).send();
+  assert.equal(provisions, 1);
+  for (const change of [{}, { session: { ...route, run_id: id("d") } }, { session: { ...route, agent_id: id("e") } },
+    { session: { ...route, journal: J, events_url: `/api/capture/journals/${J}/events` } }]) {
+    let pulls = 0;
+    const operation = prepareJournalAttachment(f.uploader, capture, { ...descriptor(bytes), journal: logical, ...change });
+    await assert.rejects(operation.send((async function* () { pulls++; yield bytes; })()), e => e.code === "attachment_failed" && e.outcome === "none");
+    assert.equal(pulls, 0); assert.equal(f.state.blobs.size, 0); assert.equal(events, 0);
+  }
+  const receipt = await prepareJournalAttachment(f.uploader, capture, { ...descriptor(bytes), journal: logical, session: route }).send(source(bytes));
+  assert.equal(receipt.journal, logical); assert.equal(events, 1);
+  const target = sink(); await downloadJournalAttachmentTo(f.project, receipt, target);
+  assert.equal(target.committed, 1); assert.deepEqual(Buffer.concat(target.chunks), Buffer.from(bytes));
+});
 test("selected bytes publish one immutable version and a small event; project download verifies exact bytes", async () => {
   const f = fixture(), bytes = payload(2 * 1024 * 1024 + 37), input = descriptor(bytes);
   const operation = prepareJournalAttachment(f.uploader, f.capture, input);

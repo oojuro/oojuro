@@ -366,6 +366,24 @@ export interface CaptureDiscovery {
   label: string;
   expires_us: WireInteger;
   limits: { events: number; metadata_bytes: number; text_bytes: number };
+  journal_mode?: "session";
+  session_endpoint?: "/api/capture/sessions";
+}
+/** Persist the complete accepted route with its original run/label intent. IDs are not grants. */
+export interface CaptureSession {
+  readonly format: 1;
+  readonly journal: OpaqueId;
+  readonly source: OpaqueId;
+  readonly agent_id: OpaqueId;
+  readonly run_id: OpaqueId;
+  readonly project?: OpaqueId | null;
+  readonly events_url: string;
+}
+export function captureSession(input: CaptureSession): CaptureSession;
+export class PreparedCaptureSession {
+  private constructor();
+  /** Persist intent first. Retry with the same run and label after an unknown outcome. */
+  send(options?: { signal?: AbortSignal }): Promise<CaptureSession>;
 }
 export interface CaptureReceipt {
   request_id: string;
@@ -382,8 +400,11 @@ export class PreparedCapture {
 export class OojuroCaptureClient {
   constructor(options: { baseUrl: string; token: string; fetch?: typeof globalThis.fetch });
   readonly origin: string;
+  readonly source: OpaqueId;
   discover(options?: { signal?: AbortSignal }): Promise<CaptureDiscovery>;
-  prepareBatch(input: { requestId: string; events: readonly CaptureEvent[] }): PreparedCapture;
+  prepareSession(input: { runId: OpaqueId; label: string }): PreparedCaptureSession;
+  /** Bound batches contain only the route's single run and agent; mixed inputs refuse before effects. */
+  prepareBatch(input: { requestId: string; events: readonly CaptureEvent[]; session?: CaptureSession }): PreparedCapture;
 }
 
 export interface ProjectRecordsInput {
