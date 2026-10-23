@@ -6,9 +6,12 @@ package or a public release. Local recording/read commands keep their behavior.
 
 ## Model and consent
 
-One named agent keeps a journal across runs. Capture appends to that journal;
-projects are optional collections of complete retained journals. Capture keys
-cannot read/search or administer an account. Project read keys are separate.
+This existing private client explicitly connects to one selected journal and
+reuses it across sessions. The corrected product default is one new journal per
+new session; that setup is not implemented by this command. See the
+[session setup contract](SESSION_JOURNAL_SETUP.md). Projects are optional
+collections of complete retained journals. Capture keys cannot read/search or
+administer an account. Project read keys are separate.
 
 The Linux installer supports **Codex JSONL** and **Claude Code JSONL**. After
 explicit consent it tails the selected transcript root, using the existing
