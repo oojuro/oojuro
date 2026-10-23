@@ -1,5 +1,8 @@
 import { OojuroProjectClient, type ProjectRecordRow } from "../index.js";
 const client = new OojuroProjectClient({ baseUrl: "https://example.invalid", project: "provided", token: "provided" });
+client.search({ requestId: "provided", query: "words", from: 0, k: 5 }).then(page => page.hits[0]?.excerpt);
+// @ts-expect-error Metered searches require an explicit retained request identity.
+client.search({ query: "words" });
 client.records({ from: 0, through: 100, agentId: "provided", limit: 10, cursor: null }).then(page => {
   const snapshot: string = page.snapshot;
   const row: ProjectRecordRow | undefined = page.records[0];

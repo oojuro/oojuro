@@ -351,12 +351,18 @@ function label(value, max) {
   if (/\p{Cc}/u.test(value)) fail();
 }
 function journalRoot(value, project) {
-  keys(value, ["schema", "minimum_reader", "project", "namespace"]);
-  integer(value, "schema", 1, 1);
-  integer(value, "minimum_reader", 1, 1);
-  id(value.project);
-  id(value.namespace);
+  const owned = value?.schema === 2 || value?.schema === 3;
+  keys(value, ["schema", "minimum_reader", "project", "namespace", ...(owned ? ["ownership"] : [])]);
+  integer(value, "schema", 1, 3);
+  integer(value, "minimum_reader", value.schema, value.schema);
+  id(value.project); id(value.namespace);
   if (value.project !== project) fail();
+  if (owned) {
+    keys(value.ownership, ["account", "agent"]);
+    string(value.ownership.account, 128, true);
+    if (!/^[A-Za-z0-9_-]+$/.test(value.ownership.account)) fail();
+    id(value.ownership.agent);
+  }
 }
 function nativeInput(value) {
   keys(value, nativeFields);
@@ -842,6 +848,8 @@ export class OojuroClient {
       fail("invalid_configuration");
     }
   }
+  /** Public destination metadata; never the bearer token. */
+  get origin() { return new URL(this.#base).origin; }
   toJSON() {
     return { type: "OojuroClient" };
   }
@@ -1433,6 +1441,25 @@ export class PreparedCapture extends PreparedCommit {
   toJSON() { return { type: "PreparedCapture" }; }
   [inspect]() { return "PreparedCapture {}"; }
 }
+export class PreparedCaptureSession extends PreparedCommit {
+  toJSON() { return { type: "PreparedCaptureSession" }; }
+  [inspect]() { return "PreparedCaptureSession {}"; }
+}
+function sessionRoute(input) {
+  const names = ["format", "journal", "source", "agent_id", "run_id", "events_url",
+    ...(object(input) && Object.hasOwn(input, "project") ? ["project"] : [])];
+  const route = ownFields(input, names);
+  sources.set(route, sources.get(input));
+  integer(route, "format", 1, 1);
+  for (const name of ["journal", "source", "agent_id", "run_id"]) id(route[name]);
+  if (Object.hasOwn(route, "project") && route.project !== null) id(route.project);
+  if (route.events_url !== `/api/capture/journals/${route.journal}/events`) fail();
+  return Object.freeze(route);
+}
+/** Shape validation only; current server authority is checked on every operation. */
+export function captureSession(input) {
+  try { return sessionRoute(input); } catch { fail("invalid_request"); }
+}
 /** Append-only hosted capture adapter in the existing SDK. It accepts no read/admin key. */
 export class OojuroCaptureClient {
   #origin;
@@ -1453,14 +1480,16 @@ export class OojuroCaptureClient {
     } catch { fail("invalid_configuration"); }
   }
   get origin() { return this.#origin; }
+  /** Physical source project encoded in the capture credential; this is not a read grant. */
+  get source() { return this.#token.slice(4, 68); }
   toJSON() { return { type: "OojuroCaptureClient" }; }
   [inspect]() { return "OojuroCaptureClient {}"; }
-  async #request(body, signal) {
+  async #request(body, signal, path = "/api/capture" + (body ? "/events" : ""), media = "application/vnd.oojuro.capture.v1") {
     abort(signal);
-    const response = await this.#fetch(this.#origin + "/api/capture" + (body ? "/events" : ""), {
+    const response = await this.#fetch(this.#origin + path, {
       method: body ? "POST" : "GET",
       headers: { authorization: `Bearer ${this.#token}`,
-        ...(body ? { "content-type": "application/vnd.oojuro.capture.v1",
+        ...(body ? { "content-type": media,
           "content-length": String(body.byteLength), "content-encoding": "identity" } : {}) },
       ...(body ? { body } : {}), signal, redirect: "error", cache: "no-store",
       credentials: "omit", referrerPolicy: "no-referrer",
@@ -1477,7 +1506,10 @@ export class OojuroCaptureClient {
   async discover({ signal } = {}) {
     try {
       const value = await this.#request(undefined, signal);
-      keys(value, ["format", "journal", "agent_id", "key_id", "producer_id", "label", "expires_us", "limits"]);
+      const session = Object.hasOwn(value, "journal_mode") || Object.hasOwn(value, "session_endpoint");
+      keys(value, ["format", "journal", "agent_id", "key_id", "producer_id", "label", "expires_us", "limits",
+        ...(session ? ["journal_mode", "session_endpoint"] : [])]);
+      if (session && (value.journal_mode !== "session" || value.session_endpoint !== "/api/capture/sessions")) fail();
       integer(value, "format", 1, 1);
       for (const name of ["journal", "agent_id", "key_id", "producer_id"]) id(value[name]);
       label(value.label, 128);
@@ -1489,9 +1521,31 @@ export class OojuroCaptureClient {
       return value;
     } catch (error) { throw safeError(error, false); }
   }
+  prepareSession(input) {
+    try {
+      const value = ownFields(input, ["runId", "label"]);
+      id(value.runId); label(value.label, 128);
+      if (value.label !== value.label.trim()) fail();
+      const body = encoder.encode(encode({ format: 1, run_id: value.runId, label: value.label }));
+      return new PreparedCaptureSession(async (signal) => {
+        let attempted = false;
+        try {
+          const info = await this.discover({ signal });
+          if (info.journal_mode !== "session") fail("session_capture_required");
+          attempted = true;
+          const route = sessionRoute(await this.#request(body.slice(), signal, "/api/capture/sessions", "application/json"));
+          if (route.source !== this.source ||
+              route.agent_id !== info.agent_id || route.run_id !== value.runId) fail();
+          return route;
+        } catch (error) { throw safeError(error, attempted); }
+      });
+    } catch { fail("invalid_request"); }
+  }
   prepareBatch(input) {
     try {
-      const original = ownFields(input, ["requestId", "events"]);
+      const original = ownFields(input, ["requestId", "events", ...(object(input) && Object.hasOwn(input, "session") ? ["session"] : [])]);
+      const session = Object.hasOwn(original, "session") ? sessionRoute(original.session) : undefined;
+      if (session && session.source !== this.#token.slice(4, 68)) fail();
       if (typeof original.requestId !== "string" || !/^[A-Za-z0-9_-]{1,128}$/.test(original.requestId) ||
           !Array.isArray(original.events) || original.events.length < 1 || original.events.length > 100) fail();
       const events = [];
@@ -1502,6 +1556,7 @@ export class OojuroCaptureClient {
         const descriptor = Object.getOwnPropertyDescriptor(original.events, String(index));
         if (!descriptor || !Object.hasOwn(descriptor, "value")) fail();
         const event = captureEvent(descriptor.value);
+        if (session && (event.runId !== session.run_id || event.input.agent_id !== session.agent_id)) fail();
         if (ids.includes(event.eventId)) fail();
         ids.push(event.eventId);
         const length = utf8Length(event.input.text, recordTextLimit - total);
@@ -1525,7 +1580,7 @@ export class OojuroCaptureClient {
       }
       return new PreparedCapture(async (signal) => {
         try {
-          const receipt = await this.#request(wire.slice(), signal);
+          const receipt = await this.#request(wire.slice(), signal, session?.events_url);
           keys(receipt, ["request_id", "generation", "recorded_bytes", "records"]);
           if (receipt.request_id !== original.requestId || !Array.isArray(receipt.records) || receipt.records.length !== ids.length) fail();
           integer(receipt, "generation", 1);
@@ -1546,6 +1601,26 @@ export class OojuroCaptureClient {
 }
 
 /** Shared-project read adapter; ojp_ credentials never authorize capture or administration. */
+function projectRow(row, selection) {
+  keys(row, ["journal", "record"]);
+  id(row.journal);
+  const descriptor = row.record;
+  if (!object(descriptor)) fail();
+  if (Object.hasOwn(descriptor, "capture")) {
+    keys(descriptor, ["id", "record", "text_bytes", "generation", "capture"]);
+    keys(descriptor.capture, ["event_id", "run_id"]);
+    id(descriptor.capture.event_id); id(descriptor.capture.run_id);
+    const native = { ...descriptor }; delete native.capture;
+    sources.set(native, sources.get(descriptor));
+    journalDescriptor(native);
+  } else journalDescriptor(descriptor);
+  const record = descriptor.record;
+  id(record.agent_id);
+  if ((selection.agentId !== undefined && record.agent_id !== selection.agentId) ||
+      (selection.from !== undefined && record.valid_at < selection.from) ||
+      (selection.through !== undefined && record.valid_at > selection.through)) fail();
+  return row.journal + descriptor.id;
+}
 export class OojuroProjectClient {
   #base;
   #token;
@@ -1566,11 +1641,12 @@ export class OojuroProjectClient {
   }
   toJSON() { return { type: "OojuroProjectClient" }; }
   [inspect]() { return "OojuroProjectClient {}"; }
-  async #request(path, body, signal) {
+  async #request(path, body, signal, minimum) {
     abort(signal);
     const response = await this.#fetch(this.#base + path, {
       method: body === undefined ? "GET" : "POST",
       headers: { authorization: `Bearer ${this.#token}`,
+        ...(minimum === undefined ? {} : { "x-oojuro-min-generation": String(minimum) }),
         ...(body === undefined ? {} : { "content-type": "application/x-www-form-urlencoded" }) },
       ...(body === undefined ? {} : { body }),
       signal, redirect: "error", cache: "no-store", credentials: "omit", referrerPolicy: "no-referrer",
@@ -1616,30 +1692,75 @@ export class OojuroProjectClient {
       }
       const seen = new Set();
       for (const row of value.records) {
-        keys(row, ["journal", "record"]);
-        id(row.journal);
-        const descriptor = row.record;
-        if (!object(descriptor)) fail();
-        if (Object.hasOwn(descriptor, "capture")) {
-          keys(descriptor, ["id", "record", "text_bytes", "generation", "capture"]);
-          keys(descriptor.capture, ["event_id", "run_id"]);
-          id(descriptor.capture.event_id); id(descriptor.capture.run_id);
-          // Keep the numeric source lexemes when validating the common descriptor.
-          const native = { ...descriptor }; delete native.capture;
-          sources.set(native, sources.get(descriptor));
-          journalDescriptor(native);
-        } else journalDescriptor(descriptor);
-        const record = descriptor.record;
-        id(record.agent_id);
-        if ((selection.agentId !== undefined && record.agent_id !== selection.agentId) ||
-            (selection.from !== undefined && record.valid_at < selection.from) ||
-            (selection.through !== undefined && record.valid_at > selection.through)) fail();
-        const identity = row.journal + descriptor.id;
+        const identity = projectRow(row, selection);
         if (seen.has(identity)) fail();
         seen.add(identity);
       }
       return value;
     } catch (error) { throw safeError(error, false); }
+  }
+  async search(input, { signal } = {}) {
+    let selection, body;
+    try {
+      selection = journalSnapshot(input, 32 * 1024);
+      if (!object(selection) || Object.keys(selection).some(k => !["requestId", "query", "from", "through", "agentId", "k"].includes(k))) fail();
+      id(selection.requestId); string(selection.query, 4096, true);
+      if (!selection.query.trim()) fail();
+      const form = new URLSearchParams({ request_id: selection.requestId, q: selection.query });
+      for (const key of ["from", "through"]) if (selection[key] !== undefined) {
+        integer(selection, key, -Number.MAX_SAFE_INTEGER); form.set(key, String(selection[key]));
+      }
+      if (selection.from !== undefined && selection.through !== undefined && selection.from > selection.through) fail();
+      if (selection.agentId !== undefined) { id(selection.agentId); form.set("agent_id", selection.agentId); }
+      if (selection.k !== undefined) { integer(selection, "k", 1, 100); form.set("k", String(selection.k)); }
+      body = form.toString();
+      if (encoder.encode(body).length > 32 * 1024) fail();
+    } catch { fail("invalid_request"); }
+    abort(signal);
+    try {
+      const response = await this.#request("search", body, signal);
+      contentType(response, "application/json");
+      const value = frameMetadata(new TextDecoder("utf-8", { fatal: true }).decode(await bytes(response, 4 * MiB, signal, true)));
+      keys(value, ["snapshot", "hits"]); id(value.snapshot);
+      if (!Array.isArray(value.hits) || value.hits.length > (selection.k ?? 20)) fail();
+      const seen = new Set();
+      for (const hit of value.hits) {
+        keys(hit, ["journal", "record", "score_bits", "continued", "excerpt_start", "excerpt_end", "excerpt"]);
+        const identity = projectRow({ journal: hit.journal, record: hit.record }, selection);
+        if (seen.has(identity) || !hit.record.record.indexed || typeof hit.score_bits !== "number" ||
+            !Number.isFinite(hit.score_bits) || typeof hit.continued !== "boolean") fail();
+        seen.add(identity);
+        integer(hit, "excerpt_start", 0, hit.record.text_bytes);
+        integer(hit, "excerpt_end", hit.excerpt_start, hit.record.text_bytes);
+        string(hit.excerpt, 320);
+        if (encoder.encode(hit.excerpt).length !== hit.excerpt_end - hit.excerpt_start) fail();
+      }
+      return value;
+    } catch (error) { throw safeError(error, true); }
+  }
+  /** One event-linked manifest or part; arbitrary Blob names are not accepted. */
+  async attachmentPart(input, { signal, minGeneration = 0 } = {}) {
+    let path, limit;
+    try {
+      const selected = journalSnapshot(input, 4096);
+      if (!object(selected) || Object.keys(selected).some(k => !["journal", "recordId", "part"].includes(k))) fail();
+      id(selected.journal); id(selected.recordId);
+      if (!Number.isSafeInteger(minGeneration) || minGeneration < 0) fail();
+      let suffix = "manifest"; limit = 512 * 1024;
+      if (selected.part !== undefined) {
+        integer(selected, "part", 0, 63);
+        suffix = `parts/${selected.part}`; limit = 256 * 1024;
+      }
+      path = `journals/${selected.journal}/records/${selected.recordId}/attachment/${suffix}`;
+    } catch { fail("invalid_request"); }
+    let response;
+    try {
+      response = await this.#request(path, undefined, signal, minGeneration);
+      contentType(response, "application/octet-stream");
+      const mark = generation(response, minGeneration);
+      const revision = response.headers.get("x-oojuro-blob-revision"); id(revision);
+      return { generation: mark, revision, bytes: await bytes(response, limit, signal, true) };
+    } catch (error) { await cancel(response?.body); throw safeError(error, false); }
   }
   async content(input, { signal } = {}) {
     let path;

@@ -27,7 +27,15 @@ const USAGE: &str =
            [--window 5m|1h|1d] [--writer W]... [-k N] [--samples N] [--include-waiting] [--from T] [--to T]
                                                            stretches of activity ranked by how they looked
   forget   --id ID | --key K | --older-than T | --last DUR   [--writer W] [--no-proof] [--yes]
+  cloud connect-api --connection FILE --api-key-file PRIVATE_FILE --label NAME [--base-url URL]
+  cloud connect-project --connection FILE --project ID --read-key-file PRIVATE_FILE [--base-url URL]
+  cloud connect --connection FILE --source ID --journal ID --label NAME [--base-url URL]
+  cloud connection | capture-status | capture-check --connection FILE
+  cloud capture-local-status --connection FILE --state DIR  verified local transcript acknowledgement counters
+  cloud capture --connection FILE --state DIR --source-root DIR --adapter codex|claude-code --accept-local-capture [--once]
+  cloud mcp --connection FILE                              project-scoped hosted history tools over stdio
   cloud records --connection FILE [--from T] [--through T] [--agent ID] [--limit N] [--cursor-file FILE]
+  cloud search --connection FILE --request-id ID --query-file FILE [--from T] [--through T] [--agent ID] [--k N]
   cloud get --connection FILE --journal ID --id ID          hosted project metadata / exact text
   stats                                                    what the journal holds
   export   [--from T] [--to T] [--when PHRASE] [--kind K]... [--writer W]... [--key K]   JSON lines on stdout
@@ -234,6 +242,33 @@ fn open(cli: &Cli) -> Oojuro {
 }
 
 fn cloud(cli: &Cli) -> Result<()> {
+    if cli.args.first().is_some_and(|c| c == "connect-project") {
+        let o = Opts::parse(&cli.args, &["--connection", "--project", "--read-key-file", "--base-url"], &[])?;
+        let names: std::collections::BTreeSet<_> = o.vals.iter().map(|(key, _)| key).collect();
+        if names.len() != o.vals.len() || o.rest != ["connect-project"] {
+            return Err("invalid_project_connection_arguments".into());
+        }
+        oojuro::hosted::connect_project(
+            std::path::Path::new(o.one("--connection").ok_or("missing_connection")?),
+            o.one("--base-url").unwrap_or("https://oojuro.com"),
+            o.one("--project").ok_or("missing_project")?,
+            std::path::Path::new(o.one("--read-key-file").ok_or("missing_read_key_file")?),
+        )?;
+        println!("{{\"project_read_connection_saved\":true}}");
+        return Ok(());
+    }
+    if cli.args.first().is_some_and(|c| matches!(c.as_str(), "connect-api" | "connect" | "connection" | "capture-status" | "capture-local-status" | "capture-check" | "capture")) {
+        return capture_command(cli);
+    }
+    if cli.args.first().is_some_and(|c| c == "mcp") {
+        let options = Opts::parse(&cli.args, &["--connection"], &[])?;
+        if options.vals.len() != 1 || options.rest != ["mcp"] {
+            return Err("invalid_hosted_mcp_arguments".into());
+        }
+        let path = std::path::Path::new(options.one("--connection").ok_or("missing_connection")?);
+        return oojuro::hosted_mcp::HostedMcpServer::open(path)?
+            .serve(std::io::stdin().lock(), std::io::stdout().lock());
+    }
     use oojuro::hosted::{Error, ProjectClient, Selection, read_private};
     let o = Opts::parse(
         &cli.args,
@@ -246,6 +281,9 @@ fn cloud(cli: &Cli) -> Result<()> {
             "--cursor-file",
             "--journal",
             "--id",
+            "--request-id",
+            "--query-file",
+            "--k",
         ],
         &[],
     )
@@ -264,6 +302,7 @@ fn cloud(cli: &Cli) -> Result<()> {
             "--cursor-file",
         ],
         "get" => &["--connection", "--journal", "--id"],
+        "search" => &["--connection", "--request-id", "--query-file", "--from", "--through", "--agent", "--k"],
         _ => return Err(Error::Request.into()),
     };
     if o.vals
@@ -296,6 +335,14 @@ fn cloud(cli: &Cli) -> Result<()> {
         let mut bytes = serde_json::to_vec(&page).map_err(|_| Error::Response)?;
         bytes.push(b'\n');
         bytes
+    } else if o.rest[0] == "search" {
+        let request=o.one("--request-id").ok_or(Error::Request)?;
+        let text=String::from_utf8(read_private(std::path::Path::new(o.one("--query-file").ok_or(Error::Request)?),4096)?).map_err(|_|Error::Request)?;
+        let selection=Selection { from:o.time("--from").map_err(|_|Error::Request)?, through:o.time("--through").map_err(|_|Error::Request)?,
+            agent_id:o.one("--agent").map(str::to_owned), ..Selection::default() };
+        let k=o.one("--k").map(|v|v.parse().map_err(|_|Error::Request)).transpose()?.unwrap_or(20);
+        let page=ProjectClient::open(std::path::Path::new(connection))?.search(request,&text,&selection,k)?;
+        let mut bytes=serde_json::to_vec(&page).map_err(|_|Error::Response)?;bytes.push(b'\n');bytes
     } else {
         let journal = o.one("--journal").ok_or(Error::Request)?;
         let id = o.one("--id").ok_or(Error::Request)?;
@@ -309,6 +356,85 @@ fn cloud(cli: &Cli) -> Result<()> {
         }
     };
     std::io::stdout().lock().write_all(&output)?;
+    Ok(())
+}
+
+fn capture_command(cli: &Cli) -> Result<()> {
+    use oojuro::hosted_capture as capture;
+    let o = Opts::parse(
+        &cli.args,
+        &[
+            "--api-key-file",
+            "--connection",
+            "--base-url",
+            "--source",
+            "--journal",
+            "--label",
+            "--state",
+            "--source-root",
+            "--adapter",
+        ],
+        &["--once", "--accept-local-capture"],
+    )?;
+    let names: std::collections::BTreeSet<_> = o.vals.iter().map(|(k, _)| k).collect();
+    if names.len() != o.vals.len() || o.rest.len() != 1 {
+        return Err("invalid_capture_arguments".into());
+    }
+    let command = o.rest[0].as_str();
+    let allowed: &[&str] = match command {
+        "connect-api" => &["--connection","--api-key-file","--base-url","--label"],
+        "connect" => &[
+            "--connection",
+            "--base-url",
+            "--source",
+            "--journal",
+            "--label",
+        ],
+        "connection" | "capture-status" | "capture-check" => &["--connection"],
+        "capture-local-status" => &["--connection","--state"],
+        "capture" => &["--connection", "--state", "--source-root", "--adapter"],
+        _ => return Err("invalid_capture_command".into()),
+    };
+    if o.vals.iter().any(|(k, _)| !allowed.contains(&k.as_str()))
+        || command != "capture" && !o.switches.is_empty()
+    {
+        return Err("invalid_capture_arguments".into());
+    }
+    let val = |name: &str| o.one(name).ok_or("missing_capture_argument");
+    let connection = std::path::Path::new(val("--connection")?);
+    let value = match command {
+        "connect-api" => serde_json::to_value(capture::connect_api(connection,
+            o.one("--base-url").unwrap_or("https://oojuro.com"),
+            std::path::Path::new(val("--api-key-file")?),val("--label")?)?)?,
+        "connect" => serde_json::to_value(capture::connect(
+            connection,
+            o.one("--base-url").unwrap_or("https://oojuro.com"),
+            val("--source")?,
+            val("--journal")?,
+            val("--label")?,
+        )?)?,
+        "connection" => serde_json::to_value(capture::resume_approval(connection)?)?,
+        "capture-status" => serde_json::to_value(capture::status(connection)?)?,
+        "capture-local-status" => serde_json::to_value(capture::local_status(connection,std::path::Path::new(val("--state")?))?)?,
+        "capture-check" => {
+            capture::verify_delivery(connection)?;
+            serde_json::json!({"connection_check_accepted":true,"real_history_verified":false})
+        }
+        "capture" => {
+            if !o.has("--accept-local-capture") {
+                return Err("explicit_local_capture_consent_required".into());
+            }
+            serde_json::to_value(capture::capture(
+                connection,
+                std::path::Path::new(val("--state")?),
+                std::path::Path::new(val("--source-root")?),
+                val("--adapter")?,
+                o.has("--once"),
+            )?)?
+        }
+        _ => unreachable!(),
+    };
+    println!("{}", serde_json::to_string(&value)?);
     Ok(())
 }
 

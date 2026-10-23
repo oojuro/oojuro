@@ -4614,6 +4614,7 @@ name = "oojuro"
 version = "0.1.0"
 dependencies = [
  "aho-corasick",
+ "base64 0.22.1",
  "blake3",
  "flate2",
  "jiff",

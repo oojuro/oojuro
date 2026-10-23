@@ -9,7 +9,7 @@ use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs::{self, OpenOptions},
-    io::Read,
+    io::{Read, Write},
     os::unix::fs::{MetadataExt, OpenOptionsExt},
     path::{Component, Path},
     time::Duration,
@@ -25,11 +25,19 @@ pub enum Error {
     Http(u16),
     Response,
     Bounds,
+    SearchUnknown(Option<u16>),
 }
 impl std::fmt::Display for Error {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Http(status) => write!(f, "hosted_http_{status}"),
+            Self::SearchUnknown(Some(status)) => write!(
+                f,
+                "hosted_search_outcome_unknown_http_{status}; retain original request and query"
+            ),
+            Self::SearchUnknown(None) => {
+                f.write_str("hosted_search_outcome_unknown; retain original request and query")
+            }
             _ => f.write_str(match self {
                 Self::Connection => "invalid_hosted_connection",
                 Self::PrivateFile => "private_hosted_file_required",
@@ -38,6 +46,7 @@ impl std::fmt::Display for Error {
                 Self::Response => "invalid_hosted_response",
                 Self::Bounds => "hosted_size_bound",
                 Self::Http(_) => unreachable!(),
+                Self::SearchUnknown(_) => unreachable!(),
             }),
         }
     }
@@ -64,7 +73,7 @@ fn present<'de, D: serde::Deserializer<'de>, T: Deserialize<'de>>(
     Option::<T>::deserialize(d)
 }
 /// Protected absolute file, no symlink components, hardlink aliases or writable ancestors.
-pub fn read_private(path: &Path, limit: usize) -> Result<Vec<u8>> {
+fn private_ancestors(path: &Path) -> Result<()> {
     if !path.is_absolute()
         || path
             .components()
@@ -82,6 +91,11 @@ pub fn read_private(path: &Path, limit: usize) -> Result<Vec<u8>> {
             return Err(Error::PrivateFile);
         }
     }
+    Ok(())
+}
+pub fn read_private(path: &Path, limit: usize) -> Result<Vec<u8>> {
+    private_ancestors(path)?;
+    let uid = unsafe { libc::geteuid() };
     let file = OpenOptions::new()
         .read(true)
         .custom_flags(libc::O_NOFOLLOW | libc::O_NONBLOCK)
@@ -103,13 +117,43 @@ pub fn read_private(path: &Path, limit: usize) -> Result<Vec<u8>> {
     }
     Ok(bytes)
 }
-#[derive(Deserialize)]
+#[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 struct Connection {
     version: u32,
     base_url: String,
     project: String,
     read_key: String,
+}
+/// Create-only project read setup. The key is never accepted on argv or returned.
+pub fn connect_project(path: &Path, base_url: &str, project: &str, key_file: &Path) -> Result<()> {
+    let key = read_private(key_file, 256)?;
+    let read_key = std::str::from_utf8(&key)
+        .map_err(|_| Error::Connection)?
+        .trim();
+    let c = Connection {
+        version: 1,
+        base_url: base_url.into(),
+        project: project.into(),
+        read_key: read_key.into(),
+    };
+    // Use precisely the same validation as every later hosted read.
+    ProjectClient::from_connection(&c)?;
+    private_ancestors(path)?;
+    let bytes = serde_json::to_vec(&c).map_err(|_| Error::Connection)?;
+    let mut file = OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .mode(0o600)
+        .custom_flags(libc::O_NOFOLLOW)
+        .open(path)
+        .map_err(|_| Error::PrivateFile)?;
+    file.write_all(&bytes)
+        .and_then(|_| file.sync_all())
+        .map_err(|_| Error::PrivateFile)?;
+    fs::File::open(path.parent().ok_or(Error::PrivateFile)?)
+        .and_then(|f| f.sync_all())
+        .map_err(|_| Error::PrivateFile)
 }
 /// No Debug or serialization: a connection never prints its bearer.
 pub struct ProjectClient {
@@ -124,6 +168,51 @@ pub struct Selection {
     pub agent_id: Option<String>,
     pub limit: Option<usize>,
     pub cursor: Option<String>,
+}
+impl Selection {
+    fn fields(&self) -> Result<Vec<(&'static str, String)>> {
+        if self.from.zip(self.through).is_some_and(|(a, b)| a > b)
+            || self.agent_id.as_ref().is_some_and(|v| !opaque(v))
+            || self.limit.is_some_and(|v| !(1..=1000).contains(&v))
+            || self.cursor.as_ref().is_some_and(|v| !cursor(v))
+        {
+            return Err(Error::Request);
+        }
+        let mut fields = Vec::new();
+        if let Some(v) = self.from {
+            fields.push(("from", v.to_string()));
+        }
+        if let Some(v) = self.through {
+            fields.push(("through", v.to_string()));
+        }
+        if let Some(v) = &self.agent_id {
+            fields.push(("agent_id", v.clone()));
+        }
+        if let Some(v) = self.limit {
+            fields.push(("limit", v.to_string()));
+        }
+        if let Some(v) = &self.cursor {
+            fields.push(("cursor", v.clone()));
+        }
+        Ok(fields)
+    }
+}
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct SearchPage {
+    pub snapshot: String,
+    pub hits: Vec<SearchHit>,
+}
+#[derive(Deserialize, Serialize)]
+#[serde(deny_unknown_fields)]
+pub struct SearchHit {
+    pub journal: String,
+    pub record: Descriptor,
+    pub score_bits: f64,
+    pub continued: bool,
+    pub excerpt_start: usize,
+    pub excerpt_end: usize,
+    pub excerpt: String,
 }
 #[derive(Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
@@ -212,10 +301,27 @@ impl Metadata {
             .is_ok()
     }
 }
+fn valid_row(journal: &str, d: &Descriptor, s: &Selection) -> bool {
+    let m = &d.record;
+    opaque(journal)
+        && opaque(&d.id)
+        && m.valid()
+        && d.text_bytes <= MAX_TEXT_BYTES as u64
+        && d.generation > 0
+        && d.capture
+            .as_ref()
+            .is_none_or(|c| opaque(&c.event_id) && opaque(&c.run_id))
+        && s.agent_id.as_ref().is_none_or(|a| a == &m.agent_id)
+        && s.from.is_none_or(|v| m.valid_at >= v)
+        && s.through.is_none_or(|v| m.valid_at <= v)
+}
 impl ProjectClient {
     pub fn open(path: &Path) -> Result<Self> {
         let c: Connection =
             serde_json::from_slice(&read_private(path, 8192)?).map_err(|_| Error::Connection)?;
+        Self::from_connection(&c)
+    }
+    fn from_connection(c: &Connection) -> Result<Self> {
         let url = Url::parse(&c.base_url).map_err(|_| Error::Connection)?;
         let local = url.scheme() == "http"
             && matches!(url.host_str(), Some("localhost" | "127.0.0.1" | "[::1]"));
@@ -311,29 +417,7 @@ impl ProjectClient {
         Ok(bytes)
     }
     pub fn records(&self, s: &Selection) -> Result<Page> {
-        if s.from.zip(s.through).is_some_and(|(a, b)| a > b)
-            || s.agent_id.as_ref().is_some_and(|v| !opaque(v))
-            || s.limit.is_some_and(|v| !(1..=1000).contains(&v))
-            || s.cursor.as_ref().is_some_and(|v| !cursor(v))
-        {
-            return Err(Error::Request);
-        }
-        let mut fields = Vec::new();
-        if let Some(v) = s.from {
-            fields.push(("from", v.to_string()));
-        }
-        if let Some(v) = s.through {
-            fields.push(("through", v.to_string()));
-        }
-        if let Some(v) = &s.agent_id {
-            fields.push(("agent_id", v.clone()));
-        }
-        if let Some(v) = s.limit {
-            fields.push(("limit", v.to_string()));
-        }
-        if let Some(v) = &s.cursor {
-            fields.push(("cursor", v.clone()));
-        }
+        let fields = s.fields()?;
         let body = reqwest::Url::parse_with_params("https://unused.invalid/", &fields)
             .map_err(|_| Error::Request)?;
         let body = body.query().unwrap_or("");
@@ -363,24 +447,75 @@ impl ProjectClient {
         let mut seen = BTreeSet::new();
         for row in &page.records {
             let d = &row.record;
-            let m = &d.record;
-            if !opaque(&row.journal)
-                || !opaque(&d.id)
-                || !seen.insert((&row.journal, &d.id))
-                || !m.valid()
-                || d.text_bytes > MAX_TEXT_BYTES as u64
-                || d.generation == 0
-                || d.capture
-                    .as_ref()
-                    .is_some_and(|c| !opaque(&c.event_id) || !opaque(&c.run_id))
-                || s.agent_id.as_ref().is_some_and(|a| a != &m.agent_id)
-                || s.from.is_some_and(|v| m.valid_at < v)
-                || s.through.is_some_and(|v| m.valid_at > v)
-            {
+            if !valid_row(&row.journal, d, s) || !seen.insert((&row.journal, &d.id)) {
                 return Err(Error::Response);
             }
         }
         Ok(page)
+    }
+    /// Metered operation: an uncertain reply must retain the original identity.
+    /// Repeating it obtains status only; neither client nor server reruns it.
+    pub fn search(&self, request: &str, text: &str, s: &Selection, k: usize) -> Result<SearchPage> {
+        if !opaque(request)
+            || text.trim().is_empty()
+            || text.len() > 4096
+            || !(1..=100).contains(&k)
+            || s.limit.is_some()
+            || s.cursor.is_some()
+        {
+            return Err(Error::Request);
+        }
+        let mut fields = s.fields()?;
+        fields.extend([
+            ("request_id", request.into()),
+            ("q", text.into()),
+            ("k", k.to_string()),
+        ]);
+        let encoded = Url::parse_with_params("https://unused.invalid/", &fields)
+            .map_err(|_| Error::Request)?;
+        let body = encoded.query().unwrap_or("");
+        if body.len() > 32 * 1024 {
+            return Err(Error::Bounds);
+        }
+        let response = self
+            .client
+            .post(format!("{}search", self.base))
+            .header(AUTHORIZATION, self.auth.clone())
+            .header("content-type", "application/x-www-form-urlencoded")
+            .header("accept-encoding", "identity")
+            .body(body.to_owned())
+            .send()
+            .map_err(|_| Error::SearchUnknown(None))?;
+        let result = (|| {
+            let page: SearchPage =
+                serde_json::from_slice(&self.collect(response, "application/json", 4 * MIB)?)
+                    .map_err(|_| Error::Response)?;
+            if !opaque(&page.snapshot) || page.hits.len() > k {
+                return Err(Error::Response);
+            }
+            let mut seen = BTreeSet::new();
+            for hit in &page.hits {
+                if !valid_row(&hit.journal, &hit.record, s)
+                    || !seen.insert((&hit.journal, &hit.record.id))
+                    || !hit.record.record.indexed
+                    || !hit.score_bits.is_finite()
+                    || hit.excerpt.len() > 320
+                    || hit.excerpt_end < hit.excerpt_start
+                    || hit.excerpt_end as u64 > hit.record.text_bytes
+                    || hit.excerpt.len() != hit.excerpt_end - hit.excerpt_start
+                {
+                    return Err(Error::Response);
+                }
+            }
+            Ok(page)
+        })();
+        result.map_err(|e| {
+            Error::SearchUnknown(if let Error::Http(status) = e {
+                Some(status)
+            } else {
+                None
+            })
+        })
     }
     pub fn content(&self, journal: &str, record: &str) -> Result<String> {
         if !opaque(journal) || !opaque(record) {

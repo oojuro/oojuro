@@ -1,0 +1,131 @@
+{
+  "base": "0bfef211fcf884279f8b1fb9b36f22822bd05ef9",
+  "branch": "codex/session-sdk-setup",
+  "contract": {
+    "attachment": "already provisioned matching session descriptor, original-byte version and separate intentional native file grant; metadata-only event links through bound route",
+    "automatic_attachment_spool": false,
+    "automatic_local_file_discovery": false,
+    "backend_capacity_note": "account/source backend limits independently enforced; per-spool cap is not a capacity promise",
+    "binary_understanding_or_derived_search": false,
+    "default": "new caller provider run creates a new logical journal; resume/retry retains it; stable IDs are application-owned",
+    "intent": "original event, request identity and first run/label intent persisted before effects; accepted route persisted before event send",
+    "key_replacement": "v2 pending actor-bound requests fail closed on key rotation; no automatic repack/rebind/new request IDs",
+    "legacy": "v1 private spool schema/identity and legacy emitted route/frame behavior unchanged; existing v1 binding cannot silently migrate",
+    "new_spool_schema": 2,
+    "read_authority": "separate current project read grant; capture key does not grant project reads or Blob bytes",
+    "retained_session_mappings_cap": 1024,
+    "routing": "strict source/agent/run/logical journal/exact canonical same-origin events path; explicit mixed-run/agent batches refuse before effects",
+    "source_vs_namespace": "physical source project from immutable capture token and Root3 namespace from discovery are pinned separately"
+  },
+  "date": "2026-10-23",
+  "dependencies_added": 0,
+  "evidence_sha256": {
+    "session-sdk-acceptance/joined.log": "03efbdccca90524a9ff9417cc9e288d683d9c1ce25c373c7ba612a7cacddf613",
+    "session-sdk-all.log": "b11d8fea8821bbefca284a4a163f903669e75d73b5ee96a3ac65695230764b8e",
+    "session-sdk-focused.log": "b49db50ab50bf030b34a9ee44bef6fb5ff4f30a21c3bd88c8700e8b279cdeca2",
+    "session-sdk-pack.json": "d806f13e7fda0f87fffca20342bcf0c94149dc451b9460f46e6ce2cee239d237",
+    "session-sdk-package/install.log": "0d5ce4a1747dbc4a2e5dc517a5dd2a3a5a3b329bdaf7c31c3f2eb7e419f5fb54",
+    "session-sdk-types.log": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "format": "oojuro-session-sdk-qualification-1",
+  "module_sha256": {
+    "attachments.js": "19e572526f1273d84ae5f47943052e089313e9edc9c51f320444f3e192683f20",
+    "capture.js": "b6178e49b86dffadad43c0dac4b2e075a43eebe466d5118b53b4378ff948dbaa",
+    "index.js": "aaf53a5b045e3943f84f0752f842bfccc97c17c9911ca4bd219bd63b121e080d"
+  },
+  "not_qualified": [
+    "Actual owner/application instrumentation, real history acceptance, model-driven agent calls or systemd.",
+    "SDK process/host restart or AWS recovery/failover; only SQLite-handle reopen here.",
+    "Owner-friendly reconciliation/replacement of actor-bound uncertain pending requests.",
+    "Combined capture/read grant or automatic file selection/spooling; grants and user intent remain distinct.",
+    "Production latency/RAM/capacity/cost, provider durability drills, package release or deployment."
+  ],
+  "pr": "https://github.com/oojuro/oojuro/pull/74",
+  "production_changed": false,
+  "publication": {
+    "core_draft_pr": 74,
+    "core_repository_visibility": "public",
+    "deployment": false,
+    "github_actions": "disabled; qualification commands ran locally, no remote CI claim",
+    "hosted_draft_pr": 78,
+    "hosted_repository_visibility": "private",
+    "main_merge": false,
+    "package_release": false,
+    "public_topic_and_draft_pr_authorized": true
+  },
+  "repository": "oojuro/oojuro",
+  "reviewed_attachment_source": "df110aa885bbe6a53728225173df0fe29660df80",
+  "runtime_performance_gain_claim": false,
+  "sdk_runtime_source": "e42553d885f76552928e447ce4999efcb98d982b",
+  "sdk_subtree": "59ce8f6390a738fa3c8dfa8d6a3e039add4b29d9",
+  "status": "review candidate; local SDK and dedicated actual hosted session/file journey passed; no owner or production activation",
+  "verification": {
+    "actual_hosted": {
+      "authority": "real loopback HTTP + native in-process test authority + disposable TLS/SCRAM PostgreSQL; not AWS or provider key-service TLS qualification",
+      "command": "OOJURO_SESSION_SDK_ROOT=<absolute clean e425 SDK tree> OOJURO_SESSION_SDK_REPORT=<private report> python3 scripts/test-shared-accounts.py --directory-filter account_repository::directory::tests::session_sdk::",
+      "filtered_out": 618,
+      "fixture_base": "65f89019720473d50b60e12293dabcd74f812d48",
+      "fixture_branch": "codex/session-sdk-acceptance",
+      "fixture_pr": "https://github.com/oojuro/o-cloud/pull/78",
+      "fixture_repository": "oojuro/o-cloud",
+      "fixture_runtime_source": "cd7910e97cbdcb6b72828d6576ffff41cd42220f",
+      "passed": 1,
+      "raw_report_sha256": "ccb11d7a2a4de4d0ff38ed21addda4c310012b58159d06963055509a8843f221",
+      "report": {
+        "journey": {
+          "accepted_transcript_events": 3,
+          "actual_owner_agent": false,
+          "actual_process_restart": false,
+          "attachment_events": 1,
+          "capture_file_read_write_refused": true,
+          "capture_read_refused": true,
+          "detach_download_refused": true,
+          "event_ack_drops": 1,
+          "exact_file_bytes": 262145,
+          "fixture": "actual-node-session-sdk-native-http-postgresql-selected-file",
+          "journals": 2,
+          "link_ack_drops": 1,
+          "logical_attachment_link": true,
+          "mixed_run_refused_before_dispatch": true,
+          "part_ack_drops": 1,
+          "parts": 2,
+          "phase": "complete",
+          "prior_exact_context": true,
+          "production": false,
+          "resumed_same_journal": true,
+          "revoked_project_read_download_refused": true,
+          "setup_ack_drops": 1,
+          "sqlite_handle_reopens": 2
+        },
+        "production": false,
+        "retained_detach_eof_refused": true,
+        "retained_revoke_eof_refused": true,
+        "sdk_runtime": "e42553d885f76552928e447ce4999efcb98d982b",
+        "sdk_tree": "59ce8f6390a738fa3c8dfa8d6a3e039add4b29d9"
+      }
+    },
+    "focused_session_and_file_tests": {
+      "command": "node --test test/session-capture.test.js test/attachments.test.js",
+      "counted_inside_full_suite": true,
+      "failed": 0,
+      "passed": 11
+    },
+    "full_node_tests": {
+      "command": "node --test test/*.test.js",
+      "failed": 0,
+      "passed": 111,
+      "skipped": 0
+    },
+    "node_runtime": "24.20.0",
+    "offline_package": {
+      "pack_install_exports_passed": true,
+      "private_package_flag": true,
+      "published": false,
+      "tar_sha256": "27e16d58b89bd2913eba11cb090dbd73a9ce77360096fa0c14ded2b32efa0fc0"
+    },
+    "typescript": {
+      "command": "node <cached-typescript>/bin/tsc --strict --noEmit --target ES2023 --module NodeNext --moduleResolution NodeNext test/*.ts",
+      "passed": true
+    }
+  }
+}

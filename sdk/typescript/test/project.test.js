@@ -12,6 +12,55 @@ const descriptor = () => ({ id: id("a"), text_bytes: 16, generation: 4,
 const page = () => ({ snapshot: id("f"), records: [{ journal: id("1"), record: descriptor() }], next: "opaque_cursor-1" });
 const json = value => new Response(JSON.stringify(value), { headers: { "content-type": "application/json" } });
 const client = transport => new OojuroProjectClient({ baseUrl: "https://example.invalid", project: id("2"), token, fetch: transport });
+const searchPage = () => ({ snapshot: id("f"), hits: [{ journal: id("1"), record: descriptor(),
+  score_bits: 2.5, continued: false, excerpt_start: 2, excerpt_end: 8, excerpt: "α🦉" }] });
+
+test("project search uses one explicit metered request, body-only query and exact UTF8 excerpt offsets", async () => {
+  let calls = 0;
+  const c = client(async (url,init) => {
+    calls++; assert.equal(url, `https://example.invalid/api/projects/${id("2")}/search`);
+    assert.equal(init.method,"POST"); assert.equal(init.credentials,"omit"); assert.equal(init.redirect,"error");
+    const form = new URLSearchParams(init.body);
+    assert.equal(form.get("q"),"private α words\nsecond line"); assert.equal(form.get("request_id"),id("3"));
+    assert.equal(form.get("agent_id"),id("e")); return json(searchPage());
+  });
+  assert.deepEqual(await c.search({ requestId:id("3"),query:"private α words\nsecond line",from:10,through:20,agentId:id("e"),k:1 }),searchPage());
+  assert.equal(calls,1);
+});
+
+test("search validation precedes the network and dispatched failures retain unknown metering outcome", async () => {
+  let calls=0; const c=client(async()=>{calls++;throw Error(token);});
+  for (const change of [{requestId:"not-opaque"},{query:" "},{query:"α".repeat(2049)},{k:0},{k:101},
+    {cursor:"unsupported"},{from:2,through:1},{from:1.1},{agentId:"wrong"}]) {
+    await assert.rejects(c.search({requestId:id("3"),query:"words",...change}),error("invalid_request"));
+  }
+  assert.equal(calls,0);
+  await assert.rejects(c.search({requestId:id("3"),query:"words"}),e=>e.outcome==="unknown"&&!String(e).includes(token));
+  assert.equal(calls,1,"transport failure never triggers an automatic retry");
+  const controller=new AbortController();controller.abort();
+  await assert.rejects(c.search({requestId:id("3"),query:"words"},{signal:controller.signal}),error("aborted"));
+  assert.equal(calls,1);
+  await assert.rejects(client(async()=>new Response(token,{status:409})).search({requestId:id("3"),query:"words"}),
+    e=>e.status===409&&e.outcome==="unknown"&&!String(e).includes(token));
+});
+
+test("search rejects malformed hits, foreign selections, ambiguous integers and incomplete EOF", async () => {
+  for (const mutate of [p=>p.hits.push(p.hits[0]),p=>{p.hits[0].record.record.indexed=false;},
+    p=>{p.hits[0].score_bits=null;},p=>{p.hits[0].continued=1;},p=>{p.hits[0].excerpt_end=9;},
+    p=>{p.hits[0].excerpt_start=-1;},p=>{p.hits[0].record.record.valid_at=99;},
+    p=>{p.hits[0].record.record.agent_id=id("9");},p=>{p.hits[0].record.record.text="unexpected full payload";}]) {
+    const value=searchPage();mutate(value);
+    await assert.rejects(client(async()=>json(value)).search({requestId:id("3"),query:"words",from:10,through:20,agentId:id("e"),k:1}),
+      e=>e.code==="invalid_response"&&e.outcome==="unknown");
+  }
+  const wire=JSON.stringify(searchPage()).replace('"excerpt_end":8','"excerpt_end":8.0000000000000001');
+  await assert.rejects(client(async()=>new Response(wire,{headers:{"content-type":"application/json"}})).search({requestId:id("3"),query:"words"}),
+    e=>e.code==="invalid_response"&&e.outcome==="unknown");
+  let read=0;const c=client(async()=>new Response(new ReadableStream({pull(controller){
+    if(read++===0)controller.enqueue(new TextEncoder().encode(JSON.stringify(searchPage())));else controller.error(Error(token));
+  }}),{headers:{"content-type":"application/json"}}));
+  await assert.rejects(c.search({requestId:id("3"),query:"words"}),e=>e.outcome==="unknown"&&!String(e).includes(token));
+});
 
 test("project adapter keeps cursors/bearers out of URLs and sends no cookies or native generation", async () => {
   const requests = [];

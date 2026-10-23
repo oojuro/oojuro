@@ -26,6 +26,8 @@ pub mod config;
 pub mod exclude;
 pub mod hook;
 pub mod hosted;
+pub mod hosted_capture;
+pub mod hosted_mcp;
 pub mod journal;
 pub mod mcp;
 pub mod otel;

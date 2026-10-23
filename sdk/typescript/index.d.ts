@@ -170,10 +170,12 @@ export class PreparedSearch {
 }
 /** Fresh hosted flat-record namespace; never enrolls or migrates legacy Trace data. */
 export interface JournalRoot {
-  schema: 1;
-  minimum_reader: 1;
+  schema: 1 | 2 | 3;
+  minimum_reader: 1 | 2 | 3;
   project: OpaqueId;
   namespace: OpaqueId;
+  /** Required in validated schema 2/3 roots, absent in schema 1. */
+  ownership?: { account: string; agent: OpaqueId };
 }
 export type JournalKind =
   | "input"
@@ -308,6 +310,7 @@ export class PreparedJournalPeriods {
   send(options?: { signal?: AbortSignal }): Promise<Read<JournalPeriod[]>>;
 }
 export class OojuroClient {
+  readonly origin: string;
   constructor(options: ClientOptions);
   journalRoot(options?: ReadOptions): Promise<Read<JournalRoot>>;
   /** Encoded Journal POSTs are capped at 1 MiB, or the lower configured request limit.
@@ -363,6 +366,24 @@ export interface CaptureDiscovery {
   label: string;
   expires_us: WireInteger;
   limits: { events: number; metadata_bytes: number; text_bytes: number };
+  journal_mode?: "session";
+  session_endpoint?: "/api/capture/sessions";
+}
+/** Persist the complete accepted route with its original run/label intent. IDs are not grants. */
+export interface CaptureSession {
+  readonly format: 1;
+  readonly journal: OpaqueId;
+  readonly source: OpaqueId;
+  readonly agent_id: OpaqueId;
+  readonly run_id: OpaqueId;
+  readonly project?: OpaqueId | null;
+  readonly events_url: string;
+}
+export function captureSession(input: CaptureSession): CaptureSession;
+export class PreparedCaptureSession {
+  private constructor();
+  /** Persist intent first. Retry with the same run and label after an unknown outcome. */
+  send(options?: { signal?: AbortSignal }): Promise<CaptureSession>;
 }
 export interface CaptureReceipt {
   request_id: string;
@@ -379,8 +400,11 @@ export class PreparedCapture {
 export class OojuroCaptureClient {
   constructor(options: { baseUrl: string; token: string; fetch?: typeof globalThis.fetch });
   readonly origin: string;
+  readonly source: OpaqueId;
   discover(options?: { signal?: AbortSignal }): Promise<CaptureDiscovery>;
-  prepareBatch(input: { requestId: string; events: readonly CaptureEvent[] }): PreparedCapture;
+  prepareSession(input: { runId: OpaqueId; label: string }): PreparedCaptureSession;
+  /** Bound batches contain only the route's single run and agent; mixed inputs refuse before effects. */
+  prepareBatch(input: { requestId: string; events: readonly CaptureEvent[]; session?: CaptureSession }): PreparedCapture;
 }
 
 export interface ProjectRecordsInput {
@@ -403,11 +427,38 @@ export interface ProjectRecordsPage {
   records: ProjectRecordRow[];
   next: string | null;
 }
+export interface ProjectSearchInput extends Omit<ProjectRecordsInput, "limit" | "cursor"> {
+  /** Retain this opaque request identity and exact input after any uncertain outcome. */
+  requestId: OpaqueId;
+  query: string;
+  /** 1–100; default 20. Latest visible keyed versions only; no search cursor. */
+  k?: number;
+}
+export interface ProjectSearchHit extends ProjectRecordRow {
+  score_bits: number;
+  continued: boolean;
+  /** UTF-8 byte offsets in the exact original text. */
+  excerpt_start: WireInteger;
+  excerpt_end: WireInteger;
+  excerpt: string;
+}
+export interface ProjectSearchPage {
+  snapshot: OpaqueId;
+  hits: ProjectSearchHit[];
+}
 /** Hosted shared-project read API. Accepts ojp_ keys only; cannot append/administer. */
 export class OojuroProjectClient {
   constructor(options: { baseUrl: string; project: OpaqueId; token: string; fetch?: typeof globalThis.fetch });
   /** Form POST keeps opaque cursors out of request URLs. Bounded 4 MiB; clean EOF required. */
   records(input?: ProjectRecordsInput, options?: { signal?: AbortSignal }): Promise<ProjectRecordsPage>;
+  /** Metered search, no automatic retries. After dispatch errors outcome is unknown;
+   * repeating the original request returns status only (409), never reruns it. */
+  search(input: ProjectSearchInput, options?: { signal?: AbortSignal }): Promise<ProjectSearchPage>;
+  /** One currently visible event-linked manifest/part. Part index is 0..63; no arbitrary Blob names. */
+  attachmentPart(input: { journal: OpaqueId; recordId: OpaqueId; part?: number },
+    options?: { signal?: AbortSignal; minGeneration?: WireInteger }): Promise<{
+      generation: WireInteger; revision: OpaqueId; bytes: Uint8Array;
+    }>;
   /** Exact UTF-8 including leading BOM/NUL, at most 16 MiB; returned only after clean EOF. */
   content(input: { journal: OpaqueId; recordId: OpaqueId }, options?: { signal?: AbortSignal }): Promise<string>;
 }

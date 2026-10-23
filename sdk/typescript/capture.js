@@ -3,7 +3,7 @@ import { DatabaseSync } from "node:sqlite";
 import { constants, lstatSync, openSync, closeSync, fstatSync, fsyncSync, mkdirSync } from "node:fs";
 import { isAbsolute, join, dirname, parse as parsePath } from "node:path";
 import { randomBytes } from "node:crypto";
-import { OojuroCaptureClient, OojuroError, captureEvent } from "./index.js";
+import { OojuroCaptureClient, OojuroError, captureEvent, captureSession } from "./index.js";
 const inspect = Symbol.for("nodejs.util.inspect.custom");
 const MiB = 1024 * 1024;
 const fail = (code) => { throw new OojuroError(code); };
@@ -47,8 +47,19 @@ function privateFile(path, create = false) {
     if (create) fsyncSync(fd);
   } finally { if (fd !== undefined) closeSync(fd); }
 }
-function binding(origin, info) {
-  return JSON.stringify([origin, info.journal, info.agent_id, info.producer_id]);
+function binding(origin, info, source) {
+  return JSON.stringify([origin, info.journal, info.agent_id, info.producer_id,
+    ...(info.journal_mode === "session" ? ["session", source] : [])]);
+}
+function roleLabel(value) {
+  if (typeof value !== "string" || !value.isWellFormed() || !value.length || value !== value.trim() ||
+      Buffer.byteLength(value) > 128 || /\p{Cc}/u.test(value)) fail("invalid_configuration");
+  return value;
+}
+function sessionLabel(role, run) {
+  const tail = ` / ${run.slice(0, 8)}`, prefix = Array.from(role);
+  while (Buffer.byteLength(prefix.join("") + tail) > 128) prefix.pop();
+  return prefix.join("") + tail;
 }
 export class CaptureSpool {
   #db;
@@ -56,13 +67,16 @@ export class CaptureSpool {
   #binding;
   #maxBytes;
   #maxEvents;
+  #sessionMode = false;
+  #role;
   #flushing = false;
   constructor(key) { if (key !== internal) fail("use_spool_open"); }
-  static async open({ directory, client, maxBytes = 64 * MiB, maxEvents = 10000, signal } = {}) {
+  static async open({ directory, client, maxBytes = 64 * MiB, maxEvents = 10000, sessionLabel: role, signal } = {}) {
     let db;
     try {
       if (!(client instanceof OojuroCaptureClient) || !Number.isSafeInteger(maxBytes) || maxBytes < 1024 || maxBytes > 256 * MiB ||
           !Number.isSafeInteger(maxEvents) || maxEvents < 1 || maxEvents > 100000) fail("invalid_configuration");
+      if (role !== undefined) roleLabel(role);
       privateDirectory(directory);
       const path = join(directory, "capture.sqlite");
       privateFile(path, true);
@@ -80,15 +94,22 @@ export class CaptureSpool {
             CREATE TABLE events (seq INTEGER PRIMARY KEY AUTOINCREMENT, id TEXT NOT NULL UNIQUE, body TEXT NOT NULL, bytes INTEGER NOT NULL);
             CREATE TABLE batch (singleton INTEGER PRIMARY KEY CHECK(singleton=1), request TEXT NOT NULL, key_id TEXT NOT NULL, through INTEGER NOT NULL);
             PRAGMA user_version=1;`);
-        } else if (version !== 1) fail("invalid_spool");
+        } else if (version !== 1 && version !== 2) fail("invalid_spool");
         db.exec("COMMIT");
       } catch (error) { db.exec("ROLLBACK"); throw error; }
       let retained = db.prepare("SELECT binding FROM identity WHERE singleton=1").get()?.binding;
       if (retained === undefined) {
         const info = await client.discover({ signal: signal ?? AbortSignal.timeout(10000) });
-        const selected = binding(client.origin, info);
+        const selected = binding(client.origin, info, client.source);
         db.exec("BEGIN IMMEDIATE");
         try {
+          if (info.journal_mode === "session" && db.prepare("SELECT binding FROM identity WHERE singleton=1").get() === undefined) {
+            if (db.prepare("SELECT count(*) AS n FROM events").get().n || db.prepare("SELECT count(*) AS n FROM batch").get().n) fail("invalid_spool");
+            db.exec(`CREATE TABLE sessions (run TEXT PRIMARY KEY, label TEXT NOT NULL, route TEXT);
+              CREATE TABLE session_settings (singleton INTEGER PRIMARY KEY CHECK(singleton=1), role TEXT NOT NULL);
+              PRAGMA user_version=2;`);
+            db.prepare("INSERT INTO session_settings VALUES(1,?)").run(roleLabel(role ?? info.label));
+          }
           db.prepare("INSERT OR IGNORE INTO identity VALUES(1,?)").run(selected);
           retained = db.prepare("SELECT binding FROM identity WHERE singleton=1").get().binding;
           if (retained !== selected) fail("spool_binding_mismatch");
@@ -96,8 +117,17 @@ export class CaptureSpool {
         } catch (error) { db.exec("ROLLBACK"); throw error; }
       }
       const identity = JSON.parse(retained);
-      if (!Array.isArray(identity) || identity.length !== 4 || identity[0] !== client.origin ||
-          identity.slice(1).some((id) => typeof id !== "string" || !/^[0-9a-f]{64}$/.test(id))) fail("spool_binding_mismatch");
+      const sessionMode = Array.isArray(identity) && identity.length === 6 && identity[4] === "session" && identity[5] === client.source;
+      if (!Array.isArray(identity) || identity.length !== (sessionMode ? 6 : 4) || identity[0] !== client.origin ||
+          identity.slice(1, 4).some((id) => typeof id !== "string" || !/^[0-9a-f]{64}$/.test(id)) ||
+          db.prepare("PRAGMA user_version").get().user_version !== (sessionMode ? 2 : 1)) fail("spool_binding_mismatch");
+      if (sessionMode) {
+        if (db.prepare("SELECT count(*) AS n FROM sessions").get().n > 1024) fail("session_limit");
+        const saved = db.prepare("SELECT role FROM session_settings WHERE singleton=1").get();
+        if (!saved) fail("invalid_spool");
+        role = roleLabel(role ?? saved.role);
+        db.prepare("UPDATE session_settings SET role=? WHERE singleton=1").run(role);
+      } else if (role !== undefined) fail("session_capture_required");
       const fd = openSync(directory, constants.O_RDONLY | constants.O_DIRECTORY | constants.O_NOFOLLOW);
       try { fsyncSync(fd); } finally { closeSync(fd); }
       const spool = new CaptureSpool(internal);
@@ -106,11 +136,28 @@ export class CaptureSpool {
       spool.#binding = retained;
       spool.#maxBytes = maxBytes;
       spool.#maxEvents = maxEvents;
+      spool.#sessionMode = sessionMode;
+      spool.#role = role;
       if (spool.pending().events > maxEvents || spool.pending().bytes > maxBytes) fail("spool_full");
       return spool;
     } catch (error) { db?.close(); throw safe(error); }
   }
   get agentId() { return JSON.parse(this.#binding)[2]; }
+  /** Already accepted route only. No HTTP request or authority grant. */
+  session(runId) {
+    try {
+      if (!this.#db) fail("spool_closed");
+      if (!this.#sessionMode || typeof runId !== "string" || !/^[0-9a-f]{64}$/.test(runId)) fail("invalid_request");
+      const saved = this.#db.prepare("SELECT route FROM sessions WHERE run=?").get(runId);
+      if (!saved?.route) return undefined;
+      return this.#route(saved.route, runId);
+    } catch (error) { throw safe(error); }
+  }
+  #route(raw, run) {
+    const route = captureSession(JSON.parse(raw)), identity = JSON.parse(this.#binding);
+    if (route.source !== identity[5] || route.agent_id !== identity[2] || route.run_id !== run) fail("spool_binding_mismatch");
+    return route;
+  }
   toJSON() { return { type: "CaptureSpool" }; }
   [inspect]() { return "CaptureSpool {}"; }
   #transaction(operation) {
@@ -142,6 +189,10 @@ export class CaptureSpool {
         }
         const pending = this.pending();
         if (pending.events >= this.#maxEvents || pending.bytes + bytes > this.#maxBytes) fail("spool_full");
+        if (this.#sessionMode && !this.#db.prepare("SELECT run FROM sessions WHERE run=?").get(event.runId)) {
+          if (this.#db.prepare("SELECT count(*) AS n FROM sessions").get().n >= 1024) fail("session_limit");
+          this.#db.prepare("INSERT INTO sessions VALUES(?,?,NULL)").run(event.runId, sessionLabel(this.#role, event.runId));
+        }
         this.#db.prepare("INSERT INTO events(id,body,bytes) VALUES(?,?,?)").run(event.eventId, body, bytes);
         return { eventId: event.eventId, queued: true };
       });
@@ -157,7 +208,7 @@ export class CaptureSpool {
     try {
       while (this.pending().events) {
         const info = await this.#client.discover({ signal });
-        if (binding(this.#client.origin, info) !== this.#binding) fail("spool_binding_mismatch");
+        if (binding(this.#client.origin, info, this.#client.source) !== this.#binding) fail("spool_binding_mismatch");
         const batch = this.#transaction(() => {
           let current = this.#db.prepare("SELECT request,key_id,through FROM batch WHERE singleton=1").get();
           if (!current) {
@@ -167,6 +218,8 @@ export class CaptureSpool {
             const metadata = [];
             for (const row of rows) {
               const event = JSON.parse(row.body), length = Buffer.byteLength(event.input.text);
+              // Enqueue is individual events; every persisted batch deliberately targets one run.
+              if (this.#sessionMode && metadata.length && event.runId !== metadata[0].run_id) break;
               const part = { event_id: event.eventId, run_id: event.runId, adapter: event.adapter,
                 input: { ...event.input, text: "" }, text_length: length };
               const size = Buffer.byteLength(JSON.stringify({ format: 1, request_id: "f".repeat(64), events: [...metadata, part] }));
@@ -179,6 +232,7 @@ export class CaptureSpool {
             current = { request: randomId(), key_id: info.key_id, through };
             this.#db.prepare("INSERT INTO batch VALUES(1,?,?,?)").run(current.request, current.key_id, through);
           } else if (current.key_id !== info.key_id) {
+            if (this.#sessionMode) fail("spool_binding_mismatch");
             current.request = randomId(); current.key_id = info.key_id;
             this.#db.prepare("UPDATE batch SET request=?,key_id=? WHERE singleton=1").run(current.request, current.key_id);
           }
@@ -186,7 +240,33 @@ export class CaptureSpool {
           return { ...current, events };
         });
         if (!batch) break;
-        await this.#client.prepareBatch({ requestId: batch.request, events: batch.events }).send({ signal });
+        let route;
+        if (this.#sessionMode) {
+          const run = batch.events[0].runId;
+          if (batch.events.some(event => event.runId !== run || event.input.agent_id !== this.agentId)) fail("spool_binding_mismatch");
+          const intent = this.#db.prepare("SELECT label,route FROM sessions WHERE run=?").get(run);
+          if (!intent) fail("invalid_spool");
+          roleLabel(intent.label);
+          if (intent.route) route = this.#route(intent.route, run);
+          else {
+            const accepted = await this.#client.prepareSession({ runId: run, label: intent.label }).send({ signal });
+            if (accepted.source !== this.#client.source || accepted.agent_id !== this.agentId || accepted.run_id !== run)
+              fail("spool_binding_mismatch");
+            route = this.#transaction(() => {
+              const saved = this.#db.prepare("SELECT route FROM sessions WHERE run=?").get(run);
+              if (!saved) fail("invalid_spool");
+              if (saved.route) {
+                const existing = this.#route(saved.route, run);
+                if (existing.journal !== accepted.journal) fail("spool_binding_mismatch");
+                return existing;
+              }
+              this.#db.prepare("UPDATE sessions SET route=? WHERE run=? AND route IS NULL").run(JSON.stringify(accepted), run);
+              return accepted;
+            });
+          }
+        }
+        await this.#client.prepareBatch({ requestId: batch.request, events: batch.events,
+          ...(route ? { session: route } : {}) }).send({ signal });
         delivered += this.#transaction(() => {
           const current = this.#db.prepare("SELECT request FROM batch WHERE singleton=1").get();
           if (current?.request !== batch.request) return 0;

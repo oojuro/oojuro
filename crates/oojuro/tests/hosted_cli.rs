@@ -8,12 +8,202 @@ use std::{
     net::TcpListener,
     os::unix::fs::{PermissionsExt, symlink},
     path::Path,
-    process::{Command, Output},
+    process::{Command, Output, Stdio},
     thread,
 };
 
 fn id(c: char) -> String {
     c.to_string().repeat(64)
+}
+
+fn mcp(s: &Scratch, path: &Path, input: Vec<u8>) -> (Output, Vec<Value>) {
+    let mut child = Command::new(env!("CARGO_BIN_EXE_oojuro"))
+        .arg("--home")
+        .arg(s.path("unused-local-home"))
+        .args(["cloud", "mcp", "--connection"])
+        .arg(path)
+        .env_remove("HTTP_PROXY")
+        .env_remove("HTTPS_PROXY")
+        .env_remove("ALL_PROXY")
+        .env_remove("http_proxy")
+        .env_remove("https_proxy")
+        .env_remove("all_proxy")
+        .stdin(Stdio::piped())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap();
+    let mut stdin = child.stdin.take().unwrap();
+    let writer = thread::spawn(move || {
+        let _ = stdin.write_all(&input);
+    });
+    let out = child.wait_with_output().unwrap();
+    writer.join().unwrap();
+    assert!(!String::from_utf8_lossy(&out.stdout).contains(&token()));
+    assert!(!String::from_utf8_lossy(&out.stderr).contains(&token()));
+    assert!(!s.path("unused-local-home").exists());
+    let replies = out
+        .stdout
+        .split(|b| *b == b'\n')
+        .filter(|v| !v.is_empty())
+        .map(|v| serde_json::from_slice(v).expect("stdout is only MCP JSON"))
+        .collect();
+    (out, replies)
+}
+fn handshake() -> Vec<Value> {
+    vec![
+        json!({"jsonrpc":"2.0","id":1,"method":"initialize","params":{
+        "protocolVersion":"2025-11-25","capabilities":{},"clientInfo":{"name":"fixture","version":"1"}}}),
+        json!({"jsonrpc":"2.0","method":"notifications/initialized"}),
+    ]
+}
+fn frames(messages: Vec<Value>) -> Vec<u8> {
+    let mut bytes = Vec::new();
+    for v in messages {
+        serde_json::to_writer(&mut bytes, &v).unwrap();
+        bytes.push(b'\n');
+    }
+    bytes
+}
+fn tool(name: &str, arguments: Value) -> Value {
+    json!({"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":name,"arguments":arguments}})
+}
+fn tool_result(reply: &Value) -> Value {
+    assert_eq!(reply["result"]["isError"], false, "{reply}");
+    serde_json::from_str(reply["result"]["content"][0]["text"].as_str().unwrap()).unwrap()
+}
+
+#[test]
+fn hosted_mcp_negotiates_legacy_and_lists_only_scoped_read_tools() {
+    let s = Scratch::new("hosted-mcp-protocol");
+    let p = connection(&s, "http://127.0.0.1:9");
+    let mut messages = vec![
+        json!({"jsonrpc":"2.0","id":0,"method":"server/discover"}),
+        json!({"jsonrpc":"2.0","id":9,"method":"tools/list"}),
+    ];
+    messages.extend(handshake());
+    messages.push(json!({"jsonrpc":"2.0","id":2,"method":"tools/list"}));
+    messages.push(tool("remember", json!({"text":"must not write"})));
+    messages.push(tool(
+        "search",
+        json!({"request_id":id('3'),"query":"x","k":101}),
+    ));
+    let (out, replies) = mcp(&s, &p, frames(messages));
+    assert!(out.status.success());
+    assert_eq!(replies[0]["error"]["code"], -32601);
+    assert_eq!(replies[1]["error"]["message"], "initialization_required");
+    assert_eq!(replies[2]["result"]["protocolVersion"], "2025-11-25");
+    let names: Vec<_> = replies[3]["result"]["tools"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|v| v["name"].as_str().unwrap())
+        .collect();
+    assert_eq!(names, ["records", "search", "get"]);
+    assert_eq!(replies[4]["result"]["isError"], true);
+    assert_eq!(
+        replies[5]["result"]["content"][0]["text"],
+        "invalid_tool_arguments"
+    );
+}
+
+#[test]
+fn hosted_mcp_reads_metadata_and_exact_originals_with_project_key_only() {
+    let s = Scratch::new("hosted-mcp-read");
+    for (name, args, media, body, expected) in [
+        (
+            "records",
+            json!({"from":1000000,"through":2000000,"agent_id":id('e'),"limit":2,"cursor":"opaque_previous_cursor"}),
+            "application/json",
+            serde_json::to_vec(&page()).unwrap(),
+            page(),
+        ),
+        (
+            "get",
+            json!({"journal":id('1'),"record_id":id('a')}),
+            "text/plain; charset=utf-8",
+            "\u{feff}α🦉\0\r\noriginal".as_bytes().to_vec(),
+            json!({"journal":id('1'),"record_id":id('a'),"text":"\u{feff}α🦉\0\r\noriginal"}),
+        ),
+    ] {
+        let (url, h) = server(response(media, &body));
+        let p = connection(&s, &url);
+        let mut messages = handshake();
+        messages.push(tool(name, args));
+        let (out, replies) = mcp(&s, &p, frames(messages));
+        assert!(out.status.success());
+        assert_eq!(tool_result(&replies[1]), expected);
+        let wire = String::from_utf8(h.join().unwrap()).unwrap();
+        let (headers, _) = wire.split_once("\r\n\r\n").unwrap();
+        assert!(headers.contains(&format!("authorization: Bearer {}", token())));
+        assert!(!headers.to_ascii_lowercase().contains("cookie:"));
+        assert!(!headers.contains("opaque_previous_cursor"));
+    }
+}
+
+#[test]
+fn hosted_mcp_search_preserves_request_and_reports_unknown_without_remote_error_leaks() {
+    let s = Scratch::new("hosted-mcp-search");
+    let request_id = id('3');
+    let expected = json!({"snapshot":id('f'),"hits":[{"journal":id('1'),"record":page()["records"][0]["record"],"score_bits":2.5,
+        "continued":false,"excerpt_start":2,"excerpt_end":8,"excerpt":"α🦉"}]});
+    for failed in [false, true] {
+        let raw = if failed {
+            format!(
+                "HTTP/1.1 503 Busy\r\nContent-Length: {}\r\nConnection: close\r\n\r\n{}",
+                token().len(),
+                token()
+            )
+            .into_bytes()
+        } else {
+            response("application/json", &serde_json::to_vec(&expected).unwrap())
+        };
+        let (url, h) = server(raw);
+        let p = connection(&s, &url);
+        let mut messages = handshake();
+        messages.push(tool(
+            "search",
+            json!({"request_id":request_id,"query":"private search words","k":1}),
+        ));
+        let (out, replies) = mcp(&s, &p, frames(messages));
+        assert!(out.status.success());
+        if failed {
+            assert_eq!(replies[1]["result"]["isError"], true);
+            assert!(
+                replies[1]["result"]["content"][0]["text"]
+                    .as_str()
+                    .unwrap()
+                    .starts_with("hosted_search_outcome_unknown; retain original request_id")
+            );
+        } else {
+            let v = tool_result(&replies[1]);
+            assert_eq!(v["request_id"], request_id);
+            assert_eq!(v["hits"], expected["hits"]);
+        }
+        let wire = String::from_utf8(h.join().unwrap()).unwrap();
+        let (headers, body) = wire.split_once("\r\n\r\n").unwrap();
+        assert!(!headers.contains("private search words"));
+        assert!(body.contains(&format!("request_id={request_id}")));
+        assert!(body.contains("q=private+search+words"));
+    }
+}
+
+#[test]
+fn hosted_mcp_rejects_duplicate_arguments_and_bounds_the_stdio_frame() {
+    let s = Scratch::new("hosted-mcp-bound");
+    let p = connection(&s, "http://127.0.0.1:9");
+    let mut input = frames(handshake());
+    input.extend_from_slice(b"{\"jsonrpc\":\"2.0\",\"id\":2,\"method\":\"tools/call\",\"params\":{\"name\":\"records\",\"arguments\":{\"limit\":1,\"limit\":2}}}\n");
+    input.extend_from_slice(b"{\"jsonrpc\":\"2.0\",\"id\":3,\"method\":\"tools/list\",\"params\":{\"unexpected\":true}}\n");
+    input.extend(std::iter::repeat_n(b'x', (3 << 20) + 2));
+    let (out, replies) = mcp(&s, &p, input);
+    assert_eq!(out.status.code(), Some(2));
+    assert_eq!(
+        replies[1]["result"]["content"][0]["text"],
+        "invalid_tool_arguments"
+    );
+    assert_eq!(replies[2]["error"]["code"], -32602);
+    assert_eq!(replies[3]["error"]["message"], "mcp_input_bound");
 }
 fn token() -> String {
     format!("ojp_{}", "synthetic_secret_".repeat(3))
@@ -57,6 +247,52 @@ fn run(s: &Scratch, path: &Path, args: &[&str]) -> Output {
         .env_remove("all_proxy")
         .output()
         .unwrap()
+}
+#[test]
+fn hosted_project_setup_protects_secret_and_refuses_replacement_or_capture_credentials() {
+    let s = Scratch::new("hosted-project-setup");
+    fs::set_permissions(&s.0, fs::Permissions::from_mode(0o700)).unwrap();
+    let key = s.path("key");
+    private(&key, format!("{}\n", token()).as_bytes());
+    let path = s.path("project.json");
+    let args = [
+        "connect-project",
+        "--project",
+        &id('2'),
+        "--read-key-file",
+        key.to_str().unwrap(),
+    ];
+    let out = run(&s, &path, &args);
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert!(!String::from_utf8_lossy(&out.stdout).contains(&token()));
+    assert!(!String::from_utf8_lossy(&out.stderr).contains(&token()));
+    assert_eq!(
+        fs::metadata(&path).unwrap().permissions().mode() & 0o777,
+        0o600
+    );
+    let original = fs::read(&path).unwrap();
+    let cfg: Value = serde_json::from_slice(&original).unwrap();
+    assert_eq!(cfg["project"], id('2'));
+    assert_eq!(cfg["read_key"], token());
+    assert!(!run(&s, &path, &args).status.success());
+    assert_eq!(fs::read(&path).unwrap(), original);
+    private(&key, b"ojc_capture_key_must_never_grant_reads");
+    let refused = s.path("capture.json");
+    assert!(!run(&s, &refused, &args).status.success());
+    assert!(!refused.exists());
+    private(&key, token().as_bytes());
+    fs::set_permissions(&key, fs::Permissions::from_mode(0o644)).unwrap();
+    assert!(!run(&s, &refused, &args).status.success());
+    assert!(!refused.exists());
+    fs::set_permissions(&key, fs::Permissions::from_mode(0o600)).unwrap();
+    symlink(&path, &refused).unwrap();
+    assert!(!run(&s, &refused, &args).status.success());
+    assert_eq!(fs::read(&path).unwrap(), original);
+    assert!(!s.path("unused-local-home").exists());
 }
 fn server(reply: Vec<u8>) -> (String, thread::JoinHandle<Vec<u8>>) {
     let listener = TcpListener::bind("127.0.0.1:0").unwrap();
@@ -103,6 +339,63 @@ fn denied(out: &Output) {
     assert_eq!(out.status.code(), Some(2));
     assert!(out.stdout.is_empty());
     assert!(!String::from_utf8_lossy(&out.stderr).contains(&token()));
+}
+#[test]
+fn metered_search_uses_private_query_file_exact_offsets_and_reports_unknown_without_retry() {
+    let s = Scratch::new("hosted-search");
+    let q = s.path("query.txt");
+    private(&q, b"private search words");
+    let record = page()["records"][0]["record"].clone();
+    let expected = json!({"snapshot":id('f'),"hits":[{"journal":id('1'),"record":record,"score_bits":2.5,
+        "continued":false,"excerpt_start":2,"excerpt_end":8,"excerpt":"α🦉"}]});
+    let (base, h) = server(response(
+        "application/json",
+        &serde_json::to_vec(&expected).unwrap(),
+    ));
+    let path = connection(&s, &base);
+    let request = id('3');
+    let args = [
+        "search",
+        "--request-id",
+        &request,
+        "--query-file",
+        q.to_str().unwrap(),
+        "--from",
+        "@1",
+        "--through",
+        "@2",
+        "--k",
+        "1",
+    ];
+    let out = run(&s, &path, &args);
+    assert!(
+        out.status.success(),
+        "{}",
+        String::from_utf8_lossy(&out.stderr)
+    );
+    assert_eq!(
+        serde_json::from_slice::<Value>(&out.stdout).unwrap(),
+        expected
+    );
+    let wire = String::from_utf8(h.join().unwrap()).unwrap();
+    let (header, body) = wire.split_once("\r\n\r\n").unwrap();
+    assert!(header.starts_with(&format!("POST /api/projects/{}/search ", id('2'))));
+    assert!(!header.contains("private search words"));
+    assert!(body.contains("q=private+search+words"));
+    assert!(body.contains(&format!("request_id={request}")));
+    let mut broken = expected;
+    broken["hits"][0]["excerpt_end"] = json!(9);
+    let (base, h) = server(response(
+        "application/json",
+        &serde_json::to_vec(&broken).unwrap(),
+    ));
+    let path = connection(&s, &base);
+    let out = run(&s, &path, &args);
+    denied(&out);
+    assert!(String::from_utf8_lossy(&out.stderr).contains("search_outcome_unknown"));
+    h.join().unwrap();
+    fs::set_permissions(&q, fs::Permissions::from_mode(0o644)).unwrap();
+    denied(&run(&s, &path, &args));
 }
 #[test]
 fn hosted_metadata_cursor_is_posted_and_no_local_journal_is_opened() {
