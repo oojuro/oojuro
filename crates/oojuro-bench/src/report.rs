@@ -22,8 +22,8 @@ fn quality_order(suite: &str) -> &'static [&'static str] {
 
 fn speed_order(suite: &str) -> &'static [&'static str] {
     match suite {
-        "beir" => &["build_s", "search_p50_us", "search_p99_us"],
-        "turnloop" => &["prefill_s", "turn_overhead_p50_us", "turn_overhead_p99_us", "search_p50_us", "search_p99_us", "append_p50_us", "append_p99_us"],
+        "beir" => &["build_s", "search_get_p50_us", "search_get_p99_us", "search_p50_us", "search_p99_us"],
+        "turnloop" => &["prefill_s", "turn_content_overhead_p50_us", "turn_content_overhead_p99_us", "search_get_p50_us", "search_get_p99_us", "append_p50_us", "append_p99_us"],
         "memqa" => &["build_ms_p50", "search_p50_us", "search_p99_us"],
         _ => &[],
     }
@@ -86,7 +86,7 @@ pub fn render(cards: &[Scorecard], baseline: Option<&str>) -> String {
         );
         for key in [
             "runs", "cache", "build_time_included", "isolation", "k", "queries", "documents", "trajectories", "steps",
-            "labelled_steps", "background_target_records", "thinking", "questions",
+            "labelled_steps", "background_target_records", "thinking", "questions", "returned_content",
         ] {
             if let Some(v) = first.settings.get(key) {
                 let v = match v {
@@ -151,6 +151,9 @@ pub fn render(cards: &[Scorecard], baseline: Option<&str>) -> String {
         let _ = writeln!(out, "\nDurability per arm:\n");
         for a in &arms {
             let _ = writeln!(out, "- {}: {} ({}; commit {})", a.label, a.info.durability, a.info.version, a.info.commit);
+            for note in &a.info.notes {
+                let _ = writeln!(out, "  - {note}");
+            }
         }
         let refs: Vec<&Value> = cards.iter().flat_map(|c| &c.references).collect();
         if !refs.is_empty() {

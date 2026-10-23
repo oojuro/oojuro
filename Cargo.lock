@@ -4637,6 +4637,7 @@ version = "0.1.0"
 dependencies = [
  "blake3",
  "oojuro-core",
+ "oojuro-engine",
  "oojuro-nine",
  "rusqlite",
  "serde",

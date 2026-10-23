@@ -4,6 +4,7 @@ use crate::{Arm, Result};
 use std::collections::HashMap;
 
 pub mod nine;
+pub mod native_record;
 pub mod nine_maxdf;
 pub mod nine_v3;
 #[cfg(feature = "sqlite-arm")]
@@ -16,11 +17,12 @@ pub mod tantivy;
 /// Commit of the source tree this binary was built from (see build.rs).
 pub const COMMIT: &str = env!("OOJURO_BENCH_COMMIT");
 
-pub const BUILTIN: &[&str] = &["nine", "nine-v3", "tantivy", "sqlite", "jsonl", "jsonl-zstd"];
+pub const BUILTIN: &[&str] = &["native-record", "nine", "nine-v3", "tantivy", "sqlite", "jsonl", "jsonl-zstd"];
 
 pub fn builtin(name: &str) -> Result<Box<dyn Arm>> {
     match name {
         "nine" => Ok(Box::new(nine::NineArm::default())),
+        "native-record" => Ok(Box::new(native_record::NativeRecordArm::default())),
         "nine-v3" => Ok(Box::new(nine_v3::NineV3Arm::default())),
         n if n.starts_with("nine-maxdf:") => {
             let frac: f64 = n["nine-maxdf:".len()..].parse().map_err(|_| format!("{n}: want nine-maxdf:<fraction>"))?;

@@ -30,7 +30,7 @@ $B memqa --set longmemeval --split dev
 $B report bench-results/*.json --baseline nine > report.md
 ```
 
-Defaults: arms `nine nine-v3 tantivy sqlite jsonl jsonl-zstd`, `--runs 3`, every run in a fresh child
+Defaults: arms `native-record nine nine-v3 tantivy sqlite jsonl jsonl-zstd`, `--runs 3`, every run in a fresh child
 process inside a `systemd-run --user --scope` with `MemoryMax=3G` and
 `MemorySwapMax=0`, stores under `$TMPDIR/oojuro-bench/` (on disk, never /tmp),
 scorecard in `bench-results/<suite>-<dataset>-<split>-<utc>.json`.
@@ -44,6 +44,43 @@ Flags: `--arm [label=]spec` (repeat), `--runs N`, `--out FILE`, `--work DIR`,
 `--data DIR` (default `$OOJURO_DATA`, else `~/.cache/oojuro-data`), `--mem-max 3G`,
 `--in-process` (no isolation, no cgroup memory; quick iteration),
 `--keep` (keep stores), `--no-lock`.
+
+## Current native record arm and returned originals
+
+`native-record` measures the current `oojuro-engine` public `RecordLog` and the
+same `record::projection` API used by hosted captured-record search. It does not
+use Nine or Trace as its query implementation. Every search materializes the
+sealed log through the public paged view, resolves the latest imported version
+per key at the requested two clocks, and builds a fresh native projection with
+the actual source-origin/watermark binding. Its normal excerpt extraction is
+included. There is no retained search index. This includes the public view's
+pagination/materialization overhead, which is different from hosted blob reads.
+
+The harness's arbitrary source IDs, keys, known-at timestamps and metadata are
+stored as explicit **benchmark import attributes**. Native IDs and ingest clocks
+remain genuinely assigned by RecordLog; imported known-at is never represented
+as a native ingestion timestamp. This adapter tests the harness's imported
+two-clock contract, not an independently attested source-clock claim. Text and
+attributes must reopen exactly. A public fixed fixture key seals the local
+Store; it supplies no production confidentiality/key-management claim.
+
+RecordLog syncs each native append of at most 1,000 records. Larger harness
+batches use multiple native commits and may recover partially before the harness
+ACK. All acknowledged rows must survive SIGKILL. The native 100k-record/128 MiB
+state and metadata/work bounds apply; refusals are recorded, never silently
+truncated. The local Store's compression/encryption and metadata overhead differ
+from hosted per-object Zstd/S3/KMS and from Trace's dictionary/run archive. Do not
+use this arm's footprint, latency or failure domain for hosted pricing or SOTA.
+
+BEIR and turnloop now time **search plus original get for every returned top-k
+hit**, verify all those originals against the frozen input, and count returned
+original bytes. `search_get_p50_us`/`search_get_p99_us` include both operations and
+their protocol round trips; `turn_content_overhead_*` also includes durable
+append. The older `search_*` metrics remain IDs-only service timings. Native
+projection additionally computes excerpts as its real API requires. Ranking and
+tokenization still differ across native/Nine and FTS5/Tantivy; quality metrics
+and the exact returned-byte workload accompany speed. A result with a failed gate
+or arm error cannot support a performance claim.
 
 ## Indexed JSONL and JSONL + Zstd baselines
 

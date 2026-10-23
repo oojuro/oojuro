@@ -13,6 +13,7 @@ sqlite-arm = ["dep:rusqlite", "dep:zstd"]
 
 [dependencies]
 oojuro-core.workspace = true
+oojuro-engine = { path = "../oojuro-engine" }
 oojuro-nine = { path = "../oojuro-nine" }
 serde.workspace = true
 serde_json.workspace = true
