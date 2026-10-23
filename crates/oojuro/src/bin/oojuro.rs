@@ -30,6 +30,7 @@ const USAGE: &str =
   cloud connect --connection FILE --source ID --journal ID --label NAME [--base-url URL]
   cloud connection | capture-status | capture-check --connection FILE
   cloud capture --connection FILE --state DIR --source-root DIR --adapter codex|claude-code --accept-local-capture [--once]
+  cloud mcp --connection FILE                              project-scoped hosted history tools over stdio
   cloud records --connection FILE [--from T] [--through T] [--agent ID] [--limit N] [--cursor-file FILE]
   cloud search --connection FILE --request-id ID --query-file FILE [--from T] [--through T] [--agent ID] [--k N]
   cloud get --connection FILE --journal ID --id ID          hosted project metadata / exact text
@@ -240,6 +241,15 @@ fn open(cli: &Cli) -> Oojuro {
 fn cloud(cli: &Cli) -> Result<()> {
     if cli.args.first().is_some_and(|c| matches!(c.as_str(), "connect" | "connection" | "capture-status" | "capture-check" | "capture")) {
         return capture_command(cli);
+    }
+    if cli.args.first().is_some_and(|c| c == "mcp") {
+        let options = Opts::parse(&cli.args, &["--connection"], &[])?;
+        if options.vals.len() != 1 || options.rest != ["mcp"] {
+            return Err("invalid_hosted_mcp_arguments".into());
+        }
+        let path = std::path::Path::new(options.one("--connection").ok_or("missing_connection")?);
+        return oojuro::hosted_mcp::HostedMcpServer::open(path)?
+            .serve(std::io::stdin().lock(), std::io::stdout().lock());
     }
     use oojuro::hosted::{Error, ProjectClient, Selection, read_private};
     let o = Opts::parse(
