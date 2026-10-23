@@ -1,4 +1,6 @@
 [workspace]
+# Production libraries only; CLI, integrations and comparisons are explicit builds.
+default-members = ["crates/oojuro-engine", "crates/oojuro-rank", "crates/oojuro-store"]
 members = [
     "crates/oojuro-engine",
     "crates/oojuro",

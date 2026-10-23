@@ -59,17 +59,24 @@ Forgot to sign? Amend the last commit with `git commit --amend -s`, or sign a se
 
 ## Build and test
 
-You need a recent stable Rust toolchain (the workspace uses edition 2024) and a C compiler (the storage path
-builds zstd and SQLite). Linux is the first-class platform.
+You need a recent stable Rust toolchain (the workspace uses edition 2024) and a C compiler.
+The native engine builds Zstandard and ring's crypto C/assembly. SQLite and other
+comparison databases are only required by explicitly selected benchmark/application
+packages, not the minimal engine. Linux is the first-class platform.
 
 ```bash
-cargo build --workspace
-cargo test --workspace
-cargo clippy --workspace --all-targets
+cargo build --locked                  # native engine/rank/store libraries
+cargo test --locked                   # selected engine libraries and their test fixtures
+cargo build --locked -p oojuro        # CLI/recorder and integrations
+python3 scripts/dependency_audit.py --check --output work/dependency-audit.json
 ```
 
 The benchmark harnesses (`oojuro-bench`, `oojuro-tracebench`) build many competitor engines and fetch public
 datasets; see `docs/BENCH_HARNESS.md` and `docs/TRACEBENCH.md`. They are not needed to work on the engine.
+Use `cargo build --workspace`, `cargo test --workspace` or
+`cargo clippy --workspace --all-targets` when intentionally including those broader
+development targets. Storage tools require `--features bench-tools`; `codecs` and
+`baselines` include that feature. See [DEPENDENCIES.md](DEPENDENCIES.md) for the policy.
 
 ## What a good change looks like
 

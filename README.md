@@ -34,6 +34,7 @@ sign-off (`git commit -s`). There is no CLA.
 You need a recent stable Rust toolchain (edition 2024) and a C compiler. Linux is the first-class platform.
 
 ```bash
+cargo build --release                  # minimal native engine/rank/store libraries
 cargo build --release -p oojuro        # builds the `oojuro` CLI and the `oojurod` recorder
 cargo test --workspace                 # all unit and integration tests
 cargo clippy --workspace --all-targets
@@ -42,6 +43,9 @@ cargo clippy --workspace --all-targets
 Storage benchmark tools are explicit: `cargo build --release -p oojuro-store --features bench-tools`
 for `store-bench` (`--example frame_probe` selects the probe); existing `codecs` and `baselines`
 features also enable their JSON reporting dependency. The storage library does not require it.
+
+Dependency boundaries, the foundational allowlist and the reproducible graph check are in
+[DEPENDENCIES.md](DEPENDENCIES.md). `--workspace` intentionally includes development/benchmark crates.
 
 The workspace crates:
 
