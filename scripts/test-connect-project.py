@@ -50,7 +50,9 @@ saved=json.loads(config.read_text())
 if args[1]=="list":print(json.dumps([{"name":name} for name in saved]));sys.exit(0)
 if args[1]=="get":
  if args[2] in saved:sys.exit(0)
- print('No MCP server named "'+args[2]+'". Run `claude mcp add` to add one.',file=sys.stderr);sys.exit(1)
+ if os.environ.get("FAKE_MCP_LOOKUP_ERROR"):
+  print("configuration unavailable",file=sys.stderr);sys.exit(1)
+ print('No MCP server named "'+args[2]+'". Configured servers: unrelated-server',file=sys.stderr);sys.exit(1)
 assert args[1]=="add"
 name=args[2] if args[2]!="--transport" else args[6]
 assert name not in saved,"must not overwrite"
@@ -108,6 +110,22 @@ config.write_text(json.dumps(saved))
             self.assertEqual(out.returncode, 0, out.stderr.decode())
             self.assertFalse(directory.exists())
             self.assertFalse((root/"calls.jsonl").exists())
+
+    def test_agent_inventory_error_does_not_register_or_replace_settings(self):
+        with tempfile.TemporaryDirectory(prefix="oojuro-project-inventory-") as temporary:
+            root = Path(temporary)
+            binary = self.fixture(root)
+            config = root / "agent-config.json"
+            original = config.read_bytes()
+            env = dict(os.environ, PATH=str(root)+os.pathsep+os.environ["PATH"],
+                       OOJURO_PROJECT_READ_KEY=SECRET, FAKE_MCP_LOOKUP_ERROR="1")
+            out = subprocess.run([sys.executable, str(SCRIPT), "--binary", str(binary), "--adapter", "claude-code",
+                                  "--project", PROJECT, "--directory", str(root/"private")], env=env, capture_output=True, timeout=10)
+            self.assertEqual(out.returncode, 2)
+            self.assertIn(b"unrecognized agent MCP lookup", out.stderr)
+            self.assertEqual(config.read_bytes(), original)
+            self.assertFalse((root/"private/setup-read-key").exists())
+            self.assertNotIn(SECRET.encode(), out.stdout+out.stderr)
 
 
 if __name__ == "__main__":

@@ -157,7 +157,8 @@ def main():
         existing = subprocess.run([agent, "mcp", "get", name], capture_output=True, timeout=75, env=env)
         if existing.returncode == 0:
             raise ValueError("MCP server already exists; inspect it with the agent CLI; configuration preserved")
-        if existing.returncode != 1 or existing.stdout or existing.stderr.strip() != f'No MCP server named "{name}". Run `claude mcp add` to add one.'.encode():
+        missing = f'No MCP server named "{name}". '.encode()
+        if existing.returncode != 1 or existing.stdout or not existing.stderr.strip().startswith(missing):
             raise RuntimeError("unrecognized agent MCP lookup; configuration preserved")
     run(command)
     print(json.dumps({"project_read_verified": True, "mcp_protocol_verified": True, "server_registered": name,
