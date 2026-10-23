@@ -1,0 +1,40 @@
+   Compiling libc v0.2.191
+   Compiling serde_core v1.0.229
+   Compiling getrandom v0.2.17
+   Compiling rand_core v0.6.4
+   Compiling crypto-common v0.1.7
+   Compiling cipher v0.4.4
+   Compiling universal-hash v0.5.1
+   Compiling poly1305 v0.8.0
+   Compiling chacha20 v0.9.1
+   Compiling aead v0.5.2
+   Compiling serde_json v1.0.154
+   Compiling chacha20poly1305 v0.10.1
+   Compiling oojuro-store v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-record-replay-cache/crates/oojuro-store)
+warning: linker stderr: ignoring deprecated linker optimization setting '1'
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `oojuro-store` (bin "store-bench") generated 1 warning
+warning: `oojuro-store` (test "encrypted") generated 1 warning (1 duplicate)
+    Finished `release` profile [optimized] target(s) in 4.94s
+     Running tests/encrypted.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/projection-memory-next/target/release/deps/encrypted-dac5350292b07f62)
+
+running 14 tests
+test strict_sealing_requires_a_key_before_creating_a_store ... ok
+test malformed_encryption_marker_is_rejected_without_replacement ... ok
+test sealed_empty_bodies_and_truncation_are_checked ... ok
+test strict_sealing_refuses_plaintext_legacy_upgrade_without_mutating_it ... ok
+test encrypted_raw_frames_preserve_side_fields_ranges_and_time_scan ... ok
+test forged_hot_frame_fails_replay_without_truncating_the_log ... ok
+test strict_sealing_refuses_plaintext_frame_downgrade_without_truncation ... ok
+test strict_sealing_refuses_plaintext_cold_frame_downgrade ... ok
+test cleared_read_cache_preserves_reads_and_reauthenticates_frames ... ok
+test a_store_opens_only_with_its_key ... ok
+test an_unencrypted_store_gets_a_key_and_old_frames_stay_readable ... ok
+test forged_frames_are_refused_even_with_a_valid_checksum ... ok
+test forged_dictionary_fails_authentication_even_with_a_valid_checksum ... ok
+test encrypted_roundtrip_hot_cold_and_reopen ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.11s
+

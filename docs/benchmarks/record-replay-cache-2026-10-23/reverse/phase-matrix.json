@@ -1,0 +1,1776 @@
+{
+  "baseline": [
+    {
+      "label": "baseline",
+      "run": 0,
+      "binary_sha256": "a4fc53dd5f9f215d4bc3ee6e6e1765f8da95dfe5a059f42fcbc6581fb5edc0a0",
+      "open_us": 93816,
+      "open_roundtrip_us": 93951.588,
+      "samples": [
+        {
+          "phase": "initial",
+          "VmHWM": 5197824,
+          "VmRSS": 5197824,
+          "RssAnon": 663552
+        },
+        {
+          "phase": "after_open",
+          "VmHWM": 49549312,
+          "VmRSS": 48054272,
+          "RssAnon": 41832448
+        },
+        {
+          "phase": "query_0",
+          "VmHWM": 73490432,
+          "VmRSS": 73490432,
+          "RssAnon": 67072000
+        },
+        {
+          "phase": "query_1",
+          "VmHWM": 79998976,
+          "VmRSS": 79998976,
+          "RssAnon": 73580544
+        },
+        {
+          "phase": "query_2",
+          "VmHWM": 80642048,
+          "VmRSS": 80642048,
+          "RssAnon": 74223616
+        },
+        {
+          "phase": "query_3",
+          "VmHWM": 80748544,
+          "VmRSS": 80748544,
+          "RssAnon": 74330112
+        },
+        {
+          "phase": "query_4",
+          "VmHWM": 80777216,
+          "VmRSS": 80777216,
+          "RssAnon": 74358784
+        },
+        {
+          "phase": "query_5",
+          "VmHWM": 80777216,
+          "VmRSS": 80777216,
+          "RssAnon": 74358784
+        },
+        {
+          "phase": "query_6",
+          "VmHWM": 80801792,
+          "VmRSS": 80801792,
+          "RssAnon": 74383360
+        },
+        {
+          "phase": "query_7",
+          "VmHWM": 80801792,
+          "VmRSS": 80801792,
+          "RssAnon": 74383360
+        },
+        {
+          "phase": "query_8",
+          "VmHWM": 80814080,
+          "VmRSS": 80814080,
+          "RssAnon": 74395648
+        },
+        {
+          "phase": "query_9",
+          "VmHWM": 80826368,
+          "VmRSS": 80826368,
+          "RssAnon": 74407936
+        },
+        {
+          "phase": "query_10",
+          "VmHWM": 80826368,
+          "VmRSS": 80826368,
+          "RssAnon": 74407936
+        },
+        {
+          "phase": "query_11",
+          "VmHWM": 80834560,
+          "VmRSS": 80834560,
+          "RssAnon": 74416128
+        },
+        {
+          "phase": "query_12",
+          "VmHWM": 80842752,
+          "VmRSS": 80842752,
+          "RssAnon": 74424320
+        },
+        {
+          "phase": "query_13",
+          "VmHWM": 80842752,
+          "VmRSS": 80842752,
+          "RssAnon": 74424320
+        },
+        {
+          "phase": "query_14",
+          "VmHWM": 80875520,
+          "VmRSS": 80875520,
+          "RssAnon": 74457088
+        },
+        {
+          "phase": "after_close",
+          "VmHWM": 80654336,
+          "VmRSS": 78925824,
+          "RssAnon": 72507392
+        }
+      ],
+      "results": [
+        {
+          "query_id": "test-culture-ahrtsdlgra-con03a",
+          "ranked_ids_score_sha256": "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+          "originals_exact": true,
+          "returned_original_bytes": 43887,
+          "search_us": 510584,
+          "get_us": 672,
+          "search_get_roundtrip_us": 511719.251
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro01a",
+          "ranked_ids_score_sha256": "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+          "originals_exact": true,
+          "returned_original_bytes": 69122,
+          "search_us": 72291,
+          "get_us": 687,
+          "search_get_roundtrip_us": 73401.763
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro02a",
+          "ranked_ids_score_sha256": "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+          "originals_exact": true,
+          "returned_original_bytes": 40610,
+          "search_us": 71676,
+          "get_us": 645,
+          "search_get_roundtrip_us": 72764.208
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro03a",
+          "ranked_ids_score_sha256": "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+          "originals_exact": true,
+          "returned_original_bytes": 46737,
+          "search_us": 59962,
+          "get_us": 664,
+          "search_get_roundtrip_us": 61100.854
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con01a",
+          "ranked_ids_score_sha256": "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+          "originals_exact": true,
+          "returned_original_bytes": 80851,
+          "search_us": 72653,
+          "get_us": 661,
+          "search_get_roundtrip_us": 73892.856
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con02a",
+          "ranked_ids_score_sha256": "f230f54d89c08c9678fc1a2c87ae2578e6ef949902ffd5559cb5764b67f93e07",
+          "originals_exact": true,
+          "returned_original_bytes": 71703,
+          "search_us": 73509,
+          "get_us": 1065,
+          "search_get_roundtrip_us": 75072.83
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con03a",
+          "ranked_ids_score_sha256": "ac9b8a94a62cde41dc2458bf863c23dce69cfa7a639024bcfc19e1ff291449c7",
+          "originals_exact": true,
+          "returned_original_bytes": 73013,
+          "search_us": 74109,
+          "get_us": 686,
+          "search_get_roundtrip_us": 75402.863
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-pro02a",
+          "ranked_ids_score_sha256": "8fffcfd72681b08c57253f95434b2af271c89142ee9d32427d364794fcf81725",
+          "originals_exact": true,
+          "returned_original_bytes": 68702,
+          "search_us": 74395,
+          "get_us": 708,
+          "search_get_roundtrip_us": 75590.392
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-pro03a",
+          "ranked_ids_score_sha256": "0104eeac8b20e8a356eb827fc62d46359a701b14fc7fdbfc85c7c7815aba160d",
+          "originals_exact": true,
+          "returned_original_bytes": 79123,
+          "search_us": 68138,
+          "get_us": 668,
+          "search_get_roundtrip_us": 69371.812
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-con03a",
+          "ranked_ids_score_sha256": "ba578113d6192a16ce0ff39f41a3cda318bd59a7f58f8170bd50828ca172be27",
+          "originals_exact": true,
+          "returned_original_bytes": 92136,
+          "search_us": 63889,
+          "get_us": 681,
+          "search_get_roundtrip_us": 65161.023
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-pro01a",
+          "ranked_ids_score_sha256": "3a69c02f739a086bb1344eb541d9f1c3ab3a3c162c439f66658bc110b3db3500",
+          "originals_exact": true,
+          "returned_original_bytes": 84813,
+          "search_us": 65103,
+          "get_us": 688,
+          "search_get_roundtrip_us": 66375.84
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-pro04a",
+          "ranked_ids_score_sha256": "878f1611df16bc34319f06d7fa111925e5a2e9ec14aaf688bf2222d9fe4c8154",
+          "originals_exact": true,
+          "returned_original_bytes": 74983,
+          "search_us": 69553,
+          "get_us": 633,
+          "search_get_roundtrip_us": 70693.278
+        },
+        {
+          "query_id": "test-culture-mmciahbans-pro01a",
+          "ranked_ids_score_sha256": "f044d459995d4de5c88275a9ea1d20d9e3400d03e88b50e4f2991568e32a7d5d",
+          "originals_exact": true,
+          "returned_original_bytes": 64446,
+          "search_us": 64809,
+          "get_us": 593,
+          "search_get_roundtrip_us": 65821.971
+        },
+        {
+          "query_id": "test-culture-mmctghwbsa-con01a",
+          "ranked_ids_score_sha256": "13d2740efc26d3ae722796aa2de5ff6858bff7fa9a082d7383592869862705a7",
+          "originals_exact": true,
+          "returned_original_bytes": 92722,
+          "search_us": 68847,
+          "get_us": 717,
+          "search_get_roundtrip_us": 70134.77
+        },
+        {
+          "query_id": "test-culture-mmctghwbsa-con03a",
+          "ranked_ids_score_sha256": "5cbfe89382ee39bf924b31336434210e65c55f9358edff464cad7e96e2551d20",
+          "originals_exact": true,
+          "returned_original_bytes": 53472,
+          "search_us": 68916,
+          "get_us": 810,
+          "search_get_roundtrip_us": 70347.05500000001
+        }
+      ],
+      "store_bytes_unchanged": true,
+      "store_files": [
+        {
+          "path": "records/ENCRYPTED",
+          "size": 16,
+          "allocated": 4096,
+          "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+        },
+        {
+          "path": "records/LOCK",
+          "size": 0,
+          "allocated": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "records/MANIFEST",
+          "size": 40,
+          "allocated": 4096,
+          "sha256": "fafd89c5f2319a566305a86e438fa85324dd39b754fc74f4c9c96063af4a0c00"
+        },
+        {
+          "path": "records/RECORD_FORMAT",
+          "size": 16,
+          "allocated": 4096,
+          "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+        },
+        {
+          "path": "records/dict-00000001.ojd",
+          "size": 16477,
+          "allocated": 20480,
+          "sha256": "0fb5126e5734bb69ee625d01f5c02698a6a3075b3593573afb2cb5f4cb8ad094"
+        },
+        {
+          "path": "records/hot-00000001.ojl",
+          "size": 3500772,
+          "allocated": 3502080,
+          "sha256": "4e421b1550b8fcec0f3292a487ccfb75262780434b4532dce8154b7323c6b10c"
+        }
+      ],
+      "host_load": "1.99 2.76 2.81 7/4839 3446850\n",
+      "scope": "Local copied public immutable fixture; fresh process per run; warm OS cache; full search + exact original get; no hosted latency/capacity claim"
+    },
+    {
+      "label": "baseline",
+      "run": 1,
+      "binary_sha256": "a4fc53dd5f9f215d4bc3ee6e6e1765f8da95dfe5a059f42fcbc6581fb5edc0a0",
+      "open_us": 93832,
+      "open_roundtrip_us": 93937.762,
+      "samples": [
+        {
+          "phase": "initial",
+          "VmHWM": 5074944,
+          "VmRSS": 5074944,
+          "RssAnon": 667648
+        },
+        {
+          "phase": "after_open",
+          "VmHWM": 49405952,
+          "VmRSS": 47792128,
+          "RssAnon": 41836544
+        },
+        {
+          "phase": "query_0",
+          "VmHWM": 73252864,
+          "VmRSS": 73252864,
+          "RssAnon": 67035136
+        },
+        {
+          "phase": "query_1",
+          "VmHWM": 79794176,
+          "VmRSS": 79794176,
+          "RssAnon": 73576448
+        },
+        {
+          "phase": "query_2",
+          "VmHWM": 80433152,
+          "VmRSS": 80433152,
+          "RssAnon": 74215424
+        },
+        {
+          "phase": "query_3",
+          "VmHWM": 80543744,
+          "VmRSS": 80543744,
+          "RssAnon": 74326016
+        },
+        {
+          "phase": "query_4",
+          "VmHWM": 80564224,
+          "VmRSS": 80564224,
+          "RssAnon": 74346496
+        },
+        {
+          "phase": "query_5",
+          "VmHWM": 80564224,
+          "VmRSS": 80564224,
+          "RssAnon": 74346496
+        },
+        {
+          "phase": "query_6",
+          "VmHWM": 80592896,
+          "VmRSS": 80592896,
+          "RssAnon": 74375168
+        },
+        {
+          "phase": "query_7",
+          "VmHWM": 80601088,
+          "VmRSS": 80601088,
+          "RssAnon": 74383360
+        },
+        {
+          "phase": "query_8",
+          "VmHWM": 80601088,
+          "VmRSS": 80601088,
+          "RssAnon": 74383360
+        },
+        {
+          "phase": "query_9",
+          "VmHWM": 80609280,
+          "VmRSS": 80609280,
+          "RssAnon": 74391552
+        },
+        {
+          "phase": "query_10",
+          "VmHWM": 80617472,
+          "VmRSS": 80617472,
+          "RssAnon": 74399744
+        },
+        {
+          "phase": "query_11",
+          "VmHWM": 80617472,
+          "VmRSS": 80617472,
+          "RssAnon": 74399744
+        },
+        {
+          "phase": "query_12",
+          "VmHWM": 80617472,
+          "VmRSS": 80617472,
+          "RssAnon": 74399744
+        },
+        {
+          "phase": "query_13",
+          "VmHWM": 80621568,
+          "VmRSS": 80621568,
+          "RssAnon": 74403840
+        },
+        {
+          "phase": "query_14",
+          "VmHWM": 80662528,
+          "VmRSS": 80662528,
+          "RssAnon": 74444800
+        },
+        {
+          "phase": "after_close",
+          "VmHWM": 79753216,
+          "VmRSS": 78778368,
+          "RssAnon": 72495104
+        }
+      ],
+      "results": [
+        {
+          "query_id": "test-culture-ahrtsdlgra-con03a",
+          "ranked_ids_score_sha256": "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+          "originals_exact": true,
+          "returned_original_bytes": 43887,
+          "search_us": 522161,
+          "get_us": 887,
+          "search_get_roundtrip_us": 523653.92000000004
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro01a",
+          "ranked_ids_score_sha256": "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+          "originals_exact": true,
+          "returned_original_bytes": 69122,
+          "search_us": 90994,
+          "get_us": 703,
+          "search_get_roundtrip_us": 92210.07
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro02a",
+          "ranked_ids_score_sha256": "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+          "originals_exact": true,
+          "returned_original_bytes": 40610,
+          "search_us": 79135,
+          "get_us": 1015,
+          "search_get_roundtrip_us": 80742.59
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro03a",
+          "ranked_ids_score_sha256": "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+          "originals_exact": true,
+          "returned_original_bytes": 46737,
+          "search_us": 71705,
+          "get_us": 708,
+          "search_get_roundtrip_us": 72931.851
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con01a",
+          "ranked_ids_score_sha256": "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+          "originals_exact": true,
+          "returned_original_bytes": 80851,
+          "search_us": 77501,
+          "get_us": 749,
+          "search_get_roundtrip_us": 78772.147
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con02a",
+          "ranked_ids_score_sha256": "f230f54d89c08c9678fc1a2c87ae2578e6ef949902ffd5559cb5764b67f93e07",
+          "originals_exact": true,
+          "returned_original_bytes": 71703,
+          "search_us": 84826,
+          "get_us": 759,
+          "search_get_roundtrip_us": 86202.67199999999
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con03a",
+          "ranked_ids_score_sha256": "ac9b8a94a62cde41dc2458bf863c23dce69cfa7a639024bcfc19e1ff291449c7",
+          "originals_exact": true,
+          "returned_original_bytes": 73013,
+          "search_us": 76831,
+          "get_us": 788,
+          "search_get_roundtrip_us": 78184.56599999999
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-pro02a",
+          "ranked_ids_score_sha256": "8fffcfd72681b08c57253f95434b2af271c89142ee9d32427d364794fcf81725",
+          "originals_exact": true,
+          "returned_original_bytes": 68702,
+          "search_us": 79166,
+          "get_us": 931,
+          "search_get_roundtrip_us": 80593.25200000001
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-pro03a",
+          "ranked_ids_score_sha256": "0104eeac8b20e8a356eb827fc62d46359a701b14fc7fdbfc85c7c7815aba160d",
+          "originals_exact": true,
+          "returned_original_bytes": 79123,
+          "search_us": 75555,
+          "get_us": 750,
+          "search_get_roundtrip_us": 76844.052
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-con03a",
+          "ranked_ids_score_sha256": "ba578113d6192a16ce0ff39f41a3cda318bd59a7f58f8170bd50828ca172be27",
+          "originals_exact": true,
+          "returned_original_bytes": 92136,
+          "search_us": 72356,
+          "get_us": 776,
+          "search_get_roundtrip_us": 73662.698
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-pro01a",
+          "ranked_ids_score_sha256": "3a69c02f739a086bb1344eb541d9f1c3ab3a3c162c439f66658bc110b3db3500",
+          "originals_exact": true,
+          "returned_original_bytes": 84813,
+          "search_us": 75451,
+          "get_us": 683,
+          "search_get_roundtrip_us": 76629.343
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-pro04a",
+          "ranked_ids_score_sha256": "878f1611df16bc34319f06d7fa111925e5a2e9ec14aaf688bf2222d9fe4c8154",
+          "originals_exact": true,
+          "returned_original_bytes": 74983,
+          "search_us": 78675,
+          "get_us": 623,
+          "search_get_roundtrip_us": 79776.61499999999
+        },
+        {
+          "query_id": "test-culture-mmciahbans-pro01a",
+          "ranked_ids_score_sha256": "f044d459995d4de5c88275a9ea1d20d9e3400d03e88b50e4f2991568e32a7d5d",
+          "originals_exact": true,
+          "returned_original_bytes": 64446,
+          "search_us": 59860,
+          "get_us": 631,
+          "search_get_roundtrip_us": 60934.866
+        },
+        {
+          "query_id": "test-culture-mmctghwbsa-con01a",
+          "ranked_ids_score_sha256": "13d2740efc26d3ae722796aa2de5ff6858bff7fa9a082d7383592869862705a7",
+          "originals_exact": true,
+          "returned_original_bytes": 92722,
+          "search_us": 70107,
+          "get_us": 728,
+          "search_get_roundtrip_us": 71520.035
+        },
+        {
+          "query_id": "test-culture-mmctghwbsa-con03a",
+          "ranked_ids_score_sha256": "5cbfe89382ee39bf924b31336434210e65c55f9358edff464cad7e96e2551d20",
+          "originals_exact": true,
+          "returned_original_bytes": 53472,
+          "search_us": 73504,
+          "get_us": 656,
+          "search_get_roundtrip_us": 74718.251
+        }
+      ],
+      "store_bytes_unchanged": true,
+      "store_files": [
+        {
+          "path": "records/ENCRYPTED",
+          "size": 16,
+          "allocated": 4096,
+          "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+        },
+        {
+          "path": "records/LOCK",
+          "size": 0,
+          "allocated": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "records/MANIFEST",
+          "size": 40,
+          "allocated": 4096,
+          "sha256": "fafd89c5f2319a566305a86e438fa85324dd39b754fc74f4c9c96063af4a0c00"
+        },
+        {
+          "path": "records/RECORD_FORMAT",
+          "size": 16,
+          "allocated": 4096,
+          "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+        },
+        {
+          "path": "records/dict-00000001.ojd",
+          "size": 16477,
+          "allocated": 20480,
+          "sha256": "0fb5126e5734bb69ee625d01f5c02698a6a3075b3593573afb2cb5f4cb8ad094"
+        },
+        {
+          "path": "records/hot-00000001.ojl",
+          "size": 3500772,
+          "allocated": 3502080,
+          "sha256": "4e421b1550b8fcec0f3292a487ccfb75262780434b4532dce8154b7323c6b10c"
+        }
+      ],
+      "host_load": "1.90 2.75 2.81 8/4833 3446498\n",
+      "scope": "Local copied public immutable fixture; fresh process per run; warm OS cache; full search + exact original get; no hosted latency/capacity claim"
+    },
+    {
+      "label": "baseline",
+      "run": 2,
+      "binary_sha256": "a4fc53dd5f9f215d4bc3ee6e6e1765f8da95dfe5a059f42fcbc6581fb5edc0a0",
+      "open_us": 94094,
+      "open_roundtrip_us": 94203.857,
+      "samples": [
+        {
+          "phase": "initial",
+          "VmHWM": 5136384,
+          "VmRSS": 5136384,
+          "RssAnon": 667648
+        },
+        {
+          "phase": "after_open",
+          "VmHWM": 49643520,
+          "VmRSS": 48041984,
+          "RssAnon": 41836544
+        },
+        {
+          "phase": "query_0",
+          "VmHWM": 73510912,
+          "VmRSS": 73510912,
+          "RssAnon": 67055616
+        },
+        {
+          "phase": "query_1",
+          "VmHWM": 80035840,
+          "VmRSS": 80035840,
+          "RssAnon": 73580544
+        },
+        {
+          "phase": "query_2",
+          "VmHWM": 80674816,
+          "VmRSS": 80674816,
+          "RssAnon": 74219520
+        },
+        {
+          "phase": "query_3",
+          "VmHWM": 80789504,
+          "VmRSS": 80789504,
+          "RssAnon": 74334208
+        },
+        {
+          "phase": "query_4",
+          "VmHWM": 80814080,
+          "VmRSS": 80814080,
+          "RssAnon": 74358784
+        },
+        {
+          "phase": "query_5",
+          "VmHWM": 80826368,
+          "VmRSS": 80826368,
+          "RssAnon": 74371072
+        },
+        {
+          "phase": "query_6",
+          "VmHWM": 80838656,
+          "VmRSS": 80838656,
+          "RssAnon": 74383360
+        },
+        {
+          "phase": "query_7",
+          "VmHWM": 80846848,
+          "VmRSS": 80846848,
+          "RssAnon": 74391552
+        },
+        {
+          "phase": "query_8",
+          "VmHWM": 80859136,
+          "VmRSS": 80859136,
+          "RssAnon": 74403840
+        },
+        {
+          "phase": "query_9",
+          "VmHWM": 80859136,
+          "VmRSS": 80859136,
+          "RssAnon": 74403840
+        },
+        {
+          "phase": "query_10",
+          "VmHWM": 80875520,
+          "VmRSS": 80875520,
+          "RssAnon": 74420224
+        },
+        {
+          "phase": "query_11",
+          "VmHWM": 80875520,
+          "VmRSS": 80875520,
+          "RssAnon": 74420224
+        },
+        {
+          "phase": "query_12",
+          "VmHWM": 80883712,
+          "VmRSS": 80883712,
+          "RssAnon": 74428416
+        },
+        {
+          "phase": "query_13",
+          "VmHWM": 80891904,
+          "VmRSS": 80891904,
+          "RssAnon": 74436608
+        },
+        {
+          "phase": "query_14",
+          "VmHWM": 80920576,
+          "VmRSS": 80920576,
+          "RssAnon": 74465280
+        },
+        {
+          "phase": "after_close",
+          "VmHWM": 80437248,
+          "VmRSS": 78970880,
+          "RssAnon": 72515584
+        }
+      ],
+      "results": [
+        {
+          "query_id": "test-culture-ahrtsdlgra-con03a",
+          "ranked_ids_score_sha256": "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+          "originals_exact": true,
+          "returned_original_bytes": 43887,
+          "search_us": 509669,
+          "get_us": 675,
+          "search_get_roundtrip_us": 510881.944
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro01a",
+          "ranked_ids_score_sha256": "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+          "originals_exact": true,
+          "returned_original_bytes": 69122,
+          "search_us": 73233,
+          "get_us": 653,
+          "search_get_roundtrip_us": 74447.17700000001
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro02a",
+          "ranked_ids_score_sha256": "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+          "originals_exact": true,
+          "returned_original_bytes": 40610,
+          "search_us": 78106,
+          "get_us": 696,
+          "search_get_roundtrip_us": 79199.822
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro03a",
+          "ranked_ids_score_sha256": "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+          "originals_exact": true,
+          "returned_original_bytes": 46737,
+          "search_us": 69273,
+          "get_us": 832,
+          "search_get_roundtrip_us": 70532.84
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con01a",
+          "ranked_ids_score_sha256": "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+          "originals_exact": true,
+          "returned_original_bytes": 80851,
+          "search_us": 77130,
+          "get_us": 668,
+          "search_get_roundtrip_us": 78290.933
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con02a",
+          "ranked_ids_score_sha256": "f230f54d89c08c9678fc1a2c87ae2578e6ef949902ffd5559cb5764b67f93e07",
+          "originals_exact": true,
+          "returned_original_bytes": 71703,
+          "search_us": 72728,
+          "get_us": 706,
+          "search_get_roundtrip_us": 73967.565
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con03a",
+          "ranked_ids_score_sha256": "ac9b8a94a62cde41dc2458bf863c23dce69cfa7a639024bcfc19e1ff291449c7",
+          "originals_exact": true,
+          "returned_original_bytes": 73013,
+          "search_us": 76228,
+          "get_us": 687,
+          "search_get_roundtrip_us": 77336.549
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-pro02a",
+          "ranked_ids_score_sha256": "8fffcfd72681b08c57253f95434b2af271c89142ee9d32427d364794fcf81725",
+          "originals_exact": true,
+          "returned_original_bytes": 68702,
+          "search_us": 74548,
+          "get_us": 722,
+          "search_get_roundtrip_us": 75735.913
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-pro03a",
+          "ranked_ids_score_sha256": "0104eeac8b20e8a356eb827fc62d46359a701b14fc7fdbfc85c7c7815aba160d",
+          "originals_exact": true,
+          "returned_original_bytes": 79123,
+          "search_us": 72668,
+          "get_us": 769,
+          "search_get_roundtrip_us": 74109.549
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-con03a",
+          "ranked_ids_score_sha256": "ba578113d6192a16ce0ff39f41a3cda318bd59a7f58f8170bd50828ca172be27",
+          "originals_exact": true,
+          "returned_original_bytes": 92136,
+          "search_us": 70654,
+          "get_us": 675,
+          "search_get_roundtrip_us": 71815.224
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-pro01a",
+          "ranked_ids_score_sha256": "3a69c02f739a086bb1344eb541d9f1c3ab3a3c162c439f66658bc110b3db3500",
+          "originals_exact": true,
+          "returned_original_bytes": 84813,
+          "search_us": 78088,
+          "get_us": 694,
+          "search_get_roundtrip_us": 79374.117
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-pro04a",
+          "ranked_ids_score_sha256": "878f1611df16bc34319f06d7fa111925e5a2e9ec14aaf688bf2222d9fe4c8154",
+          "originals_exact": true,
+          "returned_original_bytes": 74983,
+          "search_us": 66499,
+          "get_us": 804,
+          "search_get_roundtrip_us": 67868.46500000001
+        },
+        {
+          "query_id": "test-culture-mmciahbans-pro01a",
+          "ranked_ids_score_sha256": "f044d459995d4de5c88275a9ea1d20d9e3400d03e88b50e4f2991568e32a7d5d",
+          "originals_exact": true,
+          "returned_original_bytes": 64446,
+          "search_us": 62340,
+          "get_us": 574,
+          "search_get_roundtrip_us": 63469.708
+        },
+        {
+          "query_id": "test-culture-mmctghwbsa-con01a",
+          "ranked_ids_score_sha256": "13d2740efc26d3ae722796aa2de5ff6858bff7fa9a082d7383592869862705a7",
+          "originals_exact": true,
+          "returned_original_bytes": 92722,
+          "search_us": 63070,
+          "get_us": 662,
+          "search_get_roundtrip_us": 64257.002
+        },
+        {
+          "query_id": "test-culture-mmctghwbsa-con03a",
+          "ranked_ids_score_sha256": "5cbfe89382ee39bf924b31336434210e65c55f9358edff464cad7e96e2551d20",
+          "originals_exact": true,
+          "returned_original_bytes": 53472,
+          "search_us": 72056,
+          "get_us": 639,
+          "search_get_roundtrip_us": 73145.346
+        }
+      ],
+      "store_bytes_unchanged": true,
+      "store_files": [
+        {
+          "path": "records/ENCRYPTED",
+          "size": 16,
+          "allocated": 4096,
+          "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+        },
+        {
+          "path": "records/LOCK",
+          "size": 0,
+          "allocated": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "records/MANIFEST",
+          "size": 40,
+          "allocated": 4096,
+          "sha256": "fafd89c5f2319a566305a86e438fa85324dd39b754fc74f4c9c96063af4a0c00"
+        },
+        {
+          "path": "records/RECORD_FORMAT",
+          "size": 16,
+          "allocated": 4096,
+          "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+        },
+        {
+          "path": "records/dict-00000001.ojd",
+          "size": 16477,
+          "allocated": 20480,
+          "sha256": "0fb5126e5734bb69ee625d01f5c02698a6a3075b3593573afb2cb5f4cb8ad094"
+        },
+        {
+          "path": "records/hot-00000001.ojl",
+          "size": 3500772,
+          "allocated": 3502080,
+          "sha256": "4e421b1550b8fcec0f3292a487ccfb75262780434b4532dce8154b7323c6b10c"
+        }
+      ],
+      "host_load": "1.90 2.75 2.81 4/4827 3446418\n",
+      "scope": "Local copied public immutable fixture; fresh process per run; warm OS cache; full search + exact original get; no hosted latency/capacity claim"
+    }
+  ],
+  "cleared": [
+    {
+      "label": "cleared",
+      "run": 0,
+      "binary_sha256": "248596dff0721831510db9c93209b02a06f0266337511339c5c18e94d5398b2c",
+      "open_us": 99379,
+      "open_roundtrip_us": 99469.166,
+      "samples": [
+        {
+          "phase": "initial",
+          "VmHWM": 4960256,
+          "VmRSS": 4960256,
+          "RssAnon": 659456
+        },
+        {
+          "phase": "after_open",
+          "VmHWM": 45506560,
+          "VmRSS": 43610112,
+          "RssAnon": 37752832
+        },
+        {
+          "phase": "query_0",
+          "VmHWM": 69144576,
+          "VmRSS": 69144576,
+          "RssAnon": 62971904
+        },
+        {
+          "phase": "query_1",
+          "VmHWM": 75677696,
+          "VmRSS": 75677696,
+          "RssAnon": 69505024
+        },
+        {
+          "phase": "query_2",
+          "VmHWM": 76304384,
+          "VmRSS": 76304384,
+          "RssAnon": 70131712
+        },
+        {
+          "phase": "query_3",
+          "VmHWM": 76431360,
+          "VmRSS": 76431360,
+          "RssAnon": 70258688
+        },
+        {
+          "phase": "query_4",
+          "VmHWM": 76451840,
+          "VmRSS": 76451840,
+          "RssAnon": 70279168
+        },
+        {
+          "phase": "query_5",
+          "VmHWM": 76472320,
+          "VmRSS": 76472320,
+          "RssAnon": 70299648
+        },
+        {
+          "phase": "query_6",
+          "VmHWM": 76484608,
+          "VmRSS": 76484608,
+          "RssAnon": 70311936
+        },
+        {
+          "phase": "query_7",
+          "VmHWM": 76500992,
+          "VmRSS": 76500992,
+          "RssAnon": 70328320
+        },
+        {
+          "phase": "query_8",
+          "VmHWM": 76500992,
+          "VmRSS": 76500992,
+          "RssAnon": 70328320
+        },
+        {
+          "phase": "query_9",
+          "VmHWM": 76505088,
+          "VmRSS": 76505088,
+          "RssAnon": 70332416
+        },
+        {
+          "phase": "query_10",
+          "VmHWM": 76505088,
+          "VmRSS": 76505088,
+          "RssAnon": 70332416
+        },
+        {
+          "phase": "query_11",
+          "VmHWM": 76513280,
+          "VmRSS": 76513280,
+          "RssAnon": 70340608
+        },
+        {
+          "phase": "query_12",
+          "VmHWM": 76513280,
+          "VmRSS": 76513280,
+          "RssAnon": 70340608
+        },
+        {
+          "phase": "query_13",
+          "VmHWM": 76513280,
+          "VmRSS": 76513280,
+          "RssAnon": 70340608
+        },
+        {
+          "phase": "query_14",
+          "VmHWM": 76546048,
+          "VmRSS": 76546048,
+          "RssAnon": 70373376
+        },
+        {
+          "phase": "after_close",
+          "VmHWM": 76173312,
+          "VmRSS": 74661888,
+          "RssAnon": 68423680
+        }
+      ],
+      "results": [
+        {
+          "query_id": "test-culture-ahrtsdlgra-con03a",
+          "ranked_ids_score_sha256": "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+          "originals_exact": true,
+          "returned_original_bytes": 43887,
+          "search_us": 508256,
+          "get_us": 665,
+          "search_get_roundtrip_us": 509432.119
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro01a",
+          "ranked_ids_score_sha256": "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+          "originals_exact": true,
+          "returned_original_bytes": 69122,
+          "search_us": 76406,
+          "get_us": 687,
+          "search_get_roundtrip_us": 77642.167
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro02a",
+          "ranked_ids_score_sha256": "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+          "originals_exact": true,
+          "returned_original_bytes": 40610,
+          "search_us": 79591,
+          "get_us": 843,
+          "search_get_roundtrip_us": 80846.153
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro03a",
+          "ranked_ids_score_sha256": "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+          "originals_exact": true,
+          "returned_original_bytes": 46737,
+          "search_us": 70825,
+          "get_us": 700,
+          "search_get_roundtrip_us": 71981.152
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con01a",
+          "ranked_ids_score_sha256": "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+          "originals_exact": true,
+          "returned_original_bytes": 80851,
+          "search_us": 82248,
+          "get_us": 903,
+          "search_get_roundtrip_us": 83636.89099999999
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con02a",
+          "ranked_ids_score_sha256": "f230f54d89c08c9678fc1a2c87ae2578e6ef949902ffd5559cb5764b67f93e07",
+          "originals_exact": true,
+          "returned_original_bytes": 71703,
+          "search_us": 83124,
+          "get_us": 689,
+          "search_get_roundtrip_us": 84221.709
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con03a",
+          "ranked_ids_score_sha256": "ac9b8a94a62cde41dc2458bf863c23dce69cfa7a639024bcfc19e1ff291449c7",
+          "originals_exact": true,
+          "returned_original_bytes": 73013,
+          "search_us": 84615,
+          "get_us": 748,
+          "search_get_roundtrip_us": 85794.983
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-pro02a",
+          "ranked_ids_score_sha256": "8fffcfd72681b08c57253f95434b2af271c89142ee9d32427d364794fcf81725",
+          "originals_exact": true,
+          "returned_original_bytes": 68702,
+          "search_us": 88858,
+          "get_us": 744,
+          "search_get_roundtrip_us": 90054.543
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-pro03a",
+          "ranked_ids_score_sha256": "0104eeac8b20e8a356eb827fc62d46359a701b14fc7fdbfc85c7c7815aba160d",
+          "originals_exact": true,
+          "returned_original_bytes": 79123,
+          "search_us": 79337,
+          "get_us": 749,
+          "search_get_roundtrip_us": 80796.652
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-con03a",
+          "ranked_ids_score_sha256": "ba578113d6192a16ce0ff39f41a3cda318bd59a7f58f8170bd50828ca172be27",
+          "originals_exact": true,
+          "returned_original_bytes": 92136,
+          "search_us": 66941,
+          "get_us": 688,
+          "search_get_roundtrip_us": 68267.858
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-pro01a",
+          "ranked_ids_score_sha256": "3a69c02f739a086bb1344eb541d9f1c3ab3a3c162c439f66658bc110b3db3500",
+          "originals_exact": true,
+          "returned_original_bytes": 84813,
+          "search_us": 74622,
+          "get_us": 678,
+          "search_get_roundtrip_us": 75761.139
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-pro04a",
+          "ranked_ids_score_sha256": "878f1611df16bc34319f06d7fa111925e5a2e9ec14aaf688bf2222d9fe4c8154",
+          "originals_exact": true,
+          "returned_original_bytes": 74983,
+          "search_us": 75441,
+          "get_us": 773,
+          "search_get_roundtrip_us": 76835.978
+        },
+        {
+          "query_id": "test-culture-mmciahbans-pro01a",
+          "ranked_ids_score_sha256": "f044d459995d4de5c88275a9ea1d20d9e3400d03e88b50e4f2991568e32a7d5d",
+          "originals_exact": true,
+          "returned_original_bytes": 64446,
+          "search_us": 64258,
+          "get_us": 802,
+          "search_get_roundtrip_us": 65536.781
+        },
+        {
+          "query_id": "test-culture-mmctghwbsa-con01a",
+          "ranked_ids_score_sha256": "13d2740efc26d3ae722796aa2de5ff6858bff7fa9a082d7383592869862705a7",
+          "originals_exact": true,
+          "returned_original_bytes": 92722,
+          "search_us": 66589,
+          "get_us": 658,
+          "search_get_roundtrip_us": 67776.704
+        },
+        {
+          "query_id": "test-culture-mmctghwbsa-con03a",
+          "ranked_ids_score_sha256": "5cbfe89382ee39bf924b31336434210e65c55f9358edff464cad7e96e2551d20",
+          "originals_exact": true,
+          "returned_original_bytes": 53472,
+          "search_us": 75980,
+          "get_us": 679,
+          "search_get_roundtrip_us": 77087.86600000001
+        }
+      ],
+      "store_bytes_unchanged": true,
+      "store_files": [
+        {
+          "path": "records/ENCRYPTED",
+          "size": 16,
+          "allocated": 4096,
+          "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+        },
+        {
+          "path": "records/LOCK",
+          "size": 0,
+          "allocated": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "records/MANIFEST",
+          "size": 40,
+          "allocated": 4096,
+          "sha256": "fafd89c5f2319a566305a86e438fa85324dd39b754fc74f4c9c96063af4a0c00"
+        },
+        {
+          "path": "records/RECORD_FORMAT",
+          "size": 16,
+          "allocated": 4096,
+          "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+        },
+        {
+          "path": "records/dict-00000001.ojd",
+          "size": 16477,
+          "allocated": 20480,
+          "sha256": "0fb5126e5734bb69ee625d01f5c02698a6a3075b3593573afb2cb5f4cb8ad094"
+        },
+        {
+          "path": "records/hot-00000001.ojl",
+          "size": 3500772,
+          "allocated": 3502080,
+          "sha256": "4e421b1550b8fcec0f3292a487ccfb75262780434b4532dce8154b7323c6b10c"
+        }
+      ],
+      "host_load": "1.99 2.76 2.81 3/4840 3446678\n",
+      "scope": "Local copied public immutable fixture; fresh process per run; warm OS cache; full search + exact original get; no hosted latency/capacity claim"
+    },
+    {
+      "label": "cleared",
+      "run": 1,
+      "binary_sha256": "248596dff0721831510db9c93209b02a06f0266337511339c5c18e94d5398b2c",
+      "open_us": 102701,
+      "open_roundtrip_us": 102780.292,
+      "samples": [
+        {
+          "phase": "initial",
+          "VmHWM": 5120000,
+          "VmRSS": 5120000,
+          "RssAnon": 663552
+        },
+        {
+          "phase": "after_open",
+          "VmHWM": 45268992,
+          "VmRSS": 43638784,
+          "RssAnon": 37756928
+        },
+        {
+          "phase": "query_0",
+          "VmHWM": 69292032,
+          "VmRSS": 69292032,
+          "RssAnon": 63025152
+        },
+        {
+          "phase": "query_1",
+          "VmHWM": 75767808,
+          "VmRSS": 75767808,
+          "RssAnon": 69500928
+        },
+        {
+          "phase": "query_2",
+          "VmHWM": 76410880,
+          "VmRSS": 76410880,
+          "RssAnon": 70144000
+        },
+        {
+          "phase": "query_3",
+          "VmHWM": 76521472,
+          "VmRSS": 76521472,
+          "RssAnon": 70254592
+        },
+        {
+          "phase": "query_4",
+          "VmHWM": 76550144,
+          "VmRSS": 76550144,
+          "RssAnon": 70283264
+        },
+        {
+          "phase": "query_5",
+          "VmHWM": 76550144,
+          "VmRSS": 76550144,
+          "RssAnon": 70283264
+        },
+        {
+          "phase": "query_6",
+          "VmHWM": 76566528,
+          "VmRSS": 76566528,
+          "RssAnon": 70299648
+        },
+        {
+          "phase": "query_7",
+          "VmHWM": 76587008,
+          "VmRSS": 76587008,
+          "RssAnon": 70320128
+        },
+        {
+          "phase": "query_8",
+          "VmHWM": 76587008,
+          "VmRSS": 76587008,
+          "RssAnon": 70320128
+        },
+        {
+          "phase": "query_9",
+          "VmHWM": 76587008,
+          "VmRSS": 76587008,
+          "RssAnon": 70320128
+        },
+        {
+          "phase": "query_10",
+          "VmHWM": 76587008,
+          "VmRSS": 76587008,
+          "RssAnon": 70320128
+        },
+        {
+          "phase": "query_11",
+          "VmHWM": 76591104,
+          "VmRSS": 76591104,
+          "RssAnon": 70324224
+        },
+        {
+          "phase": "query_12",
+          "VmHWM": 76595200,
+          "VmRSS": 76595200,
+          "RssAnon": 70328320
+        },
+        {
+          "phase": "query_13",
+          "VmHWM": 76595200,
+          "VmRSS": 76595200,
+          "RssAnon": 70328320
+        },
+        {
+          "phase": "query_14",
+          "VmHWM": 76615680,
+          "VmRSS": 76615680,
+          "RssAnon": 70348800
+        },
+        {
+          "phase": "after_close",
+          "VmHWM": 76156928,
+          "VmRSS": 74731520,
+          "RssAnon": 68399104
+        }
+      ],
+      "results": [
+        {
+          "query_id": "test-culture-ahrtsdlgra-con03a",
+          "ranked_ids_score_sha256": "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+          "originals_exact": true,
+          "returned_original_bytes": 43887,
+          "search_us": 528876,
+          "get_us": 741,
+          "search_get_roundtrip_us": 530097.62
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro01a",
+          "ranked_ids_score_sha256": "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+          "originals_exact": true,
+          "returned_original_bytes": 69122,
+          "search_us": 83557,
+          "get_us": 682,
+          "search_get_roundtrip_us": 84652.42899999999
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro02a",
+          "ranked_ids_score_sha256": "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+          "originals_exact": true,
+          "returned_original_bytes": 40610,
+          "search_us": 81142,
+          "get_us": 716,
+          "search_get_roundtrip_us": 82260.32299999999
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro03a",
+          "ranked_ids_score_sha256": "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+          "originals_exact": true,
+          "returned_original_bytes": 46737,
+          "search_us": 72545,
+          "get_us": 980,
+          "search_get_roundtrip_us": 73976.051
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con01a",
+          "ranked_ids_score_sha256": "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+          "originals_exact": true,
+          "returned_original_bytes": 80851,
+          "search_us": 82028,
+          "get_us": 663,
+          "search_get_roundtrip_us": 84440.425
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con02a",
+          "ranked_ids_score_sha256": "f230f54d89c08c9678fc1a2c87ae2578e6ef949902ffd5559cb5764b67f93e07",
+          "originals_exact": true,
+          "returned_original_bytes": 71703,
+          "search_us": 82827,
+          "get_us": 704,
+          "search_get_roundtrip_us": 84073.493
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con03a",
+          "ranked_ids_score_sha256": "ac9b8a94a62cde41dc2458bf863c23dce69cfa7a639024bcfc19e1ff291449c7",
+          "originals_exact": true,
+          "returned_original_bytes": 73013,
+          "search_us": 87193,
+          "get_us": 741,
+          "search_get_roundtrip_us": 88457.033
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-pro02a",
+          "ranked_ids_score_sha256": "8fffcfd72681b08c57253f95434b2af271c89142ee9d32427d364794fcf81725",
+          "originals_exact": true,
+          "returned_original_bytes": 68702,
+          "search_us": 88340,
+          "get_us": 722,
+          "search_get_roundtrip_us": 89536.34899999999
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-pro03a",
+          "ranked_ids_score_sha256": "0104eeac8b20e8a356eb827fc62d46359a701b14fc7fdbfc85c7c7815aba160d",
+          "originals_exact": true,
+          "returned_original_bytes": 79123,
+          "search_us": 82013,
+          "get_us": 744,
+          "search_get_roundtrip_us": 83379.793
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-con03a",
+          "ranked_ids_score_sha256": "ba578113d6192a16ce0ff39f41a3cda318bd59a7f58f8170bd50828ca172be27",
+          "originals_exact": true,
+          "returned_original_bytes": 92136,
+          "search_us": 73129,
+          "get_us": 959,
+          "search_get_roundtrip_us": 74769.496
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-pro01a",
+          "ranked_ids_score_sha256": "3a69c02f739a086bb1344eb541d9f1c3ab3a3c162c439f66658bc110b3db3500",
+          "originals_exact": true,
+          "returned_original_bytes": 84813,
+          "search_us": 79748,
+          "get_us": 716,
+          "search_get_roundtrip_us": 81043.32999999999
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-pro04a",
+          "ranked_ids_score_sha256": "878f1611df16bc34319f06d7fa111925e5a2e9ec14aaf688bf2222d9fe4c8154",
+          "originals_exact": true,
+          "returned_original_bytes": 74983,
+          "search_us": 78953,
+          "get_us": 799,
+          "search_get_roundtrip_us": 80234.47600000001
+        },
+        {
+          "query_id": "test-culture-mmciahbans-pro01a",
+          "ranked_ids_score_sha256": "f044d459995d4de5c88275a9ea1d20d9e3400d03e88b50e4f2991568e32a7d5d",
+          "originals_exact": true,
+          "returned_original_bytes": 64446,
+          "search_us": 69592,
+          "get_us": 605,
+          "search_get_roundtrip_us": 70618.98
+        },
+        {
+          "query_id": "test-culture-mmctghwbsa-con01a",
+          "ranked_ids_score_sha256": "13d2740efc26d3ae722796aa2de5ff6858bff7fa9a082d7383592869862705a7",
+          "originals_exact": true,
+          "returned_original_bytes": 92722,
+          "search_us": 70742,
+          "get_us": 731,
+          "search_get_roundtrip_us": 72081.87
+        },
+        {
+          "query_id": "test-culture-mmctghwbsa-con03a",
+          "ranked_ids_score_sha256": "5cbfe89382ee39bf924b31336434210e65c55f9358edff464cad7e96e2551d20",
+          "originals_exact": true,
+          "returned_original_bytes": 53472,
+          "search_us": 76420,
+          "get_us": 637,
+          "search_get_roundtrip_us": 77568.48
+        }
+      ],
+      "store_bytes_unchanged": true,
+      "store_files": [
+        {
+          "path": "records/ENCRYPTED",
+          "size": 16,
+          "allocated": 4096,
+          "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+        },
+        {
+          "path": "records/LOCK",
+          "size": 0,
+          "allocated": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "records/MANIFEST",
+          "size": 40,
+          "allocated": 4096,
+          "sha256": "fafd89c5f2319a566305a86e438fa85324dd39b754fc74f4c9c96063af4a0c00"
+        },
+        {
+          "path": "records/RECORD_FORMAT",
+          "size": 16,
+          "allocated": 4096,
+          "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+        },
+        {
+          "path": "records/dict-00000001.ojd",
+          "size": 16477,
+          "allocated": 20480,
+          "sha256": "0fb5126e5734bb69ee625d01f5c02698a6a3075b3593573afb2cb5f4cb8ad094"
+        },
+        {
+          "path": "records/hot-00000001.ojl",
+          "size": 3500772,
+          "allocated": 3502080,
+          "sha256": "4e421b1550b8fcec0f3292a487ccfb75262780434b4532dce8154b7323c6b10c"
+        }
+      ],
+      "host_load": "1.90 2.75 2.81 8/4845 3446605\n",
+      "scope": "Local copied public immutable fixture; fresh process per run; warm OS cache; full search + exact original get; no hosted latency/capacity claim"
+    },
+    {
+      "label": "cleared",
+      "run": 2,
+      "binary_sha256": "248596dff0721831510db9c93209b02a06f0266337511339c5c18e94d5398b2c",
+      "open_us": 97657,
+      "open_roundtrip_us": 97777.351,
+      "samples": [
+        {
+          "phase": "initial",
+          "VmHWM": 5177344,
+          "VmRSS": 5177344,
+          "RssAnon": 663552
+        },
+        {
+          "phase": "after_open",
+          "VmHWM": 45355008,
+          "VmRSS": 43835392,
+          "RssAnon": 37756928
+        },
+        {
+          "phase": "query_0",
+          "VmHWM": 69459968,
+          "VmRSS": 69459968,
+          "RssAnon": 63000576
+        },
+        {
+          "phase": "query_1",
+          "VmHWM": 75964416,
+          "VmRSS": 75964416,
+          "RssAnon": 69505024
+        },
+        {
+          "phase": "query_2",
+          "VmHWM": 76603392,
+          "VmRSS": 76603392,
+          "RssAnon": 70144000
+        },
+        {
+          "phase": "query_3",
+          "VmHWM": 76709888,
+          "VmRSS": 76709888,
+          "RssAnon": 70250496
+        },
+        {
+          "phase": "query_4",
+          "VmHWM": 76734464,
+          "VmRSS": 76734464,
+          "RssAnon": 70275072
+        },
+        {
+          "phase": "query_5",
+          "VmHWM": 76734464,
+          "VmRSS": 76734464,
+          "RssAnon": 70275072
+        },
+        {
+          "phase": "query_6",
+          "VmHWM": 76759040,
+          "VmRSS": 76759040,
+          "RssAnon": 70299648
+        },
+        {
+          "phase": "query_7",
+          "VmHWM": 76759040,
+          "VmRSS": 76759040,
+          "RssAnon": 70299648
+        },
+        {
+          "phase": "query_8",
+          "VmHWM": 76767232,
+          "VmRSS": 76767232,
+          "RssAnon": 70307840
+        },
+        {
+          "phase": "query_9",
+          "VmHWM": 76775424,
+          "VmRSS": 76775424,
+          "RssAnon": 70316032
+        },
+        {
+          "phase": "query_10",
+          "VmHWM": 76775424,
+          "VmRSS": 76775424,
+          "RssAnon": 70316032
+        },
+        {
+          "phase": "query_11",
+          "VmHWM": 76775424,
+          "VmRSS": 76775424,
+          "RssAnon": 70316032
+        },
+        {
+          "phase": "query_12",
+          "VmHWM": 76779520,
+          "VmRSS": 76779520,
+          "RssAnon": 70320128
+        },
+        {
+          "phase": "query_13",
+          "VmHWM": 76783616,
+          "VmRSS": 76783616,
+          "RssAnon": 70324224
+        },
+        {
+          "phase": "query_14",
+          "VmHWM": 76795904,
+          "VmRSS": 76795904,
+          "RssAnon": 70336512
+        },
+        {
+          "phase": "after_close",
+          "VmHWM": 75935744,
+          "VmRSS": 74846208,
+          "RssAnon": 68386816
+        }
+      ],
+      "results": [
+        {
+          "query_id": "test-culture-ahrtsdlgra-con03a",
+          "ranked_ids_score_sha256": "0a314d0d5fbfceddc520e606659e86ccceacce0323cd8d8a34ddda8524d964ec",
+          "originals_exact": true,
+          "returned_original_bytes": 43887,
+          "search_us": 481535,
+          "get_us": 662,
+          "search_get_roundtrip_us": 482674.483
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro01a",
+          "ranked_ids_score_sha256": "dd586ba0d868c3cfd1c1b4a227a85a9723a8bceb34579b0a73ef55b671a16055",
+          "originals_exact": true,
+          "returned_original_bytes": 69122,
+          "search_us": 71005,
+          "get_us": 682,
+          "search_get_roundtrip_us": 72178.13799999999
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro02a",
+          "ranked_ids_score_sha256": "862e5797601a47d33cea3b3aedc0b570b208bd43290261644219cd84728e70e6",
+          "originals_exact": true,
+          "returned_original_bytes": 40610,
+          "search_us": 75293,
+          "get_us": 645,
+          "search_get_roundtrip_us": 76406.369
+        },
+        {
+          "query_id": "test-culture-ahrtsdlgra-pro03a",
+          "ranked_ids_score_sha256": "7783b0eea226fdc8cafb174d38678489a2cc85852c6f6b688cb5bffa3de5ef49",
+          "originals_exact": true,
+          "returned_original_bytes": 46737,
+          "search_us": 75078,
+          "get_us": 961,
+          "search_get_roundtrip_us": 76542.633
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con01a",
+          "ranked_ids_score_sha256": "00df874290cef91617a2ac667b86ba6b4b0a88c5e4b14e318f3a3f0475d75697",
+          "originals_exact": true,
+          "returned_original_bytes": 80851,
+          "search_us": 88843,
+          "get_us": 743,
+          "search_get_roundtrip_us": 90212.928
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con02a",
+          "ranked_ids_score_sha256": "f230f54d89c08c9678fc1a2c87ae2578e6ef949902ffd5559cb5764b67f93e07",
+          "originals_exact": true,
+          "returned_original_bytes": 71703,
+          "search_us": 79223,
+          "get_us": 735,
+          "search_get_roundtrip_us": 80457.58
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-con03a",
+          "ranked_ids_score_sha256": "ac9b8a94a62cde41dc2458bf863c23dce69cfa7a639024bcfc19e1ff291449c7",
+          "originals_exact": true,
+          "returned_original_bytes": 73013,
+          "search_us": 79222,
+          "get_us": 1000,
+          "search_get_roundtrip_us": 80756.37599999999
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-pro02a",
+          "ranked_ids_score_sha256": "8fffcfd72681b08c57253f95434b2af271c89142ee9d32427d364794fcf81725",
+          "originals_exact": true,
+          "returned_original_bytes": 68702,
+          "search_us": 90931,
+          "get_us": 735,
+          "search_get_roundtrip_us": 92099.39399999999
+        },
+        {
+          "query_id": "test-culture-ascidfakhba-pro03a",
+          "ranked_ids_score_sha256": "0104eeac8b20e8a356eb827fc62d46359a701b14fc7fdbfc85c7c7815aba160d",
+          "originals_exact": true,
+          "returned_original_bytes": 79123,
+          "search_us": 81830,
+          "get_us": 720,
+          "search_get_roundtrip_us": 83019.234
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-con03a",
+          "ranked_ids_score_sha256": "ba578113d6192a16ce0ff39f41a3cda318bd59a7f58f8170bd50828ca172be27",
+          "originals_exact": true,
+          "returned_original_bytes": 92136,
+          "search_us": 73075,
+          "get_us": 709,
+          "search_get_roundtrip_us": 74382.206
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-pro01a",
+          "ranked_ids_score_sha256": "3a69c02f739a086bb1344eb541d9f1c3ab3a3c162c439f66658bc110b3db3500",
+          "originals_exact": true,
+          "returned_original_bytes": 84813,
+          "search_us": 77230,
+          "get_us": 726,
+          "search_get_roundtrip_us": 78551.296
+        },
+        {
+          "query_id": "test-culture-cgeeghwmeo-pro04a",
+          "ranked_ids_score_sha256": "878f1611df16bc34319f06d7fa111925e5a2e9ec14aaf688bf2222d9fe4c8154",
+          "originals_exact": true,
+          "returned_original_bytes": 74983,
+          "search_us": 80199,
+          "get_us": 689,
+          "search_get_roundtrip_us": 81520.306
+        },
+        {
+          "query_id": "test-culture-mmciahbans-pro01a",
+          "ranked_ids_score_sha256": "f044d459995d4de5c88275a9ea1d20d9e3400d03e88b50e4f2991568e32a7d5d",
+          "originals_exact": true,
+          "returned_original_bytes": 64446,
+          "search_us": 70218,
+          "get_us": 682,
+          "search_get_roundtrip_us": 71529.944
+        },
+        {
+          "query_id": "test-culture-mmctghwbsa-con01a",
+          "ranked_ids_score_sha256": "13d2740efc26d3ae722796aa2de5ff6858bff7fa9a082d7383592869862705a7",
+          "originals_exact": true,
+          "returned_original_bytes": 92722,
+          "search_us": 70342,
+          "get_us": 659,
+          "search_get_roundtrip_us": 71625.531
+        },
+        {
+          "query_id": "test-culture-mmctghwbsa-con03a",
+          "ranked_ids_score_sha256": "5cbfe89382ee39bf924b31336434210e65c55f9358edff464cad7e96e2551d20",
+          "originals_exact": true,
+          "returned_original_bytes": 53472,
+          "search_us": 70934,
+          "get_us": 633,
+          "search_get_roundtrip_us": 72021.80799999999
+        }
+      ],
+      "store_bytes_unchanged": true,
+      "store_files": [
+        {
+          "path": "records/ENCRYPTED",
+          "size": 16,
+          "allocated": 4096,
+          "sha256": "027f57175c77594543837b3921c2d554f2f03e53e07d6e798d4a843fd448e37d"
+        },
+        {
+          "path": "records/LOCK",
+          "size": 0,
+          "allocated": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        },
+        {
+          "path": "records/MANIFEST",
+          "size": 40,
+          "allocated": 4096,
+          "sha256": "fafd89c5f2319a566305a86e438fa85324dd39b754fc74f4c9c96063af4a0c00"
+        },
+        {
+          "path": "records/RECORD_FORMAT",
+          "size": 16,
+          "allocated": 4096,
+          "sha256": "cc982e43883769104ef0f5efda0432a006202b722f6a40526fa09949608c3e5d"
+        },
+        {
+          "path": "records/dict-00000001.ojd",
+          "size": 16477,
+          "allocated": 20480,
+          "sha256": "0fb5126e5734bb69ee625d01f5c02698a6a3075b3593573afb2cb5f4cb8ad094"
+        },
+        {
+          "path": "records/hot-00000001.ojl",
+          "size": 3500772,
+          "allocated": 3502080,
+          "sha256": "4e421b1550b8fcec0f3292a487ccfb75262780434b4532dce8154b7323c6b10c"
+        }
+      ],
+      "host_load": "1.37 2.66 2.78 3/4838 3446250\n",
+      "scope": "Local copied public immutable fixture; fresh process per run; warm OS cache; full search + exact original get; no hosted latency/capacity claim"
+    }
+  ]
+}

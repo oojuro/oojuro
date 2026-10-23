@@ -1,0 +1,27 @@
+gates cleared run 0 done
+gates cleared run 1 done
+gates cleared run 2 done
+# Oojuro benchmark report
+
+## gates · synthetic · all
+
+- Hardware: AMD Ryzen 7 8845HS w/ Radeon 780M Graphics · 16 logical CPUs · 29062768 kB RAM · store on ext4 · rustc rustc 1.99.0 (b940084d7 2026-09-28)
+- runs: 3
+- isolation: child process per run in a systemd --user scope, MemoryMax=3G, MemorySwapMax=0
+- scorecards: 2026-10-23T20:16:46Z
+
+| arm | gates | disk/raw | peak mem/raw | steady RSS/raw |
+|---|---|---|---|---|
+| cleared `native-record` | pass (7) | – | – | – |
+
+Durability per arm:
+
+- cleared: native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups (RecordLog sealed record-2 + current record::projection; commit 63898ea331d1)
+  - actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search
+  - source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged
+  - native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim
+  - RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm
+  - derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK
+
+
+scorecard: work/record-replay-cache/gates.json
