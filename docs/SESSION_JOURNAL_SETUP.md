@@ -19,6 +19,11 @@ that the current private fixed-journal client implements it.
   an ambiguous display name is not. Renaming does not redirect future writes.
 - Journals are independent of projects. A project may reference several complete
   journals, and one journal may appear in several projects without payload copies.
+- With project read access, a new session can search and read previous journals
+  in that project. This does not route new writes into those old journals.
+  Capture-only access never grants project reads. An installer may attach new
+  journals to a configured project only with the owner's setup authority; it
+  configures project read access only when granted.
 - The normal path does not require manual source/journal IDs, fingerprints or
   repeated browser approval. Project read/search authority remains scoped.
 
@@ -57,6 +62,9 @@ journals, resume/retry preserves identity, explicit reuse works, duplicate names
 are safe, rename preserves IDs/sharing, integration revocation stops delegated
 capture, and a project cannot read an unshared sibling in the same physical
 store. Exercise actual installed Codex/Claude configuration, MCP and direct SDK.
+Verify cross-session context too: session two has its own journal, can find an
+authorized decision in session one's journal through the project, and cannot
+read an unshared journal or continue reading after membership/key revocation.
 
 Engine/CLI/SDK/integration behavior belongs in `oojuro/oojuro`; account API keys,
 provisioning authority, hosted logical-journal directory, UI, billing and AWS
