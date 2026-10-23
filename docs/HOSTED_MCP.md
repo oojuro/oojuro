@@ -1,9 +1,10 @@
-# Hosted project MCP — private candidate
+# Hosted project MCP — review candidate
 
 `oojuro cloud mcp --connection /absolute/private/project.json` exposes the
 existing hosted project client over stdio. This is a separate command from the
 local recorder's `oojuro mcp`. It never falls back to a local journal or accepts
-an append-only capture credential. The candidate and its packages remain private.
+an append-only capture credential. This candidate has no production activation
+or package release.
 
 ## Journals, projects and keys
 
@@ -34,7 +35,7 @@ absolute executable and connection-file paths.
 
 ## Guided project setup
 
-Use the CLI and script from this private candidate. Obtain a project read key in
+Use the CLI and script from this review candidate. Obtain a project read key in
 the signed-in project's management page; capture/integration keys cannot replace
 it. The key grants reads of **all currently attached journals** in that project,
 including earlier sessions. Choose a project with the history this agent should
@@ -102,7 +103,7 @@ Replace only the paths and project ID; none are secrets:
 
 ## Agent configuration
 
-After building/installing this private candidate, use an absolute executable
+After building/installing this candidate, use an absolute executable
 path. A local stdio server must run where its private file is accessible.
 
 Codex:
@@ -166,14 +167,23 @@ duplicating originals into structuredContent. These are payload bounds, not a
 process RAM cap; serialization can temporarily copy data. Cancellation cannot
 interrupt the synchronous in-flight HTTP request before its client deadline.
 
-Ten real CLI process/loopback HTTP tests pass: six existing hosted CLI gates and
-four MCP gates covering legacy negotiation/fallback, read-only tool scope,
+Eleven real CLI process/loopback HTTP tests pass: six existing hosted CLI gates,
+four MCP gates and the protected project connection setup gate. They cover
+legacy negotiation/fallback, read-only tool scope,
 metadata/exact BOM+NUL content, bearer separation, metered search and unknown
 outcome privacy, duplicate arguments and input bounds. They do not establish
 live owner/project access or actual Codex/Claude client acceptance. Guided setup
-adds protected credential entry and official CLI registration, but its own
-qualification must be checked separately. Actual hosted joined acceptance,
-installed client tool calls and direct SDK setup remain separate gates before
-calling onboarding complete.
+adds three synthetic subprocess boundary tests and registration checks with
+installed Codex CLI 0.163.0 and Claude Code 2.1.306 in disposable HOME/config
+directories, using the actual Oojuro CLI, loopback project metadata and local
+stdio. Both preserve unrelated servers, keep secrets out of agent configuration
+and refuse repeated registration without replacing entries. These are
+registration/protocol checks; no model-driven agent tool call or real owner
+configuration was used. Actual hosted joined acceptance and direct SDK setup
+remain separate gates before calling onboarding complete.
+
+The dated [setup qualification report](project-mcp-setup-qualification-2026-10-23.json)
+records exact source/binary identity, checks and remaining gates. Repository
+source visibility and production/package activation are separate statuses.
 
 Protocol reference: [MCP 2025-11-25 stdio transports](https://modelcontextprotocol.io/specification/2025-11-25/basic/transports).

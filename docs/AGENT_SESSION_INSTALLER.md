@@ -1,4 +1,4 @@
-# API-key session installer (private review candidate)
+# API-key session installer (review candidate)
 
 This implements the CLI/installer step of the session-journal contract. The paired hosted integration-session API is a separate private candidate. Its synthetic joined CLI/HTTP/PostgreSQL journey now passes; production activation and actual owner agent/service acceptance remain unfinished.
 
