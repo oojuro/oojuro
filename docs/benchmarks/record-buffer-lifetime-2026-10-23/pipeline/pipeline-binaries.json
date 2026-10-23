@@ -1,0 +1,10 @@
+{
+  "baseline_source": "c42c10d32364d692bccc97030c447dc05ceb85b0",
+  "candidate_source": "d204189450f4c2fc86cbdf77266aa895734b2d3f",
+  "binary_sha256": {
+    "profile-native-baseline": "08751a1d797077430df44cabc0e45f354ad321f2ffcc89ba8b55e718194881b3",
+    "oojuro-bench-baseline": "a4fc53dd5f9f215d4bc3ee6e6e1765f8da95dfe5a059f42fcbc6581fb5edc0a0",
+    "profile-native-lifetime": "66eacfccc4662315f97e7e0adbbdb5b6020293dec9eb09ddf6f00926ea139992",
+    "oojuro-bench-lifetime": "3c7152bc4dcd971468816fbd9be6a1f62ed7855a9293fceb43ef12f408048671"
+  }
+}

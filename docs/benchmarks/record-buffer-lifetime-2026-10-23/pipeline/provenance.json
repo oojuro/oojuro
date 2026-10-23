@@ -1,0 +1,38 @@
+{
+  "baseline_source": "c42c10d32364d692bccc97030c447dc05ceb85b0",
+  "candidate_source": "d204189450f4c2fc86cbdf77266aa895734b2d3f",
+  "scope": "Frozen first full native local pipeline, experimental only. Normal search medians worse in first order; no general RAM/latency or hosted recommendation.",
+  "checks": {
+    "full_hit_signatures": 45,
+    "fresh_reopens": 12,
+    "footprint_checks": 24,
+    "files": 66,
+    "gate_arms": 2,
+    "gate_runs_per_arm": 3,
+    "sigkill_trials": 18
+  },
+  "sha256": {
+    "baseline-full-hits.jsonl": "adbdd8a1f1a2594d520d68c189777f8cbce9b7e79ed7ea292d9c6b10f9cd23e9",
+    "beir-host-before.json": "c7041c88b42bc4cc7fbb447769804ee44afb2f0d6bb981567b796772c02e527f",
+    "beir.json": "33402ae6ef9854f9d3ff0fcb352bcde396fdeb64022ae6e8db94e76b07f1af81",
+    "beir.log": "c72b09858f122c0c4298571586aab0b7e5f9f3645eedf33f5c35a3fbd786abde",
+    "gates-host-before.json": "6a4f4f770a5e2b86fb883892364a1d7ea60b64b5cdcd6f3259a853c1a7149868",
+    "gates.json": "eff7321129d1217c29afa2592371b39a7e23e62eff086753858e88d77b4712d3",
+    "gates.log": "9b86676557c9b83e8285a576c7c61a2cdddddced6cdf45918ee3e2ad5b5d044a",
+    "history-host-before.json": "db8025f6187f88fdd9774963cd5a0b5c10c0cdc64f27dce1db4cb93601c2004a",
+    "history.json": "e2df0f98d4681efbe44d20488839e7c11544a407ecb89ac4eefbc80114abf031",
+    "history.log": "6d5b639b8b70bceb0fa71b99442e38f68e0daffd08ddae74ea3d991737b4e806",
+    "lifetime-full-hits.jsonl": "9ed7e644966bbdf89a00e30b2b009393d9debc860f78fbcd7966af91d68084cc",
+    "matrix-driver.log": "da9145bfe48376c9d88e9eea6136cd42a4c37761c34f34916e22147b476d973f",
+    "pipeline-binaries.json": "1f49b57e7a88ab1c8637b72c305ddba0745bcc89351fb5f8397a544df13cebbb",
+    "pipeline-build.log": "18ceba5c349612ef9215556e8f92ff17380db1d2797524b82ddf8871dc680093",
+    "reopen-and-files.json": "4b8f5e255cf485be95bbce13d0803f40dd5afe0bbc35b2fc8a65783e343da07c",
+    "spec.json": "14f2d3d06e788b7600c10076f5ff39a0b36a36174d6b7cdeb37fd128a6afc4d8",
+    "tools/run-stage.py": "2453f932c52efb887f362562974c980e7e81e87fbd7dc1a894261ffb859799e3",
+    "tools/verify-full-hits.py": "2ceb1100220dfa3abed9004fb293da7d69fec7d7eed5d5b6d7ae981474ca630c",
+    "tools/verify-stores.py": "b9012adcfd9c89c83dbf648040e7a0a24ce2f2f59ba76f93d4b15980bba88241",
+    "verify-full-hits-baseline.log": "98d8869acd504c2a69c4b352855c3c6cc179f6857aa575b22739ca9cc887f687",
+    "verify-full-hits-lifetime.log": "04da4e3568726ee24159544044cc0bbc05de1cc877a1e207308df0e8278ce340",
+    "verify-stores.log": "5e238a37b483bb7a84c4232d014b43f85276583d79234410ceecafac1810edee"
+  }
+}
