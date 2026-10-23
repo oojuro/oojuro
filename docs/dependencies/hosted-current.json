@@ -1,0 +1,4558 @@
+{
+  "cargo": "cargo 1.99.0 (5f94df478 2026-08-27)",
+  "dirty": false,
+  "format": 1,
+  "graphs": {
+    "default": {
+      "dev_dependencies": false,
+      "edge_count": 421,
+      "edges": "normal,build",
+      "external_count": 177,
+      "package_count": 188,
+      "packages": {
+        "adler2@2.0.1": {
+          "features": [],
+          "git_source": null,
+          "name": "adler2",
+          "used_by": [
+            "miniz_oxide@0.9.1"
+          ],
+          "version": "2.0.1"
+        },
+        "aead@0.5.2": {
+          "features": [
+            "alloc",
+            "getrandom",
+            "rand_core"
+          ],
+          "git_source": null,
+          "name": "aead",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.5.2"
+        },
+        "aho-corasick@1.1.5": {
+          "features": [
+            "default",
+            "perf-literal",
+            "std"
+          ],
+          "git_source": null,
+          "name": "aho-corasick",
+          "used_by": [
+            "oojuro-cloud@0.1.0",
+            "oojuro-engine@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca",
+            "oojuro-trace@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "regex-automata@0.4.18",
+            "regex@1.13.1"
+          ],
+          "version": "1.1.5"
+        },
+        "alloc-no-stdlib@2.0.4": {
+          "features": [],
+          "git_source": null,
+          "name": "alloc-no-stdlib",
+          "used_by": [
+            "alloc-stdlib@0.2.4",
+            "brotli-decompressor@5.0.3"
+          ],
+          "version": "2.0.4"
+        },
+        "alloc-stdlib@0.2.4": {
+          "features": [],
+          "git_source": null,
+          "name": "alloc-stdlib",
+          "used_by": [
+            "brotli-decompressor@5.0.3"
+          ],
+          "version": "0.2.4"
+        },
+        "anyhow@1.0.104": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "anyhow",
+          "used_by": [
+            "prost-derive@0.14.4"
+          ],
+          "version": "1.0.104"
+        },
+        "arrayvec@0.7.8": {
+          "features": [],
+          "git_source": null,
+          "name": "arrayvec",
+          "used_by": [
+            "blake3@1.8.7"
+          ],
+          "version": "0.7.8"
+        },
+        "async-trait@0.1.92": {
+          "features": [],
+          "git_source": null,
+          "name": "async-trait",
+          "used_by": [
+            "tokio-postgres@0.7.18"
+          ],
+          "version": "0.1.92"
+        },
+        "atomic-waker@1.1.2": {
+          "features": [],
+          "git_source": null,
+          "name": "atomic-waker",
+          "used_by": [
+            "hyper@1.12.0"
+          ],
+          "version": "1.1.2"
+        },
+        "base64@0.22.1": {
+          "features": [
+            "alloc",
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "base64",
+          "used_by": [
+            "oojuro-cloud@0.1.0",
+            "postgres-protocol@0.6.12"
+          ],
+          "version": "0.22.1"
+        },
+        "bitflags@2.13.2": {
+          "features": [],
+          "git_source": null,
+          "name": "bitflags",
+          "used_by": [
+            "rusqlite@0.40.2"
+          ],
+          "version": "2.13.2"
+        },
+        "blake3@1.8.7": {
+          "features": [
+            "pure",
+            "std"
+          ],
+          "git_source": null,
+          "name": "blake3",
+          "used_by": [
+            "oojuro-capture@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-cloud@0.1.0",
+            "oojuro-core@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-engine@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca",
+            "oojuro-nine@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca",
+            "oojuro-trace@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "1.8.7"
+        },
+        "block-buffer@0.10.4": {
+          "features": [],
+          "git_source": null,
+          "name": "block-buffer",
+          "used_by": [
+            "digest@0.10.7"
+          ],
+          "version": "0.10.4"
+        },
+        "block-buffer@0.12.1": {
+          "features": [],
+          "git_source": null,
+          "name": "block-buffer",
+          "used_by": [
+            "digest@0.11.3"
+          ],
+          "version": "0.12.1"
+        },
+        "brotli-decompressor@5.0.3": {
+          "features": [
+            "alloc-stdlib",
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "brotli-decompressor",
+          "used_by": [
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "5.0.3"
+        },
+        "byteorder@1.5.0": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "byteorder",
+          "used_by": [
+            "postgres-protocol@0.6.12",
+            "tokio-postgres@0.7.18"
+          ],
+          "version": "1.5.0"
+        },
+        "bytes@1.12.1": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "bytes",
+          "used_by": [
+            "http-body-util@0.1.5",
+            "http-body@1.1.0",
+            "http@1.5.0",
+            "hyper-util@0.1.21",
+            "hyper@1.12.0",
+            "oojuro-cloud@0.1.0",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "postgres-protocol@0.6.12",
+            "postgres-types@0.2.14",
+            "postgres@0.19.14",
+            "prost@0.14.4",
+            "tokio-postgres@0.7.18",
+            "tokio-util@0.7.20",
+            "tokio@1.53.3"
+          ],
+          "version": "1.12.1"
+        },
+        "cc@1.8.0": {
+          "features": [
+            "parallel"
+          ],
+          "git_source": null,
+          "name": "cc",
+          "used_by": [
+            "blake3@1.8.7",
+            "libsqlite3-sys@0.38.2",
+            "ring@0.17.14",
+            "zstd-sys@2.1.2+zstd.1.5.7"
+          ],
+          "version": "1.8.0"
+        },
+        "cfg-if@1.0.5": {
+          "features": [],
+          "git_source": null,
+          "name": "cfg-if",
+          "used_by": [
+            "blake3@1.8.7",
+            "chacha20@0.10.2",
+            "chacha20@0.9.1",
+            "crc32fast@1.5.2",
+            "getrandom@0.2.17",
+            "getrandom@0.3.4",
+            "getrandom@0.4.3",
+            "md-5@0.11.0",
+            "parking_lot_core@0.9.12",
+            "ring@0.17.14",
+            "sha2@0.10.9",
+            "sha2@0.11.1"
+          ],
+          "version": "1.0.5"
+        },
+        "chacha20@0.10.2": {
+          "features": [
+            "rng"
+          ],
+          "git_source": null,
+          "name": "chacha20",
+          "used_by": [
+            "rand@0.10.3"
+          ],
+          "version": "0.10.2"
+        },
+        "chacha20@0.9.1": {
+          "features": [
+            "zeroize"
+          ],
+          "git_source": null,
+          "name": "chacha20",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.9.1"
+        },
+        "chacha20poly1305@0.10.1": {
+          "features": [
+            "alloc",
+            "default",
+            "getrandom",
+            "rand_core"
+          ],
+          "git_source": null,
+          "name": "chacha20poly1305",
+          "used_by": [
+            "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca"
+          ],
+          "version": "0.10.1"
+        },
+        "cipher@0.4.4": {
+          "features": [
+            "zeroize"
+          ],
+          "git_source": null,
+          "name": "cipher",
+          "used_by": [
+            "chacha20@0.9.1",
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.4.4"
+        },
+        "cmov@0.5.4": {
+          "features": [],
+          "git_source": null,
+          "name": "cmov",
+          "used_by": [
+            "ctutils@0.4.3"
+          ],
+          "version": "0.5.4"
+        },
+        "const-oid@0.10.2": {
+          "features": [],
+          "git_source": null,
+          "name": "const-oid",
+          "used_by": [
+            "digest@0.11.3"
+          ],
+          "version": "0.10.2"
+        },
+        "const-oid@0.9.6": {
+          "features": [
+            "db",
+            "std"
+          ],
+          "git_source": null,
+          "name": "const-oid",
+          "used_by": [
+            "der@0.7.10",
+            "x509-cert@0.2.5"
+          ],
+          "version": "0.9.6"
+        },
+        "constant_time_eq@0.4.2": {
+          "features": [
+            "std"
+          ],
+          "git_source": null,
+          "name": "constant_time_eq",
+          "used_by": [
+            "blake3@1.8.7"
+          ],
+          "version": "0.4.2"
+        },
+        "cpufeatures@0.2.17": {
+          "features": [],
+          "git_source": null,
+          "name": "cpufeatures",
+          "used_by": [
+            "chacha20@0.9.1",
+            "poly1305@0.8.0",
+            "sha2@0.10.9"
+          ],
+          "version": "0.2.17"
+        },
+        "cpufeatures@0.3.1": {
+          "features": [],
+          "git_source": null,
+          "name": "cpufeatures",
+          "used_by": [
+            "blake3@1.8.7",
+            "chacha20@0.10.2",
+            "sha2@0.11.1"
+          ],
+          "version": "0.3.1"
+        },
+        "crc32fast@1.5.2": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "crc32fast",
+          "used_by": [
+            "flate2@1.1.10",
+            "oojuro-core@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-nine@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca",
+            "oojuro-trace@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "1.5.2"
+        },
+        "crypto-common@0.1.7": {
+          "features": [
+            "getrandom",
+            "rand_core",
+            "std"
+          ],
+          "git_source": null,
+          "name": "crypto-common",
+          "used_by": [
+            "aead@0.5.2",
+            "cipher@0.4.4",
+            "digest@0.10.7",
+            "universal-hash@0.5.1"
+          ],
+          "version": "0.1.7"
+        },
+        "crypto-common@0.2.2": {
+          "features": [],
+          "git_source": null,
+          "name": "crypto-common",
+          "used_by": [
+            "digest@0.11.3"
+          ],
+          "version": "0.2.2"
+        },
+        "ctutils@0.4.3": {
+          "features": [],
+          "git_source": null,
+          "name": "ctutils",
+          "used_by": [
+            "digest@0.11.3"
+          ],
+          "version": "0.4.3"
+        },
+        "der@0.7.10": {
+          "features": [
+            "alloc",
+            "derive",
+            "flagset",
+            "oid",
+            "std"
+          ],
+          "git_source": null,
+          "name": "der",
+          "used_by": [
+            "spki@0.7.3",
+            "x509-cert@0.2.5"
+          ],
+          "version": "0.7.10"
+        },
+        "der_derive@0.7.3": {
+          "features": [],
+          "git_source": null,
+          "name": "der_derive",
+          "used_by": [
+            "der@0.7.10"
+          ],
+          "version": "0.7.3"
+        },
+        "digest@0.10.7": {
+          "features": [
+            "alloc",
+            "block-buffer",
+            "core-api",
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "digest",
+          "used_by": [
+            "sha2@0.10.9"
+          ],
+          "version": "0.10.7"
+        },
+        "digest@0.11.3": {
+          "features": [
+            "alloc",
+            "block-api",
+            "default",
+            "mac",
+            "oid"
+          ],
+          "git_source": null,
+          "name": "digest",
+          "used_by": [
+            "hmac@0.13.0",
+            "md-5@0.11.0",
+            "sha2@0.11.1"
+          ],
+          "version": "0.11.3"
+        },
+        "either@1.19.0": {
+          "features": [
+            "std",
+            "use_std"
+          ],
+          "git_source": null,
+          "name": "either",
+          "used_by": [
+            "itertools@0.14.0"
+          ],
+          "version": "1.19.0"
+        },
+        "errno@0.3.14": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "errno",
+          "used_by": [
+            "signal-hook-registry@1.4.8"
+          ],
+          "version": "0.3.14"
+        },
+        "fallible-iterator@0.2.0": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "fallible-iterator",
+          "used_by": [
+            "postgres-protocol@0.6.12",
+            "postgres-types@0.2.14",
+            "postgres@0.19.14",
+            "tokio-postgres@0.7.18"
+          ],
+          "version": "0.2.0"
+        },
+        "fallible-iterator@0.3.0": {
+          "features": [
+            "alloc",
+            "default"
+          ],
+          "git_source": null,
+          "name": "fallible-iterator",
+          "used_by": [
+            "rusqlite@0.40.2"
+          ],
+          "version": "0.3.0"
+        },
+        "fallible-streaming-iterator@0.1.9": {
+          "features": [],
+          "git_source": null,
+          "name": "fallible-streaming-iterator",
+          "used_by": [
+            "rusqlite@0.40.2"
+          ],
+          "version": "0.1.9"
+        },
+        "fastcdc@3.2.1": {
+          "features": [
+            "default"
+          ],
+          "git_source": null,
+          "name": "fastcdc",
+          "used_by": [
+            "oojuro-capture@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca"
+          ],
+          "version": "3.2.1"
+        },
+        "find-msvc-tools@0.1.14": {
+          "features": [],
+          "git_source": null,
+          "name": "find-msvc-tools",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "0.1.14"
+        },
+        "flagset@0.4.7": {
+          "features": [],
+          "git_source": null,
+          "name": "flagset",
+          "used_by": [
+            "der@0.7.10"
+          ],
+          "version": "0.4.7"
+        },
+        "flate2@1.1.10": {
+          "features": [
+            "any_impl",
+            "default",
+            "miniz_oxide",
+            "runtime_detection",
+            "rust_backend"
+          ],
+          "git_source": null,
+          "name": "flate2",
+          "used_by": [
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "1.1.10"
+        },
+        "foldhash@0.2.0": {
+          "features": [],
+          "git_source": null,
+          "name": "foldhash",
+          "used_by": [
+            "hashbrown@0.17.1"
+          ],
+          "version": "0.2.0"
+        },
+        "form_urlencoded@1.2.2": {
+          "features": [
+            "alloc",
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "form_urlencoded",
+          "used_by": [
+            "oojuro-cloud@0.1.0"
+          ],
+          "version": "1.2.2"
+        },
+        "futures-channel@0.3.34": {
+          "features": [
+            "alloc",
+            "default",
+            "futures-sink",
+            "sink",
+            "std"
+          ],
+          "git_source": null,
+          "name": "futures-channel",
+          "used_by": [
+            "hyper-util@0.1.21",
+            "tokio-postgres@0.7.18"
+          ],
+          "version": "0.3.34"
+        },
+        "futures-core@0.3.34": {
+          "features": [
+            "alloc",
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "futures-core",
+          "used_by": [
+            "futures-channel@0.3.34",
+            "futures-util@0.3.34",
+            "http-body-util@0.1.5",
+            "hyper@1.12.0",
+            "tokio-util@0.7.20"
+          ],
+          "version": "0.3.34"
+        },
+        "futures-sink@0.3.34": {
+          "features": [
+            "alloc",
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "futures-sink",
+          "used_by": [
+            "futures-channel@0.3.34",
+            "futures-util@0.3.34",
+            "tokio-util@0.7.20"
+          ],
+          "version": "0.3.34"
+        },
+        "futures-task@0.3.34": {
+          "features": [],
+          "git_source": null,
+          "name": "futures-task",
+          "used_by": [
+            "futures-util@0.3.34"
+          ],
+          "version": "0.3.34"
+        },
+        "futures-util@0.3.34": {
+          "features": [
+            "futures-sink",
+            "sink"
+          ],
+          "git_source": null,
+          "name": "futures-util",
+          "used_by": [
+            "hyper-util@0.1.21",
+            "postgres@0.19.14",
+            "tokio-postgres@0.7.18"
+          ],
+          "version": "0.3.34"
+        },
+        "generic-array@0.14.7": {
+          "features": [
+            "more_lengths"
+          ],
+          "git_source": null,
+          "name": "generic-array",
+          "used_by": [
+            "aead@0.5.2",
+            "block-buffer@0.10.4",
+            "crypto-common@0.1.7",
+            "inout@0.1.4"
+          ],
+          "version": "0.14.7"
+        },
+        "getrandom@0.2.17": {
+          "features": [],
+          "git_source": null,
+          "name": "getrandom",
+          "used_by": [
+            "rand_core@0.6.4",
+            "ring@0.17.14"
+          ],
+          "version": "0.2.17"
+        },
+        "getrandom@0.3.4": {
+          "features": [
+            "std"
+          ],
+          "git_source": null,
+          "name": "getrandom",
+          "used_by": [
+            "rand_core@0.9.5"
+          ],
+          "version": "0.3.4"
+        },
+        "getrandom@0.4.3": {
+          "features": [
+            "std",
+            "sys_rng"
+          ],
+          "git_source": null,
+          "name": "getrandom",
+          "used_by": [
+            "rand@0.10.3"
+          ],
+          "version": "0.4.3"
+        },
+        "hashbrown@0.17.1": {
+          "features": [
+            "default-hasher"
+          ],
+          "git_source": null,
+          "name": "hashbrown",
+          "used_by": [
+            "hashlink@0.12.2"
+          ],
+          "version": "0.17.1"
+        },
+        "hashlink@0.12.2": {
+          "features": [],
+          "git_source": null,
+          "name": "hashlink",
+          "used_by": [
+            "rusqlite@0.40.2"
+          ],
+          "version": "0.12.2"
+        },
+        "hmac@0.13.0": {
+          "features": [],
+          "git_source": null,
+          "name": "hmac",
+          "used_by": [
+            "postgres-protocol@0.6.12"
+          ],
+          "version": "0.13.0"
+        },
+        "http-body-util@0.1.5": {
+          "features": [
+            "default"
+          ],
+          "git_source": null,
+          "name": "http-body-util",
+          "used_by": [
+            "oojuro-cloud@0.1.0",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "0.1.5"
+        },
+        "http-body@1.1.0": {
+          "features": [],
+          "git_source": null,
+          "name": "http-body",
+          "used_by": [
+            "http-body-util@0.1.5",
+            "hyper-util@0.1.21",
+            "hyper@1.12.0",
+            "oojuro-cloud@0.1.0",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "1.1.0"
+        },
+        "http@1.5.0": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "http",
+          "used_by": [
+            "http-body-util@0.1.5",
+            "http-body@1.1.0",
+            "hyper-rustls@0.27.10",
+            "hyper-util@0.1.21",
+            "hyper@1.12.0",
+            "oojuro-cloud@0.1.0",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "1.5.0"
+        },
+        "httparse@1.10.1": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "httparse",
+          "used_by": [
+            "hyper-util@0.1.21",
+            "hyper@1.12.0"
+          ],
+          "version": "1.10.1"
+        },
+        "httpdate@1.0.3": {
+          "features": [],
+          "git_source": null,
+          "name": "httpdate",
+          "used_by": [
+            "hyper@1.12.0"
+          ],
+          "version": "1.0.3"
+        },
+        "hybrid-array@0.4.15": {
+          "features": [],
+          "git_source": null,
+          "name": "hybrid-array",
+          "used_by": [
+            "block-buffer@0.12.1",
+            "crypto-common@0.2.2"
+          ],
+          "version": "0.4.15"
+        },
+        "hyper-rustls@0.27.10": {
+          "features": [
+            "http1",
+            "ring",
+            "tls12",
+            "webpki-roots"
+          ],
+          "git_source": null,
+          "name": "hyper-rustls",
+          "used_by": [
+            "oojuro-cloud@0.1.0",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "0.27.10"
+        },
+        "hyper-util@0.1.21": {
+          "features": [
+            "client",
+            "client-legacy",
+            "default",
+            "http1",
+            "tokio"
+          ],
+          "git_source": null,
+          "name": "hyper-util",
+          "used_by": [
+            "hyper-rustls@0.27.10",
+            "oojuro-cloud@0.1.0",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "0.1.21"
+        },
+        "hyper@1.12.0": {
+          "features": [
+            "client",
+            "default",
+            "http1",
+            "server"
+          ],
+          "git_source": null,
+          "name": "hyper",
+          "used_by": [
+            "hyper-rustls@0.27.10",
+            "hyper-util@0.1.21",
+            "oojuro-cloud@0.1.0",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "1.12.0"
+        },
+        "inout@0.1.4": {
+          "features": [],
+          "git_source": null,
+          "name": "inout",
+          "used_by": [
+            "cipher@0.4.4"
+          ],
+          "version": "0.1.4"
+        },
+        "itertools@0.14.0": {
+          "features": [
+            "default",
+            "use_alloc",
+            "use_std"
+          ],
+          "git_source": null,
+          "name": "itertools",
+          "used_by": [
+            "prost-derive@0.14.4"
+          ],
+          "version": "0.14.0"
+        },
+        "itoa@1.0.18": {
+          "features": [],
+          "git_source": null,
+          "name": "itoa",
+          "used_by": [
+            "http@1.5.0",
+            "hyper@1.12.0",
+            "serde_json@1.0.154"
+          ],
+          "version": "1.0.18"
+        },
+        "jiff-core@0.1.1": {
+          "features": [
+            "alloc",
+            "std",
+            "tz-fat"
+          ],
+          "git_source": null,
+          "name": "jiff-core",
+          "used_by": [
+            "jiff@0.2.38"
+          ],
+          "version": "0.1.1"
+        },
+        "jiff@0.2.38": {
+          "features": [
+            "alloc",
+            "default",
+            "perf-inline",
+            "std",
+            "tz-fat",
+            "tz-system",
+            "tzdb-bundle-platform",
+            "tzdb-concatenated",
+            "tzdb-zoneinfo"
+          ],
+          "git_source": null,
+          "name": "jiff",
+          "used_by": [
+            "oojuro@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "0.2.38"
+        },
+        "jobserver@0.1.35": {
+          "features": [],
+          "git_source": null,
+          "name": "jobserver",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "0.1.35"
+        },
+        "libc@0.2.191": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "libc",
+          "used_by": [
+            "cc@1.8.0",
+            "errno@0.3.14",
+            "getrandom@0.2.17",
+            "getrandom@0.3.4",
+            "getrandom@0.4.3",
+            "hyper-util@0.1.21",
+            "jobserver@0.1.35",
+            "memmap2@0.9.11",
+            "mio@1.2.4",
+            "oojuro-cloud@0.1.0",
+            "oojuro-engine@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca",
+            "oojuro@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "parking_lot_core@0.9.12",
+            "signal-hook-registry@1.4.8",
+            "socket2@0.6.5",
+            "tokio-util@0.7.20",
+            "tokio@1.53.3",
+            "whoami@2.1.3"
+          ],
+          "version": "0.2.191"
+        },
+        "libsqlite3-sys@0.38.2": {
+          "features": [
+            "bundled",
+            "bundled_bindings",
+            "cc",
+            "default",
+            "min_sqlite_version_3_34_1",
+            "pkg-config",
+            "vcpkg"
+          ],
+          "git_source": null,
+          "name": "libsqlite3-sys",
+          "used_by": [
+            "rusqlite@0.40.2"
+          ],
+          "version": "0.38.2"
+        },
+        "lock_api@0.4.14": {
+          "features": [
+            "atomic_usize",
+            "default"
+          ],
+          "git_source": null,
+          "name": "lock_api",
+          "used_by": [
+            "parking_lot@0.12.5"
+          ],
+          "version": "0.4.14"
+        },
+        "log@0.4.34": {
+          "features": [],
+          "git_source": null,
+          "name": "log",
+          "used_by": [
+            "postgres@0.19.14",
+            "r2d2@0.8.10",
+            "tokio-postgres@0.7.18"
+          ],
+          "version": "0.4.34"
+        },
+        "lz4_flex@0.11.6": {
+          "features": [
+            "checked-decode",
+            "default",
+            "frame",
+            "safe-decode",
+            "safe-encode",
+            "std"
+          ],
+          "git_source": null,
+          "name": "lz4_flex",
+          "used_by": [
+            "oojuro-core@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-nine@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca"
+          ],
+          "version": "0.11.6"
+        },
+        "md-5@0.11.0": {
+          "features": [
+            "alloc",
+            "default",
+            "oid"
+          ],
+          "git_source": null,
+          "name": "md-5",
+          "used_by": [
+            "postgres-protocol@0.6.12"
+          ],
+          "version": "0.11.0"
+        },
+        "memchr@2.8.3": {
+          "features": [
+            "alloc",
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "memchr",
+          "used_by": [
+            "aho-corasick@1.1.5",
+            "postgres-protocol@0.6.12",
+            "regex-automata@0.4.18",
+            "regex@1.13.1",
+            "serde_json@1.0.154"
+          ],
+          "version": "2.8.3"
+        },
+        "memmap2@0.9.11": {
+          "features": [],
+          "git_source": null,
+          "name": "memmap2",
+          "used_by": [
+            "oojuro-nine@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "0.9.11"
+        },
+        "miniz_oxide@0.9.1": {
+          "features": [
+            "default",
+            "simd",
+            "simd-adler32",
+            "with-alloc"
+          ],
+          "git_source": null,
+          "name": "miniz_oxide",
+          "used_by": [
+            "flate2@1.1.10"
+          ],
+          "version": "0.9.1"
+        },
+        "mio@1.2.4": {
+          "features": [
+            "net",
+            "os-ext",
+            "os-poll"
+          ],
+          "git_source": null,
+          "name": "mio",
+          "used_by": [
+            "tokio@1.53.3"
+          ],
+          "version": "1.2.4"
+        },
+        "once_cell@1.21.4": {
+          "features": [
+            "alloc",
+            "default",
+            "race",
+            "std"
+          ],
+          "git_source": null,
+          "name": "once_cell",
+          "used_by": [
+            "rustls@0.23.46",
+            "tracing-core@0.1.36"
+          ],
+          "version": "1.21.4"
+        },
+        "oojuro-capture@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4": {
+          "features": [],
+          "git_source": "https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+          "name": "oojuro-capture",
+          "used_by": [
+            "oojuro-cloud@0.1.0",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "0.1.0"
+        },
+        "oojuro-cloud@0.1.0": {
+          "features": [],
+          "git_source": null,
+          "name": "oojuro-cloud",
+          "used_by": [],
+          "version": "0.1.0"
+        },
+        "oojuro-core@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4": {
+          "features": [],
+          "git_source": "https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+          "name": "oojuro-core",
+          "used_by": [
+            "oojuro-nine@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-trace@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "0.1.0"
+        },
+        "oojuro-engine@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca": {
+          "features": [],
+          "git_source": "https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca",
+          "name": "oojuro-engine",
+          "used_by": [
+            "oojuro-cloud@0.1.0"
+          ],
+          "version": "0.1.0"
+        },
+        "oojuro-nine@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4": {
+          "features": [],
+          "git_source": "https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+          "name": "oojuro-nine",
+          "used_by": [
+            "oojuro-trace@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "0.1.0"
+        },
+        "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4": {
+          "features": [],
+          "git_source": "https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+          "name": "oojuro-proxy",
+          "used_by": [
+            "oojuro@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "0.1.0"
+        },
+        "oojuro-rank@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca": {
+          "features": [],
+          "git_source": "https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca",
+          "name": "oojuro-rank",
+          "used_by": [
+            "oojuro-engine@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca"
+          ],
+          "version": "0.1.0"
+        },
+        "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4": {
+          "features": [],
+          "git_source": "https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+          "name": "oojuro-store",
+          "used_by": [
+            "oojuro-trace@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "0.1.0"
+        },
+        "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca": {
+          "features": [],
+          "git_source": "https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca",
+          "name": "oojuro-store",
+          "used_by": [
+            "oojuro-engine@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca"
+          ],
+          "version": "0.1.0"
+        },
+        "oojuro-trace@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4": {
+          "features": [],
+          "git_source": "https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+          "name": "oojuro-trace",
+          "used_by": [
+            "oojuro-capture@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-cloud@0.1.0",
+            "oojuro@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "0.1.0"
+        },
+        "oojuro@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4": {
+          "features": [],
+          "git_source": "https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+          "name": "oojuro",
+          "used_by": [
+            "oojuro-cloud@0.1.0"
+          ],
+          "version": "0.1.0"
+        },
+        "opaque-debug@0.3.1": {
+          "features": [],
+          "git_source": null,
+          "name": "opaque-debug",
+          "used_by": [
+            "poly1305@0.8.0"
+          ],
+          "version": "0.3.1"
+        },
+        "parking_lot@0.12.5": {
+          "features": [
+            "default"
+          ],
+          "git_source": null,
+          "name": "parking_lot",
+          "used_by": [
+            "r2d2@0.8.10",
+            "scheduled-thread-pool@0.2.7",
+            "tokio-postgres@0.7.18"
+          ],
+          "version": "0.12.5"
+        },
+        "parking_lot_core@0.9.12": {
+          "features": [],
+          "git_source": null,
+          "name": "parking_lot_core",
+          "used_by": [
+            "parking_lot@0.12.5"
+          ],
+          "version": "0.9.12"
+        },
+        "percent-encoding@2.3.2": {
+          "features": [
+            "alloc",
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "percent-encoding",
+          "used_by": [
+            "form_urlencoded@1.2.2",
+            "tokio-postgres@0.7.18"
+          ],
+          "version": "2.3.2"
+        },
+        "phf@0.13.1": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "phf",
+          "used_by": [
+            "tokio-postgres@0.7.18"
+          ],
+          "version": "0.13.1"
+        },
+        "phf_shared@0.13.1": {
+          "features": [
+            "std"
+          ],
+          "git_source": null,
+          "name": "phf_shared",
+          "used_by": [
+            "phf@0.13.1"
+          ],
+          "version": "0.13.1"
+        },
+        "pin-project-lite@0.2.17": {
+          "features": [],
+          "git_source": null,
+          "name": "pin-project-lite",
+          "used_by": [
+            "futures-util@0.3.34",
+            "http-body-util@0.1.5",
+            "hyper-util@0.1.21",
+            "hyper@1.12.0",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "tokio-postgres@0.7.18",
+            "tokio-util@0.7.20",
+            "tokio@1.53.3",
+            "tracing@0.1.44"
+          ],
+          "version": "0.2.17"
+        },
+        "pkg-config@0.3.34": {
+          "features": [],
+          "git_source": null,
+          "name": "pkg-config",
+          "used_by": [
+            "libsqlite3-sys@0.38.2",
+            "zstd-sys@2.1.2+zstd.1.5.7"
+          ],
+          "version": "0.3.34"
+        },
+        "poly1305@0.8.0": {
+          "features": [],
+          "git_source": null,
+          "name": "poly1305",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.8.0"
+        },
+        "postgres-protocol@0.6.12": {
+          "features": [
+            "default"
+          ],
+          "git_source": null,
+          "name": "postgres-protocol",
+          "used_by": [
+            "postgres-types@0.2.14",
+            "tokio-postgres@0.7.18"
+          ],
+          "version": "0.6.12"
+        },
+        "postgres-types@0.2.14": {
+          "features": [
+            "serde-1",
+            "serde_json-1",
+            "with-serde_json-1"
+          ],
+          "git_source": null,
+          "name": "postgres-types",
+          "used_by": [
+            "tokio-postgres@0.7.18"
+          ],
+          "version": "0.2.14"
+        },
+        "postgres@0.19.14": {
+          "features": [
+            "with-serde_json-1"
+          ],
+          "git_source": null,
+          "name": "postgres",
+          "used_by": [
+            "oojuro-cloud@0.1.0",
+            "r2d2_postgres@0.18.2"
+          ],
+          "version": "0.19.14"
+        },
+        "ppv-lite86@0.2.21": {
+          "features": [
+            "simd",
+            "std"
+          ],
+          "git_source": null,
+          "name": "ppv-lite86",
+          "used_by": [
+            "rand_chacha@0.9.0"
+          ],
+          "version": "0.2.21"
+        },
+        "proc-macro2@1.0.107": {
+          "features": [
+            "default",
+            "proc-macro"
+          ],
+          "git_source": null,
+          "name": "proc-macro2",
+          "used_by": [
+            "async-trait@0.1.92",
+            "der_derive@0.7.3",
+            "prost-derive@0.14.4",
+            "quote@1.0.47",
+            "serde_derive@1.0.229",
+            "syn@2.0.119",
+            "syn@3.0.9",
+            "tokio-macros@2.7.2"
+          ],
+          "version": "1.0.107"
+        },
+        "prost-derive@0.14.4": {
+          "features": [],
+          "git_source": null,
+          "name": "prost-derive",
+          "used_by": [
+            "prost@0.14.4"
+          ],
+          "version": "0.14.4"
+        },
+        "prost@0.14.4": {
+          "features": [
+            "derive",
+            "std"
+          ],
+          "git_source": null,
+          "name": "prost",
+          "used_by": [
+            "oojuro@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "0.14.4"
+        },
+        "quote@1.0.47": {
+          "features": [
+            "default",
+            "proc-macro"
+          ],
+          "git_source": null,
+          "name": "quote",
+          "used_by": [
+            "async-trait@0.1.92",
+            "der_derive@0.7.3",
+            "prost-derive@0.14.4",
+            "serde_derive@1.0.229",
+            "syn@2.0.119",
+            "syn@3.0.9",
+            "tokio-macros@2.7.2"
+          ],
+          "version": "1.0.47"
+        },
+        "r2d2@0.8.10": {
+          "features": [],
+          "git_source": null,
+          "name": "r2d2",
+          "used_by": [
+            "r2d2_postgres@0.18.2"
+          ],
+          "version": "0.8.10"
+        },
+        "r2d2_postgres@0.18.2": {
+          "features": [],
+          "git_source": null,
+          "name": "r2d2_postgres",
+          "used_by": [
+            "oojuro-cloud@0.1.0"
+          ],
+          "version": "0.18.2"
+        },
+        "rand@0.10.3": {
+          "features": [
+            "alloc",
+            "default",
+            "std",
+            "std_rng",
+            "sys_rng",
+            "thread_rng"
+          ],
+          "git_source": null,
+          "name": "rand",
+          "used_by": [
+            "postgres-protocol@0.6.12",
+            "tokio-postgres@0.7.18"
+          ],
+          "version": "0.10.3"
+        },
+        "rand@0.9.5": {
+          "features": [
+            "alloc",
+            "default",
+            "os_rng",
+            "small_rng",
+            "std",
+            "std_rng",
+            "thread_rng"
+          ],
+          "git_source": null,
+          "name": "rand",
+          "used_by": [
+            "oojuro-cloud@0.1.0"
+          ],
+          "version": "0.9.5"
+        },
+        "rand_chacha@0.9.0": {
+          "features": [
+            "std"
+          ],
+          "git_source": null,
+          "name": "rand_chacha",
+          "used_by": [
+            "rand@0.9.5"
+          ],
+          "version": "0.9.0"
+        },
+        "rand_core@0.10.1": {
+          "features": [],
+          "git_source": null,
+          "name": "rand_core",
+          "used_by": [
+            "chacha20@0.10.2",
+            "getrandom@0.4.3",
+            "rand@0.10.3"
+          ],
+          "version": "0.10.1"
+        },
+        "rand_core@0.6.4": {
+          "features": [
+            "getrandom"
+          ],
+          "git_source": null,
+          "name": "rand_core",
+          "used_by": [
+            "crypto-common@0.1.7"
+          ],
+          "version": "0.6.4"
+        },
+        "rand_core@0.9.5": {
+          "features": [
+            "os_rng",
+            "std"
+          ],
+          "git_source": null,
+          "name": "rand_core",
+          "used_by": [
+            "rand@0.9.5",
+            "rand_chacha@0.9.0"
+          ],
+          "version": "0.9.5"
+        },
+        "regex-automata@0.4.18": {
+          "features": [
+            "alloc",
+            "dfa-onepass",
+            "hybrid",
+            "meta",
+            "nfa-backtrack",
+            "nfa-pikevm",
+            "nfa-thompson",
+            "perf-inline",
+            "perf-literal",
+            "perf-literal-multisubstring",
+            "perf-literal-substring",
+            "std",
+            "syntax",
+            "unicode",
+            "unicode-age",
+            "unicode-bool",
+            "unicode-case",
+            "unicode-gencat",
+            "unicode-perl",
+            "unicode-script",
+            "unicode-segment",
+            "unicode-word-boundary"
+          ],
+          "git_source": null,
+          "name": "regex-automata",
+          "used_by": [
+            "regex@1.13.1"
+          ],
+          "version": "0.4.18"
+        },
+        "regex-syntax@0.8.11": {
+          "features": [
+            "default",
+            "std",
+            "unicode",
+            "unicode-age",
+            "unicode-bool",
+            "unicode-case",
+            "unicode-gencat",
+            "unicode-perl",
+            "unicode-script",
+            "unicode-segment"
+          ],
+          "git_source": null,
+          "name": "regex-syntax",
+          "used_by": [
+            "regex-automata@0.4.18",
+            "regex@1.13.1"
+          ],
+          "version": "0.8.11"
+        },
+        "regex@1.13.1": {
+          "features": [
+            "default",
+            "perf",
+            "perf-backtrack",
+            "perf-cache",
+            "perf-dfa",
+            "perf-inline",
+            "perf-literal",
+            "perf-onepass",
+            "std",
+            "unicode",
+            "unicode-age",
+            "unicode-bool",
+            "unicode-case",
+            "unicode-gencat",
+            "unicode-perl",
+            "unicode-script",
+            "unicode-segment"
+          ],
+          "git_source": null,
+          "name": "regex",
+          "used_by": [
+            "oojuro-capture@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "1.13.1"
+        },
+        "ring@0.17.14": {
+          "features": [
+            "alloc",
+            "default",
+            "dev_urandom_fallback"
+          ],
+          "git_source": null,
+          "name": "ring",
+          "used_by": [
+            "oojuro-cloud@0.1.0",
+            "oojuro-engine@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca",
+            "rustls-webpki@0.103.15",
+            "rustls@0.23.46"
+          ],
+          "version": "0.17.14"
+        },
+        "rusqlite@0.40.2": {
+          "features": [
+            "bundled",
+            "cache",
+            "default",
+            "ffi-sqlite-wasm-rs",
+            "hashlink",
+            "modern_sqlite"
+          ],
+          "git_source": null,
+          "name": "rusqlite",
+          "used_by": [
+            "oojuro-cloud@0.1.0"
+          ],
+          "version": "0.40.2"
+        },
+        "rust-stemmers@1.2.0": {
+          "features": [],
+          "git_source": null,
+          "name": "rust-stemmers",
+          "used_by": [
+            "oojuro-engine@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca",
+            "oojuro-nine@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "1.2.0"
+        },
+        "rustls-pki-types@1.15.1": {
+          "features": [
+            "alloc",
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "rustls-pki-types",
+          "used_by": [
+            "rustls-webpki@0.103.15",
+            "rustls@0.23.46",
+            "webpki-roots@1.0.9"
+          ],
+          "version": "1.15.1"
+        },
+        "rustls-webpki@0.103.15": {
+          "features": [
+            "alloc",
+            "ring",
+            "std"
+          ],
+          "git_source": null,
+          "name": "rustls-webpki",
+          "used_by": [
+            "rustls@0.23.46"
+          ],
+          "version": "0.103.15"
+        },
+        "rustls@0.23.46": {
+          "features": [
+            "ring",
+            "std",
+            "tls12"
+          ],
+          "git_source": null,
+          "name": "rustls",
+          "used_by": [
+            "hyper-rustls@0.27.10",
+            "oojuro-cloud@0.1.0",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "tokio-postgres-rustls@0.14.0",
+            "tokio-rustls@0.26.6"
+          ],
+          "version": "0.23.46"
+        },
+        "scheduled-thread-pool@0.2.7": {
+          "features": [],
+          "git_source": null,
+          "name": "scheduled-thread-pool",
+          "used_by": [
+            "r2d2@0.8.10"
+          ],
+          "version": "0.2.7"
+        },
+        "scopeguard@1.2.0": {
+          "features": [],
+          "git_source": null,
+          "name": "scopeguard",
+          "used_by": [
+            "lock_api@0.4.14"
+          ],
+          "version": "1.2.0"
+        },
+        "serde@1.0.229": {
+          "features": [
+            "default",
+            "derive",
+            "serde_derive",
+            "std"
+          ],
+          "git_source": null,
+          "name": "serde",
+          "used_by": [
+            "oojuro-capture@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-cloud@0.1.0",
+            "oojuro-core@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-engine@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca",
+            "oojuro-nine@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-trace@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "rust-stemmers@1.2.0"
+          ],
+          "version": "1.0.229"
+        },
+        "serde_core@1.0.229": {
+          "features": [
+            "alloc",
+            "default",
+            "result",
+            "std"
+          ],
+          "git_source": null,
+          "name": "serde_core",
+          "used_by": [
+            "postgres-types@0.2.14",
+            "serde@1.0.229",
+            "serde_json@1.0.154",
+            "serde_spanned@1.1.2",
+            "toml@0.9.12+spec-1.1.0",
+            "toml_datetime@0.7.5+spec-1.1.0"
+          ],
+          "version": "1.0.229"
+        },
+        "serde_derive@1.0.229": {
+          "features": [
+            "default"
+          ],
+          "git_source": null,
+          "name": "serde_derive",
+          "used_by": [
+            "rust-stemmers@1.2.0",
+            "serde@1.0.229"
+          ],
+          "version": "1.0.229"
+        },
+        "serde_json@1.0.154": {
+          "features": [
+            "default",
+            "raw_value",
+            "std"
+          ],
+          "git_source": null,
+          "name": "serde_json",
+          "used_by": [
+            "oojuro-capture@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-cloud@0.1.0",
+            "oojuro-core@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-engine@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca",
+            "oojuro-nine@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca",
+            "oojuro-trace@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "postgres-types@0.2.14"
+          ],
+          "version": "1.0.154"
+        },
+        "serde_spanned@1.1.2": {
+          "features": [
+            "alloc",
+            "serde",
+            "std"
+          ],
+          "git_source": null,
+          "name": "serde_spanned",
+          "used_by": [
+            "toml@0.9.12+spec-1.1.0"
+          ],
+          "version": "1.1.2"
+        },
+        "sha2@0.10.9": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "sha2",
+          "used_by": [
+            "oojuro-capture@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-cloud@0.1.0"
+          ],
+          "version": "0.10.9"
+        },
+        "sha2@0.11.1": {
+          "features": [
+            "alloc",
+            "default",
+            "oid"
+          ],
+          "git_source": null,
+          "name": "sha2",
+          "used_by": [
+            "postgres-protocol@0.6.12",
+            "tokio-postgres-rustls@0.14.0"
+          ],
+          "version": "0.11.1"
+        },
+        "shlex@2.0.1": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "shlex",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "2.0.1"
+        },
+        "signal-hook-registry@1.4.8": {
+          "features": [],
+          "git_source": null,
+          "name": "signal-hook-registry",
+          "used_by": [
+            "tokio@1.53.3"
+          ],
+          "version": "1.4.8"
+        },
+        "simd-adler32@0.3.10": {
+          "features": [],
+          "git_source": null,
+          "name": "simd-adler32",
+          "used_by": [
+            "miniz_oxide@0.9.1"
+          ],
+          "version": "0.3.10"
+        },
+        "siphasher@1.0.4": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "siphasher",
+          "used_by": [
+            "phf_shared@0.13.1"
+          ],
+          "version": "1.0.4"
+        },
+        "smallvec@1.16.3": {
+          "features": [
+            "const_generics",
+            "const_new"
+          ],
+          "git_source": null,
+          "name": "smallvec",
+          "used_by": [
+            "hyper@1.12.0",
+            "parking_lot_core@0.9.12",
+            "rusqlite@0.40.2"
+          ],
+          "version": "1.16.3"
+        },
+        "socket2@0.6.5": {
+          "features": [
+            "all"
+          ],
+          "git_source": null,
+          "name": "socket2",
+          "used_by": [
+            "hyper-util@0.1.21",
+            "tokio-postgres@0.7.18",
+            "tokio@1.53.3"
+          ],
+          "version": "0.6.5"
+        },
+        "spki@0.7.3": {
+          "features": [
+            "alloc",
+            "std"
+          ],
+          "git_source": null,
+          "name": "spki",
+          "used_by": [
+            "x509-cert@0.2.5"
+          ],
+          "version": "0.7.3"
+        },
+        "stringprep@0.1.5": {
+          "features": [],
+          "git_source": null,
+          "name": "stringprep",
+          "used_by": [
+            "postgres-protocol@0.6.12"
+          ],
+          "version": "0.1.5"
+        },
+        "subtle@2.6.1": {
+          "features": [],
+          "git_source": null,
+          "name": "subtle",
+          "used_by": [
+            "rustls@0.23.46",
+            "universal-hash@0.5.1"
+          ],
+          "version": "2.6.1"
+        },
+        "syn@2.0.119": {
+          "features": [
+            "clone-impls",
+            "default",
+            "derive",
+            "extra-traits",
+            "parsing",
+            "printing",
+            "proc-macro"
+          ],
+          "git_source": null,
+          "name": "syn",
+          "used_by": [
+            "der_derive@0.7.3",
+            "prost-derive@0.14.4"
+          ],
+          "version": "2.0.119"
+        },
+        "syn@3.0.9": {
+          "features": [
+            "clone-impls",
+            "default",
+            "derive",
+            "full",
+            "parsing",
+            "printing",
+            "proc-macro",
+            "visit-mut"
+          ],
+          "git_source": null,
+          "name": "syn",
+          "used_by": [
+            "async-trait@0.1.92",
+            "serde_derive@1.0.229",
+            "tokio-macros@2.7.2"
+          ],
+          "version": "3.0.9"
+        },
+        "tinyvec@1.13.3": {
+          "features": [
+            "alloc",
+            "default"
+          ],
+          "git_source": null,
+          "name": "tinyvec",
+          "used_by": [
+            "unicode-normalization@0.1.26"
+          ],
+          "version": "1.13.3"
+        },
+        "tokio-macros@2.7.2": {
+          "features": [],
+          "git_source": null,
+          "name": "tokio-macros",
+          "used_by": [
+            "tokio@1.53.3"
+          ],
+          "version": "2.7.2"
+        },
+        "tokio-postgres-rustls@0.14.0": {
+          "features": [
+            "default",
+            "ring"
+          ],
+          "git_source": null,
+          "name": "tokio-postgres-rustls",
+          "used_by": [
+            "oojuro-cloud@0.1.0"
+          ],
+          "version": "0.14.0"
+        },
+        "tokio-postgres@0.7.18": {
+          "features": [
+            "default",
+            "runtime",
+            "with-serde_json-1"
+          ],
+          "git_source": null,
+          "name": "tokio-postgres",
+          "used_by": [
+            "postgres@0.19.14",
+            "tokio-postgres-rustls@0.14.0"
+          ],
+          "version": "0.7.18"
+        },
+        "tokio-rustls@0.26.6": {
+          "features": [
+            "ring",
+            "tls12"
+          ],
+          "git_source": null,
+          "name": "tokio-rustls",
+          "used_by": [
+            "hyper-rustls@0.27.10",
+            "tokio-postgres-rustls@0.14.0"
+          ],
+          "version": "0.26.6"
+        },
+        "tokio-util@0.7.20": {
+          "features": [
+            "codec",
+            "default",
+            "libc"
+          ],
+          "git_source": null,
+          "name": "tokio-util",
+          "used_by": [
+            "tokio-postgres@0.7.18"
+          ],
+          "version": "0.7.20"
+        },
+        "tokio@1.53.3": {
+          "features": [
+            "bytes",
+            "default",
+            "io-util",
+            "libc",
+            "macros",
+            "mio",
+            "net",
+            "rt",
+            "rt-multi-thread",
+            "signal",
+            "signal-hook-registry",
+            "socket2",
+            "sync",
+            "time",
+            "tokio-macros"
+          ],
+          "git_source": null,
+          "name": "tokio",
+          "used_by": [
+            "hyper-rustls@0.27.10",
+            "hyper-util@0.1.21",
+            "hyper@1.12.0",
+            "oojuro-cloud@0.1.0",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "postgres@0.19.14",
+            "tokio-postgres-rustls@0.14.0",
+            "tokio-postgres@0.7.18",
+            "tokio-rustls@0.26.6",
+            "tokio-util@0.7.20"
+          ],
+          "version": "1.53.3"
+        },
+        "toml@0.9.12+spec-1.1.0": {
+          "features": [
+            "default",
+            "display",
+            "parse",
+            "serde",
+            "std"
+          ],
+          "git_source": null,
+          "name": "toml",
+          "used_by": [
+            "oojuro@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "0.9.12+spec-1.1.0"
+        },
+        "toml_datetime@0.7.5+spec-1.1.0": {
+          "features": [
+            "alloc",
+            "serde",
+            "std"
+          ],
+          "git_source": null,
+          "name": "toml_datetime",
+          "used_by": [
+            "toml@0.9.12+spec-1.1.0"
+          ],
+          "version": "0.7.5+spec-1.1.0"
+        },
+        "toml_parser@1.1.5+spec-1.1.0": {
+          "features": [
+            "alloc",
+            "std"
+          ],
+          "git_source": null,
+          "name": "toml_parser",
+          "used_by": [
+            "toml@0.9.12+spec-1.1.0"
+          ],
+          "version": "1.1.5+spec-1.1.0"
+        },
+        "toml_writer@1.1.3+spec-1.1.0": {
+          "features": [
+            "alloc",
+            "std"
+          ],
+          "git_source": null,
+          "name": "toml_writer",
+          "used_by": [
+            "toml@0.9.12+spec-1.1.0"
+          ],
+          "version": "1.1.3+spec-1.1.0"
+        },
+        "tower-service@0.3.3": {
+          "features": [],
+          "git_source": null,
+          "name": "tower-service",
+          "used_by": [
+            "hyper-rustls@0.27.10",
+            "hyper-util@0.1.21"
+          ],
+          "version": "0.3.3"
+        },
+        "tracing-core@0.1.36": {
+          "features": [
+            "once_cell",
+            "std"
+          ],
+          "git_source": null,
+          "name": "tracing-core",
+          "used_by": [
+            "tracing@0.1.44"
+          ],
+          "version": "0.1.36"
+        },
+        "tracing@0.1.44": {
+          "features": [
+            "std"
+          ],
+          "git_source": null,
+          "name": "tracing",
+          "used_by": [
+            "hyper-util@0.1.21"
+          ],
+          "version": "0.1.44"
+        },
+        "try-lock@0.2.5": {
+          "features": [],
+          "git_source": null,
+          "name": "try-lock",
+          "used_by": [
+            "want@0.3.2"
+          ],
+          "version": "0.2.5"
+        },
+        "twox-hash@2.1.5": {
+          "features": [
+            "xxhash32"
+          ],
+          "git_source": null,
+          "name": "twox-hash",
+          "used_by": [
+            "lz4_flex@0.11.6"
+          ],
+          "version": "2.1.5"
+        },
+        "typenum@1.20.1": {
+          "features": [
+            "const-generics"
+          ],
+          "git_source": null,
+          "name": "typenum",
+          "used_by": [
+            "crypto-common@0.1.7",
+            "generic-array@0.14.7",
+            "hybrid-array@0.4.15"
+          ],
+          "version": "1.20.1"
+        },
+        "unicode-bidi@0.3.18": {
+          "features": [
+            "default",
+            "hardcoded-data",
+            "std"
+          ],
+          "git_source": null,
+          "name": "unicode-bidi",
+          "used_by": [
+            "stringprep@0.1.5"
+          ],
+          "version": "0.3.18"
+        },
+        "unicode-ident@1.0.27": {
+          "features": [],
+          "git_source": null,
+          "name": "unicode-ident",
+          "used_by": [
+            "proc-macro2@1.0.107",
+            "syn@2.0.119",
+            "syn@3.0.9"
+          ],
+          "version": "1.0.27"
+        },
+        "unicode-normalization@0.1.26": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "unicode-normalization",
+          "used_by": [
+            "stringprep@0.1.5"
+          ],
+          "version": "0.1.26"
+        },
+        "unicode-properties@0.1.4": {
+          "features": [
+            "default",
+            "emoji",
+            "general-category"
+          ],
+          "git_source": null,
+          "name": "unicode-properties",
+          "used_by": [
+            "stringprep@0.1.5"
+          ],
+          "version": "0.1.4"
+        },
+        "universal-hash@0.5.1": {
+          "features": [],
+          "git_source": null,
+          "name": "universal-hash",
+          "used_by": [
+            "poly1305@0.8.0"
+          ],
+          "version": "0.5.1"
+        },
+        "untrusted@0.9.0": {
+          "features": [],
+          "git_source": null,
+          "name": "untrusted",
+          "used_by": [
+            "ring@0.17.14",
+            "rustls-webpki@0.103.15"
+          ],
+          "version": "0.9.0"
+        },
+        "vcpkg@0.2.15": {
+          "features": [],
+          "git_source": null,
+          "name": "vcpkg",
+          "used_by": [
+            "libsqlite3-sys@0.38.2"
+          ],
+          "version": "0.2.15"
+        },
+        "version_check@0.9.5": {
+          "features": [],
+          "git_source": null,
+          "name": "version_check",
+          "used_by": [
+            "generic-array@0.14.7"
+          ],
+          "version": "0.9.5"
+        },
+        "want@0.3.2": {
+          "features": [],
+          "git_source": null,
+          "name": "want",
+          "used_by": [
+            "hyper@1.12.0"
+          ],
+          "version": "0.3.2"
+        },
+        "webpki-roots@1.0.9": {
+          "features": [],
+          "git_source": null,
+          "name": "webpki-roots",
+          "used_by": [
+            "hyper-rustls@0.27.10"
+          ],
+          "version": "1.0.9"
+        },
+        "whoami@2.1.3": {
+          "features": [
+            "default",
+            "std",
+            "wasi-wasite",
+            "wasm-web"
+          ],
+          "git_source": null,
+          "name": "whoami",
+          "used_by": [
+            "tokio-postgres@0.7.18"
+          ],
+          "version": "2.1.3"
+        },
+        "winnow@0.7.15": {
+          "features": [],
+          "git_source": null,
+          "name": "winnow",
+          "used_by": [
+            "toml@0.9.12+spec-1.1.0"
+          ],
+          "version": "0.7.15"
+        },
+        "winnow@1.0.4": {
+          "features": [],
+          "git_source": null,
+          "name": "winnow",
+          "used_by": [
+            "toml_parser@1.1.5+spec-1.1.0"
+          ],
+          "version": "1.0.4"
+        },
+        "x509-cert@0.2.5": {
+          "features": [
+            "std"
+          ],
+          "git_source": null,
+          "name": "x509-cert",
+          "used_by": [
+            "tokio-postgres-rustls@0.14.0"
+          ],
+          "version": "0.2.5"
+        },
+        "zerocopy@0.8.63": {
+          "features": [
+            "simd"
+          ],
+          "git_source": null,
+          "name": "zerocopy",
+          "used_by": [
+            "ppv-lite86@0.2.21"
+          ],
+          "version": "0.8.63"
+        },
+        "zeroize@1.9.1": {
+          "features": [
+            "alloc",
+            "default"
+          ],
+          "git_source": null,
+          "name": "zeroize",
+          "used_by": [
+            "chacha20poly1305@0.10.1",
+            "cipher@0.4.4",
+            "rustls-pki-types@1.15.1",
+            "rustls@0.23.46"
+          ],
+          "version": "1.9.1"
+        },
+        "zmij@1.0.23": {
+          "features": [],
+          "git_source": null,
+          "name": "zmij",
+          "used_by": [
+            "serde_json@1.0.154"
+          ],
+          "version": "1.0.23"
+        },
+        "zstd-safe@7.3.0": {
+          "features": [
+            "experimental",
+            "std",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd-safe",
+          "used_by": [
+            "zstd@0.13.3"
+          ],
+          "version": "7.3.0"
+        },
+        "zstd-sys@2.1.2+zstd.1.5.7": {
+          "features": [
+            "experimental",
+            "std",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd-sys",
+          "used_by": [
+            "zstd-safe@7.3.0"
+          ],
+          "version": "2.1.2+zstd.1.5.7"
+        },
+        "zstd@0.13.3": {
+          "features": [
+            "experimental",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd",
+          "used_by": [
+            "oojuro-cloud@0.1.0",
+            "oojuro-proxy@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4",
+            "oojuro-store@0.1.0#https://github.com/oojuro/oojuro.git?rev=5197b8ca4dacecd1563b14c24e036eaf7cda2921#5197b8ca",
+            "oojuro-trace@0.1.0#https://github.com/oojuro/oojuro.git?rev=3a17d1d4fbb519cb013afc492a7e9cc84cb1efcd#3a17d1d4"
+          ],
+          "version": "0.13.3"
+        }
+      },
+      "roots": [
+        "oojuro-cloud@0.1.0"
+      ],
+      "selection": [],
+      "target": "x86_64-unknown-linux-gnu"
+    }
+  },
+  "inventory": {
+    "adler2@2.0.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A simple clean-room implementation of the Adler-32 checksum",
+      "license": "0BSD OR MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/oyvindln/adler2",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "aead@0.5.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Traits for Authenticated Encryption with Associated Data (AEAD) algorithms,\nsuch as AES-GCM as ChaCha20Poly1305, which provide a high-level API\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/traits",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "aho-corasick@1.1.5": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Fast multiple substring searching.",
+      "license": "Unlicense OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/BurntSushi/aho-corasick",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "alloc-no-stdlib@2.0.4": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A dynamic allocator that may be used with or without the stdlib. This allows a package with nostd to allocate memory dynamically and be used either with a custom allocator, items on the stack, or by a package that wishes to simply use Box<>. It also provides options to use calloc or a mutable global variable for pre-zeroed memory",
+      "license": "BSD-3-Clause",
+      "native_links": null,
+      "repository": "https://github.com/dropbox/rust-alloc-no-stdlib",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "alloc-stdlib@0.2.4": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A dynamic allocator example that may be used with the stdlib",
+      "license": "BSD-3-Clause",
+      "native_links": null,
+      "repository": "https://github.com/dropbox/rust-alloc-no-stdlib",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "anyhow@1.0.104": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Flexible concrete Error type built on std::error::Error",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/dtolnay/anyhow",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "arrayvec@0.7.8": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A vector with fixed capacity, backed by an array (it can be stored on the stack too). Implements fixed capacity ArrayVec and ArrayString.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/bluss/arrayvec",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "async-trait@0.1.92": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Type erasure for async trait methods",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/dtolnay/async-trait",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "atomic-waker@1.1.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A synchronization primitive for task wakeup",
+      "license": "Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/smol-rs/atomic-waker",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "base64@0.22.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "encodes and decodes base64 as bytes or utf8",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/marshallpierce/rust-base64",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "bitflags@2.13.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A macro to generate structures which behave like bitflags.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/bitflags/bitflags",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "blake3@1.8.7": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "the BLAKE3 hash function",
+      "license": "CC0-1.0 OR Apache-2.0 OR Apache-2.0 WITH LLVM-exception",
+      "native_links": null,
+      "repository": "https://github.com/BLAKE3-team/BLAKE3",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "block-buffer@0.10.4": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Buffer type for block processing of data",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/utils",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "block-buffer@0.12.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Buffer types for block processing of data",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/utils",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "brotli-decompressor@5.0.3": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A brotli decompressor that with an interface avoiding the rust stdlib. This makes it suitable for embedded devices and kernels. It is designed with a pluggable allocator so that the standard lib's allocator may be employed. The default build also includes a stdlib allocator and stream interface. Disable this with --features=no-stdlib. Alternatively, --features=unsafe turns off array bounds checks and memory initialization but provides a safe interface for the caller.  Without adding the --features=unsafe argument, all included code is safe. For compression in addition to this library, download https://github.com/dropbox/rust-brotli ",
+      "license": "BSD-3-Clause/MIT",
+      "native_links": null,
+      "repository": "https://github.com/dropbox/rust-brotli-decompressor",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "byteorder@1.5.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Library for reading/writing numbers in big-endian and little-endian.",
+      "license": "Unlicense OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/BurntSushi/byteorder",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "bytes@1.12.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Types and traits for working with bytes",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/tokio-rs/bytes",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "cc@1.8.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A build-time dependency for Cargo build scripts to assist in invoking the native\nC compiler to compile native C code into a static archive to be linked into Rust\ncode.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/cc-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "cfg-if@1.0.5": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A macro to ergonomically define an item depending on a large number of #[cfg]\nparameters. Structured like an if-else chain, the first matching branch is the\nitem that gets emitted.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/cfg-if",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "chacha20@0.10.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "The ChaCha20 stream cipher (RFC 8439) implemented in pure Rust using traits\nfrom the RustCrypto `cipher` crate, with optional architecture-specific\nhardware acceleration (AVX2, SSE2). Additionally provides the ChaCha8, ChaCha12,\nXChaCha20, XChaCha12 and XChaCha8 stream ciphers, and also optional\nrand_core-compatible RNGs based on those ciphers.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/stream-ciphers",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "chacha20@0.9.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "The ChaCha20 stream cipher (RFC 8439) implemented in pure Rust using traits\nfrom the RustCrypto `cipher` crate, with optional architecture-specific\nhardware acceleration (AVX2, SSE2). Additionally provides the ChaCha8, ChaCha12,\nXChaCha20, XChaCha12 and XChaCha8 stream ciphers, and also optional\nrand_core-compatible RNGs based on those ciphers.\n",
+      "license": "Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/stream-ciphers",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "chacha20poly1305@0.10.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Pure Rust implementation of the ChaCha20Poly1305 Authenticated Encryption\nwith Additional Data Cipher (RFC 8439) with optional architecture-specific\nhardware acceleration. Also contains implementations of the XChaCha20Poly1305\nextended nonce variant of ChaCha20Poly1305, and the reduced-round\nChaCha8Poly1305 and ChaCha12Poly1305 lightweight variants.\n",
+      "license": "Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/AEADs/tree/master/chacha20poly1305",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "cipher@0.4.4": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Traits for describing block ciphers and stream ciphers",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/traits",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "cmov@0.5.4": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Conditional move CPU intrinsics which are guaranteed on major platforms (ARM32/ARM64, x86/x86_64,\nRISC-V) to execute in constant-time and not be rewritten as branches by the compiler. Provides\nwrappers for the CMOV family of instructions on x86/x86_64 and CSEL on AArch64, along with a\nportable \"best-effort\" pure Rust fallback implementation.\n",
+      "license": "Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/utils",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "const-oid@0.10.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Const-friendly implementation of the ISO/IEC Object Identifier (OID) standard\nas defined in ITU X.660, with support for BER/DER encoding/decoding as well as\nheapless no_std (i.e. embedded) support\n",
+      "license": "Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/formats",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "const-oid@0.9.6": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Const-friendly implementation of the ISO/IEC Object Identifier (OID) standard\nas defined in ITU X.660, with support for BER/DER encoding/decoding as well as\nheapless no_std (i.e. embedded) support\n",
+      "license": "Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/formats/tree/master/const-oid",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "constant_time_eq@0.4.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Compares two equal-sized byte strings in constant time.",
+      "license": "CC0-1.0 OR MIT-0 OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/cesarb/constant_time_eq",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "cpufeatures@0.2.17": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Lightweight runtime CPU feature detection for aarch64, loongarch64, and x86/x86_64 targets, \nwith no_std support and support for mobile targets including Android and iOS\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/utils",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "cpufeatures@0.3.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Lightweight runtime CPU feature detection for aarch64, loongarch64, and x86/x86_64 targets,\nwith no_std support and support for mobile targets including Android and iOS\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/utils",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "crc32fast@1.5.2": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Fast, SIMD-accelerated CRC32 (IEEE) checksum computation",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/srijs/rust-crc32fast",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "crypto-common@0.1.7": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Common cryptographic traits",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/traits",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "crypto-common@0.2.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Common traits used by cryptographic algorithms",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/traits",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "ctutils@0.4.3": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Constant-time utility library with selection and equality testing support targeting cryptographic\napplications. Supports `const fn` where appropriate. Built on the `cmov` crate which provides\narchitecture-specific predication intrinsics. Heavily inspired by the `subtle` crate.\n",
+      "license": "Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/utils",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "der@0.7.10": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Pure Rust embedded-friendly implementation of the Distinguished Encoding Rules\n(DER) for Abstract Syntax Notation One (ASN.1) as described in ITU X.690 with\nfull support for heapless no_std targets\n",
+      "license": "Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/formats/tree/master/der",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "der_derive@0.7.3": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Custom derive support for the `der` crate's `Choice` and `Sequence` traits",
+      "license": "Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/formats/tree/master/der/derive",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "digest@0.10.7": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Traits for cryptographic hash functions and message authentication codes",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/traits",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "digest@0.11.3": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Traits for cryptographic hash functions and message authentication codes",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/traits",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "either@1.19.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "The enum `Either` with variants `Left` and `Right` is a general purpose sum type with two cases.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rayon-rs/either",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "errno@0.3.14": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Cross-platform interface to the `errno` variable.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/lambda-fairy/rust-errno",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "fallible-iterator@0.2.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Fallible iterator traits",
+      "license": "MIT/Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/sfackler/rust-fallible-iterator",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "fallible-iterator@0.3.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Fallible iterator traits",
+      "license": "MIT/Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/sfackler/rust-fallible-iterator",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "fallible-streaming-iterator@0.1.9": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Fallible streaming iteration",
+      "license": "MIT/Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/sfackler/fallible-streaming-iterator",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "fastcdc@3.2.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "FastCDC (content defined chunking) in pure Rust.",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/nlfiedler/fastcdc-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "find-msvc-tools@0.1.14": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Find windows-specific tools, read MSVC versions from the registry and from COM interfaces",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/cc-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "flagset@0.4.7": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Data types and a macro for generating enumeration-based bit flags",
+      "license": "Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/enarx/flagset",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "flate2@1.1.10": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "DEFLATE compression and decompression exposed as Read/BufRead/Write streams.\nSupports miniz_oxide and multiple zlib implementations. Supports zlib, gzip,\nand raw deflate streams.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/flate2-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "foldhash@0.2.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A fast, non-cryptographic, minimally DoS-resistant hashing algorithm.",
+      "license": "Zlib",
+      "native_links": null,
+      "repository": "https://github.com/orlp/foldhash",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "form_urlencoded@1.2.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Parser and serializer for the application/x-www-form-urlencoded syntax, as used by HTML forms.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/servo/rust-url",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "futures-channel@0.3.34": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Channels for asynchronous communication using futures-rs.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/futures-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "futures-core@0.3.34": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "The core traits and types in for the `futures` library.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/futures-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "futures-sink@0.3.34": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "The asynchronous `Sink` trait for the futures-rs library.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/futures-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "futures-task@0.3.34": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Tools for working with tasks.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/futures-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "futures-util@0.3.34": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Common utilities and extension traits for the futures-rs library.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/futures-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "generic-array@0.14.7": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Generic types implementing functionality of arrays",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/fizyk20/generic-array.git",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "getrandom@0.2.17": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A small cross-platform library for retrieving random data from system source",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-random/getrandom",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "getrandom@0.3.4": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A small cross-platform library for retrieving random data from system source",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-random/getrandom",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "getrandom@0.4.3": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A small cross-platform library for retrieving random data from system source",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-random/getrandom",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "hashbrown@0.17.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A Rust port of Google's SwissTable hash map",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/hashbrown",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "hashlink@0.12.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "HashMap-like containers that hold their key-value pairs in a user controllable order",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/djc/hashlink",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "hmac@0.13.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Generic implementation of Hash-based Message Authentication Code (HMAC)",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/MACs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "http-body-util@0.1.5": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Combinators and adapters for HTTP request or response bodies.\n",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/hyperium/http-body",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "http-body@1.1.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Trait representing an asynchronous, streaming, HTTP request or response body.\n",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/hyperium/http-body",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "http@1.5.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A set of types for representing HTTP requests and responses.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/hyperium/http",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "httparse@1.10.1": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A tiny, safe, speedy, zero-copy HTTP/1.x parser.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/seanmonstar/httparse",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "httpdate@1.0.3": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "HTTP date parsing and formatting",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/pyfisch/httpdate",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "hybrid-array@0.4.15": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Hybrid typenum-based and const generic array types designed to provide the\nflexibility of typenum-based expressions while also allowing interoperability\nand a transition path to const generics\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/hybrid-array",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "hyper-rustls@0.27.10": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Rustls+hyper integration for pure rust HTTPS",
+      "license": "Apache-2.0 OR ISC OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/rustls/hyper-rustls",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "hyper-util@0.1.21": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "hyper utilities",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/hyperium/hyper-util",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "hyper@1.12.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A protective and efficient HTTP library for all.",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/hyperium/hyper",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "inout@0.1.4": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Custom reference types for code generic over in-place and buffer-to-buffer modes of operation.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/utils",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "itertools@0.14.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Extra iterator adaptors, iterator methods, free functions, and macros.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-itertools/itertools",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "itoa@1.0.18": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Fast integer primitive to string conversion",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/dtolnay/itoa",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "jiff-core@0.1.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Low level datetime primitives for the Jiff library.",
+      "license": "Unlicense OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/BurntSushi/jiff",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "jiff@0.2.38": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A date-time library that encourages you to jump into the pit of success.\n\nThis library is heavily inspired by the Temporal project.\n",
+      "license": "Unlicense OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/BurntSushi/jiff",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "jobserver@0.1.35": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "An implementation of the GNU Make jobserver for Rust.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/jobserver-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "libc@0.2.191": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Raw FFI bindings to platform libraries like libc.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/libc",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "libsqlite3-sys@0.38.2": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Native bindings to the libsqlite3 library",
+      "license": "MIT",
+      "native_links": "sqlite3",
+      "repository": "https://github.com/rusqlite/rusqlite",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "lock_api@0.4.14": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Wrappers to create fully-featured Mutex and RwLock types. Compatible with no_std.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/Amanieu/parking_lot",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "log@0.4.34": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A lightweight logging facade for Rust\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/log",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "lz4_flex@0.11.6": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Fastest LZ4 implementation in Rust, no unsafe by default.",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/pseitz/lz4_flex",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "md-5@0.11.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "MD5 hash function",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/hashes",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "memchr@2.8.3": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Provides extremely fast (uses SIMD on x86_64, aarch64 and wasm32) routines for\n1, 2 or 3 byte search and single substring search.\n",
+      "license": "Unlicense OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/BurntSushi/memchr",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "memmap2@0.9.11": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Cross-platform Rust API for memory-mapped file IO",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RazrFalcon/memmap2-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "miniz_oxide@0.9.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "DEFLATE compression and decompression library rewritten in Rust based on miniz",
+      "license": "MIT OR Zlib OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/Frommi/miniz_oxide/tree/master/miniz_oxide",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "mio@1.2.4": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Lightweight non-blocking I/O.",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/tokio-rs/mio",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "once_cell@1.21.4": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Single assignment cells and lazy values.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/matklad/once_cell",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "opaque-debug@0.3.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Macro for opaque Debug trait implementation",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/utils",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "parking_lot@0.12.5": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "More compact and efficient implementations of the standard synchronization primitives.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/Amanieu/parking_lot",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "parking_lot_core@0.9.12": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "An advanced API for creating custom synchronization primitives.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/Amanieu/parking_lot",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "percent-encoding@2.3.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Percent encoding and decoding",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/servo/rust-url/",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "phf@0.13.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Runtime support for perfect hash function data structures",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/rust-phf/rust-phf",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "phf_shared@0.13.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Support code shared by PHF libraries",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/rust-phf/rust-phf",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "pin-project-lite@0.2.17": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A lightweight version of pin-project written with declarative macros.\n",
+      "license": "Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/taiki-e/pin-project-lite",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "pkg-config@0.3.34": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A library to run the pkg-config system tool at build time in order to be used in\nCargo build scripts.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/pkg-config-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "poly1305@0.8.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "The Poly1305 universal hash function and message authentication code",
+      "license": "Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/universal-hashes",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "postgres-protocol@0.6.12": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Low level Postgres protocol APIs",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-postgres/rust-postgres",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "postgres-types@0.2.14": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Conversions between Rust and Postgres values",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-postgres/rust-postgres",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "postgres@0.19.14": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A native, synchronous PostgreSQL client",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-postgres/rust-postgres",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "ppv-lite86@0.2.21": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Cross-platform cryptography-oriented low-level SIMD library.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/cryptocorrosion/cryptocorrosion",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "proc-macro2@1.0.107": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A substitute implementation of the compiler's `proc_macro` API to decouple token-based libraries from the procedural macro use case.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/dtolnay/proc-macro2",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "prost-derive@0.14.4": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Generate encoding and decoding implementations for Prost annotated types.",
+      "license": "Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/tokio-rs/prost",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "prost@0.14.4": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A Protocol Buffers implementation for the Rust Language.",
+      "license": "Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/tokio-rs/prost",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "quote@1.0.47": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Quasi-quoting macro quote!(...)",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/dtolnay/quote",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "r2d2@0.8.10": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A generic connection pool",
+      "license": "MIT/Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/sfackler/r2d2",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "r2d2_postgres@0.18.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Postgres support for the r2d2 connection pool",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/sfackler/r2d2-postgres",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "rand@0.10.3": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Random number generators and other randomness functionality.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-random/rand",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "rand@0.9.5": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Random number generators and other randomness functionality.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-random/rand",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "rand_chacha@0.9.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "ChaCha random number generator\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-random/rand",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "rand_core@0.10.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Core random number generation traits and tools for implementation.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-random/rand_core",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "rand_core@0.6.4": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Core random number generator traits and tools for implementation.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-random/rand",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "rand_core@0.9.5": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Core random number generator traits and tools for implementation.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-random/rand",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "regex-automata@0.4.18": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Automata construction and matching using regular expressions.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/regex",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "regex-syntax@0.8.11": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A regular expression parser.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/regex",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "regex@1.13.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "An implementation of regular expressions for Rust. This implementation uses\nfinite automata and guarantees linear time matching on all inputs.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/regex",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "ring@0.17.14": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "An experiment.",
+      "license": "Apache-2.0 AND ISC",
+      "native_links": "ring_core_0_17_14_",
+      "repository": "https://github.com/briansmith/ring",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "rusqlite@0.40.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Ergonomic wrapper for SQLite",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/rusqlite/rusqlite",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "rust-stemmers@1.2.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A rust implementation of some popular snowball stemming algorithms",
+      "license": "MIT/BSD-3-Clause",
+      "native_links": null,
+      "repository": "https://github.com/CurrySoftware/rust-stemmers",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "rustls-pki-types@1.15.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Shared types for the rustls PKI ecosystem",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rustls/pki-types",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "rustls-webpki@0.103.15": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Web PKI X.509 Certificate Verification.",
+      "license": "ISC",
+      "native_links": null,
+      "repository": "https://github.com/rustls/webpki",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "rustls@0.23.46": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Rustls is a modern TLS library written in Rust.",
+      "license": "Apache-2.0 OR ISC OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/rustls/rustls",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "scheduled-thread-pool@0.2.7": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A scheduled thread pool",
+      "license": "MIT/Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/sfackler/scheduled-thread-pool",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "scopeguard@1.2.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A RAII scope guard that will run a given closure when it goes out of scope,\neven if the code between panics (assuming unwinding panic).\n\nDefines the macros `defer!`, `defer_on_unwind!`, `defer_on_success!` as\nshorthands for guards with one of the implemented strategies.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/bluss/scopeguard",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "serde@1.0.229": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A generic serialization/deserialization framework",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/serde-rs/serde",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "serde_core@1.0.229": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Serde traits only, with no support for derive -- use the `serde` crate instead",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/serde-rs/serde",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "serde_derive@1.0.229": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Macros 1.1 implementation of #[derive(Serialize, Deserialize)]",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/serde-rs/serde",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "serde_json@1.0.154": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A JSON serialization file format",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/serde-rs/json",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "serde_spanned@1.1.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Serde-compatible spanned Value",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/toml-rs/toml",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "sha2@0.10.9": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Pure Rust implementation of the SHA-2 hash function family\nincluding SHA-224, SHA-256, SHA-384, and SHA-512.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/hashes",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "sha2@0.11.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Pure Rust implementation of the SHA-2 hash function family\nincluding SHA-224, SHA-256, SHA-384, and SHA-512.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/hashes",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "shlex@2.0.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Split a string into shell words, like Python's shlex.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/comex/rust-shlex",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "signal-hook-registry@1.4.8": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Backend crate for signal-hook",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/vorner/signal-hook",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "simd-adler32@0.3.10": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A SIMD-accelerated Adler-32 hash algorithm implementation.",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/mcountryman/simd-adler32",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "siphasher@1.0.4": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "SipHash-2-4 and SipHash-1-3 keyed hash functions in pure Rust, with 64-bit and 128-bit output and no_std support",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/jedisct1/rust-siphash",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "smallvec@1.16.3": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "'Small vector' optimization: store up to a small number of items on the stack",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/servo/rust-smallvec",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "socket2@0.6.5": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Utilities for handling networking sockets with a maximal amount of configuration\npossible intended.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-lang/socket2",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "spki@0.7.3": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "X.509 Subject Public Key Info (RFC5280) describing public keys as well as their\nassociated AlgorithmIdentifiers (i.e. OIDs)\n",
+      "license": "Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/formats/tree/master/spki",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "stringprep@0.1.5": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "An implementation of the stringprep algorithm",
+      "license": "MIT/Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/sfackler/rust-stringprep",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "subtle@2.6.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Pure-Rust traits and utilities for constant-time cryptographic implementations.",
+      "license": "BSD-3-Clause",
+      "native_links": null,
+      "repository": "https://github.com/dalek-cryptography/subtle",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "syn@2.0.119": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Parser for Rust source code",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/dtolnay/syn",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "syn@3.0.9": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Parser for Rust source code",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/dtolnay/syn",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "tinyvec@1.13.3": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "`tinyvec` provides 100% safe vec-like data structures.",
+      "license": "Zlib OR Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/Lokathor/tinyvec",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "tokio-macros@2.7.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Tokio's proc macros.\n",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/tokio-rs/tokio",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "tokio-postgres-rustls@0.14.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Rustls integration for tokio-postgres",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/jbg/tokio-postgres-rustls",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "tokio-postgres@0.7.18": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A native, asynchronous PostgreSQL client",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rust-postgres/rust-postgres",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "tokio-rustls@0.26.6": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Asynchronous TLS/SSL streams for Tokio using Rustls.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rustls/tokio-rustls",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "tokio-util@0.7.20": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Additional utilities for working with Tokio.\n",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/tokio-rs/tokio",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "tokio@1.53.3": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "An event-driven, non-blocking I/O platform for writing asynchronous I/O\nbacked applications.\n",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/tokio-rs/tokio",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "toml@0.9.12+spec-1.1.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A native Rust encoder and decoder of TOML-formatted files and streams. Provides\nimplementations of the standard Serialize/Deserialize traits for TOML data to\nfacilitate deserializing and serializing Rust structures.\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/toml-rs/toml",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "toml_datetime@0.7.5+spec-1.1.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A TOML-compatible datetime type",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/toml-rs/toml",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "toml_parser@1.1.5+spec-1.1.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Yet another format-preserving TOML parser.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/toml-rs/toml",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "toml_writer@1.1.3+spec-1.1.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A low-level interface for writing out TOML\n",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/toml-rs/toml",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "tower-service@0.3.3": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Trait representing an asynchronous, request / response based, client or server.\n",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/tower-rs/tower",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "tracing-core@0.1.36": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Core primitives for application-level tracing.\n",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/tokio-rs/tracing",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "tracing@0.1.44": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Application-level tracing for Rust.\n",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/tokio-rs/tracing",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "try-lock@0.2.5": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A lightweight atomic lock.",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/seanmonstar/try-lock",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "twox-hash@2.1.5": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A Rust implementation of the XXHash and XXH3 algorithms",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/shepmaster/twox-hash",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "typenum@1.20.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Typenum is a Rust library for type-level numbers evaluated at\n    compile time. It currently supports bits, unsigned integers, and signed\n    integers. It also provides a type-level array of type-level numbers, but its\n    implementation is incomplete.",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/paholg/typenum",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "unicode-bidi@0.3.18": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Implementation of the Unicode Bidirectional Algorithm",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/servo/unicode-bidi",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "unicode-ident@1.0.27": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Determine whether characters have the XID_Start or XID_Continue properties according to Unicode Standard Annex #31",
+      "license": "(MIT OR Apache-2.0) AND Unicode-3.0",
+      "native_links": null,
+      "repository": "https://github.com/dtolnay/unicode-ident",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "unicode-normalization@0.1.26": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "This crate provides functions for normalization of\nUnicode strings, including Canonical and Compatible\nDecomposition and Recomposition, as described in\nUnicode Standard Annex #15.\n",
+      "license": "(MIT OR Apache-2.0) AND Unicode-3.0",
+      "native_links": null,
+      "repository": "https://github.com/unicode-rs/unicode-normalization",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "unicode-properties@0.1.4": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Query character Unicode properties according to\nUAX #44 and UTR #51.\n",
+      "license": "MIT/Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/unicode-rs/unicode-properties",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "universal-hash@0.5.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Traits which describe the functionality of universal hash functions (UHFs)",
+      "license": "MIT OR Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/traits",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "untrusted@0.9.0": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Safe, fast, zero-panic, zero-crashing, zero-allocation parsing of untrusted inputs in Rust.",
+      "license": "ISC",
+      "native_links": null,
+      "repository": "https://github.com/briansmith/untrusted",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "vcpkg@0.2.15": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A library to find native dependencies in a vcpkg tree at build\ntime in order to be used in Cargo build scripts.\n",
+      "license": "MIT/Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/mcgoo/vcpkg-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "version_check@0.9.5": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Tiny crate to check the version of the installed/running rustc.",
+      "license": "MIT/Apache-2.0",
+      "native_links": null,
+      "repository": "https://github.com/SergioBenitez/version_check",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "want@0.3.2": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Detect when another Future wants a result.",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/seanmonstar/want",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "webpki-roots@1.0.9": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Mozilla's CA root certificates for use with webpki",
+      "license": "CDLA-Permissive-2.0",
+      "native_links": null,
+      "repository": "https://github.com/rustls/webpki-roots",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "whoami@2.1.3": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Rust library for getting information about the current user and environment",
+      "license": "Apache-2.0 OR BSL-1.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/ardaku/whoami",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "winnow@0.7.15": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A byte-oriented, zero-copy, parser combinators library",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/winnow-rs/winnow",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "winnow@1.0.4": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A byte-oriented, zero-copy, parser combinators library",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/winnow-rs/winnow",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "x509-cert@0.2.5": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Pure Rust implementation of the X.509 Public Key Infrastructure Certificate\nformat as described in RFC 5280\n",
+      "license": "Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/formats/tree/master/x509-cert",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "zerocopy@0.8.63": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Zerocopy makes zero-cost memory manipulation effortless. We write \"unsafe\" so you don't have to.",
+      "license": "BSD-2-Clause OR Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/google/zerocopy",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "zeroize@1.9.1": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Securely clear secrets from memory with a simple trait built on\nstable Rust primitives which guarantee memory is zeroed using an\noperation will not be 'optimized away' by the compiler.\nUses a portable pure Rust implementation that works everywhere,\neven WASM!\n",
+      "license": "Apache-2.0 OR MIT",
+      "native_links": null,
+      "repository": "https://github.com/RustCrypto/utils",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "zmij@1.0.23": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "A double-to-string conversion algorithm based on Schubfach and xjb",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/dtolnay/zmij",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "zstd-safe@7.3.0": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Safe low-level bindings for the zstd compression library.",
+      "license": "BSD-3-Clause",
+      "native_links": null,
+      "repository": "https://github.com/gyscos/zstd-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "zstd-sys@2.1.2+zstd.1.5.7": {
+      "build_script": true,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Low-level bindings for the zstd compression library.",
+      "license": "BSD-3-Clause",
+      "native_links": "zstd",
+      "repository": "https://github.com/gyscos/zstd-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    },
+    "zstd@0.13.3": {
+      "build_script": false,
+      "decision": "caller-selected graph; see scope-specific audit",
+      "description": "Binding for the zstd compression library.",
+      "license": "MIT",
+      "native_links": null,
+      "repository": "https://github.com/gyscos/zstd-rs",
+      "scopes": [
+        "default"
+      ],
+      "source": "registry+https://github.com/rust-lang/crates.io-index"
+    }
+  },
+  "revision": "398059a799d034eeeb169a590a839e62e63fe71b",
+  "rustc": "rustc 1.99.0 (b940084d7 2026-09-28)",
+  "target": "x86_64-unknown-linux-gnu"
+}

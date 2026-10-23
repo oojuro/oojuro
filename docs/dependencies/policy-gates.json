@@ -1,0 +1,35 @@
+{
+  "valid_candidate": "passed",
+  "negative_cases": [
+    {
+      "case": "actual prior default includes benchmark graph",
+      "result": "correctly refused",
+      "reason": "default: dependency outside engine allowlist: adler2"
+    },
+    {
+      "case": "provider inserted into core",
+      "result": "correctly refused",
+      "reason": "engine: dependency outside engine allowlist: aws-config"
+    },
+    {
+      "case": "unexpected internal benchmark crate",
+      "result": "correctly refused",
+      "reason": "engine: dependency outside engine allowlist: oojuro-tracebench"
+    },
+    {
+      "case": "LZ4 frame restored",
+      "result": "correctly refused",
+      "reason": "engine: require safe, checked, block-only LZ4 features"
+    },
+    {
+      "case": "unsafe LZ4 decode",
+      "result": "correctly refused",
+      "reason": "engine: require safe, checked, block-only LZ4 features"
+    },
+    {
+      "case": "partial --check CLI",
+      "result": "correctly refused",
+      "exit_code": 2
+    }
+  ]
+}
