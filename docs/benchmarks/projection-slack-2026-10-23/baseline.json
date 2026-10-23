@@ -1,0 +1,7 @@
+{
+  "source": "f01345f92a2570ddce7a9577b7703fddfc8eaee7",
+  "runtime": "5197b8ca4dacecd1563b14c24e036eaf7cda2921",
+  "binary_sha256": "2d8e53cd47df71ea4bbded2e6574000590a0c78d27746485c71b497ffedecf4f",
+  "source_of_binary": "frozen clean-source shipping build; profile uses identical four compact runtime files from 7d81635",
+  "scope": "copied public frozen benchmark corpus only; no AWS/provider operation"
+}

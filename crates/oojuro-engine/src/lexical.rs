@@ -133,6 +133,10 @@ impl Index {
             seen: HashMap::new(),
         };
         index.append_record_rows(rows, tokenize)?;
+        // Full builds retain no posting growth slack; incremental appends still grow normally.
+        for postings in index.postings.values_mut() {
+            postings.shrink_to_fit();
+        }
         Ok(index)
     }
     pub(crate) fn append_record_rows<'a>(
@@ -143,6 +147,7 @@ impl Index {
         if self.authority != 0 || self.failed {
             return Err(Error::Authority);
         }
+        self.documents.reserve(rows.size_hint().0);
         // Temporary build work only: never retain corpus vocabulary after return.
         let mut stems = HashMap::new();
         for (id, valid_at, text, indexed) in rows {

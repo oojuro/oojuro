@@ -1,0 +1,17 @@
+{
+  "reason": "DCO signoffs added to only the two owned commits; historical base unchanged. Raw measured provenance and artifacts retained unchanged. Equal full Git trees establish byte-for-byte source/evidence identity; no benchmark rerun needed solely for commit metadata.",
+  "mapping": [
+    {
+      "kind": "runtime",
+      "measured_commit": "59ac5a9f6036fc51c133fc5b5eb056b1045ae411",
+      "canonical_signed_commit": "22a17675949444e80fab3b74ca1b01c75c7e1b20",
+      "identical_tree": "57279a6cb2cc02ae06d35a9ed25d013165fc1f3d"
+    },
+    {
+      "kind": "frozen-evidence",
+      "measured_commit": "9645859567bbb9c4060aa75ef1229a8bca9db491",
+      "canonical_signed_commit": "838d60161137e8f26b6f94c04bca0ca0ea11b63a",
+      "identical_tree": "0382a33b72f311d8f4dc53f6e9b0b0fa1eea0d06"
+    }
+  ]
+}

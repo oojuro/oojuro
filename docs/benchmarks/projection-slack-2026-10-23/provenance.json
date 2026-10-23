@@ -1,0 +1,50 @@
+{
+  "source_commit": "59ac5a9f6036fc51c133fc5b5eb056b1045ae411",
+  "base_commit": "f01345f92a2570ddce7a9577b7703fddfc8eaee7",
+  "source_sha256": {
+    "crates/oojuro-engine/src/lexical.rs": "aad831d40120a6176691c12d6e288816e0fe57fccc979981a22c4c271525240e"
+  },
+  "binaries": {
+    "oojuro-bench-baseline": "2d8e53cd47df71ea4bbded2e6574000590a0c78d27746485c71b497ffedecf4f",
+    "oojuro-bench-trimmed": "a4fc53dd5f9f215d4bc3ee6e6e1765f8da95dfe5a059f42fcbc6581fb5edc0a0",
+    "profile-native-baseline": "e460af96bbdad4afeafdd4463bcd5f81a75705656143b51faabbdae7f044d5ea",
+    "profile-native-trimmed": "08751a1d797077430df44cabc0e45f354ad321f2ffcc89ba8b55e718194881b3"
+  },
+  "frozen_input_spec_sha256": "7b0209a64ee89529c5dea7eb5b2817a5817ed9c7eab4b5ccc10b7bc4990df6ec",
+  "scope": "Same copied frozen public fixtures; local warm OS cache; no hosted RAM cap, cost or speed claim; first matrix overlaps root incremental and one-core dependency recovery test; reverse timing has no known compiler/test overlap",
+  "artifacts": {
+    "baseline-full-hits.jsonl": "a1d4c4e09bbb242d76d353559ce556b5679fd7700510a9ae06fa3ab94c76becb",
+    "baseline-phase.json": "5633974595479dc0cdd82f372540515f259a63a416d505e8d54f17ed8af8c1b3",
+    "baseline.json": "cf1ea8ed778a6b57c64a82aeb730fcb06c573cc7353cb9b855ada5ae6f199868",
+    "build.log": "7c32d65c20a2598dfcf86ab380386ccb5fd59c14ec82e69f065b2c0df965b1f8",
+    "lexical-tests.log": "1276723d0e737fd60345f2e1288dcf240e6a68ffd4741eb877399f24305c6830",
+    "record-tests.log": "c6326ed6898410cc0cd72989b183091cf034ee1a7b9f416be1b2d5153e668ad9",
+    "reverse/beir-host-before.json": "04693a02b5d27e5dac8aaa55c9ee367da675ccade2c3a850b8cc634489170ec9",
+    "reverse/beir.json": "9d2c7278d27613e8e863e085e1726ad0c6388d2f7476b4ee8dbd2dc6b1b4343e",
+    "reverse/beir.log": "aee8670aafc0f01c712ca95b136ecba34a1d67d1decddb1ad1e46cf79b95c683",
+    "reverse/spec.json": "bc23f7bcb070f347fbfd2f66760ff7692b442a410a94e0c0579e8359a9dfee3b",
+    "reverse-driver.log": "55aa3189918238f070e8c78e09fafde7f883d1b98682cce735369d2e81d83574",
+    "tools/memory-phases.py": "9d852d48dbab812fffb064f7030f70f3b97e5d024d9e6954d10fa292ad3dfc0c",
+    "tools/run-engine.sh": "171f7bc18f1be8f2a5f0335698cf8fb492067f1ff0282f3ce481f2266045b3d9",
+    "tools/run-stage.py": "2fc4e6745a534c0d9da84fb94bfc1b15564262f974f85d45fef0e13561f692a4",
+    "tools/verify-full-hits.py": "8649a608bce6d7045294ec5e35e266d871599a19a9f53a592fb4de2b82698cc1",
+    "tools/verify-stores.py": "9dd994c38ef4edecd310bcccfb67d291ba039b1ea88269457ed04bae2989bed8",
+    "trimmed/beir-host-before.json": "bdbb546c55f01a4207fe4d420844c42446603e52a7cf293879c31fdd45c523e4",
+    "trimmed/beir.json": "d4ce73ca0e1ff62814b0205fd48d4808eede5118d81974bc406708a412bc4496",
+    "trimmed/beir.log": "e1b37dc903de341dede8a5d4eed108b1c9b94fba13c9c7dc6483f4026303c379",
+    "trimmed/gates-host-before.json": "18658757e51934c8310dbf6eb672f32e9b5268515da93d1190d562f621dcc92c",
+    "trimmed/gates.json": "0d3f3245889349434448789960ee660c6022572fc548d6859e2ccb0a9db252d1",
+    "trimmed/gates.log": "790ce16ea89a3f3fc79e884d123058ecc3e686bcc87e9a00e9f5ec942faa8359",
+    "trimmed/history-host-before.json": "ff95b07850c7584118b8c4640535202d3d3ccec280388233830290a0de207abe",
+    "trimmed/history.json": "2e5cfec386db225ef9882735ad3031cbb5153dba207e180f77cda9801f35b4f4",
+    "trimmed/history.log": "7b26664dca6e4e1d7717ea4ff7f79cedcb12f75aa3f1409570adf56b69540ba8",
+    "trimmed/reopen-and-files.json": "187c9b8bf54db74044abaf3f8813cfe5aeef1c2208a37a72ed62d1a870f1247b",
+    "trimmed/spec.json": "d6525840740fccab42016933825f0e0ce12afad059531e14d73cf737a4d45239",
+    "trimmed-driver.log": "651812472fb4109f4207dc0534fcefa5c566c872d8c9508b7f074cfa2c589651",
+    "trimmed-full-hits.jsonl": "ca558da01c51971498f157a430538069728e8d036d488858d7c56de8a45eb834",
+    "trimmed-phase.json": "36092a52e0b1b021ab4b666fb2f3eb85436bf7e3a12f95cfc28ea4a4a601ed8a",
+    "verify-full-hits-baseline.log": "98d8869acd504c2a69c4b352855c3c6cc179f6857aa575b22739ca9cc887f687",
+    "verify-full-hits-trimmed.log": "849644f78740b2076d6861cbe0951e0678d1ee59b3f40cd099f3b52aece8f77f",
+    "verify-stores.log": "5e238a37b483bb7a84c4232d014b43f85276583d79234410ceecafac1810edee"
+  }
+}
