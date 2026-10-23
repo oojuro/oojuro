@@ -1,0 +1,54 @@
+beir beir-arguana topk run 0 done
+beir beir-arguana topk run 1 done
+beir beir-arguana topk run 2 done
+beir beir-arguana baseline run 0 done
+beir beir-arguana baseline run 1 done
+beir beir-arguana baseline run 2 done
+# Oojuro benchmark report
+
+## beir · beir-arguana · dev
+
+- Hardware: AMD Ryzen 7 8845HS w/ Radeon 780M Graphics · 16 logical CPUs · 29062768 kB RAM · store on ext4 · rustc rustc 1.99.0 (b940084d7 2026-09-28)
+- runs: 3
+- cache: warm: queries run in the build process right after the last append
+- build_time_included: reported separately as build_s; not in query latency
+- isolation: child process per run in a systemd --user scope, MemoryMax=3G, MemorySwapMax=0
+- k: 100
+- queries: 15
+- documents: 8674
+- returned_content: search_get includes search, top-k ID filtering and byte-exact original get for every returned hit; IDs-only search remains separate
+- scorecards: 2026-10-23T20:24:36Z
+
+| arm | gates | ndcg@10 | recall@10 | recall@100 | mrr@10 | disk/raw | peak mem/raw | steady RSS/raw | build_s | search_get_p50_us | search_get_p99_us | search_p50_us | search_p99_us |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| topk `native-record` | pass (2) | 0.504 | 0.733 | 1.000 | 0.430 | 0.39× | 8.95× | 3.78× | 0.3 (0.3–0.3) | 59128.8 (59123.7–60298.0) | 403100.7 (393922.7–411003.7) | 58296.0 (58233.0–59399.0) | 402247.0 (393049.0–410086.0) |
+| baseline `native-record` | pass (2) | 0.504 | 0.733 | 1.000 | 0.430 | 0.39× | 8.92× | 3.79× | 0.3 (0.3–0.3) | 59159.6 (58628.8–59899.7) | 414751.0 (412059.2–419243.3) | 58280.0 (57734.0–59013.0) | 413890.0 (411243.0–418302.0) |
+
+Durability per arm:
+
+- topk: native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups (RecordLog sealed record-2 + current record::projection; commit ebd94ba13d56)
+  - actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search
+  - source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged
+  - native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim
+  - RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm
+  - derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK
+- baseline: native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups (RecordLog sealed record-2 + current record::projection; commit 59ac5a9f6036)
+  - actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search
+  - source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged
+  - native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim
+  - RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm
+  - derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK
+
+Published references (not run here; full test split):
+
+| system | metric | value | uses LLM | source |
+|---|---|---|---|---|
+| Anserini BM25 flat | ndcg@10 | 0.397 | no | Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-arguana.flat.md |
+| Anserini BM25 flat | recall@100 | 0.9324 | no | Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-arguana.flat.md |
+| Anserini BM25 multifield | ndcg@10 | 0.4142 | no | Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-arguana.multifield.md |
+| Anserini BM25 multifield | recall@100 | 0.9431 | no | Anserini BEIR v1.0.0 regressions, castorini/anserini@0de713b7aedf50f96b890cabf706d4af8c4073d5 docs/reproduce/from-document-collection/beir-v1.0.0-arguana.multifield.md |
+
+Note: Published references use the full BEIR test split; this run uses a frozen subset.
+
+
+scorecard: /home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/query-topk-memory/reverse/beir.json

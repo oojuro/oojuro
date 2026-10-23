@@ -1,0 +1,16 @@
+{
+  "scope": "same-machine warm-cache local diagnostic; exact returned-work gate; no hosted/SOTA/cost claim",
+  "stage": "matrix",
+  "runs": 3,
+  "binary_sha256": {
+    "baseline": "a4fc53dd5f9f215d4bc3ee6e6e1765f8da95dfe5a059f42fcbc6581fb5edc0a0",
+    "topk": "6a6ae13c91e8f8bf17483b0099013364cc1ba4f284d45797737aec23dd29749f"
+  },
+  "frozen_input_spec_sha256": "7b0209a64ee89529c5dea7eb5b2817a5817ed9c7eab4b5ccc10b7bc4990df6ec",
+  "arms": {
+    "baseline": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/query-topk-memory/oojuro-bench-baseline",
+    "topk": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/query-topk-memory/oojuro-bench-topk"
+  },
+  "memory_max": "3G",
+  "swap_max": 0
+}

@@ -1,0 +1,46 @@
+{
+  "status": "EXPERIMENTAL ONLY: no compelling full-pipeline RAM/latency gain on frozen fixtures",
+  "source_commit": "ebd94ba13d56e0d7aa3af57859a11c536ef31f32",
+  "base_commit": "c42c10d32364d692bccc97030c447dc05ceb85b0",
+  "source_sha256": {
+    "crates/oojuro-engine/src/lexical/prepared.rs": "308411660b9b406965079340eece7d365fd26a6382b70f079f22c5819df66def",
+    "crates/oojuro-engine/src/lexical/tests.rs": "abe48f96e1da1eae59f1f58c06da0c9bcd7d17ffd76c6c59d689c2335e0ac0b0"
+  },
+  "binaries": {
+    "oojuro-bench-baseline": "a4fc53dd5f9f215d4bc3ee6e6e1765f8da95dfe5a059f42fcbc6581fb5edc0a0",
+    "oojuro-bench-topk": "6a6ae13c91e8f8bf17483b0099013364cc1ba4f284d45797737aec23dd29749f",
+    "profile-native-baseline": "08751a1d797077430df44cabc0e45f354ad321f2ffcc89ba8b55e718194881b3",
+    "profile-native-topk": "15217198a601985d7a6278a326b03e0dc17c541d44774c6ce8e178133d63b1fc"
+  },
+  "frozen_input_spec_sha256": "7b0209a64ee89529c5dea7eb5b2817a5817ed9c7eab4b5ccc10b7bc4990df6ec",
+  "artifacts": {
+    "baseline-full-hits.jsonl": "ca558da01c51971498f157a430538069728e8d036d488858d7c56de8a45eb834",
+    "build.log": "435736201efe30a32d4ea04b5812ba7f7d47ee72ffdb988538bcf862dc3778d4",
+    "lexical-tests.log": "030cf24c18d6cd9fa5ed9272d1a1aabeefc119e7664317e6834a045099b36de1",
+    "matrix/beir-host-before.json": "99b86ea1a48346fb4787ca7441e9ee341647f715c37b0f7e71e22b68ad6e7032",
+    "matrix/beir.json": "07e29bdfd804827e00c3c481dd139cee4ad271a7e29fddab63f4931d61a370d6",
+    "matrix/beir.log": "28a9497209a07d5084b5a3fcce550fc134feff6b9ff6a4c9d4441892209fc2e5",
+    "matrix/gates-host-before.json": "5f0b42eb5741f04f2e6c67ee83dfc21eeaed99752376f96ca6137136455fad87",
+    "matrix/gates.json": "165357b472dc92cd112dfcc6ed57cf829b5a4345aac43ce4f472dc97716c4e45",
+    "matrix/gates.log": "570750c9190ffe45719fa5d9b22c2fc69b94962622ec19d0b7e6020cdb123247",
+    "matrix/history-host-before.json": "75232114aacaeaf507ac29047914b5208aba3202d71c3fc938b35db9e4fef3cd",
+    "matrix/history.json": "74cabcfb92574ec212b057907a3f6e33521d935ce2123b7640b67a9f4d7ca43e",
+    "matrix/history.log": "f4cf6ddb234cdb795f0f8d54f4bd1e2f7a35e54022ba88479349bf336e438f12",
+    "matrix/reopen-and-files.json": "dc025ba76eab95241bca79e702475676f4fe897db49db925c4e74904ca5e2feb",
+    "matrix/spec.json": "a6cb0f2c8b38ee95343c11a46f4eea56fdf9c43e1df4b84a7a402ca7e541d83a",
+    "matrix-driver.log": "27810025ca4f058dc1507c719bf031e0e0f2f384fb9cb262027a55407d913684",
+    "record-tests.log": "f16eefcc9bdb1a6a393f94d2ce0ac317c38d02c52ccba6c87148da76c9398329",
+    "reverse/beir-host-before.json": "b3a16ce132e952fdddae71ccdf429099867a65b0afa7a996c732553cfaa515d9",
+    "reverse/beir.json": "5e5c5f14f4bb04feb614ca90e0cadee8c8390db696800c355d02d2cb8084ae0f",
+    "reverse/beir.log": "352d2d1ca593aaf1bd3d863469a5a910d3c51bdf62b676c761d8bdfbd2654da3",
+    "reverse/spec.json": "acdee3dd11175efc243cd9a49e4edc1b6608b0c9a8fe887db2cd313cad090994",
+    "reverse-driver.log": "b6fb49478e159c31599eb3d5178f1418f82e5e0f4abf2b3a32556ebaa6c819c6",
+    "tools/run-engine.sh": "171f7bc18f1be8f2a5f0335698cf8fb492067f1ff0282f3ce481f2266045b3d9",
+    "tools/run-stage.py": "65dd2e7f05db097881fcb4873a3b32a90e6505b530a46e0e670175dd258b7737",
+    "tools/verify-full-hits.py": "0bf61702e66962b861346b4dc652193ce589bc695eab92799f1a476aa3ddab44",
+    "tools/verify-stores.py": "95ce0fb81a44e26f8211745f739a0f829b3e8ecdf6a50c569b47b538c45a0e18",
+    "topk-full-hits.jsonl": "9e628bfff2654e8073ae8161348af6dbdc802ca259b9a0eb293d17df66ba9e23",
+    "verify-full-hits-topk.log": "e25cb86ef3e0715307c16d69b6d47b875bb41b69fc4a139e6cc493de519c08dc",
+    "verify-stores.log": "5e238a37b483bb7a84c4232d014b43f85276583d79234410ceecafac1810edee"
+  }
+}
