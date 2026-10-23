@@ -7,6 +7,8 @@ from pathlib import Path
 import re
 import shutil
 import subprocess
+import tarfile
+import tomllib
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -22,6 +24,14 @@ def sha(path):
 def legal_files(root):
     return sorted(p for p in root.rglob("*") if p.is_file() and
                   re.search(r"license|copying|copyright|notice|authors", p.name, re.I))
+
+
+def crate_notices(archive, checksum):
+    assert sha(archive) == checksum, "registry archive checksum mismatch"
+    with tarfile.open(archive) as contents:
+        return {str(Path(m.name).relative_to(archive.stem)): contents.extractfile(m).read()
+                for m in contents.getmembers() if m.isfile() and
+                re.search(r"license|copying|copyright|notice|authors", Path(m.name).name, re.I)}
 
 
 def put(src, dest):
@@ -45,12 +55,15 @@ def package(binary_dir, out, target):
     metadata = json.loads(run("cargo", "metadata", "--locked", "--offline", "--format-version", "1", "--filter-platform", target))
     tree = run("cargo", "tree", "--locked", "--offline", "-p", "oojuro", "--edges", "normal,build", "--target", target, "--prefix", "none", "--format", "{p}")
     selected = set(re.findall(r"^([\w-]+) v([^\s]+)", tree, re.M))
+    locked = {(p["name"], p["version"]): p.get("checksum") for p in tomllib.loads((ROOT / "Cargo.lock").read_text())["package"]}
     dependencies = []
     for p in sorted(metadata["packages"], key=lambda p: (p["name"], p["version"])):
         if (p["name"], p["version"]) not in selected or p["source"] is None:
             continue
         directory = Path(p["manifest_path"]).parent
-        files = legal_files(directory)
+        archive = directory.parents[2] / "cache" / directory.parent.name / (directory.name + ".crate")
+        checksum = locked[(p["name"], p["version"])]
+        files = crate_notices(archive, checksum)
         dest = out / "licenses" / (p["name"] + "-" + p["version"])
         if not files:
             # alloc-stdlib 0.2.4 omits the workspace BSD notice from its .crate.
@@ -59,13 +72,14 @@ def package(binary_dir, out, target):
             for f in files:
                 put(f, dest / f.name)
         else:
-            checksums = json.loads((directory / ".cargo-checksum.json").read_text())
-            for f in files:
-                assert sha(f) == checksums["files"][str(f.relative_to(directory))], "registry notice changed"
-                put(f, dest / f.relative_to(directory))
+            for name, data in files.items():
+                f = dest / name
+                assert f.resolve().is_relative_to(dest.resolve()), "unsafe registry path"
+                f.parent.mkdir(parents=True, exist_ok=True)
+                f.write_bytes(data)
         allowed = {"0BSD", "MIT", "MIT-0", "Apache-2.0", "LLVM-exception", "CC0-1.0", "BSD-3-Clause", "ISC", "Unlicense", "Zlib", "Unicode-3.0", "CDLA-Permissive-2.0", "OR", "AND", "WITH"}
         assert p["license"] and set(re.findall(r"[\w.-]+", p["license"])) <= allowed, "unreviewed license: " + p["name"]
-        dependencies.append({"name": p["name"], "version": p["version"], "license": p["license"], "repository": p["repository"], "registryChecksum": json.loads((directory / ".cargo-checksum.json").read_text())["package"]})
+        dependencies.append({"name": p["name"], "version": p["version"], "license": p["license"], "repository": p["repository"], "registryChecksum": checksum})
     for name in ["LICENSE", "NOTICE", "Cargo.lock"]:
         put(ROOT / name, out / name)
     shutil.copytree(ROOT / "licenses", out / "licenses" / "project-supplements")

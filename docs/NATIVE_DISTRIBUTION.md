@@ -22,6 +22,10 @@ embedded-dictionary presence and file/binary SHA-256. It cannot prove that arbit
 passed to it were built from the named source: keep the clean build log and source checkout
 identity alongside the manifest, and verify binary hashes before promotion.
 
+Packaging requires Python 3.11+ and the Cargo registry archives from the build. Their SHA-256
+must match Cargo.lock; license files are extracted from those verified archives, not a mutable
+registry source directory.
+
 Ship the entire output, including LICENSE, NOTICE, `licenses/`, Cargo.lock and manifest. The
 packager retains all legal files found in the selected crates, including nested notices for
 ring/BoringSSL/fiat, zstd, Unicode data, stemmers and webpki root certificates. It also preserves

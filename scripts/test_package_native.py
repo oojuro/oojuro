@@ -2,6 +2,7 @@ import importlib.util
 import json
 from pathlib import Path
 import tempfile
+import tarfile
 import unittest
 
 spec = importlib.util.spec_from_file_location("package_native", Path(__file__).with_name("package_native.py"))
@@ -10,6 +11,20 @@ spec.loader.exec_module(package)
 
 
 class Distribution(unittest.TestCase):
+    def test_registry_archive_is_verified_against_lock_checksum(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            notice = root / "LICENSE"
+            notice.write_text("synthetic upstream copyright")
+            archive = root / "example-1.crate"
+            with tarfile.open(archive, "w:gz") as target:
+                target.add(notice, arcname="example-1/LICENSE")
+            checksum = package.sha(archive)
+            self.assertEqual(package.crate_notices(archive, checksum), {"LICENSE": notice.read_bytes()})
+            archive.write_bytes(archive.read_bytes() + b"corrupt")
+            with self.assertRaises(AssertionError):
+                package.crate_notices(archive, checksum)
+
     def test_notice_verifier_rejects_missing_changed_and_escaping_paths(self):
         with tempfile.TemporaryDirectory() as directory:
             out = Path(directory)
