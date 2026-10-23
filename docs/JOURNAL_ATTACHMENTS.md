@@ -1,6 +1,6 @@
 # Explicit journal attachments (review candidate)
 
-The Node 24 `@oojuro/v2-client/attachments` module connects the existing user-file protocol to a small journal event. This candidate is not deployed and is not automatic local-file capture. An application must select bytes with the user's consent and provide a separate ordinary native file-write/read credential, a metadata-only capture credential, and a project read credential. Capture keys do not gain file read or write authority.
+The Node 24 `@oojuro/v2-client/attachments` module connects the existing user-file protocol to a small journal event. This candidate is not deployed and is not automatic local-file capture. An application must select bytes with the user's consent and provide a separate ordinary native file-write/read credential, a journal capture credential, and a project read credential. Capture keys do not gain file read or write authority.
 
 ## Credential scope
 
