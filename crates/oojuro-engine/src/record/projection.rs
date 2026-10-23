@@ -123,15 +123,12 @@ impl Index {
         let inner = lexical::Index::from_record_rows(
             &binding.writer,
             1,
-            rows.iter()
+            rows.iter_mut()
                 .enumerate()
-                .map(|(i, r)| ((i + 1) as u64, r.valid_at, r.text.as_str(), r.indexed)),
+                .map(|(i, r)| ((i + 1) as u64, r.valid_at, std::mem::take(&mut r.text), r.indexed)),
         )
         .map_err(|_| Error::Unavailable)?;
-        // Lexical carriers own the exact originals; retain metadata here once.
-        for row in &mut rows {
-            row.text = String::new();
-        }
+        // Lexical carriers take the exact originals; rows retain metadata only.
         Ok(Self {
             binding,
             rows,
@@ -173,13 +170,14 @@ impl Index {
             .collect();
         drop(old_ids);
         let start = self.rows.len();
+        let added_text_bytes = added.iter().map(|row| row.text.len()).sum::<usize>();
         self.inner
             .append_record_rows(
-                added.iter().enumerate().map(|(i, row)| {
+                added.iter_mut().enumerate().map(|(i, row)| {
                     (
                         (start + i + 1) as u64,
                         row.valid_at,
-                        row.text.as_str(),
+                        std::mem::take(&mut row.text),
                         row.indexed,
                     )
                 }),
@@ -187,10 +185,7 @@ impl Index {
             )
             .map_err(|_| Error::Unavailable)?;
         self.ids.extend(added.iter().map(|row| row.id.clone()));
-        self.text_bytes += added.iter().map(|row| row.text.len()).sum::<usize>();
-        for row in &mut added {
-            row.text = String::new();
-        }
+        self.text_bytes += added_text_bytes;
         self.rows.extend(added);
         self.binding = binding;
         Ok(self)

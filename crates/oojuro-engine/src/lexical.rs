@@ -109,17 +109,17 @@ impl Index {
         self.applied = batches.len();
         Ok(())
     }
-    pub(crate) fn from_record_rows<'a>(
+    pub(crate) fn from_record_rows<T: Into<String>>(
         writer: &str,
         owner: u32,
-        rows: impl Iterator<Item = (u64, i64, &'a str, bool)>,
+        rows: impl Iterator<Item = (u64, i64, T, bool)>,
     ) -> Result<Self> {
         Self::record_rows_mode(writer, owner, rows, true)
     }
-    pub(crate) fn record_rows_mode<'a>(
+    pub(crate) fn record_rows_mode<T: Into<String>>(
         writer: &str,
         owner: u32,
-        rows: impl Iterator<Item = (u64, i64, &'a str, bool)>,
+        rows: impl Iterator<Item = (u64, i64, T, bool)>,
         tokenize: bool,
     ) -> Result<Self> {
         let mut index = Self {
@@ -135,9 +135,9 @@ impl Index {
         index.append_record_rows(rows, tokenize)?;
         Ok(index)
     }
-    pub(crate) fn append_record_rows<'a>(
+    pub(crate) fn append_record_rows<T: Into<String>>(
         &mut self,
-        rows: impl Iterator<Item = (u64, i64, &'a str, bool)>,
+        rows: impl Iterator<Item = (u64, i64, T, bool)>,
         tokenize: bool,
     ) -> Result<()> {
         if self.authority != 0 || self.failed {
@@ -149,8 +149,9 @@ impl Index {
             if self.documents.last().is_some_and(|old| old.event.id >= id) {
                 return Err(Error::Authority);
             }
+            let text = text.into();
             let terms = if tokenize && indexed && !text.is_empty() {
-                analyze_with_stems(text, &mut stems)?
+                analyze_with_stems(&text, &mut stems)?
             } else {
                 vec![]
             };
@@ -182,7 +183,7 @@ impl Index {
                 duration_us: 0,
                 tool: String::new(),
                 args: String::new(),
-                text: text.into(),
+                text,
                 indexed,
                 line_start: 0,
                 line_end: 0,

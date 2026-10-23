@@ -660,3 +660,23 @@ fn retained_allocation_diagnostic() {
     drop(docs);
     println!("{}",serde_json::json!({"initial":initial,"after_input":after_input,"after_build":after_build,"after_query":after_query,"after_drop_index":after_drop_index,"after_drop_input":memory(),"retained":stats}));
 }
+
+#[test]
+fn owned_record_text_reuses_allocation_while_borrowed_input_remains_independent() {
+    let original = "alpha cache_error retrying durable original text ".repeat(32);
+    let expected = original.clone();
+    let allocation = original.as_ptr();
+    let owned = Index::from_record_rows(WRITER, 1, std::iter::once((1, 100, original, true))).unwrap();
+    assert_eq!(owned.record_text(0).unwrap().as_ptr(), allocation);
+    let mut caller = expected.clone();
+    let borrowed = Index::from_record_rows(WRITER, 1, std::iter::once((1, 100, caller.as_str(), true))).unwrap();
+    caller.clear();
+    assert_eq!(borrowed.record_text(0), Some(expected.as_str()));
+    assert_eq!(owned.record_text(0), Some(expected.as_str()));
+    for text in ["alpha", "cache_error", "retry", "\"durable original\""] {
+        let query = Query { writer: WRITER, agent: 1, text, from: 0, to: 200, k: 10 };
+        let signature = |index: &Index| index.search(&query).unwrap().into_iter()
+            .map(|hit| (hit.id, hit.bits.to_bits(), hit.continued, hit.time, hit.row)).collect::<Vec<_>>();
+        assert_eq!(signature(&owned), signature(&borrowed));
+    }
+}
