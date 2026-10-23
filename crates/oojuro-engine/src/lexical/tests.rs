@@ -631,7 +631,11 @@ fn sparse_candidates_cover_word_boundaries_and_the_full_row_limit() {
                 (
                     id,
                     0,
-                    if id == n { "needle common" } else { "common" },
+                    if id == 1 || id == n {
+                        "needle common"
+                    } else {
+                        "common"
+                    },
                     true,
                 )
             }),
@@ -650,7 +654,11 @@ fn sparse_candidates_cover_word_boundaries_and_the_full_row_limit() {
             let hits = index.search(&q).unwrap();
             assert_eq!(
                 hits.iter().map(|h| h.id).collect::<Vec<_>>(),
-                if n == 0 { vec![] } else { vec![n] }
+                match n {
+                    0 => vec![],
+                    1 => vec![1],
+                    _ => vec![1, n],
+                }
             );
         }
         q.text = "key:1";
