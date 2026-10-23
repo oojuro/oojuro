@@ -20,7 +20,7 @@ env:
 
 jobs:
   storage:
-    name: Storage and engine
+    name: Legacy engine and shared storage
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -31,13 +31,30 @@ jobs:
         run: rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --no-self-update
       - name: Prepare private test scratch
         run: mkdir -p -m 700 "$RUNNER_TEMP/oojuro-tests"
-      - name: Test storage and engine without comparison features
+      - name: Test legacy engine, storage recovery and sealed frames
         env:
           TMPDIR: ${{ runner.temp }}/oojuro-tests
         run: cargo +"$RUST_TOOLCHAIN" test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro-store -p oojuro-nine
 
+  native:
+    name: Native engine and ranking
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust
+        run: rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --no-self-update
+      - name: Prepare private test scratch
+        run: mkdir -p -m 700 "$RUNNER_TEMP/oojuro-tests"
+      - name: Test native authority, retrieval, accounting and rank conformance
+        env:
+          TMPDIR: ${{ runner.temp }}/oojuro-tests
+        run: cargo +"$RUST_TOOLCHAIN" test --locked --no-default-features --lib --tests -p oojuro-engine -p oojuro-rank -- --test-threads=1
+
   runtime:
-    name: Capture, proxy, CLI and MCP
+    name: Legacy and native capture, CLI and MCP
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -52,3 +69,9 @@ jobs:
         env:
           TMPDIR: ${{ runner.temp }}/oojuro-tests
         run: cargo +"$RUST_TOOLCHAIN" test --locked --no-default-features --lib --tests -p oojuro-trace -p oojuro-capture -p oojuro-proxy -p oojuro
+      # Also included by the complete runtime suite above; keep historical-format
+      # acceptance visible as a separate named gate without enumerating every trace target.
+      - name: Reopen, append and merge the frozen legacy-format fixture
+        env:
+          TMPDIR: ${{ runner.temp }}/oojuro-tests
+        run: cargo +"$RUST_TOOLCHAIN" test --locked --no-default-features -p oojuro-trace --test compat

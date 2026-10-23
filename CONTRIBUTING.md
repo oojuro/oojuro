@@ -76,10 +76,13 @@ The normal checks select runtime packages explicitly, without benchmark comparis
 
 ```bash
 cargo test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro-store -p oojuro-nine
+cargo test --locked --no-default-features --lib --tests -p oojuro-engine -p oojuro-rank -- --test-threads=1
 cargo test --locked --no-default-features --lib --tests -p oojuro-trace -p oojuro-capture -p oojuro-proxy -p oojuro
 ```
 
-The second command includes real local CLI, daemon, mock proxy and stdio MCP integration tests. They use synthetic data and local test servers. Give fixtures a short private `TMPDIR` with enough disk space; the daemon rejects socket paths longer than 103 bytes. CI creates private scratch under `runner.temp`. Current `main` has no separate Node/Python SDK tree. Add checks for a new runtime crate or SDK in the same PR that introduces it; this explicit package list does not discover new packages automatically.
+The native command runs authority, retrieval, allocation accounting and rank conformance tests serially, including subprocess crash/lock fixtures. The third command includes real legacy and native CLI, daemon, mock proxy and stdio MCP integration tests. They use synthetic data and local test servers. Give fixtures a short private `TMPDIR` with enough disk space; the daemon rejects socket paths longer than 103 bytes. CI creates private scratch under `runner.temp`. CI explicitly repeats `cargo test --locked --no-default-features -p oojuro-trace --test compat` as a named historical-format gate. It opens the frozen `df8fa85` fixture, compares its original answers, then appends and merges old/new segments. The shared storage suite includes encrypted/plaintext transitions, strict sealing, corruption and torn-tail recovery. These checks do not establish compatibility for every historical native binary.
+
+This native-lineage proposal inherits older experimental `sdk/typescript` and `sdk/temporal` trees. These Rust jobs do not test, typecheck or package those SDKs. Later CLI/session, MCP read, attachment and session-SDK topic branches are outside this proposal; see [the exact source boundary](docs/MAIN_NATIVE_FOUNDATION.md). Add checks for a new runtime crate or SDK in the same PR that introduces it; this explicit package list does not discover new packages automatically.
 
 The benchmark harnesses (`oojuro-bench`, `oojuro-tracebench`) build competitor engines and fetch public datasets. `oojuro-store`'s `baselines` and `codecs` features are also comparison tools. They are not part of normal CI. Run them deliberately for the change being measured; see `docs/BENCH_HARNESS.md` and `docs/TRACEBENCH.md`. Do not use `--workspace` or `--all-features` as a substitute for the runtime checks above.
 
