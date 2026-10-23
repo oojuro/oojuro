@@ -4,7 +4,9 @@ from pathlib import Path
 import tempfile
 import tarfile
 import unittest
-from unittest.mock import patch
+import os
+import subprocess
+import sys
 import io
 
 spec = importlib.util.spec_from_file_location("package_native", Path(__file__).with_name("package_native.py"))
@@ -23,57 +25,40 @@ class Distribution(unittest.TestCase):
             with self.assertRaises(ValueError):
                 package.crate_notices(archive, package.sha(archive))
 
-    def test_selected_graph_packages_without_unused_workspace_archives(self):
+    def test_release_build_prepares_cache_before_building_or_packaging(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            cache = root / "cargo/registry/cache/synthetic"
-            cache.mkdir(parents=True)
-            archive = cache / "example-1.0.0.crate"
-            with tarfile.open(archive, "w:gz") as target:
-                for name, data in {
-                    "LICENSE": b"Synthetic upstream license",
-                    "Cargo.toml": b'[package]\nname="example"\nversion="1.0.0"\nlicense="MIT"\n',
-                }.items():
-                    member = tarfile.TarInfo("example-1.0.0/" + name)
-                    member.size = len(data)
-                    target.addfile(member, io.BytesIO(data))
-            for name in ["LICENSE", "NOTICE", "licenses/project/LICENSE", "crates/oojuro-store/dict/README.md", "rust/share/doc/rust/COPYRIGHT-library.html", "rust/share/doc/rust/licenses/MIT", "binaries/oojuro", "binaries/oojurod"]:
-                file = root / name
-                file.parent.mkdir(parents=True, exist_ok=True)
-                file.write_text("Synthetic legal or binary content")
-            (root / "crates/oojuro-store/dict/starter-v1.zdict").write_bytes(b"synthetic dictionary")
-            (root / "Cargo.lock").write_text(f'''[[package]]
-name = "oojuro"
-version = "0.1.0"
-[[package]]
-name = "example"
-version = "1.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "{package.sha(archive)}"
-[[package]]
-name = "unused-benchmark"
-version = "9.0.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "{'a' * 64}"
-''')
-            def run(*args):
-                if args[:2] == ("cargo", "metadata"):
-                    raise FileNotFoundError("unused benchmark archive was never downloaded")
-                if args[:2] == ("cargo", "tree"):
-                    return "oojuro v0.1.0\nexample v1.0.0"
-                if args == ("git", "status", "--porcelain"):
-                    return ""
-                if args == ("git", "rev-parse", "HEAD"):
-                    return "b" * 40
-                if args == ("rustc", "--print", "sysroot"):
-                    return str(root / "rust")
-                if args in [("rustc", "-vV"), ("cargo", "--version")]:
-                    return "synthetic toolchain"
-                raise ValueError("unexpected command")
-            with patch.object(package, "ROOT", root), patch.object(package, "run", run), patch.dict("os.environ", {"CARGO_HOME": str(root / "cargo")}):
-                package.package(root / "binaries", root / "bundle", "x86_64-unknown-linux-gnu")
-            manifest = json.loads((root / "bundle/manifest.json").read_text())
-            self.assertEqual([d["name"] for d in manifest["dependencies"]], ["example"])
+            tools, log = root / "tools", root / "calls.jsonl"
+            tools.mkdir()
+            helper = "#!" + sys.executable + "\n" + r"""
+import json, os, sys
+from pathlib import Path
+name = Path(sys.argv[0]).name
+if name == "git":
+    sys.exit(0)
+with open(os.environ['NATIVE_TEST_LOG'], 'a') as log:
+    log.write(json.dumps([name, *sys.argv[1:]]) + '\n')
+if name == 'cargo' and sys.argv[1] == 'fetch' and os.environ.get('NATIVE_TEST_FETCH_FAIL'):
+    sys.exit(23)
+"""
+            for name in ["git", "cargo", "python3"]:
+                file = tools / name
+                file.write_text(helper)
+                file.chmod(0o700)
+            target = root / "target with spaces"
+            env = {**os.environ, "PATH": str(tools) + os.pathsep + os.environ['PATH'],
+                   "NATIVE_TEST_LOG": str(log), "CARGO_TARGET_DIR": str(target)}
+            script = Path(__file__).with_name("build_native.sh")
+            result = subprocess.run(["bash", str(script), str(root / "fresh output")], env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            calls = [json.loads(line) for line in log.read_text().splitlines()]
+            self.assertEqual([call[:2] for call in calls], [["cargo", "fetch"], ["cargo", "build"], ["python3", "scripts/package_native.py"]])
+            self.assertIn("--locked", calls[0])
+            self.assertEqual(calls[2][2], str(target / "x86_64-unknown-linux-gnu/release"))
+            log.unlink()
+            result = subprocess.run(["bash", str(script), str(root / "fresh output")], env={**env, "NATIVE_TEST_FETCH_FAIL": "1"}, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 23)
+            self.assertEqual(len(log.read_text().splitlines()), 1)
 
     def test_registry_archive_is_verified_against_lock_checksum(self):
         with tempfile.TemporaryDirectory() as directory:
