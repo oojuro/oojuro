@@ -6,6 +6,10 @@ losslessly compressed, and lets it search its own history in milliseconds. No LL
 **Status:** pre-release. The engine, the recorder and CLI, and the benchmark harnesses are published here; the v1
 architecture is still being finalized, so formats and interfaces may change.
 
+For local application records, start with the [local journal quickstart](docs/LOCAL_JOURNAL_QUICKSTART.md):
+append typed JSONL, retry safely, search, retrieve original text and export bounded pages.
+For Codex/Claude capture and shared hosted history, see [combined agent setup](docs/COMBINED_AGENT_SETUP.md).
+
 ## License
 
 Oojuro's original code is licensed under the **Apache License 2.0** (see `LICENSE` and `NOTICE`).

@@ -67,6 +67,30 @@ typed input conflicts. A late backdated `valid_at` need not become the key winne
 Store errors may be ambiguous after durable append: reopen/retry original intent;
 a missing success response is not proof that nothing committed.
 
+### JSONL input
+
+Use `--input-format jsonl` to submit one complete typed Input object per line:
+
+```sh
+oojuro-native record-append --root ./record-review --input ./private-input.jsonl \
+  --input-format jsonl --request original-operation --allow-unredacted-records
+```
+
+The default remains a JSON array (`--input-format json`). Both formats use the
+same private-file checks, 32 MiB file / 1,000-record batch limits and typed
+validation. LF, CRLF and a final line without a newline are accepted. Blank
+lines, multiline objects, invalid UTF-8, unknown fields and incomplete objects
+are refused. The complete batch is decoded and validated before append, so a
+malformed later line never commits a valid prefix.
+
+Retry identity is based on typed values: the same request and values return the
+original receipt even when switching between JSON arrays and JSONL. Keep batch
+boundaries, row order, values and request IDs stable when retrying. Larger imports
+require explicitly chosen separate batches; they are not one atomic import.
+This retains decoded text/metadata, not the JSONL file's original whitespace or
+escape spelling. Arbitrary source schemas need an explicit field mapping.
+See the [local journal quickstart](LOCAL_JOURNAL_QUICKSTART.md).
+
 ## Reads and independent time cutoffs
 
 ```sh

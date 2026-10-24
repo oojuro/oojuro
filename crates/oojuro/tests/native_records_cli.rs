@@ -102,6 +102,153 @@ fn ids(v: &Value) -> Vec<u64> {
         .collect()
 }
 
+fn append_jsonl(f: &Fixture, request: &str) -> Output {
+    f.call(
+        "record-append",
+        &[
+            "--input",
+            f.input.to_str().unwrap(),
+            "--input-format",
+            "jsonl",
+            "--request",
+            request,
+            "--allow-unredacted-records",
+        ],
+    )
+}
+
+#[test]
+fn jsonl_exact_originals_reopen_and_cross_format_retry() {
+    let f = Fixture::new();
+    f.setup();
+    let mut first = row("battery λ\r\nsecond line\u{0}終", Some("memory"), 10);
+    first["attrs"] = json!({"source_id": "synthetic-1", "nested": {"n": 7}});
+    let second = row("battery duplicate", None, 20);
+    let third = row("battery duplicate", None, 20);
+    let rows = [first, second, third];
+    let mut input = Vec::new();
+    for (i, value) in rows.iter().enumerate() {
+        input.extend(serde_json::to_vec(value).unwrap());
+        if i < 2 {
+            input.extend_from_slice(b"\r\n");
+        }
+    }
+    private(&f.input, &input);
+    let ack = ok(append_jsonl(&f, "jsonl-original-operation"));
+    assert_eq!(ack["ids"], json!([41, 42, 43]));
+    assert_eq!(fs::read(&f.input).unwrap(), input);
+    assert_eq!(ok(append_jsonl(&f, "jsonl-original-operation")), ack);
+    // Representation and LF/CRLF/final-newline choices are not new typed intent.
+    private(&f.input, &[input.as_slice(), b"\n"].concat());
+    assert_eq!(ok(append_jsonl(&f, "jsonl-original-operation")), ack);
+    f.write(json!(rows));
+    assert_eq!(ok(f.append("jsonl-original-operation")), ack);
+    for (i, original) in rows.iter().enumerate() {
+        let stored = ok(f.call("record-get", &["--id", &(41 + i).to_string()]));
+        for (key, value) in original.as_object().unwrap() {
+            assert_eq!(&stored[key], value, "field {key}");
+        }
+        assert_eq!(stored["recorded_at"], ack["recorded_at"][i]);
+    }
+    assert_eq!(
+        ids(&ok(f.call("record-export", &["--versions", "all"]))),
+        vec![41, 42, 43]
+    );
+    assert_eq!(
+        ok(f.call("record-search", &["--query", "battery"]))["hits"]
+            .as_array()
+            .unwrap()
+            .len(),
+        3
+    );
+    let changed = row("changed typed intent", None, 20);
+    private(&f.input, &serde_json::to_vec(&changed).unwrap());
+    refused(
+        append_jsonl(&f, "jsonl-original-operation"),
+        "record_refused: conflict",
+    );
+}
+
+#[test]
+fn jsonl_invalid_later_rows_bounds_and_permissions_never_append_a_prefix() {
+    let f = Fixture::new();
+    f.setup();
+    let original = row("PRIVATE-JSONL-ORIGINAL", None, 10);
+    let line = serde_json::to_vec(&original).unwrap();
+    let mut unknown = original.clone();
+    unknown["unexpected"] = json!(true);
+    let mut missing = original.clone();
+    missing.as_object_mut().unwrap().remove("indexed");
+    let bad_rows = [
+        b"not-json".to_vec(),
+        b"\n".to_vec(),
+        serde_json::to_vec(&unknown).unwrap(),
+        serde_json::to_vec(&missing).unwrap(),
+        b"\xff".to_vec(),
+        serde_json::to_vec_pretty(&original).unwrap(),
+    ];
+    for bad in bad_rows {
+        private(&f.input, &[line.as_slice(), b"\n", &bad].concat());
+        refused(append_jsonl(&f, "bad-later-row"), "invalid_config");
+    }
+    private(&f.input, b"");
+    refused(append_jsonl(&f, "empty"), "record_refused: bounds");
+    let mut too_many = Vec::new();
+    for _ in 0..1001 {
+        too_many.extend_from_slice(&line);
+        too_many.push(b'\n');
+    }
+    private(&f.input, &too_many);
+    refused(append_jsonl(&f, "too-many"), "output_or_input_bound");
+    private(&f.input, &line);
+    fs::set_permissions(&f.input, fs::Permissions::from_mode(0o644)).unwrap();
+    refused(
+        append_jsonl(&f, "public-input"),
+        "private_owner_permissions_required",
+    );
+    // Consent still precedes looking at even a nonexistent JSONL source.
+    let absent = f.parent.join("PRIVATE-MISSING.jsonl");
+    refused(
+        f.call(
+            "record-append",
+            &[
+                "--input",
+                absent.to_str().unwrap(),
+                "--input-format",
+                "jsonl",
+                "--request",
+                "consent",
+            ],
+        ),
+        "explicit_unredacted_record_consent_required",
+    );
+    refused(
+        f.call(
+            "record-append",
+            &[
+                "--input",
+                absent.to_str().unwrap(),
+                "--input-format",
+                "csv",
+                "--request",
+                "format",
+                "--allow-unredacted-records",
+            ],
+        ),
+        "invalid_arguments",
+    );
+    assert!(ids(&ok(f.call("record-range", &["--versions", "all"]))).is_empty());
+    private(&f.input, &too_many[..1000 * (line.len() + 1)]);
+    let maximum = ok(append_jsonl(&f, "exactly-1000"));
+    assert_eq!(maximum["ids"].as_array().unwrap().len(), 1000);
+    assert_eq!(maximum["ids"][999], 1040);
+    private(&f.input, &line);
+    assert_eq!(
+        ok(append_jsonl(&f, "valid-after-refusals"))["ids"],
+        json!([1041])
+    );
+}
+
 #[test]
 fn actual_record_setup_append_reopen_exact_retry_bitemporal_versions_and_provenance() {
     let f = Fixture::new();

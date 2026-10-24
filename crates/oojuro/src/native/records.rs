@@ -126,7 +126,12 @@ fn options(args: &Arguments) -> Result<()> {
     let mut values = vec!["--bytes"];
     match args.command.as_str() {
         "record-setup" => values = vec!["--writer", "--owner", "--first-id", "--adapter"],
-        "record-append" => values = vec!["--input", "--request"],
+        "record-append" => {
+            values = vec!["--input", "--request", "--input-format"];
+            if !matches!(args.value("--input-format"), None | Some("json" | "jsonl")) {
+                return Err(Error::Usage);
+            }
+        }
         "record-get" => {
             values.extend(TIMES);
             values.extend(["--id", "--key"]);
@@ -222,7 +227,21 @@ pub(super) fn run(root: &Path, args: &Arguments) -> Result<i32> {
                 Path::new(args.required("--input")?),
                 record::MAX_BATCH_BYTES,
             )?;
-            let inputs: Vec<Input> = serde_json::from_slice(&encoded).map_err(|_| Error::Config)?;
+            let inputs: Vec<Input> = if args.value("--input-format") == Some("jsonl") {
+                let mut inputs = Vec::new();
+                // Decode the complete bounded batch before any append. A bad later row
+                // must never commit a valid prefix. split_inclusive accepts a final
+                // newline without accepting empty rows or a multiline JSON object.
+                for line in encoded.split_inclusive(|byte| *byte == b'\n') {
+                    if inputs.len() == 1000 {
+                        return Err(Error::Bounds);
+                    }
+                    inputs.push(serde_json::from_slice(line).map_err(|_| Error::Config)?);
+                }
+                inputs
+            } else {
+                serde_json::from_slice(&encoded).map_err(|_| Error::Config)?
+            };
             let commit = map(log.append(request, &inputs))?;
             emit(&commit, 1 << 20)?;
         }
