@@ -414,6 +414,7 @@ fn load(
         authority: log.instance(),
         applied: 0,
         failed: false,
+        retain_text: true,
         documents: vec![],
         postings: BTreeMap::new(),
         seen: HashMap::new(),

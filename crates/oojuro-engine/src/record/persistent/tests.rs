@@ -611,3 +611,39 @@ fn sigkill_record_segments_and_manifest_preserve_authority_retry_and_visibility(
         parity(&cache, &log);
     }
 }
+
+#[test]
+fn borrowed_originals_survive_loaded_empty_punctuation_tail_and_merge_without_copy() {
+    let f = Fixture::new();
+    let mut log = f.open();
+    log.append(
+        "initial-originals",
+        &[
+            input("", None, 1),
+            input("!!!", None, 2),
+            input(&"alpha raw 日本語 \0".repeat(4096), None, 3),
+        ],
+    )
+    .unwrap();
+    let cache = f.cache(&log);
+    assert_eq!(cache.index.inner.original_text_allocation(), (0, 0));
+    drop(cache);
+    let mut cache = f.cache(&log);
+    assert_eq!(
+        cache.opened(),
+        Opened::Loaded,
+        "nonempty originals must not look empty during hydrate"
+    );
+    assert_eq!(cache.index.inner.original_text_allocation(), (0, 0));
+    parity(&cache, &log);
+    append(&mut log, "tail-original", "alpha tail");
+    cache.refresh(&log).unwrap();
+    assert_eq!(cache.index.inner.original_text_allocation(), (0, 0));
+    parity(&cache, &log);
+    cache.merge(&log).unwrap();
+    drop(cache);
+    let cache = f.cache(&log);
+    assert_eq!(cache.opened(), Opened::Loaded);
+    assert_eq!(cache.index.inner.original_text_allocation(), (0, 0));
+    parity(&cache, &log);
+}

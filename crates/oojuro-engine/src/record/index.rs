@@ -32,7 +32,7 @@ impl Index {
     pub fn rebuild(log: &RecordLog) -> Result<Self> {
         let mark = log.tip()?;
         let identity = log.identity();
-        let inner = lexical::Index::from_record_rows(
+        let inner = lexical::Index::borrowed_record_rows(
             &identity.writer,
             identity.agent,
             log.records.iter().map(|r| {
@@ -43,6 +43,7 @@ impl Index {
                     r.input.indexed,
                 )
             }),
+            true,
         )
         .map_err(|_| Error::Unavailable)?;
         Ok(Self {
@@ -67,6 +68,13 @@ impl Index {
         let view = View::open(log, query.scope, query.as_of)?;
         self.search_view(log, &view, query)
     }
+    pub(super) fn original_text(log: &RecordLog, row: usize, id: u64) -> lexical::Result<&str> {
+        log.records
+            .get(row)
+            .filter(|record| record.id == id)
+            .map(|record| record.input.text.as_str())
+            .ok_or(lexical::Error::Authority)
+    }
     pub fn search_view(&self, log: &RecordLog, view: &View, query: &Query<'_>) -> Result<Search> {
         if self.failed {
             return Err(Error::Unavailable);
@@ -88,9 +96,11 @@ impl Index {
         }
         let visible = view.visible(log, &query.filter)?;
         let keys = view.keys(log)?;
+        let original_text = |row, id| Self::original_text(log, row, id);
         let mask = RecordVisibility {
             ids: &visible,
             keys: &keys,
+            original_text: Some(&original_text),
         };
         let hits = self
             .inner

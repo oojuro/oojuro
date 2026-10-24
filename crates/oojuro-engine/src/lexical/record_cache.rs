@@ -63,7 +63,11 @@ pub(crate) fn snapshot(index: &Index, start: usize, count: usize) -> Result<code
         postings,
     })
 }
-pub(crate) fn hydrate(index: &mut Index, segment: codec::Segment) -> Result<()> {
+pub(crate) fn hydrate(
+    index: &mut Index,
+    segment: codec::Segment,
+    original_text: &OriginalText<'_>,
+) -> Result<()> {
     let start = segment.start as usize;
     let end = start
         .checked_add(segment.rows.len())
@@ -98,11 +102,82 @@ pub(crate) fn hydrate(index: &mut Index, segment: codec::Segment) -> Result<()> 
     for (offset, doc) in index.documents[start..end].iter().enumerate() {
         if lengths[offset] != u64::from(doc.length)
             || scopes[offset] != u64::from(doc.scope)
-            || ((!doc.event.indexed || doc.event.text.is_empty())
+            || ((!doc.event.indexed || original_text(start + offset, doc.event.id)?.is_empty())
                 && (doc.length != 0 || doc.scope != 0))
         {
             return Err(Error::Invalid);
         }
     }
     Ok(())
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn borrowed_hydration_checks_actual_empty_original_and_row_identity() {
+        let texts = ["", "!!!", "quartz", "\0raw"];
+        let rows = || {
+            texts
+                .iter()
+                .enumerate()
+                .map(|(i, text)| (17 + i as u64, 1, *text, true))
+        };
+        let retained = Index::from_record_rows("writer", 1, rows()).unwrap();
+        let original = |row: usize, id| {
+            texts
+                .get(row)
+                .filter(|_| id == 17 + row as u64)
+                .copied()
+                .ok_or(Error::Authority)
+        };
+        let mut borrowed = Index::borrowed_record_rows("writer", 1, rows(), false).unwrap();
+        hydrate(&mut borrowed, snapshot(&retained, 0, 4).unwrap(), &original).unwrap();
+        assert_eq!(borrowed.original_text_allocation(), (0, 0));
+        assert_eq!(snapshot(&borrowed, 0, 4).unwrap().rows[2].length, 1);
+        let ids = (17..21).collect();
+        let keys = BTreeMap::new();
+        let query = Query {
+            writer: "writer",
+            agent: 1,
+            text: "\"quartz\"",
+            from: i64::MIN,
+            to: i64::MAX,
+            k: 4,
+        };
+        let mut view = RecordVisibility {
+            ids: &ids,
+            keys: &keys,
+            original_text: None,
+        };
+        assert!(matches!(
+            borrowed.search_record_view(&query, &view),
+            Err(Error::Authority)
+        ));
+        view.original_text = Some(&original);
+        assert_eq!(
+            borrowed.search_record_view(&query, &view).unwrap()[0].id,
+            19
+        );
+
+        // A nonempty carrier cannot replace the real empty-original check.
+        let mut forged = snapshot(&retained, 0, 4).unwrap();
+        forged.rows[0].length = 1;
+        forged.rows[0].scope = 1;
+        forged
+            .postings
+            .entry("forged".into())
+            .or_default()
+            .push((0, 1));
+        assert!(matches!(
+            hydrate(&mut borrowed, forged, &original),
+            Err(Error::Invalid)
+        ));
+        let mut wrong = snapshot(&retained, 0, 4).unwrap();
+        wrong.rows[0].id += 1;
+        assert!(matches!(
+            hydrate(&mut borrowed, wrong, &original),
+            Err(Error::Authority)
+        ));
+    }
 }
