@@ -117,8 +117,8 @@ These are separately audited, not included in the minimal engine budget.
 | `oojuro-core`, `oojuro-nine`, `oojuro-trace` | Legacy JSON/LZ4 log, mmap (`memmap2`), trace columns and legacy ranking; retain separately for compatibility. Do not silently migrate existing formats. |
 | `oojuro-capture` | `regex`, `sha2`, `fastcdc`, libc and trace/engine libraries for ingestion/redaction/capture; retain in capture package. |
 | `oojuro-proxy` | Hyper HTTP/body utilities, Tokio, rustls/ring/web PKI roots, bytes, pin projection, gzip/Brotli/Zstd HTTP decoding; retain in proxy package. No provider SDK in engine. |
-| `oojuro` | `reqwest` blocking rustls HTTP, TOML settings, regex, `jiff` time handling, `prost` OTLP and `flate2`; retain at application boundary. Splitting the older CLI would be a larger migration, not part of these small reductions. |
-| `sdk/typescript` | Inherited experimental client tree; outside the engine and this composition. Later session SDK/client proposals have separate qualification. |
+| `oojuro` | `base64` capture/project framing, `reqwest` blocking rustls HTTP, TOML settings, regex, `jiff` time handling, `prost` OTLP and `flate2`; retain at application boundary. Splitting the older CLI would be a larger migration, not part of these small reductions. |
+| `sdk/typescript` | Current session/capture, scoped project reads, files and attachment client is included through core80. Node built-ins; no external runtime packages. Keep it outside the engine. Its experimental private package remains unreleased; component qualification is recorded separately. |
 | `sdk/temporal` | Explicit Temporal worker/workflow/common and Oojuro-client peer dependencies; retain in the Temporal integration. Never propagate Temporal into engine. |
 
 ## Benchmarks and experiments
@@ -158,24 +158,30 @@ included by this public engine proposal.
 
 ## Current composition and qualification
 
-This proposal adapts public dependency draft66 onto qualified main/native
-foundation75 at `ba144d90d396b680122f1e93c808c724844ef2c8`. Their common ancestor
-is `f01345f92a2570ddce7a9577b7703fddfc8eaee7`; this is the same native engine,
-not a substitution of a legacy library. It preserves current allocation
-accounting, formats, native licensing/notices, publication rules and CI tests.
-Older performance experiments and optional drafts65/68 are not merged.
+This combined topic composes current client/setup core80 at
+`c426a324e64e2127194cccb88f41cd655a3c4bf8` with qualified dependency81 at
+`180271257297306cb97ec0fa307e661316cf1783`. The current capture CLI, project MCP,
+file/session SDK, continuing-journal policy and combined setup scripts are
+present, with separate component qualification. They remain outside the minimal
+engine. No private hosted source or provider dependency is introduced here.
 
-Only feature/build selection changes: existing safe checked LZ4 blocks stay;
-unused frame wrapping is disabled; Store JSON reporting becomes explicit
-`bench-tools`; plain workspace builds select the three libraries. No storage,
-append/recovery, query/ranking, compaction or encryption implementation changes.
-The Store Rust library has no serde_json public API or source use; its reporting
-binaries/example retain JSON with the documented feature. Existing callers of
-`store-bench`/`frame_probe` must add `--features bench-tools`. `baselines` and
-`codecs` enable that feature automatically.
+Dependency81 adapted public draft66 to native foundation75 at
+`ba144d90d396b680122f1e93c808c724844ef2c8`; their common ancestor is
+`f01345f92a2570ddce7a9577b7703fddfc8eaee7`. Its frozen source5e150c9 passed the
+selected functional and fresh-artifact-cache build gates. Those exact dated
+receipts remain unchanged in this tree and are not a combined test pass.
+The single build pair was essentially unchanged, so no speed/RAM gain is claimed.
 
-See [composition measurements and pending gate plan](docs/dependencies/MAIN_NATIVE_DEPENDENCY_COMPOSITION.md).
-Graph reductions are measured build dependencies, not latency/RAM/cost results.
-The composition has passed its selected functional and fresh-artifact-cache
-build gates; see [the exact current qualification](docs/dependencies/main-native-qualification.json).
-One matched build sample was essentially unchanged, so no speed/RAM gain is claimed.
+Only feature/build selection changes are composed: existing safe checked LZ4
+blocks stay; unused frame wrapping is disabled; Store JSON reporting becomes
+explicit `bench-tools`; plain workspace builds select the three libraries.
+No storage, append/recovery, query/ranking, compaction or encryption implementation
+changes. Store has no serde_json public API or library source use; reporting
+tools retain JSON with the documented feature. Existing store-bench/frame_probe
+commands add `--features bench-tools`; baselines/codecs enable it automatically.
+
+See [the source-only combined proof and pending focused gate plan](docs/dependencies/COMBINED_CLIENT_DEPENDENCY_SOURCE.md),
+[dependency component measurements](docs/dependencies/MAIN_NATIVE_DEPENDENCY_COMPOSITION.md),
+and [its exact frozen qualification](docs/dependencies/main-native-qualification.json).
+No combined tests/builds, remote push, merge, package publication or deployment
+have occurred for this new topic.
