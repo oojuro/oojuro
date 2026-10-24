@@ -4,6 +4,10 @@ This implements the CLI/installer step of the session-journal contract. The pair
 
 ## One local setup
 
+For capture and optional prior-project MCP in one command, use the
+[combined setup helper](COMBINED_AGENT_SETUP.md). The separate helper below
+remains available for capture-only setup or finishing a partial installation.
+
 With a trusted built `oojuro` CLI on PATH and this installer available, select the adapter and agent role:
 
 ```sh
