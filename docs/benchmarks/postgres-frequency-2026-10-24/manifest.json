@@ -1,0 +1,353 @@
+{
+  "runtime_source": "0c4cf99fe35dfedc8c6eb18d8720d5b8ae0a4490",
+  "scope": "Optional benchmark-only Postgres frequency baseline; fixed four pairs, ranked quality, full-copy verification metadata. No binary, corpus/original payload, credential, hosted/private source or PGDATA.",
+  "entries": [
+    {
+      "archive": "comparison-plan.json.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/controller/planned-commands.json",
+      "original_bytes": 9464,
+      "original_sha256": "b40de2c590295c9a760fc0d49e3b10574b0d13034b169d265394622e4fc07ff3",
+      "published_bytes": 7364,
+      "published_sha256": "c42e4d1935f73ddfe84e6bccbc27c062491018a0b8bd2a929ceb4ff96ee99055",
+      "stored_bytes": 1816,
+      "stored_sha256": "3a855c854f31edd472854adbd0a4d62e5d7c366ecd98ef6507a1f9b88333e4e0",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "comparison-worker.py.txt.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/controller/run-comparison.py",
+      "original_bytes": 29302,
+      "original_sha256": "9b2bf7dabcb9cc9270cc2142853d07a4190bb6df2d792dbf1bfd715e81b90e6f",
+      "published_bytes": 29302,
+      "published_sha256": "9b2bf7dabcb9cc9270cc2142853d07a4190bb6df2d792dbf1bfd715e81b90e6f",
+      "stored_bytes": 9605,
+      "stored_sha256": "30988dea9dd2a3638e86ebbc1f31298be6742471180a367694ee71bf392f5208",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "scope-launcher.py.txt.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/controller/systemd-run",
+      "original_bytes": 1932,
+      "original_sha256": "d3cae4fa82aec50e39ac764a3d087a4c4e2e89f2e79c193a90a15620646ee276",
+      "published_bytes": 1932,
+      "published_sha256": "d3cae4fa82aec50e39ac764a3d087a4c4e2e89f2e79c193a90a15620646ee276",
+      "stored_bytes": 994,
+      "stored_sha256": "856354142c033b0a0258781b44425e084abe0237c37217f4a242a323798c26be",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "comparison-dispatcher.py.txt.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/controller/dispatch-comparison.py",
+      "original_bytes": 5712,
+      "original_sha256": "f3ebb27d2d6ac5dccec34051edc345cfbd5cdc66ec3b3d810b021191ca0907b7",
+      "published_bytes": 5712,
+      "published_sha256": "f3ebb27d2d6ac5dccec34051edc345cfbd5cdc66ec3b3d810b021191ca0907b7",
+      "stored_bytes": 2084,
+      "stored_sha256": "98b9388258af8517040be8bd94ebdeff8f82cb9b98f878ad7cc1260479f5d714",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "independent-verifier.py.txt.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/controller/verify-results.py",
+      "original_bytes": 7111,
+      "original_sha256": "63d92145ebff995b7fe9fd4f0fe0af6f6182ee070f86fd38523e62757b3a3ea9",
+      "published_bytes": 7111,
+      "published_sha256": "63d92145ebff995b7fe9fd4f0fe0af6f6182ee070f86fd38523e62757b3a3ea9",
+      "stored_bytes": 2988,
+      "stored_sha256": "7c148c43c018c0b8c1418bc899c7a199fb6631e677a720be8a647ea1e400c526",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "independent-results.json.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/controller/root-independent-qualification.json",
+      "original_bytes": 224122,
+      "original_sha256": "f8c3765c885f4ec147cff52015d085d206f06609fc9ddc1f9c0a3fd20994a8fe",
+      "published_bytes": 224114,
+      "published_sha256": "ac868ff054f488d3302c47be5d1252d7f9f7ea1692a6f5682c905b4315b585a6",
+      "stored_bytes": 41151,
+      "stored_sha256": "ecd26b4231b1013310192891626179c1a6a29fe377a9fff7e03fdb0011239ca0",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "independent-resources.json.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/controller/root-resource-verification.json",
+      "original_bytes": 397,
+      "original_sha256": "018d7dbe3e8a7b557665e3378745a208acaf6d072cfe6c9706733e7bbb018d66",
+      "published_bytes": 389,
+      "published_sha256": "3c1a7d07167220e7097098ebb5e4967d09452ba0151c451b1145029be33facf8",
+      "stored_bytes": 288,
+      "stored_sha256": "8b3151bda5f28ac0c2a63d11cd64b2c94f026e6cc0663c50156d740202184a09",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "comparison-dispatch.json.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/controller/dispatch-receipt.json",
+      "original_bytes": 27948,
+      "original_sha256": "d9c938794c07dbcacf5670cec0a5ccbf40c2522a64f55a4e4178e68ffa76e195",
+      "published_bytes": 27832,
+      "published_sha256": "5e9c65adc5b7a69a901ae7f3ac39bad7affbe360a37b742724cf37d017ca86c2",
+      "stored_bytes": 1850,
+      "stored_sha256": "5a199b0af7b90a5c46cf55178410b170e3384b6924bb1bc55e602cf225715bdf",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "comparison-summary.json.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/controller/results-summary.json",
+      "original_bytes": 8322,
+      "original_sha256": "261f890d0eccd3a4be34383a65a0e4e9cb8b64659ea2c6157cd6e0321476bdd1",
+      "published_bytes": 8322,
+      "published_sha256": "261f890d0eccd3a4be34383a65a0e4e9cb8b64659ea2c6157cd6e0321476bdd1",
+      "stored_bytes": 1608,
+      "stored_sha256": "f0f848a33757be197b466bf43f40536977591a016f2e806b87b5cba770eb3dc7",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "build-failed.json.gz",
+      "source_relative": "work/postgres-frequency-baseline-qualification/build-attempt-1/receipt.json",
+      "original_bytes": 4102,
+      "original_sha256": "94792fd1f498246e296027f71eb63c0b5edc559c79a2d913d8e3031636b37fa8",
+      "published_bytes": 3388,
+      "published_sha256": "1f0f5155df43a75cb98dadc121a91a8dcb9990e960e5c2a2e47bf7c9fae96293",
+      "stored_bytes": 1542,
+      "stored_sha256": "8185d71b545b4b8329820e57e8bfe342cdcbdc311d19e52f5d498cc3a10f00d1",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "build-failed-compiler.log.gz",
+      "source_relative": "work/postgres-frequency-baseline-qualification/build-attempt-1/bench.stderr",
+      "original_bytes": 3422,
+      "original_sha256": "d8415c3dba15c124358a92f6d9336705e1c960a4e1bc87550828fd621afc3f3c",
+      "published_bytes": 3002,
+      "published_sha256": "cb41b9743fff9059fce94d08fd01e3a6f906205cb332030d8ef054baf094a9a4",
+      "stored_bytes": 904,
+      "stored_sha256": "233c6aeba3f304cd0020914835e48e8eb3178afa00497f3ecc684daf6922543b",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "build-failed-independent.json.gz",
+      "source_relative": "work/postgres-frequency-baseline-qualification/build-attempt-1/root-independent-failure-verification.json",
+      "original_bytes": 711,
+      "original_sha256": "52fcb03d9f3337678278493b32615968d74348f90d9c7bd197db36003e951291",
+      "published_bytes": 711,
+      "published_sha256": "52fcb03d9f3337678278493b32615968d74348f90d9c7bd197db36003e951291",
+      "stored_bytes": 474,
+      "stored_sha256": "b0ae8198bd415927138bac1a785481fa4f8fef51af274a976f76ab16f1b49d50",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "build-corrected.json.gz",
+      "source_relative": "work/postgres-frequency-baseline-qualification/build-attempt-2/receipt.json",
+      "original_bytes": 8658,
+      "original_sha256": "1dc04b9084f77e3de2c2955274725f42cd033d52d9813204505ca3dcf98bc3be",
+      "published_bytes": 7034,
+      "published_sha256": "8244bace88d0ffc6c0ee431ed6be8deb988133973520b47c08ed7022ceca10ed",
+      "stored_bytes": 2058,
+      "stored_sha256": "9b212d0fcec147e95e211b2f150a47c1219068bf5ee9e6f02224b075109b8498",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "build-corrected-independent.json.gz",
+      "source_relative": "work/postgres-frequency-baseline-qualification/build-attempt-2/root-independent-qualification.json",
+      "original_bytes": 1118,
+      "original_sha256": "b8c9db12b8ef6e3808fd9d735695db42139fb361f515f7d76f04a524894287ef",
+      "published_bytes": 1118,
+      "published_sha256": "b8c9db12b8ef6e3808fd9d735695db42139fb361f515f7d76f04a524894287ef",
+      "stored_bytes": 686,
+      "stored_sha256": "43180ed3645e22c318ccf2ebfaebecb7e949c434a98de65c5c9b955ff8af8b0e",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "installed-server-tests.json.gz",
+      "source_relative": "work/postgres-frequency-baseline-qualification/gates-attempt-1/run-685ad1c9/receipt.json",
+      "original_bytes": 17144,
+      "original_sha256": "321878d17d115d27ce50d10181d5029a66c960a95879158b1ed4309b90da10ba",
+      "published_bytes": 12980,
+      "published_sha256": "adcc01e34497ce5224aae5e8b5e7cd166d18373fe91414089d5a787d47d3d646",
+      "stored_bytes": 1517,
+      "stored_sha256": "a3cbe4a32849d70cfca501443f805f05d2c46083794c575ef36a12cb36330bf4",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "installed-server-independent.json.gz",
+      "source_relative": "work/postgres-frequency-baseline-qualification/gates-attempt-1/root-independent-qualification.json",
+      "original_bytes": 998,
+      "original_sha256": "f6805b1c86e5217d0f4e5bf3a9f356dcd3f1a1c1ba8b16d2a19f9698917e9401",
+      "published_bytes": 998,
+      "published_sha256": "f6805b1c86e5217d0f4e5bf3a9f356dcd3f1a1c1ba8b16d2a19f9698917e9401",
+      "stored_bytes": 611,
+      "stored_sha256": "103bee298aa48ca47f33593ef920245c35df735be327669b3555d9357d86556d",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "installed-cover-density.stdout.gz",
+      "source_relative": "work/postgres-frequency-baseline-qualification/gates-attempt-1/run-685ad1c9/cover-density.stdout",
+      "original_bytes": 207,
+      "original_sha256": "d9ccba850e8f230744f310635b5f1da4d7077807f9ddb52500f812d5d3b38813",
+      "published_bytes": 207,
+      "published_sha256": "d9ccba850e8f230744f310635b5f1da4d7077807f9ddb52500f812d5d3b38813",
+      "stored_bytes": 162,
+      "stored_sha256": "c809b46934197f8d2027be16eb2372080ab3f56703cae908a9ccc211ed3da6a5",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "installed-frequency.stdout.gz",
+      "source_relative": "work/postgres-frequency-baseline-qualification/gates-attempt-1/run-685ad1c9/frequency.stdout",
+      "original_bytes": 217,
+      "original_sha256": "24c0e68cf0a3351ee581384e62e8731b110688a0f9b033def099595a79d3a99c",
+      "published_bytes": 217,
+      "published_sha256": "24c0e68cf0a3351ee581384e62e8731b110688a0f9b033def099595a79d3a99c",
+      "stored_bytes": 168,
+      "stored_sha256": "391d074011c4ea206afb81b3ae1312eb8486304808b3cd56266409b9471ee3c2",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "original-default-timeout.json.gz",
+      "source_relative": "work/postgres-record-comparison-20261024/run-ece12eae1378e8ad/root-independent-failure-verification.json",
+      "original_bytes": 875,
+      "original_sha256": "8bc3bd28736d9c2404f1e515441186d538a85430b42dca9b57e6a6171627ac9c",
+      "published_bytes": 867,
+      "published_sha256": "ac310e8d23e9b7644696eef803f8acae557c8a7a7560b00034625c97689eec38",
+      "stored_bytes": 512,
+      "stored_sha256": "801fc28fdcf7f58b469e108fb431386a22af9613306fcb138b829db276aea5ff",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "round-0.json.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/run-24f609ad/round-0.json",
+      "original_bytes": 24881,
+      "original_sha256": "4ccb1b2b94156424de823e6eff52fc26cc4b8e96f083c57814d8a46a2e7c36da",
+      "published_bytes": 24243,
+      "published_sha256": "2a519599c1703fb209b821549162c5419d6c5647e28fe326d5cf5928ba4d8ecf",
+      "stored_bytes": 4472,
+      "stored_sha256": "913032f2608970cab390bcf17fe294e41f8ff5ec5ab0cc10d2500731b5778b89",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "ranklists-0-native.jsonl.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/run-24f609ad/pools-round-0.native",
+      "original_bytes": 93353,
+      "original_sha256": "bb6b2a2cc17e63b924b93021d475706071da35a0843a2ba7b265aab551b66463",
+      "published_bytes": 93353,
+      "published_sha256": "bb6b2a2cc17e63b924b93021d475706071da35a0843a2ba7b265aab551b66463",
+      "stored_bytes": 19445,
+      "stored_sha256": "87eb5490d096d139359803a7c05e9b16974663e9e32f2527af34d20024ff6008",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "ranklists-0-pg.jsonl.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/run-24f609ad/pools-round-0.pg",
+      "original_bytes": 93449,
+      "original_sha256": "ea8ec01982f88ef1ba081109bf1be235d2268cb8e1a3f002913f92efeac83a3a",
+      "published_bytes": 93449,
+      "published_sha256": "ea8ec01982f88ef1ba081109bf1be235d2268cb8e1a3f002913f92efeac83a3a",
+      "stored_bytes": 16850,
+      "stored_sha256": "1670970fbd7f1631ca150ff398c607df99343e409cf4391d0a0100928d4bf966",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "round-1.json.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/run-24f609ad/round-1.json",
+      "original_bytes": 24749,
+      "original_sha256": "aec5a164b6f72654de7dfe2999fa51ac67da23d3ac268ad8e89d714d9c2ae766",
+      "published_bytes": 24111,
+      "published_sha256": "b0cc988cbf8ef10074a2948c8e4ad68da7eaac259bb66cb3b15c9bcec83b502e",
+      "stored_bytes": 4443,
+      "stored_sha256": "af4121d68f40848398257c7f562fb6ddc20bee2c18401febcd31f870583ed0ca",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "ranklists-1-native.jsonl.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/run-24f609ad/pools-round-1.native",
+      "original_bytes": 93353,
+      "original_sha256": "bb6b2a2cc17e63b924b93021d475706071da35a0843a2ba7b265aab551b66463",
+      "published_bytes": 93353,
+      "published_sha256": "bb6b2a2cc17e63b924b93021d475706071da35a0843a2ba7b265aab551b66463",
+      "stored_bytes": 19445,
+      "stored_sha256": "87eb5490d096d139359803a7c05e9b16974663e9e32f2527af34d20024ff6008",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "ranklists-1-pg.jsonl.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/run-24f609ad/pools-round-1.pg",
+      "original_bytes": 93449,
+      "original_sha256": "ea8ec01982f88ef1ba081109bf1be235d2268cb8e1a3f002913f92efeac83a3a",
+      "published_bytes": 93449,
+      "published_sha256": "ea8ec01982f88ef1ba081109bf1be235d2268cb8e1a3f002913f92efeac83a3a",
+      "stored_bytes": 16850,
+      "stored_sha256": "1670970fbd7f1631ca150ff398c607df99343e409cf4391d0a0100928d4bf966",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "round-2.json.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/run-24f609ad/round-2.json",
+      "original_bytes": 24793,
+      "original_sha256": "b947e03a7ef375c167d2709d9c27e647dd078add188c0d32f8b693289a123810",
+      "published_bytes": 24155,
+      "published_sha256": "5ed8db4c8f7f25c2ceb4d8d4edfe5e12cf11fa75c3f99927e5b711a91ef2b47d",
+      "stored_bytes": 4461,
+      "stored_sha256": "079acc42c337ca23d7e92d0e4962e432bf90960521c99466c3a007d3424a534f",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "ranklists-2-native.jsonl.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/run-24f609ad/pools-round-2.native",
+      "original_bytes": 93353,
+      "original_sha256": "bb6b2a2cc17e63b924b93021d475706071da35a0843a2ba7b265aab551b66463",
+      "published_bytes": 93353,
+      "published_sha256": "bb6b2a2cc17e63b924b93021d475706071da35a0843a2ba7b265aab551b66463",
+      "stored_bytes": 19445,
+      "stored_sha256": "87eb5490d096d139359803a7c05e9b16974663e9e32f2527af34d20024ff6008",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "ranklists-2-pg.jsonl.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/run-24f609ad/pools-round-2.pg",
+      "original_bytes": 93449,
+      "original_sha256": "ea8ec01982f88ef1ba081109bf1be235d2268cb8e1a3f002913f92efeac83a3a",
+      "published_bytes": 93449,
+      "published_sha256": "ea8ec01982f88ef1ba081109bf1be235d2268cb8e1a3f002913f92efeac83a3a",
+      "stored_bytes": 16850,
+      "stored_sha256": "1670970fbd7f1631ca150ff398c607df99343e409cf4391d0a0100928d4bf966",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "round-3.json.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/run-24f609ad/round-3.json",
+      "original_bytes": 24749,
+      "original_sha256": "45bb289d5a917fb7bb8c92095fe97aafa4c7a95e448633b3bcc02de3703a6323",
+      "published_bytes": 24111,
+      "published_sha256": "3fd6da03258f69767c8cfac39fed409ff7eaa20618e20e73d50cd8b9828483a3",
+      "stored_bytes": 4457,
+      "stored_sha256": "59d31d30b84580ec635a182606c1ae3728ba6394e67665370a707f8f49b3cc5f",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "ranklists-3-native.jsonl.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/run-24f609ad/pools-round-3.native",
+      "original_bytes": 93353,
+      "original_sha256": "bb6b2a2cc17e63b924b93021d475706071da35a0843a2ba7b265aab551b66463",
+      "published_bytes": 93353,
+      "published_sha256": "bb6b2a2cc17e63b924b93021d475706071da35a0843a2ba7b265aab551b66463",
+      "stored_bytes": 19445,
+      "stored_sha256": "87eb5490d096d139359803a7c05e9b16974663e9e32f2527af34d20024ff6008",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    },
+    {
+      "archive": "ranklists-3-pg.jsonl.gz",
+      "source_relative": "work/postgres-frequency-comparison-20261024/run-24f609ad/pools-round-3.pg",
+      "original_bytes": 93449,
+      "original_sha256": "ea8ec01982f88ef1ba081109bf1be235d2268cb8e1a3f002913f92efeac83a3a",
+      "published_bytes": 93449,
+      "published_sha256": "ea8ec01982f88ef1ba081109bf1be235d2268cb8e1a3f002913f92efeac83a3a",
+      "stored_bytes": 16850,
+      "stored_sha256": "1670970fbd7f1631ca150ff398c607df99343e409cf4391d0a0100928d4bf966",
+      "transform": "workspace/home/private temporary/user-cgroup path redaction only; scalar measurements and source/artifact/compiler digests unchanged"
+    }
+  ],
+  "totals": {
+    "files": 31,
+    "original_bytes": 1198142,
+    "published_bytes": 1186428,
+    "stored_bytes": 234031
+  }
+}

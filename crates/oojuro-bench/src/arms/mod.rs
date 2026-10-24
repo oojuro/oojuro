@@ -26,6 +26,8 @@ pub fn builtin(name: &str) -> Result<Box<dyn Arm>> {
         "nine" => Ok(Box::new(nine::NineArm::default())),
         #[cfg(all(feature = "postgres-arm", target_os = "linux"))]
         "postgres" => Ok(Box::new(postgres::PostgresArm::default())),
+        #[cfg(all(feature = "postgres-arm", target_os = "linux"))]
+        "postgres-frequency" => Ok(Box::new(postgres::PostgresArm::frequency())),
         "native-record" => Ok(Box::new(native_record::NativeRecordArm::default())),
         "nine-v3" => Ok(Box::new(nine_v3::NineV3Arm::default())),
         n if n.starts_with("nine-maxdf:") => {

@@ -180,6 +180,26 @@ pub struct PostgresArm {
     store: Option<OpenStore>,
     server: Option<GroupChild>,
     initialization_us: u64,
+    frequency: bool,
+}
+
+impl PostgresArm {
+    /// Separate comparison arm: frequency ranking is not cover-density parity.
+    pub fn frequency() -> Self {
+        let mut arm = Self::default();
+        arm.frequency = true;
+        arm
+    }
+    fn search_sql(&self) -> String {
+        if self.frequency {
+            SEARCH.replacen("ts_rank_cd(", "ts_rank(", 1)
+        } else {
+            SEARCH.into()
+        }
+    }
+    fn ranker(&self) -> &'static str {
+        if self.frequency { "ts_rank" } else { "ts_rank_cd" }
+    }
 }
 
 fn private_dir(path: &Path) -> Result<()> {
@@ -235,7 +255,8 @@ fn limit(k: usize) -> Result<i64> {
 impl Arm for PostgresArm {
     fn info(&self) -> ArmInfo {
         ArmInfo {
-            name: "postgres".into(), version: "PostgreSQL (actual version in stats) GIN English ts_rank_cd".into(),
+            name: if self.frequency { "postgres-frequency" } else { "postgres" }.into(),
+            version: format!("PostgreSQL (actual version in stats) GIN English {}", self.ranker()),
             commit: COMMIT.into(), protocol: PROTOCOL.into(),
             durability: "one transaction per batch; fsync + synchronous_commit + full_page_writes on".into(),
             notes: vec![
@@ -402,6 +423,7 @@ impl Arm for PostgresArm {
                 return Err("required PostgreSQL durability settings differ".into());
             }
             let settings = serde_json::json!({
+                "ranker": self.ranker(),
                 "server_version": value(0)?, "fsync": value(1)?, "synchronous_commit": value(2)?,
                 "full_page_writes": value(3)?, "shared_buffers": value(4)?, "work_mem": value(5)?,
                 "maintenance_work_mem": value(6)?, "max_connections": value(7)?, "max_wal_size": value(8)?,
@@ -412,7 +434,7 @@ impl Arm for PostgresArm {
             });
             Ok(OpenStore {
                 insert: client.prepare(INSERT)?,
-                search: client.prepare(SEARCH)?,
+                search: client.prepare(&self.search_sql())?,
                 get: client.prepare("SELECT original FROM docs WHERE id=$1")?,
                 range: client.prepare(RANGE)?,
                 client,
@@ -592,9 +614,16 @@ mod tests {
     #[test]
     #[ignore = "requires pinned PostgreSQL binary/library and finite isolated cgroup"]
     fn postgres_exact_originals_visibility_atomic_batch_and_reopen() -> Result<()> {
+        exact_originals_visibility_atomic_batch_and_reopen(PostgresArm::default())
+    }
+    #[test]
+    #[ignore = "requires pinned PostgreSQL binary/library and finite isolated cgroup"]
+    fn postgres_frequency_exact_originals_visibility_atomic_batch_and_reopen() -> Result<()> {
+        exact_originals_visibility_atomic_batch_and_reopen(PostgresArm::frequency())
+    }
+    fn exact_originals_visibility_atomic_batch_and_reopen(mut arm: PostgresArm) -> Result<()> {
         let scratch = Scratch::new("rows")?;
         let cfg = config()?;
-        let mut arm = PostgresArm::default();
         let docs = vec![
             doc("id\0한", "", "evidence\0original 😀\n", 0, 0),
             doc("explicit", "explicit", "evidence explicit key", 0, 0),
@@ -636,6 +665,22 @@ mod tests {
         zero.k = 0;
         assert!(arm.search(&zero)?.is_empty());
         let first = arm.search(&query("evidence", 50, 50))?;
+        // Ask the actual server for both rankers: verify the selected scores and
+        // that this fixture distinguishes them, rather than only matching IDs.
+        let frequency = arm.frequency;
+        let mut scores_differ = false;
+        for hit in &first {
+            let row = arm.store.as_mut().unwrap().client.query_one(
+                "SELECT ts_rank(search_document,plainto_tsquery('pg_catalog.english','evidence')),ts_rank_cd(search_document,plainto_tsquery('pg_catalog.english','evidence')) FROM docs WHERE id=$1",
+                &[&hit.id.as_bytes()],
+            )?;
+            let rank: f32 = row.try_get(0)?;
+            let cover: f32 = row.try_get(1)?;
+            scores_differ |= rank.to_bits() != cover.to_bits();
+            assert_eq!(hit.score.to_bits(), f64::from(if frequency { rank } else { cover }).to_bits());
+        }
+        assert!(scores_differ);
+        assert_eq!(arm.stats()?["settings"]["ranker"], arm.ranker());
         let fingerprint = |hits: Vec<Hit>| {
             hits.into_iter()
                 .map(|h| {
