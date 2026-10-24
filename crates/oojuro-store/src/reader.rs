@@ -50,7 +50,22 @@ pub(crate) struct Decoded {
 
 impl Decoded {
     fn cost(&self) -> usize {
-        self.body.len() + 24 * self.meta.records.len() + 64
+        fn allocated<T>(v: &Vec<T>) -> usize {
+            v.capacity().saturating_mul(std::mem::size_of::<T>())
+        }
+        // Charge known retained allocations, including spare capacity. Arc/cache
+        // table/allocator and decoder overhead are separate; callers can retain
+        // an Arc after eviction, so this is not a process RSS limit.
+        [
+            allocated(&self.body),
+            allocated(&self.meta.records),
+            allocated(&self.meta.side),
+            allocated(&self.meta.text_start),
+            allocated(&self.meta.pieces),
+            allocated(&self.meta.piece_list),
+        ]
+        .into_iter()
+        .fold(std::mem::size_of::<Self>(), usize::saturating_add)
     }
 }
 
@@ -181,7 +196,7 @@ pub(crate) fn decode_payload<F: Frames + ?Sized>(fs: &F, payload: &[u8], head: &
             };
             let dctx = &mut owned;
             dctx.reset(zstd_safe::ResetDirective::SessionOnly).map_err(zerr)?;
-            let mut out = vec![0u8; raw_len];
+            let mut out = vec![0u8; if need.is_none() { raw_len } else { meta_len }];
             let mut input = zstd_safe::InBuffer::around(packed);
             let mut pos = 0;
             let mut fill = |target: usize, out: &mut Vec<u8>, pos: &mut usize, input: &mut zstd_safe::InBuffer| -> Result<()> {
@@ -199,8 +214,10 @@ pub(crate) fn decode_payload<F: Frames + ?Sized>(fs: &F, payload: &[u8], head: &
             fill(meta_len, &mut out, &mut pos, &mut input)?;
             let meta = meta_of(head, &out)?;
             let target = need.map_or(raw_len, |n| n(&meta).clamp(meta_len, raw_len));
+            // Standard buffered streaming permits relocation; our contexts do
+            // not enable zstd's experimental stable-output-buffer mode.
+            out.resize(target, 0);
             fill(target, &mut out, &mut pos, &mut input)?;
-            out.truncate(target);
             let mut rc = fs.read_state().ctx.lock().unwrap();
             let idle = rc.dctx.entry(head.dict).or_default();
             if idle.len() < 8 {
@@ -215,6 +232,10 @@ pub(crate) fn decode_payload<F: Frames + ?Sized>(fs: &F, payload: &[u8], head: &
     }
     Ok((meta, body))
 }
+
+#[cfg(test)]
+#[path = "reader/tests.rs"]
+mod tests;
 
 /// Frame `i` decoded through at least the bytes `need` asks for.
 pub(crate) fn decoded_with<F: Frames + ?Sized>(fs: &F, i: usize, need: Option<&dyn Fn(&Meta) -> usize>) -> Result<Arc<Decoded>> {

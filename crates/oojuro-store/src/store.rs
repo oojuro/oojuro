@@ -64,7 +64,9 @@ pub struct Options {
     pub hot_file_bytes: u64,
     /// `fdatasync` after every appended batch.
     pub sync: bool,
-    /// Decoded-frame cache budget in bytes (0 disables caching).
+    /// Known retained decoded-frame allocations, including vector capacity
+    /// (0 disables caching). Decoder/allocator/cache-table overhead and caller-
+    /// retained frames are separate; this is not a process RSS limit.
     pub cache_bytes: usize,
     /// Retrain the dictionary at compaction once the raw text added since the
     /// newest one was trained reaches `dict_spacing` x its size, so stored
