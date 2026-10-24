@@ -1141,3 +1141,113 @@ fn record_search_exact_wire_budget_includes_large_escaped_originals_and_metadata
     index.failed = true;
     assert!(matches!(index.search_view(&log, &snapshot, &bad), Err(Error::Unavailable)));
 }
+
+#[test]
+fn borrowed_record_text_preserves_full_originals_score_bits_and_reopen_without_retained_copy() {
+    fn compare(log: &RecordLog) {
+        let identity = log.identity();
+        let borrowed = Index::rebuild(log).unwrap();
+        let retained = Index {
+            inner: crate::lexical::Index::from_record_rows(
+                &identity.writer,
+                identity.agent,
+                log.records.iter().map(|r| {
+                    (
+                        r.id,
+                        r.input.valid_at,
+                        r.input.text.as_str(),
+                        r.input.indexed,
+                    )
+                }),
+            )
+            .unwrap(),
+            mark: log.tip().unwrap(),
+            failed: false,
+        };
+        let bytes = log
+            .records
+            .iter()
+            .map(|r| r.input.text.len())
+            .sum::<usize>();
+        assert!(bytes > 100_000);
+        assert_eq!(borrowed.inner.original_text_allocation(), (0, 0));
+        let (owned_len, owned_capacity) = retained.inner.original_text_allocation();
+        assert_eq!(owned_len, bytes);
+        assert!(owned_capacity >= bytes);
+        assert!(crate::lexical::OriginalTextSource::text(log, 0, log.records[0].id + 1).is_err());
+        assert!(crate::lexical::OriginalTextSource::text(log, log.records.len(), 0).is_err());
+        for (text, id) in [("\"raw slash\"", 9), ("\"!!!\"", 11), ("\"日本語\"", 9)] {
+            let found = borrowed.search(log, &query(text, AsOf::default())).unwrap();
+            assert_eq!(found.hits.len(), 1);
+            assert_eq!(found.hits[0].record.id, id);
+            assert_eq!(
+                found.hits[0].record.text,
+                log.records[(id - 9) as usize].input.text
+            );
+        }
+        for cut in [
+            AsOf::default(),
+            AsOf {
+                from: i64::MIN,
+                valid_at: 10,
+                known_at: 102,
+            },
+        ] {
+            for text in [
+                "",
+                "quartz",
+                "battery",
+                "\"raw slash\"",
+                "\"!!!\"",
+                "\"日本語\"",
+                "key:memory",
+                "foo_bar",
+                "missing",
+            ] {
+                let query = query(text, cut);
+                let signature = |s: Search| {
+                    s.hits
+                        .into_iter()
+                        .map(|h| (h.record, h.bits.to_bits(), h.continued, h.row))
+                        .collect::<Vec<_>>()
+                };
+                assert_eq!(
+                    signature(borrowed.search(log, &query).unwrap()),
+                    signature(retained.search(log, &query).unwrap()),
+                    "{text}"
+                );
+            }
+        }
+        let mut filtered = query("quartz", AsOf::default());
+        filtered.filter.agent_id = Some("missing-reported-agent".into());
+        assert_eq!(
+            borrowed.search(log, &filtered).unwrap().hits.len(),
+            retained.search(log, &filtered).unwrap().hits.len()
+        );
+    }
+    let fixture = Fixture::new();
+    let mut log = fixture.clock(100);
+    let mut stored = input("quartz foo_bar stored only", None, 4);
+    stored.indexed = false;
+    let large = "quartz raw slash \"\\\0日本語 ".repeat(8192);
+    log.append(
+        "borrow-originals",
+        &[
+            input(&large, None, 1),
+            input("", None, 2),
+            input("!!!", None, 3),
+            stored,
+            input("quartz old memory", Some("memory"), 5),
+        ],
+    )
+    .unwrap();
+    log.append(
+        "replace-memory",
+        &[input("battery new memory", Some("memory"), 20)],
+    )
+    .unwrap();
+    compare(&log);
+    drop(log);
+    let log = fixture.open();
+    compare(&log);
+}

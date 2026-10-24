@@ -32,7 +32,7 @@ impl Index {
     pub fn rebuild(log: &RecordLog) -> Result<Self> {
         let mark = log.tip()?;
         let identity = log.identity();
-        let inner = lexical::Index::from_record_rows(
+        let inner = lexical::Index::borrowed_record_rows(
             &identity.writer,
             identity.agent,
             log.records.iter().map(|r| {
@@ -43,6 +43,7 @@ impl Index {
                     r.input.indexed,
                 )
             }),
+            true,
         )
         .map_err(|_| Error::Unavailable)?;
         Ok(Self {
@@ -91,6 +92,7 @@ impl Index {
         let mask = RecordVisibility {
             ids: &visible,
             keys: &keys,
+            original_text: Some(log),
         };
         let hits = self
             .inner
@@ -130,5 +132,14 @@ impl Index {
         };
         json_size(&result, query.max_bytes)?;
         Ok(result)
+    }
+}
+impl lexical::OriginalTextSource for RecordLog {
+    fn text(&self, row: usize, expected_id: u64) -> lexical::Result<&str> {
+        self.records
+            .get(row)
+            .filter(|record| record.id == expected_id)
+            .map(|record| record.input.text.as_str())
+            .ok_or(lexical::Error::Authority)
     }
 }

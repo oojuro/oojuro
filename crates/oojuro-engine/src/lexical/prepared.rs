@@ -17,7 +17,7 @@ pub(super) fn rank(
     q: &Query<'_>,
     k: usize,
     options: Options<'_>,
-) -> (Vec<(usize, Hit)>, bool) {
+) -> Result<(Vec<(usize, Hit)>, bool)> {
     let Options {
         split,
         prune,
@@ -90,8 +90,8 @@ pub(super) fn rank(
     let scope_model = direct.is_none() && !anchored && literal.is_none() && !q.text.is_empty();
     let scan_time = q.text.is_empty() || (literal.is_some() && query.is_empty());
     let terms: Vec<_> = query.iter().map(|(term, n)| (term, *n)).collect();
-    let eligible = |row| {
-        index.visible(row, q, view)
+    let eligible = |row| -> Result<bool> {
+        Ok(index.visible(row, q, view)
                 // Record-only correction: a nonword literal has no postings
                 // and scans text, but must still honor initial eligibility.
                 // Empty timelines and actual-key reads retain stored-only rows.
@@ -99,17 +99,24 @@ pub(super) fn rank(
                     || direct.is_some()
                     || q.text.is_empty()
                     || index.documents[row].event.indexed)
-                && literal.is_none_or(|phrase| {
-                    phrase_start(&index.documents[row].event.text, phrase).is_some()
+                && match literal {
+                    Some(phrase) => phrase_start(index.original_text(row, view)?, phrase).is_some(),
+                    None => true,
                 })
     };
     let mut candidates = BTreeSet::new();
     if let Some(row) = direct {
-        if let Some(row) = row.filter(|row| eligible(*row)) {
-            candidates.insert(row);
+        if let Some(row) = row {
+            if eligible(row)? {
+                candidates.insert(row);
+            }
         }
     } else if scan_time {
-        candidates.extend((0..index.documents.len()).filter(|row| eligible(*row)));
+        for row in 0..index.documents.len() {
+            if eligible(row)? {
+                candidates.insert(row);
+            }
+        }
     } else {
         let rarest = literal.and_then(|_| {
             terms
@@ -128,18 +135,19 @@ pub(super) fn rank(
                 |r| r == i,
             );
             if first && let Some(list) = index.postings.get(term.as_str()) {
-                candidates.extend(
-                    list.iter()
-                        .map(|(row, _)| *row as usize)
-                        .filter(|row| eligible(*row)),
-                );
+                for (row, _) in list {
+                    let row = *row as usize;
+                    if eligible(row)? {
+                        candidates.insert(row);
+                    }
+                }
             }
         }
     }
     if let Some(plan) = plan {
         for (row, doc) in index.documents.iter().enumerate() {
             if plan.extra_ids.contains(&doc.event.id)
-                && eligible(row)
+                && eligible(row)?
                 && (!anchored
                     || original_anchors.iter().any(|term| {
                         index.postings.get(term).is_some_and(|list| {
@@ -324,7 +332,7 @@ pub(super) fn rank(
             })
     });
     result.truncate(k);
-    (result, anchored && literal.is_none())
+    Ok((result, anchored && literal.is_none()))
 }
 /// Enabled RAM pipeline only. Uses one candidate-pool F3 model per F2 group.
 /// Extra IDs must be validated before this method; this also checks eligibility.
@@ -355,7 +363,12 @@ pub(crate) fn search(
         let e = &index.documents[row].event;
         if !index.visible(row, q, Some(view))
             || !e.indexed
-            || literal_query(q.text).is_some_and(|literal| phrase_start(&e.text, literal).is_none())
+            || match literal_query(q.text) {
+                Some(literal) => {
+                    phrase_start(index.original_text(row, Some(view))?, literal).is_none()
+                }
+                None => false,
+            }
         {
             return Err(Error::Authority);
         }
@@ -371,7 +384,7 @@ pub(crate) fn search(
             original_ids: None,
             plan: Some(plan),
         },
-    );
+    )?;
     if anchored && first.len() < k {
         let (rest, _) = rank(
             index,
@@ -384,7 +397,7 @@ pub(crate) fn search(
                 original_ids: None,
                 plan: Some(plan),
             },
-        );
+        )?;
         let listed: BTreeSet<_> = first.iter().map(|(row, _)| *row).collect();
         for (row, mut hit) in rest {
             if first.len() == k {
@@ -417,7 +430,7 @@ pub(crate) fn original(
         return Ok(vec![]);
     }
     Ok(index
-        .continued_view(q, k, true, Some(view), None)
+        .continued_view(q, k, true, Some(view), None)?
         .into_iter()
         .map(|(_, h)| h)
         .collect())

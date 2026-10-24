@@ -221,6 +221,7 @@ fn search_inner(
     let mask = lexical::RecordVisibility {
         ids: &visible,
         keys: &keys,
+        original_text: Some(log),
     };
     let rows = log
         .records
