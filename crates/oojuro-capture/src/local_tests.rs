@@ -427,11 +427,11 @@ fn oracle_ids_bits_decimal_ties_identifier_continuations_and_deleted_cache_rebui
     .unwrap();
     let r = c.capture_file(SOURCE, &f.file, |_| true).unwrap().unwrap();
     assert_eq!(r.event_ids, (9..15).collect::<Vec<_>>());
-    let oracle_opts = crate::ingest::Options {
+    let oracle_opts = crate::reference_ingest::Options {
         batch_bytes: 79,
-        ..crate::ingest::Options::default()
+        ..crate::reference_ingest::Options::default()
     };
-    let mut oracle = crate::ingest::Capture::open(&f.ram.join("oracle"), oracle_opts).unwrap();
+    let mut oracle = crate::reference_ingest::Capture::open(&f.ram.join("oracle"), oracle_opts).unwrap();
     oracle.state.next_id = 9;
     oracle.save().unwrap();
     oracle.set_policy(Box::new(Mode::Allow));

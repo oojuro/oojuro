@@ -7,6 +7,11 @@ Assessment boundary: public `origin/main` at
 not in that main snapshot. This transport proposal is stacked on that candidate;
 neither its existence nor a local test pass merges or releases its parents.
 
+The consolidation candidate composes those heads with the `.ojo` naming decision and
+[retires legacy front doors](SUPPORTED_INTERFACES.md). It targets main directly.
+Historical compatibility is no longer a release requirement; current-format
+corruption, interruption, retry and recovery guarantees remain required.
+
 ## Stage
 
 Oojuro is a **pre-release source project with an experimental native engine and
@@ -38,8 +43,7 @@ The source snapshot and review boundaries are described in
    exact release source in clean supported environments. Enable and observe the
    reviewed CI workflow through the repository owner; proposed YAML is not a
    successful remote run.
-3. Freeze/version the supported disk and network formats; qualify upgrade,
-   interrupted-write recovery and current/previous reader compatibility. Document
+3. Freeze/version the supported disk and network formats; qualify interrupted-write recovery and current-format readers. Document
    supported platforms and unsupported workloads.
 4. Produce reproducible, reviewed binary/package artifacts with the required
    notices and an explicit release/security/update policy.

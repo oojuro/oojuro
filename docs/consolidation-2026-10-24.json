@@ -1,0 +1,203 @@
+{
+  "version": 1,
+  "base": "main",
+  "preserved_pr_heads": [
+    {
+      "number": 4,
+      "url": "https://github.com/oojuro/oojuro/pull/4",
+      "headRefName": "codex/sealing-regressions-20261022",
+      "headRefOid": "c750ab2c6cb2b3d837de265225a18f49645d0ba5",
+      "title": "Seal low-level store frames and dictionaries with authenticated encryption"
+    },
+    {
+      "number": 15,
+      "url": "https://github.com/oojuro/oojuro/pull/15",
+      "headRefName": "codex/raw-file-capture",
+      "headRefOid": "8df48391c1b55f473c8730598b2d8bc9e95dbeb6",
+      "title": "Capture explicitly authorized local files into the sealed raw journal"
+    },
+    {
+      "number": 16,
+      "url": "https://github.com/oojuro/oojuro/pull/16",
+      "headRefName": "codex/codex-atomic-capture",
+      "headRefOid": "45b6b072877b18fe725471bde124f0f1c30206ab",
+      "title": "Commit Codex raw and authorized parsed provenance atomically"
+    },
+    {
+      "number": 17,
+      "url": "https://github.com/oojuro/oojuro/pull/17",
+      "headRefName": "codex/native-lexical",
+      "headRefOid": "1afbc51d711c0bf2e24af8f203d2f5199e245543",
+      "title": "Port native lexical query over committed capture receipts"
+    },
+    {
+      "number": 18,
+      "url": "https://github.com/oojuro/oojuro/pull/18",
+      "headRefName": "codex/native-segments",
+      "headRefOid": "d73cf4fc5b572c77c7904dda216b9bcad551be67",
+      "title": "Native encrypted derived lexical segments and crash-safe publication"
+    },
+    {
+      "number": 19,
+      "url": "https://github.com/oojuro/oojuro/pull/19",
+      "headRefName": "codex/native-receipt-api",
+      "headRefOid": "7b029dce4a59a61fd3cf7b8d25dce27fcfc77949",
+      "title": "Native receipt API: scoped immutable timeline, original get and bounded export"
+    },
+    {
+      "number": 43,
+      "url": "https://github.com/oojuro/oojuro/pull/43",
+      "headRefName": "codex/oojuro-native-record-contract",
+      "headRefOid": "a4b2f9da31a3c2a85ffb98cc67694307fd74aee9",
+      "title": "feat(engine): expose pure Record input and filter validation"
+    },
+    {
+      "number": 47,
+      "url": "https://github.com/oojuro/oojuro/pull/47",
+      "headRefName": "codex/oojuro-native-journal-sdk",
+      "headRefOid": "b6db5a64f0026fee753a91b8a178c75ccc2959cc",
+      "title": "feat(sdk): explicit hosted Journal JSON client"
+    },
+    {
+      "number": 48,
+      "url": "https://github.com/oojuro/oojuro/pull/48",
+      "headRefName": "codex/oojuro-native-journal-framed-sdk",
+      "headRefOid": "6663874b8ba92e747934bdf9a7fcb43523e3fb7a",
+      "title": "feat(sdk): bounded hosted Journal framed transfer and discovery"
+    },
+    {
+      "number": 56,
+      "url": "https://github.com/oojuro/oojuro/pull/56",
+      "headRefName": "codex/oojuro-hosted-capture-sdk",
+      "headRefOid": "6e4f5271312c85c20df807b15e29702549204fde",
+      "title": "Add hosted capture SDK and project reads in SDK and CLI"
+    },
+    {
+      "number": 61,
+      "url": "https://github.com/oojuro/oojuro/pull/61",
+      "headRefName": "codex/agent-connect-client",
+      "headRefOid": "5b038dd299ae3c921a55866c20dd0f3e97ccd3cb",
+      "title": "Connect named agents through browser-approved hosted capture"
+    },
+    {
+      "number": 62,
+      "url": "https://github.com/oojuro/oojuro/pull/62",
+      "headRefName": "codex/compact-postings-ram",
+      "headRefOid": "f01345f92a2570ddce7a9577b7703fddfc8eaee7",
+      "title": "Reduce projection RAM with compact checked posting handles"
+    },
+    {
+      "number": 63,
+      "url": "https://github.com/oojuro/oojuro/pull/63",
+      "headRefName": "codex/hosted-project-mcp",
+      "headRefOid": "52f7b68ab375248494226699cec32c1bb30d4ace",
+      "title": "Add scoped hosted project MCP stdio tools (private candidate)"
+    },
+    {
+      "number": 64,
+      "url": "https://github.com/oojuro/oojuro/pull/64",
+      "headRefName": "codex/session-journal-client",
+      "headRefOid": "d013b4aa973d199ef94229803c7a86fe87f9c1be",
+      "title": "Correct hosted session default and simplify client setup contract"
+    },
+    {
+      "number": 70,
+      "url": "https://github.com/oojuro/oojuro/pull/70",
+      "headRefName": "codex/integration-session-cli",
+      "headRefOid": "33d3163feafd4c63f8590c9a3c459c780c9d57b6",
+      "title": "feat(cli): one-key installer with durable session journal routing"
+    },
+    {
+      "number": 72,
+      "url": "https://github.com/oojuro/oojuro/pull/72",
+      "headRefName": "codex/project-mcp-setup",
+      "headRefOid": "0bfef211fcf884279f8b1fb9b36f22822bd05ef9",
+      "title": "feat(cli): guided project-read MCP setup for Codex and Claude Code"
+    },
+    {
+      "number": 73,
+      "url": "https://github.com/oojuro/oojuro/pull/73",
+      "headRefName": "codex/public-core-ci",
+      "headRefOid": "4493dc5ea3f83a3838074eae9c0945c314ec78f0",
+      "title": "Propose unprivileged CI and a public contribution workflow"
+    },
+    {
+      "number": 74,
+      "url": "https://github.com/oojuro/oojuro/pull/74",
+      "headRefName": "codex/session-sdk-setup",
+      "headRefOid": "99818c3e2c8125d3f8243b36ba880abf31c5004e",
+      "title": "feat(sdk): durable per-session journals and bound intentional files"
+    },
+    {
+      "number": 75,
+      "url": "https://github.com/oojuro/oojuro/pull/75",
+      "headRefName": "codex/main-native-engine-foundation",
+      "headRefOid": "ba144d90d396b680122f1e93c808c724844ef2c8",
+      "title": "Compose deployed native engine with public main and explicit CI"
+    },
+    {
+      "number": 76,
+      "url": "https://github.com/oojuro/oojuro/pull/76",
+      "headRefName": "codex/main-native-client-sdk",
+      "headRefOid": "9149542ec3ed5410cd17c2a562f64bd6136a8b6c",
+      "title": "Compose main-based capture CLI MCP and session SDK with explicit CI"
+    },
+    {
+      "number": 78,
+      "url": "https://github.com/oojuro/oojuro/pull/78",
+      "headRefName": "codex/combined-agent-setup",
+      "headRefOid": "ef0d33627f361279d0e72e1d9b0c55502d3a4591",
+      "title": "Compose capture and project-history MCP setup in one command"
+    },
+    {
+      "number": 79,
+      "url": "https://github.com/oojuro/oojuro/pull/79",
+      "headRefName": "codex/capture-journal-reuse-client",
+      "headRefOid": "6704a3510c6acf30da302133f73f5080a2e527ff",
+      "title": "Add explicit continuing-journal policy to session capture clients"
+    },
+    {
+      "number": 80,
+      "url": "https://github.com/oojuro/oojuro/pull/80",
+      "headRefName": "codex/reuse-combined-agent-setup",
+      "headRefOid": "c426a324e64e2127194cccb88f41cd655a3c4bf8",
+      "title": "Compose continuing-journal client and combined agent setup"
+    },
+    {
+      "number": 81,
+      "url": "https://github.com/oojuro/oojuro/pull/81",
+      "headRefName": "codex/main-native-dependency-policy",
+      "headRefOid": "180271257297306cb97ec0fa307e661316cf1783",
+      "title": "Compose minimal dependency policy on qualified native foundation"
+    },
+    {
+      "number": 82,
+      "url": "https://github.com/oojuro/oojuro/pull/82",
+      "headRefName": "codex/combined-client-dependency-policy",
+      "headRefOid": "8824d2cb8e8884128fc07d468366cef2a85252ec",
+      "title": "Compose current client setup with minimal engine dependency policy"
+    },
+    {
+      "number": 92,
+      "url": "https://github.com/oojuro/oojuro/pull/92",
+      "headRefName": "codex/product-readiness-2026-10-24",
+      "headRefOid": "d1b24f7ed020365e09431aeaa8f4a7ff05e27dc3",
+      "title": "Accept bounded typed JSONL batches in the native Record CLI"
+    },
+    {
+      "number": 94,
+      "url": "https://github.com/oojuro/oojuro/pull/94",
+      "headRefName": "codex/ojo-file-extension",
+      "headRefOid": "f9ebb7ebaa275d93e1fce910b45136ef7204187d",
+      "title": "docs: adopt .ojo as the standalone journal file extension"
+    },
+    {
+      "number": 95,
+      "url": "https://github.com/oojuro/oojuro/pull/95",
+      "headRefName": "codex/secure-capture-transport",
+      "headRefOid": "cd0a315fbe84b217cfc528470668e7408032ec48",
+      "title": "Add opt-in compressed capture uploads and assess open-source readiness"
+    }
+  ],
+  "closure_rule": "Close only after the integration PR is pushed and the current PR head is still an ancestor. Preserve branches used by remaining work."
+}

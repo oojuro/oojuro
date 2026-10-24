@@ -1,0 +1,34 @@
+{
+  "version": 1,
+  "decision": "Native and current hosted clients; no legacy facade/daemon/socket compatibility.",
+  "source_parent": "4c7517c",
+  "validation": {
+    "rust_runtime_cli": "128 passed, 0 failed",
+    "sdk_runtime": "118 passed, 0 failed",
+    "sdk_declarations": "strict NodeNext smoke checks passed",
+    "sdk_package": "offline pack/install/import exports passed",
+    "agent_setup": "all three Python setup/connect suites passed",
+    "native_package": "5 packaging checks passed; binary set now oojuro and oojuro-native",
+    "dependency_policy": "engine/rank/store policy and 7 refusal tests passed",
+    "production_graph": "Trace/Nine/proxy/prost/toml/jiff absent; native shared storage retained"
+  },
+  "local_logs": [
+    {
+      "file": "core-prune-tests.log",
+      "sha256": "91d81cdddd27b6e823407ea0d00edd0605eb0f503bddeb5be48cdd52df8dbd47"
+    },
+    {
+      "file": "core-prune-sdk-tests.log",
+      "sha256": "363e908bae8a89682f1bd83d44e3e598f0e4bcf663023d63a491b6bf4a020196"
+    },
+    {
+      "file": "core-prune-setup-tests.log",
+      "sha256": "1459276d6dc23938c32f3a6c23981fd92fc44e1ccfdf639933f4ae15dc8c1311"
+    },
+    {
+      "file": "core-prune-package-tests.log",
+      "sha256": "b5609b5f85710b220dfce7c07d98bc3db318ec399aa727cd1040900ba9588a45"
+    }
+  ],
+  "limits": "Local synthetic checks. No remote Actions run, main merge, deployment or package publication. Inherited engine/storage checks from composed candidate are recorded separately; they were not rerun for this front-door retirement."
+}

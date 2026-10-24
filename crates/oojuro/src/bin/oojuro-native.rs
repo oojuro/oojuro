@@ -1,4 +1,4 @@
-//! Explicit Linux native journal commands. Existing oojuro/oojurod stay unchanged.
+//! Supported Linux local journal commands.
 #[cfg(target_os = "linux")]
 #[path = "../native/mod.rs"]
 mod native;

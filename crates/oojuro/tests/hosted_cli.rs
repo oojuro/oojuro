@@ -18,8 +18,6 @@ fn id(c: char) -> String {
 
 fn mcp(s: &Scratch, path: &Path, input: Vec<u8>) -> (Output, Vec<Value>) {
     let mut child = Command::new(env!("CARGO_BIN_EXE_oojuro"))
-        .arg("--home")
-        .arg(s.path("unused-local-home"))
         .args(["cloud", "mcp", "--connection"])
         .arg(path)
         .env_remove("HTTP_PROXY")
@@ -231,10 +229,8 @@ fn connection(s: &Scratch, base: &str) -> std::path::PathBuf {
     );
     p
 }
-fn run(s: &Scratch, path: &Path, args: &[&str]) -> Output {
+fn run(_s: &Scratch, path: &Path, args: &[&str]) -> Output {
     Command::new(env!("CARGO_BIN_EXE_oojuro"))
-        .arg("--home")
-        .arg(s.path("unused-local-home"))
         .args(["cloud"])
         .args(args)
         .arg("--connection")

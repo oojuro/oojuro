@@ -1,3 +1,5 @@
+> Historical interface documentation. Current entry points and retirement details: [SUPPORTED_INTERFACES](SUPPORTED_INTERFACES.md).
+
 # Capture layer (v1): attach and record agent logs
 
 Code: `crates/oojuro-capture` (the ingest library); the `oojurod` binary is

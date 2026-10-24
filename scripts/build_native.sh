@@ -8,5 +8,5 @@ cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.."
 target=x86_64-unknown-linux-gnu
 # Cargo metadata/tree resolve the workspace before filtering, including uncompiled benchmarks.
 cargo fetch --locked
-cargo build --release --locked -p oojuro --bin oojuro --bin oojurod --target "$target"
+cargo build --release --locked -p oojuro --bin oojuro --bin oojuro-native --target "$target"
 python3 scripts/package_native.py "${CARGO_TARGET_DIR:-target}/$target/release" "$1" --target "$target"

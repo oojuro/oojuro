@@ -1,9 +1,10 @@
 # Explicit native CLI review slice
 
-`oojuro-native` is a separate Linux executable. It does not change `oojuro`,
-`oojurod`, their default stores, sockets, daemon, MCP or forwarding. Every command
-requires `--root DIR`; nothing discovers a native home from the environment.
-There is no migration or production selection. Build with:
+`oojuro-native` is the supported Linux executable for local journals. `oojuro`
+provides the scoped hosted client. The old daemon/socket service has been retired;
+see [supported interfaces](SUPPORTED_INTERFACES.md). Every local command requires
+`--root DIR`; nothing discovers a native home from the environment. There is no
+automatic migration from an old journal. Build with:
 
 ```sh
 cargo build -p oojuro --bin oojuro-native

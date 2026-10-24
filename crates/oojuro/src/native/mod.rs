@@ -1,11 +1,11 @@
-//! Explicit native command composition; existing recorder/socket/MCP paths are independent.
+//! Native local journal application.
 mod config;
 mod policy;
 mod records;
 mod temporal;
 use config::{Config, Harness};
 use oojuro_capture::{
-    ingest::Policy,
+    policy::Policy,
     local::{LocalCapture, Options},
 };
 use oojuro_engine::{

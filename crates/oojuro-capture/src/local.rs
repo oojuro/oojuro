@@ -4,7 +4,7 @@
 //! this is not a production swap, confidentiality or key-lifecycle claim.
 use crate::{
     FileCtx, ParseCounts, Rec, claude, codex,
-    ingest::{Decision, Policy},
+    policy::{Decision, Policy},
     kind, redact, sink,
 };
 use oojuro_engine::{

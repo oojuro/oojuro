@@ -3,7 +3,7 @@
 The journal for AI agents: an embedded database that records agent activity,
 losslessly compressed, and lets it search its own history in milliseconds. No LLM inside the database.
 
-**Status:** pre-release. The engine, the recorder and CLI, and the benchmark harnesses are published here; the v1
+**Status:** pre-release. The native engine, CLI, SDKs and benchmark harnesses are published here; the
 architecture is still being finalized, so formats and interfaces may change.
 
 See the [open-source readiness assessment](docs/OPEN_SOURCE_READINESS.md) for the
@@ -20,8 +20,7 @@ standalone `.ojo` support is not implemented. See the [format naming decision](d
 ## License
 
 Oojuro's original code is licensed under the **Apache License 2.0** (see `LICENSE` and `NOTICE`).
-That covers the engine, the recorder and daemon (`oojurod`), the file format, the SDKs, the CLI and the MCP
-tools.
+That covers the engine, file format, SDKs, CLI and hosted MCP client.
 
 Third-party materials retain their own terms. In particular, the embedded starter dictionary
 includes transformed CC BY 4.0, MIT and Apache-2.0 dataset material; it is not newly Apache-licensed
@@ -52,8 +51,8 @@ sign-off (`git commit -s`). There is no CLA.
 You need a recent stable Rust toolchain (edition 2024) and a C compiler. Linux is the first-class platform.
 
 ```bash
-cargo build --locked --release -p oojuro # builds the `oojuro` CLI and the `oojurod` recorder
-cargo test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro-store -p oojuro-nine -p oojuro-trace -p oojuro-capture -p oojuro-proxy -p oojuro
+cargo build --locked --release -p oojuro # builds `oojuro` (hosted client) and `oojuro-native` (local journal)
+cargo test --locked --no-default-features --lib --tests -p oojuro-engine -p oojuro-rank -p oojuro-store -p oojuro-capture -p oojuro
 ```
 
 Plain `cargo build` and `cargo test` select the engine/rank/store libraries.
@@ -71,17 +70,18 @@ The workspace crates:
 
 | Crate | What it is |
 |---|---|
-| `oojuro` | the front door: library, `oojuro` CLI, `oojurod` daemon, MCP server |
+| `oojuro` | native local CLI and scoped hosted capture/history/MCP clients |
+| `oojuro-engine`, `oojuro-rank` | encrypted native authority, retrieval and ranking |
 | `oojuro-capture` | attach-and-record ingestion of agent logs, with secret redaction |
 | `oojuro-proxy` | recording proxy for Anthropic and OpenAI-compatible model APIs |
-| `oojuro-trace` | the agent-trace store: events, columns, compressed originals, search |
+| `oojuro-trace` | historical comparison engine and test oracle |
 | `oojuro-store` | append-only compressed store for agent text |
-| `oojuro-nine` | the text engine: compressed timeline with code-length search |
+| `oojuro-nine` | ranking comparison engine and test oracle |
 | `oojuro-core` | shared types and persistence primitives |
 | `oojuro-bench`, `oojuro-tracebench` | benchmark harnesses (public datasets, competitor engines) |
 
-Start with [docs/DESIGN.md](docs/DESIGN.md), then [docs/FRONT_DOOR.md](docs/FRONT_DOOR.md) and
-[docs/CAPTURE.md](docs/CAPTURE.md). The benchmark methodology and results are in
+Start with the [local journal quickstart](docs/LOCAL_JOURNAL_QUICKSTART.md) and
+[combined agent setup](docs/COMBINED_AGENT_SETUP.md). See the [supported interface decision](docs/SUPPORTED_INTERFACES.md). The benchmark methodology and results are in
 [docs/TRACEBENCH.md](docs/TRACEBENCH.md), [docs/BENCH_HARNESS.md](docs/BENCH_HARNESS.md) and
 [docs/benchmarks/](docs/benchmarks/). See [CONTRIBUTING.md](CONTRIBUTING.md) to contribute.
 

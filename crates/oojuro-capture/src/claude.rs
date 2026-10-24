@@ -627,7 +627,7 @@ mod tests {
             out.iter().map(|r| r.meta.iter().find(|m| m.0 == marker::META).map_or("-", |m| m.1.as_str())).collect();
         assert_eq!(marks, ["context", "call", "result", "call", "result", "-", "-"]);
         assert!(ctx.lookups.is_empty());
-        use crate::ingest::Decision;
+        use crate::policy::Decision;
         let indexed: Vec<bool> =
             out.iter().map(|r| Decision::default_for(r) == Decision::Store { indexed: true }).collect();
         assert_eq!(indexed, [false, false, false, false, false, true, true], "marked records are stored, not indexed");

@@ -2,7 +2,7 @@ use super::{Error, Result};
 use oojuro::exclude::{Exclude, tool_call_paths};
 use oojuro_capture::{
     Rec,
-    ingest::{Decision, Policy},
+    policy::{Decision, Policy},
     kind,
 };
 use serde::Deserialize;

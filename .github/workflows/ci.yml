@@ -20,7 +20,7 @@ env:
 
 jobs:
   storage:
-    name: Legacy engine and shared storage
+    name: Shared storage and recovery
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -35,10 +35,10 @@ jobs:
         run: RUSTUP_TOOLCHAIN="$RUST_TOOLCHAIN" python3 scripts/dependency_audit.py --engine-only --check --output "$RUNNER_TEMP/engine-dependency-audit.json"
       - name: Check dependency policy refusal cases
         run: python3 scripts/test_dependency_audit.py
-      - name: Test legacy engine, storage recovery and sealed frames
+      - name: Test storage recovery and sealed frames
         env:
           TMPDIR: ${{ runner.temp }}/oojuro-tests
-        run: cargo +"$RUST_TOOLCHAIN" test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro-store -p oojuro-nine
+        run: cargo +"$RUST_TOOLCHAIN" test --locked --no-default-features --lib --tests -p oojuro-store
 
   native:
     name: Native engine and ranking
@@ -58,7 +58,7 @@ jobs:
         run: cargo +"$RUST_TOOLCHAIN" test --locked --no-default-features --lib --tests -p oojuro-engine -p oojuro-rank -- --test-threads=1
 
   runtime:
-    name: Legacy and native capture, CLI and MCP
+    name: Native capture, CLI and hosted MCP
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
@@ -72,7 +72,7 @@ jobs:
       - name: Test runtime and local protocol clients
         env:
           TMPDIR: ${{ runner.temp }}/oojuro-tests
-        run: cargo +"$RUST_TOOLCHAIN" test --locked --no-default-features --lib --tests -p oojuro-trace -p oojuro-capture -p oojuro-proxy -p oojuro
+        run: cargo +"$RUST_TOOLCHAIN" test --locked --no-default-features --lib --tests -p oojuro-capture -p oojuro
       - name: Test capture and project setup without real agent configuration
         env:
           TMPDIR: ${{ runner.temp }}/oojuro-tests
@@ -80,12 +80,6 @@ jobs:
           python3 scripts/test-connect-agent.py
           python3 scripts/test-connect-project.py
           python3 scripts/test-setup-agent.py
-      # Also included by the complete runtime suite above; keep historical-format
-      # acceptance visible as a separate named gate without enumerating every trace target.
-      - name: Reopen, append and merge the frozen legacy-format fixture
-        env:
-          TMPDIR: ${{ runner.temp }}/oojuro-tests
-        run: cargo +"$RUST_TOOLCHAIN" test --locked --no-default-features -p oojuro-trace --test compat
 
   sdk:
     name: Session SDK runtime, declarations and local package

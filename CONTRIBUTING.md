@@ -72,17 +72,17 @@ Open a draft pull request while the change is being developed. Include what chan
 
 You need stable Rust (edition 2024) and a C compiler for the standard zstd codec. Linux is the first-class platform. CI pins Rust 1.99.1 on disposable GitHub-hosted Ubuntu 24.04 runners.
 
-Plain `cargo build --locked` and `cargo test --locked` select only `oojuro-engine`, `oojuro-rank` and `oojuro-store`. CLI/runtime applications still require an explicit `-p` selection. The dependency policy gate checks these libraries independently, including conditional platform dependencies; see [DEPENDENCIES.md](DEPENDENCIES.md). Store JSON-reporting tools require `--features bench-tools`; `baselines` and `codecs` enable it automatically. No public library API is removed.
+Plain `cargo build --locked` and `cargo test --locked` select only `oojuro-engine`, `oojuro-rank` and `oojuro-store`. CLI/runtime applications still require an explicit `-p` selection. The dependency policy gate checks these libraries independently, including conditional platform dependencies; see [DEPENDENCIES.md](DEPENDENCIES.md). Store JSON-reporting tools require `--features bench-tools`; `baselines` and `codecs` enable it automatically. Supported interfaces are listed in [SUPPORTED_INTERFACES](docs/SUPPORTED_INTERFACES.md).
 
 The normal checks select runtime packages explicitly, without benchmark comparison features:
 
 ```bash
-cargo test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro-store -p oojuro-nine
+cargo test --locked --no-default-features --lib --tests -p oojuro-store
 cargo test --locked --no-default-features --lib --tests -p oojuro-engine -p oojuro-rank -- --test-threads=1
-cargo test --locked --no-default-features --lib --tests -p oojuro-trace -p oojuro-capture -p oojuro-proxy -p oojuro
+cargo test --locked --no-default-features --lib --tests -p oojuro-capture -p oojuro
 ```
 
-The native command runs authority, retrieval, allocation accounting and rank conformance tests serially, including subprocess crash/lock fixtures. The third command includes real legacy and native CLI, daemon, mock proxy and stdio MCP integration tests. They use synthetic data and local test servers. Give fixtures a short private real-directory `TMPDIR` with enough disk space and no symlink ancestors (the hosted credential guard rejects them); the daemon rejects socket paths longer than 103 bytes. CI creates private scratch under `runner.temp`. CI explicitly repeats `cargo test --locked --no-default-features -p oojuro-trace --test compat` as a named historical-format gate. It opens the frozen `df8fa85` fixture, compares its original answers, then appends and merges old/new segments. The shared storage suite includes encrypted/plaintext transitions, strict sealing, corruption and torn-tail recovery. These checks do not establish compatibility for every historical native binary.
+The native command runs authority, retrieval, allocation accounting and rank conformance tests serially, including subprocess crash/lock fixtures. The runtime command covers native capture and CLI commands plus hosted clients and stdio MCP. Use a short private real-directory `TMPDIR` with no symlink ancestors for credential guards. Storage tests preserve encryption, strict sealing, corruption and torn-tail recovery. Historical engines remain comparison/test oracles; reopening their disk formats is no longer a product release gate.
 
 The session-client composition adds synthetic capture/project setup tests, plus a separate Node 24.20.0 job for `sdk/typescript`: runtime tests, strict declaration smoke checks and local offline pack/install/export checks. Its TypeScript 5.9.3 development tool is locked under `scripts/ci-sdk`; it adds no SDK runtime dependency. Run the same checks locally:
 
