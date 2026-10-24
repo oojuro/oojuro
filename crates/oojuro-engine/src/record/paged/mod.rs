@@ -6,7 +6,7 @@ mod reader;
 mod tree;
 use super::*;
 pub use cache::{Index, Opened};
-pub use reader::{Reader, Snapshot, Writer};
+pub use reader::{Append, Reader, Snapshot, Writer};
 /// Trusted caller policy for the explicit disk-backed path, never loaded from a cache.
 /// These are disk admission limits, not permission to retain a population in memory.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
