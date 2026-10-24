@@ -1,0 +1,116 @@
+{
+  "source": "5e150c97308dd38d1aa169ff8269942cea97947b",
+  "base": "ba144d90d396b680122f1e93c808c724844ef2c8",
+  "toolchain": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin",
+  "functional_target": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target",
+  "functional_cache": "explicitly warm Cargo/native compiler cache; not used for cold-build measurements",
+  "cold_target": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/cold-<before|after>-target",
+  "cold_zig_cache": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/cold-<before|after>-zig-cache",
+  "cold_rustflags": "-C target-cpu=x86-64",
+  "jobs": 2,
+  "target": "x86_64-unknown-linux-gnu",
+  "profile": "release standard workspace defaults, opt-level3; library only",
+  "compiler_cache": "fresh Cargo artifact and Zig native artifact targets per arm; shared verified Cargo registry source/index cache; OS page cache not flushed",
+  "commands": [
+    [
+      "python3",
+      "scripts/dependency_audit.py",
+      "--engine-only",
+      "--check",
+      "--output",
+      "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/minimal.json"
+    ],
+    [
+      "python3",
+      "scripts/test_dependency_audit.py"
+    ],
+    [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "--no-default-features",
+      "--lib",
+      "--tests",
+      "-p",
+      "oojuro-core",
+      "-p",
+      "oojuro-store",
+      "-p",
+      "oojuro-nine"
+    ],
+    [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "--no-default-features",
+      "--lib",
+      "--tests",
+      "-p",
+      "oojuro-engine",
+      "-p",
+      "oojuro-rank",
+      "--",
+      "--test-threads=1"
+    ],
+    [
+      "cargo",
+      "test",
+      "--offline",
+      "--locked",
+      "--no-default-features",
+      "-p",
+      "oojuro-trace",
+      "--test",
+      "compat"
+    ],
+    [
+      "cargo",
+      "check",
+      "--offline",
+      "--locked",
+      "-p",
+      "oojuro-store",
+      "--features",
+      "bench-tools",
+      "--bin",
+      "store-bench",
+      "--example",
+      "frame_probe"
+    ],
+    [
+      "python3",
+      "scripts/test_package_native.py"
+    ],
+    [
+      "/usr/bin/time",
+      "-v",
+      "-o",
+      "<arm>.time",
+      "cargo",
+      "build",
+      "--offline",
+      "--locked",
+      "--no-default-features",
+      "--release",
+      "--lib",
+      "-p",
+      "oojuro-engine",
+      "--target",
+      "x86_64-unknown-linux-gnu"
+    ]
+  ],
+  "timeouts_seconds": {
+    "policy": 120,
+    "policy-negative": 60,
+    "storage": 600,
+    "native": 600,
+    "compat": 180,
+    "bench-tools": 360,
+    "packaging": 60,
+    "cold-per-arm": 480
+  },
+  "rss_definition": "GNU time maximum single-process resident set size, including whichever descendant was largest; not aggregate process-tree RSS",
+  "no_build_started": true
+}

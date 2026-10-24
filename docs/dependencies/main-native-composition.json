@@ -1951,7 +1951,7 @@
   "graph_measurement": {
     "all_platform": "dependency predicates only, not cross-compilation",
     "breakdown": "normal-only and dev-inclusive comparison closures; build-only/development additions are set differences, not unique role labels",
-    "elapsed_rss_binary_measurements": "not measured; no build or runtime test performed for composition",
+    "elapsed_rss_binary_measurements": "Graph measurement itself has no build/runtime measurement; separate current qualification receipt records one fresh-artifact-cache build pair and focused functional gates.",
     "identity": "exact package name/version plus Git source if present; local workspace membership derived from cargo metadata workspace_members",
     "normal_build": "normal and build edges union; excludes dev",
     "profile": null,
@@ -2853,14 +2853,6 @@
     "merged/released/published package or deployment"
   ],
   "original_dependency_draft66": "0544cc81b6c579b123246c6250b5871f2592fb5d",
-  "pending_gates": [
-    "minimal policy + targeted negative controls",
-    "shared legacy/storage and serial native/rank suites",
-    "frozen historical trace reopen/append/merge compatibility",
-    "explicit bench-tools store-bench and frame_probe compile",
-    "existing native packaging/license checksum tests",
-    "bounded matched cold engine-library build before/after with isolated targets and same actual compiler/CC/profile/target/flags"
-  ],
   "policy_audit": "full --check completed using locked source graphs; functional/negative tests pending; CI minimal --engine-only --check added without removing existing tests",
   "protected_unchanged_blobs": {
     "LICENSE": "7a4a3ea2424c09fbe48d455aed1eaa94d9124835",
@@ -2871,7 +2863,18 @@
     "scripts/package_native.py": "499695dfb168853162e26f43af4e1795ab0762f8",
     "scripts/test_package_native.py": "ca2e622724c7e1306abb3add014e1ed913410d91"
   },
+  "qualification_receipt": "docs/dependencies/main-native-qualification.json",
+  "qualification_receipt_sha256": "8f6a8ccd0ff2dfdf3f2c7326d180331dbdd6b8998b227428c94b19b8fe257037",
+  "qualification_source": "5e150c97308dd38d1aa169ff8269942cea97947b",
   "qualified_base_runtime": "5fbf731",
+  "qualified_gates": [
+    "minimal policy + targeted negative controls",
+    "shared legacy/storage and serial native/rank suites",
+    "frozen historical trace reopen/append/merge compatibility",
+    "explicit bench-tools store-bench and frame_probe compile",
+    "existing native packaging/license checksum tests",
+    "bounded matched cold engine-library build before/after with isolated targets and same actual compiler/CC/profile/target/flags"
+  ],
   "repository": "oojuro/oojuro",
   "runtime_manifest_commits": [
     "602f1df",

@@ -88,32 +88,68 @@ optimization profile. An all-target graph is not evidence of cross-platform
 compilation. Required-feature target declarations, normal/build/dev edge modes
 and exact toolchain are explicit in the receipt.
 
-## Targeted gates still pending
+## Qualified gates
 
-No functional tests or compilation have run for this new composition. Existing
-qualification on another source is historical, not a pass for this tree.
-After the shared CPU window is released, qualify this frozen source with:
+Tested source: `5e150c97308dd38d1aa169ff8269942cea97947b`. Later qualification
+commits add receipts/docs only. All database implementation files and protected
+native licensing/publication/packaging files remain identical to foundation75.
 
-1. Minimal policy gate; negative checks for provider/benchmark dependency,
-   unexpected internal benchmark crate, frame re-enable, Store JSON leak and
-   wrong default selection. Keep the same gate in the storage CI job with the
-   pinned installed toolchain; repository Actions remains disabled.
-2. Current shared storage/legacy engine suite and serial native engine/rank
-   suite, plus exact frozen legacy trace compatibility fixture (reopen, compare
-   original payload/answers, append and merge). Preserve ignored counts and any
-   failures. Exercise both safe LZ4 blocks and encrypted/plaintext/sealed/torn-tail
-   paths through established tests; no replacement codec implementation.
-3. Explicit `bench-tools` build/check of store-bench and frame_probe. Verify
-   baselines/codecs auto-enable JSON in metadata; no unrelated competitor or
-   experimental-codec full build is required by this manifest-only change.
-4. Existing native packaging/license tests: selected-graph archive/notices,
-   locked checksum verification and release cache preparation must stay valid.
-5. One bounded matched cold standalone engine-library build before/after using
-   separate targets, same actual compiler/profile/target/CC/flags, recording
-   elapsed time, peak process RSS, artifacts and linked/native archives. Treat
-   this as build evidence; do not infer query/append performance. Stop optional
-   measurement once the remaining build/format risks are resolved.
+| Gate | Passed | Failed | Existing ignored | Total command time |
+| --- | ---: | ---: | ---: | ---: |
+| Shared storage and legacy engine | 141 | 0 | 1 | 235.457 s |
+| Serial native engine/rank | 175 | 0 | 10 | 41.766 s |
+| Frozen legacy trace reopen/append/merge | 4 | 0 | 1 | 9.009 s |
+| Dependency policy refusal cases | 7 | 0 | 0 | 0.164 s |
+| Native packaging/license safeguards | 5 | 0 | 0 | 0.166 s |
 
-No merge, release, package publication or deployment is authorized by this
-proposal. The public API remains available; the intentional tool feature and
-plain-build selection changes are the user-visible compatibility notes.
+The current minimal graph policy check also passes. Explicit `bench-tools`
+compilation checks both store-bench and frame_probe (2.619s). The selected metadata
+confirms baselines/codecs imply JSON reporting. The exhaustive compressed-frame
+cut-recovery case passed; ignored cases, including intentional subprocess helpers
+and measurements, are recorded individually. No new ignored case or failed gate
+is hidden. The earlier34-entry metadata inventory gap and its correction remain
+recorded without changing any graph package-set hash.
+
+## One matched fresh-artifact-cache build pair
+
+Both arms use actual task-local Rust/Cargo1.99.1 (rustc58cf8f9c3, LLVM23.1.1),
+release library profile, explicit x86_64-unknown-linux-gnu target,
+`RUSTFLAGS=-C target-cpu=x86-64`, jobs2, and identical Zig0.15.2 baseline C/C++
+wrappers. Each Cargo target **and native Zig artifact cache** starts empty.
+The existing wrapper hardcodes a shared Zig cache, so the measurement copies the
+same wrapper with only its cache location parameterized per arm. Registry source/
+index data and OS page cache remain warm; this is not a cold-machine benchmark.
+The functional test target is explicitly warm and separate from this pair.
+
+| Build | Elapsed | GNUtime maximum single-process RSS | Compiled packages |
+| --- | ---: | ---: | ---: |
+| Before foundation75 | 30.075 s | 540,588 KiB | 53 (50 external +3workspace) |
+| After composition | 29.975 s | 538,756 KiB | 52 (49 external +3workspace) |
+
+This one ordered pair is essentially unchanged. It supports the removed build
+input (`twox-hash`), not a percentage speed/RAM claim. GNUtime RSS is not aggregate
+process-tree memory or runtime database RAM. The engine rlib sizes are11,515,260
+and11,515,144 bytes; compiler artifacts differ by path/metadata and are not a
+released executable-size result. The freshly built ring main/test-support and
+Zstandard native archives are byte-identical across arms. No BLAKE3 native archive
+is produced under pure selection.
+
+The exact executed native test binary is frozen locally with SHA-256
+`aa9e21ff53749e9ede270e8579377409b8549ae8c106f27ab0f909f74f79026c`.
+It dynamically links libc plus the ELF loader; static native algorithms are
+accounted separately. The after engine library SHA-256 is
+`2787224fbfb3f9b379c44d0dd973aafa17ef441dda71f058d243cf1eeaba1b3f`.
+These local artifacts are not a package/binary publication.
+
+[Exact commands, compiler/cache provenance, ignored cases and artifacts](main-native-qualification.json),
+[raw gate receipt hash manifest](evidence-main-native/manifest.json), and
+[full selected graph/comparator receipt](main-native-composition.json) retain
+all evidence. During preparation a global rustup query unexpectedly installed
+missing1.99.1; it completed before qualification and did not change the default
+stable selection. Both actual arms use the existing task-local compiler and
+record its matching binary hash. No further installation/deletion was attempted.
+
+The short owned real /var/tmp synthetic fixture directory was removed after all
+gates. No merge, release, package publication or deployment is authorized by
+this proposal. Runtime query/append/RAM behavior, all historical native formats,
+cross-platform compilation and hosted services remain separate qualifications.

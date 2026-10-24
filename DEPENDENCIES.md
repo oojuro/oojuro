@@ -176,4 +176,6 @@ binaries/example retain JSON with the documented feature. Existing callers of
 
 See [composition measurements and pending gate plan](docs/dependencies/MAIN_NATIVE_DEPENDENCY_COMPOSITION.md).
 Graph reductions are measured build dependencies, not latency/RAM/cost results.
-This composition has not yet run its functional or build-measurement gates.
+The composition has passed its selected functional and fresh-artifact-cache
+build gates; see [the exact current qualification](docs/dependencies/main-native-qualification.json).
+One matched build sample was essentially unchanged, so no speed/RAM gain is claimed.
