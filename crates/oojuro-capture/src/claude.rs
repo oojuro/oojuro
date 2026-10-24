@@ -118,6 +118,11 @@ const SAVED_TO: &str = "Full output saved to: ";
 fn persisted_output(ctx: &FileCtx, text: &str, pc: &mut ParseCounts) -> Option<(String, &'static str)> {
     let first = text.strip_prefix(PERSISTED_STUB)?.lines().next()?;
     let path = first.split_once(SAVED_TO)?.1.trim();
+    // Native main-file capture has no authorization for secondary files. Keep the exact stub.
+    if ctx.results_root.is_none() {
+        pc.persisted.1 += 1;
+        return Some((text.to_string(), "unread"));
+    }
     match read_saved(ctx, path) {
         Some(full) => {
             pc.persisted.0 += 1;
@@ -622,7 +627,7 @@ mod tests {
             out.iter().map(|r| r.meta.iter().find(|m| m.0 == marker::META).map_or("-", |m| m.1.as_str())).collect();
         assert_eq!(marks, ["context", "call", "result", "call", "result", "-", "-"]);
         assert!(ctx.lookups.is_empty());
-        use crate::ingest::Decision;
+        use crate::policy::Decision;
         let indexed: Vec<bool> =
             out.iter().map(|r| Decision::default_for(r) == Decision::Store { indexed: true }).collect();
         assert_eq!(indexed, [false, false, false, false, false, true, true], "marked records are stored, not indexed");

@@ -56,6 +56,7 @@ pub(crate) fn pack_body(
         raw_len: body.len() as u32,
         meta_len: meta_len as u32,
         digest: digest.then(|| digest16(body)),
+        encrypted: false,
         body_at: 0,
     };
     let data = packed.as_deref().unwrap_or(body);
@@ -63,6 +64,20 @@ pub(crate) fn pack_body(
     put_head(&mut payload, &head);
     payload.extend_from_slice(data);
     Ok(payload)
+}
+
+/// Seal a finished payload: the packed body becomes `nonce | ciphertext | tag`, the head (with the
+/// encrypted flag and without a digest, which would give away equal bodies) is the associated data.
+pub(crate) fn encrypt_payload(cipher: &crate::crypto::FrameCipher, payload: &[u8]) -> Result<Vec<u8>> {
+    let mut head = get_head(payload)?;
+    let packed = &payload[head.body_at as usize..];
+    head.digest = None;
+    head.encrypted = true;
+    let mut out = Vec::with_capacity(packed.len() + 48 + crate::crypto::SEAL_OVERHEAD);
+    put_head(&mut out, &head);
+    let sealed = cipher.seal_frame(&out, packed);
+    out.extend_from_slice(&sealed);
+    Ok(out)
 }
 
 /// Chunk hash (128-bit BLAKE3 prefix) -> (frame first_seq, literal offset).
@@ -84,12 +99,13 @@ pub(crate) struct Row {
     pub text: Vec<u8>,
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub(crate) struct PackOpts {
     pub level: i32,
     pub frame_bytes: usize,
     pub dedupe_chunk: u32,
     pub threads: usize,
+    pub cipher: Option<std::sync::Arc<crate::crypto::FrameCipher>>,
 }
 
 /// A compressed, verified frame ready to be written.
@@ -272,6 +288,7 @@ impl<'d> Packer<'d> {
         let planned = std::mem::take(&mut self.planned);
         let threads = self.opts.threads.max(1).min(planned.len());
         let (level, dict, dict_id) = (self.opts.level, self.dict, self.dict_id);
+        let cipher = self.opts.cipher.clone();
         let shared = self.shared.clone();
         let next = std::sync::atomic::AtomicUsize::new(0);
         let results: Vec<Mutex<Option<Result<Vec<u8>>>>> = planned.iter().map(|_| Mutex::new(None)).collect();
@@ -305,6 +322,9 @@ impl<'d> Packer<'d> {
                                 if check != p.body {
                                     return Err(Error::Codec("packed frame failed verification"));
                                 }
+                            }
+                            if let Some(c) = &cipher {
+                                payload = encrypt_payload(c, &payload)?;
                             }
                             payload.shrink_to_fit();
                             Ok(payload)

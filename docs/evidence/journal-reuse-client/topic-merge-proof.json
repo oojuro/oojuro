@@ -1,0 +1,18 @@
+{
+  "before": {
+    "crates": "01ddbc2050c5a3fcccd63e7af4008111bb3a800f",
+    "sdk": "9e8539d6610340bd7cfbea4ca9ef1ac86d6a31f7",
+    "scripts": "6a477341fc3bf7e5a17e1c956fca8d1c359e0bab",
+    "Cargo.toml": "a7481fd7c46477cb1f90d69944808bdad4832e07",
+    "Cargo.lock": "0e9a9e133550f1fb511d3619a2330cff3098a6ba"
+  },
+  "after": {
+    "crates": "01ddbc2050c5a3fcccd63e7af4008111bb3a800f",
+    "sdk": "9e8539d6610340bd7cfbea4ca9ef1ac86d6a31f7",
+    "scripts": "6a477341fc3bf7e5a17e1c956fca8d1c359e0bab",
+    "Cargo.toml": "a7481fd7c46477cb1f90d69944808bdad4832e07",
+    "Cargo.lock": "0e9a9e133550f1fb511d3619a2330cff3098a6ba"
+  },
+  "identical": true,
+  "merge_head": "6f1226a06dd3cef6f7ef622d3cb42aa5e43cdb0c"
+}

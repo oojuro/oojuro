@@ -1,0 +1,37 @@
+{
+  "name": "@oojuro/temporal",
+  "version": "0.0.0-experimental",
+  "type": "module",
+  "private": true,
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "exports": {
+    ".": {
+      "types": "./index.d.ts",
+      "import": "./index.js"
+    },
+    "./workflow": {
+      "types": "./workflow.d.ts",
+      "import": "./workflow.js"
+    },
+    "./codec": {
+      "types": "./codec.d.ts",
+      "import": "./codec.js"
+    },
+    "./recall": {
+      "types": "./recall.d.ts",
+      "import": "./recall.js"
+    }
+  },
+  "peerDependencies": {
+    "@temporalio/worker": "^1.24.0",
+    "@temporalio/workflow": "^1.24.0",
+    "@oojuro/v2-client": "0.0.0-experimental",
+    "@temporalio/common": "^1.24.0"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}

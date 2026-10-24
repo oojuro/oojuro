@@ -1,0 +1,90 @@
+{
+  "schema": 1,
+  "time_utc": "2026-10-24T17:46:23.425252+00:00",
+  "base": "d1b24f7ed020365e09431aeaa8f4a7ff05e27dc3",
+  "stacked_on_pr": 92,
+  "files_sha256": {
+    "crates/oojuro/src/hosted_capture.rs": "278d8ff18ffc073d35ce5fb3d09cf5f9c4f6958c14a6832be0f27e54d296f7d9",
+    "sdk/typescript/index.js": "65a4c362466bbddc8f64482fac523e75d2810b361bec1f7793d0d31ce866ec26",
+    "sdk/typescript/index.d.ts": "f14a360ccec5a60a8d5f7a9cc2f7de4b5425c95a43b92960c5eaf785fcafa73c",
+    "sdk/typescript/test/capture-compression.test.js": "e2d7f841dfd70a5c295dc19f801172c55d33020affeeecb874d15d2c064387ba",
+    "sdk/typescript/test/capture-types.ts": "937acf112730a8f9f0f93990b47bdfccd0e37b90f8a0118f4771ef6d2f44bff7",
+    "scripts/bench-capture-transport.mjs": "b1cd39c07097a9f29211a3c3b6f158d96f147c6d55256562491555aa13b4fa3f"
+  },
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "c_compiler": "task-local official Zig 0.17.0 cc/ar; Rust target spelling translated for Zig",
+  "node": "v24.22.1",
+  "rust_checks": {
+    "storage-gates": {
+      "passed": 141,
+      "failed": 0,
+      "ignored": 1,
+      "suite_count": 7,
+      "log_sha256": "d0523711f7f331a1edd3889df014c89a2a228893922931e05be15d4372df1595"
+    },
+    "native-gates": {
+      "passed": 175,
+      "failed": 0,
+      "ignored": 10,
+      "suite_count": 3,
+      "log_sha256": "fc60a60e9d7681a482ecc39c3e93df4de99b062ab3e44320dee6c15cdcb1b036"
+    },
+    "runtime-gates": {
+      "passed": 236,
+      "failed": 0,
+      "ignored": 3,
+      "suite_count": 29,
+      "log_sha256": "043f85aa9744c83090ee65c096297ccedc8a59310320c293122fffb417500eb3"
+    },
+    "hosted-final": {
+      "passed": 12,
+      "failed": 0,
+      "ignored": 0,
+      "suite_count": 1,
+      "log_sha256": "167d3529e164d251fb0682f1ea7cc6c6efdce9c8b53105277c590d339fc1dc68"
+    }
+  },
+  "runtime_scope_note": "236 runtime checks completed before final whitespace-only production edits and test-fixture header-matching cleanup; the final hosted_capture group was rerun with 12 passes. Other engine/store/rank/capture/proxy production source is unchanged. The 12 focused passes overlap the runtime suite and are not added to the distinct total.",
+  "sdk": {
+    "passed": 118,
+    "failed": 0,
+    "strict_typescript": "passed all declaration smoke files, ES2023 NodeNext",
+    "offline_pack_install_exports": "passed; SDK remains private",
+    "log_sha256": "92fb7a22d7f17bef46b97e2d39e73a18b0c063ac233921fe2422fb4057f09980"
+  },
+  "transport": {
+    "acknowledgments": 240,
+    "tls_connections": 2,
+    "exact_originals": true,
+    "untrusted_certificate_control": {
+      "untrusted_fixture_certificate_rejected": true,
+      "exit_code": 1,
+      "no_completed_benchmark": true
+    },
+    "benchmark_sha256": "917b106c18959c3ee583714e24dfb0385c309ffa30d564b1d2fdbd8e8ba8f678",
+    "default": "identity; compression opt-in because reduced bytes coexist with slower local latency"
+  },
+  "readiness": {
+    "main": "abbfc71465704fce546eb86c0af66ef301585c15",
+    "candidate_commits_ahead": 166,
+    "advertised_tags": [],
+    "github_releases": [],
+    "actions_workflows": [],
+    "stage": "pre-release source; native/client candidate unmerged"
+  },
+  "development_failures": [
+    {
+      "kind": "toolchain_environment",
+      "detail": "Initial Zig wrapper did not translate the Rust x86_64-unknown-linux-gnu spelling. The task-local wrapper was corrected; all selected Rust groups then passed."
+    },
+    {
+      "kind": "sdk_session_regression",
+      "detail": "Initial response-wrapper refactor shadowed the caller session intent. Corrected the accepted-value binding; full SDK suite now passes."
+    }
+  ],
+  "limits": [
+    "draft source only; no main merge, package publication, deployment or production-data access",
+    "HTTPS fixture is synthetic loopback with in-memory ACK, not Cloud durability/capacity/WAN performance",
+    "no new crypto scheme or end-to-end encryption mode; existing scoped TLS transport remains the model"
+  ]
+}

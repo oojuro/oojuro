@@ -1,0 +1,238 @@
+{
+  "format": 1,
+  "source": "f726bab51d982896a129d4bdf2fd2d3a2edc2fff",
+  "repository": "oojuro/oojuro",
+  "scratch": "/var/tmp/ojcd-evnx3r0m",
+  "toolchain": {
+    "rustc": {
+      "path": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853",
+      "version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+    },
+    "cargo": {
+      "path": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+      "sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af",
+      "version": "cargo 1.99.1 (5f94df478 2026-08-27)\nrelease: 1.99.1\ncommit-hash: 5f94df4789f005f9a352888e8355ffc645b7ed0e\ncommit-date: 2026-08-27\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Ubuntu 26.4.0 (resolute) [64-bit]\n"
+    },
+    "cc": {
+      "path": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/portable-key-build/cc",
+      "sha256": "8880511deabe183e6e28263d2a1edd065691843f04f8794711d90ffcbd547711"
+    },
+    "c++": {
+      "path": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/portable-key-build/c++",
+      "sha256": "87478cec2e9af4d27a4b132bc58554bb29b9ef85aee5434e9e6f04edc2118e4b"
+    }
+  },
+  "gates": [
+    {
+      "name": "policy",
+      "command": [
+        "python3",
+        "scripts/dependency_audit.py",
+        "--engine-only",
+        "--check",
+        "--output",
+        "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/combined-core-dependency-qualification/minimal.json"
+      ],
+      "cwd": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-combined-client-dependency-policy",
+      "exit": 0,
+      "timed_out": false,
+      "wall_seconds": 0.665,
+      "log_sha256": "2d3b6d94decd895ef2180101aa264ba41fd94a8371980c017092fe925dff6967"
+    },
+    {
+      "name": "policy-negative",
+      "command": [
+        "python3",
+        "scripts/test_dependency_audit.py"
+      ],
+      "cwd": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-combined-client-dependency-policy",
+      "exit": 0,
+      "timed_out": false,
+      "wall_seconds": 0.165,
+      "log_sha256": "0361ec311f1a1f482002c6c80abb413fcb78ffc2c38d8c9b56efb8644c4408af",
+      "passed": 7
+    },
+    {
+      "name": "cli-tests",
+      "command": [
+        "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "--no-default-features",
+        "--lib",
+        "--tests",
+        "-p",
+        "oojuro"
+      ],
+      "cwd": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-combined-client-dependency-policy",
+      "exit": 0,
+      "timed_out": false,
+      "wall_seconds": 71.489,
+      "log_sha256": "bab125eee6eae9219c9cf9617e4c896e38a68aa3a92d29b8035469828dd94227",
+      "passed": 96,
+      "failed": 0,
+      "ignored": 0,
+      "test_binaries": 19
+    },
+    {
+      "name": "cli-build",
+      "command": [
+        "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+        "build",
+        "--offline",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro",
+        "--bin",
+        "oojuro"
+      ],
+      "cwd": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-combined-client-dependency-policy",
+      "exit": 0,
+      "timed_out": false,
+      "wall_seconds": 0.264,
+      "log_sha256": "db089ab064737fcbd8c0171c66e68820fb1b539526558b21cc8bb621c9d7c0a3"
+    }
+  ],
+  "scope": "Combined policy and CLI consumer qualification only; unchanged SDK/TS/package/setup suites and library recovery suites not repeated. No hosted/owner/provider/deployment claim.",
+  "environment": {
+    "RUSTUP_HOME": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup",
+    "RUSTUP_TOOLCHAIN": "1.99.1",
+    "RUSTC": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+    "RUSTDOC": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustdoc",
+    "RUSTFLAGS": "-C target-cpu=x86-64",
+    "CARGO_TARGET_DIR": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target",
+    "CARGO_BUILD_JOBS": "2",
+    "CC": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/portable-key-build/cc",
+    "CXX": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/portable-key-build/c++"
+  },
+  "profile": "debug/test; warm Cargo artifact cache; no timing or cold-build comparison",
+  "target": "x86_64-unknown-linux-gnu host target",
+  "cli": {
+    "path": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/combined-core-dependency-qualification/oojuro-combined-cli",
+    "original": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/oojuro",
+    "sha256": "dc2d10bf7553da54beb43b585a3d73d7d3c8f0e2f13022896f449541db651b56",
+    "bytes": 30744544,
+    "source": "f726bab51d982896a129d4bdf2fd2d3a2edc2fff",
+    "profile": "debug",
+    "features": "--no-default-features",
+    "package": "oojuro",
+    "binary": "oojuro",
+    "dynamic_links": "\tlinux-vdso.so.1 (0x00007586c04a6000)\n\tlibm.so.6 => /usr/lib/x86_64-linux-gnu/libm.so.6 (0x00007586c0366000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x00007586be200000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007586c04a8000)\n"
+  },
+  "status": "all focused combined gates passed; actual CLI frozen for separate hosted qualification",
+  "scratch_entries_retained": [],
+  "scratch_removed": true,
+  "graphs": {
+    "default": {
+      "external_count": 49,
+      "workspace_count": 3,
+      "package_set_sha256": "256ef900056a365609c277d3ee62060f44ff0c9d96f54a9c3cfeef2be0aeca75"
+    },
+    "engine": {
+      "external_count": 49,
+      "workspace_count": 3,
+      "package_set_sha256": "256ef900056a365609c277d3ee62060f44ff0c9d96f54a9c3cfeef2be0aeca75"
+    },
+    "engine-all-platforms": {
+      "external_count": 62,
+      "workspace_count": 3,
+      "package_set_sha256": "f9db0d586f05001d342eba20ab390011cc70c88b6f99a6c67ad130118b129259"
+    },
+    "rank": {
+      "external_count": 0,
+      "workspace_count": 1,
+      "package_set_sha256": "5404f7b26710ff878014d18ed4f73aadaf3e135dfb029821971bb1f8ea9d0a10"
+    },
+    "store": {
+      "external_count": 34,
+      "workspace_count": 1,
+      "package_set_sha256": "f13823509658cbeac4a8837f2bac08d2a072bb3e839f65c3ed3935a2c5df1d47"
+    },
+    "cli": {
+      "external_count": 151,
+      "workspace_count": 9,
+      "package_set_sha256": "8a4c7f9bd26ecb62ee111b9c73f395a5fcdcdbeae7dae72aa879d34e01fd0d3d"
+    }
+  },
+  "graph_count_definition": "Distinct name/version/source identities, normal+build edges, dev excluded, each isolated selector separately; all-platform engine separately. engine-only metadata inventory is intentionally policy-only.",
+  "cli_graph_features": [
+    {
+      "name": "lz4_flex",
+      "version": "0.11.6",
+      "git_source": null,
+      "workspace": false,
+      "features": [
+        "checked-decode",
+        "safe-decode",
+        "safe-encode",
+        "std"
+      ],
+      "used_by": [
+        "oojuro-core@0.1.0",
+        "oojuro-nine@0.1.0",
+        "oojuro-store@0.1.0"
+      ]
+    },
+    {
+      "name": "serde_json",
+      "version": "1.0.154",
+      "git_source": null,
+      "workspace": false,
+      "features": [
+        "default",
+        "raw_value",
+        "std"
+      ],
+      "used_by": [
+        "oojuro-capture@0.1.0",
+        "oojuro-core@0.1.0",
+        "oojuro-engine@0.1.0",
+        "oojuro-nine@0.1.0",
+        "oojuro-proxy@0.1.0",
+        "oojuro-trace@0.1.0",
+        "oojuro@0.1.0"
+      ]
+    }
+  ],
+  "runtime_production_trees_exact_core80_and_native_d72": true,
+  "hosted_pin_decision": "Only native-engine update recommended for consuming hosted candidate. Legacy old revision retained separately: upgrading also changes exact time parsing, redaction, and legacy archive dictionary sampling. Cargo feature unification from those older legacy dependencies can retain LZ4frame/twox and duplicate Store identities; isolated engine gains are not whole application gains.",
+  "not_repeated": "Byte-identical SDK/helper/license trees retain component80 evidence only; no rerun or combined claim for Node/TS/package/setup suites. Unchanged library recovery/native suites and cold-build pair retain historical dependency81 evidence only.",
+  "remote_actions": "No remote Actions run; repository Actions remain disabled per parent verification.",
+  "evidence": {
+    "cli-tests.log": {
+      "sha256": "bab125eee6eae9219c9cf9617e4c896e38a68aa3a92d29b8035469828dd94227",
+      "bytes": 16268
+    },
+    "runner.log": {
+      "sha256": "4e31b0d68867a6043f0f45bd1ef5145b453c55952749e085ceed700eba2f34fd",
+      "bytes": 2161
+    },
+    "cli-build.log": {
+      "sha256": "db089ab064737fcbd8c0171c66e68820fb1b539526558b21cc8bb621c9d7c0a3",
+      "bytes": 1724
+    },
+    "policy.log": {
+      "sha256": "2d3b6d94decd895ef2180101aa264ba41fd94a8371980c017092fe925dff6967",
+      "bytes": 205
+    },
+    "policy-negative.log": {
+      "sha256": "0361ec311f1a1f482002c6c80abb413fcb78ffc2c38d8c9b56efb8644c4408af",
+      "bytes": 105
+    },
+    "cli-normal-build-graph.json": {
+      "sha256": "b27248a21339e09687d7e7394d9dfae02596fccfaa9a28c2a64e5484b82e5257",
+      "bytes": 48402
+    },
+    "minimal.json": {
+      "sha256": "76007a5650db702922de9302bc148d3d4c09e491499e40e0a37d55fd41978854",
+      "bytes": 65798
+    },
+    "run.py": {
+      "sha256": "b79d8406152a022bf6aedd9687e303a18b2348a0cd2789aa6b6cb35456bafb30",
+      "bytes": 4746
+    }
+  }
+}

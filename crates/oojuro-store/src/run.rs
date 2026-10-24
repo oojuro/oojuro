@@ -115,7 +115,7 @@ pub fn write_run(path: &Path, rows: &mut dyn Iterator<Item = Vec<u8>>, opts: &Ru
     let mut first: Vec<Vec<u8>> = Vec::new();
     let mut buffered = 0usize;
     if opts.dict_bytes > 0 {
-        while let Some(r) = rows.next() {
+        for r in &mut *rows {
             if r.len() > MAX_FRAME {
                 return Err(Error::Invalid("row exceeds the 64 MiB frame limit"));
             }
@@ -145,7 +145,7 @@ pub fn write_run(path: &Path, rows: &mut dyn Iterator<Item = Vec<u8>>, opts: &Ru
         entries.push((p.payload.len() as u32, p.count, p.raw_len));
         Ok(())
     };
-    let pack = PackOpts { level: opts.level, frame_bytes: opts.frame_bytes, dedupe_chunk: opts.dedupe_chunk, threads: opts.threads };
+    let pack = PackOpts { level: opts.level, frame_bytes: opts.frame_bytes, dedupe_chunk: opts.dedupe_chunk, threads: opts.threads, cipher: None };
     let mut packer = Packer::new(pack, 0, dict_id, dict.as_deref().or(shared.map(|d| &d.bytes[..])));
     packer.shared = shared.cloned();
     for r in first.into_iter().chain(rows) {

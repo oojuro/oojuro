@@ -1,0 +1,73 @@
+warning: associated function `of` is never used
+   --> crates/oojuro-nine/src/segment.rs:135:12
+    |
+126 | impl Span {
+    | --------- associated function in this implementation
+...
+135 |     pub fn of(meta: &[RowMeta]) -> Self {
+    |            ^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `terms` and `total_length` are never read
+   --> crates/oojuro-nine/src/segment.rs:277:9
+    |
+273 | pub(crate) struct DiskSegment {
+    |                   ----------- fields in this struct
+...
+277 |     pub terms: u64,
+    |         ^^^^^
+278 |     pub total_length: u64,
+    |         ^^^^^^^^^^^^
+
+warning: methods `file_bytes` and `version` are never used
+   --> crates/oojuro-nine/src/segment.rs:597:12
+    |
+467 | impl DiskSegment {
+    | ---------------- methods in this implementation
+...
+597 |     pub fn file_bytes(&self) -> u64 {
+    |            ^^^^^^^^^^
+...
+917 |     pub fn version(&self) -> u32 {
+    |            ^^^^^^^
+
+warning: method `bytes` is never used
+   --> crates/oojuro-nine/src/wal.rs:245:19
+    |
+122 | impl Journal {
+    | ------------ method in this implementation
+...
+245 |     pub(crate) fn bytes(&self) -> u64 {
+    |                   ^^^^^
+
+warning: `oojuro-nine` (lib) generated 4 warnings
+warning: associated function `new` is never used
+   --> crates/oojuro-trace/src/columns.rs:480:12
+    |
+479 | impl ColStore {
+    | ------------- associated function in this implementation
+480 |     pub fn new(seal: bool) -> Self {
+    |            ^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `oojuro-trace` (lib) generated 1 warning
+   Compiling oojuro v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-capture-journal-reuse-client/crates/oojuro)
+    Finished `test` profile [unoptimized] target(s) in 3.58s
+     Running unittests src/lib.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/oojuro-906f3a172d978383)
+
+running 10 tests
+test hosted_capture::tests::api_reuse_policy_changes_only_unseen_runs_and_retains_unknown_original_intent ... ok
+test hosted_capture::tests::api_routes_are_exact_and_claude_sidechains_have_independent_session_identity ... ok
+test hosted_capture::tests::api_session_mapping_and_original_batch_survive_both_lost_acknowledgements ... ok
+test hosted_capture::tests::claude_redacts_known_secrets_and_never_reads_referenced_tool_result_files ... ok
+test hosted_capture::tests::interrupted_delivery_reopens_same_bytes_and_does_not_import_existing_history ... ok
+test hosted_capture::tests::legacy_serialization_keeps_new_session_fields_absent_and_api_files_are_strict ... ok
+test hosted_capture::tests::local_secret_never_enters_approval_and_unsafe_connections_are_refused ... ok
+test hosted_capture::tests::local_status_reads_verified_ack_counters_while_service_holds_spool_lock ... ok
+test hosted_capture::tests::provider_session_identity_ignores_resume_path_but_distinguishes_new_sessions ... ok
+test hosted_capture::tests::spool_single_writer_scope_and_changed_source_refuse_without_advancing ... ok
+
+test result: ok. 10 passed; 0 failed; 0 ignored; 0 measured; 29 filtered out; finished in 1.11s
+

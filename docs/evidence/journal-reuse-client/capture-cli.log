@@ -1,0 +1,75 @@
+warning: associated function `of` is never used
+   --> crates/oojuro-nine/src/segment.rs:135:12
+    |
+126 | impl Span {
+    | --------- associated function in this implementation
+...
+135 |     pub fn of(meta: &[RowMeta]) -> Self {
+    |            ^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `terms` and `total_length` are never read
+   --> crates/oojuro-nine/src/segment.rs:277:9
+    |
+273 | pub(crate) struct DiskSegment {
+    |                   ----------- fields in this struct
+...
+277 |     pub terms: u64,
+    |         ^^^^^
+278 |     pub total_length: u64,
+    |         ^^^^^^^^^^^^
+
+warning: methods `file_bytes` and `version` are never used
+   --> crates/oojuro-nine/src/segment.rs:597:12
+    |
+467 | impl DiskSegment {
+    | ---------------- methods in this implementation
+...
+597 |     pub fn file_bytes(&self) -> u64 {
+    |            ^^^^^^^^^^
+...
+917 |     pub fn version(&self) -> u32 {
+    |            ^^^^^^^
+
+warning: method `bytes` is never used
+   --> crates/oojuro-nine/src/wal.rs:245:19
+    |
+122 | impl Journal {
+    | ------------ method in this implementation
+...
+245 |     pub(crate) fn bytes(&self) -> u64 {
+    |                   ^^^^^
+
+warning: `oojuro-nine` (lib) generated 4 warnings
+warning: associated function `new` is never used
+   --> crates/oojuro-trace/src/columns.rs:480:12
+    |
+479 | impl ColStore {
+    | ------------- associated function in this implementation
+480 |     pub fn new(seal: bool) -> Self {
+    |            ^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `oojuro-trace` (lib) generated 1 warning
+   Compiling oojuro v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-capture-journal-reuse-client/crates/oojuro)
+    Finished `test` profile [unoptimized] target(s) in 2.02s
+     Running tests/hosted_cli.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/hosted_cli-0775f69951625ec8)
+
+running 12 tests
+test hosted_connection_and_cursor_files_require_private_real_owner_files ... ok
+test hosted_exact_text_preserves_maximum_utf8_bom_nul_without_added_newline ... ok
+test hosted_mcp_negotiates_legacy_and_lists_only_scoped_read_tools ... ok
+test hosted_mcp_reads_metadata_and_exact_originals_with_project_key_only ... ok
+test hosted_mcp_rejects_duplicate_arguments_and_bounds_the_stdio_frame ... ok
+test hosted_mcp_search_preserves_request_and_reports_unknown_without_remote_error_leaks ... ok
+test hosted_metadata_cursor_is_posted_and_no_local_journal_is_opened ... ok
+test hosted_metadata_refuses_duplicate_fields_bad_integers_shapes_and_foreign_selections ... ok
+test hosted_partial_and_redirected_reads_return_no_content_and_redact_remote_errors ... ok
+test hosted_project_setup_protects_secret_and_refuses_replacement_or_capture_credentials ... ok
+test local_capture_policy_is_explicit_private_and_does_not_claim_target_authority ... ok
+test metered_search_uses_private_query_file_exact_offsets_and_reports_unknown_without_retry ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.33s
+

@@ -4,13 +4,19 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 repository.workspace = true
-description = "Oojuro v1 capture layer: attach-and-record ingestion of agent logs (Claude Code, Codex) with secret redaction on ingest"
+description = "Native capture adapters for agent logs with secret redaction"
 
 [dependencies]
-oojuro-trace = { path = "../oojuro-trace" }
+oojuro-engine = { path = "../oojuro-engine" }
+oojuro-store = { path = "../oojuro-store" }
+libc = "0.2"
 serde.workspace = true
 serde_json = { workspace = true, features = ["raw_value"] }
 blake3.workspace = true
 regex = "1"
 sha2 = "0.10"
+
+[dev-dependencies]
+# Independent oracle for native adapter parity; never linked into shipped clients.
+oojuro-trace = { path = "../oojuro-trace" }
 fastcdc = "3"

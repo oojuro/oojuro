@@ -5,7 +5,8 @@
 | Document | What it covers |
 |---|---|
 | [DESIGN](DESIGN.md) | the record model, capture boundary, stores, settings, explicit use, and the principle of staying simple and horizontal |
-| [FRONT_DOOR](FRONT_DOOR.md) | the library, the `oojuro` CLI, the `oojurod` daemon and the MCP server |
+| [OJO_FORMAT](OJO_FORMAT.md) | the adopted `.ojo` extension, current directory storage, and remaining standalone container work |
+| [SUPPORTED_INTERFACES](SUPPORTED_INTERFACES.md) | native local journal and current hosted clients; retirement of legacy front doors |
 | [CAPTURE](CAPTURE.md) | attach-and-record ingestion of agent logs, the recording proxy, redaction on ingest |
 | [SHARED_LOG](SHARED_LOG.md) | the shared write log and the measurements behind making it the default |
 | [ACTIVITY_SEARCH](ACTIVITY_SEARCH.md) | design and measurements for finding moments by date and by how the activity looked (no engine code yet) |

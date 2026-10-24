@@ -168,6 +168,7 @@ pub fn run(ctx: &Ctx, o: &Options) -> Result<Scorecard> {
         ("cache", json!("warm: one process per run; prefill, then measured replay")),
         ("build_time_included", json!("prefill reported as prefill_s; per-turn overhead = turn search + turn append")),
         ("self_exclusion", json!("the turn input's own record is dropped from results before scoring; requested k+1")),
+        ("returned_content", json!("search_get includes search, top-k source exclusion and original get for every returned hit; all originals checked byte-exact; native projection also computes excerpts")),
         ("pool", json!(o.pool.max(o.k))),
     ] {
         card.settings.insert(k.into(), v);
@@ -254,8 +255,9 @@ pub fn run(ctx: &Ctx, o: &Options) -> Result<Scorecard> {
                 let steady = s.arm.memory();
                 // Measured replay.
                 let mut per_metric: BTreeMap<&str, Vec<f64>> = BTreeMap::new();
-                let (mut search_us, mut search_rt, mut append_us, mut append_rt, mut turn_us) =
-                    (Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
+                let (mut search_us, mut search_rt, mut append_us, mut append_rt, mut turn_us, mut content_us, mut content_turn_us) =
+                    (Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new(), Vec::new());
+                let mut returned_bytes = 0usize;
                 let (mut self_hits, mut self_total, mut leaks, mut unknown, mut inexact, mut checked) = (0, 0, 0, 0, 0, 0);
                 let mut readable = 0usize;
                 let mut lists = Vec::new();
@@ -283,7 +285,17 @@ pub fn run(ctx: &Ctx, o: &Options) -> Result<Scorecard> {
                                 ("task".into(), t.group.clone()),
                             ]),
                         };
+                        let started = Instant::now();
                         let (hits, ts) = s.arm.search(query)?;
+                        let original_ids: Vec<_> = hits.iter().filter(|h| Some(&h.id) != step.source.as_ref()).take(o.k).map(|h| h.id.clone()).collect();
+                        let originals = s.arm.get(original_ids.clone())?;
+                        let search_get_us = started.elapsed().as_secs_f64() * 1e6;
+                        if originals.len() != original_ids.len() { return Err("get returned a different number of originals".into()); }
+                        for (id, text) in original_ids.iter().zip(originals) {
+                            checked += 1;
+                            returned_bytes += text.as_ref().map_or(0, String::len);
+                            if !registry.contains_key(id) || text.map(|t| digest(&t)) != registry.get(id).map(|e| e.2) { inexact += 1; }
+                        }
                         for h in &hits {
                             match registry.get(&h.id) {
                                 None => unknown += 1,
@@ -331,15 +343,6 @@ pub fn run(ctx: &Ctx, o: &Options) -> Result<Scorecard> {
                                 per_metric.entry(name).or_default().push(value);
                             }
                         }
-                        if i % 8 == 0 && !ranked.is_empty() {
-                            let texts = s.arm.get(ranked.clone())?;
-                            for (id, text) in ranked.iter().zip(texts) {
-                                checked += 1;
-                                if text.map(|t| digest(&t)) != registry.get(id).map(|e| e.2) {
-                                    inexact += 1;
-                                }
-                            }
-                        }
                         lists.push(ranked);
                         let batch: Vec<Doc> = step
                             .records
@@ -359,6 +362,8 @@ pub fn run(ctx: &Ctx, o: &Options) -> Result<Scorecard> {
                         append_us.push(ta.arm_us as f64);
                         append_rt.push(ta.total_us as f64);
                         turn_us.push((ts.total_us + ta.total_us) as f64);
+                        content_us.push(search_get_us);
+                        content_turn_us.push(search_get_us + ta.total_us as f64);
                     }
                     // Every record of the trajectory reads back byte-identical.
                     for chunk in mine.chunks(256) {
@@ -381,11 +386,14 @@ pub fn run(ctx: &Ctx, o: &Options) -> Result<Scorecard> {
                     ("append", &append_us),
                     ("append_roundtrip", &append_rt),
                     ("turn_overhead", &turn_us),
+                    ("search_get", &content_us),
+                    ("turn_content_overhead", &content_turn_us),
                 ] {
                     runs.add("speed", &format!("{name}_p50_us"), sys::percentile(v, 50.0));
                     runs.add("speed", &format!("{name}_p99_us"), sys::percentile(v, 99.0));
                 }
                 runs.add("speed", "store_records_end", registry.len() as f64);
+                runs.add("speed", "returned_original_bytes", returned_bytes as f64);
                 runs.gate("no_future_leak", leaks == 0 && unknown == 0, json!({"leaked_hits": leaks, "unknown_ids": unknown}));
                 runs.gate("byte_exact", inexact == 0, json!({"checked": checked, "mismatched": inexact}));
                 runs.gate(

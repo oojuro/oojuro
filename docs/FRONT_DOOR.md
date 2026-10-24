@@ -1,3 +1,5 @@
+> Historical interface documentation. Current entry points and retirement details: [SUPPORTED_INTERFACES](SUPPORTED_INTERFACES.md).
+
 # Front door: the journal used like SQLite
 
 Code: `crates/oojuro` (library, `oojuro` CLI, MCP server, settings, and the

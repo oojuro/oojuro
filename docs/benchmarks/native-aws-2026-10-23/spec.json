@@ -1,0 +1,179 @@
+{
+  "campaign": "oojuro-bench-native-dev-20261023a",
+  "scope": "development comparison of local engine APIs on dedicated AWS; not hosted customer/API, failure-domain equivalence, pricing, heldout or SOTA acceptance",
+  "source": "27a1fb80231f38d5175ad75a99b6bed7880da4d6",
+  "production_native_engine_pin": "a4b2f9da31a3c2a85ffb98cc67694307fd74aee9",
+  "production_engine_source_matches": true,
+  "binary_sha256": "43990f32e9f56c060dca237a27c3dd48a1a3fbd4bd741e7e429adb61aa964c05",
+  "binary_bytes": 11486560,
+  "highest_glibc": "2.39",
+  "rust_target_cpu": "x86-64",
+  "c_cpp_target": "x86_64-linux-gnu.2.39 mcpu=baseline",
+  "production_instances": [
+    "i-00af0275b775a4169",
+    "i-039f861e6a2e0a45e",
+    "i-09804db04576b5843"
+  ],
+  "arms": [
+    "native-record",
+    "nine",
+    "tantivy",
+    "sqlite",
+    "jsonl",
+    "jsonl-zstd"
+  ],
+  "runs": 3,
+  "memory_max": "3G",
+  "workload_timeout_seconds": 4500,
+  "independent_stop_hours": 2,
+  "input_sha256": {
+    "driver.py": "ab169aeda24cf1b62e7b71c0e0a03fd2e9304ea50c0526ef28802e1b0472af00",
+    "bench/datasets.json": "304bf5c2349387932afd6f07debf154ce7a5d6b4b91a82d7add919731090c6d9",
+    "bench/prepared.json": "90a039953cbdd8be84341b1e17549b956af28a20fb2edee5eb89d2219007f7db",
+    "bench/references.json": "040c64916317af74fb7dff0a92aae133a77a3062924dfcca6fe52787cdc478e8",
+    "bench/splits/beir-arguana.json": "6aa4e3790b726206ea3649c97f2bb09ca1b0c2722557462e9b7d648105d345f6",
+    "bench/splits/beir-fiqa.json": "fbe5fb7299ccdcdbadc85b147403811bef2c5d9449bea58ba0498208463d6f96",
+    "bench/splits/beir-nfcorpus.json": "85d5a93f6620eae1e09188aac8c5f99396ea5acceb01bc16540d84a36f01883a",
+    "bench/splits/beir-scidocs.json": "a75e22b13e5a5c1115adb5ef12104ee97a967d61707ff900a254acd46f2e52cf",
+    "bench/splits/beir-scifact.json": "2dedb00313ff5fca886dd5926cff45bad161d380edad98a32b0174a8b413e5ea",
+    "bench/splits/hermes-fc.json": "b9a973fc5d9a34fc95c3253f8ceb9d79370a31f70e718d33a949f7fd63d607e8",
+    "bench/splits/longmemeval.json": "20e8e94c9bd9d0ad8a9032892599b443b6742c4351f0275008e1208d0fcbcd03",
+    "bench/splits/swe-agent.json": "1b13022cd63d7a01536845e29b764fa2fa3f4bca3d0798a567b86dabb0da0543",
+    "bench/splits/swe-agent.stats.json": "ca976eb58c9b995253768fd6b386b4ba0d4de22eac22e1fed045d6bf6fefee40",
+    "bench/splits/swe-agent.trajectories.json": "38ce8182a1de3191fdde5cab4298ac2aa4edfbe36e0b3356330f51cae2a8a4b5",
+    "data/prepared/turnloop/swe-agent.jsonl": "3106438b52feadab2bcf3c0e7ff7fb40ac8625b3969312e8cf64d4c3782089c2",
+    "data/swe-agent/train-00000-of-00012.parquet": "5a395e8c7bb8ddc4b8f4d268506b3a0e2cf9b5ec3922600117322fe788067a13",
+    "data/swe-agent/LICENSE.note": "fdb24f9a349fa5895b3df86c98476c64e989efc604642d4072a991b673d8660b",
+    "data/beir-arguana/arguana.zip": "cfdf79adce27a401b3cd3ea267903134dbfab2c6afeb95d7fe5724a00bf7557b",
+    "data/beir-arguana/LICENSE.note": "52c67f552e5be65f69033a339df0d7074d4b3f11120a5e353470b3195bbf63fc",
+    "data/beir-arguana/arguana/corpus.jsonl": "0627982cec4ee896df6dc98604ef6b499c83fd87a19eaaeb3f23b88bbef6cbce",
+    "data/beir-arguana/arguana/qrels/test.tsv": "0c47b481fa8b47fb9ca5e74bc8a017bdea14518c0e4a5d21345291180b3aca76",
+    "data/beir-arguana/arguana/queries.jsonl": "f8b7c903f95d9a2d291de3915a8fac25085e9db679f19f59fea4145bfd1df618",
+    "infrastructure/temporary.json": "fe21ecac9cfbf869cf3d4dde89dbba0c40c94472bcf04e1e43e1931a6400be61",
+    "infrastructure/README.md": "7ed9df9020cf549fcae5b39aafb91d6578548b76ae860937803609b72e0b092e"
+  },
+  "workloads": [
+    {
+      "name": "swe-dev-bg1000",
+      "arguments": [
+        "turnloop",
+        "--set",
+        "swe-agent",
+        "--split",
+        "dev",
+        "--trajectories",
+        "10",
+        "--background",
+        "1000",
+        "--k",
+        "20",
+        "--batch",
+        "1000"
+      ]
+    },
+    {
+      "name": "swe-dev-bg4000",
+      "arguments": [
+        "turnloop",
+        "--set",
+        "swe-agent",
+        "--split",
+        "dev",
+        "--trajectories",
+        "10",
+        "--background",
+        "4000",
+        "--k",
+        "20",
+        "--batch",
+        "1000"
+      ]
+    },
+    {
+      "name": "swe-dev-bg20000",
+      "arguments": [
+        "turnloop",
+        "--set",
+        "swe-agent",
+        "--split",
+        "dev",
+        "--trajectories",
+        "10",
+        "--background",
+        "20000",
+        "--k",
+        "20",
+        "--batch",
+        "1000"
+      ]
+    },
+    {
+      "name": "arguana-dev",
+      "arguments": [
+        "beir",
+        "--dataset",
+        "beir-arguana",
+        "--split",
+        "dev",
+        "--k",
+        "100",
+        "--batch",
+        "1000",
+        "--run-file",
+        "/var/lib/oojuro-bench/campaign/results/arguana-trec"
+      ]
+    }
+  ],
+  "cost": {
+    "verified_at": "2026-10-23T11:18:50.711529+00:00",
+    "instance_type": "m7a.large",
+    "usd_per_hour": "0.1159200000",
+    "sku": "TX58337QN5B6HX4A",
+    "two_hour_compute": 0.23184,
+    "two_hour_ipv4_estimate": 0.01,
+    "estimate_excludes": "S3 requests/storage, Scheduler and incidental API/transfer/tax/discounts; no product-pricing claim",
+    "two_hour_32gib_gp3_estimate": 0.0070136986301369865
+  },
+  "data_sources": {
+    "swe-agent": {
+      "kind": "trajectory",
+      "license": "CC BY 4.0",
+      "license_class": "permissive",
+      "source": "huggingface.co/datasets/nebius/SWE-agent-trajectories@68195a1450865274106246d0d0296a1d6807b88e",
+      "files": [
+        {
+          "url": "https://huggingface.co/datasets/nebius/SWE-agent-trajectories/resolve/68195a1450865274106246d0d0296a1d6807b88e/data/train-00000-of-00012.parquet",
+          "path": "train-00000-of-00012.parquet",
+          "sha256": "5a395e8c7bb8ddc4b8f4d268506b3a0e2cf9b5ec3922600117322fe788067a13",
+          "size": 89182938
+        },
+        {
+          "url": "https://huggingface.co/datasets/nebius/SWE-agent-trajectories/resolve/68195a1450865274106246d0d0296a1d6807b88e/data/train-00001-of-00012.parquet",
+          "path": "train-00001-of-00012.parquet",
+          "sha256": "fca106cce0f09891c2fadc032fb304da9ae5a7c31d2a39eb7ec70a7bdd4a9882",
+          "size": 94796688,
+          "optional": true
+        }
+      ]
+    },
+    "beir-arguana": {
+      "kind": "beir",
+      "license": "BeIR mirror card declares CC BY-SA 4.0",
+      "license_class": "research",
+      "files": [
+        {
+          "url": "https://public.ukp.informatik.tu-darmstadt.de/thakur/BEIR/datasets/arguana.zip",
+          "path": "arguana.zip",
+          "md5_published": "8ad3e3c2a5867cdced806d6503f29b99",
+          "extract": "zip",
+          "sha256": "cfdf79adce27a401b3cd3ea267903134dbfab2c6afeb95d7fe5724a00bf7557b",
+          "size": 3773617
+        }
+      ]
+    }
+  },
+  "rank_differences": "native/Nine SPUD/F2 ranking vs SQLite/JSONL/Tantivy BM25/tokenization; source clock import is explicit, native ingest clock stays genuine",
+  "returned_content": "every returned top-k original fetched, timed and byte-exact verified; native also computes excerpts",
+  "storage": "keep complete stores for checksums and private archive; count complete apparent and allocated store bytes after close",
+  "infrastructure_source": "7f57024057f2c82c7ad1064539fefba3d49ed90e"
+}

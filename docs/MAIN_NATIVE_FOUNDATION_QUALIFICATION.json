@@ -1,0 +1,180 @@
+{
+  "status": "local selected gates passed; public draft proposal only; no remote checks",
+  "tested_source": "5fbf73150036625136f9f2b89281491c031d2af7",
+  "merge": "0efe987ae12fcc86f3dae490380e36bf993434c5",
+  "parents": [
+    "4493dc5ea3f83a3838074eae9c0945c314ec78f0",
+    "d72f879484655c758c474b43b7c38dc81b902c0d"
+  ],
+  "rust": "1.99.1",
+  "environment": "local Linux, portable Zig C wrapper, not GitHub-hosted VM",
+  "graph": {
+    "scope": "selected nine runtime packages with normal/build/dev edges, local Linux",
+    "unique_formatted_entries": 168,
+    "comparison_features_enabled": false,
+    "proxy_brotli_decompressor": "normal proxy response decoding dependency"
+  },
+  "gates": [
+    {
+      "gate": "storage",
+      "command": [
+        "cargo",
+        "+1.99.1",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "--lib",
+        "--tests",
+        "-p",
+        "oojuro-core",
+        "-p",
+        "oojuro-store",
+        "-p",
+        "oojuro-nine"
+      ],
+      "exit": 0,
+      "seconds": 244.745,
+      "test_binaries": 8,
+      "passed": 141,
+      "failed": 0,
+      "ignored": 1
+    },
+    {
+      "gate": "native",
+      "command": [
+        "cargo",
+        "+1.99.1",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "--lib",
+        "--tests",
+        "-p",
+        "oojuro-engine",
+        "-p",
+        "oojuro-rank",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit": 0,
+      "seconds": 39.466,
+      "test_binaries": 3,
+      "passed": 175,
+      "failed": 0,
+      "ignored": 10
+    },
+    {
+      "gate": "runtime",
+      "command": [
+        "cargo",
+        "+1.99.1",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "--lib",
+        "--tests",
+        "-p",
+        "oojuro-trace",
+        "-p",
+        "oojuro-capture",
+        "-p",
+        "oojuro-proxy",
+        "-p",
+        "oojuro"
+      ],
+      "exit": 0,
+      "seconds": 109.285,
+      "test_binaries": 29,
+      "passed": 215,
+      "failed": 0,
+      "ignored": 3
+    },
+    {
+      "gate": "compat",
+      "command": [
+        "cargo",
+        "+1.99.1",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro-trace",
+        "--test",
+        "compat"
+      ],
+      "exit": 0,
+      "seconds": 5.014,
+      "test_binaries": 1,
+      "passed": 4,
+      "failed": 0,
+      "ignored": 1
+    }
+  ],
+  "distinct_complete_suite_counts": {
+    "passed": 531,
+    "failed": 0,
+    "ignored": 14
+  },
+  "compat_repeat_already_in_runtime": true,
+  "diagnostic": "Initial runtime symlink TMPDIR rejected by private credential guard; owned test process terminated after mock accept waits. Full runtime and compat passed with a private real /var/tmp directory; no runtime/test changes.",
+  "evidence": {
+    "main-native-ci-storage.log": {
+      "bytes": 16296,
+      "sha256": "29a7695311783a141b72ee53e68af94ad3f1dacc21e507a7ddbe153002be6f96"
+    },
+    "main-native-ci-native.log": {
+      "bytes": 21678,
+      "sha256": "705bb35159b1ea0549405fdb860c45be3f0205bc478164afb10979594ec9392f"
+    },
+    "main-native-ci-runtime.log": {
+      "bytes": 26119,
+      "sha256": "07c48eeec25adf56fb6c9c3e0cdd9b646b6a944eef896b2b5faf050cf28c42f1"
+    },
+    "main-native-ci-compat.log": {
+      "bytes": 2464,
+      "sha256": "c82c0be240c8e7ecabba1892b7951c72f357233944c7cb11580c0a4222ccdb20"
+    },
+    "main-native-ci-runtime-symlink-diagnostic.log": {
+      "bytes": 11802,
+      "sha256": "b869801f64a0689de824bf4e421abfde34029f8aec6c18ef03a969b2b247b289"
+    },
+    "main-native-ci-private-path-diagnostic.log": {
+      "bytes": 538,
+      "sha256": "e274358a8d8f3c5222d0408278c403d441229d14d230759884d6a2ba551abc85"
+    },
+    "main-native-selected-graph.txt": {
+      "bytes": 4441,
+      "sha256": "43973c2a3db4bd9fa3a79e20494ba9673c57640b4827ef9710f4ab758529d194"
+    }
+  },
+  "boundaries": [
+    "No later client/SDK/performance/dependency sibling topics integrated.",
+    "No SDK JavaScript/type/package qualification claimed.",
+    "No Actions enablement or administrative/rules change.",
+    "No main merge, binary/package release, deployment or hosted pin change."
+  ],
+  "actual_toolchain_provenance": {
+    "selection": "cargo +1.99.1; task-local RUSTUP_HOME, not a PATH-prepended compiler assumption",
+    "rustup_home": "<workspace>/work/public-ci-rustup",
+    "resolved_rustc": "<workspace>/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+    "rustc_release": "1.99.1",
+    "rustc_commit": "58cf8f9c35b355199727627d07ae34a4e2846d67",
+    "cargo_release": "1.99.1",
+    "cargo_commit": "5f94df4789f005f9a352888e8355ffc645b7ed0e",
+    "overrides": {
+      "RUSTC": null,
+      "RUSTC_WRAPPER": null,
+      "RUSTUP_TOOLCHAIN": null,
+      "CARGO_BUILD_RUSTC": null
+    },
+    "cached_build_evidence": "work/public-ci-target/.rustc_info.json records rustc1.99.1 and same compiler commit",
+    "raw_proof": "work/main-client-sdk-toolchain-proof.json",
+    "raw_proof_sha256": "33e2136c246261aac12f6cde675da696dcb35e48a90fe593020914704855e42f",
+    "proof_commands": [
+      "RUSTUP_HOME=<task-local> rustc +1.99.1 --version --verbose",
+      "RUSTUP_HOME=<task-local> cargo +1.99.1 --version --verbose",
+      "RUSTUP_HOME=<task-local> rustup which --toolchain 1.99.1 rustc"
+    ],
+    "no_gate_rerun": true
+  }
+}

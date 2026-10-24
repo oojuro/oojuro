@@ -1,5 +1,6 @@
 //! Where a single-row read of a run file spends its time (docs/PERF_ROUND2.md, item 4).
 //!
+//! Build: cargo build -p oojuro-store --features bench-tools --example frame_probe
 //! Usage: frame_probe RUN.src [--rows 2000] [--seed 1]
 //!
 //! Opens the run without a frame cache and times, for random rows: a ranged

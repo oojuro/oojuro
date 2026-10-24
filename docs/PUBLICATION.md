@@ -36,12 +36,9 @@ does not cover future commits. Do not probe a suspected credential against a liv
 
 ## CI/CD and releases
 
-Ahikara owns native CI/CD and trusted publishing. Keep GitHub Actions disabled until public
-contributions run on isolated, disposable runners without production secrets, credentials,
-host sockets, trusted caches or access to the private cloud runner. Treat PR code as untrusted;
-never execute it through `pull_request_target` or pass privileged artifacts/caches across trust
-boundaries. Pin actions/dependencies, restrict token permissions and keep signing/publishing in
-the reviewed main-branch release path. The maintainer may review and merge their own changes.
+Ahikara owns native CI/CD and trusted publishing. The proposed `.github/workflows/ci.yml` checks use only disposable GitHub-hosted Ubuntu runners, a read-only repository token and pinned checkout/toolchain versions. Checkout does not persist credentials. PR jobs receive no production secrets, private runner access, reusable caches, signing material or release artifacts. There is no `pull_request_target`, self-hosted runner, release trigger or publishing job. Treat all PR code as untrusted, including dependency build scripts. Do not move these jobs onto a private cloud runner or restore privileged artifacts/caches into them.
+
+Repository Actions remains disabled until an owner reviews and enables the proposed unprivileged checks. Adding workflow files does not toggle that setting or establish a passing check. Maintainers may review their own changes; do not require a second reviewer if that would lock out the sole maintainer. Choose required status checks only after their exact job names have run successfully. This change does not configure administrative rules. Signing, package/native releases and deployment still require the owner's approval and reviewed release evidence.
 
 This native source repository has no hosted app to deploy. `vercel.json` disables automatic
 Git deployments for every branch; do not run native builds on Vercel CPU. If a separate hosted

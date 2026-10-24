@@ -1,0 +1,10 @@
+{
+  "started_at": "2026-10-23T12:17:41.672548+00:00",
+  "finished_at": "2026-10-23T13:06:10.081249+00:00",
+  "exit": 2,
+  "instance_id": "i-07a1d44ed5e17fdf7",
+  "source": "27a1fb80231f38d5175ad75a99b6bed7880da4d6",
+  "writers_quiesced": true,
+  "scope": "development comparison of local engine APIs on dedicated AWS; not hosted customer/API, failure-domain equivalence, pricing, heldout or SOTA acceptance",
+  "goal_complete": false
+}

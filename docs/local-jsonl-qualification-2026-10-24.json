@@ -1,0 +1,30 @@
+{
+  "checks": "exact documented quickstart and additive help metadata",
+  "status": "passed",
+  "compiler": "Fedora Rust 1.99.0",
+  "binary_sha256": "903687c274ef87e715281120da0adffc9e86ddfb98410281dfda76528020974a",
+  "records": 2,
+  "data": "synthetic only",
+  "cloud_calls": 0,
+  "format": 1,
+  "base_revision": "8824d2cb8e8884128fc07d468366cef2a85252ec",
+  "verification": {
+    "native_records_cli": {
+      "passed": 8,
+      "failed": 0,
+      "ignored": 0,
+      "command": "cargo test --offline --locked --no-default-features -p oojuro --test native_records_cli"
+    },
+    "release_build": "cargo build --locked --no-default-features --release -p oojuro --bin oojuro-native",
+    "documentation_links": "passed"
+  },
+  "source_sha256": {
+    "crates/oojuro/src/native/records.rs": "85d8db6edab5c72d519f5a5814683a91adce6a436088c686ecff90a21bde8a51",
+    "crates/oojuro/src/native/mod.rs": "5f3c1cae4a93eb54278c72e2e7fe3ff205ff0cb97b47615988aff259fed60622"
+  },
+  "limits": [
+    "Typed Input JSONL only; explicit schema mapping required",
+    "No SQLite importer, SQL API, automatic history capture or hosted protocol change",
+    "Linux local synthetic verification; no performance or published binary claim"
+  ]
+}

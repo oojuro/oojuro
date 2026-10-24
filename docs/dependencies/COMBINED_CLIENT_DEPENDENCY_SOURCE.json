@@ -1,0 +1,273 @@
+{
+  "automatically_combined_files": [
+    "Cargo.lock",
+    ".github/workflows/ci.yml",
+    "CONTRIBUTING.md"
+  ],
+  "branch": "codex/combined-client-dependency-policy",
+  "ci_core80_identical_after_removing_two_policy_steps": true,
+  "combined_builds_run": false,
+  "combined_push_or_pr": false,
+  "combined_tests_run": false,
+  "component_qualification": "Dependency81 tested5e150c9; core80 includes separately qualified client/SDK/reuse/setup components. Their passes are historical component evidence, not a combined pass.",
+  "core80_trees_preserved": {
+    "LICENSE": {
+      "combined": "7a4a3ea2424c09fbe48d455aed1eaa94d9124835",
+      "core80": "7a4a3ea2424c09fbe48d455aed1eaa94d9124835"
+    },
+    "NOTICE": {
+      "combined": "205bf63447c6b9fdff0a893fe6191e3b8f8fb205",
+      "core80": "205bf63447c6b9fdff0a893fe6191e3b8f8fb205"
+    },
+    "SECURITY.md": {
+      "combined": "9ac14c8cc3e41496a16741e540e7ec124993c186",
+      "core80": "9ac14c8cc3e41496a16741e540e7ec124993c186"
+    },
+    "crates/oojuro": {
+      "combined": "57b25cd214789155758c49aa3bb768369d21cc3c",
+      "core80": "57b25cd214789155758c49aa3bb768369d21cc3c"
+    },
+    "crates/oojuro-capture": {
+      "combined": "97ec4048800fc2b1c01d467cfefa318bc7fa7d58",
+      "core80": "97ec4048800fc2b1c01d467cfefa318bc7fa7d58"
+    },
+    "crates/oojuro-core": {
+      "combined": "81caa5daf6a6a17bdb0c2966860636b5130d6dda",
+      "core80": "81caa5daf6a6a17bdb0c2966860636b5130d6dda"
+    },
+    "crates/oojuro-engine": {
+      "combined": "7696dcc8b5bde6d044d7afd2d2c0570f3042b4f7",
+      "core80": "7696dcc8b5bde6d044d7afd2d2c0570f3042b4f7"
+    },
+    "crates/oojuro-nine": {
+      "combined": "ac0e292c282a65564eda13347b6f5881543366e9",
+      "core80": "ac0e292c282a65564eda13347b6f5881543366e9"
+    },
+    "crates/oojuro-proxy": {
+      "combined": "a40601f88b28dca6754aefeb89b5548be7c791f6",
+      "core80": "a40601f88b28dca6754aefeb89b5548be7c791f6"
+    },
+    "crates/oojuro-rank": {
+      "combined": "9b03025a0709013ea13b7214d7419d0a579428f6",
+      "core80": "9b03025a0709013ea13b7214d7419d0a579428f6"
+    },
+    "crates/oojuro-store/src": {
+      "combined": "8adb4ec9d63d27a1815ed2a3c9e90f46b498c959",
+      "core80": "8adb4ec9d63d27a1815ed2a3c9e90f46b498c959"
+    },
+    "crates/oojuro-trace": {
+      "combined": "153b8058e931d41dfcc15b3f662981df6ae76e6a",
+      "core80": "153b8058e931d41dfcc15b3f662981df6ae76e6a"
+    },
+    "docs/PUBLICATION.md": {
+      "combined": "7740e9e7585e26b3cdfa80554be4f45020da48cd",
+      "core80": "7740e9e7585e26b3cdfa80554be4f45020da48cd"
+    },
+    "licenses": {
+      "combined": "b8c9a7731b7caeb190a0c5d08a14ea26be85d742",
+      "core80": "b8c9a7731b7caeb190a0c5d08a14ea26be85d742"
+    },
+    "scripts/build_native.sh": {
+      "combined": "cbde1aff24ca70a72460192d4897c9ae505c2b8c",
+      "core80": "cbde1aff24ca70a72460192d4897c9ae505c2b8c"
+    },
+    "scripts/ci-sdk": {
+      "combined": "ea1662d03944b0f82b44ef933910ba86be1446ad",
+      "core80": "ea1662d03944b0f82b44ef933910ba86be1446ad"
+    },
+    "scripts/connect-agent.py": {
+      "combined": "744d404865c908ebd2ccf604e6b4de4b99abe661",
+      "core80": "744d404865c908ebd2ccf604e6b4de4b99abe661"
+    },
+    "scripts/connect-project.py": {
+      "combined": "1c6564afc005f29d96f3cca37d2e2c7d0ccac2af",
+      "core80": "1c6564afc005f29d96f3cca37d2e2c7d0ccac2af"
+    },
+    "scripts/package_native.py": {
+      "combined": "499695dfb168853162e26f43af4e1795ab0762f8",
+      "core80": "499695dfb168853162e26f43af4e1795ab0762f8"
+    },
+    "scripts/setup-agent.py": {
+      "combined": "2c2c5a3173347ebac7d0e4fea79c880677d27731",
+      "core80": "2c2c5a3173347ebac7d0e4fea79c880677d27731"
+    },
+    "scripts/test-connect-agent.py": {
+      "combined": "d884a6d01473076594771a806c0f378f49317ff7",
+      "core80": "d884a6d01473076594771a806c0f378f49317ff7"
+    },
+    "scripts/test-connect-project.py": {
+      "combined": "049e1ae6c2c07b80d3038508f505518f52eccce0",
+      "core80": "049e1ae6c2c07b80d3038508f505518f52eccce0"
+    },
+    "scripts/test-sdk-package.py": {
+      "combined": "dcc7a77f89a8366baaee9e5cb487f0b1a0ad57c6",
+      "core80": "dcc7a77f89a8366baaee9e5cb487f0b1a0ad57c6"
+    },
+    "scripts/test-setup-agent.py": {
+      "combined": "3687e6a584cb491324dd3a08fee257bd36c0f2d1",
+      "core80": "3687e6a584cb491324dd3a08fee257bd36c0f2d1"
+    },
+    "scripts/test_package_native.py": {
+      "combined": "ca2e622724c7e1306abb3add014e1ed913410d91",
+      "core80": "ca2e622724c7e1306abb3add014e1ed913410d91"
+    },
+    "sdk": {
+      "combined": "9e8539d6610340bd7cfbea4ca9ef1ac86d6a31f7",
+      "core80": "9e8539d6610340bd7cfbea4ca9ef1ac86d6a31f7"
+    }
+  },
+  "deliberate_resolution": "No conflict markers or manual overwrite. Checked auto-merged files against both parents with exact tree/blob and parsed-lock proofs.",
+  "dependency81_policy_trees_preserved": {
+    "Cargo.toml": {
+      "combined": "1940546f05aaee215c611058007f77fe3fbdde7e",
+      "dependency81": "1940546f05aaee215c611058007f77fe3fbdde7e"
+    },
+    "crates/oojuro-store/Cargo.toml": {
+      "combined": "a9a4646ae363b3e6c882a7213a567ac1371a9399",
+      "dependency81": "a9a4646ae363b3e6c882a7213a567ac1371a9399"
+    },
+    "dependency-policy.json": {
+      "combined": "c6b7fc5f56f0bf9262a8551e916487ab45ac8d52",
+      "dependency81": "c6b7fc5f56f0bf9262a8551e916487ab45ac8d52"
+    },
+    "scripts/dependency_audit.py": {
+      "combined": "b40ae8d929d7282af9a67eb90a564d935503e066",
+      "dependency81": "b40ae8d929d7282af9a67eb90a564d935503e066"
+    },
+    "scripts/test_dependency_audit.py": {
+      "combined": "c461ff87de5c3f42cec337958da67bf1e07f3dba",
+      "dependency81": "c461ff87de5c3f42cec337958da67bf1e07f3dba"
+    }
+  },
+  "format": 1,
+  "gate_environment": "After root CPU release only: actual task-local Rust/Cargo1.99.1, Node24.20.0/TypeScript5.9.3, warm selected Cargo target, short uniquely owned real mode0700 /var/tmp scratch, synthetic/local fixtures only. No new cold build or performance benchmark.",
+  "gate_plan": [
+    {
+      "command": "python3 scripts/dependency_audit.py --engine-only --check --output <owned-work>/combined-policy.json",
+      "name": "minimal policy"
+    },
+    {
+      "command": "python3 scripts/test_dependency_audit.py",
+      "name": "policy refusal cases"
+    },
+    {
+      "command": "cargo +1.99.1 test --offline --locked --no-default-features --lib --tests -p oojuro",
+      "name": "CLI/client/native consumers",
+      "notes": "Only selected CLI package tests, including hosted capture/project/MCP and native CLI integration. Does not repeat unchanged dependency-library unit suites/exhaustive torn tails."
+    },
+    {
+      "commands": [
+        "python3 scripts/test-connect-agent.py",
+        "python3 scripts/test-connect-project.py",
+        "python3 scripts/test-setup-agent.py"
+      ],
+      "name": "protected setup wrappers"
+    },
+    {
+      "command": "node --test sdk/typescript/test/*.test.js",
+      "name": "Node runtime"
+    },
+    {
+      "command": "npm ci --offline --prefix scripts/ci-sdk --ignore-scripts --no-audit --no-fund",
+      "name": "locked declaration checker",
+      "notes": "Existing scoped development cache; no SDK runtime dependency or publication."
+    },
+    {
+      "command": "node scripts/ci-sdk/node_modules/typescript/bin/tsc --strict --noEmit --target ES2023 --module NodeNext --moduleResolution NodeNext sdk/typescript/test/*.ts",
+      "name": "declarations"
+    },
+    {
+      "command": "python3 scripts/test-sdk-package.py",
+      "name": "offline package exports"
+    }
+  ],
+  "lock_changes_vs_core80": [
+    {
+      "after": {
+        "checksum": "373f5eceeeab7925e0c1098212f2fbc4d416adec9d35051a6ab251e824c1854a",
+        "name": "lz4_flex",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "version": "0.11.6"
+      },
+      "before": {
+        "checksum": "373f5eceeeab7925e0c1098212f2fbc4d416adec9d35051a6ab251e824c1854a",
+        "dependencies": [
+          "twox-hash"
+        ],
+        "name": "lz4_flex",
+        "source": "registry+https://github.com/rust-lang/crates.io-index",
+        "version": "0.11.6"
+      },
+      "identity": [
+        "lz4_flex",
+        "0.11.6",
+        "registry+https://github.com/rust-lang/crates.io-index"
+      ]
+    }
+  ],
+  "lock_changes_vs_dependency81": [
+    {
+      "after": {
+        "dependencies": [
+          "aho-corasick",
+          "base64 0.22.1",
+          "blake3",
+          "flate2",
+          "jiff",
+          "libc",
+          "oojuro-capture",
+          "oojuro-engine",
+          "oojuro-nine",
+          "oojuro-proxy",
+          "oojuro-trace",
+          "prost",
+          "regex",
+          "reqwest",
+          "serde",
+          "serde_json",
+          "toml"
+        ],
+        "name": "oojuro",
+        "version": "0.1.0"
+      },
+      "before": {
+        "dependencies": [
+          "aho-corasick",
+          "blake3",
+          "flate2",
+          "jiff",
+          "libc",
+          "oojuro-capture",
+          "oojuro-engine",
+          "oojuro-nine",
+          "oojuro-proxy",
+          "oojuro-trace",
+          "prost",
+          "regex",
+          "reqwest",
+          "serde",
+          "serde_json",
+          "toml"
+        ],
+        "name": "oojuro",
+        "version": "0.1.0"
+      },
+      "identity": [
+        "oojuro",
+        "0.1.0",
+        null
+      ]
+    }
+  ],
+  "lock_package_count": 690,
+  "lock_package_identity_sets_equal": true,
+  "merge": "2252394f1b7b440a59b8d9268ecf84313314052f",
+  "minimum_graph": "Source proof: root/Store/engine/rank manifests and engine/rank/Store implementation are exactly dependency81; only additional lock edge relative81 is CLI base640.22.1, outside isolated minimal roots. Current combined Cargo graph gate has NOT run.",
+  "parents": [
+    "c426a324e64e2127194cccb88f41cd655a3c4bf8",
+    "180271257297306cb97ec0fa307e661316cf1783"
+  ],
+  "repository": "oojuro/oojuro",
+  "textual_conflicts": [],
+  "visibility": "public"
+}

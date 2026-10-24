@@ -46,6 +46,10 @@ the engine.
 
 ## Stores
 
+Journals currently use directories containing multiple files. The chosen extension for a future
+standalone journal file is `.ojo`, for example `agent-memory.ojo`; the container is not implemented.
+See the [format naming decision](OJO_FORMAT.md) for current storage and remaining design work.
+
 - **Private store per writer.** Append-only, auto-compressed, holds everything that writer did. It is also
   the writer's erasure domain: dedupe and dictionaries never cross stores.
 - **Shared memory: deferred.** A store that other people's agents can also read is not built; private stores

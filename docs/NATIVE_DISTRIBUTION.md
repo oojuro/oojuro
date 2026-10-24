@@ -1,6 +1,6 @@
 # Native release licensing
 
-Scope: the `oojuro` and `oojurod` Linux x86-64 front doors, default features, locked production
+Scope: the `oojuro` and `oojuro-native` Linux x86-64 front doors, default features, locked production
 and build dependencies. Competitor benchmark engines and optional codec features are not this
 release. An Apache license field alone is not a binary notice bundle.
 

@@ -1,16 +1,6 @@
-//! Storage target: `oojuro_trace::TraceDb` (the v1 record API comes later).
-//!
-//! Mapping: writer -> one agent store (private, append-only), source
-//! transcript -> session, user inputs so far -> turn, record order -> seq.
-//! The text is the record text; the tool name rides in `tool`; every other
-//! derived field (sender, subtype, model, source position, recorded time)
-//! rides in `args` as a small JSON object:
-//!
-//! `{"src":"<file no>:<line offset>:<index in line>","rt":<recorded µs>,"from":"human",...}`
-//!
-//! `src` is what makes restarts exact: records beyond the saved state are
-//! found by id and their source positions skipped on re-read.
+//! Derived metadata shared by native capture adapters.
 use crate::Rec;
+#[cfg(test)]
 use oojuro_trace::EventIn;
 
 /// The derived-metadata JSON stored with a record.
@@ -44,7 +34,8 @@ pub fn is_external(args: &str) -> bool {
 
 /// The event for a parsed record; `indexed` comes from the recording policy
 /// (by default [`crate::kind::indexed`]).
-pub fn to_event<'a>(rec: &'a Rec, id: u64, agent: u32, parent: u64, args: &'a str, indexed: bool) -> EventIn<'a> {
+#[cfg(test)]
+pub(crate) fn to_event<'a>(rec: &'a Rec, id: u64, agent: u32, parent: u64, args: &'a str, indexed: bool) -> EventIn<'a> {
     EventIn {
         id,
         session: rec.session,

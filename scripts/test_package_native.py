@@ -54,6 +54,8 @@ if name == 'cargo' and sys.argv[1] == 'fetch' and os.environ.get('NATIVE_TEST_FE
             calls = [json.loads(line) for line in log.read_text().splitlines()]
             self.assertEqual([call[:2] for call in calls], [["cargo", "fetch"], ["cargo", "build"], ["python3", "scripts/package_native.py"]])
             self.assertIn("--locked", calls[0])
+            binary_flags = [calls[1][i + 1] for i, item in enumerate(calls[1][:-1]) if item == "--bin"]
+            self.assertEqual(binary_flags, ["oojuro", "oojuro-native"])
             self.assertEqual(calls[2][2], str(target / "x86_64-unknown-linux-gnu/release"))
             log.unlink()
             result = subprocess.run(["bash", str(script), str(root / "fresh output")], env={**env, "NATIVE_TEST_FETCH_FAIL": "1"}, capture_output=True, text=True)
@@ -78,7 +80,7 @@ if name == 'cargo' and sys.argv[1] == 'fetch' and os.environ.get('NATIVE_TEST_FE
         with tempfile.TemporaryDirectory() as directory:
             out = Path(directory)
             files = {}
-            for name in ["LICENSE", "NOTICE", "Cargo.lock", "bin/oojuro", "bin/oojurod", "licenses/nested/NOTICE"]:
+            for name in ["LICENSE", "NOTICE", "Cargo.lock", "bin/oojuro", "bin/oojuro-native", "licenses/nested/NOTICE"]:
                 dest = out / name
                 dest.parent.mkdir(parents=True, exist_ok=True)
                 dest.write_text("synthetic " + name)

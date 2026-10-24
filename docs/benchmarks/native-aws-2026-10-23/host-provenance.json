@@ -1,0 +1,93 @@
+{
+  "instance_identity": {
+    "accountId": "261627851308",
+    "architecture": "x86_64",
+    "availabilityZone": "us-east-1a",
+    "billingProducts": null,
+    "devpayProductCodes": null,
+    "marketplaceProductCodes": null,
+    "imageId": "ami-02a9cdd4e98bc3c78",
+    "instanceId": "i-07a1d44ed5e17fdf7",
+    "instanceType": "m7a.large",
+    "kernelId": null,
+    "pendingTime": "2026-10-23T12:10:36Z",
+    "privateIp": "10.95.0.176",
+    "ramdiskId": null,
+    "region": "us-east-1",
+    "version": "2017-09-30"
+  },
+  "caller_role": "arn:aws:sts::261627851308:assumed-role/oojuro-bench-native-dev-20261023a-host/i-07a1d44ed5e17fdf7",
+  "lease": {
+    "instance_id": "i-07a1d44ed5e17fdf7",
+    "stop_at": "2026-10-23T13:51:07Z",
+    "independent_stop_verified": true,
+    "actual_stopped_state_verified": true,
+    "cloudtrail": {
+      "event_id": "a1e82518-3105-48b0-8fa1-0f6318300f8e",
+      "event_time": "2026-10-23T12:08:58Z",
+      "issuer": "arn:aws:iam::261627851308:role/oojuro-bench-native-dev-20261023a-stop",
+      "instance_ids": [
+        "i-07a1d44ed5e17fdf7"
+      ],
+      "event_source": "ec2.amazonaws.com"
+    },
+    "restarted_same_instance": true,
+    "deadline_unchanged_and_enabled": true,
+    "verified_at": "2026-10-23T12:10:42.444681+00:00",
+    "workloads_started": false,
+    "bootstrap_repair_command": "2257b183-0176-48d0-9282-13aa6194c1c7",
+    "bootstrap_repair_sha256": "ae94040880530188029677d12f43de82d99e0bcc3f981580d813e5a51c24f7bb",
+    "original_cloud_init_failure_retained": true
+  },
+  "artifact": {
+    "bucket": "oojuro-terraform-state-261627851308-us-east-1",
+    "key": "product/benchmarks/oojuro-bench-native-dev-20261023a/inputs/4ac2090436d852a5e431d7b35ed20eb56fdce3fb4cce9d9062eccbbc8e290fc1.tar.gz",
+    "version": "IsN74GepB9P85eLw1JVMkdPGSyf5PI_d",
+    "sha256": "4ac2090436d852a5e431d7b35ed20eb56fdce3fb4cce9d9062eccbbc8e290fc1",
+    "bytes": 158618498,
+    "checksum_sha256_base64": "SsIJBDbYUqXkMdezXtIOtW/c4/tMzp2QYuzLvI4pD8E=",
+    "source": "27a1fb80231f38d5175ad75a99b6bed7880da4d6",
+    "infrastructure_source": "7f57024057f2c82c7ad1064539fefba3d49ed90e",
+    "server_checksum_verified": true
+  },
+  "volume_readback": {
+    "AvailabilityZoneId": "use1-az1",
+    "Iops": 3000,
+    "VolumeType": "gp3",
+    "MultiAttachEnabled": false,
+    "Throughput": 125,
+    "Operator": {
+      "Managed": false,
+      "HiddenByDefault": false
+    },
+    "VolumeId": "vol-0123b833b1b2ca64e",
+    "Size": 32,
+    "SnapshotId": "snap-09313f954876f4e7e",
+    "AvailabilityZone": "us-east-1a",
+    "State": "in-use",
+    "CreateTime": "2026-10-23T11:53:46.093000+00:00",
+    "Attachments": [
+      {
+        "DeleteOnTermination": true,
+        "EbsCardIndex": 0,
+        "VolumeId": "vol-0123b833b1b2ca64e",
+        "InstanceId": "i-07a1d44ed5e17fdf7",
+        "Device": "/dev/sda1",
+        "State": "attached",
+        "AttachTime": "2026-10-23T11:53:46+00:00"
+      }
+    ],
+    "Encrypted": true,
+    "KmsKeyId": "arn:aws:kms:us-east-1:261627851308:key/f59dd42f-8857-4efa-a85b-bed105936619"
+  },
+  "controller_source": "faa2e277b96c50dd7e9304c20269572c79acf9d2",
+  "bootstrap_repair_source": "faa2e277b96c50dd7e9304c20269572c79acf9d2",
+  "bootstrap_repair_sha256": "ae94040880530188029677d12f43de82d99e0bcc3f981580d813e5a51c24f7bb",
+  "runtime_glibc": "glibc 2.39",
+  "os_release": "PRETTY_NAME=\"Ubuntu 24.04.5 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"24.04\"\nVERSION=\"24.04.5 LTS (Noble Numbat)\"\nVERSION_CODENAME=noble\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=noble\nLOGO=ubuntu-logo\n",
+  "cpuinfo": "processor\t: 0\nvendor_id\t: AuthenticAMD\ncpu family\t: 25\nmodel\t\t: 17\nmodel name\t: AMD EPYC 9R14\nstepping\t: 1\nmicrocode\t: 0xa10115b\ncpu MHz\t\t: 3699.823\ncache size\t: 1024 KB\nphysical id\t: 0\nsiblings\t: 2\ncore id\t\t: 0\ncpu cores\t: 2\napicid\t\t: 0\ninitial apicid\t: 0\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 16\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq monitor ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy cr8_legacy abm sse4a misalignsse 3dnowprefetch topoext perfctr_core ssbd perfmon_v2 ibrs ibpb stibp ibrs_enhanced vmmcall fsgsbase bmi1 avx2 smep bmi2 invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx512_bf16 clzero xsaveerptr rdpru wbnoinvd arat avx512vbmi pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid flush_l1d\nbugs\t\t: sysret_ss_attrs spectre_v1 spectre_v2 spec_store_bypass srso ibpb_no_ret spectre_v2_user tsa\nbogomips\t: 5200.00\nTLB size\t: 3584 4K pages\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 48 bits physical, 48 bits virtual\npower management:\n\nprocessor\t: 1\nvendor_id\t: AuthenticAMD\ncpu family\t: 25\nmodel\t\t: 17\nmodel name\t: AMD EPYC 9R14\nstepping\t: 1\nmicrocode\t: 0xa10115b\ncpu MHz\t\t: 3713.722\ncache size\t: 1024 KB\nphysical id\t: 0\nsiblings\t: 2\ncore id\t\t: 1\ncpu cores\t: 2\napicid\t\t: 1\ninitial apicid\t: 1\nfpu\t\t: yes\nfpu_exception\t: yes\ncpuid level\t: 16\nwp\t\t: yes\nflags\t\t: fpu vme de pse tsc msr pae mce cx8 apic sep mtrr pge mca cmov pat pse36 clflush mmx fxsr sse sse2 ht syscall nx mmxext fxsr_opt pdpe1gb rdtscp lm constant_tsc rep_good nopl xtopology nonstop_tsc cpuid extd_apicid aperfmperf tsc_known_freq pni pclmulqdq monitor ssse3 fma cx16 pcid sse4_1 sse4_2 x2apic movbe popcnt aes xsave avx f16c rdrand hypervisor lahf_lm cmp_legacy cr8_legacy abm sse4a misalignsse 3dnowprefetch topoext perfctr_core ssbd perfmon_v2 ibrs ibpb stibp ibrs_enhanced vmmcall fsgsbase bmi1 avx2 smep bmi2 invpcid avx512f avx512dq rdseed adx smap avx512ifma clflushopt clwb avx512cd sha_ni avx512bw avx512vl xsaveopt xsavec xgetbv1 xsaves avx512_bf16 clzero xsaveerptr rdpru wbnoinvd arat avx512vbmi pku ospke avx512_vbmi2 gfni vaes vpclmulqdq avx512_vnni avx512_bitalg avx512_vpopcntdq rdpid flush_l1d\nbugs\t\t: sysret_ss_attrs spectre_v1 spectre_v2 spec_store_bypass srso ibpb_no_ret spectre_v2_user tsa\nbogomips\t: 5200.00\nTLB size\t: 3584 4K pages\nclflush size\t: 64\ncache_alignment\t: 64\naddress sizes\t: 48 bits physical, 48 bits virtual\npower management:\n\n",
+  "aws_cli": "aws-cli/2.38.2 Python/3.14.6 Linux/7.0.0-1014-aws exe/x86_64.ubuntu.24",
+  "workload_timeout_seconds": 4500,
+  "returned_content": "every returned top-k original fetched, timed and byte-exact verified; native also computes excerpts",
+  "scope": "development comparison of local engine APIs on dedicated AWS; not hosted customer/API, failure-domain equivalence, pricing, heldout or SOTA acceptance"
+}

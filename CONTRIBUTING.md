@@ -57,19 +57,49 @@ By making a contribution to this project, I certify that:
 Forgot to sign? Amend the last commit with `git commit --amend -s`, or sign a series with
 `git rebase --signoff main`.
 
-## Build and test
+## Branches and pull requests
 
-You need a recent stable Rust toolchain (the workspace uses edition 2024) and a C compiler (the storage path
-builds zstd and SQLite). Linux is the first-class platform.
+Create a topic branch from current `main`; keep unrelated changes in separate branches. An isolated worktree is useful when another change is in progress:
 
 ```bash
-cargo build --workspace
-cargo test --workspace
-cargo clippy --workspace --all-targets
+git fetch origin main
+git worktree add -b your-topic ../oojuro-your-topic origin/main
 ```
 
-The benchmark harnesses (`oojuro-bench`, `oojuro-tracebench`) build many competitor engines and fetch public
-datasets; see `docs/BENCH_HARNESS.md` and `docs/TRACEBENCH.md`. They are not needed to work on the engine.
+Open a draft pull request while the change is being developed. Include what changed, the exact tests run and any remaining limits. Use `git commit -s` for each commit. Maintainers may review their own work; a draft PR does not authorize a main-branch merge, binary/package release or deployment.
+
+## Build and test
+
+You need stable Rust (edition 2024) and a C compiler for the standard zstd codec. Linux is the first-class platform. CI pins Rust 1.99.1 on disposable GitHub-hosted Ubuntu 24.04 runners.
+
+Plain `cargo build --locked` and `cargo test --locked` select only `oojuro-engine`, `oojuro-rank` and `oojuro-store`. CLI/runtime applications still require an explicit `-p` selection. The dependency policy gate checks these libraries independently, including conditional platform dependencies; see [DEPENDENCIES.md](DEPENDENCIES.md). Store JSON-reporting tools require `--features bench-tools`; `baselines` and `codecs` enable it automatically. Supported interfaces are listed in [SUPPORTED_INTERFACES](docs/SUPPORTED_INTERFACES.md).
+
+The normal checks select runtime packages explicitly, without benchmark comparison features:
+
+```bash
+cargo test --locked --no-default-features --lib --tests -p oojuro-store
+cargo test --locked --no-default-features --lib --tests -p oojuro-engine -p oojuro-rank -- --test-threads=1
+cargo test --locked --no-default-features --lib --tests -p oojuro-capture -p oojuro
+```
+
+The native command runs authority, retrieval, allocation accounting and rank conformance tests serially, including subprocess crash/lock fixtures. The runtime command covers native capture and CLI commands plus hosted clients and stdio MCP. Use a short private real-directory `TMPDIR` with no symlink ancestors for credential guards. Storage tests preserve encryption, strict sealing, corruption and torn-tail recovery. Historical engines remain comparison/test oracles; reopening their disk formats is no longer a product release gate.
+
+The session-client composition adds synthetic capture/project setup tests, plus a separate Node 24.20.0 job for `sdk/typescript`: runtime tests, strict declaration smoke checks and local offline pack/install/export checks. Its TypeScript 5.9.3 development tool is locked under `scripts/ci-sdk`; it adds no SDK runtime dependency. Run the same checks locally:
+
+```bash
+python3 scripts/test-connect-agent.py
+python3 scripts/test-connect-project.py
+node --test sdk/typescript/test/*.test.js
+npm ci --prefix scripts/ci-sdk --ignore-scripts --no-audit --no-fund
+node scripts/ci-sdk/node_modules/typescript/bin/tsc --strict --noEmit --target ES2023 --module NodeNext --moduleResolution NodeNext sdk/typescript/test/*.ts
+python3 scripts/test-sdk-package.py
+```
+
+These are local/mock/offline checks, not a hosted service, real agent or package publication gate. The inherited `sdk/temporal` peer integration has no CI job here and is not qualified by the TypeScript client job. See the [native source boundary](docs/MAIN_NATIVE_FOUNDATION.md) and [later client composition](docs/MAIN_CLIENT_SDK_COMPOSITION.md). Add checks for a new runtime crate or SDK in the same PR that introduces it; this explicit package list does not discover new packages automatically.
+
+The benchmark harnesses (`oojuro-bench`, `oojuro-tracebench`) build competitor engines and fetch public datasets. `oojuro-store`'s `baselines` and `codecs` features are also comparison tools. They are not part of normal CI. Run them deliberately for the change being measured; see `docs/BENCH_HARNESS.md` and `docs/TRACEBENCH.md`. Do not use `--workspace` or `--all-features` as a substitute for the runtime checks above.
+
+GitHub Actions is currently disabled at repository level. This PR proposes the workflow; an owner must review and enable Actions before remote check results exist. The workflow does not configure branch protection, require another reviewer, publish packages or deploy services. Keep trusted signing and release credentials outside PR jobs; see [publication boundaries](docs/PUBLICATION.md).
 
 ## What a good change looks like
 

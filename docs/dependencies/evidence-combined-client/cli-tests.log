@@ -1,0 +1,286 @@
+   Compiling ring v0.17.14
+   Compiling zstd-sys v2.1.2+zstd.1.5.7
+   Compiling blake3 v1.8.7
+   Compiling zstd-safe v7.3.0
+   Compiling lz4_flex v0.11.6
+   Compiling rustls v0.23.46
+   Compiling zstd v0.13.3
+   Compiling rustls-webpki v0.103.15
+   Compiling oojuro-store v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-combined-client-dependency-policy/crates/oojuro-store)
+   Compiling oojuro-core v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-combined-client-dependency-policy/crates/oojuro-core)
+   Compiling oojuro-nine v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-combined-client-dependency-policy/crates/oojuro-nine)
+warning: associated function `of` is never used
+   --> crates/oojuro-nine/src/segment.rs:135:12
+    |
+126 | impl Span {
+    | --------- associated function in this implementation
+...
+135 |     pub fn of(meta: &[RowMeta]) -> Self {
+    |            ^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `terms` and `total_length` are never read
+   --> crates/oojuro-nine/src/segment.rs:277:9
+    |
+273 | pub(crate) struct DiskSegment {
+    |                   ----------- fields in this struct
+...
+277 |     pub terms: u64,
+    |         ^^^^^
+278 |     pub total_length: u64,
+    |         ^^^^^^^^^^^^
+
+warning: methods `file_bytes` and `version` are never used
+   --> crates/oojuro-nine/src/segment.rs:597:12
+    |
+467 | impl DiskSegment {
+    | ---------------- methods in this implementation
+...
+597 |     pub fn file_bytes(&self) -> u64 {
+    |            ^^^^^^^^^^
+...
+917 |     pub fn version(&self) -> u32 {
+    |            ^^^^^^^
+
+warning: method `bytes` is never used
+   --> crates/oojuro-nine/src/wal.rs:245:19
+    |
+122 | impl Journal {
+    | ------------ method in this implementation
+...
+245 |     pub(crate) fn bytes(&self) -> u64 {
+    |                   ^^^^^
+
+   Compiling tokio-rustls v0.26.6
+   Compiling oojuro-rank v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-combined-client-dependency-policy/crates/oojuro-rank)
+   Compiling oojuro-engine v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-combined-client-dependency-policy/crates/oojuro-engine)
+warning: `oojuro-nine` (lib) generated 4 warnings
+   Compiling oojuro-trace v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-combined-client-dependency-policy/crates/oojuro-trace)
+warning: associated function `new` is never used
+   --> crates/oojuro-trace/src/columns.rs:480:12
+    |
+479 | impl ColStore {
+    | ------------- associated function in this implementation
+480 |     pub fn new(seal: bool) -> Self {
+    |            ^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `oojuro-trace` (lib) generated 1 warning
+   Compiling hyper-rustls v0.27.10
+   Compiling oojuro-capture v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-combined-client-dependency-policy/crates/oojuro-capture)
+   Compiling reqwest v0.12.28
+   Compiling oojuro-proxy v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-combined-client-dependency-policy/crates/oojuro-proxy)
+   Compiling oojuro v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-combined-client-dependency-policy/crates/oojuro)
+    Finished `test` profile [unoptimized] target(s) in 21.07s
+     Running unittests src/lib.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/oojuro-fa7a29a534885b6c)
+
+running 39 tests
+test config::tests::wildcards ... ok
+test config::tests::cli_values ... ok
+test exclude::tests::paths_in_tool_calls ... ok
+test hook::tests::picks_best_first_above_min_bits_before_the_turn ... ok
+test hook::tests::echo_is_never_injected ... ok
+test hook::tests::recency_promotes_newer_records_among_near_ties ... ok
+test hook::tests::targets_follow_the_tailer ... ok
+test hook::tests::the_settings_snippet_names_every_recording_event ... ok
+test hook::tests::recency_zero_keeps_the_text_order ... ok
+test hook::tests::tool_inputs_are_kept_verbatim_and_responses_as_text ... ok
+test hook::tests::top_k_and_budget_are_respected ... ok
+test config::tests::line_edits_keep_comments ... ok
+test config::tests::proxy_table ... ok
+test otel::genai::tests::a_history_sent_with_every_call_is_stored_once ... ok
+test otel::genai::tests::anthropic_content_blocks_and_current_conventions ... ok
+test exclude::tests::globs ... ok
+test otel::genai::tests::other_spans_are_counted_and_skipped ... ok
+test otel::genai::tests::message_events_on_spans_and_as_logs ... ok
+test periods::tests::binomial_tails_in_bits ... ok
+test periods::tests::tails_count_like_a_sorted_list ... ok
+test periods::tests::repeats_are_found_among_the_last_calls ... ok
+test timearg::tests::durations_and_times ... ok
+test timearg::tests::unix_times_are_exact_and_refuse_nonfinite_overflow_or_lost_precision ... ok
+test when::tests::anchors_pick_occurrences_and_flag_ambiguity ... ok
+test journal::tests::decimal_text_order_is_string_order ... ok
+test hosted_capture::tests::local_secret_never_enters_approval_and_unsafe_connections_are_refused ... ok
+test hosted_capture::tests::provider_session_identity_ignores_resume_path_but_distinguishes_new_sessions ... ok
+test journal::tests::merging_ranked_lists_is_the_engine_order_and_keeps_continued_hits_last ... ok
+test when::tests::local_days_follow_daylight_saving_and_the_year_wraps ... ok
+test when::tests::the_prototype_cases_all_pass ... ok
+test hosted_capture::tests::legacy_serialization_keeps_new_session_fields_absent_and_api_files_are_strict ... ok
+test hosted_capture::tests::claude_redacts_known_secrets_and_never_reads_referenced_tool_result_files ... ok
+test hosted_capture::tests::spool_single_writer_scope_and_changed_source_refuse_without_advancing ... ok
+test hosted_capture::tests::local_status_reads_verified_ack_counters_while_service_holds_spool_lock ... ok
+test hosted_capture::tests::api_routes_are_exact_and_claude_sidechains_have_independent_session_identity ... ok
+test hosted_capture::tests::interrupted_delivery_reopens_same_bytes_and_does_not_import_existing_history ... ok
+test append::tests::a_store_does_not_wait_for_another_stores_cache ... ok
+test hosted_capture::tests::api_session_mapping_and_original_batch_survive_both_lost_acknowledgements ... ok
+test hosted_capture::tests::api_reuse_policy_changes_only_unseen_runs_and_retains_unknown_original_intent ... ok
+
+test result: ok. 39 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.37s
+
+     Running unittests src/bin/oojuro.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/oojuro-961a3a5afa41799a)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/oojuro-native.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/oojuro_native-d69c979d42851e3e)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests src/bin/oojurod.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/oojurod-14135dbeef6c6528)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/api.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/api-a12559ea786b2d0e)
+
+running 5 tests
+test tied_scores_rank_the_same_for_every_k_and_across_writers ... ok
+test search_windows_are_engine_views_and_lists_are_never_cut_short ... ok
+test versioning_as_of_filters_and_excerpts ... ok
+test shared_log_stores_work_the_same_and_are_detected ... ok
+test redaction_and_forget_with_byte_scan_proof ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.90s
+
+     Running tests/cli.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/cli-ce0e0059aeb8a38e)
+
+running 1 test
+test cli_round_trips ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.83s
+
+     Running tests/config.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/config-bb2ed30654675813)
+
+running 2 tests
+test precedence_union_and_sources ... ok
+test set_value_keeps_comments_and_validates ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running tests/duplicates.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/duplicates-2e569399244026d5)
+
+running 1 test
+test copies_dedupe_keep_their_own_metadata_and_erase_by_reference_count ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.39s
+
+     Running tests/hooks.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/hooks-6976bcb813af8f53)
+
+running 9 tests
+test hooks_print_shows_the_settings_entry_without_writing_anything ... ok
+test the_recorder_path_records_only_what_no_tailer_reads ... ok
+test injection_and_recording_through_the_recorder ... ok
+test a_re_recorded_injection_is_never_injected_again ... ok
+test every_event_is_recorded_once_on_the_direct_path ... ok
+test injection_is_off_by_default_and_respects_the_settings ... ok
+test what_is_still_in_the_context_window_is_never_injected ... ok
+test a_broken_journal_never_fails_the_agent ... ok
+test a_compaction_reported_by_the_hook_opens_the_window_for_untailed_sessions ... ok
+
+test result: ok. 9 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 7.00s
+
+     Running tests/hosted_cli.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/hosted_cli-aeaadee931396065)
+
+running 12 tests
+test hosted_mcp_negotiates_legacy_and_lists_only_scoped_read_tools ... ok
+test hosted_metadata_cursor_is_posted_and_no_local_journal_is_opened ... ok
+test hosted_mcp_search_preserves_request_and_reports_unknown_without_remote_error_leaks ... ok
+test hosted_mcp_reads_metadata_and_exact_originals_with_project_key_only ... ok
+test metered_search_uses_private_query_file_exact_offsets_and_reports_unknown_without_retry ... ok
+test hosted_project_setup_protects_secret_and_refuses_replacement_or_capture_credentials ... ok
+test hosted_mcp_rejects_duplicate_arguments_and_bounds_the_stdio_frame ... ok
+test local_capture_policy_is_explicit_private_and_does_not_claim_target_authority ... ok
+test hosted_partial_and_redirected_reads_return_no_content_and_redact_remote_errors ... ok
+test hosted_metadata_refuses_duplicate_fields_bad_integers_shapes_and_foreign_selections ... ok
+test hosted_exact_text_preserves_maximum_utf8_bom_nul_without_added_newline ... ok
+test hosted_connection_and_cursor_files_require_private_real_owner_files ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running tests/mcp.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/mcp-9a3cd77da18600ca)
+
+running 1 test
+test mcp_initialize_list_and_call_every_tool ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.94s
+
+     Running tests/native_cli.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/native_cli-1cc92c543d94eab5)
+
+running 7 tests
+test explicit_raw_capture_and_export_consent_precede_source_or_destination_activity ... ok
+test malformed_claude_call_has_no_ack_and_never_leaks_source_path_or_private_body ... ok
+test setup_does_not_overwrite_keys_and_invalid_key_permissions_or_scope_fail_closed ... ok
+test frozen_policy_is_fail_closed_and_partial_lines_keep_their_original_policy_identity ... ok
+test denied_thought_and_tool_results_stay_withheld_after_policy_relaxation_and_restart ... ok
+test receipt_output_bounds_and_tampered_cursors_return_no_partial_payload ... ok
+test actual_codex_claude_pi_setup_capture_reopen_search_receipt_export_and_exact_raw_restore ... ok
+
+test result: ok. 7 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.03s
+
+     Running tests/native_record_context.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/native_record_context-cbb253d7ab3ac353)
+
+running 1 test
+test explicit_native_context_measures_whole_original_and_honestly_labels_estimate ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+     Running tests/native_records_cli.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/native_records_cli-b8f23c13d1517fff)
+
+running 6 tests
+test record_consent_private_input_and_exact_intent_refusals_preserve_authority ... ok
+test record_bounded_errors_and_sealed_contents_never_leak_private_inputs_or_paths ... ok
+test record_visibility_filters_and_nonindexed_literals_match_real_engine_semantics ... ok
+test actual_record_setup_append_reopen_exact_retry_bitemporal_versions_and_provenance ... ok
+test record_cursor_carries_original_query_and_prefix_across_append_and_reopen ... ok
+test record_scoped_protected_roots_never_convert_capture_or_replace_keys ... ok
+
+test result: ok. 6 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.09s
+
+     Running tests/otel.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/otel-9e19927b8360e817)
+
+running 2 tests
+test the_receiver_runs_inside_tail_when_enabled ... ok
+test the_receiver_stores_genai_spans_once_and_refuses_bad_bodies ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.35s
+
+     Running tests/periods.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/periods-81ae00965bedfbdb)
+
+running 1 test
+test each_planted_episode_comes_first_by_its_signal ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 8.88s
+
+     Running tests/proxy.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/proxy-4fe58ffe8f855185)
+
+running 3 tests
+test proxy_inside_the_recorder_honors_settings ... ok
+test transcript_recorder_wins_inside_the_daemon ... ok
+test standalone_proxy_owns_the_journal_or_uses_the_recorder ... ok
+
+test result: ok. 3 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.75s
+
+     Running tests/recorder.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/recorder-686fc1b03290375d)
+
+running 2 tests
+test recorder_honors_record_pause_exclude_and_thinking ... ok
+test concurrent_readers_and_writers_never_block_or_tear ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 4.84s
+
+     Running tests/stores.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/stores-a3a7d4f1c0cfadad)
+
+running 4 tests
+test a_key_seen_in_one_store_is_new_in_another ... ok
+test the_cache_survives_a_reopen_and_is_per_open ... ok
+test an_append_call_saves_the_capture_state_only_when_it_is_due ... ok
+test stores_appended_from_threads_match_the_serial_run ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.75s
+

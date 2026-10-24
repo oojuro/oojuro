@@ -59,7 +59,7 @@ def verify(out):
         path = out / name
         require(path.resolve().is_relative_to(out.resolve()) and not path.is_symlink(), "unsafe package path")
         require(path.stat().st_size > 0 and sha(path) == expected, "package changed: " + name)
-    require({"LICENSE", "NOTICE", "Cargo.lock", "bin/oojuro", "bin/oojurod"} <= manifest["files"].keys(), "missing required package files")
+    require({"LICENSE", "NOTICE", "Cargo.lock", "bin/oojuro", "bin/oojuro-native"} <= manifest["files"].keys(), "missing required package files")
 
 
 def package(binary_dir, out, target):
@@ -105,7 +105,7 @@ def package(binary_dir, out, target):
         put(f, out / "licenses/rust" / f.name)
     binaries = {}
     dictionary = (ROOT / "crates/oojuro-store/dict/starter-v1.zdict").read_bytes()
-    for name in ["oojuro", "oojurod"]:
+    for name in ["oojuro", "oojuro-native"]:
         src = binary_dir / name
         put(src, out / "bin" / name)
         (out / "bin" / name).chmod(0o755)

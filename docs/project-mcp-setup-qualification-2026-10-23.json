@@ -1,0 +1,174 @@
+{
+  "base": "33d3163feafd4c63f8590c9a3c459c780c9d57b6",
+  "binary": {
+    "build_jobs": 2,
+    "compiler": "rustc1.99.0 b940084d7 2026-09-28, existing portable Zig baseline cc/c++",
+    "path": "work/project-mcp-target/debug/oojuro",
+    "profile": "dev, debug=0, dependency opt-level=2",
+    "rustflags": "-C target-cpu=x86-64",
+    "sha256": "522236a9a2bbfb1289a8be90d646fedd2154b56b4f9503c7520c60fa3f9fad18",
+    "target": "x86_64-unknown-linux-gnu"
+  },
+  "branch": "codex/project-mcp-setup",
+  "capture_binary_unchanged": {
+    "path": "work/integration-client-target/debug/oojuro",
+    "sha256": "0e093079e4a7b8f9194a48ba857bffc0f60ff7a1d26604dec2d6c51cfa17b142",
+    "source": "f6429cae9b6d4c594c39bd634ac210706aeb38b6"
+  },
+  "cli_runtime_source": "e74a740d333ebda55832d6ac992b4552fba46226",
+  "credential_contract": {
+    "capture_changes": false,
+    "capture_key_refused": true,
+    "connection_write": "create-only and fsync, refuses replacement; failure may leave partial file requiring local inspection",
+    "input": [
+      "protected file",
+      "existing OOJURO_PROJECT_READ_KEY environment",
+      "hidden terminal input refusing echo fallback"
+    ],
+    "key_environment_scrubbed_from_children": [
+      "OOJURO_PROJECT_READ_KEY",
+      "OOJURO_API_KEY"
+    ],
+    "key_in_argv_or_agent_config": false,
+    "metered_search_during_setup": false,
+    "project_read_key_only": true,
+    "project_scope": "current attached journals, complete retained prior and future sessions; membership/key checks remain on each hosted operation",
+    "stored_connection": "strict existing version1 project config, owner0600, no symlink/hardlink or writable ancestors"
+  },
+  "date": "2026-10-23",
+  "dependencies_added": 0,
+  "evidence_hashes": {
+    "hosted-joined-final.log": "d68d748a0b2f44873029a1b269cda83f2ee2c9077216b051a62137428b02f1c1",
+    "project-mcp-installed-clients.json": "e53873b6a373e589e78f36fbaeb2e346b361fa0066f4097aa25c2be51b0d01b1",
+    "project-mcp-installed-clients.py": "c0a8914f7b29276db34bba2923dcf0dd441312e06f9d9149bda9e96f906eaa8e",
+    "project-mcp-python-tests.log": "714cdd7c73136f1a15bb60f605e29a8d8d8d8900afdf8079b3ace4fb33c9ff79",
+    "project-mcp-tests.log": "bb789b7af97447e9cce71904c812b0a65b3a8ad22ced496edf63af795afdaca1"
+  },
+  "format": "oojuro-project-mcp-setup-qualification-1",
+  "not_qualified": [
+    "Real owner project access, model-driven agent tool call, real agent/systemd capture installation.",
+    "One combined capture/read setup grant or browser pairing; distinct grants retained.",
+    "Direct SDK setup, package release or production activation.",
+    "Production capacity, latency, RAM, cost, recovery or durability."
+  ],
+  "performance_gain_claim": false,
+  "pr": "https://github.com/oojuro/oojuro/pull/72",
+  "production_changed": false,
+  "publication": {
+    "draft": true,
+    "merged": false,
+    "new_mcp_branch_pushed": true,
+    "new_mcp_pull_request_created": true,
+    "owner_authorized_workflow": "Public core topic branches and draft PRs allowed; main changes require PR/CI/review; merges, releases, packages and deployment still need owner approval",
+    "package_release": false,
+    "production_activation": false,
+    "repository_visibility": "PUBLIC, confirmed gh repo view and GitHub REST repos/oojuro/oojuro"
+  },
+  "registration": {
+    "client_config_contains": [
+      "absolute executable path",
+      "protected connection path"
+    ],
+    "concurrent_config_edit_limit": "Agent CLIs lack atomic add-if-absent. Setup requires no concurrent MCP config mutation.",
+    "existing_entries_refused_including_identical": true,
+    "official_agent_cli": true,
+    "other_servers_preserved": true,
+    "recovery": "rerun same protected connection after interruption; if named server exists inspect it, do not overwrite"
+  },
+  "repository": "oojuro/oojuro",
+  "setup_source": "65938d7e5dfa59e1db594a5e3c6f2cec40c62b36",
+  "source_sha256": {
+    "crates/oojuro/src/bin/oojuro.rs": "beffd848e8b44609a6b290fab370e2eff939dde4d414781b4b74ea247247f5a8",
+    "crates/oojuro/src/hosted.rs": "e5a55a42982450f23e98c37637f9e9a5dc5f43fc585763f1ae5e7b7826259737",
+    "crates/oojuro/tests/hosted_cli.rs": "099745c33b75734b7156325d2e0fe087009bc00608be4a018024598cc0c3ede0",
+    "scripts/connect-project.py": "b6773235083fb64d3ac4034776e71158e60e5ed8fd27574a47b2f1bd07ef62de",
+    "scripts/test-connect-project.py": "e660e0b01a4ec6c3f5457771399c74dafc0de9081f47e40bc77468e43906f215"
+  },
+  "status": "public core draft; local and actual hosted PostgreSQL/HTTP/session/project/stdio MCP qualification passed; owner activation pending",
+  "verification": {
+    "capture_installer_subprocess": {
+      "command": "python3 scripts/test-connect-agent.py",
+      "failed": 0,
+      "passed": 2
+    },
+    "installed_agent_registration": {
+      "binary_sha256": "522236a9a2bbfb1289a8be90d646fedd2154b56b4f9503c7520c60fa3f9fad18",
+      "cli_runtime_source": "e74a740",
+      "clients": [
+        {
+          "actual_agent_model_tool_call": false,
+          "adapter": "codex",
+          "existing_server_refused_without_config_change": true,
+          "installed_version": "codex-cli 0.163.0",
+          "isolated_official_cli_registration": true,
+          "live_loopback_metadata_reads": 2,
+          "local_stdio_negotiated": true,
+          "real_user_config_changed": false,
+          "secrets_in_agent_config": false,
+          "unrelated_server_preserved": true
+        },
+        {
+          "actual_agent_model_tool_call": false,
+          "adapter": "claude-code",
+          "existing_server_refused_without_config_change": true,
+          "installed_version": "2.1.306 (Claude Code)",
+          "isolated_official_cli_registration": true,
+          "live_loopback_metadata_reads": 2,
+          "local_stdio_negotiated": true,
+          "real_user_config_changed": false,
+          "secrets_in_agent_config": false,
+          "unrelated_server_preserved": true
+        }
+      ],
+      "fixture": "isolated-installed-agent-cli-registration-and-real-oojuro-loopback-metadata-stdio",
+      "runtime": "e74a740",
+      "setup_script_source": "65938d7e5dfa59e1db594a5e3c6f2cec40c62b36"
+    },
+    "joined_postgresql_http_mcp": {
+      "actual_owner_or_agent_model_tool_call": false,
+      "hosted_runtime_source": "310770cde0ce646683287cc4ccb0605f5a538a44",
+      "journey": {
+        "accepted_transcript_events": 3,
+        "actual_agent_installation": false,
+        "actual_systemd": false,
+        "capture_read_denied": true,
+        "cli_sha256": "0e093079e4a7b8f9194a48ba857bffc0f60ff7a1d26604dec2d6c51cfa17b142",
+        "cli_source": "f6429cae9b6d4c594c39bd634ac210706aeb38b6",
+        "fixture": "actual-frozen-cli-http-postgresql-synthetic-source",
+        "journals": 2,
+        "mcp_setup": {
+          "actual_agent_registration": false,
+          "actual_agent_tool_call": false,
+          "capture_key_refused": true,
+          "cli_sha256": "522236a9a2bbfb1289a8be90d646fedd2154b56b4f9503c7520c60fa3f9fad18",
+          "journals": 2,
+          "prior_context_exact_get": true,
+          "protected_config_created": true,
+          "read_only_tools": 3,
+          "records": 3,
+          "stdio_initialize": true
+        },
+        "old_history_excluded": true,
+        "production": false,
+        "project_read_prior_context": true,
+        "resume_reopened_same_journal": true
+      },
+      "raw_report_sha256": "e48a9b4751ca94ed589b71af4538ca2cfbdfe7a661438d835b3ba023ec758bb1",
+      "status": "passed",
+      "suite_passed": 17,
+      "suite_scope": "PostgreSQL/TLS/HTTP session, CLI+stdio MCP, Node attachment and audit-v3/v4 composition; one frozen CLI journey includes the MCP stage"
+    },
+    "project_setup_subprocess": {
+      "command": "python3 scripts/test-connect-project.py",
+      "failed": 0,
+      "passed": 3
+    },
+    "rust": {
+      "binary_target_tests": 0,
+      "command": "cargo test --locked -p oojuro --lib --bin oojuro --test hosted_cli",
+      "failed": 0,
+      "hosted_cli_passed": 11,
+      "library_passed": 38
+    }
+  }
+}

@@ -1,28 +1,19 @@
-//! Oojuro v1 capture layer (spec: `docs/CAPTURE.md`, product model: `docs/DESIGN.md`).
-//!
-//! Attach-and-record: the agent never calls the database. `oojurod` reads the
-//! logs agents already write (Claude Code project JSONL, Codex rollout JSONL),
-//! maps every entry to a v1 record — a **writer ID** (the agent that observed
-//! or produced it), timestamps and verbatim text — infers its structure (kind,
-//! tool, sender) as derived metadata, masks secrets **before** anything is
-//! stored, and appends into the writer's private store.
-//!
-//! - [`claude`] / [`codex`]: line parsers (robust to unknown entry types).
-//! - [`redact`]: secret redaction on ingest.
-//! - [`ingest`]: one-shot import and follow-mode tailer with crash-safe
-//!   per-file offsets (see [`state`]).
-//! - [`sink`]: the storage target (today `oojuro_trace::TraceDb`, one agent
-//!   store per writer).
-//! - [`marker`]: records that come from Oojuro itself (memory lookups,
-//!   injected context): stored, never indexed.
+//! Native log capture adapters, parsing, redaction and recording policy.
+//! Historical ingestion exists only as an internal test oracle.
 pub mod claude;
 pub mod codex;
-pub mod ingest;
+#[cfg(test)]
+mod reference_ingest;
+pub mod policy;
+#[cfg(target_os = "linux")]
+pub mod local;
 pub mod marker;
 pub mod redact;
 pub mod sink;
-pub mod state;
-pub mod stats;
+#[cfg(test)]
+mod state;
+#[cfg(test)]
+mod stats;
 pub mod time;
 
 pub type Error = Box<dyn std::error::Error + Send + Sync>;
@@ -224,7 +215,7 @@ pub struct Rec {
 
 /// A record that comes from no log file (the model API proxy,
 /// `docs/CAPTURE.md` "Model API proxy"), appended with
-/// [`ingest::Capture::append_direct`]. Text is verbatim; the store owner
+/// native capture adapters. Text is verbatim; the store owner
 /// redacts it (again) before storing. Derived metadata rides in `meta`
 /// (JSON values: model, usage, sub, partial, ...).
 #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -275,7 +266,7 @@ impl Rec {
     }
 }
 
-/// Counters a parser updates (merged into [`stats::Stats`]).
+/// Counters a parser updates.
 #[derive(Default, Debug, Clone, serde::Serialize)]
 pub struct ParseCounts {
     /// Entry types seen (`format:type[/subtype]`).
