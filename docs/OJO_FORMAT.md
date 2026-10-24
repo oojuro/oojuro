@@ -1,7 +1,7 @@
 # The `.ojo` file extension
 
 **Decision:** `.ojo` is the canonical extension for a future standalone Oojuro
-journal file. Use lowercase, for example `agent-memory.ojo`. The product and
+database file. Use lowercase, for example `agent-memory.ojo`. The product and
 command names remain Oojuro and `oojuro`.
 
 **Status:** the name is adopted; the standalone container is not implemented.
@@ -22,7 +22,7 @@ Oojuro currently opens a journal directory containing several files. The
 | `LOCK` | Coordinates ownership of the directory |
 
 These files are components of a store. Renaming one to `.ojo` does not make it a
-complete standalone journal. Existing directory paths and component extensions
+complete standalone database. Existing directory paths and component extensions
 continue to work as before.
 
 The [CLI's JSONL export](FRONT_DOOR.md#surface) remains JSONL and should use
@@ -32,7 +32,7 @@ defined Oojuro container. The `~/.oojuro/` application directory and
 
 ## Standalone container work
 
-A future implementation will use `.ojo` for its user-facing journal files.
+A future implementation will use `.ojo` for its user-facing database files.
 Before adding commands that produce or consume those files, its format and
 reader/writer contract must define:
 
@@ -40,7 +40,7 @@ reader/writer contract must define:
   writes, including any required companion files.
 - A recognizable header, an explicit format version, and rejection of
   unsupported versions independently of the filename.
-- The contents required to reopen a complete journal, including dictionaries,
+- The contents required to reopen a complete database, including dictionaries,
   metadata, and the treatment of rebuildable indexes.
 - Integrity checks, resource bounds, and behavior on truncated or corrupt input.
 - Snapshot consistency and safe publication of a completed file; locking and
