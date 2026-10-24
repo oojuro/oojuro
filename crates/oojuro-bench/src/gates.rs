@@ -186,10 +186,15 @@ fn crash(runs: &mut Runs, ctx: &Ctx, spec: &ArmSpec, run: usize) -> Result<()> {
     std::fs::create_dir_all(&dir)?;
     let store = dir.join("store");
     let mut acked: Vec<Doc> = Vec::new();
+    let mut generated = BTreeMap::new();
+    let mut previously_recovered: BTreeMap<String, Doc> = BTreeMap::new();
     let mut inflight_report = Vec::new();
     let mut failures = Vec::new();
     for (trial, delay_ms) in [0u64, 5, 30].into_iter().enumerate() {
         let mut arm = reopen(ctx, spec, &store, &dir.join(format!("trial{trial}.stderr")))?;
+        // PostgreSQL promises one transaction per batch. Other arms may durably
+        // commit smaller chunks before their outer batch acknowledgement.
+        let atomic_batch_required = arm.info()?.name == "postgres";
         for b in 0..10 {
             let batch: Vec<Doc> = (0..20)
                 .map(|i| {
@@ -198,6 +203,7 @@ fn crash(runs: &mut Runs, ctx: &Ctx, spec: &ArmSpec, run: usize) -> Result<()> {
                 })
                 .collect();
             arm.append_batch(batch.clone())?;
+            generated.extend(batch.iter().cloned().map(|d| (d.id.clone(), d)));
             acked.extend(batch);
         }
         let inflight: Vec<Doc> = (0..2000)
@@ -206,6 +212,7 @@ fn crash(runs: &mut Runs, ctx: &Ctx, spec: &ArmSpec, run: usize) -> Result<()> {
                 doc(&format!("crash-{trial}-inflight-{i}"), "", &format!("inflight{trial}x{i} {}", "pad ".repeat(50)), t, t)
             })
             .collect();
+        generated.extend(inflight.iter().cloned().map(|d| (d.id.clone(), d)));
         let ArmHandle::Process(p) = &mut arm else { return Err("crash gate needs a process arm".into()) };
         p.send_only(&Request::AppendBatch { docs: inflight.clone() })?;
         if delay_ms > 0 {
@@ -214,24 +221,58 @@ fn crash(runs: &mut Runs, ctx: &Ctx, spec: &ArmSpec, run: usize) -> Result<()> {
         p.kill()?;
         let mut arm = reopen(ctx, spec, &store, &dir.join(format!("trial{trial}-recover.stderr")))?;
         let mut changed = 0;
+        let mut acked_reply_cardinality_invalid = false;
         for docs in acked.chunks(500) {
             let got = arm.get(docs.iter().map(|d| d.id.clone()).collect())?;
+            acked_reply_cardinality_invalid |= got.len() != docs.len();
             changed += got.iter().zip(docs).filter(|(g, d)| g.as_deref() != Some(d.text.as_str())).count();
         }
-        let present = arm
-            .get(inflight.iter().map(|d| d.id.clone()).collect())?
+        let inflight_got = arm.get(inflight.iter().map(|d| d.id.clone()).collect())?;
+        let inflight_reply_cardinality_invalid = inflight_got.len() != inflight.len();
+        let present = inflight_got
             .iter()
             .zip(&inflight)
             .filter(|(g, d)| g.as_deref() == Some(d.text.as_str()))
             .count();
-        inflight_report.push(json!({"delay_ms": delay_ms, "inflight_present": present, "of": inflight.len()}));
+        // Text-only reads cannot prove the original keys, clocks or metadata.
+        let recovered = arm.get_range(i64::MIN, i64::MAX, 10_000)?;
+        let recovered_len = recovered.len();
+        let recovered: BTreeMap<_, _> = recovered.into_iter().map(|d| (d.id.clone(), d)).collect();
+        let inflight_get_matches_range = inflight_got.iter().zip(&inflight)
+            .all(|(got, d)| got.as_deref() == recovered.get(&d.id).map(|row| row.text.as_str()));
+        let full_acked_changed = acked.iter().filter(|d| recovered.get(&d.id) != Some(*d)).count();
+        let inflight_rows = inflight.iter().filter(|d| recovered.contains_key(&d.id)).count();
+        let inflight_changed = inflight.iter().filter(|d| recovered.get(&d.id).is_some_and(|got| got != *d)).count();
+        let atomic = (inflight_rows == 0 || inflight_rows == inflight.len())
+            && present == inflight_rows && inflight_changed == 0;
+        let complete_unique = recovered_len < 10_000 && recovered.len() == recovered_len;
+        let all_returned_originals = recovered.iter().all(|(id, got)| generated.get(id) == Some(got));
+        let previous_survive = previously_recovered.iter().all(|(id, d)| recovered.get(id) == Some(d));
+        inflight_report.push(json!({"delay_ms": delay_ms, "inflight_present": present, "of": inflight.len(),
+            "inflight_rows": inflight_rows, "inflight_changed": inflight_changed, "atomic": atomic,
+            "atomic_batch_required": atomic_batch_required, "full_acked_changed": full_acked_changed,
+            "complete_unique": complete_unique, "all_returned_originals": all_returned_originals,
+            "previous_survive": previous_survive, "acked_reply_cardinality_invalid": acked_reply_cardinality_invalid,
+            "inflight_reply_cardinality_invalid": inflight_reply_cardinality_invalid,
+            "inflight_get_matches_range": inflight_get_matches_range}));
         let last = acked.last().cloned().ok_or("no acked docs")?;
         let token = last.text.split(' ').next().unwrap_or_default().to_string();
         let (hits, _) = arm.search(query(&token, 1_000_000, 1_000_000, 5))?;
         let searchable = hits.iter().any(|h| h.id == last.id);
-        if changed > 0 || !searchable {
-            failures.push(json!({"trial": trial, "acked_missing_or_changed": changed, "last_acked_searchable": searchable}));
+        if changed > 0 || full_acked_changed > 0 || (atomic_batch_required && !atomic)
+            || !complete_unique || !all_returned_originals || !previous_survive
+            || !inflight_get_matches_range || acked_reply_cardinality_invalid
+            || inflight_reply_cardinality_invalid || !searchable {
+            failures.push(json!({"trial": trial, "acked_missing_or_changed": changed,
+                "full_acked_changed": full_acked_changed, "atomic": atomic,
+                "atomic_batch_required": atomic_batch_required, "complete_unique": complete_unique,
+                "all_returned_originals": all_returned_originals, "previous_survive": previous_survive,
+                "acked_reply_cardinality_invalid": acked_reply_cardinality_invalid,
+                "inflight_reply_cardinality_invalid": inflight_reply_cardinality_invalid,
+                "inflight_get_matches_range": inflight_get_matches_range,
+                "last_acked_searchable": searchable}));
         }
+        previously_recovered = recovered;
         arm.close()?;
         arm.finish()?;
     }
@@ -239,7 +280,7 @@ fn crash(runs: &mut Runs, ctx: &Ctx, spec: &ArmSpec, run: usize) -> Result<()> {
         "crash_recovery",
         failures.is_empty(),
         json!({"trials": 3, "acked_records": acked.len(), "failures": failures, "inflight": inflight_report,
-               "note": "inflight_present strictly between 0 and the batch size means the batch was not atomic"}),
+               "note": "all acknowledged and previously recovered full Docs survive; PostgreSQL additionally promises all-or-nothing for each batch"}),
     );
     if !ctx.keep {
         let _ = std::fs::remove_dir_all(&dir);
