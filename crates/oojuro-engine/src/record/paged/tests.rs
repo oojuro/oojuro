@@ -805,3 +805,327 @@ fn future_rows_change_literal_df_but_old_snapshot_keeps_native_bits_and_identifi
         );
     }
 }
+
+fn disk_policy(records: usize) -> DiskLimits {
+    DiskLimits::new(records, 1 << 30, 1 << 30, 10000).unwrap()
+}
+fn disk_writer(f: &Fixture, records: usize) -> Writer {
+    Writer::open_clock(
+        &f.root.join("authority"),
+        &KEY,
+        identity(),
+        &f.root.join("directory"),
+        None,
+        disk_policy(records),
+        Arc::new(|| Ok(100)),
+    )
+    .unwrap()
+}
+#[test]
+fn disk_writer_exact_retry_current_index_old_snapshot_and_native_rank_match() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 50);
+    assert_eq!(writer.reader().unwrap().locator_count(), 0);
+    let mut index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    let first = vec![
+        row("alpha old foo_bar", Some("memory"), 10),
+        row("alpha original duplicate", None, 11),
+    ];
+    let ack = writer.append_indexed(&mut index, "first", &first).unwrap();
+    let old = writer
+        .reader()
+        .unwrap()
+        .view(scope(), AsOf::default())
+        .unwrap();
+    let old_hits = signature(
+        index
+            .search_view(
+                writer.reader().unwrap(),
+                &old,
+                &query("alpha", AsOf::default()),
+            )
+            .unwrap(),
+    );
+    let second = vec![
+        row("alpha newest", Some("memory"), 20),
+        row("alpha backdated", Some("memory"), 5),
+    ];
+    let next = writer.append("second", &second).unwrap();
+    assert!(
+        index
+            .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+            .is_err()
+    );
+    index.refresh(writer.reader().unwrap()).unwrap();
+    assert_eq!(
+        writer.append_indexed(&mut index, "first", &first).unwrap(),
+        ack
+    );
+    assert_eq!(writer.reader().unwrap().watermark().unwrap().records, 4);
+    let mut changed = first.clone();
+    changed[0].text.push('x');
+    assert_eq!(writer.append("first", &changed), Err(Error::Conflict));
+    assert_eq!(
+        signature(
+            index
+                .search_view(
+                    writer.reader().unwrap(),
+                    &old,
+                    &query("alpha", AsOf::default())
+                )
+                .unwrap()
+        ),
+        old_hits
+    );
+    let snapshot = writer
+        .reader()
+        .unwrap()
+        .view(scope(), AsOf::default())
+        .unwrap();
+    assert_eq!(
+        writer
+            .reader()
+            .unwrap()
+            .get_key(&snapshot, "memory", 10000)
+            .unwrap()
+            .unwrap()
+            .id,
+        next.ids[0]
+    );
+    let actual: Vec<_> = ["alpha", "foo_bar", "\"alpha original\"", "key:memory", ""]
+        .iter()
+        .map(|text| {
+            signature(
+                index
+                    .search(writer.reader().unwrap(), &query(text, AsOf::default()))
+                    .unwrap(),
+            )
+        })
+        .collect();
+    let originals = writer
+        .reader()
+        .unwrap()
+        .read_ordinals(
+            &snapshot,
+            0,
+            Limits {
+                entries: 1000,
+                bytes: 1 << 20,
+            },
+        )
+        .unwrap();
+    assert_eq!(originals.len(), 4);
+    assert_eq!(originals[0].text, first[0].text);
+    assert!(
+        writer
+            .reader()
+            .unwrap()
+            .read_ordinals(
+                &snapshot,
+                0,
+                Limits {
+                    entries: 1000,
+                    bytes: 8
+                }
+            )
+            .is_err()
+    );
+    let past = writer
+        .reader()
+        .unwrap()
+        .view(
+            scope(),
+            AsOf {
+                known_at: ack.recorded_at[1],
+                ..AsOf::default()
+            },
+        )
+        .unwrap();
+    assert_eq!(
+        writer
+            .reader()
+            .unwrap()
+            .read_ordinals(
+                &past,
+                0,
+                Limits {
+                    entries: 1000,
+                    bytes: 1 << 20
+                }
+            )
+            .unwrap()
+            .len(),
+        2
+    );
+    let minimum = writer.reader().unwrap().watermark().unwrap();
+    drop(index);
+    drop(writer);
+    // Small new-path stores remain byte-format compatible with the bounded API.
+    let log = f.log();
+    let native = super::super::Index::rebuild(&log).unwrap();
+    for (at, text) in ["alpha", "foo_bar", "\"alpha original\"", "key:memory", ""]
+        .iter()
+        .enumerate()
+    {
+        assert_eq!(
+            signature(native.search(&log, &query(text, AsOf::default())).unwrap()),
+            actual[at]
+        );
+    }
+    drop(native);
+    drop(log);
+    let writer = Writer::open_disk(
+        &f.root.join("authority"),
+        &KEY,
+        identity(),
+        &f.root.join("directory"),
+        Some(&minimum),
+        disk_policy(50),
+    )
+    .unwrap();
+    assert_eq!(
+        writer.reader().unwrap().receipt("first").unwrap(),
+        Some(ack)
+    );
+    let index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    assert_eq!(index.opened(), Opened::Loaded);
+    assert_eq!(
+        signature(
+            index
+                .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+                .unwrap()
+        ),
+        actual[0]
+    );
+    std::thread::scope(|threads| {
+        for _ in 0..10 {
+            let reader = writer.reader().unwrap();
+            let snapshot = &snapshot;
+            threads.spawn(move || {
+                assert_eq!(
+                    reader.get_id(snapshot, 10, 10000).unwrap().unwrap().text,
+                    "alpha original duplicate"
+                );
+            });
+        }
+    });
+}
+#[test]
+fn disk_writer_admission_does_not_expand_legacy_guards_and_retries_survive_full_store() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 2);
+    let inputs = vec![
+        row("bounded original", None, 1),
+        row("bounded second", None, 2),
+    ];
+    assert_eq!(
+        writer.append("too many", &[inputs.clone(), inputs.clone()].concat()),
+        Err(Error::Bounds)
+    );
+    let ack = writer.append("full", &inputs).unwrap();
+    assert_eq!(writer.append("full", &inputs).unwrap(), ack);
+    assert_eq!(writer.append("overflow", &inputs[..1]), Err(Error::Bounds));
+    assert_eq!(MAX_RECORDS, 100000);
+    assert_eq!(MAX_STATE_BYTES, 128 << 20);
+    drop(writer);
+    assert!(
+        Reader::open_disk_with_limits(
+            &f.root.join("authority"),
+            &KEY,
+            identity(),
+            &f.root.join("directory"),
+            None,
+            disk_policy(1)
+        )
+        .is_err()
+    );
+    let mut writer = disk_writer(&f, 2);
+    assert_eq!(writer.append("full", &inputs).unwrap(), ack);
+}
+#[test]
+fn disk_writer_unknown_ack_and_failed_search_publication_recover_exact_receipts() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 100);
+    writer.hook = Some(Box::new(|phase| {
+        if matches!(phase, authority::Phase::AfterStore) {
+            panic!("synthetic lost ACK");
+        }
+    }));
+    let original = vec![row("alpha exact after lost acknowledgement", None, 1)];
+    assert!(
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(
+            || writer.append("uncertain", &original)
+        ))
+        .is_err()
+    );
+    assert!(writer.reader().is_err());
+    drop(writer);
+    let mut writer = disk_writer(&f, 100);
+    let ack = writer
+        .reader()
+        .unwrap()
+        .receipt("uncertain")
+        .unwrap()
+        .unwrap();
+    assert_eq!(writer.append("uncertain", &original).unwrap(), ack);
+    let cache = f.root.join("disk-index");
+    let mut index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    fs::remove_file(cache.join("DISK_RECORD_INDEX")).unwrap();
+    fs::create_dir(cache.join("DISK_RECORD_INDEX")).unwrap();
+    let input = vec![row(
+        "alpha committed despite disposable cache failure",
+        None,
+        2,
+    )];
+    assert!(
+        writer
+            .append_indexed(&mut index, "cache failure", &input)
+            .is_err()
+    );
+    assert!(
+        index
+            .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+            .is_err()
+    );
+    let committed = writer
+        .reader()
+        .unwrap()
+        .receipt("cache failure")
+        .unwrap()
+        .unwrap();
+    fs::remove_dir(cache.join("DISK_RECORD_INDEX")).unwrap();
+    drop(index);
+    let mut index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    assert_eq!(
+        writer
+            .append_indexed(&mut index, "cache failure", &input)
+            .unwrap(),
+        committed
+    );
+    assert_eq!(
+        index
+            .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+            .unwrap()
+            .hits
+            .len(),
+        2
+    );
+    drop(index);
+    drop(writer);
+    fs::remove_file(cache.join("DISK_RECORD_INDEX")).unwrap();
+    fs::remove_file(f.root.join("directory/DIRECTORY")).unwrap();
+    let writer = disk_writer(&f, 100);
+    let index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    assert_eq!(
+        writer.reader().unwrap().receipt("cache failure").unwrap(),
+        Some(committed)
+    );
+    assert_eq!(
+        index
+            .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+            .unwrap()
+            .hits
+            .len(),
+        2
+    );
+}
