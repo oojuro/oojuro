@@ -8,7 +8,7 @@ not in that main snapshot. This transport proposal is stacked on that candidate;
 neither its existence nor a local test pass merges or releases its parents.
 
 The consolidation candidate composes those heads with the `.ojo` naming decision and
-[retires legacy front doors](SUPPORTED_INTERFACES.md). It targets main directly.
+[retires legacy front doors](SUPPORTED_INTERFACES.md). It targets main directly in [PR 96](https://github.com/oojuro/oojuro/pull/96).
 Historical compatibility is no longer a release requirement; current-format
 corruption, interruption, retry and recovery guarantees remain required.
 

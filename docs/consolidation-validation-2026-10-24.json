@@ -27,7 +27,7 @@
     },
     {
       "file": "core-prune-package-tests.log",
-      "sha256": "b5609b5f85710b220dfce7c07d98bc3db318ec399aa727cd1040900ba9588a45"
+      "sha256": "40c0e3d6a85f496192c4c04ccff7a8f0ba590147b75b17ba0ddc84e9a29ac634"
     }
   ],
   "limits": "Local synthetic checks. No remote Actions run, main merge, deployment or package publication. Inherited engine/storage checks from composed candidate are recorded separately; they were not rerun for this front-door retirement."
