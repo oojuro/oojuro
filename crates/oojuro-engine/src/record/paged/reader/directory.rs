@@ -97,11 +97,17 @@ impl Reader {
         reader.disk = Some(disk);
         Ok(reader)
     }
-    pub(super) fn publish_batch(&mut self, batch: &Batch, digest: [u8; 32]) -> Result<()> {
-        self.tip = next_ref(&self.tip, batch, digest)?;
-        self.sequence = batch.watermark.sequence;
+    pub(super) fn publish_group(&mut self, batches: &[(Batch, [u8; 32])]) -> Result<()> {
+        let previous = self.tip.clone();
+        for (batch, digest) in batches {
+            if self.sequence.checked_add(1) != Some(batch.watermark.sequence) {
+                return Err(Error::Authority);
+            }
+            self.tip = next_ref(&self.tip, batch, *digest)?;
+            self.sequence = batch.watermark.sequence;
+        }
         let mut disk = self.disk.take().ok_or(Error::Invalid)?;
-        let result = disk.advance(self, batch);
+        let result = disk.advance(self, &previous, batches);
         if result.is_err() {
             disk.failed = true;
         }
@@ -411,13 +417,21 @@ impl Directory {
             failed: false,
         })
     }
-    fn advance(&mut self, reader: &Reader, batch: &Batch) -> Result<()> {
+    fn advance(
+        &mut self,
+        reader: &Reader,
+        previous: &Ref,
+        batches: &[(Batch, [u8; 32])],
+    ) -> Result<()> {
         if self.failed {
             return Err(Error::Unavailable);
         }
-        let (old, records, _) = reader.parse_binding(&self.roots.binding)?;
-        if old.checked_add(1) != Some(reader.sequence)
-            || records.checked_add(batch.assigned.len() as u64) != Some(reader.tip.records)
+        let (old, records, digest) = reader.parse_binding(&self.roots.binding)?;
+        if batches.is_empty()
+            || batches.len() > 1000
+            || records != previous.records
+            || digest != previous.digest
+            || old.checked_add(batches.len() as u64) != Some(reader.sequence)
         {
             return Err(Error::Authority);
         }
@@ -437,23 +451,40 @@ impl Directory {
             reader.tree_context(&self.path, Purpose::KeyVersion),
             self.roots.key_version.clone(),
         )?;
-        prefix.insert(Entry::new(
-            reader.sequence.to_be_bytes().to_vec(),
-            json(&reader.tip, 32 << 10)?,
-        )?)?;
-        request.insert(Entry::new(
-            batch.request.to_vec(),
-            reader.sequence.to_be_bytes().to_vec(),
-        )?)?;
+        let mut prefixes = Vec::new();
+        let mut requests = Vec::new();
         let mut rows = Vec::new();
         let mut versions = Vec::new();
-        for (offset, row) in batch.assigned.iter().enumerate() {
-            let value = slot(reader.sequence, offset)?;
-            rows.push(Entry::new(row.id.to_be_bytes().to_vec(), value.clone())?);
-            if let Some(key) = key_entry(reader, row)? {
-                versions.push(Entry::new(key, value)?);
+        let mut previous = previous.clone();
+        for (at, (batch, digest)) in batches.iter().enumerate() {
+            let sequence = old.checked_add(at as u64 + 1).ok_or(Error::Bounds)?;
+            let next = next_ref(&previous, batch, *digest)?;
+            reader.check(&batch.watermark, sequence, next.records, next.digest)?;
+            prefixes.push(Entry::new(
+                sequence.to_be_bytes().to_vec(),
+                json(&next, 32 << 10)?,
+            )?);
+            requests.push(Entry::new(
+                batch.request.to_vec(),
+                sequence.to_be_bytes().to_vec(),
+            )?);
+            for (offset, row) in batch.assigned.iter().enumerate() {
+                let value = slot(sequence, offset)?;
+                rows.push(Entry::new(row.id.to_be_bytes().to_vec(), value.clone())?);
+                if rows.len() > 1000 {
+                    return Err(Error::Bounds);
+                }
+                if let Some(key) = key_entry(reader, row)? {
+                    versions.push(Entry::new(key, value)?);
+                }
             }
+            previous = next;
         }
+        if previous != reader.tip {
+            return Err(Error::Authority);
+        }
+        prefix.insert_batch(prefixes)?;
+        request.insert_batch(requests)?;
         record.insert_batch(rows)?;
         if !versions.is_empty() {
             keys.insert_batch(versions)?;

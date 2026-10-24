@@ -1153,13 +1153,33 @@ fn disk_writer_crash_child() {
             }
         }));
     }
-    writer
-        .append_indexed(
-            &mut index,
-            "child",
-            &[row("alpha child exact", Some("memory"), 20)],
-        )
-        .unwrap();
+    if std::env::var_os("OOJURO_WRITER_GROUP").is_some() {
+        let first = [row("alpha child exact", Some("memory"), 20)];
+        let second = [row("alpha grouped independent", None, 21)];
+        writer
+            .append_group_indexed(
+                &mut index,
+                &[
+                    Append {
+                        request: "child",
+                        inputs: &first,
+                    },
+                    Append {
+                        request: "child-2",
+                        inputs: &second,
+                    },
+                ],
+            )
+            .unwrap();
+    } else {
+        writer
+            .append_indexed(
+                &mut index,
+                "child",
+                &[row("alpha child exact", Some("memory"), 20)],
+            )
+            .unwrap();
+    }
     panic!("writer boundary not reached");
 }
 fn writer_boundary() {
@@ -1172,6 +1192,13 @@ fn writer_boundary() {
 }
 #[test]
 fn disk_writer_sigkill_actual_append_directory_and_index_publication_recovers_receipts() {
+    writer_crash_matrix(false);
+}
+#[test]
+fn disk_group_sigkill_independent_receipts_and_searchable_ack_boundaries() {
+    writer_crash_matrix(true);
+}
+fn writer_crash_matrix(grouped: bool) {
     use std::{
         io::{BufRead, BufReader},
         process::{Command, Stdio},
@@ -1240,6 +1267,9 @@ fn disk_writer_sigkill_actual_append_directory_and_index_publication_recovers_re
         if let Some(phase) = phase.strip_prefix("directory:") {
             command.env("OOJURO_DIRECTORY_CRASH_PHASE", phase);
         }
+        if grouped {
+            command.env("OOJURO_WRITER_GROUP", "1");
+        }
         let mut child = command.spawn().unwrap();
         let output = child.stdout.take().unwrap();
         let (tx, rx) = mpsc::channel();
@@ -1261,6 +1291,32 @@ fn disk_writer_sigkill_actual_append_directory_and_index_publication_recovers_re
         let mut writer = disk_writer(&f, 1000);
         let receipt = writer.reader().unwrap().receipt("child").unwrap().unwrap();
         assert_eq!(receipt.ids, vec![11]);
+        if grouped {
+            let second = writer
+                .reader()
+                .unwrap()
+                .receipt("child-2")
+                .unwrap()
+                .unwrap();
+            assert_eq!(second.ids, vec![12]);
+            let first_input = [row("alpha child exact", Some("memory"), 20)];
+            let second_input = [row("alpha grouped independent", None, 21)];
+            assert_eq!(
+                writer
+                    .append_group(&[
+                        Append {
+                            request: "child-2",
+                            inputs: &second_input
+                        },
+                        Append {
+                            request: "child",
+                            inputs: &first_input
+                        }
+                    ])
+                    .unwrap(),
+                vec![second, receipt.clone()]
+            );
+        }
         let mut index =
             Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
         assert_eq!(
@@ -1292,7 +1348,7 @@ fn disk_writer_sigkill_actual_append_directory_and_index_publication_recovers_re
                 .unwrap()
                 .hits
                 .len(),
-            2
+            if grouped { 3 } else { 2 }
         );
         let snapshot = writer
             .reader()
@@ -1574,4 +1630,177 @@ fn disk_visibility_metadata_matches_native_clocks_filters_versions_and_literal_b
         ),
         expected[0]
     );
+}
+
+#[test]
+fn disk_group_preserves_independent_retries_clocks_order_conflicts_and_legacy_format() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 1000);
+    let seed = [row("alpha seed", None, 0)];
+    let seed_receipt = writer.append("seed", &seed).unwrap();
+    let first = [
+        row("alpha first version", Some("memory"), 10),
+        row("alpha independent", None, 11),
+    ];
+    let second = [row("alpha second version", Some("memory"), 20)];
+    let mut index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    let receipts = writer
+        .append_group_indexed(
+            &mut index,
+            &[
+                Append {
+                    request: "first",
+                    inputs: &first,
+                },
+                Append {
+                    request: "second",
+                    inputs: &second,
+                },
+                Append {
+                    request: "first",
+                    inputs: &first,
+                },
+                Append {
+                    request: "seed",
+                    inputs: &seed,
+                },
+            ],
+        )
+        .unwrap();
+    assert_eq!(receipts[0], receipts[2]);
+    assert_eq!(receipts[3], seed_receipt);
+    assert_eq!(receipts[0].ids, vec![10, 11]);
+    assert_eq!(receipts[1].ids, vec![12]);
+    assert_eq!(receipts[0].recorded_at, vec![101, 102]);
+    assert_eq!(receipts[1].recorded_at, vec![103]);
+    assert_eq!(receipts[0].watermark.sequence, 2);
+    assert_eq!(receipts[1].watermark.sequence, 3);
+    let before = writer.reader().unwrap().watermark().unwrap();
+    let conflict = [row("different input", Some("memory"), 10)];
+    assert_eq!(
+        writer.append_group(&[
+            Append {
+                request: "fresh-before-conflict",
+                inputs: &seed
+            },
+            Append {
+                request: "first",
+                inputs: &conflict
+            }
+        ]),
+        Err(Error::Conflict)
+    );
+    assert!(
+        writer
+            .reader()
+            .unwrap()
+            .receipt("fresh-before-conflict")
+            .unwrap()
+            .is_none()
+    );
+    assert_eq!(
+        writer.reader().unwrap().watermark().unwrap().records,
+        before.records
+    );
+    assert_eq!(writer.append_group(&[]), Err(Error::Bounds));
+    assert_eq!(
+        writer.append_group(&vec![
+            Append {
+                request: "repeated",
+                inputs: &seed
+            };
+            1001
+        ]),
+        Err(Error::Bounds)
+    );
+    let mut invalid = seed.clone();
+    invalid[0].agent_id.clear();
+    assert_eq!(
+        writer.append_group(&[
+            Append {
+                request: "fresh-before-invalid",
+                inputs: &seed
+            },
+            Append {
+                request: "invalid",
+                inputs: &invalid
+            }
+        ]),
+        Err(Error::Bounds)
+    );
+    assert!(
+        writer
+            .reader()
+            .unwrap()
+            .receipt("fresh-before-invalid")
+            .unwrap()
+            .is_none()
+    );
+    let mut q = query(
+        "alpha",
+        AsOf {
+            known_at: 102,
+            ..AsOf::default()
+        },
+    );
+    let past = signature(index.search(writer.reader().unwrap(), &q).unwrap());
+    q.as_of = AsOf::default();
+    let current = signature(index.search(writer.reader().unwrap(), &q).unwrap());
+    assert_eq!(past.len(), 3);
+    assert_eq!(current.len(), 3);
+    drop(index);
+    drop(writer);
+    let mut log = f.log();
+    let native = super::super::Index::rebuild(&log).unwrap();
+    q.as_of = AsOf {
+        known_at: 102,
+        ..AsOf::default()
+    };
+    assert_eq!(signature(native.search(&log, &q).unwrap()), past);
+    q.as_of = AsOf::default();
+    assert_eq!(signature(native.search(&log, &q).unwrap()), current);
+    drop(native);
+    assert_eq!(log.append("first", &first).unwrap(), receipts[0]);
+    assert_eq!(log.append("second", &second).unwrap(), receipts[1]);
+    drop(log);
+    let mut writer = disk_writer(&f, 1000);
+    assert_eq!(
+        writer
+            .append_group(&[
+                Append {
+                    request: "second",
+                    inputs: &second
+                },
+                Append {
+                    request: "first",
+                    inputs: &first
+                }
+            ])
+            .unwrap(),
+        vec![receipts[1].clone(), receipts[0].clone()]
+    );
+}
+#[test]
+fn disk_group_encoded_capacity_failure_does_not_publish_a_prefix() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 1000);
+    // Each individual input fits, but escaping makes the two fresh batches
+    // exceed the shared 32 MiB group bound. Nothing may commit first.
+    let first = [row(&"\\".repeat(9 << 20), None, 1)];
+    let second = [row(&"\\".repeat(9 << 20), None, 2)];
+    assert_eq!(
+        writer.append_group(&[
+            Append {
+                request: "first",
+                inputs: &first
+            },
+            Append {
+                request: "second",
+                inputs: &second
+            }
+        ]),
+        Err(Error::Bounds)
+    );
+    assert_eq!(writer.reader().unwrap().watermark().unwrap().records, 0);
+    assert!(writer.reader().unwrap().receipt("first").unwrap().is_none());
 }

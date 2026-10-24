@@ -10,7 +10,7 @@ use std::{
     path::Path,
     sync::{Arc, Mutex},
 };
-pub use writer::Writer;
+pub use writer::{Append, Writer};
 const CURSOR_AAD: &[u8] = b"oojuro/record-paged/cursor/v1\0";
 const MAX_CURSOR: usize = 16 << 10;
 struct Intent([u8; 32]);

@@ -10,6 +10,13 @@ pub struct Writer {
     #[cfg(test)]
     pub(in crate::record::paged) hook: Option<Box<dyn Fn(authority::Phase)>>,
 }
+/// One independent request in a bounded group commit. Order is caller order;
+/// retries keep their first committed IDs/clocks even when regrouped.
+#[derive(Clone, Copy)]
+pub struct Append<'a> {
+    pub request: &'a str,
+    pub inputs: &'a [Input],
+}
 impl Writer {
     pub fn open_disk(
         dir: &Path,
@@ -69,97 +76,156 @@ impl Writer {
     }
     /// Durable authority append. Call `Index::refresh` before using an older search index.
     pub fn append(&mut self, request: &str, inputs: &[Input]) -> Result<Commit> {
+        self.append_group(&[Append { request, inputs }])?
+            .pop()
+            .ok_or(Error::Authority)
+    }
+    /// Share one synced Store append and one locator publication across requests.
+    /// At most 1000 requests, 1000 input rows and 32 MiB of new encoded authority
+    /// are accepted. This API does not wait to collect work; callers bound queue/wait.
+    /// No request is acknowledged before every new frame and locator is durable.
+    pub fn append_group(&mut self, requests: &[Append<'_>]) -> Result<Vec<Commit>> {
         let reader = &mut self.reader;
         reader.healthy()?;
-        if !name(request, 1024) || inputs.is_empty() || inputs.len() > 1000 {
+        if requests.is_empty() || requests.len() > 1000 {
             return Err(Error::Bounds);
         }
-        for input in inputs {
-            input.validate()?;
-        }
-        let request = reader.tag("request", request)?;
-        let fingerprint = reader.tag("typed-input-v1", inputs)?;
-        if let Some(sequence) = reader
-            .disk
-            .as_ref()
-            .ok_or(Error::Invalid)?
-            .request(reader, &request)?
-        {
-            let batch = reader.batch(usize::try_from(sequence).map_err(|_| Error::Bounds)?)?;
-            if batch.request != request {
-                return Err(Error::Authority);
+        let mut input_count = 0usize;
+        for part in requests {
+            if !name(part.request, 1024) || part.inputs.is_empty() {
+                return Err(Error::Bounds);
             }
-            return if batch.fingerprint == fingerprint {
-                Ok(commit(&batch))
-            } else {
-                Err(Error::Conflict)
-            };
+            input_count = input_count
+                .checked_add(part.inputs.len())
+                .ok_or(Error::Bounds)?;
+            if input_count > 1000 {
+                return Err(Error::Bounds);
+            }
+            for input in part.inputs {
+                input.validate()?;
+            }
         }
-        let count = reader
-            .tip
-            .records
-            .checked_add(inputs.len() as u64)
-            .ok_or(Error::Bounds)?;
-        if count > reader.capacity.records as u64 {
-            return Err(Error::Bounds);
-        }
-        let mut id = reader
-            .identity
-            .first_id
-            .checked_add(reader.tip.records)
-            .ok_or(Error::Bounds)?;
-        let mut previous = reader.tip.last_at;
-        let now = (self.clock)()?;
-        let mut assigned = Vec::with_capacity(inputs.len());
-        for input in inputs {
-            let recorded_at = match previous {
-                Some(last) => now.max(last.checked_add(1).ok_or(Error::Bounds)?),
-                None => now,
-            };
-            assigned.push(Assigned {
-                id,
-                recorded_at,
-                input: input.clone(),
-            });
-            id = id.checked_add(1).ok_or(Error::Bounds)?;
-            previous = Some(recorded_at);
-        }
-        let sequence = reader.sequence.checked_add(1).ok_or(Error::Bounds)?;
-        if reader.store.len() != sequence {
+        let first = reader.sequence.checked_add(1).ok_or(Error::Bounds)?;
+        if reader.store.len() != first {
             return Err(Error::Authority);
         }
-        let canonical = json(
-            &Unsigned {
+        let mut previous = reader.tip.clone();
+        let mut sequence = first;
+        let mut batches = Vec::new();
+        let mut encoded = Vec::new();
+        let mut encoded_bytes = 0usize;
+        let mut receipts: BTreeMap<[u8; 32], ([u8; 32], Commit)> = BTreeMap::new();
+        let mut output = Vec::with_capacity(requests.len());
+        for part in requests {
+            let request = reader.tag("request", part.request)?;
+            let fingerprint = reader.tag("typed-input-v1", part.inputs)?;
+            if let Some((old_fingerprint, old)) = receipts.get(&request) {
+                if *old_fingerprint != fingerprint {
+                    return Err(Error::Conflict);
+                }
+                output.push(old.clone());
+                continue;
+            }
+            if let Some(at) = reader
+                .disk
+                .as_ref()
+                .ok_or(Error::Invalid)?
+                .request(reader, &request)?
+            {
+                let batch = reader.batch(usize::try_from(at).map_err(|_| Error::Bounds)?)?;
+                if batch.request != request {
+                    return Err(Error::Authority);
+                }
+                if batch.fingerprint != fingerprint {
+                    return Err(Error::Conflict);
+                }
+                let receipt = commit(&batch);
+                receipts.insert(request, (fingerprint, receipt.clone()));
+                output.push(receipt);
+                continue;
+            }
+            let count = previous
+                .records
+                .checked_add(part.inputs.len() as u64)
+                .ok_or(Error::Bounds)?;
+            if count > reader.capacity.records as u64 {
+                return Err(Error::Bounds);
+            }
+            let mut id = reader
+                .identity
+                .first_id
+                .checked_add(previous.records)
+                .ok_or(Error::Bounds)?;
+            let mut clock = previous.last_at;
+            let now = (self.clock)()?;
+            let mut assigned = Vec::with_capacity(part.inputs.len());
+            for input in part.inputs {
+                let recorded_at = match clock {
+                    Some(last) => now.max(last.checked_add(1).ok_or(Error::Bounds)?),
+                    None => now,
+                };
+                assigned.push(Assigned {
+                    id,
+                    recorded_at,
+                    input: input.clone(),
+                });
+                id = id.checked_add(1).ok_or(Error::Bounds)?;
+                clock = Some(recorded_at);
+            }
+            let canonical = json(
+                &Unsigned {
+                    schema: 2,
+                    request,
+                    fingerprint,
+                    assigned: &assigned,
+                },
+                MAX_BATCH_BYTES,
+            )?;
+            let digest = authority::chain(previous.digest, &canonical);
+            let mut watermark = Watermark {
+                schema: 1,
+                origin: reader.origin,
+                identity: reader.identity_tag,
+                sequence,
+                records: count,
+                commitment: vec![],
+            };
+            watermark.commitment = reader
+                .cipher
+                .seal_frame(&authority::aad(&watermark)?, &digest);
+            let batch = Batch {
                 schema: 2,
                 request,
                 fingerprint,
-                assigned: &assigned,
-            },
-            MAX_BATCH_BYTES,
-        )?;
-        let digest = authority::chain(reader.tip.digest, &canonical);
-        let mut watermark = Watermark {
-            schema: 1,
-            origin: reader.origin,
-            identity: reader.identity_tag,
-            sequence,
-            records: count,
-            commitment: vec![],
-        };
-        watermark.commitment = reader
-            .cipher
-            .seal_frame(&authority::aad(&watermark)?, &digest);
-        let batch = Batch {
-            schema: 2,
-            request,
-            fingerprint,
-            assigned,
-            watermark,
-        };
-        let encoded = json(&batch, MAX_BATCH_BYTES)?;
+                assigned,
+                watermark,
+            };
+            let bytes = json(&batch, MAX_BATCH_BYTES)?;
+            encoded_bytes = encoded_bytes
+                .checked_add(bytes.len())
+                .ok_or(Error::Bounds)?;
+            if encoded_bytes > MAX_BATCH_BYTES {
+                return Err(Error::Bounds);
+            }
+            previous = Ref {
+                records: count,
+                last_at: clock,
+                digest,
+                request,
+            };
+            let receipt = commit(&batch);
+            receipts.insert(request, (fingerprint, receipt.clone()));
+            output.push(receipt);
+            batches.push((batch, digest));
+            encoded.push(bytes);
+            sequence = sequence.checked_add(1).ok_or(Error::Bounds)?;
+        }
+        if batches.is_empty() {
+            return Ok(output);
+        }
         let bytes = reader
             .encoded_bytes
-            .checked_add(encoded.len())
+            .checked_add(encoded_bytes)
             .ok_or(Error::Bounds)?;
         if bytes > reader.capacity.source_bytes {
             return Err(Error::Bounds);
@@ -168,27 +234,32 @@ impl Writer {
         if let Some(hook) = &self.hook {
             hook(authority::Phase::BeforeStore);
         }
-        // From here onward an error is uncertain; only reopen/retry may recover a receipt.
+        // All validation/capacity/conflict failures above leave authority unchanged.
+        // From here an error is uncertain: reopen and retry each independent request.
         reader.failed = true;
+        let carriers: Vec<_> = encoded
+            .iter()
+            .map(|bytes| authority::carrier(bytes))
+            .collect();
         let actual = reader
             .store
-            .append(&[authority::carrier(&encoded)])
+            .append(&carriers)
             .map_err(|_| Error::Unavailable)?;
-        if actual != sequence {
+        if actual != first {
             return Err(Error::Authority);
         }
         #[cfg(test)]
         if let Some(hook) = &self.hook {
             hook(authority::Phase::AfterStore);
         }
-        reader.publish_batch(&batch, digest)?;
+        reader.publish_group(&batches)?;
         reader.encoded_bytes = bytes;
         reader.failed = false;
         #[cfg(test)]
         if let Some(hook) = &self.hook {
             hook(authority::Phase::BeforeAck);
         }
-        Ok(commit(&batch))
+        Ok(output)
     }
     /// Success means both a durable receipt and a current lexical index. Cache failure
     /// can follow a committed append: reopen the cache and retry the same request.
@@ -201,6 +272,17 @@ impl Writer {
         let commit = self.append(request, inputs)?;
         index.refresh(self.reader()?)?;
         Ok(commit)
+    }
+    /// Each returned receipt has durable authority and a current searchable index.
+    /// An index error may follow committed requests; reopen and retry their identities.
+    pub fn append_group_indexed(
+        &mut self,
+        index: &mut Index,
+        requests: &[Append<'_>],
+    ) -> Result<Vec<Commit>> {
+        let receipts = self.append_group(requests)?;
+        index.refresh(self.reader()?)?;
+        Ok(receipts)
     }
 }
 fn commit(batch: &Batch) -> Commit {

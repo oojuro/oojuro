@@ -82,3 +82,29 @@ COW page/root, visibility page, segment and descriptor publication boundaries.
 A source change and these correctness checks do not establish the one-million
 record / ten-client latency target. Exhaustive posting/metadata work remains a
 scale cost to measure; no SLA or hosted latency result follows from this API.
+
+## Bounded group commit
+
+`Writer::append_group` and `append_group_indexed` accept independent borrowed
+`Append { request, inputs }` entries. Caller order assigns new request sequences,
+IDs and monotonic engine clocks. Repeated identities retain their first exact
+receipt, even when retries are reordered or regrouped. Changed inputs conflict.
+Validation, conflict and capacity checks for the entire submitted group finish
+before any new authority append.
+
+A group accepts at most 1000 requests, 1000 submitted input rows (including
+retries), and 32 MiB total new encoded authority batches. It adds no collection
+wait: a queueing caller must separately bound its queue, group size and wait.
+One synced Store append contains the unchanged Record2 batches, followed by one
+COW directory publication. `append_group_indexed` additionally requires current
+lexical publication before returning any receipts. Search probes belong outside
+the ACK timer when measuring ACK latency; their queueing effects still belong in
+a concurrent workload. Unknown outcomes retain each request identity for reopen
+and exact retry; the group API does not promise a transactional rollback.
+
+The group test matrix checks duplicate and previous receipts, regrouped retries,
+per-request prefixes, order/clocks, all-or-reject admission failures, format
+compatibility with `RecordLog`, and SIGKILL across the actual grouped Store,
+directory, visibility, segment and searchable descriptor publication. Direct and
+grouped performance must be reported separately. A grouped native run is not an
+equivalent comparison to SQLite/JSONL runs that sync every request separately.
