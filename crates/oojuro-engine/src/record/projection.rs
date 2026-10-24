@@ -256,11 +256,19 @@ impl Index {
             .collect();
         // Keys are already resolved by the caller's committed snapshot. Duplicate
         // keys are refused; do not reinterpret its memory winner using event time.
+        // The scorer consults only the complete query or its explicit key:
+        // suffix. Resolve that single candidate without cloning every source
+        // key for each query. Source keys remain unique and caller-resolved.
+        let wanted_key = q.text.strip_prefix("key:").unwrap_or(q.text);
         let keys = self
             .rows
             .iter()
             .enumerate()
-            .filter_map(|(i, r)| r.key.as_ref().map(|k| (k.clone(), (i + 1) as u64)))
+            .find_map(|(i, r)| {
+                (r.key.as_deref() == Some(wanted_key))
+                    .then(|| (wanted_key.to_owned(), (i + 1) as u64))
+            })
+            .into_iter()
             .collect();
         let mask = RecordVisibility {
             ids: &ids,

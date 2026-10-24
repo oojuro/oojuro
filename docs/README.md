@@ -18,6 +18,7 @@
 | [BENCH_HARNESS](BENCH_HARNESS.md) | `oojuro-bench`: BEIR, turn-loop replay, memory QA and correctness gates |
 | [PERF_ROUND2](PERF_ROUND2.md) | perf round 2: per-store cache, dedupe key, lean index, read paths, long queries, fsync audit |
 | [PERF_SEARCH](PERF_SEARCH.md) | search latency at scale |
+| [PROJECTION_QUERY_KEY_QUALIFICATION](PROJECTION_QUERY_KEY_QUALIFICATION.md) | bounded cached projection query-key comparison, correctness and adverse controls |
 | [PERF_STORE](PERF_STORE.md) | the compressed store: dictionaries, tiers, compaction |
 | [SEARCH_FIXES](SEARCH_FIXES.md) | two search bugs found by an outcome evaluation, their fixes and the measurements |
 | [TRACK_COMPRESS](TRACK_COMPRESS.md), [TRACK_LEXICAL](TRACK_LEXICAL.md), [TRACK_TRACEDB](TRACK_TRACEDB.md) | research logs of the compression, lexical-search and trace-database work: hypotheses, measurements, what was kept and rejected |

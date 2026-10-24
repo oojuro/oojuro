@@ -1,0 +1,6291 @@
+{
+  "binaries": {
+    "baseline": "de6a43c8dd6d6566ea01b7eb4b5918aca55698c62ec4f96cfca5729c039c26a4",
+    "candidate": "97c7c2d4d59a3e5b85ac132070ba8723c1aebe4a8dcad4c9e9907945be0a9bec"
+  },
+  "runs": [
+    {
+      "build_ns_one_observation": 4356243,
+      "estimated_heap_after_queries": 1339213,
+      "estimated_retained_heap_bytes": 1339213,
+      "heap_estimate": {
+        "count": 21,
+        "max_us": 9.413,
+        "min_us": 8.403,
+        "p50_us": 8.489,
+        "p95_us": 8.979,
+        "sorted_samples_ns": [
+          8403,
+          8432,
+          8436,
+          8441,
+          8447,
+          8453,
+          8458,
+          8473,
+          8473,
+          8477,
+          8489,
+          8497,
+          8501,
+          8509,
+          8519,
+          8525,
+          8574,
+          8576,
+          8958,
+          8979,
+          9413
+        ]
+      },
+      "label": "baseline-1000-0",
+      "queries": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "37e91b359e76759806c82db95d35b03ec048e3670c382b2143d73f26743211ff",
+          "timing": {
+            "count": 20,
+            "max_us": 133.836,
+            "min_us": 100.754,
+            "p50_us": 104.609,
+            "p95_us": 125.281,
+            "sorted_samples_ns": [
+              100754,
+              101445,
+              101979,
+              102413,
+              102520,
+              102974,
+              104207,
+              104280,
+              104525,
+              104609,
+              105863,
+              108119,
+              112332,
+              114304,
+              117334,
+              117625,
+              119736,
+              123035,
+              125281,
+              133836
+            ]
+          }
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "4aaedb1fd9a1b411461b085f65c81024db1084c9f3a318e7ebcc2079f39af24a",
+          "timing": {
+            "count": 20,
+            "max_us": 485.037,
+            "min_us": 283.713,
+            "p50_us": 298.88,
+            "p95_us": 395.165,
+            "sorted_samples_ns": [
+              283713,
+              285627,
+              288394,
+              289650,
+              293740,
+              294618,
+              295667,
+              296238,
+              296884,
+              298880,
+              299988,
+              301428,
+              305215,
+              305771,
+              306046,
+              306278,
+              306414,
+              312849,
+              395165,
+              485037
+            ]
+          }
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 90.422,
+            "min_us": 82.191,
+            "p50_us": 85.254,
+            "p95_us": 89.699,
+            "sorted_samples_ns": [
+              82191,
+              83707,
+              83878,
+              83895,
+              83976,
+              84380,
+              84759,
+              84948,
+              85097,
+              85254,
+              85259,
+              85954,
+              86296,
+              86411,
+              86967,
+              87527,
+              88231,
+              89074,
+              89699,
+              90422
+            ]
+          }
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff",
+          "timing": {
+            "count": 20,
+            "max_us": 99.103,
+            "min_us": 86.758,
+            "p50_us": 91.991,
+            "p95_us": 95.417,
+            "sorted_samples_ns": [
+              86758,
+              87976,
+              88646,
+              90287,
+              90335,
+              90410,
+              91246,
+              91324,
+              91520,
+              91991,
+              92668,
+              93342,
+              93498,
+              93838,
+              94077,
+              94445,
+              94498,
+              94611,
+              95417,
+              99103
+            ]
+          }
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "8a1b191647001a18e278f9e352ec8874e26632244dc46c0f3e591cf83133f770",
+          "timing": {
+            "count": 20,
+            "max_us": 102.888,
+            "min_us": 89.012,
+            "p50_us": 91.584,
+            "p95_us": 100.439,
+            "sorted_samples_ns": [
+              89012,
+              89852,
+              89963,
+              90284,
+              90301,
+              90372,
+              90424,
+              91058,
+              91353,
+              91584,
+              91776,
+              92718,
+              93058,
+              93766,
+              93978,
+              94427,
+              94790,
+              94799,
+              100439,
+              102888
+            ]
+          }
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a",
+          "timing": {
+            "count": 20,
+            "max_us": 95.935,
+            "min_us": 89.026,
+            "p50_us": 90.671,
+            "p95_us": 95.662,
+            "sorted_samples_ns": [
+              89026,
+              89570,
+              89630,
+              89786,
+              90026,
+              90109,
+              90116,
+              90304,
+              90325,
+              90671,
+              90861,
+              91360,
+              91407,
+              91736,
+              92582,
+              93171,
+              93334,
+              93518,
+              95662,
+              95935
+            ]
+          }
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 90.113,
+            "min_us": 83.462,
+            "p50_us": 85.874,
+            "p95_us": 88.438,
+            "sorted_samples_ns": [
+              83462,
+              83874,
+              84702,
+              84826,
+              84906,
+              85353,
+              85359,
+              85398,
+              85449,
+              85874,
+              85960,
+              86119,
+              86143,
+              86667,
+              87433,
+              87440,
+              87856,
+              88437,
+              88438,
+              90113
+            ]
+          }
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 99.165,
+            "min_us": 82.161,
+            "p50_us": 84.846,
+            "p95_us": 92.267,
+            "sorted_samples_ns": [
+              82161,
+              82557,
+              83271,
+              83720,
+              83826,
+              84294,
+              84326,
+              84652,
+              84735,
+              84846,
+              85512,
+              86007,
+              86453,
+              86552,
+              86780,
+              87293,
+              87671,
+              88510,
+              92267,
+              99165
+            ]
+          }
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785",
+          "timing": {
+            "count": 20,
+            "max_us": 91.106,
+            "min_us": 83.409,
+            "p50_us": 85.191,
+            "p95_us": 88.813,
+            "sorted_samples_ns": [
+              83409,
+              83491,
+              83656,
+              83749,
+              84123,
+              84296,
+              84800,
+              84885,
+              84931,
+              85191,
+              85436,
+              85583,
+              85751,
+              85833,
+              85834,
+              85893,
+              85926,
+              87054,
+              88813,
+              91106
+            ]
+          }
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "2f0ae1edbc8515a9c67ef5e884fad262d762cbadff0b4122a14ef956b42aecbf",
+          "timing": {
+            "count": 20,
+            "max_us": 393.887,
+            "min_us": 341.211,
+            "p50_us": 352.839,
+            "p95_us": 374.426,
+            "sorted_samples_ns": [
+              341211,
+              343472,
+              344973,
+              346381,
+              349024,
+              349112,
+              349690,
+              350786,
+              350875,
+              352839,
+              353172,
+              354979,
+              358279,
+              359575,
+              360359,
+              363671,
+              364003,
+              364482,
+              374426,
+              393887
+            ]
+          }
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "50f44e8b41055033c1fb1f4cca6693632d442b7b4891881b7439960aeea950d1",
+          "timing": {
+            "count": 20,
+            "max_us": 451.371,
+            "min_us": 386.351,
+            "p50_us": 404.704,
+            "p95_us": 421.943,
+            "sorted_samples_ns": [
+              386351,
+              389778,
+              390294,
+              391859,
+              395552,
+              396293,
+              396867,
+              400595,
+              404226,
+              404704,
+              404771,
+              406155,
+              410013,
+              410854,
+              410924,
+              411349,
+              412537,
+              415994,
+              421943,
+              451371
+            ]
+          }
+        },
+        {
+          "case": "filtered_common",
+          "hits": 2,
+          "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b",
+          "timing": {
+            "count": 20,
+            "max_us": 98.698,
+            "min_us": 87.854,
+            "p50_us": 90.01,
+            "p95_us": 97.354,
+            "sorted_samples_ns": [
+              87854,
+              88288,
+              88605,
+              88727,
+              88926,
+              89295,
+              89364,
+              89485,
+              89919,
+              90010,
+              90416,
+              90464,
+              90562,
+              91311,
+              91702,
+              91954,
+              93818,
+              96338,
+              97354,
+              98698
+            ]
+          }
+        }
+      ],
+      "refresh_mode": "append32+reorder",
+      "refresh_ns_one_observation": 1012925,
+      "refreshed_estimated_heap_bytes": 1756733,
+      "refreshed_rows": 1032,
+      "refreshed_signatures": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "b248fbe42dd48ca4cee2719a7e575f93d59b7b0bffba0f71062b469212f3e7e8"
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff"
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "8a1b191647001a18e278f9e352ec8874e26632244dc46c0f3e591cf83133f770"
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a"
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785"
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+        },
+        {
+          "case": "filtered_common",
+          "hits": 2,
+          "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+        }
+      ],
+      "rows": 1000,
+      "scope": "pure local cached public projection API; no remote freshness proof",
+      "text_bytes": 75044,
+      "binary": "baseline",
+      "binary_sha256": "de6a43c8dd6d6566ea01b7eb4b5918aca55698c62ec4f96cfca5729c039c26a4",
+      "order": 0
+    },
+    {
+      "build_ns_one_observation": 4423361,
+      "estimated_heap_after_queries": 1339213,
+      "estimated_retained_heap_bytes": 1339213,
+      "heap_estimate": {
+        "count": 21,
+        "max_us": 32.684,
+        "min_us": 8.558,
+        "p50_us": 8.829,
+        "p95_us": 11.655,
+        "sorted_samples_ns": [
+          8558,
+          8633,
+          8652,
+          8666,
+          8675,
+          8676,
+          8696,
+          8705,
+          8750,
+          8756,
+          8829,
+          8884,
+          8934,
+          8947,
+          8953,
+          9001,
+          9010,
+          9018,
+          9336,
+          11655,
+          32684
+        ]
+      },
+      "label": "candidate-1000-1",
+      "queries": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "37e91b359e76759806c82db95d35b03ec048e3670c382b2143d73f26743211ff",
+          "timing": {
+            "count": 20,
+            "max_us": 61.406,
+            "min_us": 45.081,
+            "p50_us": 47.989,
+            "p95_us": 59.945,
+            "sorted_samples_ns": [
+              45081,
+              45177,
+              45190,
+              45397,
+              45850,
+              46982,
+              46997,
+              47219,
+              47456,
+              47989,
+              48236,
+              48614,
+              49103,
+              51546,
+              52179,
+              52230,
+              53047,
+              54670,
+              59945,
+              61406
+            ]
+          }
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "4aaedb1fd9a1b411461b085f65c81024db1084c9f3a318e7ebcc2079f39af24a",
+          "timing": {
+            "count": 20,
+            "max_us": 578.004,
+            "min_us": 226.186,
+            "p50_us": 253.357,
+            "p95_us": 273.377,
+            "sorted_samples_ns": [
+              226186,
+              239366,
+              245616,
+              245637,
+              247119,
+              249358,
+              249891,
+              250344,
+              251241,
+              253357,
+              254984,
+              257369,
+              257498,
+              258323,
+              261553,
+              263786,
+              267640,
+              268237,
+              273377,
+              578004
+            ]
+          }
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 22.611,
+            "min_us": 10.289,
+            "p50_us": 12.205,
+            "p95_us": 21.527,
+            "sorted_samples_ns": [
+              10289,
+              10413,
+              10453,
+              10469,
+              10638,
+              10922,
+              11287,
+              11559,
+              11598,
+              12205,
+              14029,
+              14387,
+              14697,
+              14742,
+              14819,
+              15682,
+              17305,
+              17975,
+              21527,
+              22611
+            ]
+          }
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff",
+          "timing": {
+            "count": 20,
+            "max_us": 21.299,
+            "min_us": 15.115,
+            "p50_us": 16.947,
+            "p95_us": 18.67,
+            "sorted_samples_ns": [
+              15115,
+              15214,
+              15937,
+              16062,
+              16660,
+              16758,
+              16825,
+              16912,
+              16932,
+              16947,
+              17235,
+              17247,
+              17364,
+              17871,
+              17894,
+              18079,
+              18559,
+              18588,
+              18670,
+              21299
+            ]
+          }
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "8a1b191647001a18e278f9e352ec8874e26632244dc46c0f3e591cf83133f770",
+          "timing": {
+            "count": 20,
+            "max_us": 134.332,
+            "min_us": 22.205,
+            "p50_us": 27.539,
+            "p95_us": 50.939,
+            "sorted_samples_ns": [
+              22205,
+              22466,
+              24307,
+              24975,
+              25552,
+              25838,
+              26555,
+              27084,
+              27098,
+              27539,
+              27943,
+              28130,
+              28312,
+              28462,
+              29398,
+              29825,
+              30176,
+              32205,
+              50939,
+              134332
+            ]
+          }
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a",
+          "timing": {
+            "count": 20,
+            "max_us": 19.023,
+            "min_us": 14.1,
+            "p50_us": 15.202,
+            "p95_us": 18.655,
+            "sorted_samples_ns": [
+              14100,
+              14262,
+              14297,
+              14308,
+              14540,
+              14821,
+              14926,
+              14931,
+              15138,
+              15202,
+              15887,
+              16018,
+              16040,
+              17079,
+              17172,
+              17604,
+              17715,
+              17772,
+              18655,
+              19023
+            ]
+          }
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 13.938,
+            "min_us": 10.029,
+            "p50_us": 11.547,
+            "p95_us": 12.798,
+            "sorted_samples_ns": [
+              10029,
+              10507,
+              10532,
+              10660,
+              11157,
+              11369,
+              11388,
+              11532,
+              11541,
+              11547,
+              11679,
+              11808,
+              11828,
+              11910,
+              12183,
+              12381,
+              12485,
+              12785,
+              12798,
+              13938
+            ]
+          }
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 17.548,
+            "min_us": 8.259,
+            "p50_us": 8.908,
+            "p95_us": 10.448,
+            "sorted_samples_ns": [
+              8259,
+              8401,
+              8672,
+              8692,
+              8697,
+              8710,
+              8711,
+              8846,
+              8869,
+              8908,
+              8948,
+              9041,
+              9127,
+              9178,
+              9262,
+              9361,
+              9409,
+              9552,
+              10448,
+              17548
+            ]
+          }
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785",
+          "timing": {
+            "count": 20,
+            "max_us": 12.4,
+            "min_us": 10.207,
+            "p50_us": 10.689,
+            "p95_us": 11.607,
+            "sorted_samples_ns": [
+              10207,
+              10221,
+              10305,
+              10336,
+              10352,
+              10368,
+              10581,
+              10581,
+              10684,
+              10689,
+              10691,
+              10724,
+              10726,
+              10752,
+              10806,
+              11145,
+              11354,
+              11409,
+              11607,
+              12400
+            ]
+          }
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "2f0ae1edbc8515a9c67ef5e884fad262d762cbadff0b4122a14ef956b42aecbf",
+          "timing": {
+            "count": 20,
+            "max_us": 297.9,
+            "min_us": 252.841,
+            "p50_us": 267.496,
+            "p95_us": 293.58,
+            "sorted_samples_ns": [
+              252841,
+              253898,
+              255354,
+              258291,
+              259464,
+              260207,
+              263503,
+              264221,
+              265927,
+              267496,
+              268401,
+              269174,
+              270356,
+              270741,
+              274455,
+              281735,
+              283537,
+              284413,
+              293580,
+              297900
+            ]
+          }
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "50f44e8b41055033c1fb1f4cca6693632d442b7b4891881b7439960aeea950d1",
+          "timing": {
+            "count": 20,
+            "max_us": 371.658,
+            "min_us": 311.69,
+            "p50_us": 326.299,
+            "p95_us": 353.52,
+            "sorted_samples_ns": [
+              311690,
+              313452,
+              317589,
+              318574,
+              319671,
+              320259,
+              321355,
+              322448,
+              326009,
+              326299,
+              329100,
+              329649,
+              332027,
+              332523,
+              333733,
+              334762,
+              337302,
+              340357,
+              353520,
+              371658
+            ]
+          }
+        },
+        {
+          "case": "filtered_common",
+          "hits": 2,
+          "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b",
+          "timing": {
+            "count": 20,
+            "max_us": 22.805,
+            "min_us": 15.929,
+            "p50_us": 17.4,
+            "p95_us": 21.92,
+            "sorted_samples_ns": [
+              15929,
+              16076,
+              16324,
+              16503,
+              16511,
+              16759,
+              16962,
+              17201,
+              17217,
+              17400,
+              17437,
+              18060,
+              18709,
+              18989,
+              19773,
+              20596,
+              20657,
+              20678,
+              21920,
+              22805
+            ]
+          }
+        }
+      ],
+      "refresh_mode": "append32+reorder",
+      "refresh_ns_one_observation": 1171610,
+      "refreshed_estimated_heap_bytes": 1756733,
+      "refreshed_rows": 1032,
+      "refreshed_signatures": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "b248fbe42dd48ca4cee2719a7e575f93d59b7b0bffba0f71062b469212f3e7e8"
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff"
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "8a1b191647001a18e278f9e352ec8874e26632244dc46c0f3e591cf83133f770"
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a"
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785"
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+        },
+        {
+          "case": "filtered_common",
+          "hits": 2,
+          "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+        }
+      ],
+      "rows": 1000,
+      "scope": "pure local cached public projection API; no remote freshness proof",
+      "text_bytes": 75044,
+      "binary": "candidate",
+      "binary_sha256": "97c7c2d4d59a3e5b85ac132070ba8723c1aebe4a8dcad4c9e9907945be0a9bec",
+      "order": 1
+    },
+    {
+      "build_ns_one_observation": 4301298,
+      "estimated_heap_after_queries": 1339213,
+      "estimated_retained_heap_bytes": 1339213,
+      "heap_estimate": {
+        "count": 21,
+        "max_us": 8.595,
+        "min_us": 8.162,
+        "p50_us": 8.228,
+        "p95_us": 8.402,
+        "sorted_samples_ns": [
+          8162,
+          8168,
+          8201,
+          8209,
+          8216,
+          8217,
+          8218,
+          8219,
+          8225,
+          8228,
+          8228,
+          8234,
+          8235,
+          8238,
+          8245,
+          8256,
+          8258,
+          8281,
+          8303,
+          8402,
+          8595
+        ]
+      },
+      "label": "candidate-1000-2",
+      "queries": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "37e91b359e76759806c82db95d35b03ec048e3670c382b2143d73f26743211ff",
+          "timing": {
+            "count": 20,
+            "max_us": 87.377,
+            "min_us": 26.549,
+            "p50_us": 39.954,
+            "p95_us": 64.325,
+            "sorted_samples_ns": [
+              26549,
+              26638,
+              27492,
+              27524,
+              28904,
+              29650,
+              31796,
+              34628,
+              36651,
+              39954,
+              43858,
+              46323,
+              46967,
+              47966,
+              48447,
+              49071,
+              49103,
+              50789,
+              64325,
+              87377
+            ]
+          }
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "4aaedb1fd9a1b411461b085f65c81024db1084c9f3a318e7ebcc2079f39af24a",
+          "timing": {
+            "count": 20,
+            "max_us": 387.664,
+            "min_us": 200.449,
+            "p50_us": 207.51,
+            "p95_us": 277.973,
+            "sorted_samples_ns": [
+              200449,
+              202484,
+              204234,
+              204504,
+              205179,
+              205377,
+              206495,
+              206611,
+              207483,
+              207510,
+              208843,
+              209613,
+              210146,
+              211938,
+              213291,
+              214215,
+              219480,
+              221676,
+              277973,
+              387664
+            ]
+          }
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 12.179,
+            "min_us": 9.655,
+            "p50_us": 10.696,
+            "p95_us": 11.36,
+            "sorted_samples_ns": [
+              9655,
+              9724,
+              9732,
+              9937,
+              10197,
+              10552,
+              10553,
+              10580,
+              10584,
+              10696,
+              10710,
+              10739,
+              10853,
+              10885,
+              11024,
+              11047,
+              11146,
+              11161,
+              11360,
+              12179
+            ]
+          }
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff",
+          "timing": {
+            "count": 20,
+            "max_us": 17.96,
+            "min_us": 13.535,
+            "p50_us": 14.195,
+            "p95_us": 17.674,
+            "sorted_samples_ns": [
+              13535,
+              13627,
+              13854,
+              13971,
+              14026,
+              14075,
+              14111,
+              14114,
+              14125,
+              14195,
+              14241,
+              14287,
+              14295,
+              14343,
+              14555,
+              14633,
+              15075,
+              15656,
+              17674,
+              17960
+            ]
+          }
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "8a1b191647001a18e278f9e352ec8874e26632244dc46c0f3e591cf83133f770",
+          "timing": {
+            "count": 20,
+            "max_us": 22.439,
+            "min_us": 19.565,
+            "p50_us": 20.094,
+            "p95_us": 21.414,
+            "sorted_samples_ns": [
+              19565,
+              19902,
+              19928,
+              19995,
+              20023,
+              20038,
+              20047,
+              20067,
+              20076,
+              20094,
+              20240,
+              20324,
+              20368,
+              20384,
+              20552,
+              20602,
+              20676,
+              20737,
+              21414,
+              22439
+            ]
+          }
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a",
+          "timing": {
+            "count": 20,
+            "max_us": 15.688,
+            "min_us": 13.709,
+            "p50_us": 14.299,
+            "p95_us": 15.254,
+            "sorted_samples_ns": [
+              13709,
+              13936,
+              13961,
+              14066,
+              14095,
+              14127,
+              14149,
+              14288,
+              14291,
+              14299,
+              14492,
+              14540,
+              14630,
+              14679,
+              14742,
+              14766,
+              14880,
+              14945,
+              15254,
+              15688
+            ]
+          }
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 11.304,
+            "min_us": 9.491,
+            "p50_us": 10.151,
+            "p95_us": 11.043,
+            "sorted_samples_ns": [
+              9491,
+              9525,
+              9584,
+              9619,
+              9635,
+              9735,
+              9851,
+              9949,
+              10135,
+              10151,
+              10181,
+              10432,
+              10497,
+              10531,
+              10648,
+              10782,
+              10819,
+              10961,
+              11043,
+              11304
+            ]
+          }
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 10.644,
+            "min_us": 8.995,
+            "p50_us": 9.476,
+            "p95_us": 10.541,
+            "sorted_samples_ns": [
+              8995,
+              9125,
+              9139,
+              9141,
+              9189,
+              9224,
+              9233,
+              9351,
+              9363,
+              9476,
+              9484,
+              9700,
+              9722,
+              9913,
+              10059,
+              10102,
+              10104,
+              10518,
+              10541,
+              10644
+            ]
+          }
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785",
+          "timing": {
+            "count": 20,
+            "max_us": 18.897,
+            "min_us": 11.177,
+            "p50_us": 11.752,
+            "p95_us": 12.193,
+            "sorted_samples_ns": [
+              11177,
+              11244,
+              11342,
+              11355,
+              11411,
+              11524,
+              11585,
+              11677,
+              11695,
+              11752,
+              11821,
+              11840,
+              11962,
+              12009,
+              12025,
+              12028,
+              12087,
+              12121,
+              12193,
+              18897
+            ]
+          }
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "2f0ae1edbc8515a9c67ef5e884fad262d762cbadff0b4122a14ef956b42aecbf",
+          "timing": {
+            "count": 20,
+            "max_us": 282.056,
+            "min_us": 251.191,
+            "p50_us": 259.594,
+            "p95_us": 280.949,
+            "sorted_samples_ns": [
+              251191,
+              252617,
+              252951,
+              253334,
+              254041,
+              254898,
+              257919,
+              258855,
+              259336,
+              259594,
+              261392,
+              262046,
+              265624,
+              265781,
+              265931,
+              271876,
+              273740,
+              278324,
+              280949,
+              282056
+            ]
+          }
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "50f44e8b41055033c1fb1f4cca6693632d442b7b4891881b7439960aeea950d1",
+          "timing": {
+            "count": 20,
+            "max_us": 327.899,
+            "min_us": 301.907,
+            "p50_us": 308.991,
+            "p95_us": 323.963,
+            "sorted_samples_ns": [
+              301907,
+              301990,
+              302994,
+              303483,
+              306121,
+              306889,
+              307705,
+              307868,
+              308230,
+              308991,
+              309592,
+              312432,
+              312491,
+              316776,
+              317862,
+              319568,
+              322716,
+              322942,
+              323963,
+              327899
+            ]
+          }
+        },
+        {
+          "case": "filtered_common",
+          "hits": 2,
+          "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b",
+          "timing": {
+            "count": 20,
+            "max_us": 19.877,
+            "min_us": 14.54,
+            "p50_us": 15.024,
+            "p95_us": 17.576,
+            "sorted_samples_ns": [
+              14540,
+              14557,
+              14574,
+              14655,
+              14720,
+              14725,
+              14812,
+              14841,
+              14992,
+              15024,
+              15098,
+              15358,
+              15408,
+              15525,
+              15648,
+              15722,
+              16151,
+              16271,
+              17576,
+              19877
+            ]
+          }
+        }
+      ],
+      "refresh_mode": "append32+reorder",
+      "refresh_ns_one_observation": 971596,
+      "refreshed_estimated_heap_bytes": 1756733,
+      "refreshed_rows": 1032,
+      "refreshed_signatures": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "b248fbe42dd48ca4cee2719a7e575f93d59b7b0bffba0f71062b469212f3e7e8"
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff"
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "8a1b191647001a18e278f9e352ec8874e26632244dc46c0f3e591cf83133f770"
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a"
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785"
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+        },
+        {
+          "case": "filtered_common",
+          "hits": 2,
+          "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+        }
+      ],
+      "rows": 1000,
+      "scope": "pure local cached public projection API; no remote freshness proof",
+      "text_bytes": 75044,
+      "binary": "candidate",
+      "binary_sha256": "97c7c2d4d59a3e5b85ac132070ba8723c1aebe4a8dcad4c9e9907945be0a9bec",
+      "order": 2
+    },
+    {
+      "build_ns_one_observation": 3886238,
+      "estimated_heap_after_queries": 1339213,
+      "estimated_retained_heap_bytes": 1339213,
+      "heap_estimate": {
+        "count": 21,
+        "max_us": 8.853,
+        "min_us": 8.389,
+        "p50_us": 8.414,
+        "p95_us": 8.544,
+        "sorted_samples_ns": [
+          8389,
+          8394,
+          8396,
+          8399,
+          8400,
+          8401,
+          8401,
+          8402,
+          8404,
+          8413,
+          8414,
+          8415,
+          8416,
+          8419,
+          8425,
+          8429,
+          8455,
+          8458,
+          8492,
+          8544,
+          8853
+        ]
+      },
+      "label": "baseline-1000-3",
+      "queries": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "37e91b359e76759806c82db95d35b03ec048e3670c382b2143d73f26743211ff",
+          "timing": {
+            "count": 20,
+            "max_us": 118.241,
+            "min_us": 91.014,
+            "p50_us": 96.345,
+            "p95_us": 111.127,
+            "sorted_samples_ns": [
+              91014,
+              91435,
+              91743,
+              92111,
+              92835,
+              93474,
+              94412,
+              94525,
+              95918,
+              96345,
+              96427,
+              97100,
+              98030,
+              101402,
+              101990,
+              104365,
+              106837,
+              108363,
+              111127,
+              118241
+            ]
+          }
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "4aaedb1fd9a1b411461b085f65c81024db1084c9f3a318e7ebcc2079f39af24a",
+          "timing": {
+            "count": 20,
+            "max_us": 353.038,
+            "min_us": 247.615,
+            "p50_us": 266.796,
+            "p95_us": 320.215,
+            "sorted_samples_ns": [
+              247615,
+              254686,
+              255134,
+              257240,
+              258000,
+              258340,
+              264754,
+              264977,
+              266197,
+              266796,
+              270435,
+              270684,
+              273034,
+              273914,
+              280111,
+              282776,
+              314470,
+              318858,
+              320215,
+              353038
+            ]
+          }
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 78.22,
+            "min_us": 73.627,
+            "p50_us": 74.617,
+            "p95_us": 77.516,
+            "sorted_samples_ns": [
+              73627,
+              73952,
+              73986,
+              74092,
+              74127,
+              74229,
+              74387,
+              74441,
+              74530,
+              74617,
+              74676,
+              75333,
+              75346,
+              75351,
+              75406,
+              75787,
+              76309,
+              76416,
+              77516,
+              78220
+            ]
+          }
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff",
+          "timing": {
+            "count": 20,
+            "max_us": 91.916,
+            "min_us": 79.585,
+            "p50_us": 83.267,
+            "p95_us": 91.674,
+            "sorted_samples_ns": [
+              79585,
+              79678,
+              79858,
+              80145,
+              80843,
+              82544,
+              82839,
+              82982,
+              83022,
+              83267,
+              84443,
+              84872,
+              85882,
+              88582,
+              88829,
+              89247,
+              89924,
+              90379,
+              91674,
+              91916
+            ]
+          }
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "8a1b191647001a18e278f9e352ec8874e26632244dc46c0f3e591cf83133f770",
+          "timing": {
+            "count": 20,
+            "max_us": 114.123,
+            "min_us": 80.464,
+            "p50_us": 93.58,
+            "p95_us": 109.335,
+            "sorted_samples_ns": [
+              80464,
+              81508,
+              81676,
+              81966,
+              84842,
+              86416,
+              90678,
+              91115,
+              92287,
+              93580,
+              94017,
+              94715,
+              98789,
+              98835,
+              98841,
+              107701,
+              108245,
+              109266,
+              109335,
+              114123
+            ]
+          }
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a",
+          "timing": {
+            "count": 20,
+            "max_us": 126.224,
+            "min_us": 79.786,
+            "p50_us": 84.187,
+            "p95_us": 124.408,
+            "sorted_samples_ns": [
+              79786,
+              80608,
+              80748,
+              81061,
+              82088,
+              82566,
+              82725,
+              82930,
+              83011,
+              84187,
+              84861,
+              86683,
+              91558,
+              94255,
+              95950,
+              101210,
+              103147,
+              118028,
+              124408,
+              126224
+            ]
+          }
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 93.499,
+            "min_us": 74.082,
+            "p50_us": 75.844,
+            "p95_us": 87.911,
+            "sorted_samples_ns": [
+              74082,
+              74368,
+              74474,
+              74750,
+              74754,
+              74929,
+              75419,
+              75448,
+              75749,
+              75844,
+              75920,
+              76356,
+              76396,
+              79883,
+              80738,
+              83438,
+              86094,
+              87153,
+              87911,
+              93499
+            ]
+          }
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 112.536,
+            "min_us": 77.451,
+            "p50_us": 87.295,
+            "p95_us": 100.502,
+            "sorted_samples_ns": [
+              77451,
+              78154,
+              78641,
+              81045,
+              81647,
+              84259,
+              85241,
+              86014,
+              86109,
+              87295,
+              88648,
+              89606,
+              90657,
+              94419,
+              95691,
+              96709,
+              98596,
+              99020,
+              100502,
+              112536
+            ]
+          }
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785",
+          "timing": {
+            "count": 20,
+            "max_us": 99.75,
+            "min_us": 77.445,
+            "p50_us": 84.288,
+            "p95_us": 96.724,
+            "sorted_samples_ns": [
+              77445,
+              77483,
+              78076,
+              78476,
+              78802,
+              79197,
+              80278,
+              80590,
+              82125,
+              84288,
+              84905,
+              86745,
+              87345,
+              88475,
+              90971,
+              91975,
+              92194,
+              95263,
+              96724,
+              99750
+            ]
+          }
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "2f0ae1edbc8515a9c67ef5e884fad262d762cbadff0b4122a14ef956b42aecbf",
+          "timing": {
+            "count": 20,
+            "max_us": 485.948,
+            "min_us": 303.068,
+            "p50_us": 318.653,
+            "p95_us": 408.111,
+            "sorted_samples_ns": [
+              303068,
+              304305,
+              306356,
+              306989,
+              308142,
+              308477,
+              310124,
+              311258,
+              317109,
+              318653,
+              319446,
+              321334,
+              323871,
+              331622,
+              331663,
+              333127,
+              339609,
+              358168,
+              408111,
+              485948
+            ]
+          }
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "50f44e8b41055033c1fb1f4cca6693632d442b7b4891881b7439960aeea950d1",
+          "timing": {
+            "count": 20,
+            "max_us": 425.579,
+            "min_us": 370.896,
+            "p50_us": 393.395,
+            "p95_us": 424.17,
+            "sorted_samples_ns": [
+              370896,
+              374615,
+              377849,
+              378341,
+              379309,
+              379430,
+              384962,
+              390824,
+              392274,
+              393395,
+              394537,
+              396754,
+              399790,
+              405484,
+              406937,
+              407555,
+              409742,
+              420786,
+              424170,
+              425579
+            ]
+          }
+        },
+        {
+          "case": "filtered_common",
+          "hits": 2,
+          "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b",
+          "timing": {
+            "count": 20,
+            "max_us": 95.709,
+            "min_us": 85.401,
+            "p50_us": 87.473,
+            "p95_us": 94.483,
+            "sorted_samples_ns": [
+              85401,
+              85707,
+              85849,
+              85882,
+              86396,
+              86623,
+              86868,
+              86925,
+              87305,
+              87473,
+              87685,
+              87771,
+              88148,
+              88444,
+              88621,
+              89206,
+              90008,
+              92046,
+              94483,
+              95709
+            ]
+          }
+        }
+      ],
+      "refresh_mode": "append32+reorder",
+      "refresh_ns_one_observation": 998847,
+      "refreshed_estimated_heap_bytes": 1756733,
+      "refreshed_rows": 1032,
+      "refreshed_signatures": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "b248fbe42dd48ca4cee2719a7e575f93d59b7b0bffba0f71062b469212f3e7e8"
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff"
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "8a1b191647001a18e278f9e352ec8874e26632244dc46c0f3e591cf83133f770"
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a"
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785"
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+        },
+        {
+          "case": "filtered_common",
+          "hits": 2,
+          "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+        }
+      ],
+      "rows": 1000,
+      "scope": "pure local cached public projection API; no remote freshness proof",
+      "text_bytes": 75044,
+      "binary": "baseline",
+      "binary_sha256": "de6a43c8dd6d6566ea01b7eb4b5918aca55698c62ec4f96cfca5729c039c26a4",
+      "order": 3
+    },
+    {
+      "build_ns_one_observation": 45284181,
+      "estimated_heap_after_queries": 15053167,
+      "estimated_retained_heap_bytes": 15053167,
+      "heap_estimate": {
+        "count": 21,
+        "max_us": 270.19,
+        "min_us": 220.174,
+        "p50_us": 227.28,
+        "p95_us": 239.531,
+        "sorted_samples_ns": [
+          220174,
+          220673,
+          221653,
+          221842,
+          222311,
+          223358,
+          224003,
+          224380,
+          226649,
+          227136,
+          227280,
+          227410,
+          227611,
+          227936,
+          228132,
+          229446,
+          229808,
+          233050,
+          233079,
+          239531,
+          270190
+        ]
+      },
+      "label": "baseline-10000-0",
+      "queries": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "a9cccc0a64421c8e73c517a74172b725d200897532276401c5606c12f2c35bc3",
+          "timing": {
+            "count": 20,
+            "max_us": 1538.346,
+            "min_us": 1277.927,
+            "p50_us": 1325.631,
+            "p95_us": 1370.015,
+            "sorted_samples_ns": [
+              1277927,
+              1298570,
+              1301047,
+              1308957,
+              1314733,
+              1316958,
+              1323655,
+              1324870,
+              1324949,
+              1325631,
+              1328679,
+              1328943,
+              1342613,
+              1346446,
+              1348731,
+              1349825,
+              1350500,
+              1364556,
+              1370015,
+              1538346
+            ]
+          }
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "e42fc3ed5d3b9fb1097f6fb27c4b991aef34bb21f1f1c9faba21e1c5fbe3edba",
+          "timing": {
+            "count": 20,
+            "max_us": 3819.233,
+            "min_us": 3465.755,
+            "p50_us": 3627.02,
+            "p95_us": 3809.598,
+            "sorted_samples_ns": [
+              3465755,
+              3525993,
+              3536888,
+              3569135,
+              3576577,
+              3580795,
+              3597095,
+              3602638,
+              3607433,
+              3627020,
+              3642782,
+              3660319,
+              3660587,
+              3663665,
+              3684694,
+              3712746,
+              3722543,
+              3756423,
+              3809598,
+              3819233
+            ]
+          }
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 916.169,
+            "min_us": 838.841,
+            "p50_us": 855.013,
+            "p95_us": 905.823,
+            "sorted_samples_ns": [
+              838841,
+              841986,
+              842969,
+              844724,
+              845271,
+              850471,
+              851459,
+              851664,
+              852463,
+              855013,
+              867338,
+              868365,
+              870168,
+              872695,
+              884105,
+              896180,
+              899430,
+              904784,
+              905823,
+              916169
+            ]
+          }
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff",
+          "timing": {
+            "count": 20,
+            "max_us": 906.681,
+            "min_us": 823.568,
+            "p50_us": 859.24,
+            "p95_us": 895.665,
+            "sorted_samples_ns": [
+              823568,
+              827764,
+              835604,
+              838295,
+              842255,
+              843038,
+              846709,
+              855485,
+              855973,
+              859240,
+              863224,
+              870281,
+              873614,
+              874006,
+              880235,
+              881406,
+              885846,
+              889793,
+              895665,
+              906681
+            ]
+          }
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "9b6420a1740a2460b7c898ba23bf39e20f335f7eb601eb7186e50d410345175d",
+          "timing": {
+            "count": 20,
+            "max_us": 1009.857,
+            "min_us": 848.49,
+            "p50_us": 901.29,
+            "p95_us": 958.212,
+            "sorted_samples_ns": [
+              848490,
+              862567,
+              865991,
+              869994,
+              871415,
+              882572,
+              883032,
+              885512,
+              887550,
+              901290,
+              905318,
+              906245,
+              908892,
+              917148,
+              925226,
+              927212,
+              931793,
+              945313,
+              958212,
+              1009857
+            ]
+          }
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a",
+          "timing": {
+            "count": 20,
+            "max_us": 926.394,
+            "min_us": 841.073,
+            "p50_us": 883.972,
+            "p95_us": 925.749,
+            "sorted_samples_ns": [
+              841073,
+              849666,
+              853029,
+              853855,
+              867030,
+              878076,
+              880559,
+              882173,
+              882485,
+              883972,
+              893398,
+              895743,
+              897140,
+              898001,
+              902394,
+              902395,
+              916893,
+              920570,
+              925749,
+              926394
+            ]
+          }
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 923.519,
+            "min_us": 819.688,
+            "p50_us": 848.612,
+            "p95_us": 918.451,
+            "sorted_samples_ns": [
+              819688,
+              822111,
+              822707,
+              824515,
+              830251,
+              835612,
+              839205,
+              844118,
+              845864,
+              848612,
+              856241,
+              859973,
+              866735,
+              868624,
+              872208,
+              884328,
+              893422,
+              909544,
+              918451,
+              923519
+            ]
+          }
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 888.063,
+            "min_us": 797.211,
+            "p50_us": 827.293,
+            "p95_us": 887.505,
+            "sorted_samples_ns": [
+              797211,
+              809717,
+              812629,
+              815640,
+              815810,
+              819003,
+              824070,
+              827004,
+              827096,
+              827293,
+              828236,
+              829804,
+              846124,
+              846708,
+              856404,
+              866016,
+              869447,
+              869655,
+              887505,
+              888063
+            ]
+          }
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785",
+          "timing": {
+            "count": 20,
+            "max_us": 887.861,
+            "min_us": 817.226,
+            "p50_us": 850.388,
+            "p95_us": 876.754,
+            "sorted_samples_ns": [
+              817226,
+              826553,
+              827900,
+              828379,
+              833671,
+              834640,
+              840468,
+              845912,
+              847290,
+              850388,
+              852984,
+              857381,
+              861343,
+              864385,
+              865269,
+              866548,
+              866692,
+              875109,
+              876754,
+              887861
+            ]
+          }
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "d7b50d4e1861f47bcd17112a10c9b5f3633b78e38afa0b8279bd87899bb0504a",
+          "timing": {
+            "count": 20,
+            "max_us": 4608.861,
+            "min_us": 4042.609,
+            "p50_us": 4321.229,
+            "p95_us": 4548.826,
+            "sorted_samples_ns": [
+              4042609,
+              4099188,
+              4148107,
+              4163537,
+              4183235,
+              4203215,
+              4208751,
+              4217884,
+              4229631,
+              4321229,
+              4339118,
+              4339402,
+              4377376,
+              4389812,
+              4413906,
+              4438053,
+              4443302,
+              4491200,
+              4548826,
+              4608861
+            ]
+          }
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "b9fb05152049801ea98f05c3f85184417a0861ee13fc291bbff2a6a978ba03ca",
+          "timing": {
+            "count": 20,
+            "max_us": 1756.256,
+            "min_us": 1651.445,
+            "p50_us": 1698.064,
+            "p95_us": 1744.394,
+            "sorted_samples_ns": [
+              1651445,
+              1664731,
+              1671774,
+              1677489,
+              1678024,
+              1683592,
+              1683982,
+              1685563,
+              1695441,
+              1698064,
+              1708057,
+              1712736,
+              1713434,
+              1717481,
+              1720159,
+              1722249,
+              1728540,
+              1730388,
+              1744394,
+              1756256
+            ]
+          }
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "0485b4b84eba305b2c37a8c82ab6e09b6f00a017110c1ced7d25a174fcb392e8",
+          "timing": {
+            "count": 20,
+            "max_us": 1078.793,
+            "min_us": 978.281,
+            "p50_us": 995.713,
+            "p95_us": 1038.027,
+            "sorted_samples_ns": [
+              978281,
+              978930,
+              980778,
+              983723,
+              985412,
+              987288,
+              991015,
+              991473,
+              992368,
+              995713,
+              998422,
+              1002734,
+              1011567,
+              1012623,
+              1023363,
+              1029650,
+              1034792,
+              1037212,
+              1038027,
+              1078793
+            ]
+          }
+        }
+      ],
+      "refresh_mode": "append32+reorder",
+      "refresh_ns_one_observation": 7995632,
+      "refreshed_estimated_heap_bytes": 16762160,
+      "refreshed_rows": 10032,
+      "refreshed_signatures": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "b225a042386ad3a239fca3c45ff3acf9e9449d7dc01ebe68b722b71edb352394"
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "2c184409e16a77ce2ad40e06e7c441c0d56505c4236340c5de2095b168e19d41"
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff"
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "9b6420a1740a2460b7c898ba23bf39e20f335f7eb601eb7186e50d410345175d"
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a"
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785"
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "db40d9047d061baa245a00e044c1f830e51436cfd54a780e7fb71bbcd75eb0ac"
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "242418ad0c789d24b26b2bc01ed871b26fbcc34e784ecb7ac64a3a86fb15daaf"
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "0485b4b84eba305b2c37a8c82ab6e09b6f00a017110c1ced7d25a174fcb392e8"
+        }
+      ],
+      "rows": 10000,
+      "scope": "pure local cached public projection API; no remote freshness proof",
+      "text_bytes": 760346,
+      "binary": "baseline",
+      "binary_sha256": "de6a43c8dd6d6566ea01b7eb4b5918aca55698c62ec4f96cfca5729c039c26a4",
+      "order": 0
+    },
+    {
+      "build_ns_one_observation": 39487772,
+      "estimated_heap_after_queries": 15053167,
+      "estimated_retained_heap_bytes": 15053167,
+      "heap_estimate": {
+        "count": 21,
+        "max_us": 295.29,
+        "min_us": 183.189,
+        "p50_us": 185.291,
+        "p95_us": 235.807,
+        "sorted_samples_ns": [
+          183189,
+          184283,
+          184291,
+          184424,
+          184579,
+          184659,
+          184983,
+          184989,
+          185052,
+          185233,
+          185291,
+          185522,
+          185592,
+          185690,
+          186338,
+          186789,
+          188056,
+          193218,
+          200303,
+          235807,
+          295290
+        ]
+      },
+      "label": "candidate-10000-1",
+      "queries": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "a9cccc0a64421c8e73c517a74172b725d200897532276401c5606c12f2c35bc3",
+          "timing": {
+            "count": 20,
+            "max_us": 527.35,
+            "min_us": 455.804,
+            "p50_us": 471.039,
+            "p95_us": 521.527,
+            "sorted_samples_ns": [
+              455804,
+              458010,
+              458601,
+              459163,
+              462924,
+              465132,
+              467881,
+              470089,
+              470984,
+              471039,
+              473039,
+              476754,
+              476967,
+              480434,
+              493541,
+              510564,
+              514101,
+              518206,
+              521527,
+              527350
+            ]
+          }
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "e42fc3ed5d3b9fb1097f6fb27c4b991aef34bb21f1f1c9faba21e1c5fbe3edba",
+          "timing": {
+            "count": 20,
+            "max_us": 2671.095,
+            "min_us": 2356.446,
+            "p50_us": 2459.749,
+            "p95_us": 2668.563,
+            "sorted_samples_ns": [
+              2356446,
+              2369752,
+              2405760,
+              2417663,
+              2429359,
+              2436719,
+              2440350,
+              2448165,
+              2451510,
+              2459749,
+              2461495,
+              2471609,
+              2476092,
+              2479449,
+              2495394,
+              2527080,
+              2532951,
+              2619622,
+              2668563,
+              2671095
+            ]
+          }
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 125.32,
+            "min_us": 87.143,
+            "p50_us": 97.36,
+            "p95_us": 119.601,
+            "sorted_samples_ns": [
+              87143,
+              88604,
+              94275,
+              95328,
+              95406,
+              96079,
+              96264,
+              97227,
+              97324,
+              97360,
+              101470,
+              102052,
+              112420,
+              113119,
+              114557,
+              115658,
+              117372,
+              118724,
+              119601,
+              125320
+            ]
+          }
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff",
+          "timing": {
+            "count": 20,
+            "max_us": 91.962,
+            "min_us": 77.508,
+            "p50_us": 85.517,
+            "p95_us": 90.911,
+            "sorted_samples_ns": [
+              77508,
+              78015,
+              78724,
+              84321,
+              84342,
+              84482,
+              84751,
+              84832,
+              84975,
+              85517,
+              85613,
+              85655,
+              86317,
+              86394,
+              86478,
+              87482,
+              87630,
+              87880,
+              90911,
+              91962
+            ]
+          }
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "9b6420a1740a2460b7c898ba23bf39e20f335f7eb601eb7186e50d410345175d",
+          "timing": {
+            "count": 20,
+            "max_us": 215.122,
+            "min_us": 190.549,
+            "p50_us": 195.206,
+            "p95_us": 206.52,
+            "sorted_samples_ns": [
+              190549,
+              191713,
+              192805,
+              193559,
+              193796,
+              193827,
+              194088,
+              194620,
+              195087,
+              195206,
+              195465,
+              197266,
+              198012,
+              198484,
+              199257,
+              200317,
+              202328,
+              204186,
+              206520,
+              215122
+            ]
+          }
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a",
+          "timing": {
+            "count": 20,
+            "max_us": 88.746,
+            "min_us": 81.198,
+            "p50_us": 83.959,
+            "p95_us": 88.114,
+            "sorted_samples_ns": [
+              81198,
+              81534,
+              82724,
+              82835,
+              82910,
+              83479,
+              83546,
+              83770,
+              83840,
+              83959,
+              84955,
+              85113,
+              85218,
+              85865,
+              86041,
+              86475,
+              86622,
+              86806,
+              88114,
+              88746
+            ]
+          }
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 95.511,
+            "min_us": 79.485,
+            "p50_us": 82.081,
+            "p95_us": 90.047,
+            "sorted_samples_ns": [
+              79485,
+              80076,
+              80194,
+              80405,
+              81009,
+              81321,
+              81721,
+              81772,
+              81879,
+              82081,
+              82495,
+              83128,
+              84205,
+              87590,
+              88657,
+              89399,
+              89835,
+              89943,
+              90047,
+              95511
+            ]
+          }
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 87.888,
+            "min_us": 70.952,
+            "p50_us": 82.403,
+            "p95_us": 87.332,
+            "sorted_samples_ns": [
+              70952,
+              74202,
+              77397,
+              77543,
+              78880,
+              79004,
+              79061,
+              79152,
+              80145,
+              82403,
+              82891,
+              84673,
+              85227,
+              85421,
+              86022,
+              86389,
+              87222,
+              87276,
+              87332,
+              87888
+            ]
+          }
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785",
+          "timing": {
+            "count": 20,
+            "max_us": 88.306,
+            "min_us": 79.041,
+            "p50_us": 81.302,
+            "p95_us": 87.907,
+            "sorted_samples_ns": [
+              79041,
+              79146,
+              79347,
+              79361,
+              79382,
+              79482,
+              79503,
+              79631,
+              80005,
+              81302,
+              81474,
+              81487,
+              81529,
+              83203,
+              83704,
+              83788,
+              85823,
+              87757,
+              87907,
+              88306
+            ]
+          }
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "d7b50d4e1861f47bcd17112a10c9b5f3633b78e38afa0b8279bd87899bb0504a",
+          "timing": {
+            "count": 20,
+            "max_us": 3285.223,
+            "min_us": 3018.611,
+            "p50_us": 3135.098,
+            "p95_us": 3278.12,
+            "sorted_samples_ns": [
+              3018611,
+              3034050,
+              3049372,
+              3078264,
+              3079009,
+              3091525,
+              3114038,
+              3114117,
+              3125304,
+              3135098,
+              3135494,
+              3137259,
+              3148006,
+              3194110,
+              3206270,
+              3219373,
+              3226241,
+              3233046,
+              3278120,
+              3285223
+            ]
+          }
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "b9fb05152049801ea98f05c3f85184417a0861ee13fc291bbff2a6a978ba03ca",
+          "timing": {
+            "count": 20,
+            "max_us": 998.352,
+            "min_us": 896.908,
+            "p50_us": 928.573,
+            "p95_us": 957.788,
+            "sorted_samples_ns": [
+              896908,
+              899914,
+              900841,
+              911649,
+              914106,
+              915632,
+              916369,
+              917288,
+              920003,
+              928573,
+              930701,
+              936609,
+              939643,
+              943482,
+              947487,
+              947535,
+              949685,
+              950641,
+              957788,
+              998352
+            ]
+          }
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "0485b4b84eba305b2c37a8c82ab6e09b6f00a017110c1ced7d25a174fcb392e8",
+          "timing": {
+            "count": 20,
+            "max_us": 247.0,
+            "min_us": 209.593,
+            "p50_us": 219.334,
+            "p95_us": 245.813,
+            "sorted_samples_ns": [
+              209593,
+              209608,
+              212147,
+              212640,
+              212895,
+              213019,
+              215144,
+              215242,
+              216796,
+              219334,
+              220627,
+              221585,
+              222280,
+              222315,
+              225536,
+              225912,
+              226404,
+              227697,
+              245813,
+              247000
+            ]
+          }
+        }
+      ],
+      "refresh_mode": "append32+reorder",
+      "refresh_ns_one_observation": 7482482,
+      "refreshed_estimated_heap_bytes": 16762160,
+      "refreshed_rows": 10032,
+      "refreshed_signatures": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "b225a042386ad3a239fca3c45ff3acf9e9449d7dc01ebe68b722b71edb352394"
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "2c184409e16a77ce2ad40e06e7c441c0d56505c4236340c5de2095b168e19d41"
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff"
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "9b6420a1740a2460b7c898ba23bf39e20f335f7eb601eb7186e50d410345175d"
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a"
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785"
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "db40d9047d061baa245a00e044c1f830e51436cfd54a780e7fb71bbcd75eb0ac"
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "242418ad0c789d24b26b2bc01ed871b26fbcc34e784ecb7ac64a3a86fb15daaf"
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "0485b4b84eba305b2c37a8c82ab6e09b6f00a017110c1ced7d25a174fcb392e8"
+        }
+      ],
+      "rows": 10000,
+      "scope": "pure local cached public projection API; no remote freshness proof",
+      "text_bytes": 760346,
+      "binary": "candidate",
+      "binary_sha256": "97c7c2d4d59a3e5b85ac132070ba8723c1aebe4a8dcad4c9e9907945be0a9bec",
+      "order": 1
+    },
+    {
+      "build_ns_one_observation": 38249847,
+      "estimated_heap_after_queries": 15053167,
+      "estimated_retained_heap_bytes": 15053167,
+      "heap_estimate": {
+        "count": 21,
+        "max_us": 249.83,
+        "min_us": 173.805,
+        "p50_us": 177.676,
+        "p95_us": 187.395,
+        "sorted_samples_ns": [
+          173805,
+          174971,
+          175228,
+          175831,
+          176993,
+          177255,
+          177340,
+          177462,
+          177476,
+          177489,
+          177676,
+          178503,
+          178770,
+          179553,
+          179605,
+          179801,
+          179913,
+          184319,
+          185469,
+          187395,
+          249830
+        ]
+      },
+      "label": "candidate-10000-2",
+      "queries": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "a9cccc0a64421c8e73c517a74172b725d200897532276401c5606c12f2c35bc3",
+          "timing": {
+            "count": 20,
+            "max_us": 537.917,
+            "min_us": 444.739,
+            "p50_us": 461.52,
+            "p95_us": 519.244,
+            "sorted_samples_ns": [
+              444739,
+              448934,
+              449072,
+              449218,
+              450081,
+              450283,
+              455088,
+              455178,
+              458202,
+              461520,
+              461917,
+              462840,
+              469577,
+              473864,
+              474732,
+              483796,
+              492874,
+              494739,
+              519244,
+              537917
+            ]
+          }
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "e42fc3ed5d3b9fb1097f6fb27c4b991aef34bb21f1f1c9faba21e1c5fbe3edba",
+          "timing": {
+            "count": 20,
+            "max_us": 2399.45,
+            "min_us": 2277.239,
+            "p50_us": 2313.249,
+            "p95_us": 2391.017,
+            "sorted_samples_ns": [
+              2277239,
+              2283509,
+              2288954,
+              2296143,
+              2300084,
+              2302222,
+              2305952,
+              2307156,
+              2308607,
+              2313249,
+              2313990,
+              2317666,
+              2322213,
+              2356818,
+              2361768,
+              2365048,
+              2372344,
+              2378296,
+              2391017,
+              2399450
+            ]
+          }
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 135.076,
+            "min_us": 92.626,
+            "p50_us": 106.087,
+            "p95_us": 131.536,
+            "sorted_samples_ns": [
+              92626,
+              93010,
+              93284,
+              94238,
+              95539,
+              96377,
+              97227,
+              97528,
+              103407,
+              106087,
+              109163,
+              109570,
+              110898,
+              115086,
+              115908,
+              116137,
+              122688,
+              124254,
+              131536,
+              135076
+            ]
+          }
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff",
+          "timing": {
+            "count": 20,
+            "max_us": 106.848,
+            "min_us": 83.592,
+            "p50_us": 86.673,
+            "p95_us": 92.742,
+            "sorted_samples_ns": [
+              83592,
+              83753,
+              85445,
+              85505,
+              85598,
+              85759,
+              86068,
+              86248,
+              86248,
+              86673,
+              86907,
+              87267,
+              88404,
+              88687,
+              88892,
+              89152,
+              89464,
+              90164,
+              92742,
+              106848
+            ]
+          }
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "9b6420a1740a2460b7c898ba23bf39e20f335f7eb601eb7186e50d410345175d",
+          "timing": {
+            "count": 20,
+            "max_us": 203.181,
+            "min_us": 187.902,
+            "p50_us": 191.997,
+            "p95_us": 201.595,
+            "sorted_samples_ns": [
+              187902,
+              188549,
+              190027,
+              190182,
+              190651,
+              190712,
+              191557,
+              191684,
+              191977,
+              191997,
+              192384,
+              193075,
+              193114,
+              194542,
+              195464,
+              195475,
+              196104,
+              196605,
+              201595,
+              203181
+            ]
+          }
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a",
+          "timing": {
+            "count": 20,
+            "max_us": 91.283,
+            "min_us": 77.034,
+            "p50_us": 84.533,
+            "p95_us": 89.932,
+            "sorted_samples_ns": [
+              77034,
+              77319,
+              77690,
+              78540,
+              83359,
+              83790,
+              84028,
+              84348,
+              84431,
+              84533,
+              84859,
+              84965,
+              85017,
+              85406,
+              85665,
+              85935,
+              86476,
+              87006,
+              89932,
+              91283
+            ]
+          }
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 92.851,
+            "min_us": 87.896,
+            "p50_us": 89.764,
+            "p95_us": 92.154,
+            "sorted_samples_ns": [
+              87896,
+              88219,
+              88900,
+              88917,
+              89024,
+              89084,
+              89320,
+              89457,
+              89756,
+              89764,
+              90053,
+              90449,
+              90666,
+              90964,
+              91206,
+              91254,
+              91580,
+              91883,
+              92154,
+              92851
+            ]
+          }
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 86.186,
+            "min_us": 72.193,
+            "p50_us": 80.16,
+            "p95_us": 84.65,
+            "sorted_samples_ns": [
+              72193,
+              72829,
+              73732,
+              73850,
+              74023,
+              74413,
+              75123,
+              79281,
+              79945,
+              80160,
+              80821,
+              80887,
+              80983,
+              81168,
+              81254,
+              81441,
+              81657,
+              82010,
+              84650,
+              86186
+            ]
+          }
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785",
+          "timing": {
+            "count": 20,
+            "max_us": 85.923,
+            "min_us": 79.509,
+            "p50_us": 82.141,
+            "p95_us": 85.686,
+            "sorted_samples_ns": [
+              79509,
+              80531,
+              80949,
+              81194,
+              81467,
+              81974,
+              82008,
+              82140,
+              82140,
+              82141,
+              82261,
+              82372,
+              82403,
+              82531,
+              82930,
+              82935,
+              82988,
+              83876,
+              85686,
+              85923
+            ]
+          }
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "d7b50d4e1861f47bcd17112a10c9b5f3633b78e38afa0b8279bd87899bb0504a",
+          "timing": {
+            "count": 20,
+            "max_us": 3822.535,
+            "min_us": 3220.015,
+            "p50_us": 3423.855,
+            "p95_us": 3625.226,
+            "sorted_samples_ns": [
+              3220015,
+              3295086,
+              3354111,
+              3377110,
+              3380212,
+              3386712,
+              3406131,
+              3412516,
+              3415482,
+              3423855,
+              3424663,
+              3430022,
+              3432587,
+              3456337,
+              3471602,
+              3499281,
+              3532478,
+              3549829,
+              3625226,
+              3822535
+            ]
+          }
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "b9fb05152049801ea98f05c3f85184417a0861ee13fc291bbff2a6a978ba03ca",
+          "timing": {
+            "count": 20,
+            "max_us": 1020.382,
+            "min_us": 961.247,
+            "p50_us": 975.702,
+            "p95_us": 1001.402,
+            "sorted_samples_ns": [
+              961247,
+              964156,
+              965979,
+              967128,
+              970844,
+              971457,
+              973113,
+              974123,
+              974645,
+              975702,
+              976276,
+              979386,
+              980283,
+              983643,
+              985012,
+              991409,
+              991644,
+              993501,
+              1001402,
+              1020382
+            ]
+          }
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "0485b4b84eba305b2c37a8c82ab6e09b6f00a017110c1ced7d25a174fcb392e8",
+          "timing": {
+            "count": 20,
+            "max_us": 242.568,
+            "min_us": 216.901,
+            "p50_us": 223.031,
+            "p95_us": 234.475,
+            "sorted_samples_ns": [
+              216901,
+              217730,
+              218894,
+              219987,
+              220090,
+              220441,
+              221497,
+              221836,
+              222279,
+              223031,
+              223663,
+              223809,
+              223880,
+              225800,
+              226007,
+              227016,
+              227870,
+              230778,
+              234475,
+              242568
+            ]
+          }
+        }
+      ],
+      "refresh_mode": "append32+reorder",
+      "refresh_ns_one_observation": 8185884,
+      "refreshed_estimated_heap_bytes": 16762160,
+      "refreshed_rows": 10032,
+      "refreshed_signatures": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "b225a042386ad3a239fca3c45ff3acf9e9449d7dc01ebe68b722b71edb352394"
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "2c184409e16a77ce2ad40e06e7c441c0d56505c4236340c5de2095b168e19d41"
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff"
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "9b6420a1740a2460b7c898ba23bf39e20f335f7eb601eb7186e50d410345175d"
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a"
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785"
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "db40d9047d061baa245a00e044c1f830e51436cfd54a780e7fb71bbcd75eb0ac"
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "242418ad0c789d24b26b2bc01ed871b26fbcc34e784ecb7ac64a3a86fb15daaf"
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "0485b4b84eba305b2c37a8c82ab6e09b6f00a017110c1ced7d25a174fcb392e8"
+        }
+      ],
+      "rows": 10000,
+      "scope": "pure local cached public projection API; no remote freshness proof",
+      "text_bytes": 760346,
+      "binary": "candidate",
+      "binary_sha256": "97c7c2d4d59a3e5b85ac132070ba8723c1aebe4a8dcad4c9e9907945be0a9bec",
+      "order": 2
+    },
+    {
+      "build_ns_one_observation": 36181089,
+      "estimated_heap_after_queries": 15053167,
+      "estimated_retained_heap_bytes": 15053167,
+      "heap_estimate": {
+        "count": 21,
+        "max_us": 232.368,
+        "min_us": 178.721,
+        "p50_us": 180.318,
+        "p95_us": 186.915,
+        "sorted_samples_ns": [
+          178721,
+          178984,
+          179074,
+          179209,
+          179510,
+          179534,
+          179541,
+          179848,
+          179983,
+          179985,
+          180318,
+          180643,
+          180892,
+          181401,
+          182519,
+          183708,
+          184237,
+          185466,
+          186630,
+          186915,
+          232368
+        ]
+      },
+      "label": "baseline-10000-3",
+      "queries": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "a9cccc0a64421c8e73c517a74172b725d200897532276401c5606c12f2c35bc3",
+          "timing": {
+            "count": 20,
+            "max_us": 1220.951,
+            "min_us": 1050.926,
+            "p50_us": 1113.143,
+            "p95_us": 1174.822,
+            "sorted_samples_ns": [
+              1050926,
+              1068755,
+              1073068,
+              1077197,
+              1077451,
+              1094900,
+              1103507,
+              1103932,
+              1110081,
+              1113143,
+              1113472,
+              1113816,
+              1123131,
+              1128633,
+              1130742,
+              1133692,
+              1140723,
+              1147936,
+              1174822,
+              1220951
+            ]
+          }
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "e42fc3ed5d3b9fb1097f6fb27c4b991aef34bb21f1f1c9faba21e1c5fbe3edba",
+          "timing": {
+            "count": 20,
+            "max_us": 3412.248,
+            "min_us": 2935.772,
+            "p50_us": 3122.886,
+            "p95_us": 3330.362,
+            "sorted_samples_ns": [
+              2935772,
+              2995681,
+              3003400,
+              3005452,
+              3011951,
+              3018299,
+              3067802,
+              3117045,
+              3118654,
+              3122886,
+              3125071,
+              3129479,
+              3135644,
+              3137742,
+              3138847,
+              3164106,
+              3202303,
+              3211670,
+              3330362,
+              3412248
+            ]
+          }
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 777.0,
+            "min_us": 702.962,
+            "p50_us": 740.035,
+            "p95_us": 772.743,
+            "sorted_samples_ns": [
+              702962,
+              710049,
+              715473,
+              724372,
+              725221,
+              725500,
+              726481,
+              726728,
+              732743,
+              740035,
+              747544,
+              753433,
+              756523,
+              759728,
+              764791,
+              765293,
+              765513,
+              771150,
+              772743,
+              777000
+            ]
+          }
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff",
+          "timing": {
+            "count": 20,
+            "max_us": 898.718,
+            "min_us": 706.695,
+            "p50_us": 750.62,
+            "p95_us": 820.387,
+            "sorted_samples_ns": [
+              706695,
+              712163,
+              720512,
+              732040,
+              732186,
+              732573,
+              732960,
+              733586,
+              738610,
+              750620,
+              753089,
+              768689,
+              779290,
+              780453,
+              783380,
+              788225,
+              794376,
+              805209,
+              820387,
+              898718
+            ]
+          }
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "9b6420a1740a2460b7c898ba23bf39e20f335f7eb601eb7186e50d410345175d",
+          "timing": {
+            "count": 20,
+            "max_us": 835.594,
+            "min_us": 742.529,
+            "p50_us": 774.55,
+            "p95_us": 818.981,
+            "sorted_samples_ns": [
+              742529,
+              744995,
+              746638,
+              751719,
+              757555,
+              759674,
+              765845,
+              765864,
+              773552,
+              774550,
+              776769,
+              777803,
+              779288,
+              784762,
+              785019,
+              795002,
+              801217,
+              807838,
+              818981,
+              835594
+            ]
+          }
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a",
+          "timing": {
+            "count": 20,
+            "max_us": 893.194,
+            "min_us": 728.541,
+            "p50_us": 772.117,
+            "p95_us": 873.863,
+            "sorted_samples_ns": [
+              728541,
+              729498,
+              735592,
+              736138,
+              747813,
+              757368,
+              761279,
+              761920,
+              768543,
+              772117,
+              772314,
+              773835,
+              774629,
+              776129,
+              790048,
+              792927,
+              812172,
+              848737,
+              873863,
+              893194
+            ]
+          }
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 851.442,
+            "min_us": 715.476,
+            "p50_us": 768.774,
+            "p95_us": 822.966,
+            "sorted_samples_ns": [
+              715476,
+              733518,
+              739444,
+              740148,
+              749108,
+              749307,
+              763395,
+              765071,
+              766451,
+              768774,
+              770528,
+              778327,
+              780020,
+              781772,
+              786078,
+              791608,
+              807842,
+              808499,
+              822966,
+              851442
+            ]
+          }
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 816.014,
+            "min_us": 725.974,
+            "p50_us": 746.601,
+            "p95_us": 813.875,
+            "sorted_samples_ns": [
+              725974,
+              729816,
+              733575,
+              735820,
+              739865,
+              743758,
+              745244,
+              745927,
+              746341,
+              746601,
+              752093,
+              754791,
+              777628,
+              780579,
+              785655,
+              800765,
+              809513,
+              811209,
+              813875,
+              816014
+            ]
+          }
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785",
+          "timing": {
+            "count": 20,
+            "max_us": 823.549,
+            "min_us": 747.673,
+            "p50_us": 766.691,
+            "p95_us": 808.522,
+            "sorted_samples_ns": [
+              747673,
+              751639,
+              754037,
+              754089,
+              754312,
+              755937,
+              764234,
+              765776,
+              765835,
+              766691,
+              767816,
+              769864,
+              780543,
+              782355,
+              784833,
+              785274,
+              787931,
+              798166,
+              808522,
+              823549
+            ]
+          }
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "d7b50d4e1861f47bcd17112a10c9b5f3633b78e38afa0b8279bd87899bb0504a",
+          "timing": {
+            "count": 20,
+            "max_us": 4241.454,
+            "min_us": 3687.263,
+            "p50_us": 3908.063,
+            "p95_us": 4116.1,
+            "sorted_samples_ns": [
+              3687263,
+              3694535,
+              3749646,
+              3765183,
+              3844786,
+              3845273,
+              3868498,
+              3881288,
+              3903602,
+              3908063,
+              3909518,
+              3928082,
+              3930334,
+              3953193,
+              3972136,
+              3977688,
+              4031996,
+              4079417,
+              4116100,
+              4241454
+            ]
+          }
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "b9fb05152049801ea98f05c3f85184417a0861ee13fc291bbff2a6a978ba03ca",
+          "timing": {
+            "count": 20,
+            "max_us": 1691.27,
+            "min_us": 1520.641,
+            "p50_us": 1560.241,
+            "p95_us": 1602.67,
+            "sorted_samples_ns": [
+              1520641,
+              1521299,
+              1522669,
+              1527871,
+              1536440,
+              1550384,
+              1551865,
+              1553440,
+              1559036,
+              1560241,
+              1560296,
+              1564757,
+              1566664,
+              1574074,
+              1586793,
+              1590193,
+              1592137,
+              1597949,
+              1602670,
+              1691270
+            ]
+          }
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "0485b4b84eba305b2c37a8c82ab6e09b6f00a017110c1ced7d25a174fcb392e8",
+          "timing": {
+            "count": 20,
+            "max_us": 1049.136,
+            "min_us": 882.338,
+            "p50_us": 934.155,
+            "p95_us": 1033.549,
+            "sorted_samples_ns": [
+              882338,
+              889447,
+              892792,
+              898617,
+              898665,
+              900486,
+              914214,
+              919114,
+              930755,
+              934155,
+              934263,
+              942808,
+              944971,
+              945176,
+              951989,
+              956466,
+              981975,
+              993572,
+              1033549,
+              1049136
+            ]
+          }
+        }
+      ],
+      "refresh_mode": "append32+reorder",
+      "refresh_ns_one_observation": 7395939,
+      "refreshed_estimated_heap_bytes": 16762160,
+      "refreshed_rows": 10032,
+      "refreshed_signatures": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "b225a042386ad3a239fca3c45ff3acf9e9449d7dc01ebe68b722b71edb352394"
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "2c184409e16a77ce2ad40e06e7c441c0d56505c4236340c5de2095b168e19d41"
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff"
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "9b6420a1740a2460b7c898ba23bf39e20f335f7eb601eb7186e50d410345175d"
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a"
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785"
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "db40d9047d061baa245a00e044c1f830e51436cfd54a780e7fb71bbcd75eb0ac"
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "242418ad0c789d24b26b2bc01ed871b26fbcc34e784ecb7ac64a3a86fb15daaf"
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "0485b4b84eba305b2c37a8c82ab6e09b6f00a017110c1ced7d25a174fcb392e8"
+        }
+      ],
+      "rows": 10000,
+      "scope": "pure local cached public projection API; no remote freshness proof",
+      "text_bytes": 760346,
+      "binary": "baseline",
+      "binary_sha256": "de6a43c8dd6d6566ea01b7eb4b5918aca55698c62ec4f96cfca5729c039c26a4",
+      "order": 3
+    },
+    {
+      "build_ns_one_observation": 386096736,
+      "estimated_heap_after_queries": 141780270,
+      "estimated_retained_heap_bytes": 141780270,
+      "heap_estimate": {
+        "count": 21,
+        "max_us": 5559.498,
+        "min_us": 4696.129,
+        "p50_us": 5053.492,
+        "p95_us": 5522.922,
+        "sorted_samples_ns": [
+          4696129,
+          4857424,
+          4901480,
+          4915177,
+          4940963,
+          4995913,
+          5017554,
+          5025314,
+          5031546,
+          5050544,
+          5053492,
+          5065772,
+          5183212,
+          5255111,
+          5269199,
+          5343351,
+          5384258,
+          5407722,
+          5456876,
+          5522922,
+          5559498
+        ]
+      },
+      "label": "baseline-100000-0",
+      "queries": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "5ce4c365797caef51bd85b8789712283a134f13f4c33e3e60a3f28a4035f8c9f",
+          "timing": {
+            "count": 20,
+            "max_us": 26699.571,
+            "min_us": 23141.928,
+            "p50_us": 24627.38,
+            "p95_us": 26598.501,
+            "sorted_samples_ns": [
+              23141928,
+              23406737,
+              23448361,
+              23986927,
+              23988540,
+              24057431,
+              24358039,
+              24613250,
+              24624788,
+              24627380,
+              24767976,
+              24853078,
+              24948041,
+              25074643,
+              25170517,
+              25588797,
+              26031102,
+              26538430,
+              26598501,
+              26699571
+            ]
+          }
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "09957ad78b0ec269f332e11550c9686e892535b061514987303923a4cfd33da3",
+          "timing": {
+            "count": 20,
+            "max_us": 61095.207,
+            "min_us": 54033.832,
+            "p50_us": 58657.508,
+            "p95_us": 60893.034,
+            "sorted_samples_ns": [
+              54033832,
+              54358719,
+              55299500,
+              55858335,
+              56091984,
+              56482230,
+              56572993,
+              56903868,
+              58184416,
+              58657508,
+              59173540,
+              59401775,
+              59429060,
+              59616832,
+              59934813,
+              60098533,
+              60261739,
+              60679751,
+              60893034,
+              61095207
+            ]
+          }
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 22259.062,
+            "min_us": 19670.113,
+            "p50_us": 20586.773,
+            "p95_us": 21940.706,
+            "sorted_samples_ns": [
+              19670113,
+              19869270,
+              20084794,
+              20105325,
+              20193301,
+              20194184,
+              20402927,
+              20526976,
+              20583909,
+              20586773,
+              20674796,
+              20701498,
+              20782672,
+              20907681,
+              21173639,
+              21192341,
+              21383404,
+              21768759,
+              21940706,
+              22259062
+            ]
+          }
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff",
+          "timing": {
+            "count": 20,
+            "max_us": 23405.863,
+            "min_us": 19432.919,
+            "p50_us": 21101.221,
+            "p95_us": 22167.632,
+            "sorted_samples_ns": [
+              19432919,
+              19754182,
+              19781165,
+              19839760,
+              19903781,
+              20369941,
+              20500925,
+              20774596,
+              20857360,
+              21101221,
+              21163875,
+              21176001,
+              21254497,
+              21614887,
+              21754413,
+              21809366,
+              21886872,
+              22066315,
+              22167632,
+              23405863
+            ]
+          }
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "c786e9053962b3645b49017287c92721b12692c4575a4e958c7dc4a40c32c373",
+          "timing": {
+            "count": 20,
+            "max_us": 22003.201,
+            "min_us": 19502.154,
+            "p50_us": 20372.772,
+            "p95_us": 21070.093,
+            "sorted_samples_ns": [
+              19502154,
+              19767069,
+              19893498,
+              19986918,
+              19987206,
+              20028858,
+              20140499,
+              20189878,
+              20313302,
+              20372772,
+              20378794,
+              20444621,
+              20462149,
+              20494892,
+              20652603,
+              20671113,
+              20689977,
+              20844121,
+              21070093,
+              22003201
+            ]
+          }
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a",
+          "timing": {
+            "count": 20,
+            "max_us": 20221.54,
+            "min_us": 18070.961,
+            "p50_us": 19179.363,
+            "p95_us": 19834.392,
+            "sorted_samples_ns": [
+              18070961,
+              18087411,
+              18149965,
+              18403415,
+              18508140,
+              18659197,
+              18860121,
+              18954455,
+              19172766,
+              19179363,
+              19260986,
+              19409084,
+              19464491,
+              19712584,
+              19715801,
+              19716222,
+              19776972,
+              19786932,
+              19834392,
+              20221540
+            ]
+          }
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 19454.451,
+            "min_us": 16784.807,
+            "p50_us": 18061.002,
+            "p95_us": 19193.403,
+            "sorted_samples_ns": [
+              16784807,
+              16953057,
+              17170897,
+              17394838,
+              17475733,
+              17489748,
+              17555602,
+              17559811,
+              17865550,
+              18061002,
+              18070306,
+              18103059,
+              18248560,
+              18312771,
+              18324639,
+              18938926,
+              18959105,
+              19023504,
+              19193403,
+              19454451
+            ]
+          }
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 19780.516,
+            "min_us": 17380.216,
+            "p50_us": 18649.921,
+            "p95_us": 19703.258,
+            "sorted_samples_ns": [
+              17380216,
+              17486432,
+              17494856,
+              17557549,
+              17694870,
+              17767497,
+              17794940,
+              17888074,
+              18230210,
+              18649921,
+              18701983,
+              18736492,
+              18761639,
+              18787358,
+              18941241,
+              19053375,
+              19186790,
+              19454960,
+              19703258,
+              19780516
+            ]
+          }
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785",
+          "timing": {
+            "count": 20,
+            "max_us": 19698.691,
+            "min_us": 17715.457,
+            "p50_us": 18265.527,
+            "p95_us": 19546.506,
+            "sorted_samples_ns": [
+              17715457,
+              17738158,
+              17837528,
+              17929967,
+              17933318,
+              18134228,
+              18156137,
+              18213048,
+              18261190,
+              18265527,
+              18325712,
+              18494879,
+              18557486,
+              18624395,
+              18805674,
+              19031690,
+              19103483,
+              19217522,
+              19546506,
+              19698691
+            ]
+          }
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "a58af9a0d9ba7cbfed326d6df00773c5ebe8e0f97d1449db675e9b698da9d874",
+          "timing": {
+            "count": 20,
+            "max_us": 60468.826,
+            "min_us": 53931.419,
+            "p50_us": 58613.342,
+            "p95_us": 60199.909,
+            "sorted_samples_ns": [
+              53931419,
+              55150128,
+              56760901,
+              56900523,
+              57056976,
+              57959062,
+              57988038,
+              58042481,
+              58194269,
+              58613342,
+              58715338,
+              58853940,
+              59076890,
+              59156415,
+              59387234,
+              59510677,
+              59615099,
+              59664994,
+              60199909,
+              60468826
+            ]
+          }
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "baa71fed9d8b8232cffcd0459d61d6e457182a1aa9b8413e5e45f76f8673d7a5",
+          "timing": {
+            "count": 20,
+            "max_us": 21887.602,
+            "min_us": 18970.874,
+            "p50_us": 19875.665,
+            "p95_us": 21400.003,
+            "sorted_samples_ns": [
+              18970874,
+              18994542,
+              19064727,
+              19291395,
+              19291537,
+              19420337,
+              19645799,
+              19729895,
+              19817359,
+              19875665,
+              20118958,
+              20121984,
+              20196428,
+              20271560,
+              20416430,
+              20481468,
+              20552270,
+              20694566,
+              21400003,
+              21887602
+            ]
+          }
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29",
+          "timing": {
+            "count": 20,
+            "max_us": 25673.827,
+            "min_us": 22532.32,
+            "p50_us": 23731.203,
+            "p95_us": 25421.018,
+            "sorted_samples_ns": [
+              22532320,
+              23003847,
+              23081572,
+              23165380,
+              23470917,
+              23564712,
+              23577023,
+              23632249,
+              23678847,
+              23731203,
+              23738011,
+              23793265,
+              23866418,
+              24150991,
+              24193708,
+              24740937,
+              25184206,
+              25257973,
+              25421018,
+              25673827
+            ]
+          }
+        }
+      ],
+      "refresh_mode": "replacement+reorder",
+      "refresh_ns_one_observation": 360451142,
+      "refreshed_estimated_heap_bytes": 141780586,
+      "refreshed_rows": 100000,
+      "refreshed_signatures": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "2dbaae39f364d59a18d5e53a8ef7b8f73f2255287baed873962a24fd11b3d790"
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "4d1cad000c70a70bb8918738f3fd568c81c03b9c52918b6ce626886e5b90614a"
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "7a1ba1e5f55735b6f3369677e5e45d9f0338a9d19728bff290177a1be280b1f1"
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "c786e9053962b3645b49017287c92721b12692c4575a4e958c7dc4a40c32c373"
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a"
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785"
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "ba8ae86397e8471208287e9c4a4bb5353fda86b4b2b624854888df031907331b"
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "baa71fed9d8b8232cffcd0459d61d6e457182a1aa9b8413e5e45f76f8673d7a5"
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+        }
+      ],
+      "rows": 100000,
+      "scope": "pure local cached public projection API; no remote freshness proof",
+      "text_bytes": 7703324,
+      "binary": "baseline",
+      "binary_sha256": "de6a43c8dd6d6566ea01b7eb4b5918aca55698c62ec4f96cfca5729c039c26a4",
+      "order": 0
+    },
+    {
+      "build_ns_one_observation": 393734745,
+      "estimated_heap_after_queries": 141780270,
+      "estimated_retained_heap_bytes": 141780270,
+      "heap_estimate": {
+        "count": 21,
+        "max_us": 5703.253,
+        "min_us": 4695.607,
+        "p50_us": 4944.264,
+        "p95_us": 5425.54,
+        "sorted_samples_ns": [
+          4695607,
+          4769907,
+          4777214,
+          4785920,
+          4795829,
+          4803688,
+          4815453,
+          4847616,
+          4882298,
+          4896453,
+          4944264,
+          4948450,
+          5009974,
+          5185953,
+          5186777,
+          5194242,
+          5328290,
+          5367399,
+          5394634,
+          5425540,
+          5703253
+        ]
+      },
+      "label": "candidate-100000-1",
+      "queries": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "5ce4c365797caef51bd85b8789712283a134f13f4c33e3e60a3f28a4035f8c9f",
+          "timing": {
+            "count": 20,
+            "max_us": 7028.889,
+            "min_us": 6250.505,
+            "p50_us": 6563.228,
+            "p95_us": 6861.285,
+            "sorted_samples_ns": [
+              6250505,
+              6292414,
+              6394734,
+              6402620,
+              6408127,
+              6420932,
+              6455392,
+              6470199,
+              6551890,
+              6563228,
+              6563416,
+              6593376,
+              6593488,
+              6621806,
+              6645978,
+              6647379,
+              6679725,
+              6692496,
+              6861285,
+              7028889
+            ]
+          }
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "09957ad78b0ec269f332e11550c9686e892535b061514987303923a4cfd33da3",
+          "timing": {
+            "count": 20,
+            "max_us": 40742.959,
+            "min_us": 34667.942,
+            "p50_us": 38999.379,
+            "p95_us": 40416.124,
+            "sorted_samples_ns": [
+              34667942,
+              34809843,
+              34923200,
+              35950612,
+              36284802,
+              37263580,
+              37697822,
+              38435775,
+              38753538,
+              38999379,
+              39057821,
+              39190052,
+              39277857,
+              39554665,
+              40039343,
+              40217231,
+              40233985,
+              40355822,
+              40416124,
+              40742959
+            ]
+          }
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 2179.766,
+            "min_us": 1792.661,
+            "p50_us": 1958.572,
+            "p95_us": 2117.318,
+            "sorted_samples_ns": [
+              1792661,
+              1834884,
+              1875177,
+              1881774,
+              1902514,
+              1907384,
+              1919662,
+              1938653,
+              1939607,
+              1958572,
+              1968607,
+              1970005,
+              1988605,
+              2023454,
+              2024551,
+              2041548,
+              2066435,
+              2097387,
+              2117318,
+              2179766
+            ]
+          }
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff",
+          "timing": {
+            "count": 20,
+            "max_us": 1827.66,
+            "min_us": 1552.504,
+            "p50_us": 1672.419,
+            "p95_us": 1759.898,
+            "sorted_samples_ns": [
+              1552504,
+              1612649,
+              1627871,
+              1647451,
+              1648079,
+              1656605,
+              1665006,
+              1665833,
+              1667150,
+              1672419,
+              1679767,
+              1685691,
+              1722930,
+              1736182,
+              1737861,
+              1739658,
+              1740792,
+              1749648,
+              1759898,
+              1827660
+            ]
+          }
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "c786e9053962b3645b49017287c92721b12692c4575a4e958c7dc4a40c32c373",
+          "timing": {
+            "count": 20,
+            "max_us": 4182.566,
+            "min_us": 3769.265,
+            "p50_us": 3923.849,
+            "p95_us": 4154.474,
+            "sorted_samples_ns": [
+              3769265,
+              3782403,
+              3788851,
+              3833753,
+              3852007,
+              3860587,
+              3884865,
+              3890701,
+              3921205,
+              3923849,
+              4008439,
+              4011292,
+              4015261,
+              4041942,
+              4047782,
+              4083147,
+              4094724,
+              4113814,
+              4154474,
+              4182566
+            ]
+          }
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a",
+          "timing": {
+            "count": 20,
+            "max_us": 2027.097,
+            "min_us": 1712.062,
+            "p50_us": 1793.324,
+            "p95_us": 1949.66,
+            "sorted_samples_ns": [
+              1712062,
+              1722257,
+              1726945,
+              1732660,
+              1751259,
+              1755507,
+              1774199,
+              1774484,
+              1776977,
+              1793324,
+              1819496,
+              1837608,
+              1854664,
+              1864482,
+              1866916,
+              1871137,
+              1924871,
+              1926990,
+              1949660,
+              2027097
+            ]
+          }
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 2461.676,
+            "min_us": 2023.034,
+            "p50_us": 2161.95,
+            "p95_us": 2343.136,
+            "sorted_samples_ns": [
+              2023034,
+              2059254,
+              2102017,
+              2107346,
+              2124651,
+              2132240,
+              2141806,
+              2145410,
+              2148690,
+              2161950,
+              2176442,
+              2183175,
+              2227666,
+              2234893,
+              2238401,
+              2255144,
+              2283081,
+              2341048,
+              2343136,
+              2461676
+            ]
+          }
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 1753.984,
+            "min_us": 1552.552,
+            "p50_us": 1650.275,
+            "p95_us": 1725.308,
+            "sorted_samples_ns": [
+              1552552,
+              1600397,
+              1618692,
+              1618974,
+              1623963,
+              1627635,
+              1636862,
+              1643351,
+              1647143,
+              1650275,
+              1662384,
+              1662512,
+              1670026,
+              1680032,
+              1687018,
+              1688496,
+              1695707,
+              1718496,
+              1725308,
+              1753984
+            ]
+          }
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785",
+          "timing": {
+            "count": 20,
+            "max_us": 1812.415,
+            "min_us": 1610.205,
+            "p50_us": 1708.172,
+            "p95_us": 1746.148,
+            "sorted_samples_ns": [
+              1610205,
+              1621093,
+              1653361,
+              1659540,
+              1664829,
+              1675484,
+              1677162,
+              1703588,
+              1704587,
+              1708172,
+              1721068,
+              1721423,
+              1724416,
+              1725642,
+              1733721,
+              1735694,
+              1739346,
+              1744445,
+              1746148,
+              1812415
+            ]
+          }
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "a58af9a0d9ba7cbfed326d6df00773c5ebe8e0f97d1449db675e9b698da9d874",
+          "timing": {
+            "count": 20,
+            "max_us": 49929.208,
+            "min_us": 47210.52,
+            "p50_us": 48778.323,
+            "p95_us": 49714.913,
+            "sorted_samples_ns": [
+              47210520,
+              47540765,
+              48239347,
+              48332821,
+              48429685,
+              48571246,
+              48624927,
+              48639978,
+              48761454,
+              48778323,
+              48794764,
+              48882878,
+              48886694,
+              48905277,
+              48932089,
+              48960998,
+              49167902,
+              49189347,
+              49714913,
+              49929208
+            ]
+          }
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "baa71fed9d8b8232cffcd0459d61d6e457182a1aa9b8413e5e45f76f8673d7a5",
+          "timing": {
+            "count": 20,
+            "max_us": 3955.726,
+            "min_us": 3500.517,
+            "p50_us": 3687.183,
+            "p95_us": 3789.579,
+            "sorted_samples_ns": [
+              3500517,
+              3513423,
+              3561296,
+              3566013,
+              3591133,
+              3602483,
+              3629455,
+              3642536,
+              3666411,
+              3687183,
+              3689954,
+              3708606,
+              3716963,
+              3748539,
+              3756188,
+              3768546,
+              3781567,
+              3781764,
+              3789579,
+              3955726
+            ]
+          }
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29",
+          "timing": {
+            "count": 20,
+            "max_us": 7447.387,
+            "min_us": 6525.002,
+            "p50_us": 6926.017,
+            "p95_us": 7244.062,
+            "sorted_samples_ns": [
+              6525002,
+              6592082,
+              6644528,
+              6685872,
+              6759655,
+              6769050,
+              6825895,
+              6836050,
+              6854124,
+              6926017,
+              6927303,
+              6937468,
+              6942060,
+              6950387,
+              7022241,
+              7070217,
+              7089838,
+              7101299,
+              7244062,
+              7447387
+            ]
+          }
+        }
+      ],
+      "refresh_mode": "replacement+reorder",
+      "refresh_ns_one_observation": 517652215,
+      "refreshed_estimated_heap_bytes": 141780586,
+      "refreshed_rows": 100000,
+      "refreshed_signatures": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "2dbaae39f364d59a18d5e53a8ef7b8f73f2255287baed873962a24fd11b3d790"
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "4d1cad000c70a70bb8918738f3fd568c81c03b9c52918b6ce626886e5b90614a"
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "7a1ba1e5f55735b6f3369677e5e45d9f0338a9d19728bff290177a1be280b1f1"
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "c786e9053962b3645b49017287c92721b12692c4575a4e958c7dc4a40c32c373"
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a"
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785"
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "ba8ae86397e8471208287e9c4a4bb5353fda86b4b2b624854888df031907331b"
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "baa71fed9d8b8232cffcd0459d61d6e457182a1aa9b8413e5e45f76f8673d7a5"
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+        }
+      ],
+      "rows": 100000,
+      "scope": "pure local cached public projection API; no remote freshness proof",
+      "text_bytes": 7703324,
+      "binary": "candidate",
+      "binary_sha256": "97c7c2d4d59a3e5b85ac132070ba8723c1aebe4a8dcad4c9e9907945be0a9bec",
+      "order": 1
+    },
+    {
+      "build_ns_one_observation": 446848028,
+      "estimated_heap_after_queries": 141780270,
+      "estimated_retained_heap_bytes": 141780270,
+      "heap_estimate": {
+        "count": 21,
+        "max_us": 5562.791,
+        "min_us": 4949.091,
+        "p50_us": 5263.544,
+        "p95_us": 5548.097,
+        "sorted_samples_ns": [
+          4949091,
+          4997959,
+          5015734,
+          5020942,
+          5057062,
+          5074715,
+          5092557,
+          5160310,
+          5219916,
+          5236939,
+          5263544,
+          5321265,
+          5341434,
+          5358465,
+          5359733,
+          5365410,
+          5423966,
+          5467239,
+          5546300,
+          5548097,
+          5562791
+        ]
+      },
+      "label": "candidate-100000-2",
+      "queries": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "5ce4c365797caef51bd85b8789712283a134f13f4c33e3e60a3f28a4035f8c9f",
+          "timing": {
+            "count": 20,
+            "max_us": 7118.304,
+            "min_us": 6779.525,
+            "p50_us": 6925.928,
+            "p95_us": 7108.246,
+            "sorted_samples_ns": [
+              6779525,
+              6829207,
+              6849612,
+              6857946,
+              6869688,
+              6883389,
+              6898544,
+              6901998,
+              6922735,
+              6925928,
+              6968812,
+              6985339,
+              6994817,
+              7013434,
+              7014848,
+              7028381,
+              7035541,
+              7064076,
+              7108246,
+              7118304
+            ]
+          }
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "09957ad78b0ec269f332e11550c9686e892535b061514987303923a4cfd33da3",
+          "timing": {
+            "count": 20,
+            "max_us": 52442.11,
+            "min_us": 38741.158,
+            "p50_us": 41107.249,
+            "p95_us": 52329.973,
+            "sorted_samples_ns": [
+              38741158,
+              39029183,
+              39279527,
+              39467308,
+              39529318,
+              40065926,
+              40628648,
+              40817122,
+              41068520,
+              41107249,
+              41633482,
+              42339326,
+              42903249,
+              43031289,
+              43763633,
+              44165969,
+              46970613,
+              47926902,
+              52329973,
+              52442110
+            ]
+          }
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 2239.108,
+            "min_us": 2022.033,
+            "p50_us": 2059.285,
+            "p95_us": 2148.922,
+            "sorted_samples_ns": [
+              2022033,
+              2030755,
+              2032096,
+              2035048,
+              2035646,
+              2046342,
+              2046632,
+              2047663,
+              2056754,
+              2059285,
+              2063192,
+              2065161,
+              2069273,
+              2070003,
+              2073156,
+              2081549,
+              2127957,
+              2128173,
+              2148922,
+              2239108
+            ]
+          }
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff",
+          "timing": {
+            "count": 20,
+            "max_us": 1865.018,
+            "min_us": 1617.489,
+            "p50_us": 1714.555,
+            "p95_us": 1787.194,
+            "sorted_samples_ns": [
+              1617489,
+              1626491,
+              1630730,
+              1635791,
+              1653220,
+              1662876,
+              1678513,
+              1682777,
+              1696262,
+              1714555,
+              1715113,
+              1715342,
+              1718504,
+              1728824,
+              1745764,
+              1758070,
+              1758480,
+              1784265,
+              1787194,
+              1865018
+            ]
+          }
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "c786e9053962b3645b49017287c92721b12692c4575a4e958c7dc4a40c32c373",
+          "timing": {
+            "count": 20,
+            "max_us": 4033.898,
+            "min_us": 3696.437,
+            "p50_us": 3855.707,
+            "p95_us": 4001.379,
+            "sorted_samples_ns": [
+              3696437,
+              3707078,
+              3760602,
+              3777355,
+              3797437,
+              3812629,
+              3837027,
+              3840585,
+              3847399,
+              3855707,
+              3876759,
+              3878343,
+              3881067,
+              3921913,
+              3931962,
+              3941398,
+              3972682,
+              3994878,
+              4001379,
+              4033898
+            ]
+          }
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a",
+          "timing": {
+            "count": 20,
+            "max_us": 1841.734,
+            "min_us": 1599.181,
+            "p50_us": 1721.413,
+            "p95_us": 1806.854,
+            "sorted_samples_ns": [
+              1599181,
+              1623663,
+              1644870,
+              1652871,
+              1661598,
+              1672208,
+              1691651,
+              1706555,
+              1710845,
+              1721413,
+              1732327,
+              1742037,
+              1745783,
+              1751167,
+              1754156,
+              1760067,
+              1771117,
+              1772615,
+              1806854,
+              1841734
+            ]
+          }
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 2133.772,
+            "min_us": 1880.381,
+            "p50_us": 1970.537,
+            "p95_us": 2128.796,
+            "sorted_samples_ns": [
+              1880381,
+              1900050,
+              1919057,
+              1926416,
+              1936855,
+              1941611,
+              1949540,
+              1956702,
+              1966955,
+              1970537,
+              1974002,
+              1996869,
+              2015720,
+              2016535,
+              2029615,
+              2062920,
+              2112813,
+              2123249,
+              2128796,
+              2133772
+            ]
+          }
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 1660.465,
+            "min_us": 1478.367,
+            "p50_us": 1556.366,
+            "p95_us": 1637.804,
+            "sorted_samples_ns": [
+              1478367,
+              1509530,
+              1517565,
+              1531137,
+              1546867,
+              1547819,
+              1547996,
+              1551095,
+              1553097,
+              1556366,
+              1556551,
+              1556975,
+              1568645,
+              1578995,
+              1581389,
+              1585737,
+              1586097,
+              1602976,
+              1637804,
+              1660465
+            ]
+          }
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785",
+          "timing": {
+            "count": 20,
+            "max_us": 1624.661,
+            "min_us": 1513.37,
+            "p50_us": 1562.919,
+            "p95_us": 1615.318,
+            "sorted_samples_ns": [
+              1513370,
+              1519332,
+              1537124,
+              1539622,
+              1543899,
+              1544320,
+              1545030,
+              1549569,
+              1557336,
+              1562919,
+              1563275,
+              1564413,
+              1566937,
+              1573012,
+              1577404,
+              1583968,
+              1593628,
+              1594708,
+              1615318,
+              1624661
+            ]
+          }
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "a58af9a0d9ba7cbfed326d6df00773c5ebe8e0f97d1449db675e9b698da9d874",
+          "timing": {
+            "count": 20,
+            "max_us": 43518.522,
+            "min_us": 39289.315,
+            "p50_us": 41949.974,
+            "p95_us": 43508.107,
+            "sorted_samples_ns": [
+              39289315,
+              39391674,
+              39549154,
+              39814771,
+              39914316,
+              41018936,
+              41092742,
+              41238997,
+              41625215,
+              41949974,
+              42293228,
+              42333852,
+              42499686,
+              42573730,
+              43112317,
+              43141120,
+              43303053,
+              43421363,
+              43508107,
+              43518522
+            ]
+          }
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "baa71fed9d8b8232cffcd0459d61d6e457182a1aa9b8413e5e45f76f8673d7a5",
+          "timing": {
+            "count": 20,
+            "max_us": 3268.127,
+            "min_us": 2920.768,
+            "p50_us": 3041.494,
+            "p95_us": 3241.515,
+            "sorted_samples_ns": [
+              2920768,
+              2928624,
+              2929341,
+              2969233,
+              2987450,
+              3001802,
+              3007882,
+              3015656,
+              3032718,
+              3041494,
+              3048252,
+              3074989,
+              3078648,
+              3096554,
+              3103583,
+              3123295,
+              3159321,
+              3215304,
+              3241515,
+              3268127
+            ]
+          }
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29",
+          "timing": {
+            "count": 20,
+            "max_us": 6698.469,
+            "min_us": 5708.816,
+            "p50_us": 5794.146,
+            "p95_us": 6369.54,
+            "sorted_samples_ns": [
+              5708816,
+              5712593,
+              5714916,
+              5718590,
+              5722848,
+              5730215,
+              5770709,
+              5777101,
+              5782147,
+              5794146,
+              5841792,
+              5853993,
+              5880228,
+              5909440,
+              5917691,
+              5936406,
+              6229077,
+              6303625,
+              6369540,
+              6698469
+            ]
+          }
+        }
+      ],
+      "refresh_mode": "replacement+reorder",
+      "refresh_ns_one_observation": 334523881,
+      "refreshed_estimated_heap_bytes": 141780586,
+      "refreshed_rows": 100000,
+      "refreshed_signatures": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "2dbaae39f364d59a18d5e53a8ef7b8f73f2255287baed873962a24fd11b3d790"
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "4d1cad000c70a70bb8918738f3fd568c81c03b9c52918b6ce626886e5b90614a"
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "7a1ba1e5f55735b6f3369677e5e45d9f0338a9d19728bff290177a1be280b1f1"
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "c786e9053962b3645b49017287c92721b12692c4575a4e958c7dc4a40c32c373"
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a"
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785"
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "ba8ae86397e8471208287e9c4a4bb5353fda86b4b2b624854888df031907331b"
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "baa71fed9d8b8232cffcd0459d61d6e457182a1aa9b8413e5e45f76f8673d7a5"
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+        }
+      ],
+      "rows": 100000,
+      "scope": "pure local cached public projection API; no remote freshness proof",
+      "text_bytes": 7703324,
+      "binary": "candidate",
+      "binary_sha256": "97c7c2d4d59a3e5b85ac132070ba8723c1aebe4a8dcad4c9e9907945be0a9bec",
+      "order": 2
+    },
+    {
+      "build_ns_one_observation": 328825034,
+      "estimated_heap_after_queries": 141780270,
+      "estimated_retained_heap_bytes": 141780270,
+      "heap_estimate": {
+        "count": 21,
+        "max_us": 4670.003,
+        "min_us": 4249.692,
+        "p50_us": 4362.554,
+        "p95_us": 4586.334,
+        "sorted_samples_ns": [
+          4249692,
+          4254041,
+          4267422,
+          4271271,
+          4272906,
+          4301069,
+          4312277,
+          4323194,
+          4340313,
+          4340897,
+          4362554,
+          4371035,
+          4374396,
+          4375846,
+          4433763,
+          4438753,
+          4451402,
+          4474621,
+          4514028,
+          4586334,
+          4670003
+        ]
+      },
+      "label": "baseline-100000-3",
+      "queries": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "5ce4c365797caef51bd85b8789712283a134f13f4c33e3e60a3f28a4035f8c9f",
+          "timing": {
+            "count": 20,
+            "max_us": 21067.686,
+            "min_us": 18155.05,
+            "p50_us": 19510.536,
+            "p95_us": 20597.495,
+            "sorted_samples_ns": [
+              18155050,
+              18435313,
+              18663227,
+              18736335,
+              18763225,
+              18843223,
+              18885523,
+              19012068,
+              19315387,
+              19510536,
+              19511031,
+              19543407,
+              19838348,
+              19975505,
+              20121688,
+              20234461,
+              20296058,
+              20349198,
+              20597495,
+              21067686
+            ]
+          }
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "09957ad78b0ec269f332e11550c9686e892535b061514987303923a4cfd33da3",
+          "timing": {
+            "count": 20,
+            "max_us": 45355.862,
+            "min_us": 41186.902,
+            "p50_us": 42835.368,
+            "p95_us": 44199.216,
+            "sorted_samples_ns": [
+              41186902,
+              42150273,
+              42257895,
+              42387254,
+              42415005,
+              42456953,
+              42581497,
+              42767953,
+              42813992,
+              42835368,
+              42884335,
+              42921094,
+              42997494,
+              43185901,
+              43246664,
+              43664350,
+              43715992,
+              44198821,
+              44199216,
+              45355862
+            ]
+          }
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 16962.212,
+            "min_us": 14920.26,
+            "p50_us": 15554.908,
+            "p95_us": 16560.862,
+            "sorted_samples_ns": [
+              14920260,
+              15098789,
+              15204385,
+              15268734,
+              15383888,
+              15468195,
+              15510227,
+              15540371,
+              15550898,
+              15554908,
+              15613974,
+              15677469,
+              15714915,
+              15725185,
+              15892509,
+              15919915,
+              16107548,
+              16549635,
+              16560862,
+              16962212
+            ]
+          }
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "3d15444fb297ce9a1faa968791065d4ec65e9e7804c96edb2b83e0857ca1f6ff",
+          "timing": {
+            "count": 20,
+            "max_us": 16489.601,
+            "min_us": 15049.222,
+            "p50_us": 15513.654,
+            "p95_us": 16310.995,
+            "sorted_samples_ns": [
+              15049222,
+              15121116,
+              15132705,
+              15215402,
+              15262080,
+              15303515,
+              15350343,
+              15376417,
+              15453428,
+              15513654,
+              15596672,
+              15634434,
+              15675738,
+              15677726,
+              16041175,
+              16047101,
+              16088011,
+              16172233,
+              16310995,
+              16489601
+            ]
+          }
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "c786e9053962b3645b49017287c92721b12692c4575a4e958c7dc4a40c32c373",
+          "timing": {
+            "count": 20,
+            "max_us": 16821.256,
+            "min_us": 15411.856,
+            "p50_us": 15964.149,
+            "p95_us": 16546.749,
+            "sorted_samples_ns": [
+              15411856,
+              15585382,
+              15592543,
+              15606453,
+              15710151,
+              15791699,
+              15885075,
+              15896374,
+              15943266,
+              15964149,
+              15982376,
+              16030874,
+              16136990,
+              16259328,
+              16328656,
+              16384626,
+              16398015,
+              16532213,
+              16546749,
+              16821256
+            ]
+          }
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a",
+          "timing": {
+            "count": 20,
+            "max_us": 16445.496,
+            "min_us": 14707.635,
+            "p50_us": 15271.159,
+            "p95_us": 16195.667,
+            "sorted_samples_ns": [
+              14707635,
+              14855241,
+              14986345,
+              14987430,
+              15066410,
+              15164617,
+              15179318,
+              15217433,
+              15248310,
+              15271159,
+              15378650,
+              15419072,
+              15469810,
+              15542963,
+              15591702,
+              15934066,
+              15943051,
+              16169922,
+              16195667,
+              16445496
+            ]
+          }
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 17569.161,
+            "min_us": 15142.875,
+            "p50_us": 15588.713,
+            "p95_us": 16340.077,
+            "sorted_samples_ns": [
+              15142875,
+              15177016,
+              15281727,
+              15401070,
+              15416374,
+              15451933,
+              15453057,
+              15486854,
+              15530149,
+              15588713,
+              15597342,
+              15607363,
+              15818451,
+              15870431,
+              16002746,
+              16042970,
+              16237979,
+              16322534,
+              16340077,
+              17569161
+            ]
+          }
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+          "timing": {
+            "count": 20,
+            "max_us": 17003.769,
+            "min_us": 14758.214,
+            "p50_us": 15561.172,
+            "p95_us": 16452.903,
+            "sorted_samples_ns": [
+              14758214,
+              14975996,
+              15310036,
+              15361446,
+              15380144,
+              15405452,
+              15432526,
+              15483107,
+              15550197,
+              15561172,
+              15806349,
+              15818331,
+              15875176,
+              16082214,
+              16142293,
+              16161516,
+              16251133,
+              16335827,
+              16452903,
+              17003769
+            ]
+          }
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785",
+          "timing": {
+            "count": 20,
+            "max_us": 17111.072,
+            "min_us": 15359.967,
+            "p50_us": 15837.128,
+            "p95_us": 16974.018,
+            "sorted_samples_ns": [
+              15359967,
+              15422475,
+              15542497,
+              15582423,
+              15626614,
+              15701104,
+              15705171,
+              15773897,
+              15785570,
+              15837128,
+              15848380,
+              15877726,
+              15907510,
+              16156408,
+              16157381,
+              16523068,
+              16593794,
+              16651794,
+              16974018,
+              17111072
+            ]
+          }
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "a58af9a0d9ba7cbfed326d6df00773c5ebe8e0f97d1449db675e9b698da9d874",
+          "timing": {
+            "count": 20,
+            "max_us": 51554.645,
+            "min_us": 48270.145,
+            "p50_us": 50216.66,
+            "p95_us": 51250.624,
+            "sorted_samples_ns": [
+              48270145,
+              48522231,
+              48774757,
+              49195399,
+              49785767,
+              49836679,
+              49950814,
+              49985529,
+              50134893,
+              50216660,
+              50222124,
+              50349639,
+              50412949,
+              50448188,
+              50496571,
+              50508410,
+              50525069,
+              50613336,
+              51250624,
+              51554645
+            ]
+          }
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "baa71fed9d8b8232cffcd0459d61d6e457182a1aa9b8413e5e45f76f8673d7a5",
+          "timing": {
+            "count": 20,
+            "max_us": 18980.597,
+            "min_us": 16399.198,
+            "p50_us": 17290.137,
+            "p95_us": 18264.202,
+            "sorted_samples_ns": [
+              16399198,
+              16489998,
+              16682604,
+              16882305,
+              16913595,
+              16966810,
+              17084236,
+              17144635,
+              17171054,
+              17290137,
+              17367764,
+              17476057,
+              17515874,
+              17588013,
+              17642538,
+              17672769,
+              17743179,
+              18183728,
+              18264202,
+              18980597
+            ]
+          }
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29",
+          "timing": {
+            "count": 20,
+            "max_us": 21896.306,
+            "min_us": 20574.0,
+            "p50_us": 21146.084,
+            "p95_us": 21832.306,
+            "sorted_samples_ns": [
+              20574000,
+              20877078,
+              20906791,
+              20941503,
+              21004244,
+              21039468,
+              21047327,
+              21066984,
+              21077876,
+              21146084,
+              21258948,
+              21330667,
+              21509967,
+              21522902,
+              21543512,
+              21554514,
+              21584666,
+              21831328,
+              21832306,
+              21896306
+            ]
+          }
+        }
+      ],
+      "refresh_mode": "replacement+reorder",
+      "refresh_ns_one_observation": 312288105,
+      "refreshed_estimated_heap_bytes": 141780586,
+      "refreshed_rows": 100000,
+      "refreshed_signatures": [
+        {
+          "case": "lexical_unique",
+          "hits": 1,
+          "signature": "2dbaae39f364d59a18d5e53a8ef7b8f73f2255287baed873962a24fd11b3d790"
+        },
+        {
+          "case": "lexical_common",
+          "hits": 20,
+          "signature": "4d1cad000c70a70bb8918738f3fd568c81c03b9c52918b6ce626886e5b90614a"
+        },
+        {
+          "case": "lexical_missing",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "bare_key_first",
+          "hits": 1,
+          "signature": "7a1ba1e5f55735b6f3369677e5e45d9f0338a9d19728bff290177a1be280b1f1"
+        },
+        {
+          "case": "explicit_key_last",
+          "hits": 1,
+          "signature": "c786e9053962b3645b49017287c92721b12692c4575a4e958c7dc4a40c32c373"
+        },
+        {
+          "case": "nested_key_prefix",
+          "hits": 1,
+          "signature": "37cdb3f81af8cd6f7cd45db78f84148e1ff6e054087ec42b429ce970dea2310a"
+        },
+        {
+          "case": "missing_explicit_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "stored_only_key",
+          "hits": 0,
+          "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+        },
+        {
+          "case": "unicode_key",
+          "hits": 1,
+          "signature": "64efe764595079ef37b69b9c4b284081a58c71cefb44feb93734baf7f7662785"
+        },
+        {
+          "case": "literal_phrase",
+          "hits": 20,
+          "signature": "ba8ae86397e8471208287e9c4a4bb5353fda86b4b2b624854888df031907331b"
+        },
+        {
+          "case": "identifier_anchor",
+          "hits": 20,
+          "signature": "baa71fed9d8b8232cffcd0459d61d6e457182a1aa9b8413e5e45f76f8673d7a5"
+        },
+        {
+          "case": "filtered_common",
+          "hits": 20,
+          "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+        }
+      ],
+      "rows": 100000,
+      "scope": "pure local cached public projection API; no remote freshness proof",
+      "text_bytes": 7703324,
+      "binary": "baseline",
+      "binary_sha256": "de6a43c8dd6d6566ea01b7eb4b5918aca55698c62ec4f96cfca5729c039c26a4",
+      "order": 3
+    }
+  ],
+  "scope": "Synthetic pure local cached public record::projection API; one client; no source replay, Store I/O, cloud, SDK, million-record or remote-freshness acceptance",
+  "provenance": {
+    "harness_sha256": "1baff6658204e600968afef1446ca14056996f12a151681d3f7f8b715b83d4a0",
+    "lock_sha256": "48e64622dc6707b35726f1ca04c89ab66d9cb0a0fa4e8d5e770348edf93e1a84",
+    "artifacts": {
+      "baseline": {
+        "source": "128b76f8a462817910ed5ca622adf156ed1efcc6",
+        "sha256": "de6a43c8dd6d6566ea01b7eb4b5918aca55698c62ec4f96cfca5729c039c26a4"
+      },
+      "candidate": {
+        "source": "e01c03625408993cfe88ad1805b05ad0ca797a69",
+        "sha256": "97c7c2d4d59a3e5b85ac132070ba8723c1aebe4a8dcad4c9e9907945be0a9bec"
+      }
+    },
+    "runtime_commit": "419cf4a7656ad4291108ec1f2a3f82d3b74b9c7d",
+    "candidate_build_commit": "e01c03625408993cfe88ad1805b05ad0ca797a69",
+    "baseline_tracked_tree": "unchanged 128b76f8a462817910ed5ca622adf156ed1efcc6; identical untracked public example only",
+    "builds": "separate fresh Cargo target directories, frozen and SHA-256 checked before profiles",
+    "compiler": "rustc 1.99.0",
+    "cargo": "cargo 1.99.0",
+    "target": "x86_64-unknown-linux-gnu",
+    "rustflags": "-C target-cpu=x86-64",
+    "cflags": "-march=x86-64 -mtune=generic",
+    "build_flags": "--locked --offline --no-default-features --release -p oojuro-engine --example profile_projection_keys",
+    "host": {
+      "cpu": "Intel Core Ultra 7 258V",
+      "logical_cpus": 8,
+      "os": "Linux 7.2.11-200.fc44.x86_64",
+      "conditions": "shared laptop, frequency scaling; exclusive cooperating benchmark lock, no CPU pinning"
+    },
+    "public_wrapper_sha256": "9ad6bc327b4912acb91e559ce4f110f3150e95e4353412b8b8dea52691be11d6"
+  },
+  "checks": {
+    "projection_tests": {
+      "passed": 9,
+      "failed": 0,
+      "ignored": 1,
+      "ignored_name": "projection_allocation_measurement (explicit opt-in timing; estimated retained heap separately measured by public helper)"
+    },
+    "nine_tests": {
+      "passed": 94,
+      "failed": 0,
+      "ignored": 0
+    },
+    "profiles": 12,
+    "query_cases_per_profile": 12,
+    "timed_samples_per_query": 20,
+    "warmups_per_query": 1,
+    "heap_estimate_samples_per_profile": 21,
+    "order_per_size": [
+      "baseline",
+      "candidate",
+      "candidate",
+      "baseline"
+    ],
+    "percentiles": "nearest rank",
+    "parity": "opaque IDs, exact f64 score bits, continuation/time fields, UTF8 excerpt boundaries and original slice bytes; pre/post-refresh result signatures; text and estimated retained heap counts",
+    "public_wrapper": "offline report verification passed and altered signature deliberately rejected",
+    "remote_ci": "not run; GitHub Actions disabled"
+  },
+  "limitations": [
+    "Build and refresh have one observation per process (two per source/size), not a latency percentile.",
+    "No retained-heap improvement: estimator excludes per-query temporaries, allocator overhead and process RSS.",
+    "Mixed 100k common-term p95 and adverse candidate build/refresh observations retained without a universal speedup claim.",
+    "No format, source replay, authority, dependency, API-signature or admission-limit change.",
+    "Binding remains a caller assertion; this cached projection is not a remote freshness or authorization proof."
+  ]
+}
