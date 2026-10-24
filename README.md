@@ -13,6 +13,9 @@ current main/candidate boundary and remaining release gates, and
 For local application records, start with the [local journal quickstart](docs/LOCAL_JOURNAL_QUICKSTART.md):
 append typed JSONL, retry safely, search, retrieve original text and export bounded pages.
 For Codex/Claude capture and shared hosted history, see [combined agent setup](docs/COMBINED_AGENT_SETUP.md).
+**File extension:** `.ojo` is the chosen extension for a future standalone Oojuro journal file
+(for example, `agent-memory.ojo`). Journals currently use directories containing multiple files;
+standalone `.ojo` support is not implemented. See the [format naming decision](docs/OJO_FORMAT.md).
 
 ## License
 
