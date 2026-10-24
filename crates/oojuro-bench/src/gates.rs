@@ -194,7 +194,7 @@ fn crash(runs: &mut Runs, ctx: &Ctx, spec: &ArmSpec, run: usize) -> Result<()> {
         let mut arm = reopen(ctx, spec, &store, &dir.join(format!("trial{trial}.stderr")))?;
         // PostgreSQL promises one transaction per batch. Other arms may durably
         // commit smaller chunks before their outer batch acknowledgement.
-        let atomic_batch_required = arm.info()?.name == "postgres";
+        let atomic_batch_required = matches!(arm.info()?.name.as_str(), "postgres" | "postgres-frequency");
         for b in 0..10 {
             let batch: Vec<Doc> = (0..20)
                 .map(|i| {
