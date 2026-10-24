@@ -1,0 +1,124 @@
+{
+  "version": 1,
+  "integration_pr": "https://github.com/oojuro/oojuro/pull/96",
+  "verified_integration_commit": "e813f9009de3586a4d10e4277901d200148d477f",
+  "closed_reviews": [
+    {
+      "number": 4,
+      "head": "c750ab2c6cb2b3d837de265225a18f49645d0ba5"
+    },
+    {
+      "number": 15,
+      "head": "8df48391c1b55f473c8730598b2d8bc9e95dbeb6"
+    },
+    {
+      "number": 16,
+      "head": "45b6b072877b18fe725471bde124f0f1c30206ab"
+    },
+    {
+      "number": 17,
+      "head": "1afbc51d711c0bf2e24af8f203d2f5199e245543"
+    },
+    {
+      "number": 18,
+      "head": "d73cf4fc5b572c77c7904dda216b9bcad551be67"
+    },
+    {
+      "number": 19,
+      "head": "7b029dce4a59a61fd3cf7b8d25dce27fcfc77949"
+    },
+    {
+      "number": 43,
+      "head": "a4b2f9da31a3c2a85ffb98cc67694307fd74aee9"
+    },
+    {
+      "number": 47,
+      "head": "b6db5a64f0026fee753a91b8a178c75ccc2959cc"
+    },
+    {
+      "number": 48,
+      "head": "6663874b8ba92e747934bdf9a7fcb43523e3fb7a"
+    },
+    {
+      "number": 56,
+      "head": "6e4f5271312c85c20df807b15e29702549204fde"
+    },
+    {
+      "number": 61,
+      "head": "5b038dd299ae3c921a55866c20dd0f3e97ccd3cb"
+    },
+    {
+      "number": 62,
+      "head": "f01345f92a2570ddce7a9577b7703fddfc8eaee7"
+    },
+    {
+      "number": 63,
+      "head": "52f7b68ab375248494226699cec32c1bb30d4ace"
+    },
+    {
+      "number": 64,
+      "head": "d013b4aa973d199ef94229803c7a86fe87f9c1be"
+    },
+    {
+      "number": 70,
+      "head": "33d3163feafd4c63f8590c9a3c459c780c9d57b6"
+    },
+    {
+      "number": 72,
+      "head": "0bfef211fcf884279f8b1fb9b36f22822bd05ef9"
+    },
+    {
+      "number": 73,
+      "head": "4493dc5ea3f83a3838074eae9c0945c314ec78f0"
+    },
+    {
+      "number": 74,
+      "head": "99818c3e2c8125d3f8243b36ba880abf31c5004e"
+    },
+    {
+      "number": 75,
+      "head": "ba144d90d396b680122f1e93c808c724844ef2c8"
+    },
+    {
+      "number": 76,
+      "head": "9149542ec3ed5410cd17c2a562f64bd6136a8b6c"
+    },
+    {
+      "number": 78,
+      "head": "ef0d33627f361279d0e72e1d9b0c55502d3a4591"
+    },
+    {
+      "number": 79,
+      "head": "6704a3510c6acf30da302133f73f5080a2e527ff"
+    },
+    {
+      "number": 80,
+      "head": "c426a324e64e2127194cccb88f41cd655a3c4bf8"
+    },
+    {
+      "number": 81,
+      "head": "180271257297306cb97ec0fa307e661316cf1783"
+    },
+    {
+      "number": 82,
+      "head": "8824d2cb8e8884128fc07d468366cef2a85252ec"
+    },
+    {
+      "number": 92,
+      "head": "d1b24f7ed020365e09431aeaa8f4a7ff05e27dc3"
+    },
+    {
+      "number": 95,
+      "head": "cd0a315fbe84b217cfc528470668e7408032ec48"
+    }
+  ],
+  "retained_changing_reviews": [
+    {
+      "number": 94,
+      "head": "78bf1fb89643b55e94d7243c6e63a3a8b5aa9819",
+      "reason": "Current head advanced beyond the verified snapshot; preserved open."
+    }
+  ],
+  "verification": "Fresh GitHub read confirmed CLOSED state and Git ancestry of every closed head. Branch refs retained for dependent reviews/worktrees. Independent experiments and ongoing diagnostics/repository extraction were not modified.",
+  "legacy_policy": "No supported legacy service, daemon, socket fallback or format-compatibility release gate. Preserve native encryption, current-format recovery and retry guarantees."
+}
