@@ -169,6 +169,17 @@ def main():
                          "retain only in explicitly selected benchmark/experimental tools"
                          if not args.scope else "caller-selected graph; see scope-specific audit"),
         }
+    external_keys = {key for graph_ in report["graphs"].values()
+                     for key, package in graph_["packages"].items() if not package["workspace"]}
+    missing_inventory = sorted(external_keys - set(report["inventory"]))
+    report["inventory_coverage"] = {
+        "mode": "policy-only; --no-deps metadata intentionally omits external inventory" if args.engine_only else "selected external package metadata",
+        "selected_external_packages": len(external_keys),
+        "inventoried_packages": len(report["inventory"]),
+        "omitted_packages": missing_inventory,
+    }
+    if missing_inventory and not args.engine_only:
+        raise ValueError(f"selected dependencies missing metadata inventory: {missing_inventory}")
     if args.check:
         check(report)
     args.output.parent.mkdir(parents=True, exist_ok=True)

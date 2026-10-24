@@ -45,6 +45,10 @@ cargo build --locked --release -p oojuro # builds the `oojuro` CLI and the `ooju
 cargo test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro-store -p oojuro-nine -p oojuro-trace -p oojuro-capture -p oojuro-proxy -p oojuro
 ```
 
+Plain `cargo build` and `cargo test` select the engine/rank/store libraries.
+Use the explicit application selection above and the native-engine gates in
+CONTRIBUTING.md for complete runtime coverage.
+
 These tests select the runtime packages and leave benchmark comparison features disabled.
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the explicit CI gates and topic-branch workflow.
 

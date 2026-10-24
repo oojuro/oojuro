@@ -30,6 +30,13 @@ Keep CI checks for the isolated graph as well as testing consuming applications.
 **names**, including transitive build/platform support. The direct allowlist is
 eight foundational libraries and four explicit algorithm/platform exceptions.
 The larger transitive set is not permission to add new direct dependencies.
+`--engine-only --check` is a policy-only CI graph check: metadata uses
+`--no-deps`, so its external package inventory is intentionally omitted and
+reported as such. The full audit records the selected external metadata inventory
+and refuses an unexplained coverage gap. Current core/workspace dependencies
+have no Git-sourced external packages; source-qualified graph keys preserve Git
+identity, and any unsupported inventory mapping must fail rather than disappear.
+
 Changes to a dependency, enabled features, native build or lockfile require
 review of purpose, scope, security, format/query compatibility and affected
 tests. Prefer removing unused features or isolating tools over rewriting code.
