@@ -1,0 +1,367 @@
+{
+  "scope": "safe qualification metadata only; no binaries/libraries/image layers/PGDATA/corpus/original text/credentials",
+  "files": [
+    {
+      "archive": "gates.json",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/run-ee4830b2135ceddb/gates.json",
+      "original_sha256": "56a21542132d0ad8866270b4ea8d9a4ae4b09e1624cb1e79123bb8db6d4c090c",
+      "published_sha256": "e1bd7e6666b7ad658218670c0bd624bdd6848039ce0dff4c7ca2d04e3486d1ae",
+      "bytes": 6382,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "qualification.json",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/run-ee4830b2135ceddb/receipt.json",
+      "original_sha256": "0c8cc2e257996c7b7dc70b8e6feb7a0756878bd6fb37d3eb6568d83016f4e0e7",
+      "published_sha256": "9a8c5e8ce00786d4e195588f4c89f28a91aee7df0a99157c033e5025be81f745",
+      "bytes": 59468,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "independent-qualification.json",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/run-ee4830b2135ceddb/root-independent-qualification.json",
+      "original_sha256": "3ad56359f2ffd7e3290e653264747663461ff09a05b566f22283962fb8c76c42",
+      "published_sha256": "8b3af03676df133e24fa28aa8a134a0cb36054e452c4d9add1dc9c8b6787a661",
+      "bytes": 3296,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "outside-cleanup.json",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/dispatch-receipt.json",
+      "original_sha256": "2bb1e81e9d8274f113aa39a4b42364d1cf31cc1d2a735fda9a0fc4dbb5165baf",
+      "published_sha256": "70c88b6de8de2c6df577b8d635d328275f9fe98fe1e7965372298a7260d1464d",
+      "bytes": 23283,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "runtime-manifest.json",
+      "source_relative": "work/postgres-record-baseline-preparation/runtime-v3/runtime-manifest.json",
+      "original_sha256": "88acd85b9b3edba8ec5da5fc3b66f3371c947f211504fb3067f2a72214fcfa7c",
+      "published_sha256": "c3f6b028dada9e0317bc43dfe58a480c332473449a946340031ef6265b403143",
+      "bytes": 452483,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "main-build.json",
+      "source_relative": "work/postgres-record-baseline-qualification/build-attempt-3-main/receipt.json",
+      "original_sha256": "dfb321e6242f73b0647b376c76a5dca0e1998d1c5b99b9b25d5a414a8d6976df",
+      "published_sha256": "209fec7c87a02281f0a0e26a6421bac03aa871c253b2847e7afb6ac687c379c3",
+      "bytes": 4833,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "main-build-independent.json",
+      "source_relative": "work/postgres-record-baseline-qualification/build-attempt-3-main/root-independent-build-verification.json",
+      "original_sha256": "d3f3ede529c524ae04b938f016acc4a78b325bd917e6d0300565ead711eb0f82",
+      "published_sha256": "91384b1e503d7acff604f9426bfadbb0ee1075f0226ca20f6efbe5cc440cc3d0",
+      "bytes": 597,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "libtest-build.json",
+      "source_relative": "work/postgres-record-baseline-qualification/build-attempt-2-libtest/receipt.json",
+      "original_sha256": "f1044d29c62cb81f646511c6e41cc00d0aa722393aa060c0bfa34e616d3c97a1",
+      "published_sha256": "ea4f6ba42b77879130d69d2c1cbe2b5aaa615fb83ab8963f40a83b8401cfe877",
+      "bytes": 4868,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "libtest-build-independent.json",
+      "source_relative": "work/postgres-record-baseline-qualification/build-attempt-2-libtest/root-terminal-verification.json",
+      "original_sha256": "f99305a3f8aeca7e6c71b29fc30b2e939fd515292775bffd7e244a66e101a605",
+      "published_sha256": "f99305a3f8aeca7e6c71b29fc30b2e939fd515292775bffd7e244a66e101a605",
+      "bytes": 964,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "focused-attempt1.json",
+      "source_relative": "work/postgres-record-baseline-qualification/gates-attempt-1/run-76e032389368c711/receipt.json",
+      "original_sha256": "09d6945e8843184e55273b106c63d2e0661c9f42423cde1198717d042412c51a",
+      "published_sha256": "9847a522e185cb9f8f32c67238934af997fe11519b5a8d98eafddd4ba32b1730",
+      "bytes": 2923,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "focused-attempt2.json",
+      "source_relative": "work/postgres-record-baseline-qualification/gates-attempt-2/run-32b7e8325242829b/receipt.json",
+      "original_sha256": "8e26b4731bdeee9b7b2ece66b78c84c33b41024b948f425ca72f5046ad031608",
+      "published_sha256": "63d45acc2ee604e3bbd113676233152e75db8c873013f0e77b3ba404d3fd46ab",
+      "bytes": 3048,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "focused-attempt3.json",
+      "source_relative": "work/postgres-record-baseline-qualification/gates-attempt-3/run-641191f050df73e8/receipt.json",
+      "original_sha256": "a94e6fd37ca0521ce445664ba456d14d801e90143bd8bfe0e0edcac8851a1b0e",
+      "published_sha256": "ce5b695682364656721405f70bf741faf2e00b43897c8d6e55922860d831514e",
+      "bytes": 9909,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "focused-independent.json",
+      "source_relative": "work/postgres-record-baseline-qualification/gates-attempt-3/root-independent-qualification.json",
+      "original_sha256": "3d89c1b30469c6f5ea4cc876c2c005072cbc9dd0785181ecc680c0dc015b0e7c",
+      "published_sha256": "3d89c1b30469c6f5ea4cc876c2c005072cbc9dd0785181ecc680c0dc015b0e7c",
+      "bytes": 1138,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "scope-reconciliation.json",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/run-ee4830b2135ceddb/scope-reconciliation.json",
+      "original_sha256": "c3f76a6d04019be7b92dd305b5af5f5de595d6854bce9876d55a62b7560bd498",
+      "published_sha256": "87d2fa549e5942cab8ddaaf8fa77edca5083c18626817e2bf72437705fae73ee",
+      "bytes": 19210,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "controller-source.py.txt",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/run-gates-copy.py",
+      "original_sha256": "68e3a0132a3e17fff756681c3b5475f3c807dec648934ed22ad77f6464e2c6f6",
+      "published_sha256": "68e3a0132a3e17fff756681c3b5475f3c807dec648934ed22ad77f6464e2c6f6",
+      "bytes": 25918,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "launcher-source.py.txt",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/systemd-run",
+      "original_sha256": "e135974ea955fd02831c5eb0ac9c8632fe56e06efe399562ccecc226535e88ad",
+      "published_sha256": "e135974ea955fd02831c5eb0ac9c8632fe56e06efe399562ccecc226535e88ad",
+      "bytes": 3800,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "dispatcher-source.py.txt",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/dispatch-gates-copy.py",
+      "original_sha256": "189efb431caec4ddccdcd5a1b3ef0e983ff0f5a304e90bcf409f5505f35cd418",
+      "published_sha256": "189efb431caec4ddccdcd5a1b3ef0e983ff0f5a304e90bcf409f5505f35cd418",
+      "bytes": 5718,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "planned-commands.json",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/planned-commands.json",
+      "original_sha256": "bd96547d09b858a76d26cf44d593e14935a0ce2da964afa87472011bad1ecabe",
+      "published_sha256": "80e13bb8640ca6c6ba50a3589947aab7b8500970ab7b0a2835c9f07b5f4a8114",
+      "bytes": 2872,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "review.md",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/REVIEW.md",
+      "original_sha256": "e62c1ea83d4784bb6f1b1791fc8fd94d7b9c0822c2b88223c220a58b55a7b79d",
+      "published_sha256": "e62c1ea83d4784bb6f1b1791fc8fd94d7b9c0822c2b88223c220a58b55a7b79d",
+      "bytes": 3313,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "exact-source-before.json",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/run-ee4830b2135ceddb/exact-source-before.json",
+      "original_sha256": "6bf46defe22e3accc44207a941ce449b4299ba2ceb9688cf7f7a4e4eca09a718",
+      "published_sha256": "6bf46defe22e3accc44207a941ce449b4299ba2ceb9688cf7f7a4e4eca09a718",
+      "bytes": 195339,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "exact-source-after.json",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/run-ee4830b2135ceddb/exact-source-after.json",
+      "original_sha256": "6bf46defe22e3accc44207a941ce449b4299ba2ceb9688cf7f7a4e4eca09a718",
+      "published_sha256": "6bf46defe22e3accc44207a941ce449b4299ba2ceb9688cf7f7a4e4eca09a718",
+      "bytes": 195339,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "exact-copy-before-open.json",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/run-ee4830b2135ceddb/exact-copy-before-open.json",
+      "original_sha256": "6bf46defe22e3accc44207a941ce449b4299ba2ceb9688cf7f7a4e4eca09a718",
+      "published_sha256": "6bf46defe22e3accc44207a941ce449b4299ba2ceb9688cf7f7a4e4eca09a718",
+      "bytes": 195339,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "exact-copy-after-close.json",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/run-ee4830b2135ceddb/exact-copy-after-close.json",
+      "original_sha256": "37cebbd80cee9d897e18f01e6b18d3baa6245873d78e8a1312773f304cbc1b18",
+      "published_sha256": "37cebbd80cee9d897e18f01e6b18d3baa6245873d78e8a1312773f304cbc1b18",
+      "bytes": 195339,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "crash-source-before.json",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/run-ee4830b2135ceddb/crash-source-before.json",
+      "original_sha256": "a6653a359880ffb0fb1b5fa5b52facca382b731e7345f08dedc1b4ccac35ca9d",
+      "published_sha256": "a6653a359880ffb0fb1b5fa5b52facca382b731e7345f08dedc1b4ccac35ca9d",
+      "bytes": 195546,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "crash-source-after.json",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/run-ee4830b2135ceddb/crash-source-after.json",
+      "original_sha256": "a6653a359880ffb0fb1b5fa5b52facca382b731e7345f08dedc1b4ccac35ca9d",
+      "published_sha256": "a6653a359880ffb0fb1b5fa5b52facca382b731e7345f08dedc1b4ccac35ca9d",
+      "bytes": 195546,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "crash-copy-before-open.json",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/run-ee4830b2135ceddb/crash-copy-before-open.json",
+      "original_sha256": "a6653a359880ffb0fb1b5fa5b52facca382b731e7345f08dedc1b4ccac35ca9d",
+      "published_sha256": "a6653a359880ffb0fb1b5fa5b52facca382b731e7345f08dedc1b4ccac35ca9d",
+      "bytes": 195546,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    },
+    {
+      "archive": "crash-copy-after-close.json",
+      "source_relative": "work/postgres-record-baseline-qualification/cli-gates-copy-attempt-1/run-ee4830b2135ceddb/crash-copy-after-close.json",
+      "original_sha256": "b653079e7809045f69bb53d715042480aba3787796e53383bf475c8629bed719",
+      "published_sha256": "b653079e7809045f69bb53d715042480aba3787796e53383bf475c8629bed719",
+      "bytes": 195547,
+      "transform": "host workspace/home/private temporary/cgroup path redaction only; no scalar result or source/artifact/compiler hash changed"
+    }
+  ],
+  "payload": {
+    "path": "qualification-payload.tar.gz",
+    "bytes": 425885,
+    "sha256": "e04fa9dc69a0e7fb0e9b088320c70a2c2d9d1fbb4aeb9a265bd7a3f520e66518",
+    "uncompressed_tar_bytes": 2222080,
+    "uncompressed_tar_sha256": "cdf42d4245c9c2937d618afd9ee74636e4c719f36e186fb457d14393b76e4bef",
+    "determinism": "sorted flat regular paths; USTAR; mode0644; uid/gid/mtime0; blankuser/group; gzipfilenameempty/mtime0/level9",
+    "roundtrip_verified": true,
+    "entries": [
+      {
+        "path": "controller-source.py.txt",
+        "bytes": 25918,
+        "sha256": "68e3a0132a3e17fff756681c3b5475f3c807dec648934ed22ad77f6464e2c6f6"
+      },
+      {
+        "path": "crash-copy-after-close.json",
+        "bytes": 195547,
+        "sha256": "b653079e7809045f69bb53d715042480aba3787796e53383bf475c8629bed719"
+      },
+      {
+        "path": "crash-copy-before-open.json",
+        "bytes": 195546,
+        "sha256": "a6653a359880ffb0fb1b5fa5b52facca382b731e7345f08dedc1b4ccac35ca9d"
+      },
+      {
+        "path": "crash-source-after.json",
+        "bytes": 195546,
+        "sha256": "a6653a359880ffb0fb1b5fa5b52facca382b731e7345f08dedc1b4ccac35ca9d"
+      },
+      {
+        "path": "crash-source-before.json",
+        "bytes": 195546,
+        "sha256": "a6653a359880ffb0fb1b5fa5b52facca382b731e7345f08dedc1b4ccac35ca9d"
+      },
+      {
+        "path": "dispatcher-source.py.txt",
+        "bytes": 5718,
+        "sha256": "189efb431caec4ddccdcd5a1b3ef0e983ff0f5a304e90bcf409f5505f35cd418"
+      },
+      {
+        "path": "exact-copy-after-close.json",
+        "bytes": 195339,
+        "sha256": "37cebbd80cee9d897e18f01e6b18d3baa6245873d78e8a1312773f304cbc1b18"
+      },
+      {
+        "path": "exact-copy-before-open.json",
+        "bytes": 195339,
+        "sha256": "6bf46defe22e3accc44207a941ce449b4299ba2ceb9688cf7f7a4e4eca09a718"
+      },
+      {
+        "path": "exact-source-after.json",
+        "bytes": 195339,
+        "sha256": "6bf46defe22e3accc44207a941ce449b4299ba2ceb9688cf7f7a4e4eca09a718"
+      },
+      {
+        "path": "exact-source-before.json",
+        "bytes": 195339,
+        "sha256": "6bf46defe22e3accc44207a941ce449b4299ba2ceb9688cf7f7a4e4eca09a718"
+      },
+      {
+        "path": "focused-attempt1.json",
+        "bytes": 2923,
+        "sha256": "9847a522e185cb9f8f32c67238934af997fe11519b5a8d98eafddd4ba32b1730"
+      },
+      {
+        "path": "focused-attempt2.json",
+        "bytes": 3048,
+        "sha256": "63d45acc2ee604e3bbd113676233152e75db8c873013f0e77b3ba404d3fd46ab"
+      },
+      {
+        "path": "focused-attempt3.json",
+        "bytes": 9909,
+        "sha256": "ce5b695682364656721405f70bf741faf2e00b43897c8d6e55922860d831514e"
+      },
+      {
+        "path": "focused-independent.json",
+        "bytes": 1138,
+        "sha256": "3d89c1b30469c6f5ea4cc876c2c005072cbc9dd0785181ecc680c0dc015b0e7c"
+      },
+      {
+        "path": "gates.json",
+        "bytes": 6382,
+        "sha256": "e1bd7e6666b7ad658218670c0bd624bdd6848039ce0dff4c7ca2d04e3486d1ae"
+      },
+      {
+        "path": "independent-qualification.json",
+        "bytes": 3296,
+        "sha256": "8b3af03676df133e24fa28aa8a134a0cb36054e452c4d9add1dc9c8b6787a661"
+      },
+      {
+        "path": "launcher-source.py.txt",
+        "bytes": 3800,
+        "sha256": "e135974ea955fd02831c5eb0ac9c8632fe56e06efe399562ccecc226535e88ad"
+      },
+      {
+        "path": "libtest-build-independent.json",
+        "bytes": 964,
+        "sha256": "f99305a3f8aeca7e6c71b29fc30b2e939fd515292775bffd7e244a66e101a605"
+      },
+      {
+        "path": "libtest-build.json",
+        "bytes": 4868,
+        "sha256": "ea4f6ba42b77879130d69d2c1cbe2b5aaa615fb83ab8963f40a83b8401cfe877"
+      },
+      {
+        "path": "main-build-independent.json",
+        "bytes": 597,
+        "sha256": "91384b1e503d7acff604f9426bfadbb0ee1075f0226ca20f6efbe5cc440cc3d0"
+      },
+      {
+        "path": "main-build.json",
+        "bytes": 4833,
+        "sha256": "209fec7c87a02281f0a0e26a6421bac03aa871c253b2847e7afb6ac687c379c3"
+      },
+      {
+        "path": "outside-cleanup.json",
+        "bytes": 23283,
+        "sha256": "70c88b6de8de2c6df577b8d635d328275f9fe98fe1e7965372298a7260d1464d"
+      },
+      {
+        "path": "planned-commands.json",
+        "bytes": 2872,
+        "sha256": "80e13bb8640ca6c6ba50a3589947aab7b8500970ab7b0a2835c9f07b5f4a8114"
+      },
+      {
+        "path": "qualification.json",
+        "bytes": 59468,
+        "sha256": "9a8c5e8ce00786d4e195588f4c89f28a91aee7df0a99157c033e5025be81f745"
+      },
+      {
+        "path": "review.md",
+        "bytes": 3313,
+        "sha256": "e62c1ea83d4784bb6f1b1791fc8fd94d7b9c0822c2b88223c220a58b55a7b79d"
+      },
+      {
+        "path": "runtime-manifest.json",
+        "bytes": 452483,
+        "sha256": "c3f6b028dada9e0317bc43dfe58a480c332473449a946340031ef6265b403143"
+      },
+      {
+        "path": "scope-reconciliation.json",
+        "bytes": 19210,
+        "sha256": "87d2fa549e5942cab8ddaaf8fa77edca5083c18626817e2bf72437705fae73ee"
+      }
+    ]
+  }
+}
