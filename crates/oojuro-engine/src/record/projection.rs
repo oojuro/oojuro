@@ -4,6 +4,8 @@
 use super::*;
 use crate::lexical::{self, RecordVisibility, passage};
 use std::collections::BTreeSet;
+mod refresh;
+pub use refresh::{Refresh, RowRef};
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Binding {
     pub namespace: [u8; 32],
@@ -23,32 +25,6 @@ pub struct Row {
     pub status: Option<Status>,
     pub agent_id: String,
     pub indexed: bool,
-}
-impl Row {
-    fn same_metadata(&self, other: &Self) -> bool {
-        // Exhaustive destructuring requires new source fields to join this check.
-        let Self {
-            id,
-            key,
-            text: _,
-            valid_at,
-            reported_recorded_at,
-            kind,
-            tool,
-            status,
-            agent_id,
-            indexed,
-        } = self;
-        id == &other.id
-            && key == &other.key
-            && valid_at == &other.valid_at
-            && reported_recorded_at == &other.reported_recorded_at
-            && kind == &other.kind
-            && tool == &other.tool
-            && status == &other.status
-            && agent_id == &other.agent_id
-            && indexed == &other.indexed
-    }
 }
 pub struct Query<'a> {
     pub text: &'a str,
@@ -171,56 +147,17 @@ impl Index {
     /// snapshot again. Only byte/metadata-identical retained rows reuse postings.
     /// Replacements, deletions and filter changes rebuild; errors consume the old
     /// value. This is derived work reuse, never a current-authority substitute.
-    pub fn refresh(mut self, binding: Binding, rows: Vec<Row>) -> Result<Self> {
-        if binding.namespace != self.binding.namespace || binding.writer != self.binding.writer {
-            return Err(Error::Scope);
+    pub fn refresh(self, binding: Binding, rows: Vec<Row>) -> Result<Self> {
+        let mut refresh = self.begin_refresh(binding, rows.len())?;
+        for row in rows {
+            refresh.push_owned(row)?;
         }
-        Self::validate(&binding, &rows)?;
-        let unchanged = {
-            let incoming: std::collections::BTreeMap<_, _> =
-                rows.iter().map(|row| (row.id.as_str(), row)).collect();
-            self.rows.iter().enumerate().all(|(old_i, old)| {
-                incoming.get(old.id.as_str()).is_some_and(|row| {
-                    old.same_metadata(row)
-                        && self.inner.record_text(old_i) == Some(row.text.as_str())
-                })
-            })
-        };
-        if binding.view == self.binding.view && (!unchanged || rows.len() != self.rows.len()) {
-            return Err(Error::Conflict);
-        }
-        if !unchanged {
-            drop(self);
-            return Self::build(binding, rows);
-        }
-        let old_ids: BTreeSet<_> = self.ids.iter().map(String::as_str).collect();
-        let mut added: Vec<_> = rows
-            .into_iter()
-            .filter(|row| !old_ids.contains(row.id.as_str()))
-            .collect();
-        drop(old_ids);
-        let start = self.rows.len();
-        self.inner
-            .append_record_rows(
-                added.iter().enumerate().map(|(i, row)| {
-                    (
-                        (start + i + 1) as u64,
-                        row.valid_at,
-                        row.text.as_str(),
-                        row.indexed,
-                    )
-                }),
-                true,
-            )
-            .map_err(|_| Error::Unavailable)?;
-        self.ids.extend(added.iter().map(|row| row.id.clone()));
-        self.text_bytes += added.iter().map(|row| row.text.len()).sum::<usize>();
-        for row in &mut added {
-            row.text = String::new();
-        }
-        self.rows.extend(added);
-        self.binding = binding;
-        Ok(self)
+        refresh.finish()
+    }
+    /// Begin a complete fresh snapshot refresh. Every expected row must be
+    /// supplied before finish; this value carries no authority or freshness proof.
+    pub fn begin_refresh(self, binding: Binding, rows: usize) -> Result<Refresh> {
+        Refresh::new(self, binding, rows)
     }
     pub fn search(&self, binding: &Binding, q: &Query<'_>) -> Result<Vec<Hit>> {
         if binding != &self.binding {
