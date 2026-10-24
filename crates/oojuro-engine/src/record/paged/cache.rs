@@ -62,6 +62,28 @@ pub enum Opened {
     Extended,
     Rebuilt,
 }
+/// Opt-in per-request measurements. Counts cover this query, not other clients.
+/// Times include validation and I/O inside each phase; they are not an SLA.
+/// Byte counts are encrypted page bytes processed, not physical disk I/O.
+/// Row counts describe corpus visits or original requests, not the internal
+/// number of rows decoded from a selected authority batch.
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct SearchProfile {
+    pub total_ns: u128,
+    pub term_pass_ns: u128,
+    pub presence_pass_ns: u128,
+    pub statistics_pass_ns: u128,
+    pub scoring_pass_ns: u128,
+    pub originals_ns: u128,
+    pub segment_loads: u64,
+    pub segment_bytes: u64,
+    pub visibility_pages: u64,
+    pub visibility_bytes: u64,
+    pub rows_examined: u64,
+    pub fallback_authority_rows: u64,
+    pub literal_originals: u64,
+    pub selected_originals: u64,
+}
 /// Retains only bounded manifest references, not payload rows, terms or a hydrated Index.
 pub struct Index {
     manifest: Manifest,
@@ -409,11 +431,32 @@ impl Index {
         let s = reader.view(query.scope, query.as_of)?;
         self.search_view(reader, &s, query)
     }
+    pub fn search_profiled(
+        &self,
+        reader: &Reader,
+        query: &Query<'_>,
+    ) -> Result<(Search, SearchProfile)> {
+        let began = std::time::Instant::now();
+        let snapshot = reader.view(query.scope, query.as_of)?;
+        let mut profile = SearchProfile::default();
+        let found = self.search_view_work(reader, &snapshot, query, Some(&mut profile))?;
+        profile.total_ns = began.elapsed().as_nanos();
+        Ok((found, profile))
+    }
     pub fn search_view(
         &self,
         reader: &Reader,
         snapshot: &Snapshot,
         query: &Query<'_>,
+    ) -> Result<Search> {
+        self.search_view_work(reader, snapshot, query, None)
+    }
+    fn search_view_work(
+        &self,
+        reader: &Reader,
+        snapshot: &Snapshot,
+        query: &Query<'_>,
+        mut work: Option<&mut SearchProfile>,
     ) -> Result<Search> {
         self.current(reader)?;
         reader.snapshot(snapshot)?;
@@ -450,10 +493,12 @@ impl Index {
         } else {
             direct
         };
-        let (first, anchored) = self.rank(reader, snapshot, query, false, direct)?;
+        let (first, anchored) =
+            self.rank(reader, snapshot, query, false, direct, work.as_deref_mut())?;
         let mut hits = first;
         if anchored && hits.len() < query.k {
-            let (rest, _) = self.rank(reader, snapshot, query, true, direct)?;
+            let (rest, _) =
+                self.rank(reader, snapshot, query, true, direct, work.as_deref_mut())?;
             let listed: BTreeSet<_> = hits.iter().map(|h| h.id).collect();
             for mut h in rest {
                 if hits.len() == query.k {
@@ -467,9 +512,13 @@ impl Index {
         }
         let mut out = Vec::new();
         let mut bytes = 0usize;
+        let originals_began = work.as_ref().map(|_| std::time::Instant::now());
         for selected in hits.chunks(1000) {
             let ids: Vec<_> = selected.iter().map(|h| h.id).collect();
             let originals = reader.get_ids(snapshot, &ids, query.max_bytes)?;
+            if let Some(work) = work.as_deref_mut() {
+                work.selected_originals += ids.len() as u64;
+            }
             for (h, original) in selected.iter().zip(originals) {
                 let record = original.ok_or(Error::Authority)?;
                 bytes = bytes
@@ -485,6 +534,9 @@ impl Index {
                     row: h.row,
                 });
             }
+        }
+        if let Some(work) = work.as_deref_mut() {
+            work.originals_ns += originals_began.unwrap().elapsed().as_nanos();
         }
         let result = Search {
             watermark: snapshot.watermark().clone(),
@@ -515,13 +567,19 @@ impl Index {
         query: &Query<'_>,
         split: bool,
         direct: Option<Option<u64>>,
+        mut work: Option<&mut SearchProfile>,
     ) -> Result<(Vec<lexical::Hit>, bool)> {
         let possible = paged::possible_terms(query.text);
         let mut df: BTreeMap<String, u64> = possible.iter().map(|t| (t.clone(), 0)).collect();
         let mut present = BTreeSet::new();
         let raw: Vec<_> = paged::terms(query.text).into_iter().collect();
+        let term_began = work.as_ref().map(|_| std::time::Instant::now());
         self.visit_references(reader, |reference| {
             let segment = load_segment(reader, &self.directory, &self.manifest, reference)?;
+            if let Some(work) = work.as_deref_mut() {
+                work.segment_loads += 1;
+                work.segment_bytes += (reference.bytes + SEAL_OVERHEAD) as u64;
+            }
             for (term, n) in &mut df {
                 *n = n
                     .checked_add(segment.postings.get(term).map_or(0, |p| p.len() as u64))
@@ -529,12 +587,17 @@ impl Index {
             }
             Ok(true)
         })?;
+        if let Some(work) = work.as_deref_mut() {
+            work.term_pass_ns += term_began.unwrap().elapsed().as_nanos();
+        }
+        let presence_began = work.as_ref().map(|_| std::time::Instant::now());
         self.walk(
             reader,
             snapshot,
             &query.filter,
             &raw,
             false,
+            work.as_deref_mut(),
             |_, _, tf, visible| {
                 if visible {
                     for ((term, _), n) in raw.iter().zip(tf) {
@@ -546,7 +609,11 @@ impl Index {
                 Ok(())
             },
         )?;
+        if let Some(work) = work.as_deref_mut() {
+            work.presence_pass_ns += presence_began.unwrap().elapsed().as_nanos();
+        }
         let plan = paged::Plan::new(query.text, split, direct, &present, &df);
+        let statistics_began = work.as_ref().map(|_| std::time::Instant::now());
         let mut stats = paged::Stats::new(&plan);
         self.walk(
             reader,
@@ -554,6 +621,7 @@ impl Index {
             &query.filter,
             &plan.terms,
             lexical_literal(query.text),
+            work.as_deref_mut(),
             |r, row, tf, visible| {
                 stats
                     .visit(
@@ -567,15 +635,20 @@ impl Index {
                     .map_err(map_codec)
             },
         )?;
+        if let Some(work) = work.as_deref_mut() {
+            work.statistics_pass_ns += statistics_began.unwrap().elapsed().as_nanos();
+        }
         let model = stats.finish(plan);
         let anchored = model.plan.continues();
         let mut top = paged::Top::new(query.k);
+        let scoring_began = work.as_ref().map(|_| std::time::Instant::now());
         self.walk(
             reader,
             snapshot,
             &query.filter,
             &model.plan.terms,
             lexical_literal(query.text),
+            work.as_deref_mut(),
             |r, row, tf, visible| {
                 if model
                     .plan
@@ -590,6 +663,9 @@ impl Index {
                 Ok(())
             },
         )?;
+        if let Some(work) = work.as_deref_mut() {
+            work.scoring_pass_ns += scoring_began.unwrap().elapsed().as_nanos();
+        }
         Ok((top.finish(), anchored))
     }
     fn walk(
@@ -599,6 +675,7 @@ impl Index {
         filter: &Filter,
         terms: &[(String, usize)],
         need_text: bool,
+        mut work: Option<&mut SearchProfile>,
         mut visit: impl FnMut(&Assigned, &codec::Row, &[u32], bool) -> Result<()>,
     ) -> Result<()> {
         let bound = reader.snapshot(snapshot)?;
@@ -609,6 +686,11 @@ impl Index {
             }
             let segment = load_segment(reader, &self.directory, &self.manifest, reference)?;
             let end = (start + segment.rows.len()).min(bound);
+            if let Some(work) = work.as_deref_mut() {
+                work.segment_loads += 1;
+                work.segment_bytes += (reference.bytes + SEAL_OVERHEAD) as u64;
+                work.rows_examined += (end - start) as u64;
+            }
             let tf_at = |local: usize| -> Vec<u32> {
                 terms
                     .iter()
@@ -628,6 +710,12 @@ impl Index {
             if let Some(metadata) =
                 visibility::load(reader, &self.directory, &self.manifest, reference)?
             {
+                if let Some(work) = work.as_deref_mut() {
+                    work.visibility_pages += 1;
+                    work.visibility_bytes +=
+                        (reference.visibility.as_ref().ok_or(Error::Authority)?.bytes
+                            + SEAL_OVERHEAD) as u64;
+                }
                 for (local, meta) in metadata.rows.into_iter().take(end - start).enumerate() {
                     let row = segment.rows.get(local).ok_or(Error::Authority)?;
                     let mut assigned = meta.assigned();
@@ -641,6 +729,9 @@ impl Index {
                         && assigned.input.indexed
                         && (terms.is_empty() || tf.iter().any(|n| *n > 0))
                     {
+                        if let Some(work) = work.as_deref_mut() {
+                            work.literal_originals += 1;
+                        }
                         assigned = reader
                             .assigned(snapshot.watermark(), assigned.id)?
                             .ok_or(Error::Authority)?;
@@ -648,6 +739,9 @@ impl Index {
                     visit(&assigned, row, &tf, visible)?;
                 }
             } else {
+                if let Some(work) = work.as_deref_mut() {
+                    work.fallback_authority_rows += (end - start) as u64;
+                }
                 let mut local = 0usize;
                 reader.scan(snapshot.watermark(), start, end, |r| {
                     let row = segment.rows.get(local).ok_or(Error::Authority)?;
