@@ -1,0 +1,147 @@
+{
+  "status": "qualified-functional-neutral-peak-memory",
+  "runtime": "d6b1f94a0b39a529ceeff1dc7d198d4e0132315e",
+  "control_runtime": "09b0fbd943625a031698fb52cd574b006b31786a",
+  "control_cli": "cd270843f75412ce77ac70ff13296d7aeb3a1ad4197e56a8e3051dafca8f2339",
+  "candidate_cli": "71754eef61c9fbdcc36ede784c873ffe15a96350b44c413d4d4bfba0240ce8c6",
+  "functional_tests": {
+    "passed": 16,
+    "failed": 0,
+    "ignored": 0,
+    "prior_compile_failure": "7f773 six lifetime errors/zero artifacts/zero selectors; retained separately"
+  },
+  "new_type_ownership_test": "Native carrier String text length AND capacity zero; this is not steady-state RSS or an allocator bound",
+  "rounds": [
+    {
+      "round": 0,
+      "label": "before",
+      "name": "r0-before",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "8cbf09c29d4dcd154acaf46500c648041f783d94d2229f2e95222d8a8c120597",
+      "context_bytes": 922,
+      "wall_seconds": 3.7717136908322573,
+      "cli_max_rss_kib": 33452,
+      "whole_scope_memory_peak_bytes": 32874496,
+      "copied_store_unchanged": true
+    },
+    {
+      "round": 0,
+      "label": "after",
+      "name": "r0-after",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "8cbf09c29d4dcd154acaf46500c648041f783d94d2229f2e95222d8a8c120597",
+      "context_bytes": 922,
+      "wall_seconds": 3.771763003896922,
+      "cli_max_rss_kib": 33936,
+      "whole_scope_memory_peak_bytes": 32407552,
+      "copied_store_unchanged": true
+    },
+    {
+      "round": 1,
+      "label": "after",
+      "name": "r1-after",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "8cbf09c29d4dcd154acaf46500c648041f783d94d2229f2e95222d8a8c120597",
+      "context_bytes": 922,
+      "wall_seconds": 3.7715229969471693,
+      "cli_max_rss_kib": 33900,
+      "whole_scope_memory_peak_bytes": 32911360,
+      "copied_store_unchanged": true
+    },
+    {
+      "round": 1,
+      "label": "before",
+      "name": "r1-before",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "8cbf09c29d4dcd154acaf46500c648041f783d94d2229f2e95222d8a8c120597",
+      "context_bytes": 922,
+      "wall_seconds": 3.8212314238771796,
+      "cli_max_rss_kib": 33900,
+      "whole_scope_memory_peak_bytes": 32522240,
+      "copied_store_unchanged": true
+    },
+    {
+      "round": 2,
+      "label": "before",
+      "name": "r2-before",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "8cbf09c29d4dcd154acaf46500c648041f783d94d2229f2e95222d8a8c120597",
+      "context_bytes": 922,
+      "wall_seconds": 3.8742706021293998,
+      "cli_max_rss_kib": 34036,
+      "whole_scope_memory_peak_bytes": 32514048,
+      "copied_store_unchanged": true
+    },
+    {
+      "round": 2,
+      "label": "after",
+      "name": "r2-after",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "8cbf09c29d4dcd154acaf46500c648041f783d94d2229f2e95222d8a8c120597",
+      "context_bytes": 922,
+      "wall_seconds": 3.7703213528729975,
+      "cli_max_rss_kib": 33816,
+      "whole_scope_memory_peak_bytes": 32481280,
+      "copied_store_unchanged": true
+    },
+    {
+      "round": 3,
+      "label": "after",
+      "name": "r3-after",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "8cbf09c29d4dcd154acaf46500c648041f783d94d2229f2e95222d8a8c120597",
+      "context_bytes": 922,
+      "wall_seconds": 3.770432148128748,
+      "cli_max_rss_kib": 33764,
+      "whole_scope_memory_peak_bytes": 33771520,
+      "copied_store_unchanged": true
+    },
+    {
+      "round": 3,
+      "label": "before",
+      "name": "r3-before",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "8cbf09c29d4dcd154acaf46500c648041f783d94d2229f2e95222d8a8c120597",
+      "context_bytes": 922,
+      "wall_seconds": 3.8215201599523425,
+      "cli_max_rss_kib": 34052,
+      "whole_scope_memory_peak_bytes": 32620544,
+      "copied_store_unchanged": true
+    }
+  ],
+  "medians": {
+    "before": {
+      "cli_max_rss_kib": 33968.0,
+      "whole_scope_memory_peak_bytes": 32571392.0,
+      "wall_seconds": 3.821375791914761
+    },
+    "after": {
+      "cli_max_rss_kib": 33858.0,
+      "whole_scope_memory_peak_bytes": 32696320.0,
+      "wall_seconds": 3.7709775725379586
+    }
+  },
+  "limits": [
+    "DEBUGopt0 warm escape-heavy32originals\u2192one small context only",
+    "no meaningful peak RSS win; round0RSS worse, round1equal; cgroup median slightly higher",
+    "no measured steady-state RSS/release/general search/hosted/cost gain",
+    "all8 nonempty922B contexts equal within this campaign; no across-campaign clock/output equality claim",
+    "public Search keeps owned full originals; Capture/projection carrier retained; no cache or authority change"
+  ]
+}
