@@ -46,7 +46,7 @@ cargo test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro
 ```
 
 These tests select the runtime packages and leave benchmark comparison features disabled.
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the two CI jobs and topic-branch workflow.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for the explicit CI gates and topic-branch workflow.
 
 Storage benchmark tools are explicit: `cargo build --release -p oojuro-store --features bench-tools`
 for `store-bench` (`--example frame_probe` selects the probe); existing `codecs` and `baselines`

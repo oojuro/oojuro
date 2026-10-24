@@ -72,6 +72,8 @@ Open a draft pull request while the change is being developed. Include what chan
 
 You need stable Rust (edition 2024) and a C compiler for the standard zstd codec. Linux is the first-class platform. CI pins Rust 1.99.1 on disposable GitHub-hosted Ubuntu 24.04 runners.
 
+Plain `cargo build --locked` selects only `oojuro-engine`, `oojuro-rank` and `oojuro-store`. CLI/runtime applications still require an explicit `-p` selection. The dependency policy gate checks these libraries independently, including conditional platform dependencies; see [DEPENDENCIES.md](DEPENDENCIES.md). Store JSON-reporting tools require `--features bench-tools`; `baselines` and `codecs` enable it automatically. No public library API is removed.
+
 The normal checks select runtime packages explicitly, without benchmark comparison features:
 
 ```bash
