@@ -1,0 +1,3819 @@
+{
+  "scope": "Separate PR93-source warm serial arm diagnostic; not the new engine-only main source or a new-main performance result",
+  "controls": "Fixed arm order AB/BA, identical originals/queries, existing arm protocol; no fs cache drop or cgroup isolation",
+  "limitations": [
+    "Unique-token search is correctness/work diagnostic, not representative relevance or query mix",
+    "Short search/write series do not qualify tail percentiles or general throughput gains",
+    "Native local encryption differs from plaintext SQLite/JSONL; not matched confidentiality or hosted failure domains",
+    "Seed/reopen/full original verification included in each fresh store; clean reopen only, no new crash campaign"
+  ],
+  "runs": [
+    {
+      "label": "round0-control",
+      "arm": "native-record",
+      "records": 100000,
+      "binary_sha256": "bb414ac5386e8f1c25df49402de6ab7eea33372d57677baebaabb3c877f79335",
+      "load_average_before": [
+        2.43408203125,
+        2.07177734375,
+        2.14501953125
+      ],
+      "errors": 0,
+      "arm_info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "9a6dc2e69c92",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "create_open_us": 120876.687,
+      "append_batch_1000": {
+        "wall": {
+          "n": 100,
+          "p50_us": 20657.101,
+          "p95_us": 27545.278,
+          "p99_us": 35448.721
+        },
+        "engine": {
+          "n": 100,
+          "p50_us": 19398,
+          "p95_us": 26303,
+          "p99_us": 34377
+        }
+      },
+      "append_single": {
+        "wall": {
+          "n": 32,
+          "p50_us": 7713.253,
+          "p95_us": 12107.623,
+          "p99_us": 12868.306
+        },
+        "engine": {
+          "n": 32,
+          "p50_us": 7121,
+          "p95_us": 12027,
+          "p99_us": 12749
+        }
+      },
+      "get_1": {
+        "wall": {
+          "n": 1000,
+          "p50_us": 118.726,
+          "p95_us": 248.909,
+          "p99_us": 454.162
+        },
+        "engine": {
+          "n": 1000,
+          "p50_us": 79,
+          "p95_us": 152,
+          "p99_us": 280
+        }
+      },
+      "get_20": {
+        "wall": {
+          "n": 1000,
+          "p50_us": 1429.399,
+          "p95_us": 1830.644,
+          "p99_us": 2991.428
+        },
+        "engine": {
+          "n": 1000,
+          "p50_us": 1355,
+          "p95_us": 1713,
+          "p99_us": 2505
+        }
+      },
+      "search_unique": {
+        "wall": {
+          "n": 50,
+          "p50_us": 279994.78,
+          "p95_us": 301639.788,
+          "p99_us": 329288.911
+        },
+        "engine": {
+          "n": 50,
+          "p50_us": 279711,
+          "p95_us": 301385,
+          "p99_us": 329045
+        },
+        "ranked_signature": "c86ab2106f61288b041bdd8b2f2b2f537d8976aef1b54c41f64aa961856d38ef"
+      },
+      "stats_open": {
+        "projection_refreshed_from_current_view": true,
+        "records": 100000
+      },
+      "open_footprint": {
+        "apparent_bytes": 5237937,
+        "allocated_bytes": 5251072,
+        "files": [
+          {
+            "path": "records/ENCRYPTED",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/LOCK",
+            "bytes": 0,
+            "allocated": 0
+          },
+          {
+            "path": "records/MANIFEST",
+            "bytes": 36,
+            "allocated": 4096
+          },
+          {
+            "path": "records/RECORD_FORMAT",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/hot-00000001.ojl",
+            "bytes": 5237869,
+            "allocated": 5238784
+          }
+        ]
+      },
+      "closed_footprint": {
+        "apparent_bytes": 5237937,
+        "allocated_bytes": 5251072,
+        "files": [
+          {
+            "path": "records/ENCRYPTED",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/LOCK",
+            "bytes": 0,
+            "allocated": 0
+          },
+          {
+            "path": "records/MANIFEST",
+            "bytes": 36,
+            "allocated": 4096
+          },
+          {
+            "path": "records/RECORD_FORMAT",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/hot-00000001.ojl",
+            "bytes": 5237869,
+            "allocated": 5238784
+          }
+        ]
+      },
+      "reopen_us": 519147.212,
+      "acknowledged_originals_verified": 100000,
+      "logical_text_bytes": 15065512,
+      "corpus_sha256": "925ab9f7b060567ff8ca176fcf9ccd7bd998e9cf1192fa9c90691705d1bb03fa",
+      "high_water_rss_bytes": 424157184,
+      "freshness_and_past_clock_oracles": true,
+      "load_average_after": [
+        2.49755859375,
+        2.11474609375,
+        2.158203125
+      ],
+      "status": "passed"
+    },
+    {
+      "label": "round0-candidate",
+      "arm": "native-record",
+      "records": 100000,
+      "binary_sha256": "2244deb1f5a9d6bfec99f8f87361df450f7f7c24187938f0837135d847eac9d4",
+      "load_average_before": [
+        2.49755859375,
+        2.11474609375,
+        2.158203125
+      ],
+      "errors": 0,
+      "arm_info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "f93bcd9e9dbf",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "create_open_us": 88552.313,
+      "append_batch_1000": {
+        "wall": {
+          "n": 100,
+          "p50_us": 26681.088,
+          "p95_us": 35245.769,
+          "p99_us": 37472.16
+        },
+        "engine": {
+          "n": 100,
+          "p50_us": 24984,
+          "p95_us": 33181,
+          "p99_us": 35229
+        }
+      },
+      "append_single": {
+        "wall": {
+          "n": 32,
+          "p50_us": 7266.901,
+          "p95_us": 12530.43,
+          "p99_us": 12541.47
+        },
+        "engine": {
+          "n": 32,
+          "p50_us": 7060,
+          "p95_us": 12349,
+          "p99_us": 12425
+        }
+      },
+      "get_1": {
+        "wall": {
+          "n": 1000,
+          "p50_us": 36.591,
+          "p95_us": 102.899,
+          "p99_us": 314.705
+        },
+        "engine": {
+          "n": 1000,
+          "p50_us": 9,
+          "p95_us": 18,
+          "p99_us": 31
+        }
+      },
+      "get_20": {
+        "wall": {
+          "n": 1000,
+          "p50_us": 131.883,
+          "p95_us": 261.671,
+          "p99_us": 440.954
+        },
+        "engine": {
+          "n": 1000,
+          "p50_us": 91,
+          "p95_us": 182,
+          "p99_us": 212
+        }
+      },
+      "search_unique": {
+        "wall": {
+          "n": 50,
+          "p50_us": 279201.453,
+          "p95_us": 308396.468,
+          "p99_us": 323964.677
+        },
+        "engine": {
+          "n": 50,
+          "p50_us": 279010,
+          "p95_us": 308271,
+          "p99_us": 323841
+        },
+        "ranked_signature": "c86ab2106f61288b041bdd8b2f2b2f537d8976aef1b54c41f64aa961856d38ef"
+      },
+      "stats_open": {
+        "projection_refreshed_from_current_view": true,
+        "records": 100000
+      },
+      "open_footprint": {
+        "apparent_bytes": 5238259,
+        "allocated_bytes": 5251072,
+        "files": [
+          {
+            "path": "records/ENCRYPTED",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/LOCK",
+            "bytes": 0,
+            "allocated": 0
+          },
+          {
+            "path": "records/MANIFEST",
+            "bytes": 36,
+            "allocated": 4096
+          },
+          {
+            "path": "records/RECORD_FORMAT",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/hot-00000001.ojl",
+            "bytes": 5238191,
+            "allocated": 5238784
+          }
+        ]
+      },
+      "closed_footprint": {
+        "apparent_bytes": 5238259,
+        "allocated_bytes": 5251072,
+        "files": [
+          {
+            "path": "records/ENCRYPTED",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/LOCK",
+            "bytes": 0,
+            "allocated": 0
+          },
+          {
+            "path": "records/MANIFEST",
+            "bytes": 36,
+            "allocated": 4096
+          },
+          {
+            "path": "records/RECORD_FORMAT",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/hot-00000001.ojl",
+            "bytes": 5238191,
+            "allocated": 5238784
+          }
+        ]
+      },
+      "reopen_us": 526137.326,
+      "acknowledged_originals_verified": 100000,
+      "logical_text_bytes": 15065512,
+      "corpus_sha256": "925ab9f7b060567ff8ca176fcf9ccd7bd998e9cf1192fa9c90691705d1bb03fa",
+      "high_water_rss_bytes": 424218624,
+      "freshness_and_past_clock_oracles": true,
+      "load_average_after": [
+        2.52099609375,
+        2.140625,
+        2.16552734375
+      ],
+      "status": "passed"
+    },
+    {
+      "label": "round1-candidate",
+      "arm": "native-record",
+      "records": 100000,
+      "binary_sha256": "2244deb1f5a9d6bfec99f8f87361df450f7f7c24187938f0837135d847eac9d4",
+      "load_average_before": [
+        2.52099609375,
+        2.140625,
+        2.16552734375
+      ],
+      "errors": 0,
+      "arm_info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "f93bcd9e9dbf",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "create_open_us": 114951.895,
+      "append_batch_1000": {
+        "wall": {
+          "n": 100,
+          "p50_us": 23016.743,
+          "p95_us": 35903.458,
+          "p99_us": 43764.5
+        },
+        "engine": {
+          "n": 100,
+          "p50_us": 21613,
+          "p95_us": 33676,
+          "p99_us": 42310
+        }
+      },
+      "append_single": {
+        "wall": {
+          "n": 32,
+          "p50_us": 8537.446,
+          "p95_us": 11877.004,
+          "p99_us": 12057.792
+        },
+        "engine": {
+          "n": 32,
+          "p50_us": 8359,
+          "p95_us": 11732,
+          "p99_us": 11883
+        }
+      },
+      "get_1": {
+        "wall": {
+          "n": 1000,
+          "p50_us": 25.725,
+          "p95_us": 127.274,
+          "p99_us": 357.763
+        },
+        "engine": {
+          "n": 1000,
+          "p50_us": 6,
+          "p95_us": 27,
+          "p99_us": 48
+        }
+      },
+      "get_20": {
+        "wall": {
+          "n": 1000,
+          "p50_us": 106.086,
+          "p95_us": 324.942,
+          "p99_us": 611.162
+        },
+        "engine": {
+          "n": 1000,
+          "p50_us": 79,
+          "p95_us": 199,
+          "p99_us": 247
+        }
+      },
+      "search_unique": {
+        "wall": {
+          "n": 50,
+          "p50_us": 278221.665,
+          "p95_us": 284053.069,
+          "p99_us": 293787.247
+        },
+        "engine": {
+          "n": 50,
+          "p50_us": 278002,
+          "p95_us": 283948,
+          "p99_us": 293614
+        },
+        "ranked_signature": "c86ab2106f61288b041bdd8b2f2b2f537d8976aef1b54c41f64aa961856d38ef"
+      },
+      "stats_open": {
+        "projection_refreshed_from_current_view": true,
+        "records": 100000
+      },
+      "open_footprint": {
+        "apparent_bytes": 5237302,
+        "allocated_bytes": 5251072,
+        "files": [
+          {
+            "path": "records/ENCRYPTED",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/LOCK",
+            "bytes": 0,
+            "allocated": 0
+          },
+          {
+            "path": "records/MANIFEST",
+            "bytes": 36,
+            "allocated": 4096
+          },
+          {
+            "path": "records/RECORD_FORMAT",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/hot-00000001.ojl",
+            "bytes": 5237234,
+            "allocated": 5238784
+          }
+        ]
+      },
+      "closed_footprint": {
+        "apparent_bytes": 5237302,
+        "allocated_bytes": 5251072,
+        "files": [
+          {
+            "path": "records/ENCRYPTED",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/LOCK",
+            "bytes": 0,
+            "allocated": 0
+          },
+          {
+            "path": "records/MANIFEST",
+            "bytes": 36,
+            "allocated": 4096
+          },
+          {
+            "path": "records/RECORD_FORMAT",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/hot-00000001.ojl",
+            "bytes": 5237234,
+            "allocated": 5238784
+          }
+        ]
+      },
+      "reopen_us": 521561.848,
+      "acknowledged_originals_verified": 100000,
+      "logical_text_bytes": 15065512,
+      "corpus_sha256": "925ab9f7b060567ff8ca176fcf9ccd7bd998e9cf1192fa9c90691705d1bb03fa",
+      "high_water_rss_bytes": 424042496,
+      "freshness_and_past_clock_oracles": true,
+      "load_average_after": [
+        2.087890625,
+        2.06591796875,
+        2.14013671875
+      ],
+      "status": "passed"
+    },
+    {
+      "label": "round1-control",
+      "arm": "native-record",
+      "records": 100000,
+      "binary_sha256": "bb414ac5386e8f1c25df49402de6ab7eea33372d57677baebaabb3c877f79335",
+      "load_average_before": [
+        2.087890625,
+        2.06591796875,
+        2.14013671875
+      ],
+      "errors": 0,
+      "arm_info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "9a6dc2e69c92",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "create_open_us": 117141.144,
+      "append_batch_1000": {
+        "wall": {
+          "n": 100,
+          "p50_us": 28153.878,
+          "p95_us": 36407.391,
+          "p99_us": 41438.057
+        },
+        "engine": {
+          "n": 100,
+          "p50_us": 26584,
+          "p95_us": 34330,
+          "p99_us": 39360
+        }
+      },
+      "append_single": {
+        "wall": {
+          "n": 32,
+          "p50_us": 8773.301,
+          "p95_us": 12752.433,
+          "p99_us": 14396.781
+        },
+        "engine": {
+          "n": 32,
+          "p50_us": 8682,
+          "p95_us": 12612,
+          "p99_us": 14096
+        }
+      },
+      "get_1": {
+        "wall": {
+          "n": 1000,
+          "p50_us": 96.082,
+          "p95_us": 162.3,
+          "p99_us": 212.232
+        },
+        "engine": {
+          "n": 1000,
+          "p50_us": 71,
+          "p95_us": 123,
+          "p99_us": 140
+        }
+      },
+      "get_20": {
+        "wall": {
+          "n": 1000,
+          "p50_us": 1296.277,
+          "p95_us": 1559.857,
+          "p99_us": 1686.648
+        },
+        "engine": {
+          "n": 1000,
+          "p50_us": 1239,
+          "p95_us": 1483,
+          "p99_us": 1612
+        }
+      },
+      "search_unique": {
+        "wall": {
+          "n": 50,
+          "p50_us": 280580.168,
+          "p95_us": 291314.941,
+          "p99_us": 311044.261
+        },
+        "engine": {
+          "n": 50,
+          "p50_us": 280403,
+          "p95_us": 291096,
+          "p99_us": 310905
+        },
+        "ranked_signature": "c86ab2106f61288b041bdd8b2f2b2f537d8976aef1b54c41f64aa961856d38ef"
+      },
+      "stats_open": {
+        "projection_refreshed_from_current_view": true,
+        "records": 100000
+      },
+      "open_footprint": {
+        "apparent_bytes": 5238728,
+        "allocated_bytes": 5251072,
+        "files": [
+          {
+            "path": "records/ENCRYPTED",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/LOCK",
+            "bytes": 0,
+            "allocated": 0
+          },
+          {
+            "path": "records/MANIFEST",
+            "bytes": 36,
+            "allocated": 4096
+          },
+          {
+            "path": "records/RECORD_FORMAT",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/hot-00000001.ojl",
+            "bytes": 5238660,
+            "allocated": 5238784
+          }
+        ]
+      },
+      "closed_footprint": {
+        "apparent_bytes": 5238728,
+        "allocated_bytes": 5251072,
+        "files": [
+          {
+            "path": "records/ENCRYPTED",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/LOCK",
+            "bytes": 0,
+            "allocated": 0
+          },
+          {
+            "path": "records/MANIFEST",
+            "bytes": 36,
+            "allocated": 4096
+          },
+          {
+            "path": "records/RECORD_FORMAT",
+            "bytes": 16,
+            "allocated": 4096
+          },
+          {
+            "path": "records/hot-00000001.ojl",
+            "bytes": 5238660,
+            "allocated": 5238784
+          }
+        ]
+      },
+      "reopen_us": 568600.761,
+      "acknowledged_originals_verified": 100000,
+      "logical_text_bytes": 15065512,
+      "corpus_sha256": "925ab9f7b060567ff8ca176fcf9ccd7bd998e9cf1192fa9c90691705d1bb03fa",
+      "high_water_rss_bytes": 424091648,
+      "freshness_and_past_clock_oracles": true,
+      "load_average_after": [
+        2.06494140625,
+        2.060546875,
+        2.13623046875
+      ],
+      "status": "passed"
+    },
+    {
+      "label": "sqlite",
+      "arm": "sqlite",
+      "records": 100000,
+      "binary_sha256": "2244deb1f5a9d6bfec99f8f87361df450f7f7c24187938f0837135d847eac9d4",
+      "load_average_before": [
+        2.06494140625,
+        2.060546875,
+        2.13623046875
+      ],
+      "errors": 0,
+      "arm_info": {
+        "name": "sqlite-fts5",
+        "version": "sqlite 3.53.2 fts5 porter unicode61 bm25",
+        "commit": "f93bcd9e9dbf",
+        "durability": "one transaction per batch; WAL + synchronous=FULL (fsync at commit)",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "query = OR of distinct tokens; latest-revision filter in SQL"
+        ]
+      },
+      "create_open_us": 101512.569,
+      "append_batch_1000": {
+        "wall": {
+          "n": 100,
+          "p50_us": 18164.169,
+          "p95_us": 35614.545,
+          "p99_us": 37726.909
+        },
+        "engine": {
+          "n": 100,
+          "p50_us": 17159,
+          "p95_us": 34702,
+          "p99_us": 36639
+        }
+      },
+      "append_single": {
+        "wall": {
+          "n": 32,
+          "p50_us": 8844.42,
+          "p95_us": 16575.085,
+          "p99_us": 22179.063
+        },
+        "engine": {
+          "n": 32,
+          "p50_us": 8746,
+          "p95_us": 16378,
+          "p99_us": 22084
+        }
+      },
+      "get_1": {
+        "wall": {
+          "n": 1000,
+          "p50_us": 22.802,
+          "p95_us": 34.297,
+          "p99_us": 57.639
+        },
+        "engine": {
+          "n": 1000,
+          "p50_us": 3,
+          "p95_us": 7,
+          "p99_us": 11
+        }
+      },
+      "get_20": {
+        "wall": {
+          "n": 1000,
+          "p50_us": 88.723,
+          "p95_us": 141.071,
+          "p99_us": 203.241
+        },
+        "engine": {
+          "n": 1000,
+          "p50_us": 58,
+          "p95_us": 104,
+          "p99_us": 141
+        }
+      },
+      "search_unique": {
+        "wall": {
+          "n": 50,
+          "p50_us": 54.953,
+          "p95_us": 82.391,
+          "p99_us": 97.58
+        },
+        "engine": {
+          "n": 50,
+          "p50_us": 38,
+          "p95_us": 57,
+          "p99_us": 72
+        },
+        "ranked_signature": "cfed85bf5257c44cfd7cbe640aa2b933ce960651a3e19e9251d75eaa00db801c"
+      },
+      "stats_open": {
+        "records": 100000
+      },
+      "open_footprint": {
+        "apparent_bytes": 48536496,
+        "allocated_bytes": 48537600,
+        "files": [
+          {
+            "path": "store.sqlite",
+            "bytes": 43073536,
+            "allocated": 43073536
+          },
+          {
+            "path": "store.sqlite-shm",
+            "bytes": 32768,
+            "allocated": 32768
+          },
+          {
+            "path": "store.sqlite-wal",
+            "bytes": 5430192,
+            "allocated": 5431296
+          }
+        ]
+      },
+      "closed_footprint": {
+        "apparent_bytes": 43073536,
+        "allocated_bytes": 43073536,
+        "files": [
+          {
+            "path": "store.sqlite",
+            "bytes": 43073536,
+            "allocated": 43073536
+          }
+        ]
+      },
+      "reopen_us": 656.799,
+      "acknowledged_originals_verified": 100000,
+      "logical_text_bytes": 15065512,
+      "corpus_sha256": "925ab9f7b060567ff8ca176fcf9ccd7bd998e9cf1192fa9c90691705d1bb03fa",
+      "high_water_rss_bytes": 100900864,
+      "freshness_and_past_clock_oracles": true,
+      "load_average_after": [
+        2.06494140625,
+        2.060546875,
+        2.13623046875
+      ],
+      "status": "passed"
+    },
+    {
+      "label": "jsonl",
+      "arm": "jsonl",
+      "records": 100000,
+      "binary_sha256": "2244deb1f5a9d6bfec99f8f87361df450f7f7c24187938f0837135d847eac9d4",
+      "load_average_before": [
+        2.06494140625,
+        2.060546875,
+        2.13623046875
+      ],
+      "errors": 0,
+      "arm_info": {
+        "name": "jsonl-fts5",
+        "version": "Zstd 1.5.7; SQLite 3.53.2 contentless FTS5 porter unicode61 bm25",
+        "commit": "f93bcd9e9dbf",
+        "durability": "immutable batch file fsync + directory fsync, then SQLite WAL synchronous=FULL commit; one host, no replication/backups/encryption",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "one JSONL frame per batch; no dictionary or deduplication; level 3 when compressed",
+          "same OR-token query/ranking and two-clock SQL visibility as sqlite arm; FTS5 stores no original text",
+          "all payloads, index, WAL/SHM and uncommitted orphan frames count toward footprint; no automatic orphan reclamation",
+          "get decodes each selected batch frame once per request; no retained payload cache"
+        ]
+      },
+      "create_open_us": 123334.319,
+      "append_batch_1000": {
+        "wall": {
+          "n": 100,
+          "p50_us": 33648.583,
+          "p95_us": 47760.159,
+          "p99_us": 57206.68
+        },
+        "engine": {
+          "n": 100,
+          "p50_us": 32488,
+          "p95_us": 46637,
+          "p99_us": 56048
+        }
+      },
+      "append_single": {
+        "wall": {
+          "n": 32,
+          "p50_us": 19627.122,
+          "p95_us": 28623.177,
+          "p99_us": 41306.342
+        },
+        "engine": {
+          "n": 32,
+          "p50_us": 19516,
+          "p95_us": 28505,
+          "p99_us": 41173
+        }
+      },
+      "get_1": {
+        "wall": {
+          "n": 1000,
+          "p50_us": 119.415,
+          "p95_us": 208.591,
+          "p99_us": 381.359
+        },
+        "engine": {
+          "n": 1000,
+          "p50_us": 82,
+          "p95_us": 123,
+          "p99_us": 243
+        }
+      },
+      "get_20": {
+        "wall": {
+          "n": 1000,
+          "p50_us": 3224.455,
+          "p95_us": 3670.64,
+          "p99_us": 4854.667
+        },
+        "engine": {
+          "n": 1000,
+          "p50_us": 3143,
+          "p95_us": 3541,
+          "p99_us": 4647
+        }
+      },
+      "search_unique": {
+        "wall": {
+          "n": 50,
+          "p50_us": 52.69,
+          "p95_us": 76.334,
+          "p99_us": 98.9
+        },
+        "engine": {
+          "n": 50,
+          "p50_us": 41,
+          "p95_us": 56,
+          "p99_us": 74
+        },
+        "ranked_signature": "cfed85bf5257c44cfd7cbe640aa2b933ce960651a3e19e9251d75eaa00db801c"
+      },
+      "stats_open": {
+        "codec_level": 0,
+        "orphan_frames": 0,
+        "payload_bytes": 25443292,
+        "payload_files": 133,
+        "records": 100000,
+        "referenced_frames": 133,
+        "whole_store_bytes": 61407484
+      },
+      "open_footprint": {
+        "apparent_bytes": 61407484,
+        "allocated_bytes": 61857792,
+        "files": [
+          {
+            "path": "index.sqlite",
+            "bytes": 30789632,
+            "allocated": 30789632
+          },
+          {
+            "path": "index.sqlite-shm",
+            "bytes": 32768,
+            "allocated": 32768
+          },
+          {
+            "path": "index.sqlite-wal",
+            "bytes": 5141792,
+            "allocated": 5144576
+          },
+          {
+            "path": "payloads/02c467a1b2a9469273a0a93acb138ef12c56340e234c20d35c7d67eb323c64a7",
+            "bytes": 254652,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/05f688f884a3bb3d4f10602731b580ebcb16650a3d2d146b66b61c0386e9a465",
+            "bytes": 250430,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/063b976c0a9da7cee3a06b408e8ea6494bc63829e623c86e7caf66807f7d7415",
+            "bytes": 252650,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/067e34bb34a9bfb9c878bf6553c725df37ff32462f76b1f65358b47d48755382",
+            "bytes": 254654,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/0b55b88677c0bcb76cfd1c1e391ea696dd943ff668a14d10ed093cc45e716832",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/0da0b6ce71b867fe635c5fedca590481e831c15e12434f252ccd92034fc13995",
+            "bytes": 254654,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/0ebb012dc1525a371b3d037931cf78e640e8682ad57a7bb685985879a192e98c",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/1028fd9a639350b6a75ab168a687e6eda04b7a77a077387f5e816840c1655923",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/11898ce11af8dbda6d4b387105d9d15cab5ebb03a400d8111e6fbcf2b3d4a799",
+            "bytes": 254653,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/13a1152bb1668a47e9cbf02582a591f8f10b1172d37c1cb744e6d9ec64e9e565",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/149bcfe1d9fd425ffaf800aa04cede07f64e35e7f8482265d504024868857f8a",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/15fbb9adc15c7608111eac44b093f4cf5983c05163e88bcadd4f16d442d324b8",
+            "bytes": 254658,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/17183e9dfa82cbd302dd3ddd723361ae468dd5af6c0f3c900be9ac7686ded9a8",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/17d110916061d32c6a2dc403b5823a1b1a8ad0501305194af7d790857095d035",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/19f0e1fe727d7ff1922be7bda9065f4bbf1b9b0b00f397c8b59b61fe83965541",
+            "bytes": 254652,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/1efd8cfb73ea57e65a3d324432237a5836c9ba85ee3bbb2b749d202f3da9ecd1",
+            "bytes": 254656,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/210a194334fef39baee8307a92d773c9846b7667d93f46e7bce50cbb3e377142",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/22b8395d04f56282165707fdfa3be4f029d0e60712fe89b22ee5b0007fc4ea34",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/25a731b6af320f5a0a56e0bdca0d536776a6da739adf2471f994ff3de1b4882f",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/2603025758b6e1f5369f85be4a02a9f0961ad301a66f1aabc5179fb702453d13",
+            "bytes": 254655,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/2684fa1077868392363114f4325e3910ef5d6343e3d6d26bf2c9bd7e6a73ac76",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/2744ed29164b28886e8fdd048f86182f195d961346a5fd2dbf5c24527e53240f",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/2751143dd56943479557283ff080a341c1804c84ccdd5f911dc67c3d81042e60",
+            "bytes": 254655,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/27b176950f65a4fa0b01179776141dcbf018e1253c87f6203b7b9797a9e02efc",
+            "bytes": 254651,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/2d55756593137a97a049e1a73721cc26c3f2a16b3b737cd1594b5b8aa2ce45d9",
+            "bytes": 254658,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/2e1cae0933147dceef15e101ed379b50c7239c0ef16306ed9e3f81bae9c68205",
+            "bytes": 254653,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/2e27937cb2e1a65e9230fff8eafcf08233415b1d8e47f23986a5f01a543a63b2",
+            "bytes": 252660,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/32bb7e6eabe9b84e3834289a368a980029d0703d384d36ca0c8f3d2e15139240",
+            "bytes": 254652,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/339fd585421bff9bd92900cafb97db867f3b7bc78fd501d31951f60a8d55c70d",
+            "bytes": 254658,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/35986ee00ae1c82673083f9a61d7c137f36a72b68fa743892cf6451edf85fb9c",
+            "bytes": 254654,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/38cd34c6f95c3a8b47c3e0cb327546684e04c3b5a215a55ef5431c96fdec8a1b",
+            "bytes": 254655,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/39e633e6f7550acec96cd2ad6cc48aee37d45ec5bc26800e8535f7952714aebd",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/3c14d0b71f72d4345dedb99bbc9098e55721ba5e01cc7fbbecc1a07332a3e6e9",
+            "bytes": 254659,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/3d4d84b97f029030089810d714ca63fa5834abe74583d4587a6c02c3a30b3c14",
+            "bytes": 254657,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/409a1adbc125675e4bf48d56feca8f34ca7fc3962ca66fca9e35ad6f7f1d8041",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/40cbdc10312646f512087736195ccf0fbe422422379cee64caf1125e60abf525",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/43f73dbac9821cda23821e9439bd85694f982f09b2c4c636c116f7adc4f6df7b",
+            "bytes": 254659,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/449e37acca924571c974f3929d318365dc620d2d97449dced0f0b947eb1c56b9",
+            "bytes": 254653,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/461277adcea9ef60e5b47fe1849b9c53df7e86f84afa6bf7ea28e59da81ec9c1",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/47f213e18020afaec12322fd3c644a2fc2f309c5810634902ccff2a48d3d693e",
+            "bytes": 254651,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/487abf02f02e0b89538e442a37dde6da768a3c61d8cd502426a37a1112c3ac55",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/52286879fe30f885b1d8789afe871af9238ee04adc2dcb91af65b1adf770660f",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/55a6be54f21bf0ae2e553a7bd1a1238ed6787d95313303868857d483ede21d23",
+            "bytes": 254652,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/5b3e3b8c406d22f975482098466627800d01eee9a3bbb126fc60985c82b2fca9",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/5dea0a3c0f594a63284e77c80d99ab8931219f271c53a4585f3b094a9d8c199d",
+            "bytes": 254654,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/5f7a475c4f0c36aaf6c60012b098fb70304181c3a3307fb0beb68763f23d64b4",
+            "bytes": 254651,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/6198cd00fad31c91e7eb5254b36f4271ae2a7f7d899d0ec62faaabdf05de0919",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/6428406668c55bfba4501c648510ab33c1d9d225e7458ee359b7bc2e32710fa5",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/669f7cafb0cc644be6a7ecc02b82b540709ba57272398715b1f7617481657cb6",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/67c80ed7752c246a80a9a14dbbc97822b19f74a21ea66c12d90cabbf0580e8da",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/67e174d3ca2b16809ee448237914606f352668e37b5bd250d7cee0e4b8fad015",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/68c932874f747cab83de02d5dabca5fce07d1e4ec748e44382e8f513057371d6",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/6b65d43841c755aee383b9a2e40d5be7805a3cbac200247dcf521d8905623f04",
+            "bytes": 254651,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/6e283cba8c138ee646c9a854348c49bcd6ce8291b7607276797680b200cdf603",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/6f59b931c81ad74260c7de41480cda0483d069ef6eadd5365013978b4b34dcfd",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/706d6b6c4cc4eb028031536825961232f7c2545a8bc6b21d492d83921e253eec",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/70cbae3e2d3805f12511b93c5d4f5a1d23e35c6011ee9c56a6a8c03aedde1cdc",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/723f129812cc7358fd7e032feb0ce95101617c73d53179b05be9fbced7265a3a",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/73332c7d0cea5f7c97fe772855abb6726cc6b74fd07506f94f732dd5c30a0655",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/7629989985d6a907b5a8c3a42c552d55174b7b19bc0fd2b2c02cd108cc633b7c",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/772afec9c03b974f792084ed19ee432faca3cd0eed85ead2c9da0f35a63437a8",
+            "bytes": 252660,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/7a207b068449a50fb8f9bd0ebeae2ec3efe6710921a5177eae35a9561e581ea1",
+            "bytes": 254658,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/7a5fc76cd8269aa931333cd55707ab6cc7fd25a17759d17715c307d157cd78ec",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/7b1f494e932f2f4b64a41f9f959c0fbe68dac87d441d394a252f329dc0b50fb7",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/7b50b4d06fefa28ddf3da9c78cf3a01335001e60dd0835f6d80327db9a574e7e",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/7f667c9e74c09e96c0b5a914ce4f16d72e66d3718e71ca25f7cb54763e181b08",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/828252a8271cecfd720222a3449e70f85b78695614e78e0722caa62818edcea2",
+            "bytes": 252650,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/83064b55e94d452f49e2a0fb4c4eb8c47d217a4f842d98b230394cd0a058f597",
+            "bytes": 254651,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/84bc6873ac13ce4676819186231797d3ef027401c4fd7d845aeb549c85a56e78",
+            "bytes": 254655,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/857b06c126ec7c3bb3559006e9cd12a6cb5b05922bfa8800316ede73c3ea8f9c",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/85961cb3e4470b97a9e682f545578541176def728beab1484c79db25404e2e3e",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/872f12478fb32af0fadd1530928075b77de9ae0c5f0becd4d1cfe37004bf81ec",
+            "bytes": 254653,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/8cc590b3e5b39047998c3df49a7c1e13623e855abf368b777a9c3a1593b568a4",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/8d7a9b2fc55634d6690582b9b44f32095ba5811a8efe6b38face2167547d6d01",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/8f2829691254f6131b9bebdee761d6f62e0a286735a9ef86e644c9c0955727bd",
+            "bytes": 254659,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/8f30e768a4463a009f8e6e7512cda7cbbc7fc259b250c64d19fd311354de6180",
+            "bytes": 252660,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/9191b02e4ae68abe623b6dff909dc0e5571a2c92aa6bbcbe006d0ce95325904f",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/95c91dd94c43fd5b1a4b1df597609512949982c1e3f7b41a7cbbe38a480d542b",
+            "bytes": 252650,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/9bdb2c59c888100556d5875d0de5aca3b5e876f3ec431510d625cea394c9f425",
+            "bytes": 254656,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/9c26f380609327efdfc8c47ed5332ebef8980861711377aaa380c9b6eca60743",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/9ca99af8782902938228f8c6a89ddae4c61de3971d4fdac1f95cda5b5e02cd8c",
+            "bytes": 254658,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/9d9ec244eefd0613ef4ba79b940f27ba6527d180932d1f18829ca004709837b4",
+            "bytes": 254654,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/9e33e69840b25b7f4eae81d4d563cf88987b60ab803e82610d9fa7ad4385a4aa",
+            "bytes": 254652,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/9f1a2f51c6a0c8586ba1f898cb8a19b7fd2fee446757afd2647070f4dee7f38e",
+            "bytes": 254659,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/a0573db071a17132a2c7973594043fd9c046c14de2afb827328218136780b1dd",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/a20b17428409cb36449ed49c69a7b436e44261a919bec17137d5ffb3aa04e34d",
+            "bytes": 254653,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/a37dc12abcf0e93b6a528f4d4eb2df3fa9fe621e2cc74cefbddd435225fd545b",
+            "bytes": 252660,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/a497762770261ddc698c98c95b9271de3af10d29be62c58ada193874ca356b44",
+            "bytes": 254651,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/a772fc069a00eb1bc12863473b0abbbfc127f0560647f648ce55a81dbe33c337",
+            "bytes": 254652,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/a98aea0edda910c49e041154d4b5cac75d1140bef76c3333f7eac4d0ba6073bd",
+            "bytes": 252650,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/abdf3790743f2d0a1012e4a7e5804b97c11ff347dde469449b10d322c32abe9e",
+            "bytes": 252660,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/b271aa29341091b39377720c28c393dc4216694b4db40dae6e6bf810982fbfb2",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/b729ddada250937d103bfbebbc33fcd81e349a329803c370ec52b9c41eab0eac",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/bae370e55f2c8eecf22020e7e5ac657fa2e32e42e3f9ceca6bdf60a634b14401",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/bb175302d0dbc82a4d490ced5e4ca3930cf0b5659210381fd509532546fa92d3",
+            "bytes": 254654,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/bb9bf9e95bc3ca928a99d43d467c59776955a4c59c13f734935be4d98049e3f6",
+            "bytes": 254657,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/bc3e9d362b1c8094e196e7048b6c650b38b37a5610eb7f38c385bb23fe10178e",
+            "bytes": 254659,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/bdc6e232733893351ea56c6f5d3e2df37a791923ffb8f16609172aeae6131ce5",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/be0a08f6a0b92bd576ae4ede0394447da57f7df64441b6993704023c35ba5cb6",
+            "bytes": 254659,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/beb4b78aa25e344f4c2d7fc8ce3b1720fcae4be2e1d19382be64f905f0e6ea5c",
+            "bytes": 254651,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/c5cdcee04d4c45806510c4469dcd2e539f2e58ef2832d3a77f3b00ee56476bde",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/c5e3fa384128b5a6454902ff54f4c4cf112b47fd6e9c733f186301e5ab95b057",
+            "bytes": 254657,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/c787863011552bc40a2de321f5f03e7fae32ed59d9b768ea5858c1ddbd66b1c6",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/cb8a0a62834e25e1d941eaa506e238497bc2b8a9b076cad660087919053c9a62",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/cbe8f076e3da687034fde712e9f23358d59d8e76935127e324bdc51130cbcf19",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/cd3b0de4fc8b81e1bd3eb74a6c604d6f069281a4f0622480dfb2f17d6c98853c",
+            "bytes": 254656,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/cdc6d73d0a544895b5f30d216080d9f8dd8cd5055a3d242b422b873ad4c919c7",
+            "bytes": 254656,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/ce08de1b9df0bf94f3f763d3c3d332591172d0f212d9523fcc977ffb3ee4aa45",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/d1a2497fc34cf5976b0b3be77f5172d20af76d43379b28abcf25aef09b2a9ba7",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/d2457c84d194668ef3f8e975ec590de93b3a41ed2029ef9eb237f3b9bf01683a",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/d26d7fbf0b8f77c8518aaa5936bb1c26bd64c8fa184f43186e49548f2298ab45",
+            "bytes": 254653,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/d2ab6173a7149feb317edb43c4c271738f1cee98ebd1928f617d36119be4af28",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/d85ac870568ba3a1a4d3c0a2650b6221b38fa4fbfd4a376fad25effbe03acafa",
+            "bytes": 254659,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/daf6457cb173923273e5cbdd685eda0ec19540fee4c453643e3899781ff1a746",
+            "bytes": 246251,
+            "allocated": 249856
+          },
+          {
+            "path": "payloads/decf2782b4ccde9d7ca5d611b6237c3db987f7d820fc58f138ee056c7a86ad22",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/e1bfcd92233a533657fbeb29710387b230d83e1b27c699983d1b1f16575073a3",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/e2619a574a8ddfdffcdfd3b5658cf72d7fbff6474e1c105256118fbcecac0f84",
+            "bytes": 254655,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/e30203583efa4829360805ef7bb2f679c27dc098a3ea660406e7d44e49254061",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/e3a539188d2971067184718f627d117c093b2ee93ffb098221ba913e6393ce68",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/e60f672216f6688e3ac5f500edbbe944ad096784deb82f07d6daae36d7795e23",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/e6bfbf9b9586cedef908770ff7ea07c85a630c7e3206721ba90421a11bad9d35",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/e81bd2cafb80d599251b3796abbbcec6c357573c676c3b9f8cc03f7db6d532e9",
+            "bytes": 254656,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/e8d765576289b19ecf2a6e7747cf816741221167d0cade1d26bf39da699d22d8",
+            "bytes": 254657,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/eeaabafa9aa928ec4e0828386e0300da7793c597850e369a1ce1ce317a3ff5cd",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/f01dd1199cd924020b5fab9d6c2fcdeeef9a626aaed0929c7179fa758f8f471f",
+            "bytes": 254655,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/f06c514aafd5ebc0c82a610958b548cd2df3438bef7e5b8a1908505584bf0780",
+            "bytes": 254658,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/f410b56ada969da84782f151865279b442ac4bdade92a9a0bff73f8f9a1f7e17",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/f648d91e7970deccb040d806f71c737c1f062cf64d075daaef7890d142ba3f9f",
+            "bytes": 254656,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/f7055803faf953ae62eedae8bec177a1c58d2cfc01e7aaedf07ab0925ad299ce",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/f9ae86cd035877421f27482b5533b00b1edee8b506fd7050a1f1c5da0d4dac43",
+            "bytes": 254657,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/fccae8acc0ab71b308b74f715c129ee8972406cc01e6bdd77df66e865824dbeb",
+            "bytes": 254657,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/ffc63d0062775b7aeb0f61d346a8fb017881243b6797c9ae009813a8e5077ac0",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/ffefb48adc55c9cb9e2561073c88ae7d4ae3b2461454e69f4f2b176017d710a8",
+            "bytes": 254650,
+            "allocated": 258048
+          }
+        ]
+      },
+      "closed_footprint": {
+        "apparent_bytes": 57371612,
+        "allocated_bytes": 57819136,
+        "files": [
+          {
+            "path": "index.sqlite",
+            "bytes": 31928320,
+            "allocated": 31928320
+          },
+          {
+            "path": "payloads/02c467a1b2a9469273a0a93acb138ef12c56340e234c20d35c7d67eb323c64a7",
+            "bytes": 254652,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/05f688f884a3bb3d4f10602731b580ebcb16650a3d2d146b66b61c0386e9a465",
+            "bytes": 250430,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/063b976c0a9da7cee3a06b408e8ea6494bc63829e623c86e7caf66807f7d7415",
+            "bytes": 252650,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/067e34bb34a9bfb9c878bf6553c725df37ff32462f76b1f65358b47d48755382",
+            "bytes": 254654,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/0b55b88677c0bcb76cfd1c1e391ea696dd943ff668a14d10ed093cc45e716832",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/0da0b6ce71b867fe635c5fedca590481e831c15e12434f252ccd92034fc13995",
+            "bytes": 254654,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/0ebb012dc1525a371b3d037931cf78e640e8682ad57a7bb685985879a192e98c",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/1028fd9a639350b6a75ab168a687e6eda04b7a77a077387f5e816840c1655923",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/11898ce11af8dbda6d4b387105d9d15cab5ebb03a400d8111e6fbcf2b3d4a799",
+            "bytes": 254653,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/13a1152bb1668a47e9cbf02582a591f8f10b1172d37c1cb744e6d9ec64e9e565",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/149bcfe1d9fd425ffaf800aa04cede07f64e35e7f8482265d504024868857f8a",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/15fbb9adc15c7608111eac44b093f4cf5983c05163e88bcadd4f16d442d324b8",
+            "bytes": 254658,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/17183e9dfa82cbd302dd3ddd723361ae468dd5af6c0f3c900be9ac7686ded9a8",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/17d110916061d32c6a2dc403b5823a1b1a8ad0501305194af7d790857095d035",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/19f0e1fe727d7ff1922be7bda9065f4bbf1b9b0b00f397c8b59b61fe83965541",
+            "bytes": 254652,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/1efd8cfb73ea57e65a3d324432237a5836c9ba85ee3bbb2b749d202f3da9ecd1",
+            "bytes": 254656,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/210a194334fef39baee8307a92d773c9846b7667d93f46e7bce50cbb3e377142",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/22b8395d04f56282165707fdfa3be4f029d0e60712fe89b22ee5b0007fc4ea34",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/25a731b6af320f5a0a56e0bdca0d536776a6da739adf2471f994ff3de1b4882f",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/2603025758b6e1f5369f85be4a02a9f0961ad301a66f1aabc5179fb702453d13",
+            "bytes": 254655,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/2684fa1077868392363114f4325e3910ef5d6343e3d6d26bf2c9bd7e6a73ac76",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/2744ed29164b28886e8fdd048f86182f195d961346a5fd2dbf5c24527e53240f",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/2751143dd56943479557283ff080a341c1804c84ccdd5f911dc67c3d81042e60",
+            "bytes": 254655,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/27b176950f65a4fa0b01179776141dcbf018e1253c87f6203b7b9797a9e02efc",
+            "bytes": 254651,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/2d55756593137a97a049e1a73721cc26c3f2a16b3b737cd1594b5b8aa2ce45d9",
+            "bytes": 254658,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/2e1cae0933147dceef15e101ed379b50c7239c0ef16306ed9e3f81bae9c68205",
+            "bytes": 254653,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/2e27937cb2e1a65e9230fff8eafcf08233415b1d8e47f23986a5f01a543a63b2",
+            "bytes": 252660,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/32bb7e6eabe9b84e3834289a368a980029d0703d384d36ca0c8f3d2e15139240",
+            "bytes": 254652,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/339fd585421bff9bd92900cafb97db867f3b7bc78fd501d31951f60a8d55c70d",
+            "bytes": 254658,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/35986ee00ae1c82673083f9a61d7c137f36a72b68fa743892cf6451edf85fb9c",
+            "bytes": 254654,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/38cd34c6f95c3a8b47c3e0cb327546684e04c3b5a215a55ef5431c96fdec8a1b",
+            "bytes": 254655,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/39e633e6f7550acec96cd2ad6cc48aee37d45ec5bc26800e8535f7952714aebd",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/3c14d0b71f72d4345dedb99bbc9098e55721ba5e01cc7fbbecc1a07332a3e6e9",
+            "bytes": 254659,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/3d4d84b97f029030089810d714ca63fa5834abe74583d4587a6c02c3a30b3c14",
+            "bytes": 254657,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/409a1adbc125675e4bf48d56feca8f34ca7fc3962ca66fca9e35ad6f7f1d8041",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/40cbdc10312646f512087736195ccf0fbe422422379cee64caf1125e60abf525",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/43f73dbac9821cda23821e9439bd85694f982f09b2c4c636c116f7adc4f6df7b",
+            "bytes": 254659,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/449e37acca924571c974f3929d318365dc620d2d97449dced0f0b947eb1c56b9",
+            "bytes": 254653,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/461277adcea9ef60e5b47fe1849b9c53df7e86f84afa6bf7ea28e59da81ec9c1",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/47f213e18020afaec12322fd3c644a2fc2f309c5810634902ccff2a48d3d693e",
+            "bytes": 254651,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/487abf02f02e0b89538e442a37dde6da768a3c61d8cd502426a37a1112c3ac55",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/52286879fe30f885b1d8789afe871af9238ee04adc2dcb91af65b1adf770660f",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/55a6be54f21bf0ae2e553a7bd1a1238ed6787d95313303868857d483ede21d23",
+            "bytes": 254652,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/5b3e3b8c406d22f975482098466627800d01eee9a3bbb126fc60985c82b2fca9",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/5dea0a3c0f594a63284e77c80d99ab8931219f271c53a4585f3b094a9d8c199d",
+            "bytes": 254654,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/5f7a475c4f0c36aaf6c60012b098fb70304181c3a3307fb0beb68763f23d64b4",
+            "bytes": 254651,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/6198cd00fad31c91e7eb5254b36f4271ae2a7f7d899d0ec62faaabdf05de0919",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/6428406668c55bfba4501c648510ab33c1d9d225e7458ee359b7bc2e32710fa5",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/669f7cafb0cc644be6a7ecc02b82b540709ba57272398715b1f7617481657cb6",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/67c80ed7752c246a80a9a14dbbc97822b19f74a21ea66c12d90cabbf0580e8da",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/67e174d3ca2b16809ee448237914606f352668e37b5bd250d7cee0e4b8fad015",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/68c932874f747cab83de02d5dabca5fce07d1e4ec748e44382e8f513057371d6",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/6b65d43841c755aee383b9a2e40d5be7805a3cbac200247dcf521d8905623f04",
+            "bytes": 254651,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/6e283cba8c138ee646c9a854348c49bcd6ce8291b7607276797680b200cdf603",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/6f59b931c81ad74260c7de41480cda0483d069ef6eadd5365013978b4b34dcfd",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/706d6b6c4cc4eb028031536825961232f7c2545a8bc6b21d492d83921e253eec",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/70cbae3e2d3805f12511b93c5d4f5a1d23e35c6011ee9c56a6a8c03aedde1cdc",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/723f129812cc7358fd7e032feb0ce95101617c73d53179b05be9fbced7265a3a",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/73332c7d0cea5f7c97fe772855abb6726cc6b74fd07506f94f732dd5c30a0655",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/7629989985d6a907b5a8c3a42c552d55174b7b19bc0fd2b2c02cd108cc633b7c",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/772afec9c03b974f792084ed19ee432faca3cd0eed85ead2c9da0f35a63437a8",
+            "bytes": 252660,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/7a207b068449a50fb8f9bd0ebeae2ec3efe6710921a5177eae35a9561e581ea1",
+            "bytes": 254658,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/7a5fc76cd8269aa931333cd55707ab6cc7fd25a17759d17715c307d157cd78ec",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/7b1f494e932f2f4b64a41f9f959c0fbe68dac87d441d394a252f329dc0b50fb7",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/7b50b4d06fefa28ddf3da9c78cf3a01335001e60dd0835f6d80327db9a574e7e",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/7f667c9e74c09e96c0b5a914ce4f16d72e66d3718e71ca25f7cb54763e181b08",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/828252a8271cecfd720222a3449e70f85b78695614e78e0722caa62818edcea2",
+            "bytes": 252650,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/83064b55e94d452f49e2a0fb4c4eb8c47d217a4f842d98b230394cd0a058f597",
+            "bytes": 254651,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/84bc6873ac13ce4676819186231797d3ef027401c4fd7d845aeb549c85a56e78",
+            "bytes": 254655,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/857b06c126ec7c3bb3559006e9cd12a6cb5b05922bfa8800316ede73c3ea8f9c",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/85961cb3e4470b97a9e682f545578541176def728beab1484c79db25404e2e3e",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/872f12478fb32af0fadd1530928075b77de9ae0c5f0becd4d1cfe37004bf81ec",
+            "bytes": 254653,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/8cc590b3e5b39047998c3df49a7c1e13623e855abf368b777a9c3a1593b568a4",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/8d7a9b2fc55634d6690582b9b44f32095ba5811a8efe6b38face2167547d6d01",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/8f2829691254f6131b9bebdee761d6f62e0a286735a9ef86e644c9c0955727bd",
+            "bytes": 254659,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/8f30e768a4463a009f8e6e7512cda7cbbc7fc259b250c64d19fd311354de6180",
+            "bytes": 252660,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/9191b02e4ae68abe623b6dff909dc0e5571a2c92aa6bbcbe006d0ce95325904f",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/95c91dd94c43fd5b1a4b1df597609512949982c1e3f7b41a7cbbe38a480d542b",
+            "bytes": 252650,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/9bdb2c59c888100556d5875d0de5aca3b5e876f3ec431510d625cea394c9f425",
+            "bytes": 254656,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/9c26f380609327efdfc8c47ed5332ebef8980861711377aaa380c9b6eca60743",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/9ca99af8782902938228f8c6a89ddae4c61de3971d4fdac1f95cda5b5e02cd8c",
+            "bytes": 254658,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/9d9ec244eefd0613ef4ba79b940f27ba6527d180932d1f18829ca004709837b4",
+            "bytes": 254654,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/9e33e69840b25b7f4eae81d4d563cf88987b60ab803e82610d9fa7ad4385a4aa",
+            "bytes": 254652,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/9f1a2f51c6a0c8586ba1f898cb8a19b7fd2fee446757afd2647070f4dee7f38e",
+            "bytes": 254659,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/a0573db071a17132a2c7973594043fd9c046c14de2afb827328218136780b1dd",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/a20b17428409cb36449ed49c69a7b436e44261a919bec17137d5ffb3aa04e34d",
+            "bytes": 254653,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/a37dc12abcf0e93b6a528f4d4eb2df3fa9fe621e2cc74cefbddd435225fd545b",
+            "bytes": 252660,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/a497762770261ddc698c98c95b9271de3af10d29be62c58ada193874ca356b44",
+            "bytes": 254651,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/a772fc069a00eb1bc12863473b0abbbfc127f0560647f648ce55a81dbe33c337",
+            "bytes": 254652,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/a98aea0edda910c49e041154d4b5cac75d1140bef76c3333f7eac4d0ba6073bd",
+            "bytes": 252650,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/abdf3790743f2d0a1012e4a7e5804b97c11ff347dde469449b10d322c32abe9e",
+            "bytes": 252660,
+            "allocated": 253952
+          },
+          {
+            "path": "payloads/b271aa29341091b39377720c28c393dc4216694b4db40dae6e6bf810982fbfb2",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/b729ddada250937d103bfbebbc33fcd81e349a329803c370ec52b9c41eab0eac",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/bae370e55f2c8eecf22020e7e5ac657fa2e32e42e3f9ceca6bdf60a634b14401",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/bb175302d0dbc82a4d490ced5e4ca3930cf0b5659210381fd509532546fa92d3",
+            "bytes": 254654,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/bb9bf9e95bc3ca928a99d43d467c59776955a4c59c13f734935be4d98049e3f6",
+            "bytes": 254657,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/bc3e9d362b1c8094e196e7048b6c650b38b37a5610eb7f38c385bb23fe10178e",
+            "bytes": 254659,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/bdc6e232733893351ea56c6f5d3e2df37a791923ffb8f16609172aeae6131ce5",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/be0a08f6a0b92bd576ae4ede0394447da57f7df64441b6993704023c35ba5cb6",
+            "bytes": 254659,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/beb4b78aa25e344f4c2d7fc8ce3b1720fcae4be2e1d19382be64f905f0e6ea5c",
+            "bytes": 254651,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/c5cdcee04d4c45806510c4469dcd2e539f2e58ef2832d3a77f3b00ee56476bde",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/c5e3fa384128b5a6454902ff54f4c4cf112b47fd6e9c733f186301e5ab95b057",
+            "bytes": 254657,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/c787863011552bc40a2de321f5f03e7fae32ed59d9b768ea5858c1ddbd66b1c6",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/cb8a0a62834e25e1d941eaa506e238497bc2b8a9b076cad660087919053c9a62",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/cbe8f076e3da687034fde712e9f23358d59d8e76935127e324bdc51130cbcf19",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/cd3b0de4fc8b81e1bd3eb74a6c604d6f069281a4f0622480dfb2f17d6c98853c",
+            "bytes": 254656,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/cdc6d73d0a544895b5f30d216080d9f8dd8cd5055a3d242b422b873ad4c919c7",
+            "bytes": 254656,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/ce08de1b9df0bf94f3f763d3c3d332591172d0f212d9523fcc977ffb3ee4aa45",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/d1a2497fc34cf5976b0b3be77f5172d20af76d43379b28abcf25aef09b2a9ba7",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/d2457c84d194668ef3f8e975ec590de93b3a41ed2029ef9eb237f3b9bf01683a",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/d26d7fbf0b8f77c8518aaa5936bb1c26bd64c8fa184f43186e49548f2298ab45",
+            "bytes": 254653,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/d2ab6173a7149feb317edb43c4c271738f1cee98ebd1928f617d36119be4af28",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/d85ac870568ba3a1a4d3c0a2650b6221b38fa4fbfd4a376fad25effbe03acafa",
+            "bytes": 254659,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/daf6457cb173923273e5cbdd685eda0ec19540fee4c453643e3899781ff1a746",
+            "bytes": 246251,
+            "allocated": 249856
+          },
+          {
+            "path": "payloads/decf2782b4ccde9d7ca5d611b6237c3db987f7d820fc58f138ee056c7a86ad22",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/e1bfcd92233a533657fbeb29710387b230d83e1b27c699983d1b1f16575073a3",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/e2619a574a8ddfdffcdfd3b5658cf72d7fbff6474e1c105256118fbcecac0f84",
+            "bytes": 254655,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/e30203583efa4829360805ef7bb2f679c27dc098a3ea660406e7d44e49254061",
+            "bytes": 254650,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/e3a539188d2971067184718f627d117c093b2ee93ffb098221ba913e6393ce68",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/e60f672216f6688e3ac5f500edbbe944ad096784deb82f07d6daae36d7795e23",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/e6bfbf9b9586cedef908770ff7ea07c85a630c7e3206721ba90421a11bad9d35",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/e81bd2cafb80d599251b3796abbbcec6c357573c676c3b9f8cc03f7db6d532e9",
+            "bytes": 254656,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/e8d765576289b19ecf2a6e7747cf816741221167d0cade1d26bf39da699d22d8",
+            "bytes": 254657,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/eeaabafa9aa928ec4e0828386e0300da7793c597850e369a1ce1ce317a3ff5cd",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/f01dd1199cd924020b5fab9d6c2fcdeeef9a626aaed0929c7179fa758f8f471f",
+            "bytes": 254655,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/f06c514aafd5ebc0c82a610958b548cd2df3438bef7e5b8a1908505584bf0780",
+            "bytes": 254658,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/f410b56ada969da84782f151865279b442ac4bdade92a9a0bff73f8f9a1f7e17",
+            "bytes": 255,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/f648d91e7970deccb040d806f71c737c1f062cf64d075daaef7890d142ba3f9f",
+            "bytes": 254656,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/f7055803faf953ae62eedae8bec177a1c58d2cfc01e7aaedf07ab0925ad299ce",
+            "bytes": 254,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/f9ae86cd035877421f27482b5533b00b1edee8b506fd7050a1f1c5da0d4dac43",
+            "bytes": 254657,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/fccae8acc0ab71b308b74f715c129ee8972406cc01e6bdd77df66e865824dbeb",
+            "bytes": 254657,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/ffc63d0062775b7aeb0f61d346a8fb017881243b6797c9ae009813a8e5077ac0",
+            "bytes": 254660,
+            "allocated": 258048
+          },
+          {
+            "path": "payloads/ffefb48adc55c9cb9e2561073c88ae7d4ae3b2461454e69f4f2b176017d710a8",
+            "bytes": 254650,
+            "allocated": 258048
+          }
+        ]
+      },
+      "reopen_us": 18514.926,
+      "acknowledged_originals_verified": 100000,
+      "logical_text_bytes": 15065512,
+      "corpus_sha256": "925ab9f7b060567ff8ca176fcf9ccd7bd998e9cf1192fa9c90691705d1bb03fa",
+      "high_water_rss_bytes": 132427776,
+      "freshness_and_past_clock_oracles": true,
+      "load_average_after": [
+        2.60302734375,
+        2.17431640625,
+        2.1728515625
+      ],
+      "status": "passed"
+    },
+    {
+      "label": "jsonl-zstd",
+      "arm": "jsonl-zstd",
+      "records": 100000,
+      "binary_sha256": "2244deb1f5a9d6bfec99f8f87361df450f7f7c24187938f0837135d847eac9d4",
+      "load_average_before": [
+        2.60302734375,
+        2.17431640625,
+        2.1728515625
+      ],
+      "errors": 0,
+      "arm_info": {
+        "name": "jsonl-zstd-fts5",
+        "version": "Zstd 1.5.7; SQLite 3.53.2 contentless FTS5 porter unicode61 bm25",
+        "commit": "f93bcd9e9dbf",
+        "durability": "immutable batch file fsync + directory fsync, then SQLite WAL synchronous=FULL commit; one host, no replication/backups/encryption",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "one JSONL frame per batch; no dictionary or deduplication; level 3 when compressed",
+          "same OR-token query/ranking and two-clock SQL visibility as sqlite arm; FTS5 stores no original text",
+          "all payloads, index, WAL/SHM and uncommitted orphan frames count toward footprint; no automatic orphan reclamation",
+          "get decodes each selected batch frame once per request; no retained payload cache"
+        ]
+      },
+      "create_open_us": 119732.617,
+      "append_batch_1000": {
+        "wall": {
+          "n": 100,
+          "p50_us": 35217.468,
+          "p95_us": 48380.215,
+          "p99_us": 54549.888
+        },
+        "engine": {
+          "n": 100,
+          "p50_us": 34108,
+          "p95_us": 47314,
+          "p99_us": 53699
+        }
+      },
+      "append_single": {
+        "wall": {
+          "n": 32,
+          "p50_us": 24881.565,
+          "p95_us": 30591.352,
+          "p99_us": 30643.353
+        },
+        "engine": {
+          "n": 32,
+          "p50_us": 24755,
+          "p95_us": 30455,
+          "p99_us": 30526
+        }
+      },
+      "get_1": {
+        "wall": {
+          "n": 1000,
+          "p50_us": 223.976,
+          "p95_us": 310.285,
+          "p99_us": 520.19
+        },
+        "engine": {
+          "n": 1000,
+          "p50_us": 180,
+          "p95_us": 219,
+          "p99_us": 402
+        }
+      },
+      "get_20": {
+        "wall": {
+          "n": 1000,
+          "p50_us": 4499.669,
+          "p95_us": 4894.307,
+          "p99_us": 5669.668
+        },
+        "engine": {
+          "n": 1000,
+          "p50_us": 4410,
+          "p95_us": 4770,
+          "p99_us": 5166
+        }
+      },
+      "search_unique": {
+        "wall": {
+          "n": 50,
+          "p50_us": 58.764,
+          "p95_us": 80.651,
+          "p99_us": 99.496
+        },
+        "engine": {
+          "n": 50,
+          "p50_us": 41,
+          "p95_us": 55,
+          "p99_us": 69
+        },
+        "ranked_signature": "cfed85bf5257c44cfd7cbe640aa2b933ce960651a3e19e9251d75eaa00db801c"
+      },
+      "stats_open": {
+        "codec_level": 3,
+        "orphan_frames": 0,
+        "payload_bytes": 4591013,
+        "payload_files": 133,
+        "records": 100000,
+        "referenced_frames": 133,
+        "whole_store_bytes": 40555205
+      },
+      "open_footprint": {
+        "apparent_bytes": 40555205,
+        "allocated_bytes": 41013248,
+        "files": [
+          {
+            "path": "index.sqlite",
+            "bytes": 30789632,
+            "allocated": 30789632
+          },
+          {
+            "path": "index.sqlite-shm",
+            "bytes": 32768,
+            "allocated": 32768
+          },
+          {
+            "path": "index.sqlite-wal",
+            "bytes": 5141792,
+            "allocated": 5144576
+          },
+          {
+            "path": "payloads/00544928f35c934e673f5696371ebacfd753bb37a7958b7944d18c858df2d10d",
+            "bytes": 45785,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/014b86a55ac058737db88e10503584b4946602b4c934dd0cf99a3a440b3ac34c",
+            "bytes": 45759,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/0305e7676ea56b9e2dedb2f7ef7349acf13f411de6b079e2cb0c20dc7d20cd62",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/03f7f8b178d7c4d22c2fa226790f469ac694be871e992ed0d5ccecc8d8012952",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/08a840598816d738ba1eaf302558518a9ab567316fdbc35e6c0a2474d095b33f",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/0bae97db4f0435ae1d033d34fdcf20b52beb3ef1ea69e6e6c2c0ae31dcceabbe",
+            "bytes": 205,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/0c511c80dc5f0dc0cb9aa410a8b79c78934bd9848cb10c07e761d8cf674c0a3c",
+            "bytes": 45676,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/0e8ab32e01cab685ba8dbebf10b2278b411124ec08c665039ef0d555a60d8440",
+            "bytes": 45944,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/109ea1e8b3e39e859e38b7690759697f8e79690f43293bc6e031d33896fa12af",
+            "bytes": 45765,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/111c26c3a47f3ddc06a2cd102e5a1a829c127dbbe069915042813ba84bc9fbf4",
+            "bytes": 45936,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/1255ea1fcca0cbb5583b9435303fe4107d25690c06e7f8053c0316eba1468547",
+            "bytes": 46050,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/1768ab0413742939fb5c811a36afe20cd4bfd6b521923c6fcdae1976c65a30ad",
+            "bytes": 45770,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/17ec760c0e6620bf51b1dadc7370ca5ebe455f273eeae95c1af0f0df8e05b2ce",
+            "bytes": 45635,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/1b7ce4336749aea91c9f982fbd7b44cd2422c5e58d0f858197ef4efcabd89375",
+            "bytes": 45613,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/1ce665bb77a68365844f061876766b22b3579e7cc24d9cd4681ac06cc214930e",
+            "bytes": 45757,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/1d4962e623198e420ecc2ad046acd846631363315de53a3166f1ba67348b5265",
+            "bytes": 45717,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/224933b955a05587ba00ef399fb27e2e9b0a68bbdeb3cc1f761ad37835aee08e",
+            "bytes": 45927,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/24562f0527a212ee589cacadfe44371bc2e9bd1a3da8c924a596e06606eafd7e",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/250841bbe29d1d8bb3658464803170f34d066122f8662640fe31cc18039429b1",
+            "bytes": 45811,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/2a107392b4fb32c45c4d4dda79c523a9cb58b7a9d7a11f7178c272e5ea317112",
+            "bytes": 207,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/2b7a13db12c7cf7fc9ec29e0c033edf0143b4cc894ab5c3d18fda02c1ab82be5",
+            "bytes": 46028,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/2f3b69e86c7e7bd0bf073b70cf8d8d023337a2036b82c578db29d11ae44b7d35",
+            "bytes": 45866,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/31140cd0f3a5104d1d07715a7727ceecd6e7ec0d84b8a945961fa5a930926586",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/338305a1f48b6af51d567a6de0a6c104a3cb1d5b6c49fa26ea7245b4f4b89546",
+            "bytes": 45684,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/3659fde9218b4dd7f67a4552406be54d3c7b62f234603a41e7063f6695bbe5fd",
+            "bytes": 45927,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/3697bac76d5a53ae8ab413cb552753c58b2fa787ffaa0d2292d49d8cba01737b",
+            "bytes": 45751,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/3d9693b45b46770230a353f80b46a0273c2e033c28109362b538539705728b47",
+            "bytes": 46079,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/3fec2955826248f15730e085c8c7e0e8860c531a9c58ede7fc25b11a5cdbe716",
+            "bytes": 45948,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/41f76fa36e6dc98f30c823b90d7aacc12af363e79403839e924604e12e21ff83",
+            "bytes": 46024,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/433a92b909c5b88311a73ca3af40c66c68205c1f558a7f5f448a651c2cf092cb",
+            "bytes": 46080,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/46ad58046069d4f849b0ec49895ef58095889549907b9422a8c7e803110f347a",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/4713221a7804d1ced609ebe18ef95c4ce7b22d6416e3b4e58c44354307b2ed4f",
+            "bytes": 45965,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/4777f0205dede50a3dae40e63237a63938a5b396aa2dd5086428eda7d4dfb4c3",
+            "bytes": 207,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/48306e31e7d46905a99c90f342375b346082be0bbe5faf127bdf4b6c16df6520",
+            "bytes": 45932,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/4861a0511592b8a068903bae6a0b3ddada89e78a33d567839768a08e03528290",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/48de800512484746befe8a5f7d6a50f050a084758a4b9dc2b7572ed05d8f96c9",
+            "bytes": 45956,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/48e2e605f610a5dfdb490fbdb639079728511675434c7d2cc4e52190d55a7ad1",
+            "bytes": 45700,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/4a496547382d024246c53ccea19ee0fc7d1d435de4f38a58bb7db0ba45f1d65d",
+            "bytes": 46017,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/4d0d0c00fb0bcd7bf1d4afbcdf633a5ad418923d2f7af81db08fd1c5c613d479",
+            "bytes": 45983,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/5258d1ced2ffbc318ae736d0e94116e52688a1eb7e618ca8b2baefedc77e1e68",
+            "bytes": 46059,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/5459d9ad267698c07bf2b5a1d9b8cb9fb42f35d7d0cd5903499fe22ba107004a",
+            "bytes": 45891,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/56b2250dca0029e8d31c46c6cb018acf9279cc05b3ca75ec0bd7b29e0d536e32",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/57302d5e04565f4494e2cb371339470b1e6dbc5df87d06649c1883063bf22ba1",
+            "bytes": 45620,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/5a0fd2463210b11c1c7c44a1632081eeaaed8608f806b48572700c44f1f6b099",
+            "bytes": 45727,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/5bd446ab46898ab1184ac7b41c2785dedb72e4ce43cdec71dc066c47c7c18cba",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/5fe4c3c758eb35e77994a9db0ebf959ba3b0413c027308ab195fcb2532c086c3",
+            "bytes": 45776,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/64e92c948b582beb710ff128afe33102f97932b3c239df4a528c58eab257e9c1",
+            "bytes": 45942,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/664cc8a58b1f56a96da1e4c7ab92df9b9b15e82f4060e33f0e1ad1cdb930d49a",
+            "bytes": 207,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/66e6eaace60e0cc5eaa8628a7d67d5de698cee7fe9497dce08e2b67fe1ef0230",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/6872199c0118dd63cc31191da5a14774682a571e8691c3aa313ea96a22745bba",
+            "bytes": 45817,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/6872f3503259763cffd2139741c5290117e178bd0e33d9120896946d0988de13",
+            "bytes": 45749,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/689f4b43c4717a238963a72e2b733b0025abb09e9bffe8ec867fd179bb257365",
+            "bytes": 45773,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/6b29d1dbb1163b2571bc9de350e978106e2c09a4c7cb1df2644c5cdba47d85dc",
+            "bytes": 45940,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/6c3299acf69a32f74ed4eb870e5d3fb723d718d78f78c84cbf004115ef922731",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/6ed898590e8e8e5ccee9d89266c3da9e640de020e1d25fa421dd9dbb397314b5",
+            "bytes": 45948,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/70853971bffc1556cc75cd8f6eaaf9d213652478d762bd6da1b26e363b760ffc",
+            "bytes": 45836,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/735a62c73d02987b990b30f58e1fa55efbdf5bac981fca4b15010308a34d62f7",
+            "bytes": 207,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/738c9737ab6d8fb6700e5ba310c8b4af5904238f7ffe5bceda217dc3124a79df",
+            "bytes": 45867,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/73b38125ebae638a683dbc736ddd4fcdfc56511c841f708272f2ed1fd8c8434d",
+            "bytes": 45885,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/73e703ec2bb584239950899bf92990edb206e6eb825309fd74606f7694c51049",
+            "bytes": 45935,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/75becfa525d9715607784b2ea2aeb5364e7fb114e2e4d00d10061c702378805f",
+            "bytes": 46017,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/7863c68ae837a6e4d4bcfd9cc314d4c8b765a389f2d832501a8a7dee77834c20",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/79ad2d455783b07c4d3f8d7fe38b42e0698c8c4e3e0de44917277d7ce6aeb60b",
+            "bytes": 45723,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/7e2e0df67e18e7ec88f7d4408d9089655d311c1e8107c3491a1b6542934425d5",
+            "bytes": 45852,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/7f53739f9d2f59da848ea2fb1adcbe0923aa05f400bcf20dda3fc5ecb09e7675",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/816abcc1f7775c50c2fe7edaaa92526eae46f04d9286428ecbb597cf5dc2d1bd",
+            "bytes": 45849,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/818cb3e39d01bbc886cb846e542fb20c7a650835fbe2c260ba3142e868d56959",
+            "bytes": 45959,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/81fc5b45c3dffdf0a5e6decfea69a717d744a2f3a8bb0ffe99b795bbec1cdaaa",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/82a6d1667750c2934d538fca8e1a3dff1d33f4f74b69ebef0d85c40163e0bb8f",
+            "bytes": 45737,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/834dc9f05f198dffd50d0ebde45d40e99e031a2c17fd210335d897582ee1134a",
+            "bytes": 45688,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/8be342fa3c6e6c04103cfddcf1ca629b66d365eb0c383aefd90f0d411940eed7",
+            "bytes": 45752,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/8fa84bb917397cff1cdf008da454491921b8cd94749373e6dcb40bedecc4a6d3",
+            "bytes": 45941,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/9196561d15110fae1b4441a005dcb0019b0c9ce432af9672f8cb531da1e23a56",
+            "bytes": 210,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/933a0a14f28ba2eb186b3b163431e99b2ac81ce94005a260d1ac0792bef42951",
+            "bytes": 45822,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/93d85a6fa59405ee1a4df8f035940e374ebde4711de806217fb0ae16662ff163",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/940899d900d6a469bc631bbef70d4da24891068fa51b134ef5644ae72d63f528",
+            "bytes": 45973,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/96bd59d1d380172305e65201b004994c3f85f92746df0c98e88df4e09c68b497",
+            "bytes": 45767,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/96f9a2a259d85d68e5a53b8f5b2d6b803d6f20223f19b574d7a2f232f3b0164d",
+            "bytes": 45935,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/97fcaad3697f40b20d0a8d59712cdcd0aa07e66803ec41cac869e78d86b1b7fc",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/9b548c583c181797995552adbede306843ac7ab3f15f71306cc68a3ff0751dfd",
+            "bytes": 45988,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/9b6edeca1b5831be88936dd681db35b5082b492b4a145adab75e591bea04433e",
+            "bytes": 45674,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/a304baebc9ab95fe93b96f3c2c3069ce9f2a8ce17e5db90c54e97e25b8eafc1d",
+            "bytes": 44486,
+            "allocated": 45056
+          },
+          {
+            "path": "payloads/a75ab5228b54d0befd5f1fcc36363310bdea29cb0dd446882d09a82cb3ae4560",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/a78ad2238a11f30c68fa60370d118eb8ff864ad2827da0bb978c4bb6202533e1",
+            "bytes": 45777,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/a7bd13e0e7f86cf0b239027b332f718c9a6ebe024bdadc7c22e7b2c840996465",
+            "bytes": 45975,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/a807f5f902871a02896cfdcc37937e2bb98c177440ae0c78a50afa942f6a9056",
+            "bytes": 45756,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/aa18de7e6d98253de8d9eb89592ec3bf1479c5be5d3ab792a273edeabb575b67",
+            "bytes": 45954,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/ad294b036673a4d48bd7c15f2c4b9794c03506823eee0df6c742f6d997a086b3",
+            "bytes": 45853,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/b00f016c0a6d1ec26e25e2acc357eae793ac395195bc0e8b3bdea9ebc7822f2b",
+            "bytes": 45714,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/b04e56ea88ec398107fb35cb6d023bfef62461d902090c86bc77df77f12e2c2e",
+            "bytes": 45922,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/b0714c2ce7e952427ec701cf8a01ebafbfae7fffdf3f47324d95e2df1fec6f69",
+            "bytes": 45817,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/b28b78adacb41ce96d3e66200e009ac5c4198bccecdc6694d6193b7c16c4bcbc",
+            "bytes": 45612,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/b43040165dac4884c0ca35b108907a7ffe3d78f7ac6460dbc02f69382d747355",
+            "bytes": 45964,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/b5c11a386b1c67d38128a919a93d044c4cffcc8bcc5b7ff33075bca39ae35cd6",
+            "bytes": 45736,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/b68ead9beb1c2d92831d696b913295a50f3ef66e3724256f26a961285886bf32",
+            "bytes": 45999,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/bcf1224e0d5856a25de1a4ed7a27ec9f16e5c2ede1b1d2975e07c8e381aa41bc",
+            "bytes": 45864,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/bd959e6f1188e937a771f8722580ced5a4f99f376cb38f27ac47c9f0aeada2e3",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/bf296db345c4244a8885b8b64241bce855bc44fb527c7dd746586e21fc2d964b",
+            "bytes": 45648,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/bfa06726f6798a4575029e68138f769cb26d5921ec607e91e974a5d7c88a5359",
+            "bytes": 45847,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/c154dd41d6b195e12e48ffac54bae44242c42f8d3351744ff06b1ce9a1360dfb",
+            "bytes": 45700,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/c1b5c3b6f48e2164901cb15ebf14e8e8a393b845feb2f5c94da19003b18e0917",
+            "bytes": 45723,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/c1e47c6dc9157e90f15417ea4320d9e8ed433dfdac81de3316c150a553bf36bf",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/c5f2780500d1bf51b390ae6e6a25096585645736abf6eb1a17ad7966b943d552",
+            "bytes": 45711,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/c9ffe951cf2cadc94c5d7a83f8c17b9cccf3be45cb79025635332c6bfc838549",
+            "bytes": 210,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/ce043d284ea972dce1dcb3c5ece13fd01277d3d4b9481f91eb91ddac9aa6a493",
+            "bytes": 45974,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/d163a8271a2f68ffdc9deeb0149943b3c331f12994db0f68e5e262ab20bc7a70",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/d235e8a6bbe70e5577653feb803aafba3c443cc6cbcf4053ee0f7fedd5c9f25c",
+            "bytes": 45843,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/d4332288a0612eedb666d8e32f2aaa8b12168559a1e0efc5e048c1f50def2ccd",
+            "bytes": 46057,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/d621a2e07671df469d5227894f2aedf081155b9f4fd759c0fbb4d8f327179ebc",
+            "bytes": 45799,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/d6d8a3c67f4caa0b0a52367e546120d070d7f16099a5053dbbdea9e8e5f132b4",
+            "bytes": 45916,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/d9a567fe8f9639f4525f3a6a4609b2807c718ecf40fd5560c712a86ec32a5f5d",
+            "bytes": 45872,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/dfacd6e9febed2e7f6fdb7632f6304c52e8dfa10691930e78696fa41b82d4489",
+            "bytes": 46145,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/e01bd72b044fe57ced9aa69d839a0f78d3e88bce761b157059a072127b9a7cd2",
+            "bytes": 45997,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/e2029ef39efeed2a92c6a5eee3e247dcd9bacf913e7e12328dd11e8dcc0fe6f9",
+            "bytes": 45942,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/e74bfff13b0d8df5505e1ff1575689ae82982d7915c6334aabbbf5d8e5faede4",
+            "bytes": 45870,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/eae3049ab5b72d599147dade3bb96f42fda2b2aef2547966d2b66d57f79d0388",
+            "bytes": 210,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/ec5dde27388a6f73282a488720bf1650c9ff1407b4ebedbbcbb85eaa80181c6b",
+            "bytes": 46045,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/f15be9b22db324512f4c1ed302a0d56abb4114267eb06730c50583b2c4b84aa8",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/f3936bc04e0b75e609255845a4f087f1121e62d9b4e25c94da25063f8c890504",
+            "bytes": 45632,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/f3a918d59b4420c2486bd0bb460d46806df388a94f1e1896e2bb6fca71494b3c",
+            "bytes": 206,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/f4ae5d47752d2943f7e3030ea8741c6352b1e1644e66a163a149612674d8382d",
+            "bytes": 45690,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/f5bff72d465a7736df77f58c44189a055d76d81ffc034debebfa2bafb0a948b2",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/f679cf574e7df81982687f984f78e8436d319a6ecb43c5dcbfd54996e6f60bd8",
+            "bytes": 45956,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/f6f0481177b188ca2247a75ee391fbc9f630360ba8986e8cfa2130e128496f8e",
+            "bytes": 45784,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/f7c502832f7bee4498e4656953a80d776349692a31f72ef3b3e615724092624f",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/fade20be90aa7a1abc0a7e87816c75ee41d88b102497414707081c1c622b0429",
+            "bytes": 45852,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/faf17c58244532d2061f0a6d43139012524fb6b19741e54a4d96ef5601b88e3b",
+            "bytes": 45896,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/fafe41b25a62e58f5ee8f0da1016181800c762c6a45df34f1e80482fd665d10f",
+            "bytes": 45808,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/fbceba5e6e4e67b9305c662608b4afd9d5d7e1e45bf90b50cead42b05e4b91fe",
+            "bytes": 45722,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/fbdf1f37ddce530ddbc4b407f60e681e101bf34ffd0312cb2aa4f481261b0115",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/fbf2e359db428e9eb192683bc0b614cea0d192d7e4550c32836e42df33065e43",
+            "bytes": 45874,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/fce4aec2f057c12c03b1fea78bd4e5d967eca075b935897e04dbda03b84777cd",
+            "bytes": 46069,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/fead6bbd3bbde3ecafd30df0d7874a8377e62ec03602e6fb9560c601730323f4",
+            "bytes": 45812,
+            "allocated": 49152
+          }
+        ]
+      },
+      "closed_footprint": {
+        "apparent_bytes": 36519333,
+        "allocated_bytes": 36974592,
+        "files": [
+          {
+            "path": "index.sqlite",
+            "bytes": 31928320,
+            "allocated": 31928320
+          },
+          {
+            "path": "payloads/00544928f35c934e673f5696371ebacfd753bb37a7958b7944d18c858df2d10d",
+            "bytes": 45785,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/014b86a55ac058737db88e10503584b4946602b4c934dd0cf99a3a440b3ac34c",
+            "bytes": 45759,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/0305e7676ea56b9e2dedb2f7ef7349acf13f411de6b079e2cb0c20dc7d20cd62",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/03f7f8b178d7c4d22c2fa226790f469ac694be871e992ed0d5ccecc8d8012952",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/08a840598816d738ba1eaf302558518a9ab567316fdbc35e6c0a2474d095b33f",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/0bae97db4f0435ae1d033d34fdcf20b52beb3ef1ea69e6e6c2c0ae31dcceabbe",
+            "bytes": 205,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/0c511c80dc5f0dc0cb9aa410a8b79c78934bd9848cb10c07e761d8cf674c0a3c",
+            "bytes": 45676,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/0e8ab32e01cab685ba8dbebf10b2278b411124ec08c665039ef0d555a60d8440",
+            "bytes": 45944,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/109ea1e8b3e39e859e38b7690759697f8e79690f43293bc6e031d33896fa12af",
+            "bytes": 45765,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/111c26c3a47f3ddc06a2cd102e5a1a829c127dbbe069915042813ba84bc9fbf4",
+            "bytes": 45936,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/1255ea1fcca0cbb5583b9435303fe4107d25690c06e7f8053c0316eba1468547",
+            "bytes": 46050,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/1768ab0413742939fb5c811a36afe20cd4bfd6b521923c6fcdae1976c65a30ad",
+            "bytes": 45770,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/17ec760c0e6620bf51b1dadc7370ca5ebe455f273eeae95c1af0f0df8e05b2ce",
+            "bytes": 45635,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/1b7ce4336749aea91c9f982fbd7b44cd2422c5e58d0f858197ef4efcabd89375",
+            "bytes": 45613,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/1ce665bb77a68365844f061876766b22b3579e7cc24d9cd4681ac06cc214930e",
+            "bytes": 45757,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/1d4962e623198e420ecc2ad046acd846631363315de53a3166f1ba67348b5265",
+            "bytes": 45717,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/224933b955a05587ba00ef399fb27e2e9b0a68bbdeb3cc1f761ad37835aee08e",
+            "bytes": 45927,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/24562f0527a212ee589cacadfe44371bc2e9bd1a3da8c924a596e06606eafd7e",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/250841bbe29d1d8bb3658464803170f34d066122f8662640fe31cc18039429b1",
+            "bytes": 45811,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/2a107392b4fb32c45c4d4dda79c523a9cb58b7a9d7a11f7178c272e5ea317112",
+            "bytes": 207,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/2b7a13db12c7cf7fc9ec29e0c033edf0143b4cc894ab5c3d18fda02c1ab82be5",
+            "bytes": 46028,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/2f3b69e86c7e7bd0bf073b70cf8d8d023337a2036b82c578db29d11ae44b7d35",
+            "bytes": 45866,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/31140cd0f3a5104d1d07715a7727ceecd6e7ec0d84b8a945961fa5a930926586",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/338305a1f48b6af51d567a6de0a6c104a3cb1d5b6c49fa26ea7245b4f4b89546",
+            "bytes": 45684,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/3659fde9218b4dd7f67a4552406be54d3c7b62f234603a41e7063f6695bbe5fd",
+            "bytes": 45927,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/3697bac76d5a53ae8ab413cb552753c58b2fa787ffaa0d2292d49d8cba01737b",
+            "bytes": 45751,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/3d9693b45b46770230a353f80b46a0273c2e033c28109362b538539705728b47",
+            "bytes": 46079,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/3fec2955826248f15730e085c8c7e0e8860c531a9c58ede7fc25b11a5cdbe716",
+            "bytes": 45948,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/41f76fa36e6dc98f30c823b90d7aacc12af363e79403839e924604e12e21ff83",
+            "bytes": 46024,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/433a92b909c5b88311a73ca3af40c66c68205c1f558a7f5f448a651c2cf092cb",
+            "bytes": 46080,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/46ad58046069d4f849b0ec49895ef58095889549907b9422a8c7e803110f347a",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/4713221a7804d1ced609ebe18ef95c4ce7b22d6416e3b4e58c44354307b2ed4f",
+            "bytes": 45965,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/4777f0205dede50a3dae40e63237a63938a5b396aa2dd5086428eda7d4dfb4c3",
+            "bytes": 207,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/48306e31e7d46905a99c90f342375b346082be0bbe5faf127bdf4b6c16df6520",
+            "bytes": 45932,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/4861a0511592b8a068903bae6a0b3ddada89e78a33d567839768a08e03528290",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/48de800512484746befe8a5f7d6a50f050a084758a4b9dc2b7572ed05d8f96c9",
+            "bytes": 45956,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/48e2e605f610a5dfdb490fbdb639079728511675434c7d2cc4e52190d55a7ad1",
+            "bytes": 45700,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/4a496547382d024246c53ccea19ee0fc7d1d435de4f38a58bb7db0ba45f1d65d",
+            "bytes": 46017,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/4d0d0c00fb0bcd7bf1d4afbcdf633a5ad418923d2f7af81db08fd1c5c613d479",
+            "bytes": 45983,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/5258d1ced2ffbc318ae736d0e94116e52688a1eb7e618ca8b2baefedc77e1e68",
+            "bytes": 46059,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/5459d9ad267698c07bf2b5a1d9b8cb9fb42f35d7d0cd5903499fe22ba107004a",
+            "bytes": 45891,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/56b2250dca0029e8d31c46c6cb018acf9279cc05b3ca75ec0bd7b29e0d536e32",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/57302d5e04565f4494e2cb371339470b1e6dbc5df87d06649c1883063bf22ba1",
+            "bytes": 45620,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/5a0fd2463210b11c1c7c44a1632081eeaaed8608f806b48572700c44f1f6b099",
+            "bytes": 45727,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/5bd446ab46898ab1184ac7b41c2785dedb72e4ce43cdec71dc066c47c7c18cba",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/5fe4c3c758eb35e77994a9db0ebf959ba3b0413c027308ab195fcb2532c086c3",
+            "bytes": 45776,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/64e92c948b582beb710ff128afe33102f97932b3c239df4a528c58eab257e9c1",
+            "bytes": 45942,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/664cc8a58b1f56a96da1e4c7ab92df9b9b15e82f4060e33f0e1ad1cdb930d49a",
+            "bytes": 207,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/66e6eaace60e0cc5eaa8628a7d67d5de698cee7fe9497dce08e2b67fe1ef0230",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/6872199c0118dd63cc31191da5a14774682a571e8691c3aa313ea96a22745bba",
+            "bytes": 45817,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/6872f3503259763cffd2139741c5290117e178bd0e33d9120896946d0988de13",
+            "bytes": 45749,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/689f4b43c4717a238963a72e2b733b0025abb09e9bffe8ec867fd179bb257365",
+            "bytes": 45773,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/6b29d1dbb1163b2571bc9de350e978106e2c09a4c7cb1df2644c5cdba47d85dc",
+            "bytes": 45940,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/6c3299acf69a32f74ed4eb870e5d3fb723d718d78f78c84cbf004115ef922731",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/6ed898590e8e8e5ccee9d89266c3da9e640de020e1d25fa421dd9dbb397314b5",
+            "bytes": 45948,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/70853971bffc1556cc75cd8f6eaaf9d213652478d762bd6da1b26e363b760ffc",
+            "bytes": 45836,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/735a62c73d02987b990b30f58e1fa55efbdf5bac981fca4b15010308a34d62f7",
+            "bytes": 207,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/738c9737ab6d8fb6700e5ba310c8b4af5904238f7ffe5bceda217dc3124a79df",
+            "bytes": 45867,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/73b38125ebae638a683dbc736ddd4fcdfc56511c841f708272f2ed1fd8c8434d",
+            "bytes": 45885,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/73e703ec2bb584239950899bf92990edb206e6eb825309fd74606f7694c51049",
+            "bytes": 45935,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/75becfa525d9715607784b2ea2aeb5364e7fb114e2e4d00d10061c702378805f",
+            "bytes": 46017,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/7863c68ae837a6e4d4bcfd9cc314d4c8b765a389f2d832501a8a7dee77834c20",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/79ad2d455783b07c4d3f8d7fe38b42e0698c8c4e3e0de44917277d7ce6aeb60b",
+            "bytes": 45723,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/7e2e0df67e18e7ec88f7d4408d9089655d311c1e8107c3491a1b6542934425d5",
+            "bytes": 45852,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/7f53739f9d2f59da848ea2fb1adcbe0923aa05f400bcf20dda3fc5ecb09e7675",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/816abcc1f7775c50c2fe7edaaa92526eae46f04d9286428ecbb597cf5dc2d1bd",
+            "bytes": 45849,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/818cb3e39d01bbc886cb846e542fb20c7a650835fbe2c260ba3142e868d56959",
+            "bytes": 45959,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/81fc5b45c3dffdf0a5e6decfea69a717d744a2f3a8bb0ffe99b795bbec1cdaaa",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/82a6d1667750c2934d538fca8e1a3dff1d33f4f74b69ebef0d85c40163e0bb8f",
+            "bytes": 45737,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/834dc9f05f198dffd50d0ebde45d40e99e031a2c17fd210335d897582ee1134a",
+            "bytes": 45688,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/8be342fa3c6e6c04103cfddcf1ca629b66d365eb0c383aefd90f0d411940eed7",
+            "bytes": 45752,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/8fa84bb917397cff1cdf008da454491921b8cd94749373e6dcb40bedecc4a6d3",
+            "bytes": 45941,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/9196561d15110fae1b4441a005dcb0019b0c9ce432af9672f8cb531da1e23a56",
+            "bytes": 210,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/933a0a14f28ba2eb186b3b163431e99b2ac81ce94005a260d1ac0792bef42951",
+            "bytes": 45822,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/93d85a6fa59405ee1a4df8f035940e374ebde4711de806217fb0ae16662ff163",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/940899d900d6a469bc631bbef70d4da24891068fa51b134ef5644ae72d63f528",
+            "bytes": 45973,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/96bd59d1d380172305e65201b004994c3f85f92746df0c98e88df4e09c68b497",
+            "bytes": 45767,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/96f9a2a259d85d68e5a53b8f5b2d6b803d6f20223f19b574d7a2f232f3b0164d",
+            "bytes": 45935,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/97fcaad3697f40b20d0a8d59712cdcd0aa07e66803ec41cac869e78d86b1b7fc",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/9b548c583c181797995552adbede306843ac7ab3f15f71306cc68a3ff0751dfd",
+            "bytes": 45988,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/9b6edeca1b5831be88936dd681db35b5082b492b4a145adab75e591bea04433e",
+            "bytes": 45674,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/a304baebc9ab95fe93b96f3c2c3069ce9f2a8ce17e5db90c54e97e25b8eafc1d",
+            "bytes": 44486,
+            "allocated": 45056
+          },
+          {
+            "path": "payloads/a75ab5228b54d0befd5f1fcc36363310bdea29cb0dd446882d09a82cb3ae4560",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/a78ad2238a11f30c68fa60370d118eb8ff864ad2827da0bb978c4bb6202533e1",
+            "bytes": 45777,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/a7bd13e0e7f86cf0b239027b332f718c9a6ebe024bdadc7c22e7b2c840996465",
+            "bytes": 45975,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/a807f5f902871a02896cfdcc37937e2bb98c177440ae0c78a50afa942f6a9056",
+            "bytes": 45756,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/aa18de7e6d98253de8d9eb89592ec3bf1479c5be5d3ab792a273edeabb575b67",
+            "bytes": 45954,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/ad294b036673a4d48bd7c15f2c4b9794c03506823eee0df6c742f6d997a086b3",
+            "bytes": 45853,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/b00f016c0a6d1ec26e25e2acc357eae793ac395195bc0e8b3bdea9ebc7822f2b",
+            "bytes": 45714,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/b04e56ea88ec398107fb35cb6d023bfef62461d902090c86bc77df77f12e2c2e",
+            "bytes": 45922,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/b0714c2ce7e952427ec701cf8a01ebafbfae7fffdf3f47324d95e2df1fec6f69",
+            "bytes": 45817,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/b28b78adacb41ce96d3e66200e009ac5c4198bccecdc6694d6193b7c16c4bcbc",
+            "bytes": 45612,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/b43040165dac4884c0ca35b108907a7ffe3d78f7ac6460dbc02f69382d747355",
+            "bytes": 45964,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/b5c11a386b1c67d38128a919a93d044c4cffcc8bcc5b7ff33075bca39ae35cd6",
+            "bytes": 45736,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/b68ead9beb1c2d92831d696b913295a50f3ef66e3724256f26a961285886bf32",
+            "bytes": 45999,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/bcf1224e0d5856a25de1a4ed7a27ec9f16e5c2ede1b1d2975e07c8e381aa41bc",
+            "bytes": 45864,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/bd959e6f1188e937a771f8722580ced5a4f99f376cb38f27ac47c9f0aeada2e3",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/bf296db345c4244a8885b8b64241bce855bc44fb527c7dd746586e21fc2d964b",
+            "bytes": 45648,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/bfa06726f6798a4575029e68138f769cb26d5921ec607e91e974a5d7c88a5359",
+            "bytes": 45847,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/c154dd41d6b195e12e48ffac54bae44242c42f8d3351744ff06b1ce9a1360dfb",
+            "bytes": 45700,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/c1b5c3b6f48e2164901cb15ebf14e8e8a393b845feb2f5c94da19003b18e0917",
+            "bytes": 45723,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/c1e47c6dc9157e90f15417ea4320d9e8ed433dfdac81de3316c150a553bf36bf",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/c5f2780500d1bf51b390ae6e6a25096585645736abf6eb1a17ad7966b943d552",
+            "bytes": 45711,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/c9ffe951cf2cadc94c5d7a83f8c17b9cccf3be45cb79025635332c6bfc838549",
+            "bytes": 210,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/ce043d284ea972dce1dcb3c5ece13fd01277d3d4b9481f91eb91ddac9aa6a493",
+            "bytes": 45974,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/d163a8271a2f68ffdc9deeb0149943b3c331f12994db0f68e5e262ab20bc7a70",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/d235e8a6bbe70e5577653feb803aafba3c443cc6cbcf4053ee0f7fedd5c9f25c",
+            "bytes": 45843,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/d4332288a0612eedb666d8e32f2aaa8b12168559a1e0efc5e048c1f50def2ccd",
+            "bytes": 46057,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/d621a2e07671df469d5227894f2aedf081155b9f4fd759c0fbb4d8f327179ebc",
+            "bytes": 45799,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/d6d8a3c67f4caa0b0a52367e546120d070d7f16099a5053dbbdea9e8e5f132b4",
+            "bytes": 45916,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/d9a567fe8f9639f4525f3a6a4609b2807c718ecf40fd5560c712a86ec32a5f5d",
+            "bytes": 45872,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/dfacd6e9febed2e7f6fdb7632f6304c52e8dfa10691930e78696fa41b82d4489",
+            "bytes": 46145,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/e01bd72b044fe57ced9aa69d839a0f78d3e88bce761b157059a072127b9a7cd2",
+            "bytes": 45997,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/e2029ef39efeed2a92c6a5eee3e247dcd9bacf913e7e12328dd11e8dcc0fe6f9",
+            "bytes": 45942,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/e74bfff13b0d8df5505e1ff1575689ae82982d7915c6334aabbbf5d8e5faede4",
+            "bytes": 45870,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/eae3049ab5b72d599147dade3bb96f42fda2b2aef2547966d2b66d57f79d0388",
+            "bytes": 210,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/ec5dde27388a6f73282a488720bf1650c9ff1407b4ebedbbcbb85eaa80181c6b",
+            "bytes": 46045,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/f15be9b22db324512f4c1ed302a0d56abb4114267eb06730c50583b2c4b84aa8",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/f3936bc04e0b75e609255845a4f087f1121e62d9b4e25c94da25063f8c890504",
+            "bytes": 45632,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/f3a918d59b4420c2486bd0bb460d46806df388a94f1e1896e2bb6fca71494b3c",
+            "bytes": 206,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/f4ae5d47752d2943f7e3030ea8741c6352b1e1644e66a163a149612674d8382d",
+            "bytes": 45690,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/f5bff72d465a7736df77f58c44189a055d76d81ffc034debebfa2bafb0a948b2",
+            "bytes": 208,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/f679cf574e7df81982687f984f78e8436d319a6ecb43c5dcbfd54996e6f60bd8",
+            "bytes": 45956,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/f6f0481177b188ca2247a75ee391fbc9f630360ba8986e8cfa2130e128496f8e",
+            "bytes": 45784,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/f7c502832f7bee4498e4656953a80d776349692a31f72ef3b3e615724092624f",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/fade20be90aa7a1abc0a7e87816c75ee41d88b102497414707081c1c622b0429",
+            "bytes": 45852,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/faf17c58244532d2061f0a6d43139012524fb6b19741e54a4d96ef5601b88e3b",
+            "bytes": 45896,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/fafe41b25a62e58f5ee8f0da1016181800c762c6a45df34f1e80482fd665d10f",
+            "bytes": 45808,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/fbceba5e6e4e67b9305c662608b4afd9d5d7e1e45bf90b50cead42b05e4b91fe",
+            "bytes": 45722,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/fbdf1f37ddce530ddbc4b407f60e681e101bf34ffd0312cb2aa4f481261b0115",
+            "bytes": 209,
+            "allocated": 4096
+          },
+          {
+            "path": "payloads/fbf2e359db428e9eb192683bc0b614cea0d192d7e4550c32836e42df33065e43",
+            "bytes": 45874,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/fce4aec2f057c12c03b1fea78bd4e5d967eca075b935897e04dbda03b84777cd",
+            "bytes": 46069,
+            "allocated": 49152
+          },
+          {
+            "path": "payloads/fead6bbd3bbde3ecafd30df0d7874a8377e62ec03602e6fb9560c601730323f4",
+            "bytes": 45812,
+            "allocated": 49152
+          }
+        ]
+      },
+      "reopen_us": 15330.943,
+      "acknowledged_originals_verified": 100000,
+      "logical_text_bytes": 15065512,
+      "corpus_sha256": "925ab9f7b060567ff8ca176fcf9ccd7bd998e9cf1192fa9c90691705d1bb03fa",
+      "high_water_rss_bytes": 139468800,
+      "freshness_and_past_clock_oracles": true,
+      "load_average_after": [
+        2.66455078125,
+        2.2021484375,
+        2.1826171875
+      ],
+      "status": "passed"
+    }
+  ],
+  "control_source": "9a6dc2e",
+  "candidate_source": "f93bcd9"
+}

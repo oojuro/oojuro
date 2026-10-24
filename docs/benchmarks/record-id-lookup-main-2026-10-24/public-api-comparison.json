@@ -1,0 +1,227 @@
+{
+  "scope": "Public Record API synthetic warm serial development comparison; no cloud, 1M/concurrency or SLA acceptance",
+  "identical_profile_source_sha256": "8800b20ca0d68f23389b3016c3f75ea22701f8900573f010f13e596b38757305",
+  "fixed_order": [
+    "control",
+    "candidate",
+    "candidate",
+    "control"
+  ],
+  "per_arm_build_targets_isolated": true,
+  "cold_io_or_cgroup_isolation": false,
+  "tail_sample_warning": "1,000 samples per read width per run; 200 default unique-term searches; not the owner mixed-query scale campaign",
+  "runs": [
+    {
+      "allocated_bytes": 4579328,
+      "apparent_bytes": 4566603,
+      "append_batches_1000": {
+        "p50_us": 15138.666,
+        "p95_us": 21530.102,
+        "p99_us": 29849.858,
+        "samples": 100
+      },
+      "get_1": {
+        "p50_us": 74.053,
+        "p95_us": 129.008,
+        "p99_us": 137.752,
+        "samples": 1000
+      },
+      "get_20": {
+        "p50_us": 1304.063,
+        "p95_us": 1540.777,
+        "p99_us": 1610.131,
+        "samples": 1000
+      },
+      "index_build_us": 299757.876,
+      "label": "0-control",
+      "original_digest": "7cc934330b49c31fe4f91272ea6df7efe01d0c3af4ee3dc18b85072042466b5b",
+      "originals_verified": 100000,
+      "ranked_signature": "750c69a2f3c9bf44fe6f5af85c28d0675715bb2bed8aa62576447610636b9ddb",
+      "records": 100000,
+      "reopen_us": 172174.25,
+      "scope": "Public Record API, synthetic local warm serial diagnostic; no cloud or 1M/concurrency acceptance",
+      "search_unique": {
+        "p50_us": 6652.137,
+        "p95_us": 6847.552,
+        "p99_us": 6981.437,
+        "samples": 200
+      },
+      "binary_sha256": "f647cc838206f8e04bec7e4ce0412d8c7d384090f0056fab2136d88ae7974991",
+      "load_average_before": [
+        1.5302734375,
+        2.3505859375,
+        2.423828125
+      ],
+      "load_average_after": [
+        1.48779296875,
+        2.328125,
+        2.416015625
+      ]
+    },
+    {
+      "allocated_bytes": 4583424,
+      "apparent_bytes": 4567322,
+      "append_batches_1000": {
+        "p50_us": 13836.728,
+        "p95_us": 22444.464,
+        "p99_us": 29924.117,
+        "samples": 100
+      },
+      "get_1": {
+        "p50_us": 4.292,
+        "p95_us": 4.515,
+        "p99_us": 4.756,
+        "samples": 1000
+      },
+      "get_20": {
+        "p50_us": 47.924,
+        "p95_us": 50.485,
+        "p99_us": 52.898,
+        "samples": 1000
+      },
+      "index_build_us": 312789.59,
+      "label": "1-candidate",
+      "original_digest": "7cc934330b49c31fe4f91272ea6df7efe01d0c3af4ee3dc18b85072042466b5b",
+      "originals_verified": 100000,
+      "ranked_signature": "750c69a2f3c9bf44fe6f5af85c28d0675715bb2bed8aa62576447610636b9ddb",
+      "records": 100000,
+      "reopen_us": 179306.782,
+      "scope": "Public Record API, synthetic local warm serial diagnostic; no cloud or 1M/concurrency acceptance",
+      "search_unique": {
+        "p50_us": 5679.388,
+        "p95_us": 5832.812,
+        "p99_us": 5884.141,
+        "samples": 200
+      },
+      "binary_sha256": "00ae547fff001e42fbb011393b39b52c2ef6ea12b3c1165ec42dca1a2e933e69",
+      "load_average_before": [
+        1.48779296875,
+        2.328125,
+        2.416015625
+      ],
+      "load_average_after": [
+        1.44873046875,
+        2.3056640625,
+        2.408203125
+      ]
+    },
+    {
+      "allocated_bytes": 4583424,
+      "apparent_bytes": 4567616,
+      "append_batches_1000": {
+        "p50_us": 15219.486,
+        "p95_us": 22867.77,
+        "p99_us": 28496.81,
+        "samples": 100
+      },
+      "get_1": {
+        "p50_us": 4.115,
+        "p95_us": 4.51,
+        "p99_us": 4.691,
+        "samples": 1000
+      },
+      "get_20": {
+        "p50_us": 46.971,
+        "p95_us": 51.409,
+        "p99_us": 54.272,
+        "samples": 1000
+      },
+      "index_build_us": 300364.825,
+      "label": "2-candidate",
+      "original_digest": "7cc934330b49c31fe4f91272ea6df7efe01d0c3af4ee3dc18b85072042466b5b",
+      "originals_verified": 100000,
+      "ranked_signature": "750c69a2f3c9bf44fe6f5af85c28d0675715bb2bed8aa62576447610636b9ddb",
+      "records": 100000,
+      "reopen_us": 182424.565,
+      "scope": "Public Record API, synthetic local warm serial diagnostic; no cloud or 1M/concurrency acceptance",
+      "search_unique": {
+        "p50_us": 5409.139,
+        "p95_us": 5614.763,
+        "p99_us": 5837.85,
+        "samples": 200
+      },
+      "binary_sha256": "00ae547fff001e42fbb011393b39b52c2ef6ea12b3c1165ec42dca1a2e933e69",
+      "load_average_before": [
+        1.44873046875,
+        2.3056640625,
+        2.408203125
+      ],
+      "load_average_after": [
+        1.4931640625,
+        2.30029296875,
+        2.40576171875
+      ]
+    },
+    {
+      "allocated_bytes": 4579328,
+      "apparent_bytes": 4566679,
+      "append_batches_1000": {
+        "p50_us": 15267.458,
+        "p95_us": 21978.885,
+        "p99_us": 27283.003,
+        "samples": 100
+      },
+      "get_1": {
+        "p50_us": 74.246,
+        "p95_us": 127.591,
+        "p99_us": 138.924,
+        "samples": 1000
+      },
+      "get_20": {
+        "p50_us": 1310.343,
+        "p95_us": 1553.167,
+        "p99_us": 1638.618,
+        "samples": 1000
+      },
+      "index_build_us": 302033.033,
+      "label": "3-control",
+      "original_digest": "7cc934330b49c31fe4f91272ea6df7efe01d0c3af4ee3dc18b85072042466b5b",
+      "originals_verified": 100000,
+      "ranked_signature": "750c69a2f3c9bf44fe6f5af85c28d0675715bb2bed8aa62576447610636b9ddb",
+      "records": 100000,
+      "reopen_us": 174913.573,
+      "scope": "Public Record API, synthetic local warm serial diagnostic; no cloud or 1M/concurrency acceptance",
+      "search_unique": {
+        "p50_us": 6663.398,
+        "p95_us": 6822.832,
+        "p99_us": 6987.467,
+        "samples": 200
+      },
+      "binary_sha256": "f647cc838206f8e04bec7e4ce0412d8c7d384090f0056fab2136d88ae7974991",
+      "load_average_before": [
+        1.4931640625,
+        2.30029296875,
+        2.40576171875
+      ],
+      "load_average_after": [
+        1.5341796875,
+        2.294921875,
+        2.4033203125
+      ]
+    }
+  ],
+  "control_source": "5a7c31e",
+  "candidate_runtime_source": "c19e806",
+  "compiler": "Fedora Rust/Cargo 1.99.0",
+  "rustflags": "-C target-cpu=x86-64",
+  "cflags": "-march=x86-64 -mtune=generic",
+  "new_scale_crash_experiment": false,
+  "tests": {
+    "record_tests_passed": 103,
+    "failed": 0,
+    "existing_ignored": 6,
+    "test_log_sha256": "1464672f7b9c4576ce4d0ce513b90be00b98a17729c3dc4b022204ff227b0444"
+  },
+  "source_libraries": {
+    "crates/oojuro-engine/src/record/authority.rs": "062dc1ebfd897f7482b49726ba1586e521b887390f11fc29513b57f59cc648e2",
+    "crates/oojuro-engine/src/record/index.rs": "90c726b1767c74a49e3d47d0187555a29c40b157ec0478b92f8819a465bc7f21",
+    "crates/oojuro-engine/src/record/view.rs": "3cfdfb202ad5d04b73bdbc2afdbf00342b3c248e9567c0222c221e407deed999"
+  },
+  "build_logs_sha256": {
+    "main-control-profile-build.log": "91f5b9e97acce5cf98ba06a5c3be6fa15970b816444f4c4e2cf39f4402ac5b7c",
+    "main-candidate-profile-build.log": "b0c20c79a28cf1fd1dd1abfe36abcd55126b163d6a9fbbf599e2f1d0fdabd57d"
+  },
+  "rejected_attempt": {
+    "scope": "Earlier PR93-source public profile pair used a shared target cache and produced identical hashes; rejected before measurement. All primary main-based artifacts use isolated per-arm targets."
+  }
+}
