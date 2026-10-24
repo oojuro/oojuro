@@ -112,3 +112,10 @@ The source/manifests/scripts trees are byte-identical before and after compositi
 `topic-merge-proof.json` records the Git object IDs. Raw logs remain unchanged,
 including final blank lines. This is a topic merge, not a main merge, release or
 deployment. No unchanged functional gate was rerun for documentation composition.
+
+The [combined setup command](COMBINED_AGENT_SETUP.md) composes the existing
+capture and optional project-read helpers with separate grants. It retains an
+existing installation's journal policy; change that policy through the existing
+client/helper options and restart capture with the same spool. Source composition
+and the pending combined-wrapper qualification are recorded separately; prior
+component passes do not imply this new composed wrapper has been executed.

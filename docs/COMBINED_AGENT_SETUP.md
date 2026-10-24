@@ -47,6 +47,31 @@ the two helpers. Capture's delivered-event count and a real client `records`/`ge
 call are still needed to verify activity and prior-history access. Discovery,
 service activation and MCP registration are reported separately.
 
+## Existing journal policy
+
+A fresh capture installation keeps the default: one new journal for each new
+provider session. Reusing an existing capture directory retains its saved policy.
+The wrapper adds no policy flags. To choose an existing same-integration journal,
+stop capture and use the existing client command on that installation's protected
+connection:
+
+```sh
+oojuro cloud capture-policy --connection /private/capture/connection.json \
+  --reuse-journal JOURNAL_ID
+# Restore new-session defaults for future unseen runs:
+oojuro cloud capture-policy --connection /private/capture/connection.json \
+  --new-journal-per-session
+```
+
+Restart capture using the same installation and spool to load the choice. Queued
+and resumed runs retain their original targets and pending bytes. A journal ID is
+a selector, not authorization; the service checks the same integration lineage,
+writer, source and account before binding a new run. No refusal falls back to a
+different journal. Capture policy changes do not grant project reads, attach
+journals to projects, rename journals or import history. See
+[continuing journal setup](CONTINUING_JOURNAL_SETUP.md) for the existing CLI,
+installer and SDK choices.
+
 ## Copy-paste prompt
 
 > Set up Oojuro with scripts/setup-agent.py from the trusted client checkout.
