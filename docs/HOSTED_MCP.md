@@ -35,6 +35,10 @@ absolute executable and connection-file paths.
 
 ## Guided project setup
 
+The [combined setup command](COMBINED_AGENT_SETUP.md) runs capture and this
+project helper sequentially while retaining separate grants. Use the project
+helper directly to finish a partially completed combined installation.
+
 Use the CLI and script from this review candidate. Obtain a project read key in
 the signed-in project's management page; capture/integration keys cannot replace
 it. The key grants reads of **all currently attached journals** in that project,
