@@ -104,3 +104,11 @@ These are local protocol checks, not an actual owner-agent registration or impor
 Raw local client receipts are in `docs/evidence/journal-reuse-client/`.
 No provider, production, performance, real-owner history, main merge or package
 release acceptance is claimed.
+
+## Topic composition provenance
+
+The qualification-only parent topic was merged locally before opening this draft.
+The source/manifests/scripts trees are byte-identical before and after composition;
+`topic-merge-proof.json` records the Git object IDs. Raw logs remain unchanged,
+including final blank lines. This is a topic merge, not a main merge, release or
+deployment. No unchanged functional gate was rerun for documentation composition.
