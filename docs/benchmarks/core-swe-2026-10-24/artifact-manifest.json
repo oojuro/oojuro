@@ -1,0 +1,183 @@
+{
+  "scope": "safe path-redacted evidence; no source algorithm changes",
+  "path_placeholders": {
+    "$WORKSPACE": "original local generated workspace root",
+    "$USER_HOME": "original user home",
+    "$PRIVATE_TMP": "owned ephemeral real temporary directory",
+    "$USER_MANAGER_CGROUP": "actual observed user-manager cgroup hierarchy",
+    "$USER_MANAGER_CGROUP_REL": "actual observed relative manager hierarchy"
+  },
+  "files": [
+    {
+      "retained_source": "measured-summary.json",
+      "published_file": "summary.json",
+      "retained_sha256": "0b11f6a61cb797312ebf38406b36e5c470ad403a8b800ce16d9e0c62994ec7da",
+      "published_sha256": "0b11f6a61cb797312ebf38406b36e5c470ad403a8b800ce16d9e0c62994ec7da",
+      "published_bytes": 26485,
+      "path_redacted": false
+    },
+    {
+      "retained_source": "build-proof.json",
+      "published_file": "build-proof.json",
+      "retained_sha256": "13488c0c3d77c13bde2109ac8d6498b44297ff1ccae86d3d5a8bc33bb7fd5a80",
+      "published_sha256": "a7850f173acedf79b956badea7e4f357d4d300288afba6f7978cf3b165278184",
+      "published_bytes": 1576,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "property-smoke.json",
+      "published_file": "property-smoke.json",
+      "retained_sha256": "d11729a4c967a66e5e499598d3839c66c2a3f06935755bb1658dc5076683b2b6",
+      "published_sha256": "d11729a4c967a66e5e499598d3839c66c2a3f06935755bb1658dc5076683b2b6",
+      "published_bytes": 854,
+      "path_redacted": false
+    },
+    {
+      "retained_source": "input-verification.json",
+      "published_file": "input-verification.json",
+      "retained_sha256": "348c9b15f5450a8724344c514dad4233155f13814eb76deef64c0bc16817ba4c",
+      "published_sha256": "97cd1fa5dd4c93b8f18f2103873dd359885c3dbcd80ca393deb8e6dfd87826bd",
+      "published_bytes": 262,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "gate-qualification.json",
+      "published_file": "gate-qualification.json",
+      "retained_sha256": "599a5a06ce2ad0d9e312d7c450c6a153e779731c0579bf8c4757c64cc1a0db1f",
+      "published_sha256": "d22938399c91bfab12b754dde917e5d23ff7175812003c2cd5b399a695ef302a",
+      "published_bytes": 12335,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "workload-qualification.json",
+      "published_file": "workload-qualification.json",
+      "retained_sha256": "c46e3c1e083a6bd2828be1584a997fe1eb0a9b65e216fd002e81ee9e1875d74d",
+      "published_sha256": "0795f052ce7867db1a8235e7179623ef272e570c00c1e1d086d1d1688cfd1859",
+      "published_bytes": 1663,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "gate-dispatch.json",
+      "published_file": "gate-dispatch.json",
+      "retained_sha256": "d92ecbc45764a496973da0dfdff749bed5f7d4dd8542f55375468ccfdcbf5cda",
+      "published_sha256": "ca2ae5f93bfd1c61eacce5d137bbd3eb43855f96177f21ad1097537ef8bf076f",
+      "published_bytes": 1255,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "workload-dispatch.json",
+      "published_file": "workload-dispatch.json",
+      "retained_sha256": "5fa3440964d4459966b2d44d0e5d301d81869754c846ada1f80d523f090e745c",
+      "published_sha256": "6728a82e40a4a960692d216a9c6ad7d0861ecde2cc7c1e369ad76fdbb1d28e87",
+      "published_bytes": 1653,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "planned-commands.json",
+      "published_file": "commands.json",
+      "retained_sha256": "5692dc8a52a7bb94024a52b3d203df15682d4d7c9c46a575a81c582dd2f09833",
+      "published_sha256": "ee257918d210e1df56c99bc00a05430cc49ad85c15c6ee0b5dc74a84b0821d9b",
+      "published_bytes": 7427,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "current/receipt.json",
+      "published_file": "build-current.json",
+      "retained_sha256": "7b8cfcb26ceec08918af19e713fcc142811d9998bd2cd8b0ddb23dfb3fa4c4a2",
+      "published_sha256": "69fa3b66f807d9668e8019dc35daf196130aa314b56960603c3697429835328d",
+      "published_bytes": 24904,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "control/receipt.json",
+      "published_file": "build-control.json",
+      "retained_sha256": "b12983b64711e4b9d8fc49f95a6e70e22154b1f8a7feef4764b9e0b058d1e7f8",
+      "published_sha256": "8ce98e799931adc5f19ecd3ce0322a1c977121fad11f27d8ca0e9473372043c0",
+      "published_bytes": 25119,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "run-5b546994a869159b/gates.json",
+      "published_file": "gates.json",
+      "retained_sha256": "9a8f68de08432a5316a5ef96cc7a3ee1cf2fe25a28422996efddf9ddf8a05a98",
+      "published_sha256": "b2407fee3cab7eca7b4d3f363528171ddcf1b3272224a4255a3cbd2855732414",
+      "published_bytes": 15316,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "run-5b546994a869159b/round-0.json",
+      "published_file": "round-0.json",
+      "retained_sha256": "1a4d999a0bd7f563efb70dfdf7f1b3fcb0992cdbd063b383e4323587c91a14cd",
+      "published_sha256": "b15a749869bc6d5ef81f3b3de6100082a626ef3b920141e54dab030c20954c2f",
+      "published_bytes": 44188,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "run-5b546994a869159b/round-1.json",
+      "published_file": "round-1.json",
+      "retained_sha256": "c737e1b9d2d29799f9e6d77e2be3e96d96810d11d7f22757f64f268c7729ad11",
+      "published_sha256": "e61e912486ab009742a3bf6a08cb454beb56041ca454e5da4305a531afd37d92",
+      "published_bytes": 44152,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "run-5b546994a869159b/round-2.json",
+      "published_file": "round-2.json",
+      "retained_sha256": "328241fba99dc36ec2208f1b8978ab73c203ed49aeb3e68746336ff8d0818cfd",
+      "published_sha256": "7dcea2235f3ccef858bb838cb4e68a32a25359142755c2b149104e02a2f6183c",
+      "published_bytes": 44156,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "run-5b546994a869159b/round-3.json",
+      "published_file": "round-3.json",
+      "retained_sha256": "2fdc5211ed12833f6bb123a9be59f03cc6b21f61d8d59303f58fca06817d2567",
+      "published_sha256": "e19cf3819cafa4993dbbeafa5a6340fb0327d291fa921107356bd0f645cbfaa2",
+      "published_bytes": 44244,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "build-artifact.py",
+      "published_file": "build-artifact.py.txt",
+      "retained_sha256": "4ec46b114a7a232c3710b642c526fc5d0ba510b5852c615097537c3433095686",
+      "published_sha256": "a2eaaf9d52418ca7c4de1c7567ebf03e6789334221e1de94f852aa6352c643f5",
+      "published_bytes": 8161,
+      "path_redacted": true,
+      "trailing_blank_lines_normalized": true
+    },
+    {
+      "retained_source": "run-experiment.py",
+      "published_file": "run-experiment.py.txt",
+      "retained_sha256": "f2e23a7891b922dd7f76612acd0fa6b78167db27600e53ad976cf3d1ebd917cf",
+      "published_sha256": "eb2707270cb044caf5193475e74d25ccaf15287ab0035006a52717e64cb57bf7",
+      "published_bytes": 16976,
+      "path_redacted": true,
+      "trailing_blank_lines_normalized": true
+    },
+    {
+      "retained_source": "systemd-run",
+      "published_file": "systemd-run.py.txt",
+      "retained_sha256": "c432d1874483cfe1086e666dcad1597eb0eaaa1b141e96a31da0df248c5ddc68",
+      "published_sha256": "05e35e6ab55e3735800cadf10f4d4af905e4007a18d833e6c67db33700e14287",
+      "published_bytes": 2555,
+      "path_redacted": false,
+      "trailing_blank_lines_normalized": true
+    },
+    {
+      "retained_source": "../portable-key-build/cc",
+      "published_file": "portable-cc.sh.txt",
+      "retained_sha256": "8880511deabe183e6e28263d2a1edd065691843f04f8794711d90ffcbd547711",
+      "published_sha256": "a30ed1517de759b6619ed512e60245bf9627cfb1a1381386f99c3bc0c6fd22db",
+      "published_bytes": 424,
+      "path_redacted": true
+    },
+    {
+      "retained_source": "../portable-key-build/c++",
+      "published_file": "portable-cxx.sh.txt",
+      "retained_sha256": "87478cec2e9af4d27a4b132bc58554bb29b9ef85aee5434e9e6f04edc2118e4b",
+      "published_sha256": "12e67a66ce8317ad51dbbb9c182a6f518e84a5033a250f87febb7ea2468c5d97",
+      "published_bytes": 425,
+      "path_redacted": true
+    }
+  ]
+}

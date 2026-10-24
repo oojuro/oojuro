@@ -1,0 +1,780 @@
+{
+  "status": "artifact-frozen",
+  "source": "7633eefe7503e355635522dd3e8f67fce3b143d7",
+  "worktree": "$WORKSPACE/work/oojuro-core-baseline-control",
+  "label": "control",
+  "command": [
+    "$WORKSPACE/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+    "build",
+    "--offline",
+    "--locked",
+    "--release",
+    "--target",
+    "x86_64-unknown-linux-gnu",
+    "-j",
+    "2",
+    "-p",
+    "oojuro-bench",
+    "--bin",
+    "oojuro-bench",
+    "--no-default-features",
+    "--features",
+    "sqlite-arm",
+    "--message-format=json-render-diagnostics"
+  ],
+  "profile": "release",
+  "target": "x86_64-unknown-linux-gnu",
+  "requested_features": [
+    "sqlite-arm"
+  ],
+  "cgroup": "$USER_MANAGER_CGROUP/app.slice/oojuro-core-baseline-build-control-1ae88533801accb7.service",
+  "cgroup_text": "0::$USER_MANAGER_CGROUP_REL/app.slice/oojuro-core-baseline-build-control-1ae88533801accb7.service",
+  "runtime_seconds": 1200,
+  "memory_bytes": 6442450944,
+  "tasks": 512,
+  "core_limit": 0,
+  "scratch": "$PRIVATE_TMP/ojcorebench-xowyntal",
+  "environment": {
+    "RUSTC": "$WORKSPACE/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+    "RUSTDOC": "$WORKSPACE/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustdoc",
+    "CC": "$WORKSPACE/work/portable-key-build/cc",
+    "CXX": "$WORKSPACE/work/portable-key-build/c++",
+    "RUSTFLAGS": "-C target-cpu=x86-64",
+    "CARGO_TARGET_DIR": "$WORKSPACE/work/core-baseline-readiness-20261024/target-control",
+    "CARGO_BUILD_JOBS": "2",
+    "CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER": "$WORKSPACE/work/portable-key-build/cc"
+  },
+  "lock_sha256": "2a75a9542a919adfa2a550395a9cb95dc8e459d649e8b44e27a03407c7032c47",
+  "driver_sha256": "4ec46b114a7a232c3710b642c526fc5d0ba510b5852c615097537c3433095686",
+  "tools": {
+    "cargo": {
+      "path": "$WORKSPACE/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+      "sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af",
+      "version": "cargo 1.99.1 (5f94df478 2026-08-27)\nrelease: 1.99.1\ncommit-hash: 5f94df4789f005f9a352888e8355ffc645b7ed0e\ncommit-date: 2026-08-27\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Ubuntu 26.4.0 (resolute) [64-bit]\n"
+    },
+    "rustc": {
+      "path": "$WORKSPACE/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853",
+      "version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+    }
+  },
+  "wrappers": {
+    "cc": "8880511deabe183e6e28263d2a1edd065691843f04f8794711d90ffcbd547711",
+    "c++": "87478cec2e9af4d27a4b132bc58554bb29b9ef85aee5434e9e6f04edc2118e4b"
+  },
+  "cargo_exit": 0,
+  "selected_artifacts": [
+    {
+      "reason": "compiler-artifact",
+      "package_id": "path+file://$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-bench#0.1.0",
+      "manifest_path": "$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-bench/Cargo.toml",
+      "target": {
+        "kind": [
+          "lib"
+        ],
+        "crate_types": [
+          "lib"
+        ],
+        "name": "oojuro_bench",
+        "src_path": "$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-bench/src/lib.rs",
+        "edition": "2024",
+        "doc": true,
+        "doctest": true,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "features": [
+        "sqlite-arm"
+      ],
+      "filenames": [
+        "$WORKSPACE/work/core-baseline-readiness-20261024/target-control/x86_64-unknown-linux-gnu/release/deps/liboojuro_bench-f39dba16e4f2e537.rlib",
+        "$WORKSPACE/work/core-baseline-readiness-20261024/target-control/x86_64-unknown-linux-gnu/release/deps/liboojuro_bench-f39dba16e4f2e537.rmeta"
+      ],
+      "executable": null,
+      "fresh": false
+    },
+    {
+      "reason": "compiler-artifact",
+      "package_id": "path+file://$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-bench#0.1.0",
+      "manifest_path": "$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-bench/Cargo.toml",
+      "target": {
+        "kind": [
+          "bin"
+        ],
+        "crate_types": [
+          "bin"
+        ],
+        "name": "oojuro-bench",
+        "src_path": "$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-bench/src/main.rs",
+        "edition": "2024",
+        "doc": true,
+        "doctest": false,
+        "test": true
+      },
+      "profile": {
+        "opt_level": "3",
+        "debuginfo": 0,
+        "debug_assertions": false,
+        "overflow_checks": false,
+        "test": false
+      },
+      "features": [
+        "sqlite-arm"
+      ],
+      "filenames": [
+        "$WORKSPACE/work/core-baseline-readiness-20261024/target-control/x86_64-unknown-linux-gnu/release/oojuro-bench"
+      ],
+      "executable": "$WORKSPACE/work/core-baseline-readiness-20261024/target-control/x86_64-unknown-linux-gnu/release/oojuro-bench",
+      "fresh": false
+    }
+  ],
+  "built_feature_inventory": [
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#find-msvc-tools@0.1.14",
+      "features": [],
+      "target": "find_msvc_tools"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#shlex@2.0.1",
+      "features": [
+        "default",
+        "std"
+      ],
+      "target": "shlex"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#cfg-if@1.0.5",
+      "features": [],
+      "target": "cfg_if"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#libc@0.2.191",
+      "features": [
+        "default",
+        "std"
+      ],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#version_check@0.9.5",
+      "features": [],
+      "target": "version_check"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#libc@0.2.191",
+      "features": [
+        "default",
+        "std"
+      ],
+      "target": "libc"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#libc@0.2.191",
+      "features": [
+        "default",
+        "std"
+      ],
+      "target": "libc"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#generic-array@0.14.7",
+      "features": [
+        "more_lengths"
+      ],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#jobserver@0.1.35",
+      "features": [],
+      "target": "jobserver"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#pkg-config@0.3.34",
+      "features": [],
+      "target": "pkg_config"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#getrandom@0.2.17",
+      "features": [],
+      "target": "getrandom"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#typenum@1.20.1",
+      "features": [],
+      "target": "typenum"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#generic-array@0.14.7",
+      "features": [
+        "more_lengths"
+      ],
+      "target": "generic_array"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#cc@1.8.0",
+      "features": [
+        "parallel"
+      ],
+      "target": "cc"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#rand_core@0.6.4",
+      "features": [
+        "getrandom"
+      ],
+      "target": "rand_core"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#proc-macro2@1.0.107",
+      "features": [
+        "proc-macro"
+      ],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#unicode-ident@1.0.27",
+      "features": [],
+      "target": "unicode_ident"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#serde_core@1.0.229",
+      "features": [
+        "result",
+        "std"
+      ],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#quote@1.0.47",
+      "features": [
+        "proc-macro"
+      ],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#crypto-common@0.1.7",
+      "features": [
+        "getrandom",
+        "rand_core"
+      ],
+      "target": "crypto_common"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#proc-macro2@1.0.107",
+      "features": [
+        "proc-macro"
+      ],
+      "target": "proc_macro2"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#quote@1.0.47",
+      "features": [
+        "proc-macro"
+      ],
+      "target": "quote"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#zstd-sys@2.1.2+zstd.1.5.7",
+      "features": [
+        "experimental",
+        "std",
+        "zdict_builder"
+      ],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#zmij@1.0.23",
+      "features": [],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#serde_core@1.0.229",
+      "features": [
+        "result",
+        "std"
+      ],
+      "target": "serde_core"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#blake3@1.8.7",
+      "features": [
+        "pure",
+        "std"
+      ],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#crc32fast@1.5.2",
+      "features": [
+        "default",
+        "std"
+      ],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#serde@1.0.229",
+      "features": [
+        "default",
+        "derive",
+        "serde_derive",
+        "std"
+      ],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#memchr@2.8.3",
+      "features": [
+        "alloc",
+        "std"
+      ],
+      "target": "memchr"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#serde_json@1.0.154",
+      "features": [
+        "default",
+        "std"
+      ],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#syn@3.0.9",
+      "features": [
+        "clone-impls",
+        "derive",
+        "parsing",
+        "printing",
+        "proc-macro"
+      ],
+      "target": "syn"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#zmij@1.0.23",
+      "features": [],
+      "target": "zmij"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#inout@0.1.4",
+      "features": [],
+      "target": "inout"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#subtle@2.6.1",
+      "features": [],
+      "target": "subtle"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#cpufeatures@0.2.17",
+      "features": [],
+      "target": "cpufeatures"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#zstd-safe@7.3.0",
+      "features": [
+        "experimental",
+        "std",
+        "zdict_builder"
+      ],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#itoa@1.0.18",
+      "features": [],
+      "target": "itoa"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#cpufeatures@0.3.1",
+      "features": [],
+      "target": "cpufeatures"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#constant_time_eq@0.4.2",
+      "features": [
+        "std"
+      ],
+      "target": "constant_time_eq"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#twox-hash@2.1.5",
+      "features": [
+        "xxhash32"
+      ],
+      "target": "twox_hash"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#zeroize@1.9.1",
+      "features": [],
+      "target": "zeroize"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#arrayvec@0.7.8",
+      "features": [],
+      "target": "arrayvec"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#serde_derive@1.0.229",
+      "features": [
+        "default"
+      ],
+      "target": "serde_derive"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#serde@1.0.229",
+      "features": [
+        "default",
+        "derive",
+        "serde_derive",
+        "std"
+      ],
+      "target": "serde"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#cipher@0.4.4",
+      "features": [
+        "zeroize"
+      ],
+      "target": "cipher"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#blake3@1.8.7",
+      "features": [
+        "pure",
+        "std"
+      ],
+      "target": "blake3"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#lz4_flex@0.11.6",
+      "features": [
+        "checked-decode",
+        "default",
+        "frame",
+        "safe-decode",
+        "safe-encode",
+        "std"
+      ],
+      "target": "lz4_flex"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#universal-hash@0.5.1",
+      "features": [],
+      "target": "universal_hash"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#crc32fast@1.5.2",
+      "features": [
+        "default",
+        "std"
+      ],
+      "target": "crc32fast"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#zstd-sys@2.1.2+zstd.1.5.7",
+      "features": [
+        "experimental",
+        "std",
+        "zdict_builder"
+      ],
+      "target": "zstd_sys"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#vcpkg@0.2.15",
+      "features": [],
+      "target": "vcpkg"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#opaque-debug@0.3.1",
+      "features": [],
+      "target": "opaque_debug"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#poly1305@0.8.0",
+      "features": [],
+      "target": "poly1305"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#libsqlite3-sys@0.38.2",
+      "features": [
+        "bundled",
+        "bundled_bindings",
+        "cc",
+        "default",
+        "min_sqlite_version_3_34_1",
+        "pkg-config",
+        "vcpkg"
+      ],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#zstd-safe@7.3.0",
+      "features": [
+        "experimental",
+        "std",
+        "zdict_builder"
+      ],
+      "target": "zstd_safe"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#serde_json@1.0.154",
+      "features": [
+        "default",
+        "std"
+      ],
+      "target": "serde_json"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#chacha20@0.9.1",
+      "features": [
+        "zeroize"
+      ],
+      "target": "chacha20"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#aead@0.5.2",
+      "features": [
+        "alloc",
+        "getrandom",
+        "rand_core"
+      ],
+      "target": "aead"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#foldhash@0.2.0",
+      "features": [],
+      "target": "foldhash"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#ring@0.17.14",
+      "features": [
+        "alloc",
+        "default",
+        "dev_urandom_fallback"
+      ],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#hashbrown@0.17.1",
+      "features": [
+        "default-hasher"
+      ],
+      "target": "hashbrown"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#chacha20poly1305@0.10.1",
+      "features": [
+        "alloc",
+        "default",
+        "getrandom",
+        "rand_core"
+      ],
+      "target": "chacha20poly1305"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#zstd@0.13.3",
+      "features": [
+        "experimental",
+        "zdict_builder"
+      ],
+      "target": "zstd"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#untrusted@0.9.0",
+      "features": [],
+      "target": "untrusted"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#fastcdc@3.2.1",
+      "features": [
+        "default"
+      ],
+      "target": "fastcdc"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#rust-stemmers@1.2.0",
+      "features": [],
+      "target": "rust_stemmers"
+    },
+    {
+      "package": "path+file://$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-store#0.1.0",
+      "features": [],
+      "target": "oojuro_store"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#libsqlite3-sys@0.38.2",
+      "features": [
+        "bundled",
+        "bundled_bindings",
+        "cc",
+        "default",
+        "min_sqlite_version_3_34_1",
+        "pkg-config",
+        "vcpkg"
+      ],
+      "target": "libsqlite3_sys"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#hashlink@0.12.2",
+      "features": [],
+      "target": "hashlink"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#ring@0.17.14",
+      "features": [
+        "alloc",
+        "default",
+        "dev_urandom_fallback"
+      ],
+      "target": "ring"
+    },
+    {
+      "package": "path+file://$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-core#0.1.0",
+      "features": [],
+      "target": "oojuro_core"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#memmap2@0.9.11",
+      "features": [],
+      "target": "memmap2"
+    },
+    {
+      "package": "path+file://$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-rank#0.1.0",
+      "features": [],
+      "target": "oojuro_rank"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#bitflags@2.13.2",
+      "features": [],
+      "target": "bitflags"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#fallible-streaming-iterator@0.1.9",
+      "features": [],
+      "target": "fallible_streaming_iterator"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#smallvec@1.16.3",
+      "features": [],
+      "target": "smallvec"
+    },
+    {
+      "package": "path+file://$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-bench#0.1.0",
+      "features": [
+        "sqlite-arm"
+      ],
+      "target": "build-script-build"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#fallible-iterator@0.3.0",
+      "features": [
+        "alloc",
+        "default"
+      ],
+      "target": "fallible_iterator"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#rusqlite@0.40.2",
+      "features": [
+        "bundled",
+        "cache",
+        "default",
+        "ffi-sqlite-wasm-rs",
+        "hashlink",
+        "modern_sqlite"
+      ],
+      "target": "rusqlite"
+    },
+    {
+      "package": "registry+https://github.com/rust-lang/crates.io-index#aho-corasick@1.1.5",
+      "features": [
+        "default",
+        "perf-literal",
+        "std"
+      ],
+      "target": "aho_corasick"
+    },
+    {
+      "package": "path+file://$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-nine#0.1.0",
+      "features": [],
+      "target": "oojuro_nine"
+    },
+    {
+      "package": "path+file://$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-engine#0.1.0",
+      "features": [],
+      "target": "oojuro_engine"
+    },
+    {
+      "package": "path+file://$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-bench#0.1.0",
+      "features": [
+        "sqlite-arm"
+      ],
+      "target": "oojuro_bench"
+    },
+    {
+      "package": "path+file://$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-bench#0.1.0",
+      "features": [
+        "sqlite-arm"
+      ],
+      "target": "oojuro-bench"
+    }
+  ],
+  "binary": {
+    "path": "$WORKSPACE/work/core-baseline-readiness-20261024/control/oojuro-bench",
+    "sha256": "f35af93ca0167707dcaa77d7b17dd79814294f9b8e4264bf66a9571047d718a3",
+    "bytes": 6134224,
+    "source": "$WORKSPACE/work/oojuro-core-baseline-control/crates/oojuro-bench/src/main.rs",
+    "fresh": false,
+    "features": [
+      "sqlite-arm"
+    ],
+    "glibc_versions": [
+      "2.2.5",
+      "2.3",
+      "2.3.4",
+      "2.4",
+      "2.9",
+      "2.14",
+      "2.15",
+      "2.16",
+      "2.17",
+      "2.18",
+      "2.25",
+      "2.28",
+      "2.29",
+      "2.30",
+      "2.32",
+      "2.33",
+      "2.34",
+      "2.39"
+    ],
+    "readelf_header": "ELF Header:\n  Magic:   7f 45 4c 46 02 01 01 00 00 00 00 00 00 00 00 00 \n  Class:                             ELF64\n  Data:                              2's complement, little endian\n  Version:                           1 (current)\n  OS/ABI:                            UNIX - System V\n  ABI Version:                       0\n  Type:                              DYN (Position-Independent Executable file)\n  Machine:                           Advanced Micro Devices X86-64\n  Version:                           0x1\n  Entry point address:               0x1033c0\n  Start of program headers:          64 (bytes into file)\n  Start of section headers:          6132368 (bytes into file)\n  Flags:                             0x0\n  Size of this header:               64 (bytes)\n  Size of program headers:           56 (bytes)\n  Number of program headers:         12\n  Size of section headers:           64 (bytes)\n  Number of section headers:         29\n  Section header string table index: 28\n",
+    "dynamic_section": "\nDynamic section at offset 0x5d27b8 contains 26 entries:\n  Tag        Type                         Name/Value\n 0x0000000000000001 (NEEDED)             Shared library: [libm.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [libc.so.6]\n 0x0000000000000001 (NEEDED)             Shared library: [ld-linux-x86-64.so.2]\n 0x000000000000001e (FLAGS)              BIND_NOW\n 0x000000006ffffffb (FLAGS_1)            Flags: NOW PIE\n 0x0000000000000015 (DEBUG)              0x0\n 0x0000000000000007 (RELA)               0x2430\n 0x0000000000000008 (RELASZ)             144576 (bytes)\n 0x0000000000000009 (RELAENT)            24 (bytes)\n 0x000000006ffffff9 (RELACOUNT)          5872\n 0x0000000000000017 (JMPREL)             0x258f0\n 0x0000000000000002 (PLTRELSZ)           1416 (bytes)\n 0x0000000000000003 (PLTGOT)             0x5d6dc8\n 0x0000000000000014 (PLTREL)             RELA\n 0x0000000000000006 (SYMTAB)             0x320\n 0x000000000000000b (SYMENT)             24 (bytes)\n 0x0000000000000005 (STRTAB)             0x1b6c\n 0x000000000000000a (STRSZ)              2243 (bytes)\n 0x000000006ffffef5 (GNU_HASH)           0x15f0\n 0x0000000000000004 (HASH)               0x160c\n 0x0000000000000019 (INIT_ARRAY)         0x5d47b0\n 0x000000000000001b (INIT_ARRAYSZ)       8 (bytes)\n 0x000000006ffffff0 (VERSYM)             0x1328\n 0x000000006ffffffe (VERNEED)            0x1480\n 0x000000006fffffff (VERNEEDNUM)         3\n 0x0000000000000000 (NULL)               0x0\n"
+  },
+  "remaining_descendants": [],
+  "cleanup_unknown": false,
+  "scratch_removed": true,
+  "wall_seconds": 43.264,
+  "closed_logs": {
+    "cargo.stderr": {
+      "bytes": 4436,
+      "sha256": "7cdc5d87076c62ff50525d2da7481ab0ee2e260ebde40816d57d6a72ffa27483"
+    },
+    "oojuro-bench": {
+      "bytes": 6134224,
+      "sha256": "f35af93ca0167707dcaa77d7b17dd79814294f9b8e4264bf66a9571047d718a3"
+    },
+    "features.txt": {
+      "bytes": 18604,
+      "sha256": "6e83bc6028771cc2fbe6104b2f8852b8656df1f1d578f404f84bca7a7c78886c"
+    },
+    "cargo.jsonl": {
+      "bytes": 93921,
+      "sha256": "9d164e83242c14fb02b30dfef0045b3aa5ab33713ad7562c291f8a6b3b361b70"
+    }
+  }
+}

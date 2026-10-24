@@ -1,0 +1,30 @@
+{
+  "utc": "2026-10-24T04:48:01.318082+00:00",
+  "status": "all4rounds/16stores/16exactreopens/pools/inventories passed; independent cleanup confirmed",
+  "workload_exit": 0,
+  "wall_seconds": 456.014,
+  "new_workload_scopes": 16,
+  "all_owned_scopes_including_gates": 64,
+  "outside_exact_unit_names_absent": true,
+  "outside_original_pid_identities_absent": true,
+  "outer_state": "LoadState=not-found\nActiveState=inactive\nSubState=dead\n",
+  "actual_observed_cgroup_paths_absent": [
+    "$USER_MANAGER_CGROUP/app.slice/oojuro-core-baseline-workload-5b546994a869159b.service",
+    "$USER_MANAGER_CGROUP/app.slice/oojuro-arm-native_current-2381215-0072098357.scope"
+  ],
+  "controller_pid_absent": 2381209,
+  "controller_cleanup_unknown": false,
+  "stores_retained": true,
+  "source_shas": {
+    "$WORKSPACE/work/core-baseline-readiness-20261024/current/oojuro-bench": "a4b861d7049c6125f8b42b59fba98fa19775a44fbdbc79c06f452cb6d3086a51",
+    "$WORKSPACE/work/core-baseline-readiness-20261024/control/oojuro-bench": "f35af93ca0167707dcaa77d7b17dd79814294f9b8e4264bf66a9571047d718a3"
+  },
+  "closed_receipt_sha256": "77b26d58ee797968b056e1f2cad6db27086e22ce0216766d18d25462f6eacc01",
+  "scope_inventory_sha256": "333ba0202eb14eb6106c872d49d9d9130eeb46dcbec324a7678d6fbbf40c236c",
+  "round_cards_sha256": {
+    "round-0.json": "1a4d999a0bd7f563efb70dfdf7f1b3fcb0992cdbd063b383e4323587c91a14cd",
+    "round-1.json": "c737e1b9d2d29799f9e6d77e2be3e96d96810d11d7f22757f64f268c7729ad11",
+    "round-2.json": "328241fba99dc36ec2208f1b8978ab73c203ed49aeb3e68746336ff8d0818cfd",
+    "round-3.json": "2fdc5211ed12833f6bb123a9be59f03cc6b21f61d8d59303f58fca06817d2567"
+  }
+}

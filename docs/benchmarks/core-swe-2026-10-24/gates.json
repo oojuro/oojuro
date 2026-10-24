@@ -1,0 +1,514 @@
+{
+  "schema": "oojuro-scorecard-v1",
+  "created_at": "2026-10-24T04:37:26Z",
+  "harness": {
+    "args": [
+      "$WORKSPACE/work/core-baseline-readiness-20261024/current/oojuro-bench",
+      "gates",
+      "--runs",
+      "1",
+      "--mem-max",
+      "3G",
+      "--data",
+      "$WORKSPACE/work/native-benchmark/data",
+      "--keep",
+      "--work",
+      "$WORKSPACE/work/core-baseline-readiness-20261024/run-5b546994a869159b/gates-stores",
+      "--out",
+      "$WORKSPACE/work/core-baseline-readiness-20261024/run-5b546994a869159b/gates.json",
+      "--arm",
+      "native_current=cmd:$WORKSPACE/work/core-baseline-readiness-20261024/current/oojuro-bench serve --arm native-record",
+      "--arm",
+      "native_control=cmd:$WORKSPACE/work/core-baseline-readiness-20261024/control/oojuro-bench serve --arm native-record",
+      "--arm",
+      "sqlite=sqlite",
+      "--arm",
+      "jsonl_zstd=jsonl-zstd"
+    ],
+    "binary": "$WORKSPACE/work/core-baseline-readiness-20261024/current/oojuro-bench",
+    "commit": "f726bab51d98"
+  },
+  "hardware": {
+    "build_profile": "release",
+    "cpu": "AMD Ryzen 7 8845HS w/ Radeon 780M Graphics",
+    "kernel": "7.0.0-34-generic",
+    "load_avg": "0.72 1.53 2.33 4/4337 2371631",
+    "logical_cpus": 16,
+    "mem_total": "29062768 kB",
+    "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+    "swap_total": "8388604 kB",
+    "work_filesystem": {
+      "device": "/dev/nvme0n1p2",
+      "fstype": "ext4",
+      "mount": "/"
+    }
+  },
+  "suite": "gates",
+  "dataset": "synthetic",
+  "split": "all",
+  "settings": {
+    "bench_lock": "held for the whole run",
+    "cases": "byte_exact(+after reopen), get_range_order, as_of_visibility, freshness, determinism, crash_recovery (SIGKILL x3)",
+    "isolation": "child process per run in a systemd --user scope, MemoryMax=3G, MemorySwapMax=0",
+    "runs": 1
+  },
+  "arms": [
+    {
+      "label": "native_current",
+      "spec": "cmd:$WORKSPACE/work/core-baseline-readiness-20261024/current/oojuro-bench serve --arm native-record",
+      "info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "f726bab51d98",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "gates": {
+        "as_of_visibility": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 9,
+              "failures": []
+            },
+            "runs": 1
+          }
+        },
+        "byte_exact": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 1
+          }
+        },
+        "byte_exact_after_reopen": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 1
+          }
+        },
+        "crash_recovery": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "acked_records": 600,
+              "failures": [],
+              "inflight": [
+                {
+                  "delay_ms": 0,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 5,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 30,
+                  "inflight_present": 2000,
+                  "of": 2000
+                }
+              ],
+              "note": "inflight_present strictly between 0 and the batch size means the batch was not atomic",
+              "trials": 3
+            },
+            "runs": 1
+          }
+        },
+        "determinism": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "identical": 60,
+              "queries": 60
+            },
+            "runs": 1
+          }
+        },
+        "freshness": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "misses": 0,
+              "trials": 20
+            },
+            "runs": 1
+          }
+        },
+        "get_range_order": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "expected": 12,
+              "got": 12
+            },
+            "runs": 1
+          }
+        }
+      },
+      "quality": {},
+      "storage": {},
+      "memory": {},
+      "speed": {},
+      "breakdown": {},
+      "error": null
+    },
+    {
+      "label": "native_control",
+      "spec": "cmd:$WORKSPACE/work/core-baseline-readiness-20261024/control/oojuro-bench serve --arm native-record",
+      "info": {
+        "name": "native-record",
+        "version": "RecordLog sealed record-2 + current record::projection",
+        "commit": "7633eefe7503",
+        "durability": "native sealed Store sync=true; one durable append per <=1000 records; one host, no replication/backups",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "actual native RecordLog and shared projection; current snapshot materialization, row validation/refresh, original reads and excerpts are inside each search",
+          "source IDs/known-at clocks and metadata persist as explicit benchmark import attributes; seconds convert to native microseconds; native assigned IDs/ingest clocks remain genuine and unchanged",
+          "native local Store compression/encryption differs from hosted per-object Zstd/S3/KMS; public fixture key, no hosted footprint/cost or failure-domain claim",
+          "RecordLog Store defaults: hot Zstd 3, dictionary cap 512KiB trained after 4MiB, hot-file target 64MiB, decode cache 4MiB; no explicit cold compaction in this arm",
+          "derived in-memory postings reuse requires a complete fresh view and identical retained rows; changes/removals rebuild; no disk index; native 100k-record/128MiB state bounds apply; >1000 input batches can recover partially before ACK"
+        ]
+      },
+      "gates": {
+        "as_of_visibility": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 9,
+              "failures": []
+            },
+            "runs": 1
+          }
+        },
+        "byte_exact": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 1
+          }
+        },
+        "byte_exact_after_reopen": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 1
+          }
+        },
+        "crash_recovery": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "acked_records": 600,
+              "failures": [],
+              "inflight": [
+                {
+                  "delay_ms": 0,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 5,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 30,
+                  "inflight_present": 2000,
+                  "of": 2000
+                }
+              ],
+              "note": "inflight_present strictly between 0 and the batch size means the batch was not atomic",
+              "trials": 3
+            },
+            "runs": 1
+          }
+        },
+        "determinism": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "identical": 60,
+              "queries": 60
+            },
+            "runs": 1
+          }
+        },
+        "freshness": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "misses": 0,
+              "trials": 20
+            },
+            "runs": 1
+          }
+        },
+        "get_range_order": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "expected": 12,
+              "got": 12
+            },
+            "runs": 1
+          }
+        }
+      },
+      "quality": {},
+      "storage": {},
+      "memory": {},
+      "speed": {},
+      "breakdown": {},
+      "error": null
+    },
+    {
+      "label": "sqlite",
+      "spec": "sqlite",
+      "info": {
+        "name": "sqlite-fts5",
+        "version": "sqlite 3.53.2 fts5 porter unicode61 bm25",
+        "commit": "f726bab51d98",
+        "durability": "one transaction per batch; WAL + synchronous=FULL (fsync at commit)",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "query = OR of distinct tokens; latest-revision filter in SQL"
+        ]
+      },
+      "gates": {
+        "as_of_visibility": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 9,
+              "failures": []
+            },
+            "runs": 1
+          }
+        },
+        "byte_exact": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 1
+          }
+        },
+        "byte_exact_after_reopen": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 1
+          }
+        },
+        "crash_recovery": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "acked_records": 600,
+              "failures": [],
+              "inflight": [
+                {
+                  "delay_ms": 0,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 5,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 30,
+                  "inflight_present": 2000,
+                  "of": 2000
+                }
+              ],
+              "note": "inflight_present strictly between 0 and the batch size means the batch was not atomic",
+              "trials": 3
+            },
+            "runs": 1
+          }
+        },
+        "determinism": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "identical": 60,
+              "queries": 60
+            },
+            "runs": 1
+          }
+        },
+        "freshness": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "misses": 0,
+              "trials": 20
+            },
+            "runs": 1
+          }
+        },
+        "get_range_order": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "expected": 12,
+              "got": 12
+            },
+            "runs": 1
+          }
+        }
+      },
+      "quality": {},
+      "storage": {},
+      "memory": {},
+      "speed": {},
+      "breakdown": {},
+      "error": null
+    },
+    {
+      "label": "jsonl_zstd",
+      "spec": "jsonl-zstd",
+      "info": {
+        "name": "jsonl-zstd-fts5",
+        "version": "Zstd 1.5.7; SQLite 3.53.2 contentless FTS5 porter unicode61 bm25",
+        "commit": "f726bab51d98",
+        "durability": "immutable batch file fsync + directory fsync, then SQLite WAL synchronous=FULL commit; one host, no replication/backups/encryption",
+        "protocol": "oojuro-arm-v1",
+        "notes": [
+          "one JSONL frame per batch; no dictionary or deduplication; level 3 when compressed",
+          "same OR-token query/ranking and two-clock SQL visibility as sqlite arm; FTS5 stores no original text",
+          "all payloads, index, WAL/SHM and uncommitted orphan frames count toward footprint; no automatic orphan reclamation",
+          "get decodes each selected batch frame once per request; no retained payload cache"
+        ]
+      },
+      "gates": {
+        "as_of_visibility": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 9,
+              "failures": []
+            },
+            "runs": 1
+          }
+        },
+        "byte_exact": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 1
+          }
+        },
+        "byte_exact_after_reopen": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "cases": 12,
+              "mismatched": []
+            },
+            "runs": 1
+          }
+        },
+        "crash_recovery": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "acked_records": 600,
+              "failures": [],
+              "inflight": [
+                {
+                  "delay_ms": 0,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 5,
+                  "inflight_present": 0,
+                  "of": 2000
+                },
+                {
+                  "delay_ms": 30,
+                  "inflight_present": 2000,
+                  "of": 2000
+                }
+              ],
+              "note": "inflight_present strictly between 0 and the batch size means the batch was not atomic",
+              "trials": 3
+            },
+            "runs": 1
+          }
+        },
+        "determinism": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "identical": 60,
+              "queries": 60
+            },
+            "runs": 1
+          }
+        },
+        "freshness": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "misses": 0,
+              "trials": 20
+            },
+            "runs": 1
+          }
+        },
+        "get_range_order": {
+          "pass": true,
+          "detail": {
+            "example": {
+              "expected": 12,
+              "got": 12
+            },
+            "runs": 1
+          }
+        }
+      },
+      "quality": {},
+      "storage": {},
+      "memory": {},
+      "speed": {},
+      "breakdown": {},
+      "error": null
+    }
+  ],
+  "references": [],
+  "notes": []
+}
