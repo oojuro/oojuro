@@ -15,7 +15,7 @@ standalone `.ojo` read/write support is not implemented. See the
 | Repository | Purpose |
 | --- | --- |
 | [oojuro](https://github.com/oojuro/oojuro) | Embedded database engine and `.ojo` format |
-| [journal](https://github.com/oojuro/journal) | Agent capture, sessions, recorder, CLI/MCP integrations and client SDKs |
+| [o-journal](https://github.com/oojuro/o-journal) | Agent capture, sessions, recorder, CLI/MCP integrations and client SDKs |
 | [o-cloud](https://github.com/oojuro/o-cloud) | Managed hosting, sharing, accounts, billing and the `oojuro.com` website |
 | [o-release-operator](https://github.com/oojuro/o-release-operator) | Trusted release coordination for this family |
 

@@ -1,5 +1,5 @@
 > Historical agent-application document. Current ownership and maintained instructions
-> are in [Oojuro Journal](https://github.com/oojuro/journal/blob/main/docs/LOCAL_JOURNAL_QUICKSTART.md).
+> are in [Oojuro Journal](https://github.com/oojuro/o-journal/blob/main/docs/LOCAL_JOURNAL_QUICKSTART.md).
 > The content below describes the pre-split monorepo at its recorded revision.
 
 # Store and search a local agent journal

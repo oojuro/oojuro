@@ -25,7 +25,7 @@ These files are components of a store. Renaming one to `.ojo` does not make it a
 complete standalone database. Existing directory paths and component extensions
 continue to work as before.
 
-The [Journal application's JSONL export](https://github.com/oojuro/journal/blob/main/docs/FRONT_DOOR.md#surface) remains JSONL and should use
+The [Journal application's JSONL export](https://github.com/oojuro/o-journal/blob/main/docs/FRONT_DOOR.md#surface) remains JSONL and should use
 `.jsonl`. JSONL, a JSON export, or an arbitrary archive renamed to `.ojo` is not a
 defined Oojuro container. The `~/.oojuro/` application directory and
 `.oojuro.toml` configuration files retain their existing names.

@@ -6,7 +6,7 @@ agent-journal application and managed service are separate consumers.
 | Owner | Source responsibility |
 | --- | --- |
 | `oojuro/oojuro` | Engine, rank, store, legacy compatibility libraries and storage/retrieval benchmarks |
-| `oojuro/journal` | `oojuro`, `oojuro-capture`, `oojuro-proxy` application crates; agent setup scripts, application packaging and client SDKs |
+| `oojuro/o-journal` | `oojuro`, `oojuro-capture`, `oojuro-proxy` application crates; agent setup scripts, application packaging and client SDKs |
 | `oojuro/o-cloud` | Hosted account/project policy, sharing, billing, infrastructure and the `oojuro.com` website |
 | `oojuro/o-release-operator` | Trusted release handoff, signing/publishing/promotion coordination and rollback |
 
@@ -17,7 +17,7 @@ hosting (`oojuro/sa-cloud`) and its own trusted operator (`oojuro/sa-release-ope
 
 Journal's initial extraction comes from public source
 `d1b24f7ed020365e09431aeaa8f4a7ff05e27dc3`. Its source provenance is recorded
-[in Journal](https://github.com/oojuro/journal/blob/main/PROVENANCE.md), and its
+[in Journal](https://github.com/oojuro/o-journal/blob/main/PROVENANCE.md), and its
 engine dependencies are pinned to that immutable revision. Rust application and
 SDK behavior is preserved; workspace paths, dependency locations, packaging
 notice discovery and documentation links change.

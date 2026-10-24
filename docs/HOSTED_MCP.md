@@ -1,5 +1,5 @@
 > Historical agent-application document. Current ownership and maintained instructions
-> are in [Oojuro Journal](https://github.com/oojuro/journal/blob/main/docs/HOSTED_MCP.md).
+> are in [Oojuro Journal](https://github.com/oojuro/o-journal/blob/main/docs/HOSTED_MCP.md).
 > The content below describes the pre-split monorepo at its recorded revision.
 
 # Hosted project MCP — review candidate

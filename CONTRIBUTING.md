@@ -72,7 +72,7 @@ Open a draft pull request while the change is being developed. Include what chan
 
 You need stable Rust (edition 2024) and a C compiler for the standard zstd codec. Linux is the first-class platform. CI pins Rust 1.99.1 on disposable GitHub-hosted Ubuntu 24.04 runners.
 
-Plain `cargo build --locked` and `cargo test --locked` select only `oojuro-engine`, `oojuro-rank` and `oojuro-store`. Agent CLI/runtime applications now live in `oojuro/journal`. The dependency policy gate checks these libraries independently, including conditional platform dependencies; see [DEPENDENCIES.md](DEPENDENCIES.md). Store JSON-reporting tools require `--features bench-tools`; `baselines` and `codecs` enable it automatically. No public library API is removed.
+Plain `cargo build --locked` and `cargo test --locked` select only `oojuro-engine`, `oojuro-rank` and `oojuro-store`. Agent CLI/runtime applications now live in `oojuro/o-journal`. The dependency policy gate checks these libraries independently, including conditional platform dependencies; see [DEPENDENCIES.md](DEPENDENCIES.md). Store JSON-reporting tools require `--features bench-tools`; `baselines` and `codecs` enable it automatically. No public library API is removed.
 
 The normal checks select runtime packages explicitly, without benchmark comparison features:
 
@@ -85,7 +85,7 @@ cargo test --locked --no-default-features --lib --tests -p oojuro-trace
 The native command runs authority, retrieval, allocation accounting and rank conformance tests serially, including subprocess crash/lock fixtures. The third command checks the retained legacy trace-storage library. Journal owns CLI, daemon, proxy and MCP integration tests. They use synthetic data and local test servers. Give fixtures a short private real-directory `TMPDIR` with enough disk space and no symlink ancestors (the hosted credential guard rejects them); the daemon rejects socket paths longer than 103 bytes. CI creates private scratch under `runner.temp`. CI explicitly repeats `cargo test --locked --no-default-features -p oojuro-trace --test compat` as a named historical-format gate. It opens the frozen `df8fa85` fixture, compares its original answers, then appends and merges old/new segments. The shared storage suite includes encrypted/plaintext transitions, strict sealing, corruption and torn-tail recovery. These checks do not establish compatibility for every historical native binary.
 
 Agent setup, client SDK, declaration and application packaging checks live in
-[Oojuro Journal](https://github.com/oojuro/journal). Add checks to the component
+[Oojuro Journal](https://github.com/oojuro/o-journal). Add checks to the component
 that owns the behavior; source reorganization does not promote a package or a
 cloud deployment.
 
@@ -107,7 +107,7 @@ GitHub Actions is currently disabled at repository level. This PR proposes the w
 - **No real data.** Never commit transcripts, logs or datasets, and never commit anything from a real person's
   agent history. Tests use synthetic text. Benchmarks use public datasets that are fetched on demand.
 - **No secrets.** Real tokens, keys and credentials never go into the repository. Tests use invented values
-  or build them at run time (agent redaction examples live in `oojuro/journal`).
+  or build them at run time (agent redaction examples live in `oojuro/o-journal`).
 
 ## Reporting bugs and security issues
 

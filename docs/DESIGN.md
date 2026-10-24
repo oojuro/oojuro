@@ -30,7 +30,7 @@ or claim that all historical schemas are already application-neutral.
 
 ## Applications and services
 
-[Oojuro Journal](https://github.com/oojuro/journal) owns the agent application:
+[Oojuro Journal](https://github.com/oojuro/o-journal) owns the agent application:
 capture adapters, agent/session conventions, recorder, proxy, application CLI,
 MCP tools and SDKs. Its initial source is extracted from immutable public
 revision `d1b24f7ed020365e09431aeaa8f4a7ff05e27dc3` and pins the engine libraries.
@@ -43,4 +43,4 @@ has its own revision and release schedule.
 See [repository boundaries](REPOSITORY_BOUNDARIES.md), [dependency policy](../DEPENDENCIES.md),
 [storage measurements](PERF_STORE.md), [search measurements](PERF_SEARCH.md) and
 [benchmark methodology](BENCH_HARNESS.md). The previous agent-application design
-is retained in [Journal](https://github.com/oojuro/journal/blob/main/docs/DESIGN.md).
+is retained in [Journal](https://github.com/oojuro/o-journal/blob/main/docs/DESIGN.md).

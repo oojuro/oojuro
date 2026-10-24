@@ -5,7 +5,7 @@
 `oojuro/oojuro` contains the Apache-2.0 embedded database engine and its
 storage/retrieval compatibility tests and research harnesses. Agent-specific
 recorder, capture, application CLI/MCP and portable client SDK source belongs to
-`oojuro/journal`. Both run locally without an Oojuro Cloud account.
+`oojuro/o-journal`. Both run locally without an Oojuro Cloud account.
 
 Managed Oojuro hosting and the `oojuro.com` website belong to private
 `oojuro/o-cloud`. Trusted release coordination belongs to private

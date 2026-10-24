@@ -3,7 +3,7 @@
 Read README.md, docs/DESIGN.md and docs/REPOSITORY_BOUNDARIES.md first.
 Oojuro owns embedded storage and retrieval. Agent capture, transcript adapters,
 session policy, recorder, application CLI/MCP and SDK changes belong to
-`oojuro/journal`; managed hosting and the website belong to `oojuro/o-cloud`.
+`oojuro/o-journal`; managed hosting and the website belong to `oojuro/o-cloud`.
 Trusted release coordination belongs to `oojuro/o-release-operator`.
 
 Preserve supported storage formats, exact original reads, encryption, recovery,
