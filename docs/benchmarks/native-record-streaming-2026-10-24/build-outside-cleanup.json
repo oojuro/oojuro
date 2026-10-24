@@ -1,0 +1,14 @@
+{
+  "utc": "2026-10-24T05:30:47.632281+00:00",
+  "unit": "oojuro-native-stream-build-after-09dcbe2dc27910b2.service",
+  "query_exit": 0,
+  "unit_state": "LoadState=not-found\nActiveState=inactive\n",
+  "actual_cgroup": "/sys/fs/cgroup<USER_MANAGER>/app.slice/oojuro-native-stream-build-after-09dcbe2dc27910b2.service",
+  "actual_cgroup_absent": true,
+  "original_pid_absent": true,
+  "scratch": "<PRIVATE_SCRATCH>",
+  "scratch_absent": true,
+  "receipt_remaining_descendants": [],
+  "receipt_cleanup_unknown": false,
+  "unified_exit": 0
+}

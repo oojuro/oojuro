@@ -1,0 +1,106 @@
+--- previous/run-experiment.py
++++ streamed/run-experiment.py
+@@ -2,16 +2,15 @@
+ """Reviewed fixed local baseline controller. Build artifacts only unless --execute is explicit."""
+ import argparse,ast,datetime,hashlib,json,os,pathlib,re,resource,shutil,signal,stat,subprocess,time
+ W=pathlib.Path(__file__).resolve().parents[2]
+-BASE=W/"work/core-baseline-readiness-20261024"
++BASE=W/"work/native-record-streaming-20261024"
+ CURRENT="f726bab51d982896a129d4bdf2fd2d3a2edc2fff"
+-CONTROL="7633eefe7503e355635522dd3e8f67fce3b143d7"
+-C=BASE/"current/oojuro-bench";O=BASE/"control/oojuro-bench"
+-LABELS=["native_current","native_control","sqlite","jsonl_zstd"]
+-SPECS={"native_current":f"native_current=cmd:{C} serve --arm native-record",
+-       "native_control":f"native_control=cmd:{O} serve --arm native-record",
+-       "sqlite":"sqlite=sqlite","jsonl_zstd":"jsonl_zstd=jsonl-zstd"}
++CONTROL="ebc9771e8a9d9c018b61bf84743f47e3535b6e01"
++C=W/"work/core-baseline-readiness-20261024/current/oojuro-bench";O=BASE/"after/oojuro-bench"
++LABELS=["native_before","native_after"]
++SPECS={"native_before":f"native_before=cmd:{C} serve --arm native-record",
++       "native_after":f"native_after=cmd:{O} serve --arm native-record"}
+ SHAS={str(C):"a4b861d7049c6125f8b42b59fba98fa19775a44fbdbc79c06f452cb6d3086a51",
+-      str(O):"f35af93ca0167707dcaa77d7b17dd79814294f9b8e4264bf66a9571047d718a3"}
++      str(O):"NOT_FROZEN"}
+ DATA=W/"work/native-benchmark/data"
+ INPUT_SHA="3106438b52feadab2bcf3c0e7ff7fb40ac8625b3969312e8cf64d4c3782089c2"
+ def sha(p):
+@@ -33,7 +32,7 @@
+         args=[str(C),"turnloop",*common,"--set","swe-agent","--split","dev","--trajectories","10","--background","20000",
+               "--thinking","index","--k","20","--pool","20","--batch","1000","--work",str(run/f"stores/round-{n}"),
+               "--out",str(run/f"round-{n}.json"),"--dump-pools",str(run/f"pools-round-{n}")]
+-        order=LABELS[n:]+LABELS[:n]
++        order=LABELS if n%2==0 else list(reversed(LABELS))
+     for label in order:args+=["--arm",SPECS[label]]
+     return args
+ def reconcile(run):
+@@ -93,7 +92,7 @@
+             assert type(r['harness_pid']) is int and r['harness_pid']>0
+             assert type(r['launcher_pid']) is int and r['launcher_pid']>0
+             assert isinstance(r['start_ticks'],str) and r['start_ticks'].isdigit()
+-            unit=r['unit'];assert re.fullmatch(r'oojuro-arm-(native_current|native_control|sqlite|jsonl_zstd)-'+str(r['harness_pid'])+r'-[0-9]+\.scope',unit)
++            unit=r['unit'];assert re.fullmatch(r'oojuro-arm-(native_before|native_after)-'+str(r['harness_pid'])+r'-[0-9]+\.scope',unit)
+             assert unit not in seen;seen.add(unit);entry['unit']=unit
+             q=['/usr/bin/systemctl','--user','show','--property=LoadState','--property=ActiveState','--property=ControlGroup',unit]
+             state=query(q)
+@@ -132,11 +131,11 @@
+
+ def validate_card(path,phase):
+     card=json.loads(path.read_text());assert card["schema"]=="oojuro-scorecard-v1"
+-    assert {r["label"] for r in card["arms"]}==set(LABELS) and len(card["arms"])==4
++    assert {r["label"] for r in card["arms"]}==set(LABELS) and len(card["arms"])==2
+     assert card["settings"]["runs"]==1
+     for row in card["arms"]:
+         assert row["error"] is None and row["gates"] and all(g["pass"] for g in row["gates"].values())
+-        assert row["info"]["commit"]==(CONTROL if row["label"]=="native_control" else CURRENT)[:12]
++        assert row["info"]["commit"]==(CONTROL if row["label"]=="native_after" else CURRENT)[:12]
+         if phase=="gates":
+             assert set(row["gates"])=={"byte_exact","byte_exact_after_reopen","get_range_order","as_of_visibility","freshness","determinism","crash_recovery"}
+         else:
+@@ -147,6 +146,7 @@
+         s=card["settings"]
+         assert all(s[k]==v for k,v in {"steps":201,"trajectories":10,"background_target_records":20000,"thinking":"index","k":20,"pool":20}.items())
+         assert len({r["speed"]["store_records_end"]["median"] for r in card["arms"]})==1
++        assert len({r["speed"]["returned_original_bytes"]["median"] for r in card["arms"]})==1
+     return card
+ def verifier():
+     # Reuse ONLY these reviewed existing pure reconstruction/check definitions.
+@@ -177,7 +177,7 @@
+     if not a.execute:print(json.dumps(schedule,indent=2));return 0
+     os.umask(0o077);resource.setrlimit(resource.RLIMIT_CORE,(0,0))
+     cgtext=pathlib.Path("/proc/self/cgroup").read_text().strip()
+-    expected="oojuro-core-baseline-"+a.phase+"-"+a.run_name[4:]+".service"
++    expected="oojuro-native-stream-"+a.phase+"-"+a.run_name[4:]+".service"
+     assert cgtext=="0::<USER_MANAGER>/app.slice/"+expected
+     cg=pathlib.Path("/sys/fs/cgroup")/cgtext.split("0::",1)[1].lstrip("/")
+     assert set((cg/"cgroup.procs").read_text().split())=={str(os.getpid())}
+@@ -191,8 +191,7 @@
+     if a.phase=="gates":
+         run.mkdir(mode=0o700);(run/"scopes.jsonl").touch(mode=0o600,exist_ok=False)
+         config={"format":1,"driver":str(C),"inventory":str(run/"scopes.jsonl"),"arms":{
+-            "native_current":[str(C),"serve","--arm","native-record"],"native_control":[str(O),"serve","--arm","native-record"],
+-            "sqlite":[str(C),"serve","--arm","sqlite"],"jsonl_zstd":[str(C),"serve","--arm","jsonl-zstd"]}}
++            "native_before":[str(C),"serve","--arm","native-record"],"native_after":[str(O),"serve","--arm","native-record"]}}
+         save(run/"launcher.json",config)
+     else:
+         gate=json.loads((run/"receipt-gates.json").read_text())
+@@ -227,16 +226,16 @@
+             raw=sum(len(d["text"].encode()) for d in expected_docs.values())
+             copied=run/"verification";copied.mkdir();v["base"]=copied;checks=[]
+             for n in range(4):
+-                current=(run/f"pools-round-{n}.native_current").read_bytes()
+-                assert current and current==(run/f"pools-round-{n}.native_control").read_bytes()
++                current=(run/f"pools-round-{n}.native_before").read_bytes()
++                assert current and current==(run/f"pools-round-{n}.native_after").read_bytes()
+                 for label in LABELS:
+                     assert time.monotonic()<until
+                     store=run/f"stores/round-{n}"/label/"run0-turnloop/store"
+                     size=inventory(store)
+                     row=next(r for r in receipt["records"][n]["card"]["arms"] if r["label"]==label)
+                     assert size["apparent_bytes"]==row["storage"]["disk_bytes"]["median"] and size["allocated_bytes"]==row["storage"]["disk_alloc_bytes"]["median"]
+-                    v["binary"]=O if label=="native_control" else C;v["spec"]={"source":CONTROL if label=="native_control" else CURRENT}
+-                    check=v["check_store"](store,{"native_current":"native-record","native_control":"native-record","sqlite":"sqlite","jsonl_zstd":"jsonl-zstd"}[label],expected_docs)
++                    v["binary"]=O if label=="native_after" else C;v["spec"]={"source":CONTROL if label=="native_after" else CURRENT}
++                    check=v["check_store"](store,"native-record",expected_docs)
+                     checks.append({"round":n,"label":label,"inventory":size,"exact_reopen":check,"full_text_denominator":raw})
+             assert not any(copied.iterdir());copied.rmdir();receipt["store_checks"]=checks
+         receipt["status"]="passed";code=0

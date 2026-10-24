@@ -1,0 +1,33 @@
+{
+  "status": "passed",
+  "sources": [
+    "f726bab51d982896a129d4bdf2fd2d3a2edc2fff",
+    "ebc9771e8a9d9c018b61bf84743f47e3535b6e01"
+  ],
+  "artifact_shas": {
+    "<WORKSPACE>/work/core-baseline-readiness-20261024/current/oojuro-bench": "a4b861d7049c6125f8b42b59fba98fa19775a44fbdbc79c06f452cb6d3086a51",
+    "<WORKSPACE>/work/native-record-streaming-20261024/after/oojuro-bench": "5c56be5874a2c56d7d7db5d1d47c1db4ac633de8615ae94442cb3fd1f57c9f87"
+  },
+  "controller_sha256": "b23fe9b4c105de53f124448ea7b6d66e525d32dc168251bfab9fe68d2e242c5b",
+  "launcher_sha256": "5569ba504c80239104693ab4ada05077df5c130c2d3b3dea51911ac2b0dd808c",
+  "fixed_rounds": 4,
+  "retained_stores": 8,
+  "successful_queries_per_arm": 804,
+  "copied_full_doc_reopens": 8,
+  "pool_byte_equality_rounds": 4,
+  "closed_full_inventories": 8,
+  "scopes_total": 32,
+  "scope_cleanup_independent": true,
+  "actual_outer_inner_pid_cleanup_independent": true,
+  "cleanup_unknown": false,
+  "wall_seconds": 256.532,
+  "receipt_sha256": "069e3fed5b51842b224fd540daeb53334c787e9d5f5c1583ce3eac9708fb2b08",
+  "outside_cleanup_sha256": "538addfba5ab6c5013787f8864bda229698caddb165dce200a8c5a3ce95d7169",
+  "cards": {
+    "round-0.json": "6c2e0ecafb7ac94652f31ba534fde98b5f39a7a7f3bf04c7cfc583f69a8ff822",
+    "round-1.json": "26be05ce5e1e277be7805f0a2ee08144a7c289db307f1f089a1b6cf66dd10f4d",
+    "round-2.json": "c16444df5e295d4d501500547554a761fd3a6652f7382e198c9d60a1581c49ed",
+    "round-3.json": "d0fd086fdbd819d77d671455ce27fd331824ef06efdcd7d274b0e101a1e12399"
+  },
+  "no_timing_rerun": true
+}

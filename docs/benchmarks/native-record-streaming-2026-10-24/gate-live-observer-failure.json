@@ -1,0 +1,9 @@
+{
+  "phase": "outside live property sampling",
+  "status": "observer assertion failed; original queried field values were not persisted",
+  "exception_class": "AssertionError",
+  "gate_execution_exit": 0,
+  "gate_execution_repeated": false,
+  "subsequent_outside_unit_state": "LoadState=not-found\nActiveState=inactive\nMainPID=0\nControlGroup=\n",
+  "scope": "observer failure only; no timing or gate failure inferred"
+}

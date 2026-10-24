@@ -1,0 +1,51 @@
+#!/usr/bin/python3 -I
+"""One bounded outside observation; never launches or modifies a benchmark."""
+import datetime,json,os,pathlib,subprocess,time
+B=pathlib.Path(__file__).resolve().parent
+RUN=B/"run-09dcbe2dc27910b2"
+UNIT="oojuro-native-stream-workload-09dcbe2dc27910b2.service"
+OUT=B/"workload-live-observation.json"
+def save(value):
+    tmp=OUT.with_suffix(".pending")
+    fd=os.open(tmp,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+    with os.fdopen(fd,"w") as f:json.dump(value,f,indent=2);f.write("\n");f.flush();os.fsync(f.fileno())
+    os.replace(tmp,OUT)
+def query(unit,properties):
+    cmd=["/usr/bin/systemctl","--user","show",*["--property="+x for x in properties],unit]
+    q=subprocess.run(cmd,capture_output=True,text=True,timeout=3)
+    return {"command":cmd,"exit":q.returncode,"stdout":q.stdout,"stderr":q.stderr}
+def values(q):return dict(x.split("=",1) for x in q["stdout"].splitlines() if "=" in x)
+def pids(cgroup):
+    path=pathlib.Path("/sys/fs/cgroup")/cgroup.lstrip("/")
+    found=[]
+    for pid in (path/"cgroup.procs").read_text().split():
+        stat=(pathlib.Path("/proc")/pid/"stat").read_text()
+        found.append({"pid":int(pid),"start_ticks":stat.rsplit(")",1)[1].split()[19]})
+    return found
+r={"utc":datetime.datetime.now(datetime.timezone.utc).isoformat(),"status":"started"}
+assert not OUT.exists()
+r["outer_query"]=query(UNIT,["MainPID","ControlGroup","ActiveState","RuntimeMaxUSec","MemoryMax","MemorySwapMax","TasksMax","LimitCORE","KillMode","TimeoutStopUSec"])
+save(r) # Persist raw response BEFORE assertions or /proc reads.
+v=values(r["outer_query"])
+assert r["outer_query"]["exit"]==0 and v["ActiveState"]=="active"
+assert v["RuntimeMaxUSec"]=="42min" and v["MemoryMax"]==str(6<<30) and v["MemorySwapMax"]=="0"
+assert v["TasksMax"]=="512" and v["LimitCORE"]=="0" and v["KillMode"]=="control-group" and v["TimeoutStopUSec"]=="5s"
+assert v["ControlGroup"].endswith("/"+UNIT)
+r["outer_pids"]=pids(v["ControlGroup"]);save(r)
+assert any(p["pid"]==int(v["MainPID"]) for p in r["outer_pids"])
+end=time.monotonic()+8
+while True:
+    rows=[json.loads(line) for line in (RUN/"scopes.jsonl").read_text().splitlines()]
+    if len(rows)>24:break
+    assert time.monotonic()<end
+    time.sleep(.05)
+row=rows[24];assert row["label"]=="native_before"
+r["inner_inventory"]=row
+r["inner_query"]=query(row["unit"],["ControlGroup","ActiveState","RuntimeMaxUSec","MemoryMax","MemorySwapMax"])
+save(r) # Keep a refusal's exact safe property response.
+v=values(r["inner_query"])
+assert r["inner_query"]["exit"]==0 and v["ActiveState"]=="active"
+assert v["RuntimeMaxUSec"]=="5min" and v["MemoryMax"]==str(3<<30) and v["MemorySwapMax"]=="0"
+assert v["ControlGroup"].endswith("/"+row["unit"])
+r["inner_pids"]=pids(v["ControlGroup"]);r["status"]="observed";save(r)
+print(json.dumps({"status":r["status"],"outer_unit":UNIT,"first_inner_unit":row["unit"]}))

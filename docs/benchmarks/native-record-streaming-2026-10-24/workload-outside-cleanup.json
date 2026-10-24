@@ -1,0 +1,379 @@
+{
+  "utc": "2026-10-24T05:44:32.321421+00:00",
+  "unified_exit": 0,
+  "outer_unit": "oojuro-native-stream-workload-09dcbe2dc27910b2.service",
+  "outer_state": "LoadState=not-found\nActiveState=inactive\nMainPID=0\nControlGroup=\n",
+  "actual_outer_cgroup": "/sys/fs/cgroup<USER_MANAGER>/app.slice/oojuro-native-stream-workload-09dcbe2dc27910b2.service",
+  "actual_outer_cgroup_absent": true,
+  "actual_first_inner_cgroup": "/sys/fs/cgroup<USER_MANAGER>/app.slice/oojuro-arm-native_before-2658361-0567030022.scope",
+  "actual_first_inner_cgroup_absent": true,
+  "independent_scope_queries": [
+    {
+      "unit": "oojuro-arm-native_after-2644710-12085407417.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-13143036787.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-14205943178.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-15257972818.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-16379788068.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-17061011378.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-18755586231.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-19896548388.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-20955423374.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-21089007154.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-22150060219.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-23324966822.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2658361-1437933895.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2661991-0680143005.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2665517-1087386299.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2668998-0875632135.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-0852945837.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-10859789364.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-11999988562.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-1915319518.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-2983334496.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-3023272396.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-4123667113.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-5807220836.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-6485836318.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-7614213948.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-8672174895.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-9807917307.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2658361-0567030022.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2661991-1079468774.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2665517-0900992244.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2668998-1150803424.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    }
+  ],
+  "pid_starttick_checks": [
+    {
+      "pid": 2644711,
+      "start_ticks": "172148582",
+      "absent": true
+    },
+    {
+      "pid": 2644712,
+      "start_ticks": "172148589",
+      "absent": true
+    },
+    {
+      "pid": 2644713,
+      "start_ticks": "172148595",
+      "absent": true
+    },
+    {
+      "pid": 2644714,
+      "start_ticks": "172148599",
+      "absent": true
+    },
+    {
+      "pid": 2644719,
+      "start_ticks": "172148609",
+      "absent": true
+    },
+    {
+      "pid": 2644724,
+      "start_ticks": "172148678",
+      "absent": true
+    },
+    {
+      "pid": 2644800,
+      "start_ticks": "172148746",
+      "absent": true
+    },
+    {
+      "pid": 2644801,
+      "start_ticks": "172148758",
+      "absent": true
+    },
+    {
+      "pid": 2644802,
+      "start_ticks": "172148764",
+      "absent": true
+    },
+    {
+      "pid": 2644803,
+      "start_ticks": "172148778",
+      "absent": true
+    },
+    {
+      "pid": 2644804,
+      "start_ticks": "172148783",
+      "absent": true
+    },
+    {
+      "pid": 2644805,
+      "start_ticks": "172148797",
+      "absent": true
+    },
+    {
+      "pid": 2644812,
+      "start_ticks": "172148806",
+      "absent": true
+    },
+    {
+      "pid": 2644813,
+      "start_ticks": "172148811",
+      "absent": true
+    },
+    {
+      "pid": 2644814,
+      "start_ticks": "172148818",
+      "absent": true
+    },
+    {
+      "pid": 2644815,
+      "start_ticks": "172148823",
+      "absent": true
+    },
+    {
+      "pid": 2644820,
+      "start_ticks": "172148835",
+      "absent": true
+    },
+    {
+      "pid": 2644868,
+      "start_ticks": "172148903",
+      "absent": true
+    },
+    {
+      "pid": 2644908,
+      "start_ticks": "172148973",
+      "absent": true
+    },
+    {
+      "pid": 2644909,
+      "start_ticks": "172148987",
+      "absent": true
+    },
+    {
+      "pid": 2644910,
+      "start_ticks": "172148993",
+      "absent": true
+    },
+    {
+      "pid": 2644911,
+      "start_ticks": "172149006",
+      "absent": true
+    },
+    {
+      "pid": 2644912,
+      "start_ticks": "172149012",
+      "absent": true
+    },
+    {
+      "pid": 2644914,
+      "start_ticks": "172149029",
+      "absent": true
+    },
+    {
+      "pid": 2658362,
+      "start_ticks": "172167754",
+      "absent": true
+    },
+    {
+      "pid": 2660359,
+      "start_ticks": "172170941",
+      "absent": true
+    },
+    {
+      "pid": 2661992,
+      "start_ticks": "172173865",
+      "absent": true
+    },
+    {
+      "pid": 2663723,
+      "start_ticks": "172176905",
+      "absent": true
+    },
+    {
+      "pid": 2665518,
+      "start_ticks": "172180287",
+      "absent": true
+    },
+    {
+      "pid": 2667242,
+      "start_ticks": "172183606",
+      "absent": true
+    },
+    {
+      "pid": 2668999,
+      "start_ticks": "172186585",
+      "absent": true
+    },
+    {
+      "pid": 2670680,
+      "start_ticks": "172189612",
+      "absent": true
+    },
+    {
+      "pid": 2658325,
+      "start_ticks": "172167659",
+      "absent": true
+    },
+    {
+      "pid": 2658361,
+      "start_ticks": "172167753",
+      "absent": true
+    },
+    {
+      "pid": 2658362,
+      "start_ticks": "172167754",
+      "absent": true
+    }
+  ],
+  "harness_pid_checks": [
+    {
+      "pid": 2644710,
+      "path_absent": true
+    },
+    {
+      "pid": 2658361,
+      "path_absent": true
+    },
+    {
+      "pid": 2661991,
+      "path_absent": true
+    },
+    {
+      "pid": 2665517,
+      "path_absent": true
+    },
+    {
+      "pid": 2668998,
+      "path_absent": true
+    }
+  ],
+  "independent_exact_name_scan": {
+    "manager": "/sys/fs/cgroup<USER_MANAGER>",
+    "directories": 33,
+    "remaining": []
+  },
+  "remaining_descendants": [],
+  "cleanup_unknown": false,
+  "all_stores_retained": true
+}

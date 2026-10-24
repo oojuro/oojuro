@@ -39,35 +39,30 @@ fn micros(seconds: i64) -> Result<i64> {
         .checked_mul(1_000_000)
         .ok_or_else(|| "benchmark timestamp exceeds native microsecond range".into())
 }
-fn document(row: &Record) -> Result<Doc> {
+fn document(mut row: Record) -> Result<Doc> {
     if row.valid_at % 1_000_000 != 0 {
         return Err("invalid imported timestamp units".into());
     }
     Ok(Doc {
-        id: row
-            .attrs
-            .get("benchmark_id")
-            .and_then(|v| v.as_str())
-            .ok_or("missing imported ID")?
-            .into(),
-        key: row
-            .attrs
-            .get("benchmark_key")
-            .and_then(|v| v.as_str())
-            .ok_or("missing imported key")?
-            .into(),
-        text: row.text.clone(),
+        id: match row.attrs.remove("benchmark_id") {
+            Some(serde_json::Value::String(id)) => id,
+            _ => return Err("missing imported ID".into()),
+        },
+        key: match row.attrs.remove("benchmark_key") {
+            Some(serde_json::Value::String(key)) => key,
+            _ => return Err("missing imported key".into()),
+        },
+        text: row.text,
         valid_at: row.valid_at / 1_000_000,
         recorded_at: row
             .attrs
-            .get("benchmark_known_at")
+            .remove("benchmark_known_at")
             .and_then(|v| v.as_i64())
             .ok_or("missing imported clock")?,
         meta: serde_json::from_value(
             row.attrs
-                .get("benchmark_meta")
-                .ok_or("missing imported metadata")?
-                .clone(),
+                .remove("benchmark_meta")
+                .ok_or("missing imported metadata")?,
         )?,
     })
 }
@@ -76,7 +71,7 @@ impl NativeRecordArm {
     fn log(&self) -> Result<&RecordLog> {
         self.log.as_ref().ok_or_else(|| "store not open".into())
     }
-    fn records(&self) -> Result<Vec<Record>> {
+    fn visit_records(&self, mut visit: impl FnMut(Record) -> Result<()>) -> Result<()> {
         let log = self.log()?;
         let view = native(View::open(log, scope(), AsOf::default()))?;
         let limits = Limits {
@@ -84,12 +79,21 @@ impl NativeRecordArm {
             bytes: record::MAX_OUTPUT_BYTES,
         };
         let mut page = native(view.range(log, Versions::All, Filter::default(), limits))?;
-        let mut rows = Vec::new();
         loop {
-            rows.extend(page.records);
+            for row in page.records {
+                visit(row)?;
+            }
             let Some(cursor) = page.next else { break };
             page = native(View::continue_page(log, scope(), &cursor, limits))?;
         }
+        Ok(())
+    }
+    fn records(&self) -> Result<Vec<Record>> {
+        let mut rows = Vec::new();
+        self.visit_records(|row| {
+            rows.push(row);
+            Ok(())
+        })?;
         Ok(rows)
     }
 }
@@ -126,8 +130,9 @@ impl Arm for NativeRecordArm {
             },
         ))?);
         for row in self.records()? {
-            let doc = document(&row)?;
-            if self.ids.insert(doc.id, row.id).is_some() {
+            let id = row.id;
+            let doc = document(row)?;
+            if self.ids.insert(doc.id, id).is_some() {
                 return Err("duplicate imported ID".into());
             }
         }
@@ -189,19 +194,21 @@ impl Arm for NativeRecordArm {
             return Ok(Vec::new());
         }
         let mut winners: BTreeMap<String, (u64, Doc)> = BTreeMap::new();
-        for row in self.records()? {
-            let doc = document(&row)?;
+        self.visit_records(|row| {
+            let id = row.id;
+            let doc = document(row)?;
             if doc.valid_at > query.valid_at || doc.recorded_at > query.known_at {
-                continue;
+                return Ok(());
             }
-            let order = (doc.valid_at, doc.recorded_at, row.id);
+            let order = (doc.valid_at, doc.recorded_at, id);
             if winners
                 .get(doc.key())
                 .is_none_or(|(seq, old)| order > (old.valid_at, old.recorded_at, *seq))
             {
-                winners.insert(doc.key().into(), (row.id, doc));
+                winners.insert(doc.key().into(), (id, doc));
             }
-        }
+            Ok(())
+        })?;
         let view = native(View::open(self.log()?, scope(), AsOf::default()))?;
         let binding = projection::Binding {
             namespace: view.watermark().origin,
@@ -274,7 +281,7 @@ impl Arm for NativeRecordArm {
                 && r.valid_at <= to.saturating_mul(1_000_000)
         });
         rows.sort_by_key(|r| (r.valid_at, r.id));
-        rows.iter().take(limit).map(document).collect()
+        rows.into_iter().take(limit).map(document).collect()
     }
     fn stats(&mut self) -> Result<serde_json::Value> {
         let view = native(View::open(self.log()?, scope(), AsOf::default()))?;
@@ -293,6 +300,80 @@ impl Arm for NativeRecordArm {
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn streamed_pages_preserve_metadata_and_cross_page_revision_winners() {
+        let dir = std::env::temp_dir().join(format!(
+            "oojuro-native-stream-{}-{}",
+            std::process::id(),
+            crate::sys::unique_suffix()
+        ));
+        let mut arm = NativeRecordArm::default();
+        arm.open(&dir, &BTreeMap::new()).unwrap();
+        let mut docs = vec![Doc {
+            id: "rev-old".into(),
+            key: "shared-key".into(),
+            text: "sessionwinner original\0\r\n".into(),
+            valid_at: -5,
+            recorded_at: -4,
+            meta: BTreeMap::from([("original".into(), "héllo\0\r\n".into())]),
+        }];
+        docs.extend((0..1001).rev().map(|n| Doc {
+            id: format!("background-{n}"),
+            key: format!("key-{n}"),
+            text: "unmatched background".into(),
+            valid_at: n,
+            recorded_at: n,
+            meta: BTreeMap::from([("ordinal".into(), n.to_string())]),
+        }));
+        for id in ["rev-new", "rev-tie"] {
+            docs.push(Doc {
+                id: id.into(),
+                key: "shared-key".into(),
+                text: format!("sessionwinner {id}\0 exact héllo"),
+                valid_at: 1002,
+                recorded_at: 2000,
+                meta: BTreeMap::from([("revision".into(), id.into())]),
+            });
+        }
+        arm.append_batch(&docs).unwrap();
+        let mut expected = docs.clone();
+        expected.sort_by_key(|doc| doc.valid_at);
+        let read_all = |arm: &mut NativeRecordArm| {
+            assert_eq!(
+                arm.get_range(i64::MIN, i64::MAX, docs.len()).unwrap(),
+                expected
+            );
+        };
+        read_all(&mut arm);
+        for (valid_at, known_at, id) in [
+            (1001, i64::MAX, "rev-old"),
+            (i64::MAX, 1999, "rev-old"),
+            (i64::MAX, 2000, "rev-tie"),
+        ] {
+            let hits = arm
+                .search(&SearchReq {
+                    text: "sessionwinner".into(),
+                    valid_at,
+                    known_at,
+                    k: 10,
+                    context: BTreeMap::new(),
+                })
+                .unwrap();
+            assert_eq!(hits.len(), 1);
+            assert_eq!(hits[0].id, id);
+            let original = docs.iter().find(|doc| doc.id == id).unwrap();
+            assert_eq!(
+                arm.get(&[id.into()]).unwrap(),
+                vec![Some(original.text.clone())]
+            );
+        }
+        arm.close().unwrap();
+        arm.open(&dir, &BTreeMap::new()).unwrap();
+        read_all(&mut arm);
+        arm.close().unwrap();
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
     #[test]
     fn imports_preserve_originals_without_replacing_native_ingest_clock() {
         let dir = std::env::temp_dir().join(format!(
@@ -316,7 +397,7 @@ mod tests {
         assert!(rows[0].recorded_at > 0);
         assert_ne!(rows[0].recorded_at, doc.recorded_at);
         assert_eq!(rows[0].valid_at, doc.valid_at * 1_000_000);
-        assert_eq!(document(&rows[0]).unwrap(), doc);
+        assert_eq!(document(rows.into_iter().next().unwrap()).unwrap(), doc);
         assert!(arm.append_batch(std::slice::from_ref(&doc)).is_err());
         assert_eq!(arm.records().unwrap().len(), 1);
         arm.close().unwrap();

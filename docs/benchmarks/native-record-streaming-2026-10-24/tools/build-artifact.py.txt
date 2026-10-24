@@ -1,0 +1,108 @@
+#!/usr/bin/python3 -I
+"""Build only: one exact streamed-adapter artifact plus two focused unit tests."""
+import argparse, hashlib, json, os, pathlib, re, resource, shutil, signal, subprocess, tempfile, time
+W = pathlib.Path(__file__).resolve().parents[2]
+OUT = W / "work/native-record-streaming-20261024"
+TOOLS = W / "work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin"
+SOURCES = {"after":("oojuro-core-streamed-records","ebc9771e8a9d9c018b61bf84743f47e3535b6e01")}
+def sha(p):
+    with pathlib.Path(p).open("rb") as f:return hashlib.file_digest(f,"sha256").hexdigest()
+def main():
+    label=argparse.ArgumentParser();label.add_argument("label",choices=SOURCES);a=label.parse_args()
+    tree,commit=SOURCES[a.label];root=W/"work"/tree;out=OUT/a.label
+    out.mkdir(mode=0o700) # never overwrite an uncertain prior attempt
+    cgtext=pathlib.Path("/proc/self/cgroup").read_text().strip()
+    assert re.fullmatch(r"0::<USER_MANAGER>/app.slice/oojuro-native-stream-build-"+a.label+r"-[0-9a-f]{16}\.service",cgtext)
+    cg=pathlib.Path("/sys/fs/cgroup")/cgtext.split("0::",1)[1].lstrip("/")
+    assert set((cg/"cgroup.procs").read_text().split())=={str(os.getpid())}
+    assert (cg/"memory.max").read_text().strip()==str(6<<30)
+    assert (cg/"pids.max").read_text().strip()=="512"
+    assert (cg/"memory.swap.max").read_text().strip()=="0"
+    assert subprocess.check_output(["git","rev-parse","HEAD"],cwd=root,text=True).strip()==commit
+    assert not subprocess.check_output(["git","status","--porcelain"],cwd=root,text=True)
+    scratch=pathlib.Path(tempfile.mkdtemp(prefix="ojcorebench-",dir="/var/tmp"));scratch.chmod(0o700)
+    target=OUT/("target-"+a.label);assert not target.exists()
+    resource.setrlimit(resource.RLIMIT_CORE,(0,0))
+    env=os.environ.copy()
+    for key in list(env):
+        if key.startswith(("CARGO_PROFILE_","CARGO_TARGET_")) or key in ["CARGO_ENCODED_RUSTFLAGS","RUSTC_WRAPPER","RUSTC_WORKSPACE_WRAPPER","RUSTC_BOOTSTRAP","RUSTUP_TOOLCHAIN","RUSTUP_HOME","CARGO_BUILD_TARGET"]:
+            env.pop(key,None)
+    env.update(PATH=str(TOOLS)+":"+str(W/"work/portable-key-build")+":<HOME>/.cargo/bin:"+env["PATH"],
+               RUSTC=str(TOOLS/"rustc"),RUSTDOC=str(TOOLS/"rustdoc"),CC=str(W/"work/portable-key-build/cc"),
+               CXX=str(W/"work/portable-key-build/c++"),CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER=str(W/"work/portable-key-build/cc"),
+               RUSTFLAGS="-C target-cpu=x86-64",CARGO_TARGET_DIR=str(target),CARGO_BUILD_JOBS="2",CARGO_NET_OFFLINE="true",
+               CARGO_TERM_COLOR="never",LC_ALL="C",TMPDIR=str(scratch),AWS_EC2_METADATA_DISABLED="true")
+    command=[str(TOOLS/"cargo"),"build","--offline","--locked","--release","--target","x86_64-unknown-linux-gnu","-j","2",
+             "-p","oojuro-bench","--bin","oojuro-bench","--no-default-features","--features","sqlite-arm","--message-format=json-render-diagnostics"]
+    receipt={"status":"started","source":commit,"worktree":str(root),"label":a.label,"command":command,"profile":"release",
+             "target":"x86_64-unknown-linux-gnu","requested_features":["sqlite-arm"],"cgroup":str(cg),"cgroup_text":cgtext,
+             "runtime_seconds":1200,"memory_bytes":6<<30,"tasks":512,"core_limit":0,"scratch":str(scratch),
+             "environment":{k:env[k] for k in ["RUSTC","RUSTDOC","CC","CXX","RUSTFLAGS","CARGO_TARGET_DIR","CARGO_BUILD_JOBS","CARGO_TARGET_X86_64_UNKNOWN_LINUX_GNU_LINKER"]},
+             "lock_sha256":sha(root/"Cargo.lock"),"driver_sha256":sha(__file__)}
+    def save():(out/"receipt.json").write_text(json.dumps(receipt,indent=2)+"\n")
+    proc=None;code=1;started=time.monotonic()
+    try:
+        receipt["tools"]={name:{"path":str(TOOLS/name),"sha256":sha(TOOLS/name),
+                         "version":subprocess.check_output([str(TOOLS/name),"-vV"],env=env,text=True)} for name in ["cargo","rustc"]}
+        assert receipt["tools"]["rustc"]["version"].startswith("rustc 1.99.1 ")
+        receipt["wrappers"]={name:sha(W/"work/portable-key-build"/name) for name in ["cc","c++"]}
+        save()
+        with (out/"cargo.jsonl").open("xb") as messages,(out/"cargo.stderr").open("xb") as errors:
+            proc=subprocess.Popen(command,cwd=root,env=env,stdout=messages,stderr=errors)
+            try:code=proc.wait(timeout=1130)
+            except subprocess.TimeoutExpired:receipt["timeout"]=True;raise
+        receipt["cargo_exit"]=code;save();assert code==0
+        messages=[json.loads(line) for line in (out/"cargo.jsonl").read_text().splitlines() if line.startswith("{")]
+        artifacts=[m for m in messages if m.get("reason")=="compiler-artifact"]
+        selected=[m for m in artifacts if m["target"]["src_path"] in [str(root/"crates/oojuro-bench/src/lib.rs"),str(root/"crates/oojuro-bench/src/main.rs")]]
+        assert len(selected)==2 and all(m["fresh"] is False and m["features"]==["sqlite-arm"] and m["profile"]["opt_level"]=="3" and m["profile"]["test"] is False for m in selected)
+        binary=next(m for m in selected if m["executable"] is not None)
+        frozen=out/"oojuro-bench";shutil.copyfile(binary["executable"],frozen);frozen.chmod(0o500)
+        receipt["selected_artifacts"]=selected
+        receipt["built_feature_inventory"]=[{"package":m["package_id"],"features":m["features"],"target":m["target"]["name"]} for m in artifacts]
+        assert not any("aws-" in m["package_id"] or "aws_" in m["package_id"] for m in artifacts)
+        header=subprocess.check_output(["readelf","-h",str(frozen)],text=True);assert "Advanced Micro Devices X86-64" in header
+        versions=subprocess.check_output(["readelf","--version-info",str(frozen)],text=True)
+        glibc=sorted(set(re.findall(r"GLIBC_([0-9.]+)",versions)),key=lambda v:tuple(map(int,v.split("."))))
+        assert glibc and tuple(map(int,glibc[-1].split(".")))<=(2,39)
+        receipt["binary"]={"path":str(frozen),"sha256":sha(frozen),"bytes":frozen.stat().st_size,"source":binary["target"]["src_path"],
+                           "fresh":False,"features":binary["features"],"glibc_versions":glibc,"readelf_header":header,
+                           "dynamic_section":subprocess.check_output(["readelf","-d",str(frozen)],text=True)}
+        treecmd=[str(TOOLS/"cargo"),"tree","--offline","--locked","--target","x86_64-unknown-linux-gnu","-p","oojuro-bench","--no-default-features","--features","sqlite-arm","-e","features"]
+        with (out/"features.txt").open("xb") as f:subprocess.run(treecmd,cwd=root,env=env,stdout=f,stderr=subprocess.PIPE,check=True,timeout=30)
+        testcmd=[str(TOOLS/"cargo"),"test","--offline","--locked","--release","--target","x86_64-unknown-linux-gnu","-j","2",
+                 "-p","oojuro-bench","--lib","--no-default-features","--features","sqlite-arm",
+                 "arms::native_record::tests::","--","--test-threads=1"]
+        receipt["test_command"]=testcmd;save()
+        remaining=1130-(time.monotonic()-started);assert remaining>0
+        with (out/"tests.stdout").open("xb") as stdout,(out/"tests.stderr").open("xb") as stderr:
+            proc=subprocess.Popen(testcmd,cwd=root,env=env,stdout=stdout,stderr=stderr)
+            testexit=proc.wait(timeout=min(300,remaining))
+        receipt["test_exit"]=testexit
+        counts=re.findall(r"test result: (ok|FAILED)\. (\d+) passed; (\d+) failed; (\d+) ignored;",(out/"tests.stdout").read_text())
+        receipt["test_counts"]=counts;save()
+        assert testexit==0 and counts==[("ok","2","0","0")]
+        receipt["status"]="artifact-frozen-two-adapter-tests-passed";code=0
+    except Exception as error:receipt["failure_class"]=type(error).__name__;receipt["status"]="build-or-qualification-refused";code=1
+    finally:
+        deadline=time.monotonic()+5
+        while True:
+            remaining={int(p) for p in (cg/"cgroup.procs").read_text().split()}-{os.getpid()}
+            for pid in remaining:
+                try:os.kill(pid,signal.SIGKILL)
+                except ProcessLookupError:pass
+            if not remaining or time.monotonic()>=deadline:break
+            time.sleep(.05)
+        if proc is not None and proc.poll() is None:proc.wait(timeout=5)
+        receipt["remaining_descendants"]=sorted(remaining);receipt["cleanup_unknown"]=bool(remaining)
+        if not remaining:
+            try:shutil.rmtree(scratch)
+            except OSError as error:receipt["cleanup_unknown"]=True;receipt["cleanup_error_class"]=type(error).__name__
+        receipt["scratch_removed"]=not scratch.exists()
+        if receipt["cleanup_unknown"] or not receipt["scratch_removed"]:code=1;receipt["status"]="cleanup-incomplete"
+        receipt["wall_seconds"]=round(time.monotonic()-started,3)
+        receipt["closed_logs"]={p.name:{"bytes":p.stat().st_size,"sha256":sha(p)} for p in out.iterdir() if p.is_file() and p.name!="receipt.json"}
+        save()
+    print(json.dumps({"label":a.label,"status":receipt["status"],"receipt":str(out/"receipt.json")}),flush=True)
+    return code
+if __name__=="__main__":raise SystemExit(main())

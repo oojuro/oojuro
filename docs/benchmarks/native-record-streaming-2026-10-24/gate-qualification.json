@@ -1,0 +1,21 @@
+{
+  "status": "passed",
+  "source_before": "f726bab51d982896a129d4bdf2fd2d3a2edc2fff",
+  "source_after": "ebc9771e8a9d9c018b61bf84743f47e3535b6e01",
+  "artifact_before": "a4b861d7049c6125f8b42b59fba98fa19775a44fbdbc79c06f452cb6d3086a51",
+  "artifact_after": "5c56be5874a2c56d7d7db5d1d47c1db4ac633de8615ae94442cb3fd1f57c9f87",
+  "gates_per_arm": 7,
+  "gates_passed": 14,
+  "crash_trials_total": 6,
+  "acked_records_total": 1200,
+  "scope_count": 24,
+  "scope_pid_cleanup_independent": true,
+  "outer_cgroup_absent": true,
+  "live_outer_pid_observed": false,
+  "observer_failure_retained": "gate-live-observer-failure.json",
+  "receipt_sha256": "d45db192cf89bb41e8bafe60a7c5b4de19c2492ddf7bf4103a471ccf30274258",
+  "card_sha256": "0e0efd3dfa89a3579b1bd8d6ab0e15174d394e15c5775f83fdaa18b758e95a9a",
+  "outside_cleanup_sha256": "b1eb5dd057762feef7561771a6068eca28b36d0eeaa5596705943ac5149a5955",
+  "driver_wall_seconds": 5.051,
+  "timing_dispatched": false
+}

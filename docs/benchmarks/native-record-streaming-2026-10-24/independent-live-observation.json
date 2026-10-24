@@ -1,0 +1,5 @@
+{
+  "utc": "2026-10-24T05:40:15.017Z",
+  "stdout": "LoadState=loaded\nActiveState=active\nSubState=running\nInvocationID=41dc4073976044b58e256a1484737f27\nTimeoutStopUSec=5s\nRuntimeMaxUSec=42min\nMainPID=2658325\nControlGroup=<USER_MANAGER>/app.slice/oojuro-native-stream-workload-09dcbe2dc27910b2.service\nMemoryMax=6442450944\nMemorySwapMax=0\nTasksMax=512\nLimitCORE=0\nKillMode=control-group\n",
+  "stderr": ""
+}

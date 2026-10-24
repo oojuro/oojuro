@@ -1,0 +1,6 @@
+
+running 2 tests
+test arms::native_record::tests::imports_preserve_originals_without_replacing_native_ingest_clock ... ok
+test arms::native_record::tests::streamed_pages_preserve_metadata_and_cross_page_revision_winners ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 3 filtered out; finished in 0.06s
