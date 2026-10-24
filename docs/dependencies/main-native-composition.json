@@ -1,0 +1,2855 @@
+{
+  "actual_linked_native_libraries": "not measured for composition; existing zstd/ring/pure BLAKE3 implementation selection preserved",
+  "artifacts": {
+    "after": {
+      "archive": "docs/dependencies/main-native-after.json.gz",
+      "dirty": false,
+      "gzip_bytes": 99672,
+      "gzip_sha256": "1f5c115dfb5a6002b907aebc21a557da572d63345076c1325d826fd44c69ea9b",
+      "json_bytes": 1404840,
+      "json_sha256": "d9e35df6ea83ba46ff944601b5f568ef0f4609c7ba1d9bc04cc2b9a0dcfbf475",
+      "source": "0e7e276b9eb376f37084616a3b0d900e41057cbd"
+    },
+    "before": {
+      "archive": "docs/dependencies/main-native-before.json.gz",
+      "dirty": false,
+      "gzip_bytes": 128721,
+      "gzip_sha256": "b8368a1cce837aabf9ee788f8aa52b23c06e2f6c684a904aae298fddb321b87b",
+      "json_bytes": 1718596,
+      "json_sha256": "2645859ecc467dd01f33fbd674752fa3f68d50874b8f68466bcedb6405e2b3fd",
+      "source": "ba144d90d396b680122f1e93c808c724844ef2c8"
+    }
+  },
+  "base": "ba144d90d396b680122f1e93c808c724844ef2c8",
+  "branch": "codex/main-native-dependency-policy",
+  "cargo_observed": "cargo 1.99.0 (5f94df478 2026-08-27)\n",
+  "comparators": {
+    "bench": {
+      "after": {
+        "build-only-closure-additions": {
+          "external": 8,
+          "packages": [
+            "autocfg@1.5.1",
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "vcpkg@0.2.15",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 267,
+          "external": 145,
+          "feature_roots": {
+            "oojuro-bench@0.1.0": [
+              "default",
+              "sqlite-arm",
+              "tantivy-arm"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-bench"
+          ],
+          "set_sha256": "45be0ba454650ecbb65bae260576baedd36dc2a1672bc6b3da7134202f14b428",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 151,
+          "workspace": 6
+        },
+        "normal,build": {
+          "edges": 281,
+          "external": 153,
+          "feature_roots": {
+            "oojuro-bench@0.1.0": [
+              "default",
+              "sqlite-arm",
+              "tantivy-arm"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-bench"
+          ],
+          "set_sha256": "dbfe14c8bec89be4161f6f393720e42c83621f39bd5a76071c9c331e49861063",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 159,
+          "workspace": 6
+        },
+        "normal,build,dev": {
+          "edges": 281,
+          "external": 153,
+          "feature_roots": {
+            "oojuro-bench@0.1.0": [
+              "default",
+              "sqlite-arm",
+              "tantivy-arm"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-bench"
+          ],
+          "set_sha256": "dbfe14c8bec89be4161f6f393720e42c83621f39bd5a76071c9c331e49861063",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 159,
+          "workspace": 6
+        }
+      },
+      "before": {
+        "build-only-closure-additions": {
+          "external": 8,
+          "packages": [
+            "autocfg@1.5.1",
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "vcpkg@0.2.15",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 269,
+          "external": 146,
+          "feature_roots": {
+            "oojuro-bench@0.1.0": [
+              "default",
+              "sqlite-arm",
+              "tantivy-arm"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-bench"
+          ],
+          "set_sha256": "1425abd4a34c6bdcd122693e10886c550400288d0121d3f4e22bf9263b725323",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 152,
+          "workspace": 6
+        },
+        "normal,build": {
+          "edges": 283,
+          "external": 154,
+          "feature_roots": {
+            "oojuro-bench@0.1.0": [
+              "default",
+              "sqlite-arm",
+              "tantivy-arm"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-bench"
+          ],
+          "set_sha256": "4b628886e3a41fd32a07e1b620476e4fa696e94dc731c7218d2a542fcec6a862",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 160,
+          "workspace": 6
+        },
+        "normal,build,dev": {
+          "edges": 283,
+          "external": 154,
+          "feature_roots": {
+            "oojuro-bench@0.1.0": [
+              "default",
+              "sqlite-arm",
+              "tantivy-arm"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-bench"
+          ],
+          "set_sha256": "4b628886e3a41fd32a07e1b620476e4fa696e94dc731c7218d2a542fcec6a862",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 160,
+          "workspace": 6
+        }
+      }
+    },
+    "capture": {
+      "after": {
+        "build-only-closure-additions": {
+          "external": 6,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 114,
+          "external": 50,
+          "feature_roots": {
+            "oojuro-capture@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-capture"
+          ],
+          "set_sha256": "f478f5627044d82d69a9f680cf686636ef6325539d0dbf3eb8cfd4286292d569",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 57,
+          "workspace": 7
+        },
+        "normal,build": {
+          "edges": 124,
+          "external": 56,
+          "feature_roots": {
+            "oojuro-capture@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-capture"
+          ],
+          "set_sha256": "9f10b05878443359fe311e2032ec1752d36e01faa3ccb63d1ae01dacfc1547ce",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 63,
+          "workspace": 7
+        },
+        "normal,build,dev": {
+          "edges": 124,
+          "external": 56,
+          "feature_roots": {
+            "oojuro-capture@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-capture"
+          ],
+          "set_sha256": "9f10b05878443359fe311e2032ec1752d36e01faa3ccb63d1ae01dacfc1547ce",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 63,
+          "workspace": 7
+        }
+      },
+      "before": {
+        "build-only-closure-additions": {
+          "external": 6,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 116,
+          "external": 51,
+          "feature_roots": {
+            "oojuro-capture@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-capture"
+          ],
+          "set_sha256": "dc8c43dbc305c03065e2504a0926cc487ce390da44ab99d128b5160454c18db6",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 58,
+          "workspace": 7
+        },
+        "normal,build": {
+          "edges": 126,
+          "external": 57,
+          "feature_roots": {
+            "oojuro-capture@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-capture"
+          ],
+          "set_sha256": "23d38c3e9a7938fb68a44b70b85ee5835b6a00c8d10957d828722f06b80df1e4",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 64,
+          "workspace": 7
+        },
+        "normal,build,dev": {
+          "edges": 126,
+          "external": 57,
+          "feature_roots": {
+            "oojuro-capture@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-capture"
+          ],
+          "set_sha256": "23d38c3e9a7938fb68a44b70b85ee5835b6a00c8d10957d828722f06b80df1e4",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 64,
+          "workspace": 7
+        }
+      }
+    },
+    "cli": {
+      "after": {
+        "build-only-closure-additions": {
+          "external": 6,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 374,
+          "external": 145,
+          "feature_roots": {
+            "oojuro@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro"
+          ],
+          "set_sha256": "743e6c63f4a343899019394fa876634b57fda13a11866b78a892f94f194eaddd",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 154,
+          "workspace": 9
+        },
+        "normal,build": {
+          "edges": 384,
+          "external": 151,
+          "feature_roots": {
+            "oojuro@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro"
+          ],
+          "set_sha256": "2f2bd355253fc771891af516b91744f0daf1c50b1cc3a8a3594f4bd33c4b227c",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 160,
+          "workspace": 9
+        },
+        "normal,build,dev": {
+          "edges": 384,
+          "external": 151,
+          "feature_roots": {
+            "oojuro@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro"
+          ],
+          "set_sha256": "2f2bd355253fc771891af516b91744f0daf1c50b1cc3a8a3594f4bd33c4b227c",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 160,
+          "workspace": 9
+        }
+      },
+      "before": {
+        "build-only-closure-additions": {
+          "external": 6,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 376,
+          "external": 146,
+          "feature_roots": {
+            "oojuro@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro"
+          ],
+          "set_sha256": "785064f63a5fcae36ff07b871ef67bf556d7e2f63bf44b91b8c3a2db2630baf6",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 155,
+          "workspace": 9
+        },
+        "normal,build": {
+          "edges": 386,
+          "external": 152,
+          "feature_roots": {
+            "oojuro@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro"
+          ],
+          "set_sha256": "8b7c4e748c1d0ea37367bd287bdc4eafbefd31bad1969f652f628973fffcfde3",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 161,
+          "workspace": 9
+        },
+        "normal,build,dev": {
+          "edges": 386,
+          "external": 152,
+          "feature_roots": {
+            "oojuro@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro"
+          ],
+          "set_sha256": "8b7c4e748c1d0ea37367bd287bdc4eafbefd31bad1969f652f628973fffcfde3",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 161,
+          "workspace": 9
+        }
+      }
+    },
+    "default": {
+      "after": {
+        "build-only-closure-additions": {
+          "external": 6,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 1,
+          "packages": [
+            "memmap2@0.9.11",
+            "oojuro-core@0.1.0",
+            "oojuro-nine@0.1.0",
+            "oojuro-trace@0.1.0"
+          ],
+          "workspace": 3
+        },
+        "normal": {
+          "edges": 68,
+          "external": 43,
+          "feature_roots": {
+            "oojuro-engine@0.1.0": [],
+            "oojuro-rank@0.1.0": [],
+            "oojuro-store@0.1.0": []
+          },
+          "selection": [],
+          "set_sha256": "edd93fd7b9db3c65c2d6dc719478be1117c6b18e0578374f0354762bfecce99e",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 46,
+          "workspace": 3
+        },
+        "normal,build": {
+          "edges": 78,
+          "external": 49,
+          "feature_roots": {
+            "oojuro-engine@0.1.0": [],
+            "oojuro-rank@0.1.0": [],
+            "oojuro-store@0.1.0": []
+          },
+          "selection": [],
+          "set_sha256": "650627b101c4b72597b5d44b7c2607fa3cc8822d64033a5323553bff1a164f35",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 52,
+          "workspace": 3
+        },
+        "normal,build,dev": {
+          "edges": 104,
+          "external": 50,
+          "feature_roots": {
+            "oojuro-engine@0.1.0": [],
+            "oojuro-rank@0.1.0": [],
+            "oojuro-store@0.1.0": []
+          },
+          "selection": [],
+          "set_sha256": "19af42eaadc77c113d235d0397f2159d40cb2a376b9e012aa7ebc846901894b4",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 56,
+          "workspace": 6
+        }
+      },
+      "before": {
+        "build-only-closure-additions": {
+          "external": 15,
+          "packages": [
+            "autocfg@1.5.1",
+            "bindgen@0.72.1",
+            "cc@1.8.0",
+            "cexpr@0.6.0",
+            "clang-sys@1.9.1",
+            "find-msvc-tools@0.1.14",
+            "glob@0.3.4",
+            "itertools@0.13.0",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "rustflags@0.1.7",
+            "shlex@1.3.0",
+            "shlex@2.0.1",
+            "vcpkg@0.2.15",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 3,
+          "packages": [
+            "bytemuck@1.25.2",
+            "fst@0.4.7",
+            "roaring@0.11.5"
+          ],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 692,
+          "external": 287,
+          "feature_roots": {
+            "oojuro-bench@0.1.0": [
+              "default",
+              "sqlite-arm",
+              "tantivy-arm"
+            ],
+            "oojuro-capture@0.1.0": [],
+            "oojuro-core@0.1.0": [],
+            "oojuro-engine@0.1.0": [],
+            "oojuro-nine@0.1.0": [],
+            "oojuro-proxy@0.1.0": [],
+            "oojuro-rank@0.1.0": [],
+            "oojuro-store@0.1.0": [],
+            "oojuro-trace@0.1.0": [],
+            "oojuro-tracebench@0.1.0": [
+              "arm-fjall",
+              "arm-redb",
+              "arm-rocksdb",
+              "arm-tantivy",
+              "default"
+            ],
+            "oojuro@0.1.0": []
+          },
+          "selection": [],
+          "set_sha256": "161c0c2168a81affa81bafb23305ed1b9e607c8ae6eb3407ff0bff84019be6fd",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 298,
+          "workspace": 11
+        },
+        "normal,build": {
+          "edges": 724,
+          "external": 302,
+          "feature_roots": {
+            "oojuro-bench@0.1.0": [
+              "default",
+              "sqlite-arm",
+              "tantivy-arm"
+            ],
+            "oojuro-capture@0.1.0": [],
+            "oojuro-core@0.1.0": [],
+            "oojuro-engine@0.1.0": [],
+            "oojuro-nine@0.1.0": [],
+            "oojuro-proxy@0.1.0": [],
+            "oojuro-rank@0.1.0": [],
+            "oojuro-store@0.1.0": [],
+            "oojuro-trace@0.1.0": [],
+            "oojuro-tracebench@0.1.0": [
+              "arm-fjall",
+              "arm-redb",
+              "arm-rocksdb",
+              "arm-tantivy",
+              "default"
+            ],
+            "oojuro@0.1.0": []
+          },
+          "selection": [],
+          "set_sha256": "d5bf836e28228f4f7ea90e8ac8a5d62f7b7612e321b90e7723ef1845813a03d6",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 313,
+          "workspace": 11
+        },
+        "normal,build,dev": {
+          "edges": 735,
+          "external": 305,
+          "feature_roots": {
+            "oojuro-bench@0.1.0": [
+              "default",
+              "sqlite-arm",
+              "tantivy-arm"
+            ],
+            "oojuro-capture@0.1.0": [],
+            "oojuro-core@0.1.0": [],
+            "oojuro-engine@0.1.0": [],
+            "oojuro-nine@0.1.0": [],
+            "oojuro-proxy@0.1.0": [],
+            "oojuro-rank@0.1.0": [],
+            "oojuro-store@0.1.0": [],
+            "oojuro-trace@0.1.0": [],
+            "oojuro-tracebench@0.1.0": [
+              "arm-fjall",
+              "arm-redb",
+              "arm-rocksdb",
+              "arm-tantivy",
+              "default"
+            ],
+            "oojuro@0.1.0": []
+          },
+          "selection": [],
+          "set_sha256": "26a1ecd43b330c4e5c1a51d89424f9471179d13fe0909cb7a03eb987c467f7db",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 316,
+          "workspace": 11
+        }
+      }
+    },
+    "engine": {
+      "after": {
+        "build-only-closure-additions": {
+          "external": 6,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 1,
+          "packages": [
+            "memmap2@0.9.11",
+            "oojuro-core@0.1.0",
+            "oojuro-nine@0.1.0",
+            "oojuro-trace@0.1.0"
+          ],
+          "workspace": 3
+        },
+        "normal": {
+          "edges": 68,
+          "external": 43,
+          "feature_roots": {
+            "oojuro-engine@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-engine"
+          ],
+          "set_sha256": "edd93fd7b9db3c65c2d6dc719478be1117c6b18e0578374f0354762bfecce99e",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 46,
+          "workspace": 3
+        },
+        "normal,build": {
+          "edges": 78,
+          "external": 49,
+          "feature_roots": {
+            "oojuro-engine@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-engine"
+          ],
+          "set_sha256": "650627b101c4b72597b5d44b7c2607fa3cc8822d64033a5323553bff1a164f35",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 52,
+          "workspace": 3
+        },
+        "normal,build,dev": {
+          "edges": 104,
+          "external": 50,
+          "feature_roots": {
+            "oojuro-engine@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-engine"
+          ],
+          "set_sha256": "19af42eaadc77c113d235d0397f2159d40cb2a376b9e012aa7ebc846901894b4",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 56,
+          "workspace": 6
+        }
+      },
+      "before": {
+        "build-only-closure-additions": {
+          "external": 6,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 1,
+          "packages": [
+            "memmap2@0.9.11",
+            "oojuro-core@0.1.0",
+            "oojuro-nine@0.1.0",
+            "oojuro-trace@0.1.0"
+          ],
+          "workspace": 3
+        },
+        "normal": {
+          "edges": 70,
+          "external": 44,
+          "feature_roots": {
+            "oojuro-engine@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-engine"
+          ],
+          "set_sha256": "9e4c87ee9cf67f3f0a077fea9cebf51cce95284d4423952da9ecf672ac938fe8",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 47,
+          "workspace": 3
+        },
+        "normal,build": {
+          "edges": 80,
+          "external": 50,
+          "feature_roots": {
+            "oojuro-engine@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-engine"
+          ],
+          "set_sha256": "33d6ee9fa78cf5958482cf035fe24608971598c0aa8d0ed74f14b5a49b046095",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 53,
+          "workspace": 3
+        },
+        "normal,build,dev": {
+          "edges": 106,
+          "external": 51,
+          "feature_roots": {
+            "oojuro-engine@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-engine"
+          ],
+          "set_sha256": "bb1c4826f42bf0e205ccfab09503bbc0180b16e46f6c5272cef700232a0ed729",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 57,
+          "workspace": 6
+        }
+      }
+    },
+    "engine-all-platforms": {
+      "after": {
+        "normal,build": {
+          "edges": 98,
+          "external": 62,
+          "feature_roots": {
+            "oojuro-engine@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-engine"
+          ],
+          "set_sha256": "6ce952551fb07f96ef4b335fedb808cffaf63a75e39971534d96dac6184fbeaa",
+          "target": "all",
+          "total": 65,
+          "workspace": 3
+        }
+      },
+      "before": {
+        "normal,build": {
+          "edges": 100,
+          "external": 63,
+          "feature_roots": {
+            "oojuro-engine@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-engine"
+          ],
+          "set_sha256": "d96fe60e6f34ec1360afc50ff46233bd176c7e062142312f791b1a6c1f6e74bf",
+          "target": "all",
+          "total": 66,
+          "workspace": 3
+        }
+      }
+    },
+    "legacy-core": {
+      "after": {
+        "build-only-closure-additions": {
+          "external": 3,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "shlex@2.0.1"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 24,
+          "external": 18,
+          "feature_roots": {
+            "oojuro-core@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-core"
+          ],
+          "set_sha256": "a39958a4f66dd3f358bf738850dcb931eb1ef9384d7f4638d521e47bc153d21e",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 19,
+          "workspace": 1
+        },
+        "normal,build": {
+          "edges": 27,
+          "external": 21,
+          "feature_roots": {
+            "oojuro-core@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-core"
+          ],
+          "set_sha256": "844dc6f87f31645b5d29d9b7a33f7c21e9baab7676e04bea5f0333cb115f55c5",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 22,
+          "workspace": 1
+        },
+        "normal,build,dev": {
+          "edges": 27,
+          "external": 21,
+          "feature_roots": {
+            "oojuro-core@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-core"
+          ],
+          "set_sha256": "844dc6f87f31645b5d29d9b7a33f7c21e9baab7676e04bea5f0333cb115f55c5",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 22,
+          "workspace": 1
+        }
+      },
+      "before": {
+        "build-only-closure-additions": {
+          "external": 3,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "shlex@2.0.1"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 25,
+          "external": 19,
+          "feature_roots": {
+            "oojuro-core@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-core"
+          ],
+          "set_sha256": "99102e84cc9c9648b52e004e947535d460bbc1804ae6ebf8e5ccbd1f2abdf35e",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 20,
+          "workspace": 1
+        },
+        "normal,build": {
+          "edges": 28,
+          "external": 22,
+          "feature_roots": {
+            "oojuro-core@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-core"
+          ],
+          "set_sha256": "64802d5f3a8d1faa5432efe42b705aad7210fd163768811e2289c7acb29bbd4b",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 23,
+          "workspace": 1
+        },
+        "normal,build,dev": {
+          "edges": 28,
+          "external": 22,
+          "feature_roots": {
+            "oojuro-core@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-core"
+          ],
+          "set_sha256": "64802d5f3a8d1faa5432efe42b705aad7210fd163768811e2289c7acb29bbd4b",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 23,
+          "workspace": 1
+        }
+      }
+    },
+    "legacy-nine": {
+      "after": {
+        "build-only-closure-additions": {
+          "external": 3,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "shlex@2.0.1"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 6,
+          "packages": [
+            "bitpacking@0.9.3",
+            "bytemuck@1.25.2",
+            "byteorder@1.5.0",
+            "crunchy@0.2.4",
+            "fst@0.4.7",
+            "roaring@0.11.5"
+          ],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 35,
+          "external": 21,
+          "feature_roots": {
+            "oojuro-nine@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-nine"
+          ],
+          "set_sha256": "35750e53edcb467976effbf4839a26c058f388c23720fdeab3a7bcc0c3cca40a",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 23,
+          "workspace": 2
+        },
+        "normal,build": {
+          "edges": 38,
+          "external": 24,
+          "feature_roots": {
+            "oojuro-nine@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-nine"
+          ],
+          "set_sha256": "cd56831a4934ad8dcfabf5c72f0697a8fe47b20cac6148b9e30076dba7ba7928",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 26,
+          "workspace": 2
+        },
+        "normal,build,dev": {
+          "edges": 44,
+          "external": 30,
+          "feature_roots": {
+            "oojuro-nine@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-nine"
+          ],
+          "set_sha256": "3fb5bd10f65aeb80aecfc7964b997dd53a7a4cdb14bf4657f465142652399b9a",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 32,
+          "workspace": 2
+        }
+      },
+      "before": {
+        "build-only-closure-additions": {
+          "external": 3,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "shlex@2.0.1"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 6,
+          "packages": [
+            "bitpacking@0.9.3",
+            "bytemuck@1.25.2",
+            "byteorder@1.5.0",
+            "crunchy@0.2.4",
+            "fst@0.4.7",
+            "roaring@0.11.5"
+          ],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 36,
+          "external": 22,
+          "feature_roots": {
+            "oojuro-nine@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-nine"
+          ],
+          "set_sha256": "467ba1a5287769a96ae0189e231cc4938388da2c7cf37fb2712b809292b89e8e",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 24,
+          "workspace": 2
+        },
+        "normal,build": {
+          "edges": 39,
+          "external": 25,
+          "feature_roots": {
+            "oojuro-nine@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-nine"
+          ],
+          "set_sha256": "bb679b7ef10dcf5bdd9f2b3223c4fccea6e347688e7f5f991b6e445c36bbb0f3",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 27,
+          "workspace": 2
+        },
+        "normal,build,dev": {
+          "edges": 45,
+          "external": 31,
+          "feature_roots": {
+            "oojuro-nine@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-nine"
+          ],
+          "set_sha256": "dc7d64003f9ab7bcc147c1d1ce0317d3bb6b7a08d55cbc4c89a5a4f7042db4f2",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 33,
+          "workspace": 2
+        }
+      }
+    },
+    "legacy-trace": {
+      "after": {
+        "build-only-closure-additions": {
+          "external": 6,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 79,
+          "external": 42,
+          "feature_roots": {
+            "oojuro-trace@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-trace"
+          ],
+          "set_sha256": "ada242e0ed0333e027fe0b04cd5b0b29285351afef7476db01384179bb7a6c5a",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 46,
+          "workspace": 4
+        },
+        "normal,build": {
+          "edges": 88,
+          "external": 48,
+          "feature_roots": {
+            "oojuro-trace@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-trace"
+          ],
+          "set_sha256": "7700474f00246e07e4391503c1630bd9b2e7bf4091b9884497d88d50767e5efc",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 52,
+          "workspace": 4
+        },
+        "normal,build,dev": {
+          "edges": 89,
+          "external": 48,
+          "feature_roots": {
+            "oojuro-trace@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-trace"
+          ],
+          "set_sha256": "7700474f00246e07e4391503c1630bd9b2e7bf4091b9884497d88d50767e5efc",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 52,
+          "workspace": 4
+        }
+      },
+      "before": {
+        "build-only-closure-additions": {
+          "external": 6,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 81,
+          "external": 43,
+          "feature_roots": {
+            "oojuro-trace@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-trace"
+          ],
+          "set_sha256": "fc8668d7aed6f1156c092480c185f39fd2f697fc7a2fbec7fc109b6a6ec002cc",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 47,
+          "workspace": 4
+        },
+        "normal,build": {
+          "edges": 90,
+          "external": 49,
+          "feature_roots": {
+            "oojuro-trace@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-trace"
+          ],
+          "set_sha256": "9837831235481d25bed126c2415e388dfc5a0bd84cba8784aff4de75202378e1",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 53,
+          "workspace": 4
+        },
+        "normal,build,dev": {
+          "edges": 91,
+          "external": 49,
+          "feature_roots": {
+            "oojuro-trace@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-trace"
+          ],
+          "set_sha256": "9837831235481d25bed126c2415e388dfc5a0bd84cba8784aff4de75202378e1",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 53,
+          "workspace": 4
+        }
+      }
+    },
+    "proxy": {
+      "after": {
+        "build-only-closure-additions": {
+          "external": 6,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 211,
+          "external": 88,
+          "feature_roots": {
+            "oojuro-proxy@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-proxy"
+          ],
+          "set_sha256": "ed432b4fcbcb298fea4e97d61c71829dc3c944807fac170c990c80f98ed8cff9",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 96,
+          "workspace": 8
+        },
+        "normal,build": {
+          "edges": 221,
+          "external": 94,
+          "feature_roots": {
+            "oojuro-proxy@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-proxy"
+          ],
+          "set_sha256": "a29d4990e86478f10a06bde44b2319e0952492e66a07c4a7393f760a4b1453cf",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 102,
+          "workspace": 8
+        },
+        "normal,build,dev": {
+          "edges": 222,
+          "external": 94,
+          "feature_roots": {
+            "oojuro-proxy@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-proxy"
+          ],
+          "set_sha256": "a29d4990e86478f10a06bde44b2319e0952492e66a07c4a7393f760a4b1453cf",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 102,
+          "workspace": 8
+        }
+      },
+      "before": {
+        "build-only-closure-additions": {
+          "external": 6,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 213,
+          "external": 89,
+          "feature_roots": {
+            "oojuro-proxy@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-proxy"
+          ],
+          "set_sha256": "48aee1a0a85b0ee56c5d1361d6beafc0ce58c5efe530ceefdd3dbe971d343f14",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 97,
+          "workspace": 8
+        },
+        "normal,build": {
+          "edges": 223,
+          "external": 95,
+          "feature_roots": {
+            "oojuro-proxy@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-proxy"
+          ],
+          "set_sha256": "341311d60c86276ef7875e241f8463c2ae50d816ff6f6066ee7d68af110c6194",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 103,
+          "workspace": 8
+        },
+        "normal,build,dev": {
+          "edges": 224,
+          "external": 95,
+          "feature_roots": {
+            "oojuro-proxy@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-proxy"
+          ],
+          "set_sha256": "341311d60c86276ef7875e241f8463c2ae50d816ff6f6066ee7d68af110c6194",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 103,
+          "workspace": 8
+        }
+      }
+    },
+    "rank": {
+      "after": {
+        "build-only-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 0,
+          "external": 0,
+          "feature_roots": {
+            "oojuro-rank@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-rank"
+          ],
+          "set_sha256": "7a78c510f505350c8ad550935a98cdf8429debf529386fe8d0fb8c1736b27837",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 1,
+          "workspace": 1
+        },
+        "normal,build": {
+          "edges": 0,
+          "external": 0,
+          "feature_roots": {
+            "oojuro-rank@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-rank"
+          ],
+          "set_sha256": "7a78c510f505350c8ad550935a98cdf8429debf529386fe8d0fb8c1736b27837",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 1,
+          "workspace": 1
+        },
+        "normal,build,dev": {
+          "edges": 0,
+          "external": 0,
+          "feature_roots": {
+            "oojuro-rank@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-rank"
+          ],
+          "set_sha256": "7a78c510f505350c8ad550935a98cdf8429debf529386fe8d0fb8c1736b27837",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 1,
+          "workspace": 1
+        }
+      },
+      "before": {
+        "build-only-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 0,
+          "external": 0,
+          "feature_roots": {
+            "oojuro-rank@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-rank"
+          ],
+          "set_sha256": "7a78c510f505350c8ad550935a98cdf8429debf529386fe8d0fb8c1736b27837",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 1,
+          "workspace": 1
+        },
+        "normal,build": {
+          "edges": 0,
+          "external": 0,
+          "feature_roots": {
+            "oojuro-rank@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-rank"
+          ],
+          "set_sha256": "7a78c510f505350c8ad550935a98cdf8429debf529386fe8d0fb8c1736b27837",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 1,
+          "workspace": 1
+        },
+        "normal,build,dev": {
+          "edges": 0,
+          "external": 0,
+          "feature_roots": {
+            "oojuro-rank@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-rank"
+          ],
+          "set_sha256": "7a78c510f505350c8ad550935a98cdf8429debf529386fe8d0fb8c1736b27837",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 1,
+          "workspace": 1
+        }
+      }
+    },
+    "store": {
+      "after": {
+        "build-only-closure-additions": {
+          "external": 6,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 39,
+          "external": 28,
+          "feature_roots": {
+            "oojuro-store@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-store"
+          ],
+          "set_sha256": "be86943f0458550244e0d870aff7ed3ca73b24b011a22d8c864062ecb99c4451",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 29,
+          "workspace": 1
+        },
+        "normal,build": {
+          "edges": 48,
+          "external": 34,
+          "feature_roots": {
+            "oojuro-store@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-store"
+          ],
+          "set_sha256": "9652e962c16dba030f0aae3ab04f6615b89b9117b14257034ff1335130ea17be",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 35,
+          "workspace": 1
+        },
+        "normal,build,dev": {
+          "edges": 48,
+          "external": 34,
+          "feature_roots": {
+            "oojuro-store@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-store"
+          ],
+          "set_sha256": "9652e962c16dba030f0aae3ab04f6615b89b9117b14257034ff1335130ea17be",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 35,
+          "workspace": 1
+        }
+      },
+      "before": {
+        "build-only-closure-additions": {
+          "external": 6,
+          "packages": [
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 45,
+          "external": 34,
+          "feature_roots": {
+            "oojuro-store@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-store"
+          ],
+          "set_sha256": "817eaf19719131fa2e488cd6d2d1ece2786ab97bd27cf25690764e502fda7b1e",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 35,
+          "workspace": 1
+        },
+        "normal,build": {
+          "edges": 54,
+          "external": 40,
+          "feature_roots": {
+            "oojuro-store@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-store"
+          ],
+          "set_sha256": "bba3f3beaf2ac52858a645b0d5cdbcc087b1df57686de6fd1d4d82735a1ccd75",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 41,
+          "workspace": 1
+        },
+        "normal,build,dev": {
+          "edges": 54,
+          "external": 40,
+          "feature_roots": {
+            "oojuro-store@0.1.0": []
+          },
+          "selection": [
+            "-p",
+            "oojuro-store"
+          ],
+          "set_sha256": "bba3f3beaf2ac52858a645b0d5cdbcc087b1df57686de6fd1d4d82735a1ccd75",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 41,
+          "workspace": 1
+        }
+      }
+    },
+    "store-tools": {
+      "after": {
+        "build-only-closure-additions": {
+          "external": 8,
+          "packages": [
+            "autocfg@1.5.1",
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "vcpkg@0.2.15",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 384,
+          "external": 209,
+          "feature_roots": {
+            "oojuro-store@0.1.0": [
+              "baselines",
+              "bench-tools",
+              "codecs"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-store",
+            "--features",
+            "baselines,codecs"
+          ],
+          "set_sha256": "18b81a8721f4296aa6f34982b8c881f9baf42fa3ea45e356964c0a3643332c18",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 212,
+          "workspace": 3
+        },
+        "normal,build": {
+          "edges": 401,
+          "external": 217,
+          "feature_roots": {
+            "oojuro-store@0.1.0": [
+              "baselines",
+              "bench-tools",
+              "codecs"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-store",
+            "--features",
+            "baselines,codecs"
+          ],
+          "set_sha256": "093135f9575ab3462c71fd51e15db71438c769900151312b90cb2268d9ec91de",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 220,
+          "workspace": 3
+        },
+        "normal,build,dev": {
+          "edges": 401,
+          "external": 217,
+          "feature_roots": {
+            "oojuro-store@0.1.0": [
+              "baselines",
+              "bench-tools",
+              "codecs"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-store",
+            "--features",
+            "baselines,codecs"
+          ],
+          "set_sha256": "093135f9575ab3462c71fd51e15db71438c769900151312b90cb2268d9ec91de",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 220,
+          "workspace": 3
+        }
+      },
+      "before": {
+        "build-only-closure-additions": {
+          "external": 8,
+          "packages": [
+            "autocfg@1.5.1",
+            "cc@1.8.0",
+            "find-msvc-tools@0.1.14",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "shlex@2.0.1",
+            "vcpkg@0.2.15",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 385,
+          "external": 210,
+          "feature_roots": {
+            "oojuro-store@0.1.0": [
+              "baselines",
+              "codecs"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-store",
+            "--features",
+            "baselines,codecs"
+          ],
+          "set_sha256": "62b9256ce5e6326bdddd1a1336fe059c470eee6cef6d5cf1014199451188a6b7",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 213,
+          "workspace": 3
+        },
+        "normal,build": {
+          "edges": 402,
+          "external": 218,
+          "feature_roots": {
+            "oojuro-store@0.1.0": [
+              "baselines",
+              "codecs"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-store",
+            "--features",
+            "baselines,codecs"
+          ],
+          "set_sha256": "49d8d0d8dd1939855c67ad23c20f916947528dc7131cb73e90c2b8b3d7741166",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 221,
+          "workspace": 3
+        },
+        "normal,build,dev": {
+          "edges": 402,
+          "external": 218,
+          "feature_roots": {
+            "oojuro-store@0.1.0": [
+              "baselines",
+              "codecs"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-store",
+            "--features",
+            "baselines,codecs"
+          ],
+          "set_sha256": "49d8d0d8dd1939855c67ad23c20f916947528dc7131cb73e90c2b8b3d7741166",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 221,
+          "workspace": 3
+        }
+      }
+    },
+    "tracebench": {
+      "after": {
+        "build-only-closure-additions": {
+          "external": 15,
+          "packages": [
+            "autocfg@1.5.1",
+            "bindgen@0.72.1",
+            "cc@1.8.0",
+            "cexpr@0.6.0",
+            "clang-sys@1.9.1",
+            "find-msvc-tools@0.1.14",
+            "glob@0.3.4",
+            "itertools@0.13.0",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "rustflags@0.1.7",
+            "shlex@1.3.0",
+            "shlex@2.0.1",
+            "vcpkg@0.2.15",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 407,
+          "external": 209,
+          "feature_roots": {
+            "oojuro-tracebench@0.1.0": [
+              "arm-fjall",
+              "arm-redb",
+              "arm-rocksdb",
+              "arm-tantivy",
+              "default"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-tracebench"
+          ],
+          "set_sha256": "887437b893b58817ef3a3854ddc88da913d64a1b6ee924eece6abf146028f5fe",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 214,
+          "workspace": 5
+        },
+        "normal,build": {
+          "edges": 438,
+          "external": 224,
+          "feature_roots": {
+            "oojuro-tracebench@0.1.0": [
+              "arm-fjall",
+              "arm-redb",
+              "arm-rocksdb",
+              "arm-tantivy",
+              "default"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-tracebench"
+          ],
+          "set_sha256": "704be02318d1790963002a1c5fc30be0c994ed657d0741d0ed46e2c7b5cb27d3",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 229,
+          "workspace": 5
+        },
+        "normal,build,dev": {
+          "edges": 440,
+          "external": 224,
+          "feature_roots": {
+            "oojuro-tracebench@0.1.0": [
+              "arm-fjall",
+              "arm-redb",
+              "arm-rocksdb",
+              "arm-tantivy",
+              "default"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-tracebench"
+          ],
+          "set_sha256": "704be02318d1790963002a1c5fc30be0c994ed657d0741d0ed46e2c7b5cb27d3",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 229,
+          "workspace": 5
+        }
+      },
+      "before": {
+        "build-only-closure-additions": {
+          "external": 15,
+          "packages": [
+            "autocfg@1.5.1",
+            "bindgen@0.72.1",
+            "cc@1.8.0",
+            "cexpr@0.6.0",
+            "clang-sys@1.9.1",
+            "find-msvc-tools@0.1.14",
+            "glob@0.3.4",
+            "itertools@0.13.0",
+            "jobserver@0.1.35",
+            "pkg-config@0.3.34",
+            "rustflags@0.1.7",
+            "shlex@1.3.0",
+            "shlex@2.0.1",
+            "vcpkg@0.2.15",
+            "version_check@0.9.5"
+          ],
+          "workspace": 0
+        },
+        "dev-inclusive-closure-additions": {
+          "external": 0,
+          "packages": [],
+          "workspace": 0
+        },
+        "normal": {
+          "edges": 409,
+          "external": 209,
+          "feature_roots": {
+            "oojuro-tracebench@0.1.0": [
+              "arm-fjall",
+              "arm-redb",
+              "arm-rocksdb",
+              "arm-tantivy",
+              "default"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-tracebench"
+          ],
+          "set_sha256": "887437b893b58817ef3a3854ddc88da913d64a1b6ee924eece6abf146028f5fe",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 214,
+          "workspace": 5
+        },
+        "normal,build": {
+          "edges": 440,
+          "external": 224,
+          "feature_roots": {
+            "oojuro-tracebench@0.1.0": [
+              "arm-fjall",
+              "arm-redb",
+              "arm-rocksdb",
+              "arm-tantivy",
+              "default"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-tracebench"
+          ],
+          "set_sha256": "704be02318d1790963002a1c5fc30be0c994ed657d0741d0ed46e2c7b5cb27d3",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 229,
+          "workspace": 5
+        },
+        "normal,build,dev": {
+          "edges": 442,
+          "external": 224,
+          "feature_roots": {
+            "oojuro-tracebench@0.1.0": [
+              "arm-fjall",
+              "arm-redb",
+              "arm-rocksdb",
+              "arm-tantivy",
+              "default"
+            ]
+          },
+          "selection": [
+            "-p",
+            "oojuro-tracebench"
+          ],
+          "set_sha256": "704be02318d1790963002a1c5fc30be0c994ed657d0741d0ed46e2c7b5cb27d3",
+          "target": "x86_64-unknown-linux-gnu",
+          "total": 229,
+          "workspace": 5
+        }
+      }
+    }
+  },
+  "compiler_observed": "rustc 1.99.0 (b940084d7 2026-09-28)\nbinary: rustc\ncommit-hash: b940084d7eb6a299eb4bfeb8e34901bc051e7ac4\ncommit-date: 2026-09-28\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.0\nLLVM version: 23.1.1\n",
+  "format": 1,
+  "graph_measurement": {
+    "all_platform": "dependency predicates only, not cross-compilation",
+    "breakdown": "normal-only and dev-inclusive comparison closures; build-only/development additions are set differences, not unique role labels",
+    "elapsed_rss_binary_measurements": "not measured; no build or runtime test performed for composition",
+    "identity": "exact package name/version plus Git source if present; local workspace membership derived from cargo metadata workspace_members",
+    "normal_build": "normal and build edges union; excludes dev",
+    "profile": null,
+    "roots": "package library declarations; Cargo tree package graph, not binary linker map",
+    "selection": "separate per graph; cargo tree --locked --edges MODE --target TARGET --prefix depth --no-dedupe --format {p}|{f}; CARGO_NET_OFFLINE=true",
+    "target": "x86_64-unknown-linux-gnu; explicit separate engine all-platform graph"
+  },
+  "local_target_declarations": {
+    "oojuro": {
+      "declared_dependency_kinds": {
+        "build": [],
+        "dev": [
+          "toml"
+        ],
+        "normal": [
+          "aho-corasick",
+          "blake3",
+          "flate2",
+          "jiff",
+          "libc",
+          "oojuro-capture",
+          "oojuro-engine",
+          "oojuro-nine",
+          "oojuro-proxy",
+          "oojuro-trace",
+          "prost",
+          "regex",
+          "reqwest",
+          "serde",
+          "serde_json",
+          "toml"
+        ]
+      },
+      "features": {},
+      "targets": [
+        {
+          "kind": [
+            "lib"
+          ],
+          "name": "oojuro",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "bin"
+          ],
+          "name": "oojuro",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "bin"
+          ],
+          "name": "oojuro-native",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "bin"
+          ],
+          "name": "oojurod",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "multistore",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "replay_export",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "api",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "cli",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "config",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "duplicates",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "hooks",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "hosted_cli",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "mcp",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "native_cli",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "native_record_context",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "native_records_cli",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "otel",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "periods",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "proxy",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "recorder",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "stores",
+          "required_features": []
+        }
+      ]
+    },
+    "oojuro-bench": {
+      "declared_dependency_kinds": {
+        "build": [],
+        "dev": [],
+        "normal": [
+          "blake3",
+          "oojuro-core",
+          "oojuro-engine",
+          "oojuro-nine",
+          "rusqlite",
+          "serde",
+          "serde_json",
+          "tantivy",
+          "zstd"
+        ]
+      },
+      "features": {
+        "default": [
+          "tantivy-arm",
+          "sqlite-arm"
+        ],
+        "sqlite-arm": [
+          "dep:rusqlite",
+          "dep:zstd"
+        ],
+        "tantivy-arm": [
+          "dep:tantivy"
+        ]
+      },
+      "targets": [
+        {
+          "kind": [
+            "lib"
+          ],
+          "name": "oojuro_bench",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "bin"
+          ],
+          "name": "oojuro-bench",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "profile_native",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "custom-build"
+          ],
+          "name": "build-script-build",
+          "required_features": []
+        }
+      ]
+    },
+    "oojuro-capture": {
+      "declared_dependency_kinds": {
+        "build": [],
+        "dev": [],
+        "normal": [
+          "blake3",
+          "fastcdc",
+          "libc",
+          "oojuro-engine",
+          "oojuro-store",
+          "oojuro-trace",
+          "regex",
+          "serde",
+          "serde_json",
+          "sha2"
+        ]
+      },
+      "features": {},
+      "targets": [
+        {
+          "kind": [
+            "lib"
+          ],
+          "name": "oojuro_capture",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "ingest",
+          "required_features": []
+        }
+      ]
+    },
+    "oojuro-core": {
+      "declared_dependency_kinds": {
+        "build": [],
+        "dev": [],
+        "normal": [
+          "blake3",
+          "crc32fast",
+          "lz4_flex",
+          "serde",
+          "serde_json"
+        ]
+      },
+      "features": {},
+      "targets": [
+        {
+          "kind": [
+            "lib"
+          ],
+          "name": "oojuro_core",
+          "required_features": []
+        }
+      ]
+    },
+    "oojuro-engine": {
+      "declared_dependency_kinds": {
+        "build": [],
+        "dev": [
+          "oojuro-core",
+          "oojuro-nine",
+          "oojuro-trace"
+        ],
+        "normal": [
+          "aho-corasick",
+          "blake3",
+          "libc",
+          "oojuro-rank",
+          "oojuro-store",
+          "ring",
+          "rust-stemmers",
+          "serde",
+          "serde_json"
+        ]
+      },
+      "features": {},
+      "targets": [
+        {
+          "kind": [
+            "lib"
+          ],
+          "name": "oojuro_engine",
+          "required_features": []
+        }
+      ]
+    },
+    "oojuro-nine": {
+      "declared_dependency_kinds": {
+        "build": [],
+        "dev": [
+          "bitpacking",
+          "fst",
+          "roaring"
+        ],
+        "normal": [
+          "blake3",
+          "crc32fast",
+          "lz4_flex",
+          "memmap2",
+          "oojuro-core",
+          "rust-stemmers",
+          "serde",
+          "serde_json"
+        ]
+      },
+      "features": {
+        "phase-profile": [],
+        "simulated-sync": []
+      },
+      "targets": [
+        {
+          "kind": [
+            "lib"
+          ],
+          "name": "oojuro_nine",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "beir_explore",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "index_probe",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "probe_entropy",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "probe_sync",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "query_probe",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "shared_log_bench",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "turn_loop",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "verify_store",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "shared_log_kill",
+          "required_features": []
+        }
+      ]
+    },
+    "oojuro-proxy": {
+      "declared_dependency_kinds": {
+        "build": [],
+        "dev": [
+          "tokio"
+        ],
+        "normal": [
+          "blake3",
+          "brotli-decompressor",
+          "bytes",
+          "flate2",
+          "http",
+          "http-body",
+          "http-body-util",
+          "hyper",
+          "hyper-rustls",
+          "hyper-util",
+          "oojuro-capture",
+          "pin-project-lite",
+          "rustls",
+          "serde",
+          "serde_json",
+          "tokio",
+          "zstd"
+        ]
+      },
+      "features": {},
+      "targets": [
+        {
+          "kind": [
+            "lib"
+          ],
+          "name": "oojuro_proxy",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "proxy",
+          "required_features": []
+        }
+      ]
+    },
+    "oojuro-rank": {
+      "declared_dependency_kinds": {
+        "build": [],
+        "dev": [],
+        "normal": []
+      },
+      "features": {},
+      "targets": [
+        {
+          "kind": [
+            "lib"
+          ],
+          "name": "oojuro_rank",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "conformance",
+          "required_features": []
+        }
+      ]
+    },
+    "oojuro-store": {
+      "declared_dependency_kinds": {
+        "build": [],
+        "dev": [],
+        "normal": [
+          "blake3",
+          "brotli",
+          "bzip2",
+          "chacha20poly1305",
+          "crc32fast",
+          "fastcdc",
+          "fm-index",
+          "fsst-rs",
+          "libdeflater",
+          "liblzma",
+          "lz4",
+          "lz4_flex",
+          "oojuro-nine",
+          "postgres",
+          "ppmd-rust",
+          "rusqlite",
+          "serde_json",
+          "snap",
+          "tantivy",
+          "tiktoken-rs",
+          "zstd"
+        ]
+      },
+      "features": {
+        "baselines": [
+          "bench-tools",
+          "dep:oojuro-nine",
+          "dep:rusqlite",
+          "dep:tantivy",
+          "dep:postgres"
+        ],
+        "bench-tools": [
+          "dep:serde_json"
+        ],
+        "codecs": [
+          "bench-tools",
+          "dep:brotli",
+          "dep:liblzma",
+          "dep:bzip2",
+          "dep:libdeflater",
+          "dep:snap",
+          "dep:lz4",
+          "dep:ppmd-rust",
+          "dep:fsst-rs",
+          "dep:tiktoken-rs",
+          "dep:fm-index"
+        ]
+      },
+      "targets": [
+        {
+          "kind": [
+            "lib"
+          ],
+          "name": "oojuro_store",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "bin"
+          ],
+          "name": "baselines",
+          "required_features": [
+            "baselines"
+          ]
+        },
+        {
+          "kind": [
+            "bin"
+          ],
+          "name": "codecs",
+          "required_features": [
+            "codecs"
+          ]
+        },
+        {
+          "kind": [
+            "bin"
+          ],
+          "name": "dedupe-exp",
+          "required_features": [
+            "codecs"
+          ]
+        },
+        {
+          "kind": [
+            "bin"
+          ],
+          "name": "store-bench",
+          "required_features": [
+            "bench-tools"
+          ]
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "frame_probe",
+          "required_features": [
+            "bench-tools"
+          ]
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "encrypted",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "run",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "store",
+          "required_features": []
+        }
+      ]
+    },
+    "oojuro-trace": {
+      "declared_dependency_kinds": {
+        "build": [],
+        "dev": [
+          "memmap2"
+        ],
+        "normal": [
+          "aho-corasick",
+          "blake3",
+          "crc32fast",
+          "oojuro-core",
+          "oojuro-nine",
+          "oojuro-store",
+          "serde",
+          "serde_json",
+          "zstd"
+        ]
+      },
+      "features": {
+        "phase-profile": [
+          "oojuro-nine/phase-profile"
+        ]
+      },
+      "targets": [
+        {
+          "kind": [
+            "lib"
+          ],
+          "name": "oojuro_trace",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "bounds_probe",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "colblock_exp",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "many_agents",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "read_probe",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "shred_exp",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "sketch_exp",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "train_starter",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "agents",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "compat",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "dedupe",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "events",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "test"
+          ],
+          "name": "reopen",
+          "required_features": []
+        }
+      ]
+    },
+    "oojuro-tracebench": {
+      "declared_dependency_kinds": {
+        "build": [],
+        "dev": [
+          "oojuro-store",
+          "zstd"
+        ],
+        "normal": [
+          "arrow-array",
+          "arrow-schema",
+          "async-trait",
+          "blake3",
+          "fjall",
+          "futures",
+          "lance",
+          "lance-io",
+          "lancedb",
+          "memmap2",
+          "object_store",
+          "oojuro-nine",
+          "oojuro-trace",
+          "postgres",
+          "redb",
+          "rocksdb",
+          "rusqlite",
+          "serde",
+          "serde_json",
+          "tantivy",
+          "tokio",
+          "url"
+        ]
+      },
+      "features": {
+        "arm-fjall": [
+          "dep:fjall"
+        ],
+        "arm-lance": [
+          "dep:lancedb",
+          "dep:lance",
+          "dep:lance-io",
+          "dep:object_store",
+          "dep:arrow-array",
+          "dep:arrow-schema",
+          "dep:tokio",
+          "dep:futures",
+          "dep:async-trait",
+          "dep:url"
+        ],
+        "arm-redb": [
+          "dep:redb"
+        ],
+        "arm-rocksdb": [
+          "dep:rocksdb"
+        ],
+        "arm-tantivy": [
+          "dep:tantivy"
+        ],
+        "default": [
+          "arm-tantivy",
+          "arm-redb",
+          "arm-fjall",
+          "arm-rocksdb"
+        ],
+        "phase-profile": [
+          "oojuro-trace/phase-profile"
+        ]
+      },
+      "targets": [
+        {
+          "kind": [
+            "lib"
+          ],
+          "name": "oojuro_tracebench",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "bin"
+          ],
+          "name": "fsync-probe",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "bin"
+          ],
+          "name": "searchprobe",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "bin"
+          ],
+          "name": "tracebench",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "dict_probe",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "dup_probe",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "kind_probe",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "proxy_stream",
+          "required_features": []
+        },
+        {
+          "kind": [
+            "example"
+          ],
+          "name": "toolcall_template",
+          "required_features": []
+        }
+      ]
+    }
+  },
+  "merge_base": "f01345f92a2570ddce7a9577b7703fddfc8eaee7",
+  "not_claimed": [
+    "runtime read/write/search/RAM/cost gain",
+    "full qualification inherited from prior66 or75 tests",
+    "all historical formats or cross-platform compilation",
+    "merged/released/published package or deployment"
+  ],
+  "original_dependency_draft66": "0544cc81b6c579b123246c6250b5871f2592fb5d",
+  "pending_gates": [
+    "minimal policy + targeted negative controls",
+    "shared legacy/storage and serial native/rank suites",
+    "frozen historical trace reopen/append/merge compatibility",
+    "explicit bench-tools store-bench and frame_probe compile",
+    "existing native packaging/license checksum tests",
+    "bounded matched cold engine-library build before/after with isolated targets and same actual compiler/CC/profile/target/flags"
+  ],
+  "policy_audit": "full --check completed using locked source graphs; functional/negative tests pending; CI minimal --engine-only --check added without removing existing tests",
+  "protected_unchanged_blobs": {
+    "LICENSE": "7a4a3ea2424c09fbe48d455aed1eaa94d9124835",
+    "NOTICE": "205bf63447c6b9fdff0a893fe6191e3b8f8fb205",
+    "SECURITY.md": "9ac14c8cc3e41496a16741e540e7ec124993c186",
+    "docs/PUBLICATION.md": "7740e9e7585e26b3cdfa80554be4f45020da48cd",
+    "scripts/build_native.sh": "cbde1aff24ca70a72460192d4897c9ae505c2b8c",
+    "scripts/package_native.py": "499695dfb168853162e26f43af4e1795ab0762f8",
+    "scripts/test_package_native.py": "ca2e622724c7e1306abb3add014e1ed913410d91"
+  },
+  "qualified_base_runtime": "5fbf731",
+  "repository": "oojuro/oojuro",
+  "runtime_manifest_commits": [
+    "602f1df",
+    "f467707"
+  ],
+  "scope": "same native foundation, manifest feature/selection reductions plus dependency policy; no runtime implementation changes",
+  "source_frozen": "0e7e276b9eb376f37084616a3b0d900e41057cbd",
+  "visibility": "public"
+}
