@@ -4,19 +4,31 @@
     "after": {
       "archive": "docs/dependencies/main-native-after.json.gz",
       "dirty": false,
-      "gzip_bytes": 99672,
-      "gzip_sha256": "1f5c115dfb5a6002b907aebc21a557da572d63345076c1325d826fd44c69ea9b",
-      "json_bytes": 1404840,
-      "json_sha256": "d9e35df6ea83ba46ff944601b5f568ef0f4609c7ba1d9bc04cc2b9a0dcfbf475",
-      "source": "0e7e276b9eb376f37084616a3b0d900e41057cbd"
+      "gzip_bytes": 101091,
+      "gzip_sha256": "b837f4ceffa237a07a2ad4abea72056faadeb4622db34702a6d539ec4bead54b",
+      "inventory_coverage": {
+        "inventoried_packages": 336,
+        "mode": "selected external package metadata",
+        "omitted_packages": [],
+        "selected_external_packages": 336
+      },
+      "json_bytes": 1421827,
+      "json_sha256": "7020841f6019ed262d9563ab5da2ff9f3738abe6de905f678d99b115c0396f72",
+      "source": "da24bb33b3898f1b9c5a2fb52106960d8fe0ae32"
     },
     "before": {
       "archive": "docs/dependencies/main-native-before.json.gz",
       "dirty": false,
-      "gzip_bytes": 128721,
-      "gzip_sha256": "b8368a1cce837aabf9ee788f8aa52b23c06e2f6c684a904aae298fddb321b87b",
-      "json_bytes": 1718596,
-      "json_sha256": "2645859ecc467dd01f33fbd674752fa3f68d50874b8f68466bcedb6405e2b3fd",
+      "gzip_bytes": 130183,
+      "gzip_sha256": "287763c2e07530c4af0d0e47d7c6b003a2b71fab22792a76dedebbeb4289d3bf",
+      "inventory_coverage": {
+        "inventoried_packages": 336,
+        "mode": "selected external package metadata",
+        "omitted_packages": [],
+        "selected_external_packages": 336
+      },
+      "json_bytes": 1735583,
+      "json_sha256": "e0d5fdf21f58feb0965d8c7e78f939711e1a762595e983c49af4bb22de1bc21e",
       "source": "ba144d90d396b680122f1e93c808c724844ef2c8"
     }
   },
@@ -2818,6 +2830,22 @@
     }
   },
   "merge_base": "f01345f92a2570ddce7a9577b7703fddfc8eaee7",
+  "metadata_inventory_correction": {
+    "engine_only": "Explicit policy-only mode uses --no-deps and reports omitted inventory intentionally; full inventory gaps fail closed",
+    "full_after": {
+      "inventory": 336,
+      "omitted": 0,
+      "selected": 336
+    },
+    "full_before": {
+      "inventory": 336,
+      "omitted": 0,
+      "selected": 336
+    },
+    "git_sourced_external_dependencies_in_actual_graph": [],
+    "graph_package_set_hashes_changed": false,
+    "reason": "Original draft66 metadata selected default features with Linux filter while the selected graphs also included optional Store tools and all-platform engine;34 actual selected entries lacked metadata. Now include only requested Store tool features plus all platform predicates, not unrelated --all-features arms."
+  },
   "not_claimed": [
     "runtime read/write/search/RAM/cost gain",
     "full qualification inherited from prior66 or75 tests",
@@ -2850,6 +2878,10 @@
     "f467707"
   ],
   "scope": "same native foundation, manifest feature/selection reductions plus dependency policy; no runtime implementation changes",
-  "source_frozen": "0e7e276b9eb376f37084616a3b0d900e41057cbd",
+  "source_followups": [
+    "896838624450525835b97b14b0d3a94ff81b9dc8",
+    "da24bb33b3898f1b9c5a2fb52106960d8fe0ae32"
+  ],
+  "source_frozen": "da24bb33b3898f1b9c5a2fb52106960d8fe0ae32",
   "visibility": "public"
 }

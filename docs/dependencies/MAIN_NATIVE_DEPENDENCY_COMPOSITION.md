@@ -67,6 +67,20 @@ CARGO_NET_OFFLINE=true python3 scripts/dependency_audit.py --edge-breakdown --ch
 python3 scripts/dependency_audit.py --engine-only --check --output work/minimal.json
 ```
 
+The full inventory covers all336 external packages in the selected graph union, including
+optional Store codecs and all-platform support; no unexplained omissions remain.
+The initial default-feature/Linux metadata query omitted34 such entries and was
+corrected without changing any graph package-set hash. `--engine-only` is an
+explicit policy-only mode using `--no-deps`; it reports external inventory as
+intentionally omitted. No actual selected dependency is Git-sourced, and a full
+audit refuses unsupported inventory mapping rather than silently dropping it.
+
+The current build/install documentation uses explicit CLI/package selections.
+README and CONTRIBUTING also state that plain `cargo build`/`cargo test` select
+the three default libraries; historical broad benchmark commands remain labeled
+as broader experimental checks. There is no bare documented install command
+that implies the CLI is a new default.
+
 Machine-readable comparator inventories are archived in this directory. The
 receipt records exact source/tree identities, commands, hashes, selected feature
 roots and local/external closure differences. Cargo tree/metadata do not have an
