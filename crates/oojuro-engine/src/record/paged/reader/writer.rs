@@ -61,6 +61,12 @@ impl Writer {
         self.reader.healthy()?;
         Ok(&self.reader)
     }
+    /// Rebuild locator trees and retire their obsolete COW packs. This is
+    /// explicit maintenance, separately timed from append acknowledgements.
+    pub fn compact_directory(&mut self) -> Result<()> {
+        self.reader.healthy()?;
+        self.reader.compact_directory()
+    }
     /// Durable authority append. Call `Index::refresh` before using an older search index.
     pub fn append(&mut self, request: &str, inputs: &[Input]) -> Result<Commit> {
         let reader = &mut self.reader;

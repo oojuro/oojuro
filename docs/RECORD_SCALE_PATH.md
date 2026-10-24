@@ -35,3 +35,8 @@ The next scale path must make work proportional to selected pages/terms:
 This is a scale acceptance outline, not a completed index implementation,
 throughput result, storage-saving claim or SLA. The checked ID lookup remains
 small and independently reviewable while the larger index path is developed.
+
+The initial opt-in implementation and its distinct remaining query costs are
+specified in [the disk-backed path](RECORD_DISK_PATH.md). Existing in-memory
+bounds remain unchanged; staged benchmark evidence is required before claiming
+that this path satisfies a million records with ten clients.
