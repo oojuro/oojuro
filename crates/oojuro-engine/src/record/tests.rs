@@ -1105,3 +1105,39 @@ fn counted_json_preserves_exact_escaped_wire_bounds() {
         assert_eq!(json_size(&value, expected.len()).unwrap(), expected.len());
     }
 }
+
+#[test]
+fn record_search_exact_wire_budget_includes_large_escaped_originals_and_metadata() {
+    let f = Fixture::new();
+    let mut log = f.clock(100);
+    let text = format!("needle {} λ🦀", "\0\"\\\n".repeat(32_768));
+    let mut large = input(&text, Some("winner"), 2);
+    large.attrs.insert("escaped".into(), serde_json::json!({"nested": ["\0\"\\\r\n", "λ🦀", 1, true]}));
+    let mut stored = input("needle stored-only \0", None, 3);
+    stored.indexed = false;
+    log.append("escaped-output", &[input("needle old", Some("winner"), 1), large, stored]).unwrap();
+    let snapshot = view(&log);
+    let mut index = Index::rebuild(&log).unwrap();
+    for text in ["needle", r#""needle""#, "", "key:winner"] {
+        let mut q = query(text, AsOf::default());
+        q.max_bytes = MAX_OUTPUT_BYTES;
+        let full = index.search_view(&log, &snapshot, &q).unwrap();
+        let bytes = serde_json::to_vec(&full).unwrap();
+        assert!(bytes.len() > 300_000);
+        assert!(full.hits.iter().any(|h| h.record.text.contains('\0') && h.record.attrs.contains_key("escaped")));
+        q.max_bytes = bytes.len();
+        assert_eq!(serde_json::to_vec(&index.search_view(&log, &snapshot, &q).unwrap()).unwrap(), bytes);
+        q.max_bytes -= 1;
+        assert!(matches!(index.search_view(&log, &snapshot, &q), Err(Error::Bounds)));
+        q.max_bytes = bytes.len() + 1;
+        assert_eq!(serde_json::to_vec(&index.search_view(&log, &snapshot, &q).unwrap()).unwrap(), bytes);
+    }
+    // Preserve the existing public validation order, not only successful sizes.
+    let mut bad = query("needle", AsOf::default());
+    bad.scope = Scope { writer: "wrong", owner: 1 };
+    assert!(matches!(index.search_view(&log, &snapshot, &bad), Err(Error::Scope)));
+    bad.max_bytes = 0;
+    assert!(matches!(index.search_view(&log, &snapshot, &bad), Err(Error::Bounds)));
+    index.failed = true;
+    assert!(matches!(index.search_view(&log, &snapshot, &bad), Err(Error::Unavailable)));
+}

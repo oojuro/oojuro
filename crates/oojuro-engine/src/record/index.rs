@@ -128,7 +128,7 @@ impl Index {
             watermark: view.watermark().clone(),
             hits,
         };
-        json(&result, query.max_bytes)?;
+        json_size(&result, query.max_bytes)?;
         Ok(result)
     }
 }
