@@ -150,6 +150,9 @@ impl Runs {
                 self.add("memory", "steady_anon_bytes", v as f64);
                 self.add("memory", "steady_anon_ratio", v as f64 / raw);
             }
+            if let Some(v) = m.cgroup_file {
+                self.add("memory", "steady_file_bytes", v as f64);
+            }
             if let Some(v) = m.rss {
                 self.add("memory", "steady_rss_bytes", v as f64);
                 self.add("memory", "steady_rss_ratio", v as f64 / raw);
@@ -232,8 +235,11 @@ impl Ctx {
     pub fn finish(&self, mut s: Session) -> Result<((u64, u64), Option<sys::Memory>)> {
         let end = s.arm.memory();
         s.arm.close()?;
-        let disk = sys::dir_bytes(&s.store);
-        s.arm.finish()?;
+        s.arm.finish()?; // Prove the entire scope terminal BEFORE closed inventory.
+        let inventory = sys::closed_inventory(&s.store)?;
+        let disk = (inventory.apparent_file_bytes, inventory.allocated_total_bytes);
+        let inventory_path = s.store.parent().ok_or("store parent missing")?.join("closed-inventory.json");
+        std::fs::write(inventory_path, serde_json::to_vec_pretty(&inventory)?)?;
         if !self.keep {
             if let Some(dir) = s.store.parent() {
                 let _ = std::fs::remove_dir_all(dir);

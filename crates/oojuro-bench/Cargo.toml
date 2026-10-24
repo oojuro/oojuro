@@ -10,6 +10,8 @@ description = "Shared benchmark harness: engine arms, BEIR, turn-loop replay, me
 default = ["tantivy-arm", "sqlite-arm"]
 tantivy-arm = ["dep:tantivy"]
 sqlite-arm = ["dep:rusqlite", "dep:zstd"]
+# Explicit record baseline only; never selected by normal/default engine builds.
+postgres-arm = ["dep:postgres", "dep:libc"]
 
 [dependencies]
 oojuro-core.workspace = true
@@ -21,3 +23,7 @@ blake3.workspace = true
 tantivy = { version = "=0.27.0", default-features = false, features = ["mmap", "lz4-compression", "stemmer"], optional = true }
 rusqlite = { version = "0.40.2", features = ["bundled"], optional = true }
 zstd = { version = "0.13", default-features = false, optional = true }
+
+# libc supplies Linux process-group cleanup for the owned benchmark server.
+postgres = { version = "0.19", optional = true }
+libc = { version = "0.2", optional = true }

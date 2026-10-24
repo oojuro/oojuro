@@ -5,6 +5,8 @@ use std::collections::HashMap;
 
 pub mod nine;
 pub mod native_record;
+#[cfg(all(feature = "postgres-arm", target_os = "linux"))]
+pub mod postgres;
 pub mod nine_maxdf;
 pub mod nine_v3;
 #[cfg(feature = "sqlite-arm")]
@@ -22,6 +24,8 @@ pub const BUILTIN: &[&str] = &["native-record", "nine", "nine-v3", "tantivy", "s
 pub fn builtin(name: &str) -> Result<Box<dyn Arm>> {
     match name {
         "nine" => Ok(Box::new(nine::NineArm::default())),
+        #[cfg(all(feature = "postgres-arm", target_os = "linux"))]
+        "postgres" => Ok(Box::new(postgres::PostgresArm::default())),
         "native-record" => Ok(Box::new(native_record::NativeRecordArm::default())),
         "nine-v3" => Ok(Box::new(nine_v3::NineV3Arm::default())),
         n if n.starts_with("nine-maxdf:") => {
