@@ -1,0 +1,251 @@
+   Compiling blake3 v1.8.7
+   Compiling lz4_flex v0.11.6
+   Compiling zstd-sys v2.1.2+zstd.1.5.7
+   Compiling oojuro-core v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-dependency-policy/crates/oojuro-core)
+   Compiling zstd-safe v7.3.0
+   Compiling zstd v0.13.3
+   Compiling oojuro-nine v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-dependency-policy/crates/oojuro-nine)
+   Compiling oojuro-store v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-dependency-policy/crates/oojuro-store)
+warning: associated function `of` is never used
+   --> crates/oojuro-nine/src/segment.rs:135:12
+    |
+126 | impl Span {
+    | --------- associated function in this implementation
+...
+135 |     pub fn of(meta: &[RowMeta]) -> Self {
+    |            ^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `terms` and `total_length` are never read
+   --> crates/oojuro-nine/src/segment.rs:277:9
+    |
+273 | pub(crate) struct DiskSegment {
+    |                   ----------- fields in this struct
+...
+277 |     pub terms: u64,
+    |         ^^^^^
+278 |     pub total_length: u64,
+    |         ^^^^^^^^^^^^
+
+warning: methods `file_bytes` and `version` are never used
+   --> crates/oojuro-nine/src/segment.rs:597:12
+    |
+467 | impl DiskSegment {
+    | ---------------- methods in this implementation
+...
+597 |     pub fn file_bytes(&self) -> u64 {
+    |            ^^^^^^^^^^
+...
+917 |     pub fn version(&self) -> u32 {
+    |            ^^^^^^^
+
+warning: method `bytes` is never used
+   --> crates/oojuro-nine/src/wal.rs:245:19
+    |
+122 | impl Journal {
+    | ------------ method in this implementation
+...
+245 |     pub(crate) fn bytes(&self) -> u64 {
+    |                   ^^^^^
+
+warning: `oojuro-nine` (lib) generated 4 warnings
+warning: unused doc comment
+  --> crates/oojuro-nine/src/segment.rs:59:1
+   |
+59 | / /// Tests can write version 1 segments (LEB128 postings) on this thread, to
+60 | | /// check that every read path still serves old stores.
+   | |_------------------------------------------------------^
+   |   |
+   |   rustdoc does not generate documentation for macro invocations
+   |
+   = help: to document an item produced by a macro, the macro must produce the documentation as part of its expansion
+   = note: `#[warn(unused_doc_comments)]` (part of `#[warn(unused)]`) on by default
+
+warning: `oojuro-nine` (lib test) generated 4 warnings (3 duplicates)
+    Finished `test` profile [unoptimized] target(s) in 8.12s
+     Running unittests src/lib.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/oojuro_core-65da45b5b624a481)
+
+running 8 tests
+test tests::bitemporal_visibility ... ok
+test tests::invalid_vectors_and_duplicate_ids_rejected ... ok
+test tests::serialized_context_excludes_embeddings_and_respects_wire_budget ... ok
+test tests::entropy_and_projection ... ok
+test tests::compressed_journal_roundtrip_and_exclusion ... ok
+test tests::partial_tail_recovers_but_checksum_corruption_fails ... ok
+test tests::snapshot_destination_failure_preserves_append_position_and_contents ... ok
+test tests::partial_write_poison_prevents_later_acknowledgments ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests src/lib.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/oojuro_nine-e0b874c3007183cc)
+
+running 94 tests
+test codec::tests::varints_and_zigzag_roundtrip_extremes ... ok
+test context::tests::empty_packets_and_invalid_limits_are_explicit ... ok
+test codec::tests::record_frames_roundtrip_exact_fields_and_derive_put_ids ... ok
+test context::tests::short_equal_text_keeps_the_cheaper_legacy_flat_shape ... ok
+test rows::tests::a_damaged_table_is_refused ... ok
+test passage::tests::literal_evidence_keeps_priority_over_a_shorter_variant_only_span ... ok
+test context::tests::malformed_aliases_and_range_lengths_are_rejected ... ok
+test rows::tests::the_mass_cursor_follows_any_order_of_rows ... ok
+test context::tests::interleaved_origins_roundtrip_with_exact_unicode_ranges_and_all_metadata ... ok
+test segment::postings_tests::version_one_postings_still_decode ... ok
+test segment::table_tests::fingerprint_tables_must_cover_every_row ... ok
+test shared::tests::a_failed_write_poisons_the_log_until_reopen ... ok
+test shared::tests::an_interrupted_scrub_finishes_at_the_next_open ... ok
+test shared::tests::a_torn_round_whose_later_pages_persisted_is_dropped_but_synced_rounds_fail_closed ... ok
+test shared::tests::batches_of_many_stores_roundtrip_and_replay_after_reopen ... ok
+test shared::tests::damage_in_committed_history_fails_closed_and_changes_nothing ... ok
+test rows::tests::ascending_decimal_ids_and_equal_times_pack_small ... ok
+test passage::tests::composite_components_and_short_inputs_are_exact ... ok
+test shared::tests::one_round_makes_the_batches_of_every_waiting_store_durable ... ok
+test shared::tests::a_failed_round_fails_every_pipelined_batch_of_the_store_without_hanging ... ok
+test shared::tests::scrub_retires_untracked_log_files_through_dead_names ... ok
+test shared::tests::one_store_pipelines_several_batches_into_one_round ... ok
+test shared::tests::rounds_overwrite_zero_filled_files_whose_zero_tails_survive_reopen ... ok
+test archive::tests::runs_roundtrip_rows_ranges_and_detect_damage ... ok
+test shared::tests::torn_tails_of_the_newest_file_are_truncated_and_committed_batches_kept ... ok
+test shared::tests::snapshots_of_shared_log_stores_are_standalone ... ok
+test shared::tests::store_bindings_fail_closed ... ok
+test context::tests::every_measured_addition_and_exact_budget_boundary_preserves_source_order ... ok
+test shared::tests::a_lagging_store_pins_log_files_until_it_absorbs_them ... ok
+test passage::tests::word_cache_overflow_keeps_normalized_hits_and_original_offsets ... ok
+test v3::tests::archive_partial_tail_recovers_but_checksum_corruption_fails ... ok
+test segment::postings_tests::rice_postings_roundtrip_edges ... ok
+test v3::tests::historical_source_visibility_and_future_statistics_do_not_leak ... ok
+test v3::tests::local_search_accepts_no_vector_and_uses_no_empty_query_fallback_for_unknown_text ... ok
+test passage::tests::selects_distant_exact_evidence_with_unicode_and_bounded_ranges ... ok
+test v3::tests::future_statistics_can_change_phrase_scan_plan_without_changing_scores ... ok
+test v3::tests::query_cache_covers_identity_and_invalidates_on_source_changes ... ok
+test v3::tests::query_receipts_identify_the_model_and_keep_legacy_receipts_readable ... ok
+test rows::tests::rows_roundtrip_across_shapes_and_sizes ... ok
+test v3::tests::normalized_words_preserve_literal_identifiers_originals_and_time ... ok
+test segment::postings_tests::cursor_lists_decode_exactly_like_postings_including_truncated_ends ... ok
+test segment::table_tests::version_three_tables_answer_like_version_two ... ok
+test v3::tests::stores_with_null_entropy_receipts_open_again ... ok
+test v3::tests::quoted_phrases_require_exact_bytes_before_ranking_and_feedback ... ok
+test v3::tests::scope_mass_matches_hand_probabilities_escape_mass_and_addressed_fallback ... ok
+test v3::tests::verified_feedback_routes_a_repeated_query_without_rewriting_sources ... ok
+test shared::tests::erasure_scrubs_the_shared_log_once_every_store_absorbs ... ok
+test v4::tests::a_future_key_cannot_switch_a_past_query_to_key_addressing ... ok
+test shared::tests::a_crash_at_every_byte_of_a_round_recovers_exactly_its_complete_batches ... ok
+test v3::tests::exact_identifiers_keep_components_and_respect_historical_revisions ... ok
+test v3::tests::whole_source_repetition_preserves_scope_background_and_all_ordinary_scores ... ok
+test v4::tests::batches_are_atomic_and_duplicate_ids_reject_the_whole_batch ... ok
+test v3::tests::repeated_record_envelopes_compress_without_losing_metadata ... ok
+test v4::tests::merge_plan_is_a_counter_that_never_strands_older_segments ... ok
+test v3::tests::query_cache_is_bounded_and_new_feedback_invalidates_it ... ok
+test v4::tests::historical_views_ignore_future_rows_statistics_and_revisions ... ok
+test v4::tests::interrupted_flushes_recover_from_journals_and_orphans_are_removed ... ok
+test shared::tests::stores_on_one_log_commit_concurrently_and_reopen_exactly ... ok
+test v3::tests::lossless_delta_archive_recovers_unicode_and_bounds_chains ... ok
+test v4::tests::passages_reads_exports_and_stats_use_exact_originals ... ok
+test v3::tests::long_sources_are_discoverable_without_spending_the_context_budget ... ok
+test v4::tests::recovery_replays_sealed_journals_left_by_a_crash_between_journal_and_manifest ... ok
+test v4::tests::result_ids_read_from_row_prefixes_equal_the_stored_ids ... ok
+test v4::tests::receipts_follow_the_policy_and_cache_entries_never_survive_writes ... ok
+test v4::tests::query_terms_equal_the_reference_composition ... ok
+test v3::tests::late_known_revision_cache_is_shared_across_addressing_paths_and_queries_do_not_leak ... ok
+test v4::tests::originals_roundtrip_byte_exact_through_segments_and_blake3_detects_damage ... ok
+test v4::tests::torn_journal_tails_keep_every_acknowledged_row_and_header_damage_fails ... ok
+test v3::tests::sparse_scope_scores_match_dense_query_likelihood_on_historical_views ... ok
+test v4::tests::an_anchored_view_smaller_than_k_continues_with_the_unanchored_ranking ... ok
+test v4::tests::v3_stores_with_null_entropy_receipts_open_and_migrate ... ok
+test v3::tests::revision_view_matches_independent_oracle_at_both_clock_boundaries ... ok
+test v4::tests::concurrent_writers_share_syncs_and_every_ack_is_immediately_searchable ... ok
+test wal::tests::a_frame_from_another_journal_is_not_valid_here ... ok
+test v4::tests::v3_stores_migrate_with_identical_originals_feedback_receipts_and_results ... ok
+test wal::tests::batches_roundtrip_and_kind_is_checked ... ok
+test v4::tests::a_bound_on_query_terms_keeps_the_rarest_words_and_leaves_shorter_queries_alone ... ok
+test wal::tests::corrupted_header_before_committed_frames_is_an_error_not_a_truncation ... ok
+test v4::tests::stored_only_records_are_exact_and_readable_but_never_searched_or_counted ... ok
+test wal::tests::partial_write_poisons_until_reopen ... ok
+test wal::tests::multi_frame_batches_are_atomic ... ok
+test v4::tests::background_merges_run_alongside_concurrent_writers_and_readers ... ok
+test v4::tests::sorted_dictionary_lookups_equal_single_lookups ... ok
+test wal::tests::every_torn_tail_length_recovers_the_committed_prefix ... ok
+test v4::tests::subnormal_routing_weights_keep_entropy_finite_and_stores_reopenable ... ok
+test v4::tests::whole_view_background_matches_a_dense_oracle_on_historical_views ... ok
+test context::tests::expanded_size_is_bounded_before_shared_text_is_cloned_into_all_origins ... ok
+test v4::tests::multi_chunk_scans_equal_across_thread_counts_and_reopen ... ok
+test v4::tests::merges_preserve_every_result_bit_for_bit_and_survive_reopen ... ok
+test v4::tests::a_small_candidate_set_is_scored_against_a_padded_background ... ok
+test v4::tests::stores_without_versions_take_the_simple_scan_and_match_the_v3_oracle ... ok
+test v4::tests::version_one_segments_take_every_scan_path_and_match_the_v3_oracle ... ok
+test v4::tests::v4_matches_the_v3_oracle_across_segments_views_and_feedback ... ok
+test v4::tests::top_k_entropy_returns_the_same_ids_and_score_bits_as_exhaustive_scoring ... ok
+
+test result: ok. 94 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 20.74s
+
+     Running tests/shared_log_kill.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/shared_log_kill-3b94b4b31a5b4ce2)
+
+running 2 tests
+test kill_test_child_writer ... ok
+test acknowledged_batches_survive_killing_the_process ... ok
+
+test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.13s
+
+     Running unittests src/lib.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/oojuro_store-4b3ba6ab8f64e032)
+
+running 8 tests
+test store::bounded::tests::local_matched_old_and_windowed_crc_scan_measurement ... ignored
+test crypto::tests::seal_open_and_tamper ... ok
+test store::bounded::tests::buffered_hot_payloads_match_positional_frames_across_lookahead_windows ... ok
+test store::bounded::tests::positional_scanner_matches_old_candidate_semantics_at_every_boundary ... ok
+test store::bounded::tests::short_records_train_and_unusable_records_retry_only_geometrically ... ok
+test store::bounded::tests::malformed_length_torn_crc_and_embedded_later_frame_keep_old_semantics ... ok
+test store::bounded::tests::streamed_hot_training_reopen_and_compaction_preserve_sealed_original_fields ... ok
+test store::bounded::tests::training_is_bounded_deterministic_and_samples_beyond_prefix ... ok
+
+test result: ok. 7 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 4.03s
+
+     Running tests/encrypted.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/encrypted-b41a24a44b4b8ec0)
+
+running 13 tests
+test strict_sealing_requires_a_key_before_creating_a_store ... ok
+test sealed_empty_bodies_and_truncation_are_checked ... ok
+test strict_sealing_refuses_plaintext_legacy_upgrade_without_mutating_it ... ok
+test forged_hot_frame_fails_replay_without_truncating_the_log ... ok
+test malformed_encryption_marker_is_rejected_without_replacement ... ok
+test strict_sealing_refuses_plaintext_frame_downgrade_without_truncation ... ok
+test encrypted_raw_frames_preserve_side_fields_ranges_and_time_scan ... ok
+test strict_sealing_refuses_plaintext_cold_frame_downgrade ... ok
+test a_store_opens_only_with_its_key ... ok
+test an_unencrypted_store_gets_a_key_and_old_frames_stay_readable ... ok
+test forged_frames_are_refused_even_with_a_valid_checksum ... ok
+test forged_dictionary_fails_authentication_even_with_a_valid_checksum ... ok
+test encrypted_roundtrip_hot_cold_and_reopen ... ok
+
+test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.58s
+
+     Running tests/run.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/run-f6588dfc05388f8e)
+
+running 5 tests
+test empty_and_tiny_runs ... ok
+test corruption_and_truncation_are_detected ... ok
+test identical_input_gives_identical_files ... ok
+test rows_ranges_and_scans_are_exact ... ok
+test shared_dictionary_runs_need_that_dictionary ... ok
+
+test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 3.34s
+
+     Running tests/store.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/store-a5a7d9ad5145937f)
+
+running 12 tests
+test second_writer_is_refused ... ok
+test invalid_batches_are_rejected ... ok
+test failed_write_poisons_until_reopen_and_loses_only_that_batch ... ok
+test corruption_before_the_tail_is_an_error ... ok
+test zero_and_garbage_tails_are_truncated ... ok
+test dedupe_references_roundtrip_across_segments ... ok
+test interrupted_compaction_leaves_a_readable_store ... ok
+test header_and_manifest_corruption_are_errors ... ok
+test identical_input_gives_identical_bytes ... ok
+test background_compaction_while_appending ... ok
+test roundtrip_reopen_compact ... ok
+test torn_tail_inside_compressed_frame_recovers_every_cut has been running for over 60 seconds
+test torn_tail_inside_compressed_frame_recovers_every_cut ... ok
+
+test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 196.43s
+

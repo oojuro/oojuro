@@ -23,7 +23,7 @@ CREATE INDEX IF NOT EXISTS docs_time ON docs(valid_at, seq);
 CREATE VIRTUAL TABLE IF NOT EXISTS fts USING fts5(text, content='docs', content_rowid='seq', tokenize='porter unicode61');
 ";
 
-const SEARCH: &str = "
+pub(super) const SEARCH: &str = "
 SELECT d.id, bm25(fts) AS s FROM fts JOIN docs d ON d.seq = fts.rowid
 WHERE fts MATCH ?1 AND d.valid_at <= ?2 AND d.recorded_at <= ?3
   AND NOT EXISTS (SELECT 1 FROM docs n WHERE n.key = d.key AND n.seq != d.seq

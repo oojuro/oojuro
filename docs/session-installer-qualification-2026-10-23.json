@@ -1,0 +1,138 @@
+{
+  "base": "d013b4aa973d199ef94229803c7a86fe87f9c1be",
+  "binary": {
+    "build_jobs": 2,
+    "compiler_wrappers": "existing portable Zig baseline cc/c++",
+    "path": "work/integration-client-target/debug/oojuro",
+    "profile": "dev, debug=0, dependency opt-level=2",
+    "rustc": "1.99.0 (b940084d7 2026-09-28)",
+    "rustflags": "-C target-cpu=x86-64",
+    "sha256": "0e093079e4a7b8f9194a48ba857bffc0f60ff7a1d26604dec2d6c51cfa17b142",
+    "target": "x86_64-unknown-linux-gnu"
+  },
+  "client_contract": {
+    "default": "new provider session creates journal; resume/retry keeps mapping; legacy explicit fixed-journal path retained",
+    "discovery": "GET /api/capture; v2 requires journal_mode=session and session_endpoint=/api/capture/sessions, physical journal/agent/producer/key/current expiry and limits validated",
+    "event_protocol": "existing bounded framed v1 unchanged, sent only to saved logical journal route",
+    "key_exposure": "no key argv, URL, stdout, prompt or service/CLI child environment",
+    "key_input": [
+      "protected mode0600 file",
+      "installer existing OOJURO_API_KEY environment",
+      "installer hidden terminal input that refuses echo fallback"
+    ],
+    "legacy_entry_version": 1,
+    "mapping": "provider metadata or UUID filename, otherwise pinned path fallback excluding inode; role-derived label saved with original pending batch before effects",
+    "new_entry_version": 2,
+    "read_access": "separate project read credential; capture key grants no history/file reads",
+    "session_request": "POST /api/capture/sessions application/json {format:1,run_id:64hex,label:trimmed UTF8<=128 bytes}",
+    "session_response": "format=1; physical source, agent and run pinned; logical journal/project opaque; events_url exact /api/capture/journals/<journal>/events",
+    "write_access": "capture only; no file upload privilege expansion"
+  },
+  "date": "2026-10-23",
+  "dependencies_added": 0,
+  "format": "oojuro-session-installer-qualification-1",
+  "limits": {
+    "background_installer_platform": "Linux user systemd; synthetic fixture used --no-service",
+    "bounded_identity_header_bytes": 65536,
+    "initial_history": "old bytes seeded/excluded; bounded identity header inspection is not an import",
+    "line_bytes": 16777216,
+    "local_counter_status": "acknowledged client transcript count after full response validation, not an AWS recovery proof",
+    "scan_entries": 50000,
+    "service_status": "discovery/service start is not a real accepted transcript proof; waiting status stays explicit",
+    "session_identity_fallback": "arbitrary moves without provider metadata or UUID cannot prove equivalent provider session",
+    "spool_bytes": 41943040,
+    "tracked_files_and_sessions": 10000,
+    "unknown_outcomes": "pending original batch and label/route retained; no automatic new IDs or rerouting"
+  },
+  "log_hashes_only_no_raw_logs_committed": {
+    "integration-final-build.log": "d2a92ede849800e8a3ddb0f131fe416ca531c43b2356de1970ab72157c7dbd86",
+    "integration-final-tests.log": "4df4c014b9e38d63e0fd7776a6c57dcf24342ce0b3e76b4d555a015ed9873259",
+    "integration-installer-final.log": "40afceb65e60ee3d0ae4da407bc52cc44fa919e721fe47f95dd04906317638a1"
+  },
+  "not_claimed": [
+    "AWS capacity, recovery or durability drills",
+    "production latency or p95/p99",
+    "whole-process RAM reduction",
+    "real user history imported or verified",
+    "published package or merged PR"
+  ],
+  "pr": "https://github.com/oojuro/oojuro/pull/70",
+  "remaining_gates": [
+    "actual Codex/Claude/user-service installation and newly accepted transcript event",
+    "project history/read/MCP one-setup bundle after installer qualification",
+    "optional explicit logical-journal reuse preferences beyond existing fixed-journal clients",
+    "production deployment approval; no deployment performed"
+  ],
+  "repository": "oojuro/oojuro",
+  "runtime_source_commit": "f6429cae9b6d4c594c39bd634ac210706aeb38b6",
+  "signed_off": true,
+  "source_sha256": {
+    "Cargo.lock": "fb43707821cf00742e2f9f1f4d0e5d11057ca367938179074d5c8c97996b611e",
+    "crates/oojuro/src/bin/oojuro.rs": "1c58e935e6916b6d4a2c19b1f936f7d2a97748ce3e1b02139993b629ab8a6a79",
+    "crates/oojuro/src/hosted_capture.rs": "22c78a2e89f8e18c6fb2582a25c8e19172471a9956d218b3d7696e3b952782e5",
+    "crates/oojuro/src/hosted_capture/session.rs": "b0c8e6931e95128c772033f0ef5c9fe09c5c25271f826258846f8e0a5114de4d",
+    "docs/AGENT_SESSION_INSTALLER.md": "793ba3b24be8f2c8ff6aedea31e0634ceb10f774698cefdcf5127d795d94dd8f",
+    "scripts/connect-agent.py": "c8e7e970898759df81f28695bc68c953926a33f0aaa7c3c9a5321e7a3297aa58",
+    "scripts/test-connect-agent.py": "4bcc2291836fe4c9e0ca0c6a3b28c45afaeea18e465ea42ce4b5e821c3ecfc71"
+  },
+  "source_sha256_note": "Preserved original local qualification snapshot at client docs commit246efd6; runtime f6429cae9b6d4c594c39bd634ac210706aeb38b6 and frozen binary unchanged. This follow-up adds existing hosted evidence without rerunning or replacing local measurements.",
+  "status": "private draft; local/client and synthetic joined hosted CLI qualification passed; actual owner agent/service acceptance and production activation pending",
+  "verification": {
+    "build": {
+      "command": "cargo build --locked -p oojuro --bin oojuro",
+      "passed": true
+    },
+    "git_diff_check": true,
+    "installer_boundary": {
+      "authority": "synthetic subprocess CLI; no real agents/network/systemd",
+      "command": "python3 scripts/test-connect-agent.py",
+      "failed": 0,
+      "passed": 2
+    },
+    "joined_hosted": {
+      "authority": "actual frozen CLI processes, real HTTP/native session authority, disposable PostgreSQL/TLS and synthetic provider transcripts; not an owner or systemd installation",
+      "frozen_cli": {
+        "accepted_transcript_events": 3,
+        "actual_agent_installation": false,
+        "actual_systemd": false,
+        "capture_read_denied": true,
+        "cli_sha256": "0e093079e4a7b8f9194a48ba857bffc0f60ff7a1d26604dec2d6c51cfa17b142",
+        "cli_source": "f6429cae9b6d4c594c39bd634ac210706aeb38b6",
+        "fixture": "actual-frozen-cli-http-postgresql-synthetic-source",
+        "journals": 2,
+        "old_history_excluded": true,
+        "production": false,
+        "project_read_prior_context": true,
+        "resume_reopened_same_journal": true
+      },
+      "pr": "https://github.com/oojuro/o-cloud/pull/74",
+      "qualification_artifact": "oojuro-integration-sessions-qualification.json",
+      "qualification_artifact_sha256": "2ceeed25e41063e73b0d6a08962325c75bc659ea835fb29232e523fb531c9e92",
+      "real_pg_tls_http_suite_passed": 14,
+      "repository": "oojuro/o-cloud",
+      "runtime_source_commit": "d61cdc99919550c4c33e20c295b2ad2cef8fb0be"
+    },
+    "rust_library": {
+      "binary_target_tests": 0,
+      "command": "cargo test --locked -p oojuro --lib --bin oojuro",
+      "failed": 0,
+      "ignored": 0,
+      "passed": 38
+    },
+    "scenarios": [
+      "accepted session-create response lost; durable run+label retry produces same mapping",
+      "accepted capture event response lost; original pending frame reopens/replays exactly",
+      "later configured role does not change pending session mapping label",
+      "two distinct provider sessions produce two logical journal mappings",
+      "same provider session ID across different resume paths has the same run identity",
+      "Codex and Claude new transcript capture with preexisting bytes excluded",
+      "Claude sidechain reporting parent sessionId remains distinct by stable agent filename",
+      "strict physical source/agent/run/journal/exact relative route validation",
+      "old version1 serialized connection and spool fields unchanged; private source/single-writer fences retained",
+      "no key argv or output, protected temporary key removed, API mode no browser approval",
+      "installer dry run creates no files and requires no key",
+      "repeated installer invocation preserves existing connection",
+      "local acknowledgement counters readable while capture service owns spool lock, under matching current discovery identity"
+    ]
+  }
+}

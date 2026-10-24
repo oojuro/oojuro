@@ -1,0 +1,263 @@
+warning: associated function `of` is never used
+   --> crates/oojuro-nine/src/segment.rs:135:12
+    |
+126 | impl Span {
+    | --------- associated function in this implementation
+...
+135 |     pub fn of(meta: &[RowMeta]) -> Self {
+    |            ^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `terms` and `total_length` are never read
+   --> crates/oojuro-nine/src/segment.rs:277:9
+    |
+273 | pub(crate) struct DiskSegment {
+    |                   ----------- fields in this struct
+...
+277 |     pub terms: u64,
+    |         ^^^^^
+278 |     pub total_length: u64,
+    |         ^^^^^^^^^^^^
+
+warning: methods `file_bytes` and `version` are never used
+   --> crates/oojuro-nine/src/segment.rs:597:12
+    |
+467 | impl DiskSegment {
+    | ---------------- methods in this implementation
+...
+597 |     pub fn file_bytes(&self) -> u64 {
+    |            ^^^^^^^^^^
+...
+917 |     pub fn version(&self) -> u32 {
+    |            ^^^^^^^
+
+warning: method `bytes` is never used
+   --> crates/oojuro-nine/src/wal.rs:245:19
+    |
+122 | impl Journal {
+    | ------------ method in this implementation
+...
+245 |     pub(crate) fn bytes(&self) -> u64 {
+    |                   ^^^^^
+
+warning: `oojuro-nine` (lib) generated 4 warnings
+   Compiling ring v0.17.14
+   Compiling oojuro-rank v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-dependency-policy/crates/oojuro-rank)
+   Compiling oojuro-trace v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-dependency-policy/crates/oojuro-trace)
+warning: associated function `new` is never used
+   --> crates/oojuro-trace/src/columns.rs:480:12
+    |
+479 | impl ColStore {
+    | ------------- associated function in this implementation
+480 |     pub fn new(seal: bool) -> Self {
+    |            ^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `oojuro-trace` (lib) generated 1 warning
+   Compiling oojuro-engine v0.1.0 (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-dependency-policy/crates/oojuro-engine)
+    Finished `test` profile [unoptimized] target(s) in 6.87s
+     Running unittests src/lib.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/oojuro_engine-287b63c2503da9aa)
+
+running 177 tests
+test audit::tests::authentic_but_incorrect_head_or_count_or_domain_is_refused ... ok
+test audit::tests::every_event_and_checkpoint_link_is_verified_without_sampling ... ok
+test audit::tests::every_signed_field_is_bound_and_unknown_versions_refused ... ok
+test audit::tests::hosted_opaque_ciphertext_heads_and_timer_checkpoints_use_same_signature_seam ... ok
+test audit::tests::native_export_requires_explicit_expected_project_even_with_valid_current_witness ... ok
+test audit::tests::sender_public_key_cannot_replace_pinned_trust_or_scope ... ok
+test audit::tests::signed_content_free_export_roundtrip_and_witness ... ok
+test audit::tests::strict_bounded_json_and_signature_lengths ... ok
+test audit::tests::trusted_current_detects_suffix_truncation_and_floor_detects_alternate_longer_fork ... ok
+test audit::tests::uncheckpointed_tail_and_reordered_checkpoints_are_refused ... ok
+test capture_log::tests::capture_authority_missing_policy_context_and_contradictory_offsets_fail_closed ... ok
+test capture_log::tests::capture_authority_rejects_unknown_stored_and_withheld_decision_fields ... ok
+test capture_log::tests::capture_authority_torn_or_uncertain_write_never_advances_acknowledged_memory ... ok
+test capture_log::tests::capture_authority_zero_output_progress_reopens_and_compacts_without_sidecars ... ok
+test capture_log::tests::capture_capacity_counts_args_context_policy_and_preserves_committed_prefix ... ok
+test capture_log::tests::capture_registration_capacity_refuses_before_append_and_replay_publication ... ok
+test capture_log::tests::capture_replay_capacity_rejects_before_exposing_raw_or_parsed_output ... ok
+test file_capture::tests::byte_exact_partial_tails_reopen_and_append_only_resume ... ok
+test file_capture::tests::final_symlink_swap_to_the_same_inode_is_atomically_refused ... ok
+test file_capture::tests::final_symlinks_and_non_regular_files_are_refused ... ok
+test file_capture::tests::policy_precedes_even_source_inspection_and_never_registers_denied_sources ... ok
+test file_capture::tests::replacement_truncation_and_changed_early_prefix_fail_without_mixing_generations ... ok
+test lexical::memory::tests::charges_posting_document_and_text_spare_capacity ... ok
+test lexical::passage::tests::composite_components_and_short_inputs_are_exact ... ok
+test lexical::passage::tests::literal_evidence_keeps_priority_over_a_shorter_variant_only_span ... ok
+test lexical::passage::tests::selects_distant_exact_evidence_with_unicode_and_bounded_ranges ... ok
+test lexical::passage::tests::word_cache_overflow_keeps_normalized_hits_and_original_offsets ... ok
+test lexical::segments::codec::tests::oracle_posting_bit_order_and_crc_vector ... ok
+test lexical::segments::codec::tests::rejects_all_truncations_and_single_bit_corruption ... ok
+test lexical::segments::codec::tests::rejects_authenticated_structural_corruption ... ok
+test lexical::segments::codec::tests::rejects_invalid_inputs_and_expansion ... ok
+test lexical::segments::codec::tests::rejects_padding_overflow_and_invalid_utf8 ... ok
+test lexical::segments::codec::tests::roundtrip_blocks_full_width_ids_and_gamma_tf ... ok
+test lexical::segments::tests::actual_multisegment_row_boundaries_keep_native_score_bits ... ok
+test lexical::segments::tests::authenticated_malformed_cache_cannot_add_ghost_rows_or_plaintext ... ok
+test lexical::segments::tests::copied_origin_fork_with_equal_highwater_rebuilds_exact_receipt_branch ... ok
+test lexical::segments::tests::crash_publication_child ... ignored
+test lexical::segments::tests::encrypted_disk_scope_lock_bounds_and_failed_publication_preserve_authority_ack ... ok
+test lexical::segments::tests::local_native_segment_measurement ... ignored
+test lexical::segments::tests::lost_corrupt_missing_ahead_forked_and_compacted_cache_rebuilds_without_ghosts ... ok
+test lexical::segments::tests::reopen_without_tokenization_extend_dedupe_and_merge_exact_scores ... ok
+test lexical::segments::tests::sigkill_segment_and_manifest_publication_never_loses_authoritative_rows ... ok
+test lexical::segments::tests::stale_cache_extends_only_committed_receipts_and_registration_is_a_watermark ... ok
+test lexical::tests::native_above_floor_large_candidate_pruning_and_full_decimal_prefix_ties_match_oracle ... ok
+test lexical::tests::native_bitwise_oracle_port_covers_time_phrases_identifiers_dedupe_filters_and_pruning ... ok
+test lexical::tests::rejected_authority_commit_does_not_project_and_reopen_requires_fresh_binding ... ok
+test lexical::tests::streamed_analysis_matches_original_features_with_a_bounded_temporary_stem_cache ... ok
+test raw::tests::arbitrary_bytes_replay_resume_compact_and_restore ... ok
+test raw::tests::complete_but_unacknowledged_append_is_found_on_reopen_and_retry ... ok
+test raw::tests::gaps_changed_prefix_identity_reuse_and_wrong_keys_are_refused ... ok
+test raw::tests::inherited_spawn_lock_process_child ... ignored, subprocess fixture invoked by inherited_spawn_lock_still_requires_wrong_key
+test raw::tests::inherited_spawn_lock_still_requires_wrong_key ... ok
+test raw::tests::interrupted_append_never_advances_the_acknowledged_cursor ... ok
+test raw::tests::opening_refuses_unrelated_directories_and_missing_parents ... ok
+test raw::tests::raw_bytes_and_source_descriptors_never_appear_on_disk ... ok
+test raw::tests::raw_process_child ... ignored, subprocess fixture invoked by sigkill_recovers_an_acknowledged_raw_source
+test raw::tests::reopen_retries_parent_sync_after_format_committed_but_sync_failed ... ok
+test raw::tests::sigkill_recovers_an_acknowledged_raw_source ... ok
+test raw::tests::sink_failure_does_not_mutate_the_journal ... ok
+test receipts::tests::absent_get_exact_null_bound_and_compaction_invalidates_existing_snapshots ... ok
+test receipts::tests::exact_encoded_bounds_refuse_unsplittable_output_and_invalid_limits ... ok
+test receipts::tests::exact_original_receipts_and_private_state_boundary ... ok
+test receipts::tests::independent_origin_and_copied_origin_fork_cannot_resume_or_read_old_view ... ok
+test receipts::tests::interleaved_withheld_and_stored_emissions_keep_original_sparse_emission_positions ... ok
+test receipts::tests::native_memory_and_persistent_search_hits_resolve_exact_original_ids_without_dedupe_loss ... ok
+test receipts::tests::ordinal_range_includes_unknown_time_receipts_without_inventing_timestamps ... ok
+test receipts::tests::pages_no_skips_or_duplicates_and_retry_keeps_original_snapshot_after_append_reopen ... ok
+test receipts::tests::public_prefix_commitment_is_bound_to_counts_identity_and_domain ... ok
+test receipts::tests::public_watermark_never_exposes_plaintext_raw_context_prefix_digest ... ok
+test receipts::tests::refuses_scope_cursor_tamper_wrong_range_domain_ahead_and_inconsistent_stamps ... ok
+test record::context::tests::before_turn_checks_both_times_and_excludes_echoes_prompt_and_unindexed ... ok
+test record::context::tests::callback_failure_aborts_the_pack_instead_of_returning_partial_context ... ok
+test record::context::tests::deterministic_ties_use_newer_then_writer_then_decimal_id_text_and_top_k ... ok
+test record::context::tests::disabled_never_calls_meter_and_does_not_enable_injection ... ok
+test record::context::tests::exact_utf8_byte_and_complete_token_limits_do_not_cut_records ... ok
+test record::context::tests::inconsistent_reported_turn_time_or_future_same_session_turn_is_invalid ... ok
+test record::context::tests::oversized_first_record_is_skipped_whole_and_smaller_later_record_can_fit ... ok
+test record::context::tests::preserves_whole_original_record_provenance_unicode_and_measures_final_envelope ... ok
+test record::context::tests::ranked_evidence_is_preserved_but_does_not_verify_reported_causality ... ok
+test record::context::tests::rejects_nonfinite_scores_duplicate_sources_oversized_inputs_and_receipts ... ok
+test record::context::tests::text_floor_survives_ranker_boost_and_reported_turn_prior ... ok
+test record::managed::control::read::tests::page_bounds_exact_encoded_size_and_changed_tip_fail_closed ... ok
+test record::managed::control::read::tests::retained_status_survives_denial_and_names_snapshot_counts_honestly ... ok
+test record::managed::control::read::tests::signed_pages_include_checkpoint_only_links_and_exact_terminal_witness ... ok
+test record::managed::rank_view::tests::derived_sealing_is_current_generation_scope_time_filter_and_purpose_bound ... ok
+test record::managed::rank_view::tests::explicit_builder_directory_is_retired_and_denial_prevents_new_callbacks ... ok
+test record::managed::rank_view::tests::final_retained_witness_check_refuses_callback_result_after_external_change ... ok
+test record::managed::rank_view::tests::genuine_managed_projection_selects_key_winner_before_eligibility_or_filter ... ok
+test record::managed::tests::changed_retry_selector_and_unowned_files_fail_closed ... ok
+test record::managed::tests::ciphertext_corruption_wrong_owner_and_second_data_owner_refuse ... ok
+test record::managed::tests::crash_worker ... ignored, subprocess helper invoked only by managed_sigkill_publication_boundaries
+test record::managed::tests::data_and_retained_control_encryption_keys_must_be_distinct ... ok
+test record::managed::tests::denial_fences_already_open_owner_and_old_data_restore_but_not_copied_key ... ok
+test record::managed::tests::existing_or_denied_data_cannot_reenroll_under_a_fresh_control_root ... ok
+test record::managed::tests::managed_exact_sparse_ids_times_retries_lineage_and_reopen ... ok
+test record::managed::tests::managed_sigkill_publication_boundaries ... ok
+test record::managed::tests::missing_enrollment_never_bootstraps_existing_data_or_empty_marker ... ok
+test record::managed::tests::old_control_restore_and_missing_witness_cannot_bootstrap ... ok
+test record::managed::tests::overflow_and_generation_cache_registry_fail_before_false_ack ... ok
+test record::managed::tests::public_lifecycle_receipt_binds_counts_ids_scope_range_and_cipher_commitment ... ok
+test record::managed::tests::retention_uses_original_recorded_clock_not_claimed_valid_time ... ok
+test record::managed::tests::root_marker_is_inside_complete_live_byte_scan_scope ... ok
+test record::managed::tests::shared_short_strings_are_reported_not_falsely_proved_absent ... ok
+test record::managed::tests::typed_attribute_payload_residue_prevents_false_local_absence ... ok
+test record::managed::tests::writer_cleanup_is_local_only_and_signed_pending_permanent ... ok
+test record::paged::cache::disk::tests::actual_disk_reference_tree_reopens_extends_and_merges_without_a_ref_vec ... ok
+test record::paged::cache::disk::tests::disk_index_crash_child ... ignored
+test record::paged::cache::disk::tests::disk_index_sigkill_data_page_tree_and_descriptor_boundaries_preserve_original_receipt ... ok
+test record::paged::cache::disk::tests::reference_tree_corruption_missing_descriptor_and_namespace_misuse_cannot_make_hits ... ok
+test record::paged::cache::disk::tests::streamed_file_inventory_retires_orphans_and_all_disk_content_is_encrypted ... ok
+test record::paged::reader::directory::tests::actual_disk_reader_uses_no_locator_population_and_exact_original_receipts_keys_and_query ... ok
+test record::paged::reader::directory::tests::directory_crash_child ... ignored
+test record::paged::reader::directory::tests::directory_scope_lock_symlinks_and_plaintext_are_refused ... ok
+test record::paged::reader::directory::tests::directory_sigkill_pack_and_root_boundaries_never_lose_the_original_ack ... ok
+test record::paged::reader::directory::tests::disk_cow_extend_preserves_birth_proofs_snapshot_winners_and_compacts_old_packs ... ok
+test record::paged::reader::directory::tests::disk_directory_loss_corruption_semantic_forgery_fork_and_known_floor_cannot_supply_authority ... ok
+test record::paged::reader::directory::tests::no_key_tail_advances_empty_key_root_and_old_snapshot_never_sees_future_version ... ok
+test record::paged::reader::directory::tests::source_duplicate_receipt_is_rejected_without_a_request_set_or_index_fallback ... ok
+test record::paged::tests::future_rows_change_literal_df_but_old_snapshot_keeps_native_bits_and_identifiers ... ok
+test record::paged::tests::paged_above_floor_large_candidates_and_full_decimal_ties_match_exact_scorer ... ok
+test record::paged::tests::paged_crash_publication_child ... ignored
+test record::paged::tests::paged_known_witness_fork_truncation_and_corrupt_cache_refuse_ghosts ... ok
+test record::paged::tests::paged_page_selection_does_not_skip_oversized_next_row ... ok
+test record::paged::tests::paged_query_matches_native_bits_visibility_literals_identifiers_and_key_winners ... ok
+test record::paged::tests::paged_reader_schema_corruption_scope_bounds_and_encrypted_disk_are_enforced ... ok
+test record::paged::tests::paged_sigkill_new_cache_publication_preserves_original_ack_and_query ... ok
+test record::paged::tests::paged_winner_precedes_lower_bounds_and_typed_filter_statistics ... ok
+test record::paged::tests::restart_tail_refresh_original_snapshot_and_cursor_do_not_adopt_future_rows ... ok
+test record::paged::tests::streamed_reader_exact_receipts_original_reads_and_sealed_pages ... ok
+test record::paged::tree::tests::bounded_page_cache_cannot_reuse_plaintext_under_a_different_cipher ... ok
+test record::paged::tree::tests::codec_rejects_truncation_overflow_padding_and_unbounded_ref_claims ... ok
+test record::paged::tree::tests::cow_preserves_birth_bindings_and_refuses_same_number_fork_or_midread_advance ... ok
+test record::paged::tree::tests::external_sort_spills_many_runs_merges_bounded_groups_and_refuses_cross_run_duplicate ... ok
+test record::paged::tree::tests::metadata_purposes_key_classes_bounds_and_corruption_fail_closed ... ok
+test record::paged::tree::tests::packed_sorted_build_point_seek_and_complete_cursor_do_not_need_population_metadata ... ok
+test record::persistent::tests::absent_corrupt_ahead_malformed_and_foreign_cache_rebuild_verified_log ... ok
+test record::persistent::tests::authenticated_malformed_posting_lengths_refuse_before_hydrating_ghosts ... ok
+test record::persistent::tests::cache_failure_cannot_change_authority_ack_and_poisoned_handle_refuses ... ok
+test record::persistent::tests::cache_lock_symlink_plaintext_scan_and_authority_directory_refusal ... ok
+test record::persistent::tests::copied_origin_equal_highwater_fork_and_truncation_never_serve_old_postings ... ok
+test record::persistent::tests::multisegment_record_row_boundaries_preserve_every_duplicate_logical_id ... ok
+test record::persistent::tests::record_crash_publication_child ... ignored
+test record::persistent::tests::reopen_tail_merge_preserves_versions_original_ids_and_score_bits ... ok
+test record::persistent::tests::sigkill_record_segments_and_manifest_preserve_authority_retry_and_visibility ... ok
+test record::persistent::tests::stale_reopen_tokenizes_only_committed_tail_and_exact_retry_adds_no_segment ... ok
+test record::projection::memory_tests::projection_allocation_measurement ... ignored, explicit synthetic retained-allocation estimate and admission overhead measurement
+test record::projection::memory_tests::retained_allocation_includes_source_metadata_spare_capacity_without_changing_results ... ok
+test record::projection::tests::every_source_field_change_requires_a_new_view ... ok
+test record::projection::tests::projected_query_binding_duplicate_and_budget_fail_closed ... ok
+test record::projection::tests::projected_query_exact_utf8_passages_match_dev_oracle ... ok
+test record::projection::tests::projected_query_filter_precedes_floor_and_stored_only_cannot_reappear ... ok
+test record::projection::tests::projected_query_preserves_opaque_ids_bits_time_continuation_and_pre_topk_ties ... ok
+test record::projection::tests::refreshed_projection_matches_fresh_build_for_growth_reorder_replacement_and_removal ... ok
+test record::projection::tests::refreshed_projection_refuses_scope_duplicates_and_invalid_rows ... ok
+test record::ranking::tests::corrupt_table_rebuild_and_registered_erase_refuse_foreign_files ... ok
+test record::ranking::tests::empty_expand_missing_table_nonfinite_and_work_fail_transactionally_fallback ... ok
+test record::ranking::tests::expansion_candidates_use_shared_union_model_and_reject_foreign_duplicates_hidden ... ok
+test record::ranking::tests::expansion_never_promotes_a_new_identifier_into_the_original_anchor_group ... ok
+test record::ranking::tests::negative_window_scores_keep_tail_and_f2_groups_stay_first ... ok
+test record::ranking::tests::off_never_calls_plugin_and_all_skipped_preserves_ids_bits_and_f2 ... ok
+test record::ranking::tests::rescore_rechecks_lifecycle_before_each_callback ... ok
+test record::ranking::tests::tables_are_sealed_bound_to_view_filter_key_and_current_lifecycle_and_load_has_no_writes ... ok
+test record::tests::counted_json_preserves_exact_escaped_wire_bounds ... ok
+test record::tests::record_time_ack_reopen_and_original_typed_retry ... ok
+test record::tests::record_time_crash_child ... ok
+test record::tests::record_time_direct_nine_bitwise_version_time_and_background_parity ... ok
+test record::tests::record_time_direct_nine_floor_pruning_and_long_id_ties ... ok
+test record::tests::record_time_key_winner_precedes_lower_and_metadata_filters ... ok
+test record::tests::record_time_known_prefix_detects_same_origin_rollback_and_failed_projection ... ok
+test record::tests::record_time_namespace_is_explicit_and_disk_is_sealed ... ok
+test record::tests::record_time_original_intents_and_complete_json_are_required ... ok
+test record::tests::record_time_outputs_keep_header_bound_adapter_through_reopen ... ok
+test record::tests::record_time_overflow_never_commits_and_retry_does_not_read_clock ... ok
+test record::tests::record_time_sealed_but_incomplete_or_extended_receipts_fail_closed_on_reopen ... ok
+test record::tests::record_time_sigkill_before_and_after_ack_recovers_original_times_ids_and_queries ... ok
+test record::tests::record_time_snapshot_pages_scope_fork_reopen_and_output_bounds ... ok
+test record::tests::record_time_stored_only_never_reenters_content_phrase_or_identifier_anchor ... ok
+
+test result: ok. 167 passed; 0 failed; 10 ignored; 0 measured; 0 filtered out; finished in 34.86s
+
+     Running unittests src/lib.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/oojuro_rank-2c17921c85fb9b61)
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running tests/conformance.rs (/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/conformance-4fe666610bd1a6d3)
+
+running 8 tests
+test bounded_inputs_and_empty_candidates ... ok
+test disabled_is_exact_and_does_not_call_ranker ... ok
+test finite_fusion_is_deterministic_with_time_then_text_id_ties ... ok
+test invalid_outputs_skip_whole_stage_and_keep_lexical_exact ... ok
+test later_invalid_stage_cannot_erase_a_previous_valid_stage ... ok
+test missing_table_failure_and_budgets_fail_open_without_partial_scores ... ok
+test visibility_boundary_rejects_wrong_writer_duplicate_ids_and_invalid_scores ... ok
+test weighting_and_overflow_are_checked_before_commit ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

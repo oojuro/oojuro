@@ -57,19 +57,41 @@ By making a contribution to this project, I certify that:
 Forgot to sign? Amend the last commit with `git commit --amend -s`, or sign a series with
 `git rebase --signoff main`.
 
-## Build and test
+## Branches and pull requests
 
-You need a recent stable Rust toolchain (the workspace uses edition 2024) and a C compiler (the storage path
-builds zstd and SQLite). Linux is the first-class platform.
+Create a topic branch from current `main`; keep unrelated changes in separate branches. An isolated worktree is useful when another change is in progress:
 
 ```bash
-cargo build --workspace
-cargo test --workspace
-cargo clippy --workspace --all-targets
+git fetch origin main
+git worktree add -b your-topic ../oojuro-your-topic origin/main
 ```
 
-The benchmark harnesses (`oojuro-bench`, `oojuro-tracebench`) build many competitor engines and fetch public
-datasets; see `docs/BENCH_HARNESS.md` and `docs/TRACEBENCH.md`. They are not needed to work on the engine.
+Open a draft pull request while the change is being developed. Include what changed, the exact tests run and any remaining limits. Use `git commit -s` for each commit. Maintainers may review their own work; a draft PR does not authorize a main-branch merge, binary/package release or deployment.
+
+## Build and test
+
+You need stable Rust (edition 2024) and a C compiler for the standard zstd codec. Linux is the first-class platform. CI pins Rust 1.99.1 on disposable GitHub-hosted Ubuntu 24.04 runners.
+
+Plain `cargo build --locked` and `cargo test --locked` select only `oojuro-engine`, `oojuro-rank` and `oojuro-store`. Agent CLI/runtime applications now live in `oojuro/o-journal`. The dependency policy gate checks these libraries independently, including conditional platform dependencies; see [DEPENDENCIES.md](DEPENDENCIES.md). Store JSON-reporting tools require `--features bench-tools`; `baselines` and `codecs` enable it automatically. No public library API is removed.
+
+The normal checks select runtime packages explicitly, without benchmark comparison features:
+
+```bash
+cargo test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro-store -p oojuro-nine
+cargo test --locked --no-default-features --lib --tests -p oojuro-engine -p oojuro-rank -- --test-threads=1
+cargo test --locked --no-default-features --lib --tests -p oojuro-trace
+```
+
+The native command runs authority, retrieval, allocation accounting and rank conformance tests serially, including subprocess crash/lock fixtures. The third command checks the retained legacy trace-storage library. Journal owns CLI, daemon, proxy and MCP integration tests. They use synthetic data and local test servers. Give fixtures a short private real-directory `TMPDIR` with enough disk space and no symlink ancestors (the hosted credential guard rejects them); the daemon rejects socket paths longer than 103 bytes. CI creates private scratch under `runner.temp`. CI explicitly repeats `cargo test --locked --no-default-features -p oojuro-trace --test compat` as a named historical-format gate. It opens the frozen `df8fa85` fixture, compares its original answers, then appends and merges old/new segments. The shared storage suite includes encrypted/plaintext transitions, strict sealing, corruption and torn-tail recovery. These checks do not establish compatibility for every historical native binary.
+
+Agent setup, client SDK, declaration and application packaging checks live in
+[Oojuro Journal](https://github.com/oojuro/o-journal). Add checks to the component
+that owns the behavior; source reorganization does not promote a package or a
+cloud deployment.
+
+The benchmark harnesses (`oojuro-bench`, `oojuro-tracebench`) build competitor engines and fetch public datasets. `oojuro-store`'s `baselines` and `codecs` features are also comparison tools. They are not part of normal CI. Run them deliberately for the change being measured; see `docs/BENCH_HARNESS.md` and `docs/TRACEBENCH.md`. Do not use `--workspace` or `--all-features` as a substitute for the runtime checks above.
+
+GitHub Actions is currently disabled at repository level. This PR proposes the workflow; an owner must review and enable Actions before remote check results exist. The workflow does not configure branch protection, require another reviewer, publish packages or deploy services. Keep trusted signing and release credentials outside PR jobs; see [publication boundaries](docs/PUBLICATION.md).
 
 ## What a good change looks like
 
@@ -85,7 +107,7 @@ datasets; see `docs/BENCH_HARNESS.md` and `docs/TRACEBENCH.md`. They are not nee
 - **No real data.** Never commit transcripts, logs or datasets, and never commit anything from a real person's
   agent history. Tests use synthetic text. Benchmarks use public datasets that are fetched on demand.
 - **No secrets.** Real tokens, keys and credentials never go into the repository. Tests use invented values
-  or build them at run time (see `crates/oojuro-capture/src/redact.rs` for how).
+  or build them at run time (agent redaction examples live in `oojuro/o-journal`).
 
 ## Reporting bugs and security issues
 

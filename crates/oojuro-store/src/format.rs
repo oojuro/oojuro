@@ -32,6 +32,8 @@ pub const CODEC_RAW: u8 = 0;
 pub const CODEC_LZ4: u8 = 1;
 pub const CODEC_ZSTD: u8 = 2;
 pub const HAS_DIGEST: u8 = 0x80;
+/// Codec flag: the packed body is sealed (`crypto::FrameCipher::seal_frame`); no digest is stored.
+pub const ENCRYPTED: u8 = 0x40;
 /// Record flag: text is a piece list (see module docs).
 pub const PIECES: u8 = 0x80;
 pub const MAX_FRAME: usize = 64 << 20;
@@ -280,12 +282,14 @@ pub struct FrameHead {
     pub raw_len: u32,
     pub meta_len: u32,
     pub digest: Option<[u8; 16]>,
+    /// The packed body is sealed with the store key.
+    pub encrypted: bool,
     /// Offset of the packed body inside the payload.
     pub body_at: u32,
 }
 
 pub fn put_head(out: &mut Vec<u8>, h: &FrameHead) {
-    out.push(h.codec | if h.digest.is_some() { HAS_DIGEST } else { 0 });
+    out.push(h.codec | if h.digest.is_some() { HAS_DIGEST } else { 0 } | if h.encrypted { ENCRYPTED } else { 0 });
     put_varint(out, h.dict as u64);
     put_varint(out, h.first_seq);
     put_varint(out, h.count as u64);
@@ -315,7 +319,8 @@ pub fn get_head(payload: &[u8]) -> Result<FrameHead> {
         None
     };
     Ok(FrameHead {
-        codec: flags & !HAS_DIGEST,
+        codec: flags & !(HAS_DIGEST | ENCRYPTED),
+        encrypted: flags & ENCRYPTED != 0,
         dict,
         first_seq,
         count: count as u32,

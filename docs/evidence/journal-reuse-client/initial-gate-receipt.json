@@ -1,0 +1,118 @@
+{
+  "source": "da76c40b039f4df9b24d9e7937709339ef2ddc5f",
+  "tmpdir": "/var/tmp/oojuro-reuse-cli-22ne78v5",
+  "gates": [
+    {
+      "name": "capture-unit",
+      "command": [
+        "cargo",
+        "+1.99.1",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro",
+        "--bin",
+        "oojuro",
+        "hosted_capture::",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit": 0,
+      "seconds": 34.905001401901245
+    },
+    {
+      "name": "capture-cli",
+      "command": [
+        "cargo",
+        "+1.99.1",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro",
+        "--test",
+        "hosted_cli",
+        "--",
+        "--test-threads=1"
+      ],
+      "exit": 0,
+      "seconds": 2.3800888061523438
+    },
+    {
+      "name": "installer",
+      "command": [
+        "python3",
+        "scripts/test-connect-agent.py"
+      ],
+      "exit": 0,
+      "seconds": 0.5274186134338379
+    },
+    {
+      "name": "node",
+      "command": [
+        "node",
+        "--test",
+        "sdk/typescript/test/attachments.test.js",
+        "sdk/typescript/test/capture.test.js",
+        "sdk/typescript/test/client.test.js",
+        "sdk/typescript/test/file-deletion.test.js",
+        "sdk/typescript/test/files.test.js",
+        "sdk/typescript/test/journal-framed.test.js",
+        "sdk/typescript/test/journal.test.js",
+        "sdk/typescript/test/project.test.js",
+        "sdk/typescript/test/session-capture.test.js"
+      ],
+      "exit": 0,
+      "seconds": 8.493585586547852
+    },
+    {
+      "name": "npm-ci",
+      "command": [
+        "npm",
+        "ci",
+        "--prefix",
+        "scripts/ci-sdk",
+        "--ignore-scripts",
+        "--no-audit",
+        "--no-fund"
+      ],
+      "exit": 0,
+      "seconds": 0.6080131530761719
+    },
+    {
+      "name": "declarations",
+      "command": [
+        "node",
+        "scripts/ci-sdk/node_modules/typescript/bin/tsc",
+        "--strict",
+        "--noEmit",
+        "--target",
+        "ES2023",
+        "--module",
+        "NodeNext",
+        "--moduleResolution",
+        "NodeNext",
+        "sdk/typescript/test/capture-types.ts",
+        "sdk/typescript/test/file-deletion-types.ts",
+        "sdk/typescript/test/files-types.ts",
+        "sdk/typescript/test/journal-framed-types.ts",
+        "sdk/typescript/test/journal-types.ts",
+        "sdk/typescript/test/project-types.ts",
+        "sdk/typescript/test/session-attachment-types.ts",
+        "sdk/typescript/test/types.ts"
+      ],
+      "exit": 0,
+      "seconds": 0.663273811340332
+    },
+    {
+      "name": "offline-package",
+      "command": [
+        "python3",
+        "scripts/test-sdk-package.py"
+      ],
+      "exit": 0,
+      "seconds": 0.45906925201416016
+    }
+  ]
+}

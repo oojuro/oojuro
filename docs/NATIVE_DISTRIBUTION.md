@@ -1,3 +1,7 @@
+> Application native build/packaging scripts now live in [Oojuro Journal](https://github.com/oojuro/o-journal/tree/main/scripts).
+> Trusted release handoff belongs to [o-release-operator](https://github.com/oojuro/o-release-operator).
+> Historical source/package receipts below remain evidence for their exact revisions.
+
 # Native release licensing
 
 Scope: the `oojuro` and `oojurod` Linux x86-64 front doors, default features, locked production

@@ -1,0 +1,52 @@
+{
+  "base_client": "6704a35",
+  "wrapper_topic": "ef0d33627f361279d0e72e1d9b0c55502d3a4591",
+  "merge": "ac49dd2598f95cc23751f966c7b127f48d3a5d61",
+  "trees": {
+    "crates": {
+      "base": "01ddbc2050c5a3fcccd63e7af4008111bb3a800f",
+      "composed": "01ddbc2050c5a3fcccd63e7af4008111bb3a800f",
+      "identical": true
+    },
+    "sdk": {
+      "base": "9e8539d6610340bd7cfbea4ca9ef1ac86d6a31f7",
+      "composed": "9e8539d6610340bd7cfbea4ca9ef1ac86d6a31f7",
+      "identical": true
+    },
+    "Cargo.toml": {
+      "base": "a7481fd7c46477cb1f90d69944808bdad4832e07",
+      "composed": "a7481fd7c46477cb1f90d69944808bdad4832e07",
+      "identical": true
+    },
+    "Cargo.lock": {
+      "base": "0e9a9e133550f1fb511d3619a2330cff3098a6ba",
+      "composed": "0e9a9e133550f1fb511d3619a2330cff3098a6ba",
+      "identical": true
+    }
+  },
+  "helper_sources": {
+    "scripts/connect-agent.py": {
+      "reference": "6704a35",
+      "sha256": "9cac310b259b9f8b869b46121b392010ac5b9dd7c6e0469989c3f18b843499e8",
+      "identical": true
+    },
+    "scripts/connect-project.py": {
+      "reference": "6704a35",
+      "sha256": "b6773235083fb64d3ac4034776e71158e60e5ed8fd27574a47b2f1bd07ef62de",
+      "identical": true
+    },
+    "scripts/setup-agent.py": {
+      "reference": "ef0d336",
+      "sha256": "391414f2456b18c5b9402eeb7c95366a200e9d95f8ddcc88d20ff423788be5c5",
+      "identical": true
+    },
+    "scripts/test-setup-agent.py": {
+      "reference": "ef0d336",
+      "sha256": "d18e1d51b554361137d8edaa37dfdb87279168eed566ea775f485036e7d6eccd",
+      "identical": true
+    }
+  },
+  "new_tests_run": false,
+  "runtime_artifact_sha256": "d2a6b7adcb36d6d3541eb0df986ad6133f2bb9b26e230ff56bd6aa72fdb1bd82",
+  "toolchain_declaration": "CI RUST_TOOLCHAIN remains1.99.1; no rust-toolchain or rust-toolchain.toml exists in either source"
+}

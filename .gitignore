@@ -24,3 +24,6 @@ __pycache__/
 .idea/
 .vscode/
 .DS_Store
+
+# isolated SDK CI development tooling
+/scripts/ci-sdk/node_modules/

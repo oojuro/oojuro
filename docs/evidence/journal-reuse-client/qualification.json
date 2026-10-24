@@ -1,0 +1,26 @@
+{
+  "source": "da76c40b039f4df9b24d9e7937709339ef2ddc5f",
+  "rust_focused": {
+    "unit": 10,
+    "actual_hosted_cli": 12,
+    "failed": 0,
+    "ignored": 0
+  },
+  "python_installer": 2,
+  "node": {
+    "passed": 114,
+    "failed": 0,
+    "skipped": 0
+  },
+  "strict_declaration_files": 8,
+  "offline_package_export_surfaces": 5,
+  "binary_sha256": "d2a6b7adcb36d6d3541eb0df986ad6133f2bb9b26e230ff56bd6aa72fdb1bd82",
+  "sdk_tree": "50eb5a1e91ce4d5e6c1aadf0bee380d2b043d5f6",
+  "actual_rustc": "1.99.1",
+  "rustc_commit": "58cf8f9c35b355199727627d07ae34a4e2846d67",
+  "node_version": "24.20.0",
+  "zero_match_diagnostic": "Initial --bin hosted_capture selector matched zero and is not counted; corrected --lib selector passed10. Both raw logs retained.",
+  "engine_store_rank_retested": false,
+  "production": false,
+  "published_or_deployed": false
+}
