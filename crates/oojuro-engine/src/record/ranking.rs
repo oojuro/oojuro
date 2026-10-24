@@ -112,7 +112,7 @@ fn base(
             })
             .collect(),
     };
-    json(&result, q.max_bytes)?;
+    json_size(&result, q.max_bytes)?;
     Ok(result)
 }
 fn terms(query: &BTreeMap<String, usize>) -> Result<Vec<rank::Term<'_>>> {
@@ -221,6 +221,7 @@ fn search_inner(
     let mask = lexical::RecordVisibility {
         ids: &visible,
         keys: &keys,
+        original_text: Some(log),
     };
     let rows = log
         .records
@@ -616,7 +617,7 @@ fn search_inner(
         receipt,
         hits: output,
     };
-    json(&result, q.max_bytes)?;
+    json_size(&result, q.max_bytes)?;
     Ok(result)
 }
 

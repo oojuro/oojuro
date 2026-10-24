@@ -3,6 +3,12 @@ use super::*;
 use std::mem::size_of;
 
 impl Index {
+    #[cfg(test)]
+    pub(crate) fn original_text_allocation(&self) -> (usize, usize) {
+        self.documents.iter().fold((0, 0), |(len, capacity), d| {
+            (len + d.event.text.len(), capacity + d.event.text.capacity())
+        })
+    }
     pub(crate) fn estimated_heap_bytes(&self) -> usize {
         // std hides tree/table layout. Charge each tree entry for structural
         // overhead and each hash slot for alignment/control bytes separately.

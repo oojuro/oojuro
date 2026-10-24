@@ -265,6 +265,7 @@ impl Index {
         let mask = RecordVisibility {
             ids: &ids,
             keys: &keys,
+            original_text: None,
         };
         let hits = self
             .inner

@@ -1,0 +1,5 @@
+# Fixed current-native evidence
+
+The deterministic gzip contains flat regular UTF-8 metadata/code files. The manifest retains original and published hashes and sizes; only local path prefixes were redacted. Every raw round card, labelled pool, source/copy inventory, controller and independent qualification is retained. Full original protocol logs are excluded because they contain public-corpus originals; qualification records retain their hashes and full-field verification outcomes. Corpus, stores, binaries and key material are excluded.
+
+Reproduction uses the frozen command plan and exact source/artifact/input hashes. Build the corresponding public sources with the recorded portable Rust 1.99.1 configuration; artifact binaries are not distributed here. The build compiled the benchmark library into the frozen executable; no standalone benchmark rlib was retained. The normal engine libraries were frozen separately. All four orders and adverse outcomes remain in the round cards. This is warm local fits-RAM fixed-selection evidence, with 804 timed queries per arm and 52 saved labelled lists per run. It does not prove equality of every timed rank list.
