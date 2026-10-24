@@ -36,19 +36,53 @@ impl Reader {
         directory: &Path,
         minimum: Option<&Watermark>,
     ) -> Result<Self> {
-        let (mut reader, mut total) = Self::base(dir, key, identity)?;
+        Self::open_disk_inner(
+            dir,
+            key,
+            identity,
+            directory,
+            minimum,
+            DiskLimits::LEGACY,
+            false,
+        )
+    }
+    /// Disk-backed admission policy; legacy constructors retain their original limits.
+    pub fn open_disk_with_limits(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        directory: &Path,
+        minimum: Option<&Watermark>,
+        limits: DiskLimits,
+    ) -> Result<Self> {
+        Self::open_disk_inner(dir, key, identity, directory, minimum, limits, false)
+    }
+    pub(super) fn open_disk_inner(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        directory: &Path,
+        minimum: Option<&Watermark>,
+        limits: DiskLimits,
+        initialize: bool,
+    ) -> Result<Self> {
+        let (mut reader, mut total) = Self::base(dir, key, identity, initialize, limits)?;
+        if total > limits.source_bytes {
+            return Err(Error::Bounds);
+        }
         reader.refs.clear();
         reader.refs.shrink_to_fit();
         for sequence in 1..reader.store.len() {
             let encoded = reader.store.get(sequence).map_err(|_| Error::Unavailable)?;
             total = total.checked_add(encoded.len()).ok_or(Error::Bounds)?;
-            if total > MAX_STATE_BYTES {
+            if total > limits.source_bytes {
                 return Err(Error::Bounds);
             }
             let (batch, digest) = reader.verify_after(sequence, &encoded, &reader.tip)?;
             reader.tip = next_ref(&reader.tip, &batch, digest)?;
             reader.sequence = sequence;
         }
+        reader.encoded_bytes = total;
         if let Some(w) = minimum {
             let r = reader.scalar_at(w.sequence)?;
             reader.check(w, w.sequence, r.records, r.digest)?;
@@ -56,6 +90,17 @@ impl Reader {
         let disk = Directory::open(&reader, directory)?;
         reader.disk = Some(disk);
         Ok(reader)
+    }
+    pub(super) fn publish_batch(&mut self, batch: &Batch, digest: [u8; 32]) -> Result<()> {
+        self.tip = next_ref(&self.tip, batch, digest)?;
+        self.sequence = batch.watermark.sequence;
+        let mut disk = self.disk.take().ok_or(Error::Invalid)?;
+        let result = disk.advance(self, batch);
+        if result.is_err() {
+            disk.failed = true;
+        }
+        self.disk = Some(disk);
+        result
     }
     pub fn compact_directory(&mut self) -> Result<()> {
         let mut disk = self.disk.take().ok_or(Error::Invalid)?;
@@ -139,6 +184,7 @@ impl Reader {
         Ok(previous)
     }
     pub(super) fn reference(&self, sequence: u64) -> Result<Ref> {
+        self.healthy()?;
         if sequence > self.sequence {
             return Err(Error::Authority);
         }
@@ -222,8 +268,22 @@ impl Authority for Reader {
         {
             return Ok(());
         }
-        let scalar = self.scalar_at(sequence)?;
-        if scalar.records != records || scalar.digest != digest {
+        // Open verified the entire source chain. Store exposes immutable sealed
+        // sequence slots: authenticate that slot's watermark without replaying
+        // all its ancestors on every metadata-cache miss.
+        if sequence == 0 {
+            if self.genesis.records != records || self.genesis.digest != digest {
+                return Err(Error::Authority);
+            }
+        } else {
+            let encoded = self.store.get(sequence).map_err(|_| Error::Unavailable)?;
+            if encoded.len() > MAX_BATCH_BYTES {
+                return Err(Error::Bounds);
+            }
+            let batch: Batch = serde_json::from_slice(&encoded).map_err(|_| Error::Authority)?;
+            self.check(&batch.watermark, sequence, records, digest)?;
+        }
+        if records > self.tip.records {
             return Err(Error::Authority);
         }
         let mut cache = self.births.lock().map_err(|_| Error::Unavailable)?;
@@ -343,6 +403,71 @@ impl Directory {
             _lock: lock,
             failed: false,
         })
+    }
+    fn advance(&mut self, reader: &Reader, batch: &Batch) -> Result<()> {
+        if self.failed {
+            return Err(Error::Unavailable);
+        }
+        let (old, records, _) = reader.parse_binding(&self.roots.binding)?;
+        if old.checked_add(1) != Some(reader.sequence)
+            || records.checked_add(batch.assigned.len() as u64) != Some(reader.tip.records)
+        {
+            return Err(Error::Authority);
+        }
+        let mut prefix = Editor::new(
+            reader.tree_context(&self.path, Purpose::Prefix),
+            self.roots.prefix.clone(),
+        )?;
+        let mut request = Editor::new(
+            reader.tree_context(&self.path, Purpose::Request),
+            self.roots.request.clone(),
+        )?;
+        let mut record = Editor::new(
+            reader.tree_context(&self.path, Purpose::Record),
+            self.roots.record.clone(),
+        )?;
+        let mut keys = Editor::new(
+            reader.tree_context(&self.path, Purpose::KeyVersion),
+            self.roots.key_version.clone(),
+        )?;
+        prefix.insert(Entry::new(
+            reader.sequence.to_be_bytes().to_vec(),
+            json(&reader.tip, 32 << 10)?,
+        )?)?;
+        request.insert(Entry::new(
+            batch.request.to_vec(),
+            reader.sequence.to_be_bytes().to_vec(),
+        )?)?;
+        let mut rows = Vec::new();
+        let mut versions = Vec::new();
+        for (offset, row) in batch.assigned.iter().enumerate() {
+            let value = slot(reader.sequence, offset)?;
+            rows.push(Entry::new(row.id.to_be_bytes().to_vec(), value.clone())?);
+            if let Some(key) = key_entry(reader, row)? {
+                versions.push(Entry::new(key, value)?);
+            }
+        }
+        record.insert_batch(rows)?;
+        if !versions.is_empty() {
+            keys.insert_batch(versions)?;
+        }
+        let roots = Roots {
+            format: 1,
+            binding: reader.current()?,
+            prefix: prefix.finish()?,
+            request: request.finish()?,
+            record: record.finish()?,
+            key_version: keys.finish()?,
+        };
+        if roots.prefix.count != reader.sequence + 1
+            || roots.request.count != reader.sequence
+            || roots.record.count != reader.tip.records
+        {
+            return Err(Error::Authority);
+        }
+        publish(reader, &self.path, &roots)?;
+        self.roots = roots;
+        Ok(())
     }
     pub(super) fn prefix(&self, reader: &Reader, sequence: u64) -> Result<Ref> {
         if self.failed {
