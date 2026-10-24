@@ -1,0 +1,40 @@
+{
+  "source": "b1211e2b2db296f078059d888a4726642702884a",
+  "base": "9149542",
+  "command": [
+    "python3",
+    "scripts/test-setup-agent.py"
+  ],
+  "python": "3.14.4",
+  "exit": 0,
+  "tests": {
+    "passed": 3,
+    "failed": 0,
+    "elapsed_seconds": 2.004
+  },
+  "scope": "Actual existing Python helper processes; synthetic CLI, transcript directory and Codex/Claude registration boundaries only",
+  "verified": [
+    "both adapters isolate capture/read credential environments",
+    "preflight reads no keys and writes no installation or agent state",
+    "missing agent executable refuses before capture effects",
+    "capture failure prevents project setup",
+    "project failure reports partial capture completion",
+    "repeated MCP registration preserves both connections and unrelated agent entries",
+    "no synthetic keys in output, argv log or agent config",
+    "temporary key inputs removed, saved connections mode0600"
+  ],
+  "limits": [
+    "No real CLI/HTTP/PostgreSQL or model tool call for this wrapper",
+    "No actual owner installation, systemd or accepted transcript evidence",
+    "No hosted/API/engine/format/dependency changes",
+    "No main merge, release or deployment"
+  ],
+  "files": {
+    "scripts/setup-agent.py": {
+      "sha256": "391414f2456b18c5b9402eeb7c95366a200e9d95f8ddcc88d20ff423788be5c5"
+    },
+    "scripts/test-setup-agent.py": {
+      "sha256": "d18e1d51b554361137d8edaa37dfdb87279168eed566ea775f485036e7d6eccd"
+    }
+  }
+}

@@ -61,5 +61,9 @@ service activation and MCP registration are reported separately.
 > actual records/get call after reconnecting the client. Do not import history
 > or open referenced local files.
 
-Source candidate only until the qualification receipt is added. No owner
-installation, production activation, main merge or package release is implied.
+Three subprocess boundary tests pass, covering both adapters and partial/failure
+paths with the actual helper scripts and synthetic CLI/agent boundaries.
+[Qualification receipt](combined-agent-setup-qualification-2026-10-24.json) records
+the exact source and limitations. Actual combined CLI/HTTP/hosted acceptance, owner
+installation, service delivery and model-driven tools remain unverified. No main
+merge, package release or production activation is implied.
