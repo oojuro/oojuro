@@ -1,7 +1,7 @@
 # Opt-in continuing journal setup candidate
 
-Status: source candidate awaiting functional qualification and matching hosted
-reuse capability. Nothing is deployed or released. The default is still a new
+Status: implemented and qualified locally with the matching hosted protocol.
+Nothing is deployed or released. The default is still a new
 journal per new provider run, with its original journal retained on resume.
 
 ## Select a continuing journal explicitly
@@ -77,12 +77,30 @@ membership, with a separate current read key. Run IDs, writer-qualified tags,
 original evidence, request identities and exact accepted routes remain distinct.
 Current backend/session bounds still apply; reuse does not make them unlimited.
 
-## Source checks awaiting execution
+## Focused local qualification
 
-Added source tests cover strict low-level target identity, lost setup/event ACKs,
-version2 pending-default preservation across a version3 upgrade, offline reopen,
-saved/default policy changes affecting only new runs, local actual CLI private
-configuration, installer preservation and declaration surfaces. The hosted native
-and HTTP/PostgreSQL authority gates are a separate candidate. No composed gate
-has run at source freeze, and no production/owner-history/performance acceptance
-is claimed.
+Exact client source `da76c40b039f4df9b24d9e7937709339ef2ddc5f` passed:
+
+- 10 hosted-capture unit tests and 12 actual CLI tests.
+- 2 installer boundary tests.
+- 114 Node runtime tests, with no failures or skips, including an actual SQLite
+  trigger-induced migration failure/rollback and successful atomic retry.
+- 8 strict declaration smoke files and all 5 offline installed package export surfaces.
+
+Actual task-local Rust1.99.1 (`58cf8f9c35b355199727627d07ae34a4e2846d67`),
+Node24.20.0 and the locked declaration checker were used. The initial binary-only
+unit selector matched zero; it is not counted. The corrected library selector
+passed 10, and both logs are retained. Engine, storage and ranking gates were not
+repeated because their source and dependency graph are unchanged.
+
+The separately frozen actual debug CLI SHA is
+`d2a6b7adcb36d6d3541eb0df986ad6133f2bb9b26e230ff56bd6aa72fdb1bd82`.
+Separate hosted synthetic HTTP/TLS-SCRAM PostgreSQL journeys qualified the actual
+SDK and this same CLI/MCP executable, alongside previous fixed client artifacts.
+They exercised reuse, restoration of future-session defaults, resume of previously
+reused runs, exact project context and current read-authority/refusal guards.
+These are local protocol checks, not an actual owner-agent registration or import.
+
+Raw local client receipts are in `docs/evidence/journal-reuse-client/`.
+No provider, production, performance, real-owner history, main merge or package
+release acceptance is claimed.
