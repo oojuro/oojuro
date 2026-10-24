@@ -11,6 +11,7 @@ cd "$(dirname "$0")/../.."
 SCOPE=${SCOPE-systemd-run --user --scope -q -p MemoryMax=3G --}
 LOCK=${LOCK-flock $LOCKFILE}
 B=target/release/store-bench
+# Build explicitly: cargo build --release -p oojuro-store --features bench-tools --bin store-bench
 DATA=${DATA:-.scratch/data/corpus}
 D=.scratch/stores/score-${LABEL:-default}
 mkdir -p "$D"

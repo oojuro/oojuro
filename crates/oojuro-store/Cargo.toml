@@ -7,9 +7,11 @@ repository.workspace = true
 description = "Append-only compressed original store for agent text (hot + archive tiers)."
 
 [features]
+# JSON reporting is a tool concern; the storage library has no JSON dependency.
+bench-tools = ["dep:serde_json"]
 # Comparison codecs used only by the codec leaderboard binary.
-baselines = ["dep:oojuro-nine", "dep:rusqlite", "dep:tantivy", "dep:postgres"]
-codecs = ["dep:brotli", "dep:liblzma", "dep:bzip2", "dep:libdeflater", "dep:snap", "dep:lz4", "dep:ppmd-rust", "dep:fsst-rs", "dep:tiktoken-rs", "dep:fm-index"]
+baselines = ["bench-tools", "dep:oojuro-nine", "dep:rusqlite", "dep:tantivy", "dep:postgres"]
+codecs = ["bench-tools", "dep:brotli", "dep:liblzma", "dep:bzip2", "dep:libdeflater", "dep:snap", "dep:lz4", "dep:ppmd-rust", "dep:fsst-rs", "dep:tiktoken-rs", "dep:fm-index"]
 
 [dependencies]
 blake3.workspace = true
@@ -17,7 +19,7 @@ chacha20poly1305 = "0.10"
 crc32fast.workspace = true
 lz4_flex.workspace = true
 zstd = { version = "0.13", default-features = false, features = ["experimental", "zdict_builder"] }
-serde_json.workspace = true
+serde_json = { workspace = true, optional = true }
 brotli = { version = "8", optional = true }
 liblzma = { version = "0.4", optional = true, features = ["static"] }
 bzip2 = { version = "0.6", optional = true }
@@ -45,3 +47,11 @@ required-features = ["baselines"]
 [[bin]]
 name = "dedupe-exp"
 required-features = ["codecs"]
+
+[[bin]]
+name = "store-bench"
+required-features = ["bench-tools"]
+
+[[example]]
+name = "frame_probe"
+required-features = ["bench-tools"]

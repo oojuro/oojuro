@@ -1,4 +1,6 @@
 [workspace]
+# Minimal libraries by default; runtime applications and comparisons stay explicit.
+default-members = ["crates/oojuro-engine", "crates/oojuro-rank", "crates/oojuro-store"]
 members = [
     "crates/oojuro-engine",
     "crates/oojuro",
@@ -25,7 +27,7 @@ oojuro-core = { path = "crates/oojuro-core" }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 blake3 = { version = "1", default-features = false, features = ["std", "pure"] }
-lz4_flex = "0.11"
+lz4_flex = { version = "0.11", default-features = false, features = ["std", "safe-encode", "safe-decode", "checked-decode"] }
 crc32fast = "1"
 
 [profile.dev]

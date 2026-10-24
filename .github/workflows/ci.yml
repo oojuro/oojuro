@@ -31,6 +31,10 @@ jobs:
         run: rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --no-self-update
       - name: Prepare private test scratch
         run: mkdir -p -m 700 "$RUNNER_TEMP/oojuro-tests"
+      - name: Check minimal engine dependency policy
+        run: RUSTUP_TOOLCHAIN="$RUST_TOOLCHAIN" python3 scripts/dependency_audit.py --engine-only --check --output "$RUNNER_TEMP/engine-dependency-audit.json"
+      - name: Check dependency policy refusal cases
+        run: python3 scripts/test_dependency_audit.py
       - name: Test legacy engine, storage recovery and sealed frames
         env:
           TMPDIR: ${{ runner.temp }}/oojuro-tests

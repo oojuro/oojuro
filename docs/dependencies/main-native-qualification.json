@@ -1,0 +1,828 @@
+{
+  "base": "ba144d90d396b680122f1e93c808c724844ef2c8",
+  "branch": "codex/main-native-dependency-policy",
+  "cold_builds": [
+    {
+      "arm": "before",
+      "cc": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/cc",
+      "compiled_package_name_versions": [
+        [
+          "aead",
+          "0.5.2"
+        ],
+        [
+          "aho-corasick",
+          "1.1.5"
+        ],
+        [
+          "arrayvec",
+          "0.7.8"
+        ],
+        [
+          "blake3",
+          "1.8.7"
+        ],
+        [
+          "cc",
+          "1.8.0"
+        ],
+        [
+          "cfg-if",
+          "1.0.5"
+        ],
+        [
+          "chacha20",
+          "0.9.1"
+        ],
+        [
+          "chacha20poly1305",
+          "0.10.1"
+        ],
+        [
+          "cipher",
+          "0.4.4"
+        ],
+        [
+          "constant_time_eq",
+          "0.4.2"
+        ],
+        [
+          "cpufeatures",
+          "0.2.17"
+        ],
+        [
+          "cpufeatures",
+          "0.3.1"
+        ],
+        [
+          "crc32fast",
+          "1.5.2"
+        ],
+        [
+          "crypto-common",
+          "0.1.7"
+        ],
+        [
+          "fastcdc",
+          "3.2.1"
+        ],
+        [
+          "find-msvc-tools",
+          "0.1.14"
+        ],
+        [
+          "generic-array",
+          "0.14.7"
+        ],
+        [
+          "getrandom",
+          "0.2.17"
+        ],
+        [
+          "inout",
+          "0.1.4"
+        ],
+        [
+          "itoa",
+          "1.0.18"
+        ],
+        [
+          "jobserver",
+          "0.1.35"
+        ],
+        [
+          "libc",
+          "0.2.191"
+        ],
+        [
+          "lz4_flex",
+          "0.11.6"
+        ],
+        [
+          "memchr",
+          "2.8.3"
+        ],
+        [
+          "oojuro-engine",
+          "0.1.0"
+        ],
+        [
+          "oojuro-rank",
+          "0.1.0"
+        ],
+        [
+          "oojuro-store",
+          "0.1.0"
+        ],
+        [
+          "opaque-debug",
+          "0.3.1"
+        ],
+        [
+          "pkg-config",
+          "0.3.34"
+        ],
+        [
+          "poly1305",
+          "0.8.0"
+        ],
+        [
+          "proc-macro2",
+          "1.0.107"
+        ],
+        [
+          "quote",
+          "1.0.47"
+        ],
+        [
+          "rand_core",
+          "0.6.4"
+        ],
+        [
+          "ring",
+          "0.17.14"
+        ],
+        [
+          "rust-stemmers",
+          "1.2.0"
+        ],
+        [
+          "serde",
+          "1.0.229"
+        ],
+        [
+          "serde_core",
+          "1.0.229"
+        ],
+        [
+          "serde_derive",
+          "1.0.229"
+        ],
+        [
+          "serde_json",
+          "1.0.154"
+        ],
+        [
+          "shlex",
+          "2.0.1"
+        ],
+        [
+          "subtle",
+          "2.6.1"
+        ],
+        [
+          "syn",
+          "3.0.9"
+        ],
+        [
+          "twox-hash",
+          "2.1.5"
+        ],
+        [
+          "typenum",
+          "1.20.1"
+        ],
+        [
+          "unicode-ident",
+          "1.0.27"
+        ],
+        [
+          "universal-hash",
+          "0.5.1"
+        ],
+        [
+          "untrusted",
+          "0.9.0"
+        ],
+        [
+          "version_check",
+          "0.9.5"
+        ],
+        [
+          "zeroize",
+          "1.9.1"
+        ],
+        [
+          "zmij",
+          "1.0.23"
+        ],
+        [
+          "zstd",
+          "0.13.3"
+        ],
+        [
+          "zstd-safe",
+          "7.3.0"
+        ],
+        [
+          "zstd-sys",
+          "2.1.2+zstd.1.5.7"
+        ]
+      ],
+      "cxx": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/c++",
+      "initially_empty": true,
+      "library": {
+        "bytes": 11515260,
+        "path": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/cold-before-target/x86_64-unknown-linux-gnu/release/liboojuro_engine.rlib",
+        "sha256": "452044c74694cd0c6dbfc4cd610a7b5de8de3e26919de8af8ce13ba992977f10"
+      },
+      "maximum_single_process_rss_kib": 540588,
+      "native_archives": [
+        {
+          "bytes": 1626546,
+          "path": "x86_64-unknown-linux-gnu/release/build/ring-49fd791e5c16101b/out/libring_core_0_17_14_.a",
+          "sha256": "be9a2b34ccdec50837ad81e055b3cb6d02c216fb0dbbc6f0e803e839092a42df"
+        },
+        {
+          "bytes": 14992,
+          "path": "x86_64-unknown-linux-gnu/release/build/ring-49fd791e5c16101b/out/libring_core_0_17_14__test.a",
+          "sha256": "f177600fb8955d831e9f5ae675d7bfe2451ed317330bef9b626b5fdfaf18f606"
+        },
+        {
+          "bytes": 7313746,
+          "path": "x86_64-unknown-linux-gnu/release/build/zstd-sys-e30aa2aafc47147a/out/libzstd.a",
+          "sha256": "b35d51e08175cccb29ad4e3135444c8074827c0bc4510dfff880579eeafcd766"
+        }
+      ],
+      "rustflags": "-C target-cpu=x86-64",
+      "source": "ba144d90d396b680122f1e93c808c724844ef2c8",
+      "target": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/cold-before-target",
+      "time_sha256": "3552b8125da562cf9515e1382568f7563a8427433c060171794df9118190df12",
+      "wall_seconds": 30.075,
+      "zig_cache": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/cold-before-zig-cache"
+    },
+    {
+      "arm": "after",
+      "cc": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/cc",
+      "compiled_package_name_versions": [
+        [
+          "aead",
+          "0.5.2"
+        ],
+        [
+          "aho-corasick",
+          "1.1.5"
+        ],
+        [
+          "arrayvec",
+          "0.7.8"
+        ],
+        [
+          "blake3",
+          "1.8.7"
+        ],
+        [
+          "cc",
+          "1.8.0"
+        ],
+        [
+          "cfg-if",
+          "1.0.5"
+        ],
+        [
+          "chacha20",
+          "0.9.1"
+        ],
+        [
+          "chacha20poly1305",
+          "0.10.1"
+        ],
+        [
+          "cipher",
+          "0.4.4"
+        ],
+        [
+          "constant_time_eq",
+          "0.4.2"
+        ],
+        [
+          "cpufeatures",
+          "0.2.17"
+        ],
+        [
+          "cpufeatures",
+          "0.3.1"
+        ],
+        [
+          "crc32fast",
+          "1.5.2"
+        ],
+        [
+          "crypto-common",
+          "0.1.7"
+        ],
+        [
+          "fastcdc",
+          "3.2.1"
+        ],
+        [
+          "find-msvc-tools",
+          "0.1.14"
+        ],
+        [
+          "generic-array",
+          "0.14.7"
+        ],
+        [
+          "getrandom",
+          "0.2.17"
+        ],
+        [
+          "inout",
+          "0.1.4"
+        ],
+        [
+          "itoa",
+          "1.0.18"
+        ],
+        [
+          "jobserver",
+          "0.1.35"
+        ],
+        [
+          "libc",
+          "0.2.191"
+        ],
+        [
+          "lz4_flex",
+          "0.11.6"
+        ],
+        [
+          "memchr",
+          "2.8.3"
+        ],
+        [
+          "oojuro-engine",
+          "0.1.0"
+        ],
+        [
+          "oojuro-rank",
+          "0.1.0"
+        ],
+        [
+          "oojuro-store",
+          "0.1.0"
+        ],
+        [
+          "opaque-debug",
+          "0.3.1"
+        ],
+        [
+          "pkg-config",
+          "0.3.34"
+        ],
+        [
+          "poly1305",
+          "0.8.0"
+        ],
+        [
+          "proc-macro2",
+          "1.0.107"
+        ],
+        [
+          "quote",
+          "1.0.47"
+        ],
+        [
+          "rand_core",
+          "0.6.4"
+        ],
+        [
+          "ring",
+          "0.17.14"
+        ],
+        [
+          "rust-stemmers",
+          "1.2.0"
+        ],
+        [
+          "serde",
+          "1.0.229"
+        ],
+        [
+          "serde_core",
+          "1.0.229"
+        ],
+        [
+          "serde_derive",
+          "1.0.229"
+        ],
+        [
+          "serde_json",
+          "1.0.154"
+        ],
+        [
+          "shlex",
+          "2.0.1"
+        ],
+        [
+          "subtle",
+          "2.6.1"
+        ],
+        [
+          "syn",
+          "3.0.9"
+        ],
+        [
+          "typenum",
+          "1.20.1"
+        ],
+        [
+          "unicode-ident",
+          "1.0.27"
+        ],
+        [
+          "universal-hash",
+          "0.5.1"
+        ],
+        [
+          "untrusted",
+          "0.9.0"
+        ],
+        [
+          "version_check",
+          "0.9.5"
+        ],
+        [
+          "zeroize",
+          "1.9.1"
+        ],
+        [
+          "zmij",
+          "1.0.23"
+        ],
+        [
+          "zstd",
+          "0.13.3"
+        ],
+        [
+          "zstd-safe",
+          "7.3.0"
+        ],
+        [
+          "zstd-sys",
+          "2.1.2+zstd.1.5.7"
+        ]
+      ],
+      "cxx": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/c++",
+      "initially_empty": true,
+      "library": {
+        "bytes": 11515144,
+        "path": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/cold-after-target/x86_64-unknown-linux-gnu/release/liboojuro_engine.rlib",
+        "sha256": "2787224fbfb3f9b379c44d0dd973aafa17ef441dda71f058d243cf1eeaba1b3f"
+      },
+      "maximum_single_process_rss_kib": 538756,
+      "native_archives": [
+        {
+          "bytes": 1626546,
+          "path": "x86_64-unknown-linux-gnu/release/build/ring-49fd791e5c16101b/out/libring_core_0_17_14_.a",
+          "sha256": "be9a2b34ccdec50837ad81e055b3cb6d02c216fb0dbbc6f0e803e839092a42df"
+        },
+        {
+          "bytes": 14992,
+          "path": "x86_64-unknown-linux-gnu/release/build/ring-49fd791e5c16101b/out/libring_core_0_17_14__test.a",
+          "sha256": "f177600fb8955d831e9f5ae675d7bfe2451ed317330bef9b626b5fdfaf18f606"
+        },
+        {
+          "bytes": 7313746,
+          "path": "x86_64-unknown-linux-gnu/release/build/zstd-sys-e30aa2aafc47147a/out/libzstd.a",
+          "sha256": "b35d51e08175cccb29ad4e3135444c8074827c0bc4510dfff880579eeafcd766"
+        }
+      ],
+      "rustflags": "-C target-cpu=x86-64",
+      "source": "5e150c97308dd38d1aa169ff8269942cea97947b",
+      "target": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/cold-after-target",
+      "time_sha256": "fe60c76ce5ea87a1e688389d57d079bda9f9d270a29dbd781ef861be4bf11b62",
+      "wall_seconds": 29.975,
+      "zig_cache": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/cold-after-zig-cache"
+    }
+  ],
+  "distinct_rust_tests_passed": 320,
+  "environment_event": {
+    "global_rustup_auto_install": "Preparation rustup which unexpectedly auto-installed missing global1.99.1; already finished before qualification. No further global installation/deletion, active defaultstable unchanged. Actual gates/pair use existing task-local1.99.1, whose rustc hash matches the added global compiler.",
+    "task_local_rustc_sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853"
+  },
+  "format": 1,
+  "gates": [
+    {
+      "command": [
+        "python3",
+        "scripts/dependency_audit.py",
+        "--engine-only",
+        "--check",
+        "--output",
+        "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/minimal.json"
+      ],
+      "cwd": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-dependency-policy",
+      "exit": 0,
+      "log_sha256": "2d3b6d94decd895ef2180101aa264ba41fd94a8371980c017092fe925dff6967",
+      "name": "policy",
+      "timed_out": false,
+      "wall_seconds": 0.715
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_dependency_audit.py"
+      ],
+      "cwd": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-dependency-policy",
+      "exit": 0,
+      "log_sha256": "bee1deaeee8a500be7b285bf332ca87c31cd4a45337eff4bd8ff3032b84d90a2",
+      "name": "policy-negative",
+      "passed": 7,
+      "timed_out": false,
+      "wall_seconds": 0.164
+    },
+    {
+      "command": [
+        "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "--no-default-features",
+        "--lib",
+        "--tests",
+        "-p",
+        "oojuro-core",
+        "-p",
+        "oojuro-store",
+        "-p",
+        "oojuro-nine"
+      ],
+      "cwd": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-dependency-policy",
+      "exit": 0,
+      "failed": 0,
+      "ignored": 1,
+      "log_sha256": "fc6d9f6699126859c8e73ee9fbbd93f695bf6a15fc5a89b5e6f90b3a336e8265",
+      "name": "storage",
+      "passed": 141,
+      "test_binaries": 7,
+      "timed_out": false,
+      "wall_seconds": 235.457
+    },
+    {
+      "command": [
+        "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "--no-default-features",
+        "--lib",
+        "--tests",
+        "-p",
+        "oojuro-engine",
+        "-p",
+        "oojuro-rank",
+        "--",
+        "--test-threads=1"
+      ],
+      "cwd": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-dependency-policy",
+      "exit": 0,
+      "failed": 0,
+      "ignored": 10,
+      "log_sha256": "2d8d220d4d20a0ed8277c24372d9dbb5e37e955512741ae164ec8d8789ed102f",
+      "name": "native",
+      "passed": 175,
+      "test_binaries": 3,
+      "timed_out": false,
+      "wall_seconds": 41.766
+    },
+    {
+      "command": [
+        "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+        "test",
+        "--offline",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro-trace",
+        "--test",
+        "compat"
+      ],
+      "cwd": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-dependency-policy",
+      "exit": 0,
+      "failed": 0,
+      "ignored": 1,
+      "log_sha256": "867835cf2f3163bff326b023eda91760a5208fcc10b89026e9c5cc9c7a68cb46",
+      "name": "compat",
+      "passed": 4,
+      "test_binaries": 1,
+      "timed_out": false,
+      "wall_seconds": 9.009
+    },
+    {
+      "command": [
+        "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+        "check",
+        "--offline",
+        "--locked",
+        "-p",
+        "oojuro-store",
+        "--features",
+        "bench-tools",
+        "--bin",
+        "store-bench",
+        "--example",
+        "frame_probe"
+      ],
+      "cwd": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-dependency-policy",
+      "exit": 0,
+      "log_sha256": "cf43afd0c0ca4a6e49aaa70e928f5585a6b89c830a55f113bafe69b72aa19640",
+      "name": "bench-tools",
+      "timed_out": false,
+      "wall_seconds": 2.619
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/test_package_native.py"
+      ],
+      "cwd": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-dependency-policy",
+      "exit": 0,
+      "log_sha256": "3f5a380af80da6074ffdd20535f676bf02840e54257dc08bf36f750a2d8ab62d",
+      "name": "packaging",
+      "passed": 5,
+      "timed_out": false,
+      "wall_seconds": 0.166
+    },
+    {
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/cold-before.time",
+        "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+        "build",
+        "--offline",
+        "--locked",
+        "--no-default-features",
+        "--release",
+        "--lib",
+        "-p",
+        "oojuro-engine",
+        "--target",
+        "x86_64-unknown-linux-gnu"
+      ],
+      "cwd": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-engine-foundation",
+      "exit": 0,
+      "log_sha256": "0c48599158397b080f48816a8a059ccca413a2aa2fb558a0895cba149a92d22c",
+      "name": "cold-before",
+      "timed_out": false,
+      "wall_seconds": 30.075
+    },
+    {
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/cold-after.time",
+        "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+        "build",
+        "--offline",
+        "--locked",
+        "--no-default-features",
+        "--release",
+        "--lib",
+        "-p",
+        "oojuro-engine",
+        "--target",
+        "x86_64-unknown-linux-gnu"
+      ],
+      "cwd": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/oojuro-main-native-dependency-policy",
+      "exit": 0,
+      "log_sha256": "1638f803e50b41b38da50630fd9f9273be39cd8fe08b66dab67bfdc89b740339",
+      "name": "cold-after",
+      "timed_out": false,
+      "wall_seconds": 29.975
+    }
+  ],
+  "graph_receipt": "docs/dependencies/main-native-composition.json",
+  "ignored_cases": {
+    "compat": [
+      "test write_fixture ... ignored"
+    ],
+    "native": [
+      "test lexical::segments::tests::crash_publication_child ... ignored",
+      "test lexical::segments::tests::local_native_segment_measurement ... ignored",
+      "test raw::tests::inherited_spawn_lock_process_child ... ignored, subprocess fixture invoked by inherited_spawn_lock_still_requires_wrong_key",
+      "test raw::tests::raw_process_child ... ignored, subprocess fixture invoked by sigkill_recovers_an_acknowledged_raw_source",
+      "test record::managed::tests::crash_worker ... ignored, subprocess helper invoked only by managed_sigkill_publication_boundaries",
+      "test record::paged::cache::disk::tests::disk_index_crash_child ... ignored",
+      "test record::paged::reader::directory::tests::directory_crash_child ... ignored",
+      "test record::paged::tests::paged_crash_publication_child ... ignored",
+      "test record::persistent::tests::record_crash_publication_child ... ignored",
+      "test record::projection::memory_tests::projection_allocation_measurement ... ignored, explicit synthetic retained-allocation estimate and admission overhead measurement"
+    ],
+    "storage": [
+      "test store::bounded::tests::local_matched_old_and_windowed_crc_scan_measurement ... ignored"
+    ]
+  },
+  "interpretation": {
+    "build_pair": "one ordered before/after sample with fresh separate Cargo and Zig native build caches; essentially unchanged build time/RSS, no speedup or statistical claim",
+    "engine_compiled_packages": "53\u219252 including3workspace packages, matching external normal/build50\u219249; twox-hash removed",
+    "native_archives": "ring main+test-support archives and bundledZstd byte-identical across both fresh-cache arms; no BLAKE3 native archive under pure selection",
+    "rlib_bytes": "11515260\u219211515144; compiler artifact/path variation, not a deployed binary size measurement",
+    "rss": "GNUtime maximum single-process RSS, not concurrent process-tree aggregate or runtime database RAM",
+    "runtime": "No append/query/search/cost result inferred from dependency graph/build changes"
+  },
+  "limits": [
+    "Functional Cargo target reused an explicitly warm cache; only the two cold-build targets/native artifact caches began empty",
+    "Cargo registry source/index cache and OS page cache were not flushed",
+    "One matched build sample is insufficient for a reproducible percentage performance claim",
+    "No CLI/runtime full suite repeat beyond frozen trace compatibility; existing CLI application dependencies remain outside the minimal engine",
+    "Historical native compatibility, cross-platform compilation, hosted deployment and real agent history remain separate qualifications",
+    "No package/binary release, main merge, private hosted code or provider activation"
+  ],
+  "provenance": {
+    "cold_caches": "fresh separate Cargo targets and Zig native artifact caches; existing Cargo source/index and OS page cache not flushed",
+    "functional_cache": "warm public-ci-target; not used as cold measurement",
+    "functional_env": {
+      "CARGO_BUILD_JOBS": "2",
+      "CARGO_TARGET_DIR": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target",
+      "CC": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/portable-key-build/cc",
+      "CXX": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/portable-key-build/c++",
+      "PATH": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin:/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/portable-key-build:/home/rocket2/.local/bin:/home/rocket2/.cargo/bin:/home/rocket2/.local/bin:/home/rocket2/.codex/packages/standalone/releases/0.163.0-x86_64-unknown-linux-musl/codex-path:/home/rocket2/.codex/tmp/arg0-linux/codex-arg0gRfYDk:/home/rocket2/.local/bin:/home/rocket2/.local/bin:/home/rocket2/.opencode/bin:/home/rocket2/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin",
+      "RUSTC": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "RUSTDOC": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustdoc",
+      "RUSTUP_HOME": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup",
+      "RUSTUP_TOOLCHAIN": "1.99.1"
+    },
+    "global_rustup_which_auto_install": "Before any build, rustup which unexpectedly installed missing global1.99.1. It was terminal; default stable unchanged. Both actual build arms use existing task-local1.99.1 with matching rustc binary SHA, not global installation.",
+    "task_local_compiler": true
+  },
+  "python_policy_and_packaging_passed": 12,
+  "qualified_test_binary": {
+    "ldd": "\tlinux-vdso.so.1 (0x00007ee1375aa000)\n\tlibc.so.6 => /usr/lib/x86_64-linux-gnu/libc.so.6 (0x00007ee135c00000)\n\t/lib64/ld-linux-x86-64.so.2 (0x00007ee1375ac000)\n",
+    "linked_libraries": [
+      "libc.so.6",
+      "ELF loader; linux-vdso virtual mapping"
+    ],
+    "original": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-target/debug/deps/oojuro_engine-287b63c2503da9aa",
+    "path": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/oojuro-engine-qualified-tests",
+    "sha256": "aa9e21ff53749e9ede270e8579377409b8549ae8c106f27ab0f909f74f79026c",
+    "source": "5e150c97308dd38d1aa169ff8269942cea97947b"
+  },
+  "raw_gate_receipts": "docs/dependencies/evidence-main-native",
+  "raw_receipt_manifest_sha256": "ef9c5f766458673874625244e6b564711b874f5efd4d3c43df88e797472279bd",
+  "repository": "oojuro/oojuro",
+  "repository_visibility": "public",
+  "scope": "Manifest feature/default-selection reduction on qualified native foundation; no database algorithm or format source replaced",
+  "scratch": "/var/tmp/ojdp-awaf6_ot",
+  "scratch_entries_retained": [
+    "nine-wal-1006840-5-atomic",
+    "oojuro-enc-test-strict-donor-1045321",
+    "nine-wal-1006840-0-salt",
+    "oojuro-enc-test-roundtrip-1045321",
+    "oojuro-core-1006831-1792802489157631232-roundtrip",
+    "oojuro-enc-test-keys-1045321",
+    "oojuro-enc-test-upgrade-1045321",
+    "oojuro-enc-test-raw-fields-1045321",
+    "nine-wal-1006840-6-poison",
+    "nine-wal-1006840-2-roundtrip",
+    "oojuro-core-1006831-1792802489165467961-snapshot-copy",
+    "nine-wal-1006840-3-header",
+    "oojuro-enc-test-strict-cold-donor-1045321",
+    "oojuro-enc-test-strict-legacy-1045321",
+    "nine-wal-1006840-4-torn",
+    "oojuro-enc-test-forged-1045321",
+    "oojuro-enc-test-dict-forged-1045321",
+    "oojuro-enc-test-marker-1045321",
+    "oojuro-core-1006831-1792802489157765672-snapshot",
+    "oojuro-core-1006831-1792802489157696904-tail",
+    "oojuro-enc-test-strict-cold-recipient-1045321",
+    "oojuro-enc-test-hot-forged-1045321",
+    "oojuro-core-1006831-1792802489157710349-poison",
+    "nine-wal-1006840-1-salt-other",
+    "oojuro-enc-test-strict-recipient-1045321"
+  ],
+  "scratch_removed": true,
+  "selected_rust_tests_ignored": 12,
+  "source": "5e150c97308dd38d1aa169ff8269942cea97947b",
+  "status": "all functional gates and one bounded matched fresh-artifact build pair passed",
+  "substantive_source_unchanged_from_tested": true,
+  "toolchain": {
+    "c++": {
+      "cold": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/c++",
+      "cold_sha256": "7c984abc65044beaade692b4c4d47df2b342cfe673feb3ece60d0bfbc2c74f4b",
+      "functional": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/portable-key-build/c++",
+      "functional_sha256": "87478cec2e9af4d27a4b132bc58554bb29b9ef85aee5434e9e6f04edc2118e4b"
+    },
+    "cargo": {
+      "path": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/cargo",
+      "sha256": "a670e02cfa39ac2e53f77a2d911ca1fc9e2c479b0603ec956625be1daf24e3af",
+      "version": "cargo 1.99.1 (5f94df478 2026-08-27)\nrelease: 1.99.1\ncommit-hash: 5f94df4789f005f9a352888e8355ffc645b7ed0e\ncommit-date: 2026-08-27\nhost: x86_64-unknown-linux-gnu\nlibgit2: 1.9.6 (sys:0.21.0 vendored)\nlibcurl: 8.21.0-DEV (sys:0.4.90+curl-8.21.0 vendored ssl:OpenSSL/3.6.3)\nssl: OpenSSL 3.6.3 9 Jun 2026\nos: Ubuntu 26.4.0 (resolute) [64-bit]\n"
+    },
+    "cc": {
+      "cold": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/main-native-dependency-qualification/cc",
+      "cold_sha256": "2b35e096e7d0fad44c8e23af4d5d09459154e2945a4814bff191cc87372a5c5f",
+      "functional": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/portable-key-build/cc",
+      "functional_sha256": "8880511deabe183e6e28263d2a1edd065691843f04f8794711d90ffcbd547711"
+    },
+    "rustc": {
+      "path": "/home/rocket2/Documents/Codex/2026-10-22/read-engineering-github-project-and-then/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+      "sha256": "b53b780f77f952062f8ca8a3b70aef2390b1e45ad91939be94afdc9543026853",
+      "version": "rustc 1.99.1 (58cf8f9c3 2026-10-13)\nbinary: rustc\ncommit-hash: 58cf8f9c35b355199727627d07ae34a4e2846d67\ncommit-date: 2026-10-13\nhost: x86_64-unknown-linux-gnu\nrelease: 1.99.1\nLLVM version: 23.1.1\n"
+    },
+    "zig_version": "0.15.2"
+  }
+}
