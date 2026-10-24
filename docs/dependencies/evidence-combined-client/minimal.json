@@ -1,0 +1,2637 @@
+{
+  "cargo": "cargo 1.99.1 (5f94df478 2026-08-27)",
+  "dirty": false,
+  "format": 1,
+  "graphs": {
+    "default": {
+      "dev_dependencies": false,
+      "edge_count": 78,
+      "edges": "normal,build",
+      "external_count": 49,
+      "package_count": 52,
+      "packages": {
+        "aead@0.5.2": {
+          "features": [
+            "alloc",
+            "getrandom",
+            "rand_core"
+          ],
+          "git_source": null,
+          "name": "aead",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.5.2",
+          "workspace": false
+        },
+        "aho-corasick@1.1.5": {
+          "features": [
+            "default",
+            "perf-literal",
+            "std"
+          ],
+          "git_source": null,
+          "name": "aho-corasick",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "1.1.5",
+          "workspace": false
+        },
+        "arrayvec@0.7.8": {
+          "features": [],
+          "git_source": null,
+          "name": "arrayvec",
+          "used_by": [
+            "blake3@1.8.7"
+          ],
+          "version": "0.7.8",
+          "workspace": false
+        },
+        "blake3@1.8.7": {
+          "features": [
+            "pure",
+            "std"
+          ],
+          "git_source": null,
+          "name": "blake3",
+          "used_by": [
+            "oojuro-engine@0.1.0",
+            "oojuro-store@0.1.0"
+          ],
+          "version": "1.8.7",
+          "workspace": false
+        },
+        "cc@1.8.0": {
+          "features": [
+            "parallel"
+          ],
+          "git_source": null,
+          "name": "cc",
+          "used_by": [
+            "blake3@1.8.7",
+            "ring@0.17.14",
+            "zstd-sys@2.1.2+zstd.1.5.7"
+          ],
+          "version": "1.8.0",
+          "workspace": false
+        },
+        "cfg-if@1.0.5": {
+          "features": [],
+          "git_source": null,
+          "name": "cfg-if",
+          "used_by": [
+            "blake3@1.8.7",
+            "chacha20@0.9.1",
+            "crc32fast@1.5.2",
+            "getrandom@0.2.17",
+            "ring@0.17.14"
+          ],
+          "version": "1.0.5",
+          "workspace": false
+        },
+        "chacha20@0.9.1": {
+          "features": [
+            "zeroize"
+          ],
+          "git_source": null,
+          "name": "chacha20",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.9.1",
+          "workspace": false
+        },
+        "chacha20poly1305@0.10.1": {
+          "features": [
+            "alloc",
+            "default",
+            "getrandom",
+            "rand_core"
+          ],
+          "git_source": null,
+          "name": "chacha20poly1305",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "0.10.1",
+          "workspace": false
+        },
+        "cipher@0.4.4": {
+          "features": [
+            "zeroize"
+          ],
+          "git_source": null,
+          "name": "cipher",
+          "used_by": [
+            "chacha20@0.9.1",
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.4.4",
+          "workspace": false
+        },
+        "constant_time_eq@0.4.2": {
+          "features": [
+            "std"
+          ],
+          "git_source": null,
+          "name": "constant_time_eq",
+          "used_by": [
+            "blake3@1.8.7"
+          ],
+          "version": "0.4.2",
+          "workspace": false
+        },
+        "cpufeatures@0.2.17": {
+          "features": [],
+          "git_source": null,
+          "name": "cpufeatures",
+          "used_by": [
+            "chacha20@0.9.1",
+            "poly1305@0.8.0"
+          ],
+          "version": "0.2.17",
+          "workspace": false
+        },
+        "cpufeatures@0.3.1": {
+          "features": [],
+          "git_source": null,
+          "name": "cpufeatures",
+          "used_by": [
+            "blake3@1.8.7"
+          ],
+          "version": "0.3.1",
+          "workspace": false
+        },
+        "crc32fast@1.5.2": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "crc32fast",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "1.5.2",
+          "workspace": false
+        },
+        "crypto-common@0.1.7": {
+          "features": [
+            "getrandom",
+            "rand_core"
+          ],
+          "git_source": null,
+          "name": "crypto-common",
+          "used_by": [
+            "aead@0.5.2",
+            "cipher@0.4.4",
+            "universal-hash@0.5.1"
+          ],
+          "version": "0.1.7",
+          "workspace": false
+        },
+        "fastcdc@3.2.1": {
+          "features": [
+            "default"
+          ],
+          "git_source": null,
+          "name": "fastcdc",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "3.2.1",
+          "workspace": false
+        },
+        "find-msvc-tools@0.1.14": {
+          "features": [],
+          "git_source": null,
+          "name": "find-msvc-tools",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "0.1.14",
+          "workspace": false
+        },
+        "generic-array@0.14.7": {
+          "features": [
+            "more_lengths"
+          ],
+          "git_source": null,
+          "name": "generic-array",
+          "used_by": [
+            "aead@0.5.2",
+            "crypto-common@0.1.7",
+            "inout@0.1.4"
+          ],
+          "version": "0.14.7",
+          "workspace": false
+        },
+        "getrandom@0.2.17": {
+          "features": [],
+          "git_source": null,
+          "name": "getrandom",
+          "used_by": [
+            "rand_core@0.6.4",
+            "ring@0.17.14"
+          ],
+          "version": "0.2.17",
+          "workspace": false
+        },
+        "inout@0.1.4": {
+          "features": [],
+          "git_source": null,
+          "name": "inout",
+          "used_by": [
+            "cipher@0.4.4"
+          ],
+          "version": "0.1.4",
+          "workspace": false
+        },
+        "itoa@1.0.18": {
+          "features": [],
+          "git_source": null,
+          "name": "itoa",
+          "used_by": [
+            "serde_json@1.0.154"
+          ],
+          "version": "1.0.18",
+          "workspace": false
+        },
+        "jobserver@0.1.35": {
+          "features": [],
+          "git_source": null,
+          "name": "jobserver",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "0.1.35",
+          "workspace": false
+        },
+        "libc@0.2.191": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "libc",
+          "used_by": [
+            "cc@1.8.0",
+            "getrandom@0.2.17",
+            "jobserver@0.1.35",
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "0.2.191",
+          "workspace": false
+        },
+        "lz4_flex@0.11.6": {
+          "features": [
+            "checked-decode",
+            "safe-decode",
+            "safe-encode",
+            "std"
+          ],
+          "git_source": null,
+          "name": "lz4_flex",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "0.11.6",
+          "workspace": false
+        },
+        "memchr@2.8.3": {
+          "features": [
+            "alloc",
+            "std"
+          ],
+          "git_source": null,
+          "name": "memchr",
+          "used_by": [
+            "aho-corasick@1.1.5",
+            "serde_json@1.0.154"
+          ],
+          "version": "2.8.3",
+          "workspace": false
+        },
+        "oojuro-engine@0.1.0": {
+          "features": [],
+          "git_source": null,
+          "name": "oojuro-engine",
+          "used_by": [],
+          "version": "0.1.0",
+          "workspace": true
+        },
+        "oojuro-rank@0.1.0": {
+          "features": [],
+          "git_source": null,
+          "name": "oojuro-rank",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "0.1.0",
+          "workspace": true
+        },
+        "oojuro-store@0.1.0": {
+          "features": [],
+          "git_source": null,
+          "name": "oojuro-store",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "0.1.0",
+          "workspace": true
+        },
+        "opaque-debug@0.3.1": {
+          "features": [],
+          "git_source": null,
+          "name": "opaque-debug",
+          "used_by": [
+            "poly1305@0.8.0"
+          ],
+          "version": "0.3.1",
+          "workspace": false
+        },
+        "pkg-config@0.3.34": {
+          "features": [],
+          "git_source": null,
+          "name": "pkg-config",
+          "used_by": [
+            "zstd-sys@2.1.2+zstd.1.5.7"
+          ],
+          "version": "0.3.34",
+          "workspace": false
+        },
+        "poly1305@0.8.0": {
+          "features": [],
+          "git_source": null,
+          "name": "poly1305",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.8.0",
+          "workspace": false
+        },
+        "proc-macro2@1.0.107": {
+          "features": [
+            "proc-macro"
+          ],
+          "git_source": null,
+          "name": "proc-macro2",
+          "used_by": [
+            "quote@1.0.47",
+            "serde_derive@1.0.229",
+            "syn@3.0.9"
+          ],
+          "version": "1.0.107",
+          "workspace": false
+        },
+        "quote@1.0.47": {
+          "features": [
+            "proc-macro"
+          ],
+          "git_source": null,
+          "name": "quote",
+          "used_by": [
+            "serde_derive@1.0.229",
+            "syn@3.0.9"
+          ],
+          "version": "1.0.47",
+          "workspace": false
+        },
+        "rand_core@0.6.4": {
+          "features": [
+            "getrandom"
+          ],
+          "git_source": null,
+          "name": "rand_core",
+          "used_by": [
+            "crypto-common@0.1.7"
+          ],
+          "version": "0.6.4",
+          "workspace": false
+        },
+        "ring@0.17.14": {
+          "features": [
+            "alloc",
+            "default",
+            "dev_urandom_fallback"
+          ],
+          "git_source": null,
+          "name": "ring",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "0.17.14",
+          "workspace": false
+        },
+        "rust-stemmers@1.2.0": {
+          "features": [],
+          "git_source": null,
+          "name": "rust-stemmers",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "1.2.0",
+          "workspace": false
+        },
+        "serde@1.0.229": {
+          "features": [
+            "default",
+            "derive",
+            "serde_derive",
+            "std"
+          ],
+          "git_source": null,
+          "name": "serde",
+          "used_by": [
+            "oojuro-engine@0.1.0",
+            "rust-stemmers@1.2.0"
+          ],
+          "version": "1.0.229",
+          "workspace": false
+        },
+        "serde_core@1.0.229": {
+          "features": [
+            "result",
+            "std"
+          ],
+          "git_source": null,
+          "name": "serde_core",
+          "used_by": [
+            "serde@1.0.229",
+            "serde_json@1.0.154"
+          ],
+          "version": "1.0.229",
+          "workspace": false
+        },
+        "serde_derive@1.0.229": {
+          "features": [
+            "default"
+          ],
+          "git_source": null,
+          "name": "serde_derive",
+          "used_by": [
+            "rust-stemmers@1.2.0",
+            "serde@1.0.229"
+          ],
+          "version": "1.0.229",
+          "workspace": false
+        },
+        "serde_json@1.0.154": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "serde_json",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "1.0.154",
+          "workspace": false
+        },
+        "shlex@2.0.1": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "shlex",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "2.0.1",
+          "workspace": false
+        },
+        "subtle@2.6.1": {
+          "features": [],
+          "git_source": null,
+          "name": "subtle",
+          "used_by": [
+            "universal-hash@0.5.1"
+          ],
+          "version": "2.6.1",
+          "workspace": false
+        },
+        "syn@3.0.9": {
+          "features": [
+            "clone-impls",
+            "derive",
+            "parsing",
+            "printing",
+            "proc-macro"
+          ],
+          "git_source": null,
+          "name": "syn",
+          "used_by": [
+            "serde_derive@1.0.229"
+          ],
+          "version": "3.0.9",
+          "workspace": false
+        },
+        "typenum@1.20.1": {
+          "features": [],
+          "git_source": null,
+          "name": "typenum",
+          "used_by": [
+            "crypto-common@0.1.7",
+            "generic-array@0.14.7"
+          ],
+          "version": "1.20.1",
+          "workspace": false
+        },
+        "unicode-ident@1.0.27": {
+          "features": [],
+          "git_source": null,
+          "name": "unicode-ident",
+          "used_by": [
+            "proc-macro2@1.0.107",
+            "syn@3.0.9"
+          ],
+          "version": "1.0.27",
+          "workspace": false
+        },
+        "universal-hash@0.5.1": {
+          "features": [],
+          "git_source": null,
+          "name": "universal-hash",
+          "used_by": [
+            "poly1305@0.8.0"
+          ],
+          "version": "0.5.1",
+          "workspace": false
+        },
+        "untrusted@0.9.0": {
+          "features": [],
+          "git_source": null,
+          "name": "untrusted",
+          "used_by": [
+            "ring@0.17.14"
+          ],
+          "version": "0.9.0",
+          "workspace": false
+        },
+        "version_check@0.9.5": {
+          "features": [],
+          "git_source": null,
+          "name": "version_check",
+          "used_by": [
+            "generic-array@0.14.7"
+          ],
+          "version": "0.9.5",
+          "workspace": false
+        },
+        "zeroize@1.9.1": {
+          "features": [],
+          "git_source": null,
+          "name": "zeroize",
+          "used_by": [
+            "chacha20poly1305@0.10.1",
+            "cipher@0.4.4"
+          ],
+          "version": "1.9.1",
+          "workspace": false
+        },
+        "zmij@1.0.23": {
+          "features": [],
+          "git_source": null,
+          "name": "zmij",
+          "used_by": [
+            "serde_json@1.0.154"
+          ],
+          "version": "1.0.23",
+          "workspace": false
+        },
+        "zstd-safe@7.3.0": {
+          "features": [
+            "experimental",
+            "std",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd-safe",
+          "used_by": [
+            "zstd@0.13.3"
+          ],
+          "version": "7.3.0",
+          "workspace": false
+        },
+        "zstd-sys@2.1.2+zstd.1.5.7": {
+          "features": [
+            "experimental",
+            "std",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd-sys",
+          "used_by": [
+            "zstd-safe@7.3.0"
+          ],
+          "version": "2.1.2+zstd.1.5.7",
+          "workspace": false
+        },
+        "zstd@0.13.3": {
+          "features": [
+            "experimental",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "0.13.3",
+          "workspace": false
+        }
+      },
+      "roots": [
+        "oojuro-engine@0.1.0",
+        "oojuro-rank@0.1.0",
+        "oojuro-store@0.1.0"
+      ],
+      "selection": [],
+      "target": "x86_64-unknown-linux-gnu",
+      "workspace_count": 3
+    },
+    "engine": {
+      "dev_dependencies": false,
+      "edge_count": 78,
+      "edges": "normal,build",
+      "external_count": 49,
+      "package_count": 52,
+      "packages": {
+        "aead@0.5.2": {
+          "features": [
+            "alloc",
+            "getrandom",
+            "rand_core"
+          ],
+          "git_source": null,
+          "name": "aead",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.5.2",
+          "workspace": false
+        },
+        "aho-corasick@1.1.5": {
+          "features": [
+            "default",
+            "perf-literal",
+            "std"
+          ],
+          "git_source": null,
+          "name": "aho-corasick",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "1.1.5",
+          "workspace": false
+        },
+        "arrayvec@0.7.8": {
+          "features": [],
+          "git_source": null,
+          "name": "arrayvec",
+          "used_by": [
+            "blake3@1.8.7"
+          ],
+          "version": "0.7.8",
+          "workspace": false
+        },
+        "blake3@1.8.7": {
+          "features": [
+            "pure",
+            "std"
+          ],
+          "git_source": null,
+          "name": "blake3",
+          "used_by": [
+            "oojuro-engine@0.1.0",
+            "oojuro-store@0.1.0"
+          ],
+          "version": "1.8.7",
+          "workspace": false
+        },
+        "cc@1.8.0": {
+          "features": [
+            "parallel"
+          ],
+          "git_source": null,
+          "name": "cc",
+          "used_by": [
+            "blake3@1.8.7",
+            "ring@0.17.14",
+            "zstd-sys@2.1.2+zstd.1.5.7"
+          ],
+          "version": "1.8.0",
+          "workspace": false
+        },
+        "cfg-if@1.0.5": {
+          "features": [],
+          "git_source": null,
+          "name": "cfg-if",
+          "used_by": [
+            "blake3@1.8.7",
+            "chacha20@0.9.1",
+            "crc32fast@1.5.2",
+            "getrandom@0.2.17",
+            "ring@0.17.14"
+          ],
+          "version": "1.0.5",
+          "workspace": false
+        },
+        "chacha20@0.9.1": {
+          "features": [
+            "zeroize"
+          ],
+          "git_source": null,
+          "name": "chacha20",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.9.1",
+          "workspace": false
+        },
+        "chacha20poly1305@0.10.1": {
+          "features": [
+            "alloc",
+            "default",
+            "getrandom",
+            "rand_core"
+          ],
+          "git_source": null,
+          "name": "chacha20poly1305",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "0.10.1",
+          "workspace": false
+        },
+        "cipher@0.4.4": {
+          "features": [
+            "zeroize"
+          ],
+          "git_source": null,
+          "name": "cipher",
+          "used_by": [
+            "chacha20@0.9.1",
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.4.4",
+          "workspace": false
+        },
+        "constant_time_eq@0.4.2": {
+          "features": [
+            "std"
+          ],
+          "git_source": null,
+          "name": "constant_time_eq",
+          "used_by": [
+            "blake3@1.8.7"
+          ],
+          "version": "0.4.2",
+          "workspace": false
+        },
+        "cpufeatures@0.2.17": {
+          "features": [],
+          "git_source": null,
+          "name": "cpufeatures",
+          "used_by": [
+            "chacha20@0.9.1",
+            "poly1305@0.8.0"
+          ],
+          "version": "0.2.17",
+          "workspace": false
+        },
+        "cpufeatures@0.3.1": {
+          "features": [],
+          "git_source": null,
+          "name": "cpufeatures",
+          "used_by": [
+            "blake3@1.8.7"
+          ],
+          "version": "0.3.1",
+          "workspace": false
+        },
+        "crc32fast@1.5.2": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "crc32fast",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "1.5.2",
+          "workspace": false
+        },
+        "crypto-common@0.1.7": {
+          "features": [
+            "getrandom",
+            "rand_core"
+          ],
+          "git_source": null,
+          "name": "crypto-common",
+          "used_by": [
+            "aead@0.5.2",
+            "cipher@0.4.4",
+            "universal-hash@0.5.1"
+          ],
+          "version": "0.1.7",
+          "workspace": false
+        },
+        "fastcdc@3.2.1": {
+          "features": [
+            "default"
+          ],
+          "git_source": null,
+          "name": "fastcdc",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "3.2.1",
+          "workspace": false
+        },
+        "find-msvc-tools@0.1.14": {
+          "features": [],
+          "git_source": null,
+          "name": "find-msvc-tools",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "0.1.14",
+          "workspace": false
+        },
+        "generic-array@0.14.7": {
+          "features": [
+            "more_lengths"
+          ],
+          "git_source": null,
+          "name": "generic-array",
+          "used_by": [
+            "aead@0.5.2",
+            "crypto-common@0.1.7",
+            "inout@0.1.4"
+          ],
+          "version": "0.14.7",
+          "workspace": false
+        },
+        "getrandom@0.2.17": {
+          "features": [],
+          "git_source": null,
+          "name": "getrandom",
+          "used_by": [
+            "rand_core@0.6.4",
+            "ring@0.17.14"
+          ],
+          "version": "0.2.17",
+          "workspace": false
+        },
+        "inout@0.1.4": {
+          "features": [],
+          "git_source": null,
+          "name": "inout",
+          "used_by": [
+            "cipher@0.4.4"
+          ],
+          "version": "0.1.4",
+          "workspace": false
+        },
+        "itoa@1.0.18": {
+          "features": [],
+          "git_source": null,
+          "name": "itoa",
+          "used_by": [
+            "serde_json@1.0.154"
+          ],
+          "version": "1.0.18",
+          "workspace": false
+        },
+        "jobserver@0.1.35": {
+          "features": [],
+          "git_source": null,
+          "name": "jobserver",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "0.1.35",
+          "workspace": false
+        },
+        "libc@0.2.191": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "libc",
+          "used_by": [
+            "cc@1.8.0",
+            "getrandom@0.2.17",
+            "jobserver@0.1.35",
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "0.2.191",
+          "workspace": false
+        },
+        "lz4_flex@0.11.6": {
+          "features": [
+            "checked-decode",
+            "safe-decode",
+            "safe-encode",
+            "std"
+          ],
+          "git_source": null,
+          "name": "lz4_flex",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "0.11.6",
+          "workspace": false
+        },
+        "memchr@2.8.3": {
+          "features": [
+            "alloc",
+            "std"
+          ],
+          "git_source": null,
+          "name": "memchr",
+          "used_by": [
+            "aho-corasick@1.1.5",
+            "serde_json@1.0.154"
+          ],
+          "version": "2.8.3",
+          "workspace": false
+        },
+        "oojuro-engine@0.1.0": {
+          "features": [],
+          "git_source": null,
+          "name": "oojuro-engine",
+          "used_by": [],
+          "version": "0.1.0",
+          "workspace": true
+        },
+        "oojuro-rank@0.1.0": {
+          "features": [],
+          "git_source": null,
+          "name": "oojuro-rank",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "0.1.0",
+          "workspace": true
+        },
+        "oojuro-store@0.1.0": {
+          "features": [],
+          "git_source": null,
+          "name": "oojuro-store",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "0.1.0",
+          "workspace": true
+        },
+        "opaque-debug@0.3.1": {
+          "features": [],
+          "git_source": null,
+          "name": "opaque-debug",
+          "used_by": [
+            "poly1305@0.8.0"
+          ],
+          "version": "0.3.1",
+          "workspace": false
+        },
+        "pkg-config@0.3.34": {
+          "features": [],
+          "git_source": null,
+          "name": "pkg-config",
+          "used_by": [
+            "zstd-sys@2.1.2+zstd.1.5.7"
+          ],
+          "version": "0.3.34",
+          "workspace": false
+        },
+        "poly1305@0.8.0": {
+          "features": [],
+          "git_source": null,
+          "name": "poly1305",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.8.0",
+          "workspace": false
+        },
+        "proc-macro2@1.0.107": {
+          "features": [
+            "proc-macro"
+          ],
+          "git_source": null,
+          "name": "proc-macro2",
+          "used_by": [
+            "quote@1.0.47",
+            "serde_derive@1.0.229",
+            "syn@3.0.9"
+          ],
+          "version": "1.0.107",
+          "workspace": false
+        },
+        "quote@1.0.47": {
+          "features": [
+            "proc-macro"
+          ],
+          "git_source": null,
+          "name": "quote",
+          "used_by": [
+            "serde_derive@1.0.229",
+            "syn@3.0.9"
+          ],
+          "version": "1.0.47",
+          "workspace": false
+        },
+        "rand_core@0.6.4": {
+          "features": [
+            "getrandom"
+          ],
+          "git_source": null,
+          "name": "rand_core",
+          "used_by": [
+            "crypto-common@0.1.7"
+          ],
+          "version": "0.6.4",
+          "workspace": false
+        },
+        "ring@0.17.14": {
+          "features": [
+            "alloc",
+            "default",
+            "dev_urandom_fallback"
+          ],
+          "git_source": null,
+          "name": "ring",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "0.17.14",
+          "workspace": false
+        },
+        "rust-stemmers@1.2.0": {
+          "features": [],
+          "git_source": null,
+          "name": "rust-stemmers",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "1.2.0",
+          "workspace": false
+        },
+        "serde@1.0.229": {
+          "features": [
+            "default",
+            "derive",
+            "serde_derive",
+            "std"
+          ],
+          "git_source": null,
+          "name": "serde",
+          "used_by": [
+            "oojuro-engine@0.1.0",
+            "rust-stemmers@1.2.0"
+          ],
+          "version": "1.0.229",
+          "workspace": false
+        },
+        "serde_core@1.0.229": {
+          "features": [
+            "result",
+            "std"
+          ],
+          "git_source": null,
+          "name": "serde_core",
+          "used_by": [
+            "serde@1.0.229",
+            "serde_json@1.0.154"
+          ],
+          "version": "1.0.229",
+          "workspace": false
+        },
+        "serde_derive@1.0.229": {
+          "features": [
+            "default"
+          ],
+          "git_source": null,
+          "name": "serde_derive",
+          "used_by": [
+            "rust-stemmers@1.2.0",
+            "serde@1.0.229"
+          ],
+          "version": "1.0.229",
+          "workspace": false
+        },
+        "serde_json@1.0.154": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "serde_json",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "1.0.154",
+          "workspace": false
+        },
+        "shlex@2.0.1": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "shlex",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "2.0.1",
+          "workspace": false
+        },
+        "subtle@2.6.1": {
+          "features": [],
+          "git_source": null,
+          "name": "subtle",
+          "used_by": [
+            "universal-hash@0.5.1"
+          ],
+          "version": "2.6.1",
+          "workspace": false
+        },
+        "syn@3.0.9": {
+          "features": [
+            "clone-impls",
+            "derive",
+            "parsing",
+            "printing",
+            "proc-macro"
+          ],
+          "git_source": null,
+          "name": "syn",
+          "used_by": [
+            "serde_derive@1.0.229"
+          ],
+          "version": "3.0.9",
+          "workspace": false
+        },
+        "typenum@1.20.1": {
+          "features": [],
+          "git_source": null,
+          "name": "typenum",
+          "used_by": [
+            "crypto-common@0.1.7",
+            "generic-array@0.14.7"
+          ],
+          "version": "1.20.1",
+          "workspace": false
+        },
+        "unicode-ident@1.0.27": {
+          "features": [],
+          "git_source": null,
+          "name": "unicode-ident",
+          "used_by": [
+            "proc-macro2@1.0.107",
+            "syn@3.0.9"
+          ],
+          "version": "1.0.27",
+          "workspace": false
+        },
+        "universal-hash@0.5.1": {
+          "features": [],
+          "git_source": null,
+          "name": "universal-hash",
+          "used_by": [
+            "poly1305@0.8.0"
+          ],
+          "version": "0.5.1",
+          "workspace": false
+        },
+        "untrusted@0.9.0": {
+          "features": [],
+          "git_source": null,
+          "name": "untrusted",
+          "used_by": [
+            "ring@0.17.14"
+          ],
+          "version": "0.9.0",
+          "workspace": false
+        },
+        "version_check@0.9.5": {
+          "features": [],
+          "git_source": null,
+          "name": "version_check",
+          "used_by": [
+            "generic-array@0.14.7"
+          ],
+          "version": "0.9.5",
+          "workspace": false
+        },
+        "zeroize@1.9.1": {
+          "features": [],
+          "git_source": null,
+          "name": "zeroize",
+          "used_by": [
+            "chacha20poly1305@0.10.1",
+            "cipher@0.4.4"
+          ],
+          "version": "1.9.1",
+          "workspace": false
+        },
+        "zmij@1.0.23": {
+          "features": [],
+          "git_source": null,
+          "name": "zmij",
+          "used_by": [
+            "serde_json@1.0.154"
+          ],
+          "version": "1.0.23",
+          "workspace": false
+        },
+        "zstd-safe@7.3.0": {
+          "features": [
+            "experimental",
+            "std",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd-safe",
+          "used_by": [
+            "zstd@0.13.3"
+          ],
+          "version": "7.3.0",
+          "workspace": false
+        },
+        "zstd-sys@2.1.2+zstd.1.5.7": {
+          "features": [
+            "experimental",
+            "std",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd-sys",
+          "used_by": [
+            "zstd-safe@7.3.0"
+          ],
+          "version": "2.1.2+zstd.1.5.7",
+          "workspace": false
+        },
+        "zstd@0.13.3": {
+          "features": [
+            "experimental",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "0.13.3",
+          "workspace": false
+        }
+      },
+      "roots": [
+        "oojuro-engine@0.1.0"
+      ],
+      "selection": [
+        "-p",
+        "oojuro-engine"
+      ],
+      "target": "x86_64-unknown-linux-gnu",
+      "workspace_count": 3
+    },
+    "engine-all-platforms": {
+      "dev_dependencies": false,
+      "edge_count": 98,
+      "edges": "normal,build",
+      "external_count": 62,
+      "package_count": 65,
+      "packages": {
+        "aead@0.5.2": {
+          "features": [
+            "alloc",
+            "getrandom",
+            "rand_core"
+          ],
+          "git_source": null,
+          "name": "aead",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.5.2",
+          "workspace": false
+        },
+        "aho-corasick@1.1.5": {
+          "features": [
+            "default",
+            "perf-literal",
+            "std"
+          ],
+          "git_source": null,
+          "name": "aho-corasick",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "1.1.5",
+          "workspace": false
+        },
+        "arrayvec@0.7.8": {
+          "features": [],
+          "git_source": null,
+          "name": "arrayvec",
+          "used_by": [
+            "blake3@1.8.7"
+          ],
+          "version": "0.7.8",
+          "workspace": false
+        },
+        "blake3@1.8.7": {
+          "features": [
+            "pure",
+            "std"
+          ],
+          "git_source": null,
+          "name": "blake3",
+          "used_by": [
+            "oojuro-engine@0.1.0",
+            "oojuro-store@0.1.0"
+          ],
+          "version": "1.8.7",
+          "workspace": false
+        },
+        "cc@1.8.0": {
+          "features": [
+            "parallel"
+          ],
+          "git_source": null,
+          "name": "cc",
+          "used_by": [
+            "blake3@1.8.7",
+            "ring@0.17.14",
+            "zstd-sys@2.1.2+zstd.1.5.7"
+          ],
+          "version": "1.8.0",
+          "workspace": false
+        },
+        "cfg-if@1.0.5": {
+          "features": [],
+          "git_source": null,
+          "name": "cfg-if",
+          "used_by": [
+            "blake3@1.8.7",
+            "chacha20@0.9.1",
+            "crc32fast@1.5.2",
+            "getrandom@0.2.17",
+            "getrandom@0.4.3",
+            "ring@0.17.14"
+          ],
+          "version": "1.0.5",
+          "workspace": false
+        },
+        "chacha20@0.9.1": {
+          "features": [
+            "zeroize"
+          ],
+          "git_source": null,
+          "name": "chacha20",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.9.1",
+          "workspace": false
+        },
+        "chacha20poly1305@0.10.1": {
+          "features": [
+            "alloc",
+            "default",
+            "getrandom",
+            "rand_core"
+          ],
+          "git_source": null,
+          "name": "chacha20poly1305",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "0.10.1",
+          "workspace": false
+        },
+        "cipher@0.4.4": {
+          "features": [
+            "zeroize"
+          ],
+          "git_source": null,
+          "name": "cipher",
+          "used_by": [
+            "chacha20@0.9.1",
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.4.4",
+          "workspace": false
+        },
+        "constant_time_eq@0.4.2": {
+          "features": [
+            "std"
+          ],
+          "git_source": null,
+          "name": "constant_time_eq",
+          "used_by": [
+            "blake3@1.8.7"
+          ],
+          "version": "0.4.2",
+          "workspace": false
+        },
+        "cpufeatures@0.2.17": {
+          "features": [],
+          "git_source": null,
+          "name": "cpufeatures",
+          "used_by": [
+            "chacha20@0.9.1",
+            "poly1305@0.8.0"
+          ],
+          "version": "0.2.17",
+          "workspace": false
+        },
+        "cpufeatures@0.3.1": {
+          "features": [],
+          "git_source": null,
+          "name": "cpufeatures",
+          "used_by": [
+            "blake3@1.8.7"
+          ],
+          "version": "0.3.1",
+          "workspace": false
+        },
+        "crc32fast@1.5.2": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "crc32fast",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "1.5.2",
+          "workspace": false
+        },
+        "crypto-common@0.1.7": {
+          "features": [
+            "getrandom",
+            "rand_core"
+          ],
+          "git_source": null,
+          "name": "crypto-common",
+          "used_by": [
+            "aead@0.5.2",
+            "cipher@0.4.4",
+            "universal-hash@0.5.1"
+          ],
+          "version": "0.1.7",
+          "workspace": false
+        },
+        "fastcdc@3.2.1": {
+          "features": [
+            "default"
+          ],
+          "git_source": null,
+          "name": "fastcdc",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "3.2.1",
+          "workspace": false
+        },
+        "find-msvc-tools@0.1.14": {
+          "features": [],
+          "git_source": null,
+          "name": "find-msvc-tools",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "0.1.14",
+          "workspace": false
+        },
+        "generic-array@0.14.7": {
+          "features": [
+            "more_lengths"
+          ],
+          "git_source": null,
+          "name": "generic-array",
+          "used_by": [
+            "aead@0.5.2",
+            "crypto-common@0.1.7",
+            "inout@0.1.4"
+          ],
+          "version": "0.14.7",
+          "workspace": false
+        },
+        "getrandom@0.2.17": {
+          "features": [],
+          "git_source": null,
+          "name": "getrandom",
+          "used_by": [
+            "rand_core@0.6.4",
+            "ring@0.17.14"
+          ],
+          "version": "0.2.17",
+          "workspace": false
+        },
+        "getrandom@0.4.3": {
+          "features": [
+            "std"
+          ],
+          "git_source": null,
+          "name": "getrandom",
+          "used_by": [
+            "jobserver@0.1.35"
+          ],
+          "version": "0.4.3",
+          "workspace": false
+        },
+        "inout@0.1.4": {
+          "features": [],
+          "git_source": null,
+          "name": "inout",
+          "used_by": [
+            "cipher@0.4.4"
+          ],
+          "version": "0.1.4",
+          "workspace": false
+        },
+        "itoa@1.0.18": {
+          "features": [],
+          "git_source": null,
+          "name": "itoa",
+          "used_by": [
+            "serde_json@1.0.154"
+          ],
+          "version": "1.0.18",
+          "workspace": false
+        },
+        "jobserver@0.1.35": {
+          "features": [],
+          "git_source": null,
+          "name": "jobserver",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "0.1.35",
+          "workspace": false
+        },
+        "libc@0.2.191": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "libc",
+          "used_by": [
+            "cc@1.8.0",
+            "cpufeatures@0.2.17",
+            "cpufeatures@0.3.1",
+            "getrandom@0.2.17",
+            "getrandom@0.4.3",
+            "jobserver@0.1.35",
+            "oojuro-engine@0.1.0",
+            "ring@0.17.14"
+          ],
+          "version": "0.2.191",
+          "workspace": false
+        },
+        "lz4_flex@0.11.6": {
+          "features": [
+            "checked-decode",
+            "safe-decode",
+            "safe-encode",
+            "std"
+          ],
+          "git_source": null,
+          "name": "lz4_flex",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "0.11.6",
+          "workspace": false
+        },
+        "memchr@2.8.3": {
+          "features": [
+            "alloc",
+            "std"
+          ],
+          "git_source": null,
+          "name": "memchr",
+          "used_by": [
+            "aho-corasick@1.1.5",
+            "serde_json@1.0.154"
+          ],
+          "version": "2.8.3",
+          "workspace": false
+        },
+        "oojuro-engine@0.1.0": {
+          "features": [],
+          "git_source": null,
+          "name": "oojuro-engine",
+          "used_by": [],
+          "version": "0.1.0",
+          "workspace": true
+        },
+        "oojuro-rank@0.1.0": {
+          "features": [],
+          "git_source": null,
+          "name": "oojuro-rank",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "0.1.0",
+          "workspace": true
+        },
+        "oojuro-store@0.1.0": {
+          "features": [],
+          "git_source": null,
+          "name": "oojuro-store",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "0.1.0",
+          "workspace": true
+        },
+        "opaque-debug@0.3.1": {
+          "features": [],
+          "git_source": null,
+          "name": "opaque-debug",
+          "used_by": [
+            "poly1305@0.8.0"
+          ],
+          "version": "0.3.1",
+          "workspace": false
+        },
+        "pkg-config@0.3.34": {
+          "features": [],
+          "git_source": null,
+          "name": "pkg-config",
+          "used_by": [
+            "zstd-sys@2.1.2+zstd.1.5.7"
+          ],
+          "version": "0.3.34",
+          "workspace": false
+        },
+        "poly1305@0.8.0": {
+          "features": [],
+          "git_source": null,
+          "name": "poly1305",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.8.0",
+          "workspace": false
+        },
+        "proc-macro2@1.0.107": {
+          "features": [
+            "proc-macro"
+          ],
+          "git_source": null,
+          "name": "proc-macro2",
+          "used_by": [
+            "quote@1.0.47",
+            "serde_derive@1.0.229",
+            "syn@3.0.9"
+          ],
+          "version": "1.0.107",
+          "workspace": false
+        },
+        "quote@1.0.47": {
+          "features": [
+            "proc-macro"
+          ],
+          "git_source": null,
+          "name": "quote",
+          "used_by": [
+            "serde_derive@1.0.229",
+            "syn@3.0.9"
+          ],
+          "version": "1.0.47",
+          "workspace": false
+        },
+        "r-efi@6.0.0": {
+          "features": [],
+          "git_source": null,
+          "name": "r-efi",
+          "used_by": [
+            "getrandom@0.4.3"
+          ],
+          "version": "6.0.0",
+          "workspace": false
+        },
+        "rand_core@0.6.4": {
+          "features": [
+            "getrandom"
+          ],
+          "git_source": null,
+          "name": "rand_core",
+          "used_by": [
+            "crypto-common@0.1.7"
+          ],
+          "version": "0.6.4",
+          "workspace": false
+        },
+        "ring@0.17.14": {
+          "features": [
+            "alloc",
+            "default",
+            "dev_urandom_fallback"
+          ],
+          "git_source": null,
+          "name": "ring",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "0.17.14",
+          "workspace": false
+        },
+        "rust-stemmers@1.2.0": {
+          "features": [],
+          "git_source": null,
+          "name": "rust-stemmers",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "1.2.0",
+          "workspace": false
+        },
+        "serde@1.0.229": {
+          "features": [
+            "default",
+            "derive",
+            "serde_derive",
+            "std"
+          ],
+          "git_source": null,
+          "name": "serde",
+          "used_by": [
+            "oojuro-engine@0.1.0",
+            "rust-stemmers@1.2.0",
+            "serde_json@1.0.154"
+          ],
+          "version": "1.0.229",
+          "workspace": false
+        },
+        "serde_core@1.0.229": {
+          "features": [
+            "result",
+            "std"
+          ],
+          "git_source": null,
+          "name": "serde_core",
+          "used_by": [
+            "serde@1.0.229",
+            "serde_json@1.0.154"
+          ],
+          "version": "1.0.229",
+          "workspace": false
+        },
+        "serde_derive@1.0.229": {
+          "features": [
+            "default"
+          ],
+          "git_source": null,
+          "name": "serde_derive",
+          "used_by": [
+            "rust-stemmers@1.2.0",
+            "serde@1.0.229",
+            "serde_core@1.0.229"
+          ],
+          "version": "1.0.229",
+          "workspace": false
+        },
+        "serde_json@1.0.154": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "serde_json",
+          "used_by": [
+            "oojuro-engine@0.1.0"
+          ],
+          "version": "1.0.154",
+          "workspace": false
+        },
+        "shlex@2.0.1": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "shlex",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "2.0.1",
+          "workspace": false
+        },
+        "subtle@2.6.1": {
+          "features": [],
+          "git_source": null,
+          "name": "subtle",
+          "used_by": [
+            "universal-hash@0.5.1"
+          ],
+          "version": "2.6.1",
+          "workspace": false
+        },
+        "syn@3.0.9": {
+          "features": [
+            "clone-impls",
+            "derive",
+            "parsing",
+            "printing",
+            "proc-macro"
+          ],
+          "git_source": null,
+          "name": "syn",
+          "used_by": [
+            "serde_derive@1.0.229"
+          ],
+          "version": "3.0.9",
+          "workspace": false
+        },
+        "typenum@1.20.1": {
+          "features": [],
+          "git_source": null,
+          "name": "typenum",
+          "used_by": [
+            "crypto-common@0.1.7",
+            "generic-array@0.14.7"
+          ],
+          "version": "1.20.1",
+          "workspace": false
+        },
+        "unicode-ident@1.0.27": {
+          "features": [],
+          "git_source": null,
+          "name": "unicode-ident",
+          "used_by": [
+            "proc-macro2@1.0.107",
+            "syn@3.0.9"
+          ],
+          "version": "1.0.27",
+          "workspace": false
+        },
+        "universal-hash@0.5.1": {
+          "features": [],
+          "git_source": null,
+          "name": "universal-hash",
+          "used_by": [
+            "poly1305@0.8.0"
+          ],
+          "version": "0.5.1",
+          "workspace": false
+        },
+        "untrusted@0.9.0": {
+          "features": [],
+          "git_source": null,
+          "name": "untrusted",
+          "used_by": [
+            "ring@0.17.14"
+          ],
+          "version": "0.9.0",
+          "workspace": false
+        },
+        "version_check@0.9.5": {
+          "features": [],
+          "git_source": null,
+          "name": "version_check",
+          "used_by": [
+            "generic-array@0.14.7"
+          ],
+          "version": "0.9.5",
+          "workspace": false
+        },
+        "wasi@0.11.1+wasi-snapshot-preview1": {
+          "features": [],
+          "git_source": null,
+          "name": "wasi",
+          "used_by": [
+            "getrandom@0.2.17"
+          ],
+          "version": "0.11.1+wasi-snapshot-preview1",
+          "workspace": false
+        },
+        "windows-sys@0.52.0": {
+          "features": [
+            "Win32",
+            "Win32_Foundation",
+            "Win32_System",
+            "Win32_System_Threading",
+            "default"
+          ],
+          "git_source": null,
+          "name": "windows-sys",
+          "used_by": [
+            "ring@0.17.14"
+          ],
+          "version": "0.52.0",
+          "workspace": false
+        },
+        "windows-targets@0.52.6": {
+          "features": [],
+          "git_source": null,
+          "name": "windows-targets",
+          "used_by": [
+            "windows-sys@0.52.0"
+          ],
+          "version": "0.52.6",
+          "workspace": false
+        },
+        "windows_aarch64_gnullvm@0.52.6": {
+          "features": [],
+          "git_source": null,
+          "name": "windows_aarch64_gnullvm",
+          "used_by": [
+            "windows-targets@0.52.6"
+          ],
+          "version": "0.52.6",
+          "workspace": false
+        },
+        "windows_aarch64_msvc@0.52.6": {
+          "features": [],
+          "git_source": null,
+          "name": "windows_aarch64_msvc",
+          "used_by": [
+            "windows-targets@0.52.6"
+          ],
+          "version": "0.52.6",
+          "workspace": false
+        },
+        "windows_i686_gnu@0.52.6": {
+          "features": [],
+          "git_source": null,
+          "name": "windows_i686_gnu",
+          "used_by": [
+            "windows-targets@0.52.6"
+          ],
+          "version": "0.52.6",
+          "workspace": false
+        },
+        "windows_i686_gnullvm@0.52.6": {
+          "features": [],
+          "git_source": null,
+          "name": "windows_i686_gnullvm",
+          "used_by": [
+            "windows-targets@0.52.6"
+          ],
+          "version": "0.52.6",
+          "workspace": false
+        },
+        "windows_i686_msvc@0.52.6": {
+          "features": [],
+          "git_source": null,
+          "name": "windows_i686_msvc",
+          "used_by": [
+            "windows-targets@0.52.6"
+          ],
+          "version": "0.52.6",
+          "workspace": false
+        },
+        "windows_x86_64_gnu@0.52.6": {
+          "features": [],
+          "git_source": null,
+          "name": "windows_x86_64_gnu",
+          "used_by": [
+            "windows-targets@0.52.6"
+          ],
+          "version": "0.52.6",
+          "workspace": false
+        },
+        "windows_x86_64_gnullvm@0.52.6": {
+          "features": [],
+          "git_source": null,
+          "name": "windows_x86_64_gnullvm",
+          "used_by": [
+            "windows-targets@0.52.6"
+          ],
+          "version": "0.52.6",
+          "workspace": false
+        },
+        "windows_x86_64_msvc@0.52.6": {
+          "features": [],
+          "git_source": null,
+          "name": "windows_x86_64_msvc",
+          "used_by": [
+            "windows-targets@0.52.6"
+          ],
+          "version": "0.52.6",
+          "workspace": false
+        },
+        "zeroize@1.9.1": {
+          "features": [],
+          "git_source": null,
+          "name": "zeroize",
+          "used_by": [
+            "chacha20poly1305@0.10.1",
+            "cipher@0.4.4"
+          ],
+          "version": "1.9.1",
+          "workspace": false
+        },
+        "zmij@1.0.23": {
+          "features": [],
+          "git_source": null,
+          "name": "zmij",
+          "used_by": [
+            "serde_json@1.0.154"
+          ],
+          "version": "1.0.23",
+          "workspace": false
+        },
+        "zstd-safe@7.3.0": {
+          "features": [
+            "experimental",
+            "std",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd-safe",
+          "used_by": [
+            "zstd@0.13.3"
+          ],
+          "version": "7.3.0",
+          "workspace": false
+        },
+        "zstd-sys@2.1.2+zstd.1.5.7": {
+          "features": [
+            "experimental",
+            "std",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd-sys",
+          "used_by": [
+            "zstd-safe@7.3.0"
+          ],
+          "version": "2.1.2+zstd.1.5.7",
+          "workspace": false
+        },
+        "zstd@0.13.3": {
+          "features": [
+            "experimental",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "0.13.3",
+          "workspace": false
+        }
+      },
+      "roots": [
+        "oojuro-engine@0.1.0"
+      ],
+      "selection": [
+        "-p",
+        "oojuro-engine"
+      ],
+      "target": "all",
+      "workspace_count": 3
+    },
+    "rank": {
+      "dev_dependencies": false,
+      "edge_count": 0,
+      "edges": "normal,build",
+      "external_count": 0,
+      "package_count": 1,
+      "packages": {
+        "oojuro-rank@0.1.0": {
+          "features": [],
+          "git_source": null,
+          "name": "oojuro-rank",
+          "used_by": [],
+          "version": "0.1.0",
+          "workspace": true
+        }
+      },
+      "roots": [
+        "oojuro-rank@0.1.0"
+      ],
+      "selection": [
+        "-p",
+        "oojuro-rank"
+      ],
+      "target": "x86_64-unknown-linux-gnu",
+      "workspace_count": 1
+    },
+    "store": {
+      "dev_dependencies": false,
+      "edge_count": 48,
+      "edges": "normal,build",
+      "external_count": 34,
+      "package_count": 35,
+      "packages": {
+        "aead@0.5.2": {
+          "features": [
+            "alloc",
+            "getrandom",
+            "rand_core"
+          ],
+          "git_source": null,
+          "name": "aead",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.5.2",
+          "workspace": false
+        },
+        "arrayvec@0.7.8": {
+          "features": [],
+          "git_source": null,
+          "name": "arrayvec",
+          "used_by": [
+            "blake3@1.8.7"
+          ],
+          "version": "0.7.8",
+          "workspace": false
+        },
+        "blake3@1.8.7": {
+          "features": [
+            "pure",
+            "std"
+          ],
+          "git_source": null,
+          "name": "blake3",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "1.8.7",
+          "workspace": false
+        },
+        "cc@1.8.0": {
+          "features": [
+            "parallel"
+          ],
+          "git_source": null,
+          "name": "cc",
+          "used_by": [
+            "blake3@1.8.7",
+            "zstd-sys@2.1.2+zstd.1.5.7"
+          ],
+          "version": "1.8.0",
+          "workspace": false
+        },
+        "cfg-if@1.0.5": {
+          "features": [],
+          "git_source": null,
+          "name": "cfg-if",
+          "used_by": [
+            "blake3@1.8.7",
+            "chacha20@0.9.1",
+            "crc32fast@1.5.2",
+            "getrandom@0.2.17"
+          ],
+          "version": "1.0.5",
+          "workspace": false
+        },
+        "chacha20@0.9.1": {
+          "features": [
+            "zeroize"
+          ],
+          "git_source": null,
+          "name": "chacha20",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.9.1",
+          "workspace": false
+        },
+        "chacha20poly1305@0.10.1": {
+          "features": [
+            "alloc",
+            "default",
+            "getrandom",
+            "rand_core"
+          ],
+          "git_source": null,
+          "name": "chacha20poly1305",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "0.10.1",
+          "workspace": false
+        },
+        "cipher@0.4.4": {
+          "features": [
+            "zeroize"
+          ],
+          "git_source": null,
+          "name": "cipher",
+          "used_by": [
+            "chacha20@0.9.1",
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.4.4",
+          "workspace": false
+        },
+        "constant_time_eq@0.4.2": {
+          "features": [
+            "std"
+          ],
+          "git_source": null,
+          "name": "constant_time_eq",
+          "used_by": [
+            "blake3@1.8.7"
+          ],
+          "version": "0.4.2",
+          "workspace": false
+        },
+        "cpufeatures@0.2.17": {
+          "features": [],
+          "git_source": null,
+          "name": "cpufeatures",
+          "used_by": [
+            "chacha20@0.9.1",
+            "poly1305@0.8.0"
+          ],
+          "version": "0.2.17",
+          "workspace": false
+        },
+        "cpufeatures@0.3.1": {
+          "features": [],
+          "git_source": null,
+          "name": "cpufeatures",
+          "used_by": [
+            "blake3@1.8.7"
+          ],
+          "version": "0.3.1",
+          "workspace": false
+        },
+        "crc32fast@1.5.2": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "crc32fast",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "1.5.2",
+          "workspace": false
+        },
+        "crypto-common@0.1.7": {
+          "features": [
+            "getrandom",
+            "rand_core"
+          ],
+          "git_source": null,
+          "name": "crypto-common",
+          "used_by": [
+            "aead@0.5.2",
+            "cipher@0.4.4",
+            "universal-hash@0.5.1"
+          ],
+          "version": "0.1.7",
+          "workspace": false
+        },
+        "fastcdc@3.2.1": {
+          "features": [
+            "default"
+          ],
+          "git_source": null,
+          "name": "fastcdc",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "3.2.1",
+          "workspace": false
+        },
+        "find-msvc-tools@0.1.14": {
+          "features": [],
+          "git_source": null,
+          "name": "find-msvc-tools",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "0.1.14",
+          "workspace": false
+        },
+        "generic-array@0.14.7": {
+          "features": [
+            "more_lengths"
+          ],
+          "git_source": null,
+          "name": "generic-array",
+          "used_by": [
+            "aead@0.5.2",
+            "crypto-common@0.1.7",
+            "inout@0.1.4"
+          ],
+          "version": "0.14.7",
+          "workspace": false
+        },
+        "getrandom@0.2.17": {
+          "features": [],
+          "git_source": null,
+          "name": "getrandom",
+          "used_by": [
+            "rand_core@0.6.4"
+          ],
+          "version": "0.2.17",
+          "workspace": false
+        },
+        "inout@0.1.4": {
+          "features": [],
+          "git_source": null,
+          "name": "inout",
+          "used_by": [
+            "cipher@0.4.4"
+          ],
+          "version": "0.1.4",
+          "workspace": false
+        },
+        "jobserver@0.1.35": {
+          "features": [],
+          "git_source": null,
+          "name": "jobserver",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "0.1.35",
+          "workspace": false
+        },
+        "libc@0.2.191": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "libc",
+          "used_by": [
+            "cc@1.8.0",
+            "getrandom@0.2.17",
+            "jobserver@0.1.35"
+          ],
+          "version": "0.2.191",
+          "workspace": false
+        },
+        "lz4_flex@0.11.6": {
+          "features": [
+            "checked-decode",
+            "safe-decode",
+            "safe-encode",
+            "std"
+          ],
+          "git_source": null,
+          "name": "lz4_flex",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "0.11.6",
+          "workspace": false
+        },
+        "oojuro-store@0.1.0": {
+          "features": [],
+          "git_source": null,
+          "name": "oojuro-store",
+          "used_by": [],
+          "version": "0.1.0",
+          "workspace": true
+        },
+        "opaque-debug@0.3.1": {
+          "features": [],
+          "git_source": null,
+          "name": "opaque-debug",
+          "used_by": [
+            "poly1305@0.8.0"
+          ],
+          "version": "0.3.1",
+          "workspace": false
+        },
+        "pkg-config@0.3.34": {
+          "features": [],
+          "git_source": null,
+          "name": "pkg-config",
+          "used_by": [
+            "zstd-sys@2.1.2+zstd.1.5.7"
+          ],
+          "version": "0.3.34",
+          "workspace": false
+        },
+        "poly1305@0.8.0": {
+          "features": [],
+          "git_source": null,
+          "name": "poly1305",
+          "used_by": [
+            "chacha20poly1305@0.10.1"
+          ],
+          "version": "0.8.0",
+          "workspace": false
+        },
+        "rand_core@0.6.4": {
+          "features": [
+            "getrandom"
+          ],
+          "git_source": null,
+          "name": "rand_core",
+          "used_by": [
+            "crypto-common@0.1.7"
+          ],
+          "version": "0.6.4",
+          "workspace": false
+        },
+        "shlex@2.0.1": {
+          "features": [
+            "default",
+            "std"
+          ],
+          "git_source": null,
+          "name": "shlex",
+          "used_by": [
+            "cc@1.8.0"
+          ],
+          "version": "2.0.1",
+          "workspace": false
+        },
+        "subtle@2.6.1": {
+          "features": [],
+          "git_source": null,
+          "name": "subtle",
+          "used_by": [
+            "universal-hash@0.5.1"
+          ],
+          "version": "2.6.1",
+          "workspace": false
+        },
+        "typenum@1.20.1": {
+          "features": [],
+          "git_source": null,
+          "name": "typenum",
+          "used_by": [
+            "crypto-common@0.1.7",
+            "generic-array@0.14.7"
+          ],
+          "version": "1.20.1",
+          "workspace": false
+        },
+        "universal-hash@0.5.1": {
+          "features": [],
+          "git_source": null,
+          "name": "universal-hash",
+          "used_by": [
+            "poly1305@0.8.0"
+          ],
+          "version": "0.5.1",
+          "workspace": false
+        },
+        "version_check@0.9.5": {
+          "features": [],
+          "git_source": null,
+          "name": "version_check",
+          "used_by": [
+            "generic-array@0.14.7"
+          ],
+          "version": "0.9.5",
+          "workspace": false
+        },
+        "zeroize@1.9.1": {
+          "features": [],
+          "git_source": null,
+          "name": "zeroize",
+          "used_by": [
+            "chacha20poly1305@0.10.1",
+            "cipher@0.4.4"
+          ],
+          "version": "1.9.1",
+          "workspace": false
+        },
+        "zstd-safe@7.3.0": {
+          "features": [
+            "experimental",
+            "std",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd-safe",
+          "used_by": [
+            "zstd@0.13.3"
+          ],
+          "version": "7.3.0",
+          "workspace": false
+        },
+        "zstd-sys@2.1.2+zstd.1.5.7": {
+          "features": [
+            "experimental",
+            "std",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd-sys",
+          "used_by": [
+            "zstd-safe@7.3.0"
+          ],
+          "version": "2.1.2+zstd.1.5.7",
+          "workspace": false
+        },
+        "zstd@0.13.3": {
+          "features": [
+            "experimental",
+            "zdict_builder"
+          ],
+          "git_source": null,
+          "name": "zstd",
+          "used_by": [
+            "oojuro-store@0.1.0"
+          ],
+          "version": "0.13.3",
+          "workspace": false
+        }
+      },
+      "roots": [
+        "oojuro-store@0.1.0"
+      ],
+      "selection": [
+        "-p",
+        "oojuro-store"
+      ],
+      "target": "x86_64-unknown-linux-gnu",
+      "workspace_count": 1
+    }
+  },
+  "inventory": {},
+  "inventory_coverage": {
+    "inventoried_packages": 0,
+    "mode": "policy-only; --no-deps metadata intentionally omits external inventory",
+    "omitted_packages": [
+      "aead@0.5.2",
+      "aho-corasick@1.1.5",
+      "arrayvec@0.7.8",
+      "blake3@1.8.7",
+      "cc@1.8.0",
+      "cfg-if@1.0.5",
+      "chacha20@0.9.1",
+      "chacha20poly1305@0.10.1",
+      "cipher@0.4.4",
+      "constant_time_eq@0.4.2",
+      "cpufeatures@0.2.17",
+      "cpufeatures@0.3.1",
+      "crc32fast@1.5.2",
+      "crypto-common@0.1.7",
+      "fastcdc@3.2.1",
+      "find-msvc-tools@0.1.14",
+      "generic-array@0.14.7",
+      "getrandom@0.2.17",
+      "getrandom@0.4.3",
+      "inout@0.1.4",
+      "itoa@1.0.18",
+      "jobserver@0.1.35",
+      "libc@0.2.191",
+      "lz4_flex@0.11.6",
+      "memchr@2.8.3",
+      "opaque-debug@0.3.1",
+      "pkg-config@0.3.34",
+      "poly1305@0.8.0",
+      "proc-macro2@1.0.107",
+      "quote@1.0.47",
+      "r-efi@6.0.0",
+      "rand_core@0.6.4",
+      "ring@0.17.14",
+      "rust-stemmers@1.2.0",
+      "serde@1.0.229",
+      "serde_core@1.0.229",
+      "serde_derive@1.0.229",
+      "serde_json@1.0.154",
+      "shlex@2.0.1",
+      "subtle@2.6.1",
+      "syn@3.0.9",
+      "typenum@1.20.1",
+      "unicode-ident@1.0.27",
+      "universal-hash@0.5.1",
+      "untrusted@0.9.0",
+      "version_check@0.9.5",
+      "wasi@0.11.1+wasi-snapshot-preview1",
+      "windows-sys@0.52.0",
+      "windows-targets@0.52.6",
+      "windows_aarch64_gnullvm@0.52.6",
+      "windows_aarch64_msvc@0.52.6",
+      "windows_i686_gnu@0.52.6",
+      "windows_i686_gnullvm@0.52.6",
+      "windows_i686_msvc@0.52.6",
+      "windows_x86_64_gnu@0.52.6",
+      "windows_x86_64_gnullvm@0.52.6",
+      "windows_x86_64_msvc@0.52.6",
+      "zeroize@1.9.1",
+      "zmij@1.0.23",
+      "zstd-safe@7.3.0",
+      "zstd-sys@2.1.2+zstd.1.5.7",
+      "zstd@0.13.3"
+    ],
+    "selected_external_packages": 62
+  },
+  "revision": "f726bab51d982896a129d4bdf2fd2d3a2edc2fff",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "target": "x86_64-unknown-linux-gnu"
+}
