@@ -1,0 +1,38 @@
+{
+  "utc": "2026-10-24T04:37:25.275141+00:00",
+  "phase": "gates-only",
+  "command": [
+    "/usr/bin/systemd-run",
+    "--user",
+    "--wait",
+    "--pipe",
+    "--collect",
+    "--unit=oojuro-core-baseline-gates-5b546994a869159b.service",
+    "--property=Type=exec",
+    "--property=RuntimeMaxSec=720",
+    "--property=TimeoutStopSec=5",
+    "--property=KillMode=control-group",
+    "--property=MemoryMax=6G",
+    "--property=MemorySwapMax=0",
+    "--property=TasksMax=512",
+    "--property=LimitCORE=0",
+    "--",
+    "/usr/bin/python3",
+    "-I",
+    "$WORKSPACE/work/core-baseline-readiness-20261024/run-experiment.py",
+    "gates",
+    "--run-name",
+    "run-5b546994a869159b",
+    "--execute"
+  ],
+  "unit": "oojuro-core-baseline-gates-5b546994a869159b.service",
+  "status": "terminal",
+  "observer_systemd_run_pid": 2371623,
+  "live_readback": {
+    "exit": 0,
+    "stdout": "ActiveState=active\nTimeoutStopUSec=5s\nRuntimeMaxUSec=12min\nMainPID=2371625\nControlGroup=$USER_MANAGER_CGROUP_REL/app.slice/oojuro-core-baseline-gates-5b546994a869159b.service\nMemoryMax=6442450944\nMemorySwapMax=0\nTasksMax=512\nLimitCORE=0\nKillMode=control-group\n",
+    "stderr": ""
+  },
+  "terminal_exit": 0,
+  "finished_utc": "2026-10-24T04:37:33.589428+00:00"
+}

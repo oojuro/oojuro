@@ -1,0 +1,41 @@
+{
+  "utc": "2026-10-24T04:24:47.528007+00:00",
+  "builds": {
+    "current": {
+      "receipt_sha256": "7b8cfcb26ceec08918af19e713fcc142811d9998bd2cd8b0ddb23dfb3fa4c4a2",
+      "source": "f726bab51d982896a129d4bdf2fd2d3a2edc2fff",
+      "binary": {
+        "path": "$WORKSPACE/work/core-baseline-readiness-20261024/current/oojuro-bench",
+        "sha256": "a4b861d7049c6125f8b42b59fba98fa19775a44fbdbc79c06f452cb6d3086a51",
+        "bytes": 6133760,
+        "fresh": false,
+        "features": [
+          "sqlite-arm"
+        ]
+      },
+      "wall_seconds": 47.551,
+      "unit": "oojuro-core-baseline-build-current-e248eafa9f946b6c.service",
+      "outside_unit_state": "ActiveState=inactive\nSubState=dead\nResult=success\n",
+      "outside_cgroup_absent": true,
+      "outside_exact_scratch_absent": true
+    },
+    "control": {
+      "receipt_sha256": "b12983b64711e4b9d8fc49f95a6e70e22154b1f8a7feef4764b9e0b058d1e7f8",
+      "source": "7633eefe7503e355635522dd3e8f67fce3b143d7",
+      "binary": {
+        "path": "$WORKSPACE/work/core-baseline-readiness-20261024/control/oojuro-bench",
+        "sha256": "f35af93ca0167707dcaa77d7b17dd79814294f9b8e4264bf66a9571047d718a3",
+        "bytes": 6134224,
+        "fresh": false,
+        "features": [
+          "sqlite-arm"
+        ]
+      },
+      "wall_seconds": 43.264,
+      "unit": "oojuro-core-baseline-build-control-1ae88533801accb7.service",
+      "outside_unit_state": "ActiveState=inactive\nSubState=dead\nResult=success\n",
+      "outside_cgroup_absent": true,
+      "outside_exact_scratch_absent": true
+    }
+  }
+}

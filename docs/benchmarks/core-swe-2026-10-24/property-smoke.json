@@ -1,0 +1,17 @@
+{
+  "utc": "2026-10-24T04:25:55.769010+00:00",
+  "unit": "oojuro-core-baseline-property-smoke-c60515c0d0731961.scope",
+  "scope_command_exit": 0,
+  "scope_exit_evidence": "original script line4 returncode==0 assertion passed; only post-GC ActiveState assertion at line6 failed",
+  "property": "RuntimeMaxSec=300",
+  "first_observer_assertion_failed": true,
+  "observer_failure": "Immediate ActiveState-only observer assertion refused; original state stdout was not persisted, so cause is unknown. Follow-up LoadState not-found/inactive and exact cgroup absence reconciled without repeating true.",
+  "no_repeated_scope_smoke": true,
+  "original_stdout_stderr_not_persisted": true,
+  "outside_unit_query": {
+    "exit": 0,
+    "stdout": "LoadState=not-found\nActiveState=inactive\nSubState=dead\n",
+    "stderr": ""
+  },
+  "outside_cgroup_absent": true
+}

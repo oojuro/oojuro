@@ -1,0 +1,45 @@
+{
+  "utc": "2026-10-24T04:40:01.497786+00:00",
+  "phase": "one-fixed16store-workload",
+  "command": [
+    "/usr/bin/systemd-run",
+    "--user",
+    "--wait",
+    "--pipe",
+    "--collect",
+    "--unit=oojuro-core-baseline-workload-5b546994a869159b.service",
+    "--property=Type=exec",
+    "--property=RuntimeMaxSec=2520",
+    "--property=TimeoutStopSec=5",
+    "--property=KillMode=control-group",
+    "--property=MemoryMax=6G",
+    "--property=MemorySwapMax=0",
+    "--property=TasksMax=512",
+    "--property=LimitCORE=0",
+    "--",
+    "/usr/bin/python3",
+    "-I",
+    "$WORKSPACE/work/core-baseline-readiness-20261024/run-experiment.py",
+    "workload",
+    "--run-name",
+    "run-5b546994a869159b",
+    "--execute"
+  ],
+  "unit": "oojuro-core-baseline-workload-5b546994a869159b.service",
+  "status": "terminal",
+  "preexisting_gate_scope_count": 48,
+  "observer_systemd_run_pid": 2381207,
+  "live_readback": {
+    "exit": 0,
+    "stdout": "ActiveState=active\nTimeoutStopUSec=5s\nRuntimeMaxUSec=42min\nMainPID=2381209\nControlGroup=$USER_MANAGER_CGROUP_REL/app.slice/oojuro-core-baseline-workload-5b546994a869159b.service\nMemoryMax=6442450944\nMemorySwapMax=0\nTasksMax=512\nLimitCORE=0\nKillMode=control-group\n",
+    "stderr": ""
+  },
+  "first_arm_live_readback": {
+    "unit": "oojuro-arm-native_current-2381215-0072098357.scope",
+    "exit": 0,
+    "stdout": "ActiveState=active\nRuntimeMaxUSec=5min\nControlGroup=$USER_MANAGER_CGROUP_REL/app.slice/oojuro-arm-native_current-2381215-0072098357.scope\nMemoryMax=3221225472\nMemorySwapMax=0\n",
+    "stderr": ""
+  },
+  "terminal_exit": 0,
+  "finished_utc": "2026-10-24T04:47:38.110883+00:00"
+}

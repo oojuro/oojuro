@@ -1,0 +1,421 @@
+{
+  "utc": "2026-10-24T04:38:09.021657+00:00",
+  "status": "gates passed; independent cleanup confirmed; workload not dispatched",
+  "gate_exit": 0,
+  "controller_wall_seconds": 7.241,
+  "arms": [
+    {
+      "label": "native_current",
+      "source": "f726bab51d98",
+      "gates": {
+        "as_of_visibility": true,
+        "byte_exact": true,
+        "byte_exact_after_reopen": true,
+        "crash_recovery": true,
+        "determinism": true,
+        "freshness": true,
+        "get_range_order": true
+      },
+      "crash_detail": {
+        "example": {
+          "acked_records": 600,
+          "failures": [],
+          "inflight": [
+            {
+              "delay_ms": 0,
+              "inflight_present": 0,
+              "of": 2000
+            },
+            {
+              "delay_ms": 5,
+              "inflight_present": 0,
+              "of": 2000
+            },
+            {
+              "delay_ms": 30,
+              "inflight_present": 2000,
+              "of": 2000
+            }
+          ],
+          "note": "inflight_present strictly between 0 and the batch size means the batch was not atomic",
+          "trials": 3
+        },
+        "runs": 1
+      }
+    },
+    {
+      "label": "native_control",
+      "source": "7633eefe7503",
+      "gates": {
+        "as_of_visibility": true,
+        "byte_exact": true,
+        "byte_exact_after_reopen": true,
+        "crash_recovery": true,
+        "determinism": true,
+        "freshness": true,
+        "get_range_order": true
+      },
+      "crash_detail": {
+        "example": {
+          "acked_records": 600,
+          "failures": [],
+          "inflight": [
+            {
+              "delay_ms": 0,
+              "inflight_present": 0,
+              "of": 2000
+            },
+            {
+              "delay_ms": 5,
+              "inflight_present": 0,
+              "of": 2000
+            },
+            {
+              "delay_ms": 30,
+              "inflight_present": 2000,
+              "of": 2000
+            }
+          ],
+          "note": "inflight_present strictly between 0 and the batch size means the batch was not atomic",
+          "trials": 3
+        },
+        "runs": 1
+      }
+    },
+    {
+      "label": "sqlite",
+      "source": "f726bab51d98",
+      "gates": {
+        "as_of_visibility": true,
+        "byte_exact": true,
+        "byte_exact_after_reopen": true,
+        "crash_recovery": true,
+        "determinism": true,
+        "freshness": true,
+        "get_range_order": true
+      },
+      "crash_detail": {
+        "example": {
+          "acked_records": 600,
+          "failures": [],
+          "inflight": [
+            {
+              "delay_ms": 0,
+              "inflight_present": 0,
+              "of": 2000
+            },
+            {
+              "delay_ms": 5,
+              "inflight_present": 0,
+              "of": 2000
+            },
+            {
+              "delay_ms": 30,
+              "inflight_present": 2000,
+              "of": 2000
+            }
+          ],
+          "note": "inflight_present strictly between 0 and the batch size means the batch was not atomic",
+          "trials": 3
+        },
+        "runs": 1
+      }
+    },
+    {
+      "label": "jsonl_zstd",
+      "source": "f726bab51d98",
+      "gates": {
+        "as_of_visibility": true,
+        "byte_exact": true,
+        "byte_exact_after_reopen": true,
+        "crash_recovery": true,
+        "determinism": true,
+        "freshness": true,
+        "get_range_order": true
+      },
+      "crash_detail": {
+        "example": {
+          "acked_records": 600,
+          "failures": [],
+          "inflight": [
+            {
+              "delay_ms": 0,
+              "inflight_present": 0,
+              "of": 2000
+            },
+            {
+              "delay_ms": 5,
+              "inflight_present": 0,
+              "of": 2000
+            },
+            {
+              "delay_ms": 30,
+              "inflight_present": 2000,
+              "of": 2000
+            }
+          ],
+          "note": "inflight_present strictly between 0 and the batch size means the batch was not atomic",
+          "trials": 3
+        },
+        "runs": 1
+      }
+    }
+  ],
+  "scope_count": 48,
+  "outside_manager_exact_unit_names_absent": true,
+  "outside_original_pid_identities_absent": true,
+  "scope_checks": [
+    {
+      "unit": "oojuro-arm-native_current-2371631-0336516594.scope",
+      "original_pid": 2371632,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_current-2371631-1383689679.scope",
+      "original_pid": 2371633,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_current-2371631-2434650085.scope",
+      "original_pid": 2371640,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_current-2371631-3484711118.scope",
+      "original_pid": 2371643,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_current-2371631-4547090244.scope",
+      "original_pid": 2371645,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_current-2371631-5201600052.scope",
+      "original_pid": 2371649,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_current-2371631-6818048508.scope",
+      "original_pid": 2371701,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_current-2371631-7882929686.scope",
+      "original_pid": 2371702,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_current-2371631-8915808184.scope",
+      "original_pid": 2371703,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_current-2371631-9966069941.scope",
+      "original_pid": 2371704,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_current-2371631-10005341034.scope",
+      "original_pid": 2371705,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_current-2371631-11089174818.scope",
+      "original_pid": 2371742,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_control-2371631-12148547454.scope",
+      "original_pid": 2371743,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_control-2371631-13190015051.scope",
+      "original_pid": 2371744,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_control-2371631-14233575790.scope",
+      "original_pid": 2371745,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_control-2371631-15269392159.scope",
+      "original_pid": 2371746,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_control-2371631-16341336769.scope",
+      "original_pid": 2371747,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_control-2371631-17940965563.scope",
+      "original_pid": 2371768,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_control-2371631-18537587856.scope",
+      "original_pid": 2371770,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_control-2371631-19595197184.scope",
+      "original_pid": 2371771,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_control-2371631-20628256137.scope",
+      "original_pid": 2371773,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_control-2371631-21681259321.scope",
+      "original_pid": 2371775,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_control-2371631-22714323173.scope",
+      "original_pid": 2371777,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-native_control-2371631-23794183891.scope",
+      "original_pid": 2371778,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-sqlite-2371631-24868135392.scope",
+      "original_pid": 2371779,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-sqlite-2371631-25911479137.scope",
+      "original_pid": 2371782,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-sqlite-2371631-26953735370.scope",
+      "original_pid": 2371783,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-sqlite-2371631-27988367899.scope",
+      "original_pid": 2371784,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-sqlite-2371631-28054039316.scope",
+      "original_pid": 2371785,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-sqlite-2371631-29434805529.scope",
+      "original_pid": 2371790,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-sqlite-2371631-30829801838.scope",
+      "original_pid": 2371806,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-sqlite-2371631-31885239468.scope",
+      "original_pid": 2371818,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-sqlite-2371631-32929889572.scope",
+      "original_pid": 2371865,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-sqlite-2371631-33986645362.scope",
+      "original_pid": 2371900,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-sqlite-2371631-34022352439.scope",
+      "original_pid": 2371905,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-sqlite-2371631-35102511381.scope",
+      "original_pid": 2371909,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-jsonl_zstd-2371631-36146632561.scope",
+      "original_pid": 2371910,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-jsonl_zstd-2371631-37199945451.scope",
+      "original_pid": 2371911,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-jsonl_zstd-2371631-38247741714.scope",
+      "original_pid": 2371912,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-jsonl_zstd-2371631-39288259215.scope",
+      "original_pid": 2371913,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-jsonl_zstd-2371631-40400514290.scope",
+      "original_pid": 2371914,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-jsonl_zstd-2371631-41801241605.scope",
+      "original_pid": 2372060,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-jsonl_zstd-2371631-42195391320.scope",
+      "original_pid": 2372171,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-jsonl_zstd-2371631-43272142075.scope",
+      "original_pid": 2372176,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-jsonl_zstd-2371631-44313689330.scope",
+      "original_pid": 2372177,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-jsonl_zstd-2371631-45379942829.scope",
+      "original_pid": 2372179,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-jsonl_zstd-2371631-46425606818.scope",
+      "original_pid": 2372182,
+      "same_pid_identity_present": false
+    },
+    {
+      "unit": "oojuro-arm-jsonl_zstd-2371631-47525002115.scope",
+      "original_pid": 2372185,
+      "same_pid_identity_present": false
+    }
+  ],
+  "outer_state": "LoadState=not-found\nActiveState=inactive\nSubState=dead\n",
+  "outer_actual_cgroup": "$USER_MANAGER_CGROUP/app.slice/oojuro-core-baseline-gates-5b546994a869159b.service",
+  "outer_actual_cgroup_absent": true,
+  "controller_pid": 2371625,
+  "controller_pid_absent": true,
+  "controller_observed_scope_paths": 0,
+  "raw_sha256": {
+    "run-5b546994a869159b/gates.json": "9a8f68de08432a5316a5ef96cc7a3ee1cf2fe25a28422996efddf9ddf8a05a98",
+    "run-5b546994a869159b/receipt-gates.json": "9510bde807f44e94aedd8dee6c406fdc69e0ebfb005f7576c56f80955498db70",
+    "run-5b546994a869159b/scopes.jsonl": "0bd4f77b8a3d38e20017cdd65e6ce3b97866751938dc0a7b44daaf9f1f3f59e2",
+    "gate-dispatch.json": "d92ecbc45764a496973da0dfdff749bed5f7d4dd8542f55375468ccfdcbf5cda"
+  }
+}

@@ -1,0 +1,263 @@
+#!/usr/bin/python3 -I
+"""Reviewed fixed local baseline controller. Build artifacts only unless --execute is explicit."""
+import argparse,ast,datetime,hashlib,json,os,pathlib,re,resource,shutil,signal,stat,subprocess,time
+W=pathlib.Path(__file__).resolve().parents[2]
+BASE=W/"work/core-baseline-readiness-20261024"
+CURRENT="f726bab51d982896a129d4bdf2fd2d3a2edc2fff"
+CONTROL="7633eefe7503e355635522dd3e8f67fce3b143d7"
+C=BASE/"current/oojuro-bench";O=BASE/"control/oojuro-bench"
+LABELS=["native_current","native_control","sqlite","jsonl_zstd"]
+SPECS={"native_current":f"native_current=cmd:{C} serve --arm native-record",
+       "native_control":f"native_control=cmd:{O} serve --arm native-record",
+       "sqlite":"sqlite=sqlite","jsonl_zstd":"jsonl_zstd=jsonl-zstd"}
+SHAS={str(C):"a4b861d7049c6125f8b42b59fba98fa19775a44fbdbc79c06f452cb6d3086a51",
+      str(O):"f35af93ca0167707dcaa77d7b17dd79814294f9b8e4264bf66a9571047d718a3"}
+DATA=W/"work/native-benchmark/data"
+INPUT_SHA="3106438b52feadab2bcf3c0e7ff7fb40ac8625b3969312e8cf64d4c3782089c2"
+def sha(p):
+    with pathlib.Path(p).open("rb") as f:return hashlib.file_digest(f,"sha256").hexdigest()
+def save(p,value):
+    tmp=p.with_name(p.name+".pending")
+    fd=os.open(tmp,os.O_WRONLY|os.O_CREAT|os.O_EXCL|os.O_NOFOLLOW,0o600)
+    with os.fdopen(fd,"w") as f:json.dump(value,f,indent=2);f.write("\n");f.flush();os.fsync(f.fileno())
+    os.replace(tmp,p)
+    fd=os.open(p.parent,os.O_RDONLY|os.O_DIRECTORY)
+    try:os.fsync(fd)
+    finally:os.close(fd)
+def command(run,phase,n=0):
+    common=["--runs","1","--mem-max","3G","--data",str(DATA),"--keep"]
+    if phase=="gates":
+        args=[str(C),"gates",*common,"--work",str(run/"gates-stores"),"--out",str(run/"gates.json")]
+        order=LABELS
+    else:
+        args=[str(C),"turnloop",*common,"--set","swe-agent","--split","dev","--trajectories","10","--background","20000",
+              "--thinking","index","--k","20","--pool","20","--batch","1000","--work",str(run/f"stores/round-{n}"),
+              "--out",str(run/f"round-{n}.json"),"--dump-pools",str(run/f"pools-round-{n}")]
+        order=LABELS[n:]+LABELS[:n]
+    for label in order:args+=["--arm",SPECS[label]]
+    return args
+def reconcile(run):
+    # Scope placement is observed, never inferred from the app.slice convention.
+    own=pathlib.Path('/proc/self/cgroup').read_text().strip().split('0::',1)[1]
+    assert '/app.slice/' in own
+    manager=pathlib.Path('/sys/fs/cgroup')/own.split('/app.slice/',1)[0].lstrip('/')
+    unknown=[];result=[];end=time.monotonic()+100
+    def issue(phase,index,error):
+        unknown.append({'phase':phase,'row':index,'class':type(error).__name__})
+    try:lines=(run/'scopes.jsonl').read_text().splitlines()
+    except Exception as error:
+        issue('inventory-read',None,error);lines=[]
+    if len(lines)>256:
+        issue('inventory-cap',None,ValueError());lines=lines[:256]
+    observations={}
+    pathfile=run/'scope-observations.json'
+    if pathfile.exists():
+        try:
+            observations=json.loads(pathfile.read_text())
+            assert isinstance(observations,dict)
+        except Exception as error:issue('observations-read',None,error);observations={}
+    def checked_path(unit,value):
+        assert isinstance(value,str) and value.startswith('/') and '..' not in pathlib.PurePosixPath(value).parts
+        path=pathlib.Path('/sys/fs/cgroup')/value.lstrip('/')
+        assert path.is_relative_to(manager) and path.name==unit
+        return path
+    def capture(unit,stdout,index):
+        reported=[line.split('=',1)[1] for line in stdout.splitlines() if line.startswith('ControlGroup=')]
+        assert len(reported)<=1
+        previous=observations.get(unit,[])
+        assert isinstance(previous,list)
+        for value in previous:checked_path(unit,value)
+        if reported and reported[0]:
+            checked_path(unit,reported[0])
+            if reported[0] not in previous:
+                observations[unit]=previous+[reported[0]]
+                # Save the actual path BEFORE any termination command.
+                try:save(pathfile,observations)
+                except Exception as error:issue('observations-save',index,error)
+        return observations.get(unit,[])
+    def query(args):
+        left=end-time.monotonic();assert left>0
+        return subprocess.run(args,capture_output=True,text=True,timeout=min(5,left))
+    def named_paths(unit):
+        found=[];count=0
+        def failed(error):raise error
+        for parent,dirs,files in os.walk(manager,onerror=failed):
+            count+=1;assert count<=4096 and time.monotonic()<end
+            if unit in dirs:found.append(str(pathlib.Path(parent)/unit))
+        return found
+    seen=set()
+    for index,line in enumerate(lines):
+        entry={'row':index}
+        try:
+            r=json.loads(line)
+            assert type(r['harness_pid']) is int and r['harness_pid']>0
+            assert type(r['launcher_pid']) is int and r['launcher_pid']>0
+            assert isinstance(r['start_ticks'],str) and r['start_ticks'].isdigit()
+            unit=r['unit'];assert re.fullmatch(r'oojuro-arm-(native_current|native_control|sqlite|jsonl_zstd)-'+str(r['harness_pid'])+r'-[0-9]+\.scope',unit)
+            assert unit not in seen;seen.add(unit);entry['unit']=unit
+            q=['/usr/bin/systemctl','--user','show','--property=LoadState','--property=ActiveState','--property=ControlGroup',unit]
+            state=query(q)
+            actual=capture(unit,state.stdout,index)
+            entry['observed_control_groups']=list(actual)
+            if any('ActiveState='+v in state.stdout for v in ['active','activating','deactivating','failed']):
+                for cmd in [['kill','--signal=KILL','--kill-whom=all',unit],['stop',unit]]:
+                    try:
+                        termination=query(['/usr/bin/systemctl','--user',*cmd])
+                        entry.setdefault('termination_exits',[]).append(termination.returncode)
+                    except Exception as error:issue('unit-terminate',index,error)
+            until=min(end,time.monotonic()+5)
+            while True:
+                state=query(q);actual=capture(unit,state.stdout,index)
+                missing=state.returncode!=0 and 'not found' in state.stderr.lower()
+                dead=missing or 'LoadState=not-found' in state.stdout or 'ActiveState=inactive' in state.stdout
+                actual_absent=all(not checked_path(unit,value).exists() for value in actual)
+                # Already collected units may have no remaining reported path.
+                # Search the ACTUAL manager hierarchy for the exact unit basename.
+                remaining_named=named_paths(unit) if dead else []
+                pid=pathlib.Path('/proc')/str(r['launcher_pid'])/'stat'
+                try:pid_same=pid.read_text().rsplit(')',1)[1].split()[19]==r['start_ticks']
+                except FileNotFoundError:pid_same=False
+                if dead and actual_absent and not remaining_named and not pid_same:break
+                assert time.monotonic()<until
+                time.sleep(.05)
+            entry.update(state=state.stdout,query_exit=state.returncode,observed_control_groups=list(actual),
+                         observed_paths_absent=actual_absent,manager_hierarchy=str(manager),
+                         exact_unit_named_paths_remaining=remaining_named,exact_original_pid_absent=True,
+                         cgroup_proof='observed paths plus exact-name hierarchy search' if actual else 'already-collected; exact-name hierarchy search only',
+                         status='reconciled')
+        except Exception as error:
+            issue('unit-reconcile',index,error);entry['status']='unknown'
+        result.append(entry)
+    return {'rows':result,'unknown':unknown,'manager_hierarchy':str(manager)}
+
+def validate_card(path,phase):
+    card=json.loads(path.read_text());assert card["schema"]=="oojuro-scorecard-v1"
+    assert {r["label"] for r in card["arms"]}==set(LABELS) and len(card["arms"])==4
+    assert card["settings"]["runs"]==1
+    for row in card["arms"]:
+        assert row["error"] is None and row["gates"] and all(g["pass"] for g in row["gates"].values())
+        assert row["info"]["commit"]==(CONTROL if row["label"]=="native_control" else CURRENT)[:12]
+        if phase=="gates":
+            assert set(row["gates"])=={"byte_exact","byte_exact_after_reopen","get_range_order","as_of_visibility","freshness","determinism","crash_recovery"}
+        else:
+            assert set(row["gates"])=={"no_future_leak","byte_exact","freshness"}
+            for section,key in [("memory","peak_rss_bytes"),("memory","peak_cgroup_bytes"),("speed","returned_original_bytes")]:
+                assert row[section][key]["n"]==1 and row[section][key]["median"]>0
+    if phase!="gates":
+        s=card["settings"]
+        assert all(s[k]==v for k,v in {"steps":201,"trajectories":10,"background_target_records":20000,"thinking":"index","k":20,"pool":20}.items())
+        assert len({r["speed"]["store_records_end"]["median"] for r in card["arms"]})==1
+    return card
+def verifier():
+    # Reuse ONLY these reviewed existing pure reconstruction/check definitions.
+    p=W/"work/native-benchmark/verify-cold-stores.py"
+    assert sha(p)=="90538e0b5fad4653d996a0416be0c5867074a92f97aab85f5318ac03e60ab0a2"
+    names={"doc","trajectory","expected_swe","check_store"};tree=ast.parse(p.read_text())
+    selected=[x for x in tree.body if isinstance(x,ast.FunctionDef) and x.name in names]
+    assert {x.name for x in selected}==names
+    import tempfile
+    env={"pathlib":pathlib,"json":json,"hashlib":hashlib,"subprocess":subprocess,"shutil":shutil,"tempfile":tempfile,
+         "base":DATA.parent,"binary":C,"spec":{"source":CURRENT}}
+    exec(compile(ast.Module(body=selected,type_ignores=[]),str(p),"exec"),env)
+    return env
+def inventory(path):
+    apparent=allocated=files=0
+    for p in sorted(path.rglob("*")):
+        info=p.lstat();assert stat.S_ISREG(info.st_mode) or stat.S_ISDIR(info.st_mode)
+        if stat.S_ISREG(info.st_mode):
+            apparent+=info.st_size;allocated+=info.st_blocks*512;files+=1
+    assert files>0
+    return {"files":files,"apparent_bytes":apparent,"allocated_bytes":allocated}
+def main():
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument("phase",choices=["gates","workload"])
+    parser.add_argument("--run-name",required=True);parser.add_argument("--execute",action="store_true")
+    a=parser.parse_args();assert re.fullmatch(r"run-[0-9a-f]{16}",a.run_name)
+    run=BASE/a.run_name
+    schedule=[command(run,"gates")] if a.phase=="gates" else [command(run,"workload",n) for n in range(4)]
+    if not a.execute:print(json.dumps(schedule,indent=2));return 0
+    os.umask(0o077);resource.setrlimit(resource.RLIMIT_CORE,(0,0))
+    cgtext=pathlib.Path("/proc/self/cgroup").read_text().strip()
+    expected="oojuro-core-baseline-"+a.phase+"-"+a.run_name[4:]+".service"
+    assert cgtext=="0::$USER_MANAGER_CGROUP_REL/app.slice/"+expected
+    cg=pathlib.Path("/sys/fs/cgroup")/cgtext.split("0::",1)[1].lstrip("/")
+    assert set((cg/"cgroup.procs").read_text().split())=={str(os.getpid())}
+    assert (cg/"memory.max").read_text().strip()==str(6<<30) and (cg/"pids.max").read_text().strip()=="512"
+    assert (cg/"memory.swap.max").read_text().strip()=="0"
+    assert os.access(BASE/"systemd-run",os.X_OK)
+    for p,h in SHAS.items():assert sha(p)==h
+    verified=json.loads((BASE/"input-verification.json").read_text())
+    assert verified["sha256"]==INPUT_SHA and verified["bytes"]==(DATA/"prepared/turnloop/swe-agent.jsonl").stat().st_size
+    assert sha(DATA/"prepared/turnloop/swe-agent.jsonl")==INPUT_SHA
+    if a.phase=="gates":
+        run.mkdir(mode=0o700);(run/"scopes.jsonl").touch(mode=0o600,exist_ok=False)
+        config={"format":1,"driver":str(C),"inventory":str(run/"scopes.jsonl"),"arms":{
+            "native_current":[str(C),"serve","--arm","native-record"],"native_control":[str(O),"serve","--arm","native-record"],
+            "sqlite":[str(C),"serve","--arm","sqlite"],"jsonl_zstd":[str(C),"serve","--arm","jsonl-zstd"]}}
+        save(run/"launcher.json",config)
+    else:
+        gate=json.loads((run/"receipt-gates.json").read_text())
+        assert gate["status"]=="passed" and not gate.get("cleanup_unknown") and not gate["remaining_local_descendants"]
+        assert not (run/"receipt-workload.json").exists()
+    receipt={"phase":a.phase,"status":"started","utc":datetime.datetime.now(datetime.timezone.utc).isoformat(),
+             "commands":schedule,"sources":[CURRENT,CONTROL],"artifact_shas":SHAS,"driver_sha256":sha(__file__),
+             "launcher_sha256":sha(BASE/"systemd-run"),"records":[]}
+    save(run/("receipt-"+a.phase+".json"),receipt)
+    env=os.environ.copy();env.update(PATH=str(BASE)+":"+env["PATH"],OOJURO_BASELINE_CONTROL=str(run/"launcher.json"),LC_ALL="C",AWS_EC2_METADATA_DISABLED="true")
+    env.pop("OOJURO_BENCH_LOCK",None)
+    process=None;code=1;start=time.monotonic()
+    try:
+        deadline=start+(600 if a.phase=="gates" else 1800)
+        for n,cmd in enumerate(schedule):
+            assert deadline>time.monotonic()
+            with (run/(a.phase+f"-{n}.stdout")).open("xb") as stdout,(run/(a.phase+f"-{n}.stderr")).open("xb") as stderr:
+                process=subprocess.Popen(cmd,env=env,stdout=stdout,stderr=stderr,start_new_session=True)
+                assert process.wait(timeout=deadline-time.monotonic())==0
+            card=validate_card(run/("gates.json" if a.phase=="gates" else f"round-{n}.json"),a.phase)
+            receipt["records"].append({"round":n,"query_count":card["settings"].get("steps"),"card":card})
+            receipt["scope_cleanup"]=reconcile(run);save(run/("receipt-"+a.phase+".json"),receipt)
+            assert not receipt["scope_cleanup"]["unknown"]
+        if a.phase=="workload":
+            until=time.monotonic()+600;v=verifier();expected_docs=v["expected_swe"](20000)
+            def bounded_verify_run(*args,**kwargs):
+                remaining=until-time.monotonic();assert remaining>0
+                kwargs['timeout']=min(kwargs.get('timeout',remaining),remaining)
+                return subprocess.run(*args,**kwargs)
+            import types
+            v['subprocess']=types.SimpleNamespace(run=bounded_verify_run)
+            raw=sum(len(d["text"].encode()) for d in expected_docs.values())
+            copied=run/"verification";copied.mkdir();v["base"]=copied;checks=[]
+            for n in range(4):
+                current=(run/f"pools-round-{n}.native_current").read_bytes()
+                assert current and current==(run/f"pools-round-{n}.native_control").read_bytes()
+                for label in LABELS:
+                    assert time.monotonic()<until
+                    store=run/f"stores/round-{n}"/label/"run0-turnloop/store"
+                    size=inventory(store)
+                    row=next(r for r in receipt["records"][n]["card"]["arms"] if r["label"]==label)
+                    assert size["apparent_bytes"]==row["storage"]["disk_bytes"]["median"] and size["allocated_bytes"]==row["storage"]["disk_alloc_bytes"]["median"]
+                    v["binary"]=O if label=="native_control" else C;v["spec"]={"source":CONTROL if label=="native_control" else CURRENT}
+                    check=v["check_store"](store,{"native_current":"native-record","native_control":"native-record","sqlite":"sqlite","jsonl_zstd":"jsonl-zstd"}[label],expected_docs)
+                    checks.append({"round":n,"label":label,"inventory":size,"exact_reopen":check,"full_text_denominator":raw})
+            assert not any(copied.iterdir());copied.rmdir();receipt["store_checks"]=checks
+        receipt["status"]="passed";code=0
+    except Exception as error:
+        receipt["failure_class"]=type(error).__name__;receipt["status"]="failed-or-incomplete"
+    finally:
+        if process is not None and process.poll() is None:
+            try:os.killpg(process.pid,signal.SIGKILL)
+            except ProcessLookupError:pass
+            process.wait(timeout=5)
+        try:
+            receipt["scope_cleanup"]=reconcile(run)
+            if receipt["scope_cleanup"]["unknown"]:receipt["cleanup_unknown"]=True;code=1
+        except Exception as error:receipt["cleanup_unknown"]=True;receipt["cleanup_failure_class"]=type(error).__name__;code=1
+        remaining={int(x) for x in (cg/"cgroup.procs").read_text().split()}-{os.getpid()}
+        receipt["remaining_local_descendants"]=sorted(remaining)
+        if remaining:receipt["cleanup_unknown"]=True;code=1
+        if code:receipt['status']='failed-or-incomplete'
+        receipt["wall_seconds"]=round(time.monotonic()-start,3)
+        save(run/("receipt-"+a.phase+".json"),receipt)
+    # Stores retained even on pass until coordinator independently reconciles.
+    print(json.dumps({"phase":a.phase,"status":receipt["status"],"exit":code,"receipt":str(run/("receipt-"+a.phase+".json"))}))
+    return code
+if __name__=="__main__":raise SystemExit(main())
