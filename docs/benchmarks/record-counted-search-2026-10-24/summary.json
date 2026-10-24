@@ -1,0 +1,192 @@
+{
+  "qualification": "root-independent-narrow-opt0-context-allocation",
+  "runtime": "09b0fbd943625a031698fb52cd574b006b31786a",
+  "test_only": "631c19cd1ecfe9ecc7ee99379c8ef9e5c49896ce",
+  "control": "7261a55d9230596470b2f64aeed4175fbe358aba",
+  "profiles": "debug opt0, non-test no-default CLI, actual Rust1.99.1 portable target x86_64-unknown-linux-gnu",
+  "fresh_cli_sha256": {
+    "before": "42d1d4ba03c921d584b7ad54de1365d3fabbe472067c0c859965a3965dc78eb7",
+    "after": "cd270843f75412ce77ac70ff13296d7aeb3a1ad4197e56a8e3051dafca8f2339"
+  },
+  "arms": [
+    {
+      "round": 0,
+      "label": "before",
+      "name": "r0-before",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "98d49580f145ebff62a8666bcdaf1f295bc901564c1c90d04bdfea5023f9e871",
+      "context_bytes": 922,
+      "wall_seconds": 3.8707638229243457,
+      "cli_max_rss_kib": 58560,
+      "whole_scope_memory_peak_bytes": 56328192,
+      "copied_store_unchanged": true
+    },
+    {
+      "round": 0,
+      "label": "after",
+      "name": "r0-after",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "98d49580f145ebff62a8666bcdaf1f295bc901564c1c90d04bdfea5023f9e871",
+      "context_bytes": 922,
+      "wall_seconds": 3.8710113940760493,
+      "cli_max_rss_kib": 34308,
+      "whole_scope_memory_peak_bytes": 32665600,
+      "copied_store_unchanged": true
+    },
+    {
+      "round": 1,
+      "label": "after",
+      "name": "r1-after",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "98d49580f145ebff62a8666bcdaf1f295bc901564c1c90d04bdfea5023f9e871",
+      "context_bytes": 922,
+      "wall_seconds": 3.8712509779725224,
+      "cli_max_rss_kib": 34628,
+      "whole_scope_memory_peak_bytes": 32681984,
+      "copied_store_unchanged": true
+    },
+    {
+      "round": 1,
+      "label": "before",
+      "name": "r1-before",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "98d49580f145ebff62a8666bcdaf1f295bc901564c1c90d04bdfea5023f9e871",
+      "context_bytes": 922,
+      "wall_seconds": 4.071709629148245,
+      "cli_max_rss_kib": 57980,
+      "whole_scope_memory_peak_bytes": 57790464,
+      "copied_store_unchanged": true
+    },
+    {
+      "round": 2,
+      "label": "before",
+      "name": "r2-before",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "98d49580f145ebff62a8666bcdaf1f295bc901564c1c90d04bdfea5023f9e871",
+      "context_bytes": 922,
+      "wall_seconds": 4.021395248128101,
+      "cli_max_rss_kib": 57568,
+      "whole_scope_memory_peak_bytes": 56336384,
+      "copied_store_unchanged": true
+    },
+    {
+      "round": 2,
+      "label": "after",
+      "name": "r2-after",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "98d49580f145ebff62a8666bcdaf1f295bc901564c1c90d04bdfea5023f9e871",
+      "context_bytes": 922,
+      "wall_seconds": 3.8709117779508233,
+      "cli_max_rss_kib": 34584,
+      "whole_scope_memory_peak_bytes": 32751616,
+      "copied_store_unchanged": true
+    },
+    {
+      "round": 3,
+      "label": "after",
+      "name": "r3-after",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "98d49580f145ebff62a8666bcdaf1f295bc901564c1c90d04bdfea5023f9e871",
+      "context_bytes": 922,
+      "wall_seconds": 3.821446263929829,
+      "cli_max_rss_kib": 34760,
+      "whole_scope_memory_peak_bytes": 32632832,
+      "copied_store_unchanged": true
+    },
+    {
+      "round": 3,
+      "label": "before",
+      "name": "r3-before",
+      "records_before_after": 32,
+      "all_record_fields_equal": true,
+      "full_context_bytes_equal": true,
+      "context_sha256": "98d49580f145ebff62a8666bcdaf1f295bc901564c1c90d04bdfea5023f9e871",
+      "context_bytes": 922,
+      "wall_seconds": 3.970920969033614,
+      "cli_max_rss_kib": 58056,
+      "whole_scope_memory_peak_bytes": 56573952,
+      "copied_store_unchanged": true
+    }
+  ],
+  "medians": {
+    "before": {
+      "cli_max_rss_kib": 58018.0,
+      "whole_scope_memory_peak_bytes": 56455168.0,
+      "wall_seconds": 3.9961581085808575
+    },
+    "after": {
+      "cli_max_rss_kib": 34606.0,
+      "whole_scope_memory_peak_bytes": 32673792.0,
+      "wall_seconds": 3.8709615860134363
+    }
+  },
+  "median_cli_rss_reduction_percent": 40.35299389844531,
+  "search_preflight": {
+    "query": "needle compact",
+    "records": 32,
+    "stdout_bytes": 24391653,
+    "stdout_bound_bytes": 33554432,
+    "all_original_fields_equal": true,
+    "records_sha256": "5571bec7fde8f9f4e3b3cb9aed14950603b906d1b5eb0628faa98e1dd2407478",
+    "short_record_nonnegative": true,
+    "negative_large_records": 31
+  },
+  "root_independent_cleanup": {
+    "process_identities_absent": 42,
+    "actual_and_named_cgroups_absent": 9,
+    "all9closed_inventories_equal": true
+  },
+  "limitations": [
+    "DEBUG portable CLI allocation diagnostic; no release latency claim",
+    "Warm OS, escape-heavy synthetic32-record originals\u2192small context; no general search/RAM claim",
+    "Cgroup charged peak includes helper; shared file page charges can differ from process RSS",
+    "No hosted AWS cost, larger-than-RAM, cold-start, write or storage improvement claim"
+  ],
+  "earlier_attempts": [
+    {
+      "attempt": 1,
+      "result": "intentional root stop before any measured scope; repeated get verification projected beyond work budget",
+      "complete_pairs": 0
+    },
+    {
+      "attempt": 2,
+      "result": "full Watermark comparison incorrectly compared fresh AEAD commitment; failed before measured scope",
+      "complete_pairs": 0
+    },
+    {
+      "attempt": 3,
+      "result": "first baseline measured CLI returned empty context; short lexical score negative for universal needle; no candidate measured",
+      "complete_pairs": 0,
+      "baseline_wall_seconds": 4.0706493351608515,
+      "baseline_max_rss_kib": 56604
+    }
+  ],
+  "focused_checks": {
+    "distinct_passed": 6,
+    "initial_distinct_passed": 3,
+    "initial_new_ranked_assertion_failed": true,
+    "corrected_ranked_and_two_unrun_passed": 3,
+    "libtests": 2
+  },
+  "not_claimed": [
+    "release latency/speed/p99/throughput",
+    "ordinary small context/legacy CLI/hosted search benefit",
+    "cold OS/larger than RAM",
+    "write/storage/AWS cost reduction",
+    "RSS equal to cgroup charged peak"
+  ]
+}
