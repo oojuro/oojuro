@@ -669,13 +669,19 @@ fn ranked_exact_wire_budget_counts_receipts_deltas_and_escaped_originals() {
         let full = index.search_ranked(&f.log, &view, &q, &f.guard, &p).unwrap();
         let bytes = serde_json::to_vec(&full).unwrap();
         assert!(bytes.len() > 300_000 && full.hits.len() == 2);
-        assert!(!full.receipt.stages.is_empty());
-        assert!(full.hits.iter().all(|h| h.deltas.len() == 1));
+        let width = usize::from(enabled);
+        assert_eq!(full.receipt.stages.len(), width);
+        assert!(full.hits.iter().all(|h| h.deltas.len() == width));
         q.max_bytes = bytes.len();
         assert_eq!(serde_json::to_vec(&index.search_ranked(&f.log, &view, &q, &f.guard, &p).unwrap()).unwrap(), bytes);
         q.max_bytes -= 1;
         assert!(matches!(index.search_ranked(&f.log, &view, &q, &f.guard, &p), Err(Error::Bounds)));
         q.max_bytes = bytes.len() + 1;
         assert_eq!(serde_json::to_vec(&index.search_ranked(&f.log, &view, &q, &f.guard, &p).unwrap()).unwrap(), bytes);
+        if enabled {
+            assert!(plugin.calls.load(Ordering::SeqCst) > 0);
+        } else {
+            assert_eq!(plugin.calls.load(Ordering::SeqCst), 0);
+        }
     }
 }
