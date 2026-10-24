@@ -1,0 +1,116 @@
+   Compiling libc v0.2.191
+   Compiling shlex v2.0.1
+   Compiling find-msvc-tools v0.1.14
+   Compiling cfg-if v1.0.5
+   Compiling jobserver v0.1.35
+   Compiling version_check v0.9.5
+   Compiling cc v1.8.0
+   Compiling generic-array v0.14.7
+   Compiling pkg-config v0.3.34
+   Compiling getrandom v0.2.17
+   Compiling typenum v1.20.1
+   Compiling proc-macro2 v1.0.107
+   Compiling rand_core v0.6.4
+   Compiling unicode-ident v1.0.27
+   Compiling quote v1.0.47
+   Compiling crypto-common v0.1.7
+   Compiling serde_core v1.0.229
+   Compiling zstd-sys v2.1.2+zstd.1.5.7
+   Compiling syn v3.0.9
+   Compiling blake3 v1.8.7
+   Compiling crc32fast v1.5.2
+   Compiling serde v1.0.229
+   Compiling zmij v1.0.23
+   Compiling serde_derive v1.0.229
+   Compiling inout v0.1.4
+   Compiling zeroize v1.9.1
+   Compiling subtle v2.6.1
+   Compiling cpufeatures v0.3.1
+   Compiling constant_time_eq v0.4.2
+   Compiling memchr v2.8.3
+   Compiling arrayvec v0.7.8
+   Compiling serde_json v1.0.154
+   Compiling zstd-safe v7.3.0
+   Compiling cpufeatures v0.2.17
+   Compiling universal-hash v0.5.1
+   Compiling cipher v0.4.4
+   Compiling itoa v1.0.18
+   Compiling opaque-debug v0.3.1
+   Compiling vcpkg v0.2.15
+   Compiling lz4_flex v0.11.6
+   Compiling poly1305 v0.8.0
+   Compiling libsqlite3-sys v0.38.2
+   Compiling chacha20 v0.9.1
+   Compiling aead v0.5.2
+   Compiling ring v0.17.14
+   Compiling foldhash v0.2.0
+   Compiling hashbrown v0.17.1
+   Compiling chacha20poly1305 v0.10.1
+   Compiling zstd v0.13.3
+   Compiling rust-stemmers v1.2.0
+   Compiling untrusted v0.9.0
+   Compiling fastcdc v3.2.1
+   Compiling oojuro-store v0.1.0 (<WORKSPACE>/work/oojuro-core-streamed-records/crates/oojuro-store)
+   Compiling hashlink v0.12.2
+   Compiling oojuro-core v0.1.0 (<WORKSPACE>/work/oojuro-core-streamed-records/crates/oojuro-core)
+   Compiling aho-corasick v1.1.5
+   Compiling memmap2 v0.9.11
+   Compiling smallvec v1.16.3
+   Compiling oojuro-rank v0.1.0 (<WORKSPACE>/work/oojuro-core-streamed-records/crates/oojuro-rank)
+   Compiling fallible-streaming-iterator v0.1.9
+   Compiling fallible-iterator v0.3.0
+   Compiling bitflags v2.13.2
+   Compiling oojuro-bench v0.1.0 (<WORKSPACE>/work/oojuro-core-streamed-records/crates/oojuro-bench)
+   Compiling rusqlite v0.40.2
+   Compiling oojuro-engine v0.1.0 (<WORKSPACE>/work/oojuro-core-streamed-records/crates/oojuro-engine)
+   Compiling oojuro-nine v0.1.0 (<WORKSPACE>/work/oojuro-core-streamed-records/crates/oojuro-nine)
+warning: associated function `of` is never used
+   --> crates/oojuro-nine/src/segment.rs:135:12
+    |
+126 | impl Span {
+    | --------- associated function in this implementation
+...
+135 |     pub fn of(meta: &[RowMeta]) -> Self {
+    |            ^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: fields `terms` and `total_length` are never read
+   --> crates/oojuro-nine/src/segment.rs:277:9
+    |
+273 | pub(crate) struct DiskSegment {
+    |                   ----------- fields in this struct
+...
+277 |     pub terms: u64,
+    |         ^^^^^
+278 |     pub total_length: u64,
+    |         ^^^^^^^^^^^^
+
+warning: methods `file_bytes` and `version` are never used
+   --> crates/oojuro-nine/src/segment.rs:597:12
+    |
+467 | impl DiskSegment {
+    | ---------------- methods in this implementation
+...
+597 |     pub fn file_bytes(&self) -> u64 {
+    |            ^^^^^^^^^^
+...
+917 |     pub fn version(&self) -> u32 {
+    |            ^^^^^^^
+
+warning: method `bytes` is never used
+   --> crates/oojuro-nine/src/wal.rs:245:19
+    |
+122 | impl Journal {
+    | ------------ method in this implementation
+...
+245 |     pub(crate) fn bytes(&self) -> u64 {
+    |                   ^^^^^
+
+warning: `oojuro-nine` (lib) generated 4 warnings
+warning: linker stderr: ignoring deprecated linker optimization setting '1'
+  |
+  = note: `#[warn(linker_messages)]` on by default
+
+warning: `oojuro-bench` (bin "oojuro-bench") generated 1 warning
+    Finished `release` profile [optimized] target(s) in 38.25s

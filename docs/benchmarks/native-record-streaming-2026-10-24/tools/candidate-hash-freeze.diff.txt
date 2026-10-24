@@ -1,0 +1,11 @@
+--- reviewed/run-experiment.py
++++ frozen/run-experiment.py
+@@ -10,7 +10,7 @@
+ SPECS={"native_before":f"native_before=cmd:{C} serve --arm native-record",
+        "native_after":f"native_after=cmd:{O} serve --arm native-record"}
+ SHAS={str(C):"a4b861d7049c6125f8b42b59fba98fa19775a44fbdbc79c06f452cb6d3086a51",
+-      str(O):"NOT_FROZEN"}
++      str(O):"5c56be5874a2c56d7d7db5d1d47c1db4ac633de8615ae94442cb3fd1f57c9f87"}
+ DATA=W/"work/native-benchmark/data"
+ INPUT_SHA="3106438b52feadab2bcf3c0e7ff7fb40ac8625b3969312e8cf64d4c3782089c2"
+ def sha(p):

@@ -1,0 +1,24 @@
+--- previous/systemd-run
++++ streamed/systemd-run
+@@ -1,5 +1,5 @@
+ #!/usr/bin/python3 -I
+-"""Strict local launcher for the reviewed fixed four-arm experiment; no execution on import."""
++"""Strict local launcher for the reviewed fixed two-arm adapter experiment; no execution on import."""
+ import json
+ import os
+ import pathlib
+@@ -24,12 +24,12 @@
+     args = sys.argv[1:]
+     assert len(args) == 12 and args[:4] == ["--user", "--scope", "--quiet", "--collect"]
+     assert args[5:8] == ["--property=MemoryMax=3G", "--property=MemorySwapMax=0", "--"]
+-    match = re.fullmatch(r"--unit=(oojuro-arm-(native_current|native_control|sqlite|jsonl_zstd)-"
++    match = re.fullmatch(r"--unit=(oojuro-arm-(native_before|native_after)-"
+                          + str(parent) + r"-[0-9]+)", args[4])
+     assert match is not None
+     unit, label = match.groups()
+     assert args[8:] == config["arms"][label]
+-    assert set(config["arms"]) == {"native_current", "native_control", "sqlite", "jsonl_zstd"}
++    assert set(config["arms"]) == {"native_before", "native_after"}
+     assert all(v[1:3] == ["serve", "--arm"] and len(v) == 4 for v in config["arms"].values())
+     # Preserve the existing harness name. The append-only exact-name inventory
+     # exists BEFORE systemd receives the request, including uncertain launches.

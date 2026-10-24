@@ -1,0 +1,47 @@
+--- previous/build-artifact.py
++++ streamed/build-artifact.py
+@@ -1,11 +1,10 @@
+ #!/usr/bin/python3 -I
+-"""Build only: two exact source benchmark artifacts, one selected per bounded unit."""
++"""Build only: one exact streamed-adapter artifact plus two focused unit tests."""
+ import argparse, hashlib, json, os, pathlib, re, resource, shutil, signal, subprocess, tempfile, time
+ W = pathlib.Path(__file__).resolve().parents[2]
+-OUT = W / "work/core-baseline-readiness-20261024"
++OUT = W / "work/native-record-streaming-20261024"
+ TOOLS = W / "work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin"
+-SOURCES = {"current":("oojuro-core-baseline-current","f726bab51d982896a129d4bdf2fd2d3a2edc2fff"),
+-           "control":("oojuro-core-baseline-control","7633eefe7503e355635522dd3e8f67fce3b143d7")}
++SOURCES = {"after":("oojuro-core-streamed-records","ebc9771e8a9d9c018b61bf84743f47e3535b6e01")}
+ def sha(p):
+     with pathlib.Path(p).open("rb") as f:return hashlib.file_digest(f,"sha256").hexdigest()
+ def main():
+@@ -13,7 +12,7 @@
+     tree,commit=SOURCES[a.label];root=W/"work"/tree;out=OUT/a.label
+     out.mkdir(mode=0o700) # never overwrite an uncertain prior attempt
+     cgtext=pathlib.Path("/proc/self/cgroup").read_text().strip()
+-    assert re.fullmatch(r"0::<USER_MANAGER>/app.slice/oojuro-core-baseline-build-"+a.label+r"-[0-9a-f]{16}\.service",cgtext)
++    assert re.fullmatch(r"0::<USER_MANAGER>/app.slice/oojuro-native-stream-build-"+a.label+r"-[0-9a-f]{16}\.service",cgtext)
+     cg=pathlib.Path("/sys/fs/cgroup")/cgtext.split("0::",1)[1].lstrip("/")
+     assert set((cg/"cgroup.procs").read_text().split())=={str(os.getpid())}
+     assert (cg/"memory.max").read_text().strip()==str(6<<30)
+@@ -71,7 +70,19 @@
+                            "dynamic_section":subprocess.check_output(["readelf","-d",str(frozen)],text=True)}
+         treecmd=[str(TOOLS/"cargo"),"tree","--offline","--locked","--target","x86_64-unknown-linux-gnu","-p","oojuro-bench","--no-default-features","--features","sqlite-arm","-e","features"]
+         with (out/"features.txt").open("xb") as f:subprocess.run(treecmd,cwd=root,env=env,stdout=f,stderr=subprocess.PIPE,check=True,timeout=30)
+-        receipt["status"]="artifact-frozen";code=0
++        testcmd=[str(TOOLS/"cargo"),"test","--offline","--locked","--release","--target","x86_64-unknown-linux-gnu","-j","2",
++                 "-p","oojuro-bench","--lib","--no-default-features","--features","sqlite-arm",
++                 "arms::native_record::tests::","--","--test-threads=1"]
++        receipt["test_command"]=testcmd;save()
++        remaining=1130-(time.monotonic()-started);assert remaining>0
++        with (out/"tests.stdout").open("xb") as stdout,(out/"tests.stderr").open("xb") as stderr:
++            proc=subprocess.Popen(testcmd,cwd=root,env=env,stdout=stdout,stderr=stderr)
++            testexit=proc.wait(timeout=min(300,remaining))
++        receipt["test_exit"]=testexit
++        counts=re.findall(r"test result: (ok|FAILED)\. (\d+) passed; (\d+) failed; (\d+) ignored;",(out/"tests.stdout").read_text())
++        receipt["test_counts"]=counts;save()
++        assert testexit==0 and counts==[("ok","2","0","0")]
++        receipt["status"]="artifact-frozen-two-adapter-tests-passed";code=0
+     except Exception as error:receipt["failure_class"]=type(error).__name__;receipt["status"]="build-or-qualification-refused";code=1
+     finally:
+         deadline=time.monotonic()+5

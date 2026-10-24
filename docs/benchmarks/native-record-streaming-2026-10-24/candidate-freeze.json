@@ -1,0 +1,17 @@
+{
+  "source": "ebc9771e8a9d9c018b61bf84743f47e3535b6e01",
+  "binary_sha256": "5c56be5874a2c56d7d7db5d1d47c1db4ac633de8615ae94442cb3fd1f57c9f87",
+  "controller_before_sha256": "54c30b744f9c72bf7eefd27e4bba546127bcfaf306249933f5e6ab7f44d439c9",
+  "controller_after_sha256": "b23fe9b4c105de53f124448ea7b6d66e525d32dc168251bfab9fe68d2e242c5b",
+  "only_change": "replace NOT_FROZEN with actual qualified candidate artifact hash",
+  "build_exit": 0,
+  "tests": {
+    "passed": 2,
+    "failed": 0,
+    "ignored": 0
+  },
+  "build_receipt_sha256": "14443f8dc23e508d73d10723bebba517d0dba127c39777838139836b8c309ffd",
+  "outside_cleanup_sha256": "44d89e3172b82efa7847a454289e5d972565c9cd90c0aabaf604fc6333546e69",
+  "gates_dispatched": false,
+  "timing_dispatched": false
+}

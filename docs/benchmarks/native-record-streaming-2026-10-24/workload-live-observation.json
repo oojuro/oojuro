@@ -1,0 +1,64 @@
+{
+  "utc": "2026-10-24T05:39:43.212315+00:00",
+  "status": "observed",
+  "outer_query": {
+    "command": [
+      "/usr/bin/systemctl",
+      "--user",
+      "show",
+      "--property=MainPID",
+      "--property=ControlGroup",
+      "--property=ActiveState",
+      "--property=RuntimeMaxUSec",
+      "--property=MemoryMax",
+      "--property=MemorySwapMax",
+      "--property=TasksMax",
+      "--property=LimitCORE",
+      "--property=KillMode",
+      "--property=TimeoutStopUSec",
+      "oojuro-native-stream-workload-09dcbe2dc27910b2.service"
+    ],
+    "exit": 0,
+    "stdout": "ActiveState=active\nTimeoutStopUSec=5s\nRuntimeMaxUSec=42min\nMainPID=2658325\nControlGroup=<USER_MANAGER>/app.slice/oojuro-native-stream-workload-09dcbe2dc27910b2.service\nMemoryMax=6442450944\nMemorySwapMax=0\nTasksMax=512\nLimitCORE=0\nKillMode=control-group\n",
+    "stderr": ""
+  },
+  "outer_pids": [
+    {
+      "pid": 2658325,
+      "start_ticks": "172167659"
+    },
+    {
+      "pid": 2658361,
+      "start_ticks": "172167753"
+    }
+  ],
+  "inner_inventory": {
+    "unit": "oojuro-arm-native_before-2658361-0567030022.scope",
+    "launcher_pid": 2658362,
+    "start_ticks": "172167754",
+    "harness_pid": 2658361,
+    "label": "native_before"
+  },
+  "inner_query": {
+    "command": [
+      "/usr/bin/systemctl",
+      "--user",
+      "show",
+      "--property=ControlGroup",
+      "--property=ActiveState",
+      "--property=RuntimeMaxUSec",
+      "--property=MemoryMax",
+      "--property=MemorySwapMax",
+      "oojuro-arm-native_before-2658361-0567030022.scope"
+    ],
+    "exit": 0,
+    "stdout": "ActiveState=active\nRuntimeMaxUSec=5min\nControlGroup=<USER_MANAGER>/app.slice/oojuro-arm-native_before-2658361-0567030022.scope\nMemoryMax=3221225472\nMemorySwapMax=0\n",
+    "stderr": ""
+  },
+  "inner_pids": [
+    {
+      "pid": 2658362,
+      "start_ticks": "172167754"
+    }
+  ]
+}

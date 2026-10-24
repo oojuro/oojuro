@@ -1,0 +1,628 @@
+{
+  "utc": "2026-10-24T05:37:17.997768+00:00",
+  "unit": "oojuro-native-stream-gates-09dcbe2dc27910b2.service",
+  "unified_exit": 0,
+  "unit_query_exit": 0,
+  "unit_state": "LoadState=not-found\nActiveState=inactive\nMainPID=0\nControlGroup=\n",
+  "outer_cgroup_path": "/sys/fs/cgroup<USER_MANAGER>/app.slice/oojuro-native-stream-gates-09dcbe2dc27910b2.service",
+  "outer_cgroup_absent": true,
+  "outer_cgroup_provenance": "controller validates exact live /proc/self/cgroup path and actual limits before any work; outside path checked after terminal",
+  "live_outer_pid_observed": false,
+  "scope_pid_checks": [
+    {
+      "unit": "oojuro-arm-native_before-2644710-0852945837.scope",
+      "original_pid": 2644711,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-1915319518.scope",
+      "original_pid": 2644712,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-2983334496.scope",
+      "original_pid": 2644713,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-3023272396.scope",
+      "original_pid": 2644714,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-4123667113.scope",
+      "original_pid": 2644719,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-5807220836.scope",
+      "original_pid": 2644724,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-6485836318.scope",
+      "original_pid": 2644800,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-7614213948.scope",
+      "original_pid": 2644801,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-8672174895.scope",
+      "original_pid": 2644802,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-9807917307.scope",
+      "original_pid": 2644803,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-10859789364.scope",
+      "original_pid": 2644804,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-11999988562.scope",
+      "original_pid": 2644805,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-12085407417.scope",
+      "original_pid": 2644812,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-13143036787.scope",
+      "original_pid": 2644813,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-14205943178.scope",
+      "original_pid": 2644814,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-15257972818.scope",
+      "original_pid": 2644815,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-16379788068.scope",
+      "original_pid": 2644820,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-17061011378.scope",
+      "original_pid": 2644868,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-18755586231.scope",
+      "original_pid": 2644908,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-19896548388.scope",
+      "original_pid": 2644909,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-20955423374.scope",
+      "original_pid": 2644910,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-21089007154.scope",
+      "original_pid": 2644911,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-22150060219.scope",
+      "original_pid": 2644912,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-23324966822.scope",
+      "original_pid": 2644914,
+      "original_pid_identity_absent": true,
+      "harness_pid": 2644710,
+      "harness_pid_path_absent": true
+    }
+  ],
+  "scope_cleanup": {
+    "rows": [
+      {
+        "row": 0,
+        "unit": "oojuro-arm-native_before-2644710-0852945837.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 1,
+        "unit": "oojuro-arm-native_before-2644710-1915319518.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 2,
+        "unit": "oojuro-arm-native_before-2644710-2983334496.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 3,
+        "unit": "oojuro-arm-native_before-2644710-3023272396.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 4,
+        "unit": "oojuro-arm-native_before-2644710-4123667113.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 5,
+        "unit": "oojuro-arm-native_before-2644710-5807220836.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 6,
+        "unit": "oojuro-arm-native_before-2644710-6485836318.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 7,
+        "unit": "oojuro-arm-native_before-2644710-7614213948.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 8,
+        "unit": "oojuro-arm-native_before-2644710-8672174895.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 9,
+        "unit": "oojuro-arm-native_before-2644710-9807917307.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 10,
+        "unit": "oojuro-arm-native_before-2644710-10859789364.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 11,
+        "unit": "oojuro-arm-native_before-2644710-11999988562.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 12,
+        "unit": "oojuro-arm-native_after-2644710-12085407417.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 13,
+        "unit": "oojuro-arm-native_after-2644710-13143036787.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 14,
+        "unit": "oojuro-arm-native_after-2644710-14205943178.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 15,
+        "unit": "oojuro-arm-native_after-2644710-15257972818.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 16,
+        "unit": "oojuro-arm-native_after-2644710-16379788068.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 17,
+        "unit": "oojuro-arm-native_after-2644710-17061011378.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 18,
+        "unit": "oojuro-arm-native_after-2644710-18755586231.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 19,
+        "unit": "oojuro-arm-native_after-2644710-19896548388.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 20,
+        "unit": "oojuro-arm-native_after-2644710-20955423374.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 21,
+        "unit": "oojuro-arm-native_after-2644710-21089007154.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 22,
+        "unit": "oojuro-arm-native_after-2644710-22150060219.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      },
+      {
+        "row": 23,
+        "unit": "oojuro-arm-native_after-2644710-23324966822.scope",
+        "observed_control_groups": [],
+        "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n",
+        "query_exit": 0,
+        "observed_paths_absent": true,
+        "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>",
+        "exact_unit_named_paths_remaining": [],
+        "exact_original_pid_absent": true,
+        "cgroup_proof": "already-collected; exact-name hierarchy search only",
+        "status": "reconciled"
+      }
+    ],
+    "unknown": [],
+    "manager_hierarchy": "/sys/fs/cgroup<USER_MANAGER>"
+  },
+  "remaining_descendants": [],
+  "cleanup_unknown": false,
+  "independent_scope_queries": [
+    {
+      "unit": "oojuro-arm-native_after-2644710-12085407417.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-13143036787.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-14205943178.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-15257972818.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-16379788068.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-17061011378.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-18755586231.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-19896548388.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-20955423374.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-21089007154.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-22150060219.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_after-2644710-23324966822.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-0852945837.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-10859789364.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-11999988562.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-1915319518.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-2983334496.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-3023272396.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-4123667113.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-5807220836.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-6485836318.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-7614213948.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-8672174895.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    },
+    {
+      "unit": "oojuro-arm-native_before-2644710-9807917307.scope",
+      "query_exit": 0,
+      "state": "LoadState=not-found\nActiveState=inactive\nControlGroup=\n"
+    }
+  ],
+  "independent_exact_name_scan": {
+    "manager": "/sys/fs/cgroup<USER_MANAGER>",
+    "directories": 33,
+    "remaining": []
+  }
+}
