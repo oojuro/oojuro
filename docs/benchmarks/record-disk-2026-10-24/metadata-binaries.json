@@ -1,0 +1,10 @@
+{
+  "control": {
+    "source_commit": "3de7696",
+    "binary_sha256": "cbbd6695991dac82c08524a88d89c2fc50509c7c8f1110b001597438138cd5ca"
+  },
+  "candidate": {
+    "source_commit": "79764ca",
+    "binary_sha256": "4aaca0f6b178f7543726be4d8efd3a7e566e8f5804d0ae72624c5ca427720e71"
+  }
+}
