@@ -1,3 +1,7 @@
+> Historical agent-application document. Current ownership and maintained instructions
+> are in [Oojuro Journal](https://github.com/oojuro/journal/blob/main/docs/HOSTED_AGENT_SETUP.md).
+> The content below describes the pre-split monorepo at its recorded revision.
+
 # Hosted agent capture — private preview
 
 The existing `oojuro` CLI now supports browser-approved capture connections and

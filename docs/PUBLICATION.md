@@ -2,12 +2,18 @@
 
 ## What is public
 
-`oojuro/oojuro` contains the Apache-2.0 journal engine, recorder, CLI/MCP front doors, portable
-SDKs and research harnesses. It runs locally and does not require an Oojuro Cloud account.
-`oojuro/softaxiom` supplies the separate open-source personal-agent runtime that uses this journal.
-Managed journal hosting/fleet operations and Soft Axiom's hosted account, billing, encryption,
-Temporal composition and optional E2B/Kernel adapters belong to their private host repositories.
-No customer journals, cloud credentials, provider accounts or private agent conversations belong here.
+`oojuro/oojuro` contains the Apache-2.0 embedded database engine and its
+storage/retrieval compatibility tests and research harnesses. Agent-specific
+recorder, capture, application CLI/MCP and portable client SDK source belongs to
+`oojuro/journal`. Both run locally without an Oojuro Cloud account.
+
+Managed Oojuro hosting and the `oojuro.com` website belong to private
+`oojuro/o-cloud`. Trusted release coordination belongs to private
+`oojuro/o-release-operator`. Soft Axiom's personal-agent runtime is independently
+owned in `oojuro/softaxiom`, with private hosting and release operations in its
+own repositories. No customer journals, cloud credentials, provider accounts or
+private agent conversations belong in public source. See
+[repository boundaries](REPOSITORY_BOUNDARIES.md).
 
 Original source code stays Apache-2.0. Third-party content is an exception to that code license,
 not an exception to attribution: preserve root NOTICE, licenses/ and the dictionary README.

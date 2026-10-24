@@ -1,3 +1,7 @@
+> Historical agent-application document. Current ownership and maintained instructions
+> are in [Oojuro Journal](https://github.com/oojuro/journal/blob/main/docs/HOSTED_CAPTURE_SDK.md).
+> The content below describes the pre-split monorepo at its recorded revision.
+
 # Hosted capture SDK and durable queue
 
 Private candidate, Node 24.4+ on POSIX. This extends the existing

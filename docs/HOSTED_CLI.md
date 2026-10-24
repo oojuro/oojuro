@@ -1,3 +1,7 @@
+> Historical agent-application document. Current ownership and maintained instructions
+> are in [Oojuro Journal](https://github.com/oojuro/journal/blob/main/docs/HOSTED_CLI.md).
+> The content below describes the pre-split monorepo at its recorded revision.
+
 # Hosted reads in the existing Oojuro CLI
 
 Private candidate, not a published release. Build the existing `oojuro` binary:

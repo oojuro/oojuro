@@ -1,3 +1,7 @@
+> Historical agent-application document. Current ownership and maintained instructions
+> are in [Oojuro Journal](https://github.com/oojuro/journal/blob/main/docs/REUSE_SETUP_SOURCE_COMPOSITION.md).
+> The content below describes the pre-split monorepo at its recorded revision.
+
 # Continuing journal and combined setup source composition
 
 Status: source prepared; not newly tested, released or deployed.

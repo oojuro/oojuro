@@ -1,3 +1,7 @@
+> Historical agent-application document. Current ownership and maintained instructions
+> are in [Oojuro Journal](https://github.com/oojuro/journal/blob/main/docs/CONTINUING_JOURNAL_SETUP.md).
+> The content below describes the pre-split monorepo at its recorded revision.
+
 # Opt-in continuing journal setup candidate
 
 Status: implemented and qualified locally with the matching hosted protocol.

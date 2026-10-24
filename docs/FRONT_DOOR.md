@@ -1,3 +1,7 @@
+> Historical agent-application document. Current ownership and maintained instructions
+> are in [Oojuro Journal](https://github.com/oojuro/journal/blob/main/docs/FRONT_DOOR.md).
+> The content below describes the pre-split monorepo at its recorded revision.
+
 # Front door: the journal used like SQLite
 
 Code: `crates/oojuro` (library, `oojuro` CLI, MCP server, settings, and the

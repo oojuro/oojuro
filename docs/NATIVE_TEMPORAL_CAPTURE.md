@@ -1,3 +1,7 @@
+> Historical agent-application document. Current ownership and maintained instructions
+> are in [Oojuro Journal](https://github.com/oojuro/journal/blob/main/docs/NATIVE_TEMPORAL_CAPTURE.md).
+> The content below describes the pre-split monorepo at its recorded revision.
+
 # Explicit Temporal capture and SDK (experimental)
 
 This is a native local recording lane, not a migration of Temporal history or workflow state.

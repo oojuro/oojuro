@@ -72,30 +72,22 @@ Open a draft pull request while the change is being developed. Include what chan
 
 You need stable Rust (edition 2024) and a C compiler for the standard zstd codec. Linux is the first-class platform. CI pins Rust 1.99.1 on disposable GitHub-hosted Ubuntu 24.04 runners.
 
-Plain `cargo build --locked` and `cargo test --locked` select only `oojuro-engine`, `oojuro-rank` and `oojuro-store`. CLI/runtime applications still require an explicit `-p` selection. The dependency policy gate checks these libraries independently, including conditional platform dependencies; see [DEPENDENCIES.md](DEPENDENCIES.md). Store JSON-reporting tools require `--features bench-tools`; `baselines` and `codecs` enable it automatically. No public library API is removed.
+Plain `cargo build --locked` and `cargo test --locked` select only `oojuro-engine`, `oojuro-rank` and `oojuro-store`. Agent CLI/runtime applications now live in `oojuro/journal`. The dependency policy gate checks these libraries independently, including conditional platform dependencies; see [DEPENDENCIES.md](DEPENDENCIES.md). Store JSON-reporting tools require `--features bench-tools`; `baselines` and `codecs` enable it automatically. No public library API is removed.
 
 The normal checks select runtime packages explicitly, without benchmark comparison features:
 
 ```bash
 cargo test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro-store -p oojuro-nine
 cargo test --locked --no-default-features --lib --tests -p oojuro-engine -p oojuro-rank -- --test-threads=1
-cargo test --locked --no-default-features --lib --tests -p oojuro-trace -p oojuro-capture -p oojuro-proxy -p oojuro
+cargo test --locked --no-default-features --lib --tests -p oojuro-trace
 ```
 
-The native command runs authority, retrieval, allocation accounting and rank conformance tests serially, including subprocess crash/lock fixtures. The third command includes real legacy and native CLI, daemon, mock proxy and stdio MCP integration tests. They use synthetic data and local test servers. Give fixtures a short private real-directory `TMPDIR` with enough disk space and no symlink ancestors (the hosted credential guard rejects them); the daemon rejects socket paths longer than 103 bytes. CI creates private scratch under `runner.temp`. CI explicitly repeats `cargo test --locked --no-default-features -p oojuro-trace --test compat` as a named historical-format gate. It opens the frozen `df8fa85` fixture, compares its original answers, then appends and merges old/new segments. The shared storage suite includes encrypted/plaintext transitions, strict sealing, corruption and torn-tail recovery. These checks do not establish compatibility for every historical native binary.
+The native command runs authority, retrieval, allocation accounting and rank conformance tests serially, including subprocess crash/lock fixtures. The third command checks the retained legacy trace-storage library. Journal owns CLI, daemon, proxy and MCP integration tests. They use synthetic data and local test servers. Give fixtures a short private real-directory `TMPDIR` with enough disk space and no symlink ancestors (the hosted credential guard rejects them); the daemon rejects socket paths longer than 103 bytes. CI creates private scratch under `runner.temp`. CI explicitly repeats `cargo test --locked --no-default-features -p oojuro-trace --test compat` as a named historical-format gate. It opens the frozen `df8fa85` fixture, compares its original answers, then appends and merges old/new segments. The shared storage suite includes encrypted/plaintext transitions, strict sealing, corruption and torn-tail recovery. These checks do not establish compatibility for every historical native binary.
 
-The session-client composition adds synthetic capture/project setup tests, plus a separate Node 24.20.0 job for `sdk/typescript`: runtime tests, strict declaration smoke checks and local offline pack/install/export checks. Its TypeScript 5.9.3 development tool is locked under `scripts/ci-sdk`; it adds no SDK runtime dependency. Run the same checks locally:
-
-```bash
-python3 scripts/test-connect-agent.py
-python3 scripts/test-connect-project.py
-node --test sdk/typescript/test/*.test.js
-npm ci --prefix scripts/ci-sdk --ignore-scripts --no-audit --no-fund
-node scripts/ci-sdk/node_modules/typescript/bin/tsc --strict --noEmit --target ES2023 --module NodeNext --moduleResolution NodeNext sdk/typescript/test/*.ts
-python3 scripts/test-sdk-package.py
-```
-
-These are local/mock/offline checks, not a hosted service, real agent or package publication gate. The inherited `sdk/temporal` peer integration has no CI job here and is not qualified by the TypeScript client job. See the [native source boundary](docs/MAIN_NATIVE_FOUNDATION.md) and [later client composition](docs/MAIN_CLIENT_SDK_COMPOSITION.md). Add checks for a new runtime crate or SDK in the same PR that introduces it; this explicit package list does not discover new packages automatically.
+Agent setup, client SDK, declaration and application packaging checks live in
+[Oojuro Journal](https://github.com/oojuro/journal). Add checks to the component
+that owns the behavior; source reorganization does not promote a package or a
+cloud deployment.
 
 The benchmark harnesses (`oojuro-bench`, `oojuro-tracebench`) build competitor engines and fetch public datasets. `oojuro-store`'s `baselines` and `codecs` features are also comparison tools. They are not part of normal CI. Run them deliberately for the change being measured; see `docs/BENCH_HARNESS.md` and `docs/TRACEBENCH.md`. Do not use `--workspace` or `--all-features` as a substitute for the runtime checks above.
 
@@ -115,7 +107,7 @@ GitHub Actions is currently disabled at repository level. This PR proposes the w
 - **No real data.** Never commit transcripts, logs or datasets, and never commit anything from a real person's
   agent history. Tests use synthetic text. Benchmarks use public datasets that are fetched on demand.
 - **No secrets.** Real tokens, keys and credentials never go into the repository. Tests use invented values
-  or build them at run time (see `crates/oojuro-capture/src/redact.rs` for how).
+  or build them at run time (agent redaction examples live in `oojuro/journal`).
 
 ## Reporting bugs and security issues
 

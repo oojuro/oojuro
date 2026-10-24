@@ -1,3 +1,7 @@
+> Historical agent-application document. Current ownership and maintained instructions
+> are in [Oojuro Journal](https://github.com/oojuro/journal/blob/main/docs/NATIVE_RECORD_CLI.md).
+> The content below describes the pre-split monorepo at its recorded revision.
+
 # Explicit direct Record commands
 
 Linux `oojuro-native record-*` composes the current [Record SDK](NATIVE_RECORDS.md)

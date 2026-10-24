@@ -1,9 +1,0 @@
-{
-  "name": "oojuro-sdk-ci-tools",
-  "private": true,
-  "version": "0.0.0",
-  "description": "Development-only declaration checker for explicit SDK CI",
-  "devDependencies": {
-    "typescript": "5.9.3"
-  }
-}

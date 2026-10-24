@@ -1,3 +1,7 @@
+> Historical agent-application document. Current ownership and maintained instructions
+> are in [Oojuro Journal](https://github.com/oojuro/journal/blob/main/docs/SESSION_JOURNAL_SETUP.md).
+> The content below describes the pre-split monorepo at its recorded revision.
+
 # Session journal setup contract
 
 Owner correction, 23 October 2026: **new session → new journal by default**.

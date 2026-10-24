@@ -1,3 +1,7 @@
+> Historical agent-application document. Current ownership and maintained instructions
+> are in [Oojuro Journal](https://github.com/oojuro/journal/blob/main/docs/AGENT_SESSION_INSTALLER.md).
+> The content below describes the pre-split monorepo at its recorded revision.
+
 # API-key session installer (review candidate)
 
 This implements the CLI/installer step of the session-journal contract. The paired hosted integration-session API is a separate private candidate. Its synthetic joined CLI/HTTP/PostgreSQL journey now passes; production activation and actual owner agent/service acceptance remain unfinished.

@@ -14,7 +14,7 @@ deliberate dependencies. Do not replace them to lower a dependency count.
 
 ```sh
 cargo build --locked --release                     # engine/rank/store libraries
-cargo build --locked --release -p oojuro            # CLI/recorder, capture and proxy
+# CLI/recorder, capture and proxy now build in oojuro/journal
 cargo build --locked -p oojuro-store --features bench-tools --bin store-bench
 cargo build --locked -p oojuro-store --features bench-tools --example frame_probe
 cargo build --locked -p oojuro-store --features codecs,baselines

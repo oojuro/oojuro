@@ -1,3 +1,7 @@
+> Historical agent-application document. Current ownership and maintained instructions
+> are in [Oojuro Journal](https://github.com/oojuro/journal/blob/main/docs/HOSTED_JOURNAL_FRAMED_TYPESCRIPT.md).
+> The content below describes the pre-split monorepo at its recorded revision.
+
 # Hosted Journal framed TypeScript client
 
 This additive experimental surface uses the same OojuroClient authentication,

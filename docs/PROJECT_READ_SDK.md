@@ -1,3 +1,7 @@
+> Historical agent-application document. Current ownership and maintained instructions
+> are in [Oojuro Journal](https://github.com/oojuro/journal/blob/main/docs/PROJECT_READ_SDK.md).
+> The content below describes the pre-split monorepo at its recorded revision.
+
 # Shared-project read SDK
 
 Private candidate in the existing `sdk/typescript` package. Nothing is published.
