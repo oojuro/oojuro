@@ -1129,3 +1129,306 @@ fn disk_writer_unknown_ack_and_failed_search_publication_recover_exact_receipts(
         2
     );
 }
+
+#[test]
+#[ignore]
+fn disk_writer_crash_child() {
+    let f = Fixture {
+        root: PathBuf::from(std::env::var("OOJURO_WRITER_CRASH_ROOT").unwrap()),
+    };
+    let phase = std::env::var("OOJURO_WRITER_CRASH_PHASE").unwrap();
+    let mut writer = disk_writer(&f, 1000);
+    let mut index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    if phase == "AfterStore" {
+        writer.hook = Some(Box::new(|at| {
+            if matches!(at, authority::Phase::AfterStore) {
+                writer_boundary();
+            }
+        }));
+    } else if let Some(phase) = phase.strip_prefix("index:") {
+        let phase = phase.to_owned();
+        index.hook_for_test(Box::new(move |at| {
+            if at == phase {
+                writer_boundary()
+            }
+        }));
+    }
+    writer
+        .append_indexed(
+            &mut index,
+            "child",
+            &[row("alpha child exact", Some("memory"), 20)],
+        )
+        .unwrap();
+    panic!("writer boundary not reached");
+}
+fn writer_boundary() {
+    use std::io::Write;
+    println!("WRITER_BOUNDARY_READY");
+    std::io::stdout().flush().unwrap();
+    loop {
+        std::thread::park()
+    }
+}
+#[test]
+fn disk_writer_sigkill_actual_append_directory_and_index_publication_recovers_receipts() {
+    use std::{
+        io::{BufRead, BufReader},
+        process::{Command, Stdio},
+        sync::mpsc,
+        time::Duration,
+    };
+    for phase in [
+        "AfterStore",
+        "directory:PackTemp",
+        "directory:PackPublished",
+        "directory:RootPagesDurable",
+        "directory:RootTemp",
+        "directory:RootPublished",
+        "directory:RootDurable",
+        "index:SegmentTemp",
+        "index:SegmentPublished",
+        "index:DirectoryPagesDurable",
+        "index:ManifestTemp",
+        "index:ManifestPublished",
+        "index:ManifestDurable",
+    ] {
+        let f = Fixture::new();
+        let mut writer = disk_writer(&f, 1000);
+        let mut index =
+            Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+        writer
+            .append_indexed(
+                &mut index,
+                "parent",
+                &[
+                    row("alpha parent exact", Some("memory"), 10),
+                    row("alpha independent", None, 11),
+                ],
+            )
+            .unwrap();
+        let old = writer
+            .reader()
+            .unwrap()
+            .view(scope(), AsOf::default())
+            .unwrap();
+        let old_signature = signature(
+            index
+                .search_view(
+                    writer.reader().unwrap(),
+                    &old,
+                    &query("alpha", AsOf::default()),
+                )
+                .unwrap(),
+        );
+        drop(index);
+        drop(writer);
+        let mut command = Command::new(std::env::current_exe().unwrap());
+        command
+            .args([
+                "record::paged::tests::disk_writer_crash_child",
+                "--ignored",
+                "--exact",
+                "--nocapture",
+            ])
+            .env("OOJURO_WRITER_CRASH_ROOT", &f.root)
+            .env("OOJURO_WRITER_CRASH_PHASE", phase)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        if let Some(phase) = phase.strip_prefix("directory:") {
+            command.env("OOJURO_DIRECTORY_CRASH_PHASE", phase);
+        }
+        let mut child = command.spawn().unwrap();
+        let output = child.stdout.take().unwrap();
+        let (tx, rx) = mpsc::channel();
+        let listen = std::thread::spawn(move || {
+            for line in BufReader::new(output).lines() {
+                if line.unwrap().contains("BOUNDARY_READY") {
+                    let _ = tx.send(());
+                    break;
+                }
+            }
+        });
+        let reached = rx.recv_timeout(Duration::from_secs(10));
+        let _ = child.kill();
+        let status = child.wait().unwrap();
+        listen.join().unwrap();
+        assert!(reached.is_ok(), "phase={phase}");
+        use std::os::unix::process::ExitStatusExt;
+        assert_eq!(status.signal(), Some(libc::SIGKILL));
+        let mut writer = disk_writer(&f, 1000);
+        let receipt = writer.reader().unwrap().receipt("child").unwrap().unwrap();
+        assert_eq!(receipt.ids, vec![11]);
+        let mut index =
+            Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+        assert_eq!(
+            writer
+                .append_indexed(
+                    &mut index,
+                    "child",
+                    &[row("alpha child exact", Some("memory"), 20)]
+                )
+                .unwrap(),
+            receipt
+        );
+        assert_eq!(
+            signature(
+                index
+                    .search_view(
+                        writer.reader().unwrap(),
+                        &old,
+                        &query("alpha", AsOf::default())
+                    )
+                    .unwrap()
+            ),
+            old_signature,
+            "phase={phase}"
+        );
+        assert_eq!(
+            index
+                .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+                .unwrap()
+                .hits
+                .len(),
+            2
+        );
+        let snapshot = writer
+            .reader()
+            .unwrap()
+            .view(scope(), AsOf::default())
+            .unwrap();
+        let originals = writer
+            .reader()
+            .unwrap()
+            .get_ids(&snapshot, &[11, 10, 11, 0, 999], 1 << 20)
+            .unwrap();
+        assert_eq!(originals[0].as_ref().unwrap().text, "alpha child exact");
+        assert_eq!(originals[1].as_ref().unwrap().text, "alpha independent");
+        assert_eq!(
+            originals[0].as_ref().unwrap().id,
+            originals[2].as_ref().unwrap().id
+        );
+        assert!(originals[3].is_none() && originals[4].is_none());
+    }
+}
+#[test]
+fn disk_writer_evicted_births_old_prefix_and_copied_origin_fork_are_checked() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 1000);
+    writer
+        .append("genesis", &[row("alpha original", Some("memory"), 0)])
+        .unwrap();
+    let old = writer
+        .reader()
+        .unwrap()
+        .view(scope(), AsOf::default())
+        .unwrap();
+    for n in 1..90 {
+        writer
+            .append(
+                &format!("generation-{n}"),
+                &[row(&format!("alpha version {n}"), Some("memory"), n)],
+            )
+            .unwrap();
+    }
+    let latest = writer
+        .reader()
+        .unwrap()
+        .view(scope(), AsOf::default())
+        .unwrap();
+    assert_eq!(
+        writer
+            .reader()
+            .unwrap()
+            .get_key(&old, "memory", 10000)
+            .unwrap()
+            .unwrap()
+            .text,
+        "alpha original"
+    );
+    assert_eq!(
+        writer
+            .reader()
+            .unwrap()
+            .get_key(&latest, "memory", 10000)
+            .unwrap()
+            .unwrap()
+            .text,
+        "alpha version 89"
+    );
+    assert!(
+        writer
+            .reader()
+            .unwrap()
+            .get_ids(&old, &[9, 98], 10000)
+            .unwrap()[1]
+            .is_none()
+    );
+    let future = writer.reader().unwrap().watermark().unwrap();
+    drop(writer);
+    let fork = f.root.join("fork");
+    copy(&f.root.join("authority"), &fork);
+    // A same-origin fork keeps the old prefix but must not adopt a later main snapshot.
+    let mut fork_writer = Writer::open_clock(
+        &fork,
+        &KEY,
+        identity(),
+        &f.root.join("fork-directory"),
+        None,
+        disk_policy(1000),
+        Arc::new(|| Ok(100)),
+    )
+    .unwrap();
+    fork_writer
+        .append("fork-tail", &[row("alpha fork branch", Some("memory"), 90)])
+        .unwrap();
+    drop(fork_writer);
+    let mut writer = disk_writer(&f, 1000);
+    writer
+        .append("main-tail", &[row("alpha main branch", Some("memory"), 90)])
+        .unwrap();
+    let main = writer
+        .reader()
+        .unwrap()
+        .view(scope(), AsOf::default())
+        .unwrap();
+    let main_min = writer.reader().unwrap().watermark().unwrap();
+    drop(writer);
+    assert!(
+        Writer::open_disk(
+            &fork,
+            &KEY,
+            identity(),
+            &f.root.join("fork-directory"),
+            Some(&main_min),
+            disk_policy(1000)
+        )
+        .is_err()
+    );
+    let fork_writer = Writer::open_disk(
+        &fork,
+        &KEY,
+        identity(),
+        &f.root.join("fork-directory"),
+        Some(&future),
+        disk_policy(1000),
+    )
+    .unwrap();
+    assert!(
+        fork_writer
+            .reader()
+            .unwrap()
+            .get_id(&main, 99, 10000)
+            .is_err()
+    );
+    assert_eq!(
+        fork_writer
+            .reader()
+            .unwrap()
+            .get_key(&old, "memory", 10000)
+            .unwrap()
+            .unwrap()
+            .text,
+        "alpha original"
+    );
+}

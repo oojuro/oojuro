@@ -153,9 +153,10 @@ impl Native {
     fn get(&self, ids: &[usize]) -> Result<()> {
         let r = check(self.writer.reader())?;
         let s = check(r.view(scope(), AsOf::default()))?;
-        for n in ids {
-            let row = check(r.get_id(&s, *n as u64 + 1, 10000))?.ok_or("missing original")?;
-            if row.text != text(*n) {
+        let native_ids = ids.iter().map(|n| *n as u64 + 1).collect::<Vec<_>>();
+        let rows = check(r.get_ids(&s, &native_ids, record::MAX_OUTPUT_BYTES))?;
+        for (n, row) in ids.iter().zip(rows) {
+            if row.ok_or("missing original")?.text != text(*n) {
                 return Err("original mismatch".into());
             }
         }
@@ -294,14 +295,19 @@ fn report(
 }
 fn main() -> Result<()> {
     let a = std::env::args().collect::<Vec<_>>();
-    if a.len() != 6 {
-        return Err("profile_disk NEW_DIR native-disk|sqlite|jsonl|jsonl-zstd RECORDS CLIENTS SEARCHES_PER_CLIENT".into());
+    if a.len() != 7 {
+        return Err("profile_disk NEW_DIR native-disk|sqlite|jsonl|jsonl-zstd RECORDS CLIENTS SEARCHES_PER_CLIENT mixed|isolated".into());
     }
     let root = PathBuf::from(&a[1]);
     let name = &a[2];
     let count: usize = a[3].parse()?;
     let clients: usize = a[4].parse()?;
     let searches: usize = a[5].parse()?;
+    let isolated = match a[6].as_str() {
+        "isolated" => true,
+        "mixed" => false,
+        _ => return Err("mode must be mixed or isolated".into()),
+    };
     if root.exists()
         || !(1000..=1_000_000).contains(&count)
         || !(1..=10).contains(&clients)
@@ -351,6 +357,9 @@ fn main() -> Result<()> {
                                 samples.get20.push(ns)
                             }
                         }
+                        if isolated {
+                            barrier.wait();
+                        }
                         for iteration in 0..searches {
                             let (q, cutoff, kind) = query(client * searches + iteration, count);
                             let began = Instant::now();
@@ -370,6 +379,9 @@ fn main() -> Result<()> {
                             samples
                                 .queries
                                 .push(json!({"kind":kind,"ms":ns as f64/1_000_000.,"hits":ids}));
+                        }
+                        if isolated {
+                            barrier.wait();
                         }
                         for iteration in 0..5 {
                             let n = count + client * 5 + iteration;
@@ -484,6 +496,9 @@ fn main() -> Result<()> {
                                     samples.get20.push(elapsed)
                                 }
                             }
+                            if isolated {
+                                barrier.wait();
+                            }
                             for iteration in 0..searches {
                                 let (q, cutoff, kind) = query(client * searches + iteration, count);
                                 let began = Instant::now();
@@ -505,6 +520,9 @@ fn main() -> Result<()> {
                                 samples.queries.push(
                                     json!({"kind":kind,"ms":ns as f64/1_000_000.,"hits":hits}),
                                 );
+                            }
+                            if isolated {
+                                barrier.wait();
                             }
                             for iteration in 0..5 {
                                 let n = count + client * 5 + iteration;
@@ -555,6 +573,11 @@ fn main() -> Result<()> {
             inventory(&root)?,
         )
     };
+    let mut report = report;
+    report["phase_mode"] = json!(a[6]);
+    report["write_probe_timing"] = json!(
+        "durable indexed ACK includes writer queueing; exact read and search visibility probes run immediately afterward, outside ACK timer"
+    );
     println!("{report}");
     Ok(())
 }

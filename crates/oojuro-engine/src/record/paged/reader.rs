@@ -561,6 +561,52 @@ impl Reader {
         json(&rows, limits.bytes)?;
         Ok(rows)
     }
+    /// One authorized bounded request decodes each selected authority batch once.
+    /// Output order, duplicate IDs and missing IDs match the caller's list.
+    pub fn get_ids(&self, s: &Snapshot, ids: &[u64], bytes: usize) -> Result<Vec<Option<Record>>> {
+        let count = self.snapshot(s)?;
+        check_bytes(bytes)?;
+        if ids.len() > 1000 {
+            return Err(Error::Bounds);
+        }
+        let mut selected: BTreeMap<u64, Vec<(usize, usize, u64)>> = BTreeMap::new();
+        for (at, id) in ids.iter().copied().enumerate() {
+            if let Some(ordinal) = id
+                .checked_sub(self.identity.first_id)
+                .and_then(|n| usize::try_from(n).ok())
+                .filter(|n| *n < count)
+            {
+                let (sequence, offset) = self.locate(ordinal)?;
+                selected.entry(sequence).or_default().push((at, offset, id));
+            }
+        }
+        let mut out = vec![None; ids.len()];
+        let mut total = 0usize;
+        for (sequence, positions) in selected {
+            let batch = self.batch(usize::try_from(sequence).map_err(|_| Error::Bounds)?)?;
+            for (at, offset, id) in positions {
+                let row = batch.assigned.get(offset).ok_or(Error::Authority)?;
+                if row.id != id {
+                    return Err(Error::Authority);
+                }
+                if row.input.valid_at >= s.as_of.from
+                    && row.input.valid_at <= s.as_of.valid_at
+                    && row.recorded_at <= s.as_of.known_at
+                {
+                    let record = row.record(&self.identity.writer, &self.identity.adapter);
+                    total = total
+                        .checked_add(json(&record, bytes)?.len())
+                        .ok_or(Error::Bounds)?;
+                    if total > bytes {
+                        return Err(Error::Bounds);
+                    }
+                    out[at] = Some(record);
+                }
+            }
+        }
+        json(&out, bytes)?;
+        Ok(out)
+    }
     pub fn get_id(&self, s: &Snapshot, id: u64, bytes: usize) -> Result<Option<Record>> {
         self.snapshot(s)?;
         check_bytes(bytes)?;
