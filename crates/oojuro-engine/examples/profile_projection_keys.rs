@@ -80,7 +80,7 @@ fn signature(hits: &[Hit], changed: bool) -> String {
 fn distribution(mut nanos: Vec<u128>) -> serde_json::Value {
     nanos.sort_unstable();
     let count = nanos.len();
-    json!({"count":count,"p50_us":nanos[count / 2] as f64 / 1000.,
+    json!({"count":count,"p50_us":nanos[(count * 50).div_ceil(100) - 1] as f64 / 1000.,
         "p95_us":nanos[(count * 95).div_ceil(100) - 1] as f64 / 1000.,
         "min_us":nanos[0] as f64 / 1000.,"max_us":nanos[count - 1] as f64 / 1000.,
         "sorted_samples_ns":nanos})
