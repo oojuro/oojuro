@@ -36,5 +36,12 @@
     "scripts/test-setup-agent.py": {
       "sha256": "d18e1d51b554361137d8edaa37dfdb87279168eed566ea775f485036e7d6eccd"
     }
+  },
+  "ci": {
+    "installer_step_includes_new_boundary_tests": true,
+    "actionlint_version": "1.7.12",
+    "actionlint_exit": 0,
+    "actions_enabled": false,
+    "administrative_settings_changed": false
   }
 }

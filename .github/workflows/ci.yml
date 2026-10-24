@@ -75,6 +75,7 @@ jobs:
         run: |
           python3 scripts/test-connect-agent.py
           python3 scripts/test-connect-project.py
+          python3 scripts/test-setup-agent.py
       # Also included by the complete runtime suite above; keep historical-format
       # acceptance visible as a separate named gate without enumerating every trace target.
       - name: Reopen, append and merge the frozen legacy-format fixture
