@@ -412,6 +412,15 @@ impl RecordLog {
             prefix.digest,
         )
     }
+    /// Replay and append require contiguous IDs from the header-bound first ID.
+    /// The final identity check keeps an invalid derived offset fail-closed.
+    pub(super) fn record_by_id(&self, id: u64) -> Option<(usize, &Assigned)> {
+        let index = usize::try_from(id.checked_sub(self.identity.first_id)?).ok()?;
+        self.records
+            .get(index)
+            .filter(|row| row.id == id)
+            .map(|row| (index, row))
+    }
     pub(super) fn validate(&self, w: &Watermark) -> Result<usize> {
         self.healthy()?;
         let prefix = self

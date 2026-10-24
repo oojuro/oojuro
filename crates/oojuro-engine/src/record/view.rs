@@ -143,10 +143,10 @@ impl View {
     pub fn get_id(&self, log: &RecordLog, id: u64, bytes: usize) -> Result<Option<Record>> {
         let end = self.validate(log)?;
         check_bytes(bytes)?;
-        let row = log.records[..end]
-            .iter()
-            .find(|r| r.id == id && self.time(r) && self.lower(r))
-            .map(|r| r.record(&self.context.writer, &log.identity().adapter));
+        let row = log
+            .record_by_id(id)
+            .filter(|(index, row)| *index < end && self.time(row) && self.lower(row))
+            .map(|(_, row)| row.record(&self.context.writer, &log.identity().adapter));
         sized(&row, bytes)?;
         Ok(row)
     }
