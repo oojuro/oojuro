@@ -1,0 +1,946 @@
+{
+  "schema": 1,
+  "source_commit": "a53e6f0c638bbfac81d91cb8d943448edd121aef",
+  "source_dirty": true,
+  "binary_sha256": "264a3057951394d58252406e2b90f88b5e51fee9e82e3bf3fa87a151f2162205",
+  "source_sha256": {
+    "Cargo.lock": "61f3bcee5ba7cc797f44246d3765dfdaed7371ef66c73c2316c8e2bec1a40f7a",
+    "crates/ojo/examples/acid_bench.rs": "460216b41f466f15849d0d59778ad1ed2086d9b7e021aa3c1d3da7613c032b92",
+    "crates/ojo/src/lib.rs": "1d92f9002b5d2f73fc40d71f5d9a54c301d8499a1e75b55d03fb6f268ba56c3d",
+    "crates/ojo/src/wire.rs": "6c147374a4e2f064db8cb397b4a287f14ceadd329536f833f4fa23e5f0d8ad78",
+    "crates/ojo/tests/acid.rs": "ab754676eedf5d452ade1fcfcb1d723a7dfb5cc5fbb4e989491962f05ada5605",
+    "crates/ojo/tests/compatibility.rs": "1e740cf339619d3678e1b31caaf3a7f198f46622c65a51fc3dde79d09fd3a742"
+  },
+  "filesystem": "btrfs",
+  "filesystem_compression": "Disabled using chattr +m on a fresh parent directory. The inherited no-compression flag was checked on every final database file; SQLite sidecars inherit the same directory policy.",
+  "environment": "Persistent local filesystem on a shared development host; warm OS cache; SQLite WAL/FULL with INTEGER PRIMARY KEY and 64 MiB page cache; Ojo sync_all per batch; not a dedicated-device or power-cut qualification.",
+  "command_template": "acid_bench ARM NEW_DIRECTORY RECORDS BATCH VALUE_BYTES",
+  "runs": [
+    {
+      "arm": "ojo",
+      "batch": 1,
+      "durable_commit_us": {
+        "n": 1024,
+        "p50": 6423.235000000001,
+        "p95": 9607.287,
+        "p99": 11279.475
+      },
+      "records": 1024,
+      "records_per_second": 146.3694301558324,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 1.2790869999999999,
+        "p95": 1.329777,
+        "p99": 1.329777
+      },
+      "scan_seconds": 0.000878212,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "BLOB PRIMARY KEY WITHOUT ROWID; default cache",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 303168,
+      "value_bytes": 128,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 0.43300000000000005,
+        "p95": 0.476,
+        "p99": 0.5640000000000001
+      },
+      "write_seconds": 6.995996356,
+      "repeat": 0,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "sqlite-rowid",
+      "batch": 1,
+      "durable_commit_us": {
+        "n": 1024,
+        "p50": 6495.155,
+        "p95": 11877.083999999999,
+        "p99": 12573.842
+      },
+      "records": 1024,
+      "records_per_second": 135.1012193197597,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.166122,
+        "p95": 0.295601,
+        "p99": 0.295601
+      },
+      "scan_seconds": 7.7967e-05,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "INTEGER PRIMARY KEY; cache_size=-65536",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 155648,
+      "value_bytes": 128,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 1.2160000000000002,
+        "p95": 1.375,
+        "p99": 2.6790000000000003
+      },
+      "write_seconds": 7.579502281,
+      "repeat": 0,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "ojo",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 16,
+        "p50": 9428.877,
+        "p95": 22912.686,
+        "p99": 22912.686
+      },
+      "records": 1024,
+      "records_per_second": 5403.276638767238,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.259424,
+        "p95": 0.295057,
+        "p99": 0.295057
+      },
+      "scan_seconds": 5.3344e-05,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "BLOB PRIMARY KEY WITHOUT ROWID; default cache",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 158016,
+      "value_bytes": 128,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 0.30400000000000005,
+        "p95": 0.348,
+        "p99": 0.446
+      },
+      "write_seconds": 0.189514635,
+      "repeat": 0,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "sqlite-rowid",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 16,
+        "p50": 7522.264,
+        "p95": 11915.488,
+        "p99": 11915.488
+      },
+      "records": 1024,
+      "records_per_second": 5249.95949225591,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.088782,
+        "p95": 0.128692,
+        "p99": 0.128692
+      },
+      "scan_seconds": 5.5514e-05,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "INTEGER PRIMARY KEY; cache_size=-65536",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 155648,
+      "value_bytes": 128,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 0.883,
+        "p95": 0.9939999999999999,
+        "p99": 1.9089999999999998
+      },
+      "write_seconds": 0.195049124,
+      "repeat": 0,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "ojo",
+      "batch": 1,
+      "durable_commit_us": {
+        "n": 1024,
+        "p50": 6493.918000000001,
+        "p95": 11999.212,
+        "p99": 12558.062
+      },
+      "records": 1024,
+      "records_per_second": 127.53493698135279,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 2.230563,
+        "p95": 2.2965389999999997,
+        "p99": 2.2965389999999997
+      },
+      "scan_seconds": 0.001265808,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "BLOB PRIMARY KEY WITHOUT ROWID; default cache",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 1220672,
+      "value_bytes": 1024,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 0.855,
+        "p95": 1.179,
+        "p99": 1.345
+      },
+      "write_seconds": 8.029172431,
+      "repeat": 0,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "sqlite-rowid",
+      "batch": 1,
+      "durable_commit_us": {
+        "n": 1024,
+        "p50": 6563.058,
+        "p95": 11998.908000000001,
+        "p99": 12492.705
+      },
+      "records": 1024,
+      "records_per_second": 129.19888540792786,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.17315,
+        "p95": 0.32997400000000005,
+        "p99": 0.32997400000000005
+      },
+      "scan_seconds": 0.000164796,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "INTEGER PRIMARY KEY; cache_size=-65536",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 1409024,
+      "value_bytes": 1024,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 1.307,
+        "p95": 3.806,
+        "p99": 5.026
+      },
+      "write_seconds": 7.925764969,
+      "repeat": 0,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "ojo",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 16,
+        "p50": 6848.155,
+        "p95": 12114.747000000001,
+        "p99": 12114.747000000001
+      },
+      "records": 1024,
+      "records_per_second": 7006.608374376333,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 1.006758,
+        "p95": 1.05087,
+        "p99": 1.05087
+      },
+      "scan_seconds": 0.000330001,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "BLOB PRIMARY KEY WITHOUT ROWID; default cache",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 1075520,
+      "value_bytes": 1024,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 0.5579999999999999,
+        "p95": 0.6910000000000001,
+        "p99": 0.8250000000000001
+      },
+      "write_seconds": 0.146147743,
+      "repeat": 0,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "sqlite-rowid",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 16,
+        "p50": 6804.697999999999,
+        "p95": 12660.501,
+        "p99": 12660.501
+      },
+      "records": 1024,
+      "records_per_second": 5024.546011291382,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.197787,
+        "p95": 0.308529,
+        "p99": 0.308529
+      },
+      "scan_seconds": 0.000376755,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "INTEGER PRIMARY KEY; cache_size=-65536",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 1409024,
+      "value_bytes": 1024,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 1.4360000000000002,
+        "p95": 3.852,
+        "p99": 5.109
+      },
+      "write_seconds": 0.203799507,
+      "repeat": 0,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "ojo",
+      "batch": 1,
+      "durable_commit_us": {
+        "n": 1024,
+        "p50": 6604.225,
+        "p95": 11997.088,
+        "p99": 12432.703
+      },
+      "records": 1024,
+      "records_per_second": 125.68228478550148,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 7.3746849999999995,
+        "p95": 7.497654000000001,
+        "p99": 7.497654000000001
+      },
+      "scan_seconds": 0.003657493,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "BLOB PRIMARY KEY WITHOUT ROWID; default cache",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 8560704,
+      "value_bytes": 8192,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 3.02,
+        "p95": 3.4819999999999998,
+        "p99": 3.686
+      },
+      "write_seconds": 8.147528522,
+      "repeat": 0,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "sqlite-rowid",
+      "batch": 1,
+      "durable_commit_us": {
+        "n": 1024,
+        "p50": 6803.295,
+        "p95": 11995.011,
+        "p99": 12720.652
+      },
+      "records": 1024,
+      "records_per_second": 128.71944692251412,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.14333600000000002,
+        "p95": 0.33769,
+        "p99": 0.33769
+      },
+      "scan_seconds": 0.002766522,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "INTEGER PRIMARY KEY; cache_size=-65536",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 8921088,
+      "value_bytes": 8192,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 3.7359999999999998,
+        "p95": 5.861000000000001,
+        "p99": 7.5809999999999995
+      },
+      "write_seconds": 7.955285891,
+      "repeat": 0,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "ojo",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 16,
+        "p50": 9028.202000000001,
+        "p95": 11998.108,
+        "p99": 11998.108
+      },
+      "records": 1024,
+      "records_per_second": 6060.463301113054,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 8.913426000000001,
+        "p95": 8.959544,
+        "p99": 8.959544
+      },
+      "scan_seconds": 0.003774688,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "BLOB PRIMARY KEY WITHOUT ROWID; default cache",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 8415552,
+      "value_bytes": 8192,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 3.8500000000000005,
+        "p95": 4.54,
+        "p99": 5.1209999999999996
+      },
+      "write_seconds": 0.16896398,
+      "repeat": 0,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "sqlite-rowid",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 16,
+        "p50": 11088.071,
+        "p95": 28852.121000000003,
+        "p99": 28852.121000000003
+      },
+      "records": 1024,
+      "records_per_second": 3903.1335560670727,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.099763,
+        "p95": 0.201567,
+        "p99": 0.201567
+      },
+      "scan_seconds": 0.001395435,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "INTEGER PRIMARY KEY; cache_size=-65536",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 8921088,
+      "value_bytes": 8192,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 4.314,
+        "p95": 7.712,
+        "p99": 12.100999999999999
+      },
+      "write_seconds": 0.262353308,
+      "repeat": 0,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "sqlite-rowid",
+      "batch": 1,
+      "durable_commit_us": {
+        "n": 1024,
+        "p50": 6677.137,
+        "p95": 12007.837,
+        "p99": 12687.923
+      },
+      "records": 1024,
+      "records_per_second": 128.13708669337638,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.28121199999999996,
+        "p95": 0.570909,
+        "p99": 0.570909
+      },
+      "scan_seconds": 0.00017043,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "INTEGER PRIMARY KEY; cache_size=-65536",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 155648,
+      "value_bytes": 128,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 2.819,
+        "p95": 3.105,
+        "p99": 5.8340000000000005
+      },
+      "write_seconds": 7.991441248,
+      "repeat": 1,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "ojo",
+      "batch": 1,
+      "durable_commit_us": {
+        "n": 1024,
+        "p50": 7802.192,
+        "p95": 12126.457,
+        "p99": 14196.287
+      },
+      "records": 1024,
+      "records_per_second": 116.73585851800726,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.906043,
+        "p95": 0.944038,
+        "p99": 0.944038
+      },
+      "scan_seconds": 0.000626464,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "BLOB PRIMARY KEY WITHOUT ROWID; default cache",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 303168,
+      "value_bytes": 128,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 0.33799999999999997,
+        "p95": 0.382,
+        "p99": 0.5880000000000001
+      },
+      "write_seconds": 8.771940456,
+      "repeat": 1,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "sqlite-rowid",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 16,
+        "p50": 6769.028,
+        "p95": 7000.852,
+        "p99": 7000.852
+      },
+      "records": 1024,
+      "records_per_second": 6377.569569646027,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.302395,
+        "p95": 0.38778599999999996,
+        "p99": 0.38778599999999996
+      },
+      "scan_seconds": 0.000171678,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "INTEGER PRIMARY KEY; cache_size=-65536",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 155648,
+      "value_bytes": 128,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 2.5730000000000004,
+        "p95": 2.8219999999999996,
+        "p99": 4.379
+      },
+      "write_seconds": 0.160562733,
+      "repeat": 1,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "ojo",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 16,
+        "p50": 6577.964,
+        "p95": 7017.365,
+        "p99": 7017.365
+      },
+      "records": 1024,
+      "records_per_second": 8590.205865038553,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.377707,
+        "p95": 0.436855,
+        "p99": 0.436855
+      },
+      "scan_seconds": 8.5377e-05,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "BLOB PRIMARY KEY WITHOUT ROWID; default cache",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 158016,
+      "value_bytes": 128,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 0.438,
+        "p95": 0.621,
+        "p99": 0.752
+      },
+      "write_seconds": 0.119205525,
+      "repeat": 1,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "sqlite-rowid",
+      "batch": 1,
+      "durable_commit_us": {
+        "n": 1024,
+        "p50": 6899.973,
+        "p95": 12130.037,
+        "p99": 12751.672
+      },
+      "records": 1024,
+      "records_per_second": 123.04411509394114,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.244713,
+        "p95": 0.621475,
+        "p99": 0.621475
+      },
+      "scan_seconds": 0.000392667,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "INTEGER PRIMARY KEY; cache_size=-65536",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 1409024,
+      "value_bytes": 1024,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 3.4410000000000003,
+        "p95": 10.564,
+        "p99": 14.585
+      },
+      "write_seconds": 8.322218411,
+      "repeat": 1,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "ojo",
+      "batch": 1,
+      "durable_commit_us": {
+        "n": 1024,
+        "p50": 6596.299,
+        "p95": 11945.661999999998,
+        "p99": 12615.669
+      },
+      "records": 1024,
+      "records_per_second": 132.04067116908084,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 1.6419519999999999,
+        "p95": 1.673646,
+        "p99": 1.673646
+      },
+      "scan_seconds": 0.000879841,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "BLOB PRIMARY KEY WITHOUT ROWID; default cache",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 1220672,
+      "value_bytes": 1024,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 0.573,
+        "p95": 0.8059999999999999,
+        "p99": 0.9790000000000001
+      },
+      "write_seconds": 7.755186269,
+      "repeat": 1,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "sqlite-rowid",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 16,
+        "p50": 8994.58,
+        "p95": 18384.194,
+        "p99": 18384.194
+      },
+      "records": 1024,
+      "records_per_second": 4574.665760132315,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.105782,
+        "p95": 0.14284899999999998,
+        "p99": 0.14284899999999998
+      },
+      "scan_seconds": 0.000114247,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "INTEGER PRIMARY KEY; cache_size=-65536",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 1409024,
+      "value_bytes": 1024,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 0.961,
+        "p95": 2.476,
+        "p99": 3.0639999999999996
+      },
+      "write_seconds": 0.22384149,
+      "repeat": 1,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "ojo",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 16,
+        "p50": 7007.392000000001,
+        "p95": 12993.491,
+        "p99": 12993.491
+      },
+      "records": 1024,
+      "records_per_second": 6737.331847234079,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 1.353607,
+        "p95": 1.446978,
+        "p99": 1.446978
+      },
+      "scan_seconds": 0.000551601,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "BLOB PRIMARY KEY WITHOUT ROWID; default cache",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 1075520,
+      "value_bytes": 1024,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 0.926,
+        "p95": 1.17,
+        "p99": 1.33
+      },
+      "write_seconds": 0.151988951,
+      "repeat": 1,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "sqlite-rowid",
+      "batch": 1,
+      "durable_commit_us": {
+        "n": 1024,
+        "p50": 6706.4890000000005,
+        "p95": 12065.82,
+        "p99": 12915.189
+      },
+      "records": 1024,
+      "records_per_second": 126.93864993773337,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.14396499999999998,
+        "p95": 0.331972,
+        "p99": 0.331972
+      },
+      "scan_seconds": 0.002842493,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "INTEGER PRIMARY KEY; cache_size=-65536",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 8921088,
+      "value_bytes": 8192,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 3.8380000000000005,
+        "p95": 6.362,
+        "p99": 11.734
+      },
+      "write_seconds": 8.066889009,
+      "repeat": 1,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "ojo",
+      "batch": 1,
+      "durable_commit_us": {
+        "n": 1024,
+        "p50": 6692.4619999999995,
+        "p95": 12048.135999999999,
+        "p99": 12766.937
+      },
+      "records": 1024,
+      "records_per_second": 128.25398593740007,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 10.706356,
+        "p95": 11.008047,
+        "p99": 11.008047
+      },
+      "scan_seconds": 0.005792683,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "BLOB PRIMARY KEY WITHOUT ROWID; default cache",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 8560704,
+      "value_bytes": 8192,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 4.527,
+        "p95": 5.26,
+        "p99": 5.651
+      },
+      "write_seconds": 7.984157315,
+      "repeat": 1,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "sqlite-rowid",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 16,
+        "p50": 11999.095,
+        "p95": 35541.376,
+        "p99": 35541.376
+      },
+      "records": 1024,
+      "records_per_second": 3472.018995524425,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.145029,
+        "p95": 0.404088,
+        "p99": 0.404088
+      },
+      "scan_seconds": 0.003295463,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "INTEGER PRIMARY KEY; cache_size=-65536",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 8921088,
+      "value_bytes": 8192,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 4.192,
+        "p95": 8.789,
+        "p99": 14.752
+      },
+      "write_seconds": 0.294929262,
+      "repeat": 1,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "ojo",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 16,
+        "p50": 8828.899,
+        "p95": 15096.841999999999,
+        "p99": 15096.841999999999
+      },
+      "records": 1024,
+      "records_per_second": 5663.63445965158,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 6.488536,
+        "p95": 6.812963,
+        "p99": 6.812963
+      },
+      "scan_seconds": 0.003046619,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "BLOB PRIMARY KEY WITHOUT ROWID; default cache",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 8415552,
+      "value_bytes": 8192,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 2.768,
+        "p95": 3.409,
+        "p99": 3.691
+      },
+      "write_seconds": 0.180802629,
+      "repeat": 1,
+      "filesystem_attributes": "---------------------m"
+    }
+  ],
+  "scale_runs": [
+    {
+      "arm": "ojo",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 512,
+        "p50": 7129.173,
+        "p95": 12171.306,
+        "p99": 13806.023000000001
+      },
+      "records": 32768,
+      "records_per_second": 7747.640223371919,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 31.711736999999996,
+        "p95": 31.864012999999996,
+        "p99": 31.864012999999996
+      },
+      "scan_seconds": 0.013474173,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "BLOB PRIMARY KEY WITHOUT ROWID; default cache",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 34414656,
+      "value_bytes": 1024,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 0.889,
+        "p95": 1.301,
+        "p99": 1.502
+      },
+      "write_seconds": 4.229416836,
+      "repeat": 0,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "sqlite-rowid",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 512,
+        "p50": 13676.205,
+        "p95": 22085.769,
+        "p99": 33105.511999999995
+      },
+      "records": 32768,
+      "records_per_second": 4379.662663679406,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.096939,
+        "p95": 0.240919,
+        "p99": 0.240919
+      },
+      "scan_seconds": 0.021144748,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "INTEGER PRIMARY KEY; cache_size=-65536",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 44855296,
+      "value_bytes": 1024,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 2.6879999999999997,
+        "p95": 4.202,
+        "p99": 5.359
+      },
+      "write_seconds": 7.481854772,
+      "repeat": 0,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "sqlite-rowid",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 512,
+        "p50": 14536.849,
+        "p95": 24414.736,
+        "p99": 35147.45
+      },
+      "records": 32768,
+      "records_per_second": 3899.002742651792,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 0.162658,
+        "p95": 0.45126299999999997,
+        "p99": 0.45126299999999997
+      },
+      "scan_seconds": 0.03297258,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "INTEGER PRIMARY KEY; cache_size=-65536",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 44855296,
+      "value_bytes": 1024,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 4.615,
+        "p95": 6.4030000000000005,
+        "p99": 8.505
+      },
+      "write_seconds": 8.404200295,
+      "repeat": 1,
+      "filesystem_attributes": "---------------------m"
+    },
+    {
+      "arm": "ojo",
+      "batch": 64,
+      "durable_commit_us": {
+        "n": 512,
+        "p50": 12943.969,
+        "p95": 20148.781000000003,
+        "p99": 23961.947
+      },
+      "records": 32768,
+      "records_per_second": 4586.072065882414,
+      "reopen_and_get_ms": {
+        "n": 5,
+        "p50": 33.166024,
+        "p95": 35.363004000000004,
+        "p99": 35.363004000000004
+      },
+      "scan_seconds": 0.01488386,
+      "scope": "plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read",
+      "sqlite_key_schema": "BLOB PRIMARY KEY WITHOUT ROWID; default cache",
+      "sqlite_version": "3.53.2",
+      "stored_bytes": 34414656,
+      "value_bytes": 1024,
+      "warm_get_us": {
+        "n": 2000,
+        "p50": 1.475,
+        "p95": 2.102,
+        "p99": 2.4099999999999997
+      },
+      "write_seconds": 7.145112316,
+      "repeat": 1,
+      "filesystem_attributes": "---------------------m"
+    }
+  ]
+}

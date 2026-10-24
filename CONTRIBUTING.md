@@ -70,9 +70,9 @@ Open a draft pull request while the change is being developed. Include what chan
 
 ## Build and test
 
-You need stable Rust (edition 2024) and a C compiler for the standard zstd codec. Linux is the first-class platform. CI pins Rust 1.99.1 on disposable GitHub-hosted Ubuntu 24.04 runners.
+The minimal `ojo` crate needs Rust 1.89+ (edition 2024). Its optional archive/benchmark features and the retained compatibility libraries also need a C compiler. Linux is the first-class platform. CI pins Rust 1.99.1 on disposable GitHub-hosted Ubuntu 24.04 runners.
 
-Plain `cargo build --locked` and `cargo test --locked` select only `oojuro-engine`, `oojuro-rank` and `oojuro-store`. Agent CLI/runtime applications now live in `oojuro/o-journal`. The dependency policy gate checks these libraries independently, including conditional platform dependencies; see [DEPENDENCIES.md](DEPENDENCIES.md). Store JSON-reporting tools require `--features bench-tools`; `baselines` and `codecs` enable it automatically. No public library API is removed.
+Plain `cargo build --locked` and `cargo test --locked` select only the new independent `ojo` crate. Run `cargo test --locked -p ojo --features archive` for compressed file/archive interoperability. Its source is in `crates/ojo`, with the independently versioned specification and frozen vectors in `spec/`. Agent CLI/runtime applications now live in `oojuro/o-journal`. The dependency policy gate checks these libraries independently, including conditional platform dependencies; see [DEPENDENCIES.md](DEPENDENCIES.md). Store JSON-reporting tools require `--features bench-tools`; `baselines` and `codecs` enable it automatically. No public library API is removed.
 
 The normal checks select runtime packages explicitly, without benchmark comparison features:
 

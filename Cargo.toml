@@ -1,7 +1,8 @@
 [workspace]
-# Minimal libraries by default; runtime applications and comparisons stay explicit.
-default-members = ["crates/oojuro-engine", "crates/oojuro-rank", "crates/oojuro-store"]
+# Minimal file engine by default; compatibility libraries and comparisons stay explicit.
+default-members = ["crates/ojo"]
 members = [
+    "crates/ojo",
     "crates/oojuro-engine",
     "crates/oojuro-bench",
     "crates/oojuro-core",

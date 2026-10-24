@@ -29,8 +29,10 @@ using an engine revision that removes the application. Existing installer and
 cloud pins are not silently advanced by this reorganization.
 
 The native engine/rank/store implementations, legacy storage implementations
-and on-disk field names are preserved. `.ojo` is the chosen database extension;
-no standalone container or database compatibility promise is introduced here.
+and on-disk field names are preserved. The independent `crates/ojo` library adds
+experimental standalone wire 0.1 files; it does not convert old stores or claim
+a stable-format guarantee. Session finish/idle/archive scheduling remains in
+Journal/cloud; the engine exposes the generic archive operation only.
 
 Build/test logic stays with its source component. Operator coordination is
 separate from application code and does not grant publication or deployment

@@ -1,6 +1,19 @@
 # Engine dependency policy and audit
 
-The minimal production library is `oojuro-engine` → `oojuro-rank` +
+The default `ojo` crate is a fresh, independent file engine with four direct
+runtime dependencies: `sha2` (wire SHA-256), `crc32fast` (header CRC),
+`chacha20poly1305` (wire AEAD) and `getrandom` (fallible OS entropy). None requires
+a C compiler in this graph. `zstd` is optional behind `archive`; `rusqlite` and
+benchmark JSON reporting are optional behind `bench`. Development-only JSON and
+libc support vector and kernel I/O fault tests. The graph gate refuses these
+comparison/test dependencies in the default production build.
+
+The reviewed `ojo_allowlist`, `ojo_archive_additions` and direct foundations in
+`dependency-policy.json` describe both target-specific and all-platform graphs.
+They are checked alongside the retained compatibility libraries. Feature
+unification is additive, so consumers must also inspect their actual selected graph.
+
+The retained storage/search library is `oojuro-engine` → `oojuro-rank` +
 `oojuro-store`. `oojuro-core`, `oojuro-nine` and `oojuro-trace` are separate
 legacy/library stacks, not aliases for that graph. A workspace lockfile is not
 the list of libraries in a product build.
@@ -13,7 +26,7 @@ deliberate dependencies. Do not replace them to lower a dependency count.
 ## Build boundaries
 
 ```sh
-cargo build --locked --release                     # engine/rank/store libraries
+cargo build --locked --release                     # independent ojo file library
 # CLI/recorder, capture and proxy now build in oojuro/o-journal
 cargo build --locked -p oojuro-store --features bench-tools --bin store-bench
 cargo build --locked -p oojuro-store --features bench-tools --example frame_probe

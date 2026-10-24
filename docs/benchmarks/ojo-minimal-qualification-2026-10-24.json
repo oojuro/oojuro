@@ -1,0 +1,131 @@
+{
+  "schema": 1,
+  "qualified_at_utc": "2026-10-24T23:59:36.175858+00:00",
+  "base_revision": "128b76f8a462817910ed5ca622adf156ed1efcc6",
+  "implementation_revision": "a53e6f0c638bbfac81d91cb8d943448edd121aef",
+  "working_changes": "Extended recovery/archive tests, usage documentation, benchmark tuning and result reports.",
+  "rustc": "rustc 1.99.1 (58cf8f9c3 2026-10-13)",
+  "linker": "Zig 0.15.2 cc wrapper; x86_64 Linux GNU target",
+  "limits": "Local filesystem/model fault tests; no real power-cut, exhaustive fuzzing, network filesystem or cross-platform qualification.",
+  "source_sha256": {
+    "crates/ojo/Cargo.toml": "4c82ed90d0232a213e51fc4b2a8b5a85dd30a041b79667bdac79fa708e4b6e5b",
+    "crates/ojo/README.md": "bf4b5c4a7a833501c3c08ee6411e31e3fb12c4202b048fc823c9f7f5aef3871d",
+    "crates/ojo/examples/acid_bench.rs": "096f66445ff9397e9b607fc8ccc1cc806b94e630385af3d3257596bf58f8f484",
+    "crates/ojo/src/lib.rs": "1d92f9002b5d2f73fc40d71f5d9a54c301d8499a1e75b55d03fb6f268ba56c3d",
+    "crates/ojo/src/wire.rs": "6c147374a4e2f064db8cb397b4a287f14ceadd329536f833f4fa23e5f0d8ad78",
+    "crates/ojo/tests/acid.rs": "ab754676eedf5d452ade1fcfcb1d723a7dfb5cc5fbb4e989491962f05ada5605",
+    "crates/ojo/tests/compatibility.rs": "1e740cf339619d3678e1b31caaf3a7f198f46622c65a51fc3dde79d09fd3a742"
+  },
+  "checks": [
+    {
+      "name": "format",
+      "command": "cargo fmt -p ojo -- --check",
+      "exit_code": 0,
+      "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "test_summaries": []
+    },
+    {
+      "name": "raw",
+      "command": "cargo test --locked -p ojo",
+      "exit_code": 0,
+      "log_sha256": "a8a3f5be43ee70fb31326988747c878b44cfb080c721cb8723c95243f5d76b22",
+      "test_summaries": [
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    {
+      "name": "archive",
+      "command": "cargo test --locked -p ojo --features archive",
+      "exit_code": 0,
+      "log_sha256": "2b56deb86f5615c5d01ad2ccc4c217259c86fb91985648daba815c373d1eb005",
+      "test_summaries": [
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.12s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    {
+      "name": "clippy",
+      "command": "cargo clippy --locked -p ojo --all-targets --features archive,bench -- -D warnings",
+      "exit_code": 0,
+      "log_sha256": "929438564e838499e6d07c26d9af34e8360cf8b6c4eb322c02da363911ade336",
+      "test_summaries": []
+    },
+    {
+      "name": "default-build",
+      "command": "cargo build --locked",
+      "exit_code": 0,
+      "log_sha256": "3b3bc18e188760abda93d9a0ff804a965b044fcf228cf4896d7b19462ea48761",
+      "test_summaries": []
+    },
+    {
+      "name": "dependency-policy",
+      "command": "python3 scripts/dependency_audit.py --engine-only --check --output $PRIVATE_TMPDIR/dependencies.json",
+      "exit_code": 0,
+      "log_sha256": "76f11afc1f8d12f63175be7b965fe7df44d5b2cadeb4122e0269276b7193ffd0",
+      "test_summaries": []
+    },
+    {
+      "name": "policy-refusals",
+      "command": "python3 scripts/test_dependency_audit.py",
+      "exit_code": 0,
+      "log_sha256": "ad4ac64eabd67178ec79ac1d2fb871be1354bab2dae07d883b9f9c6d8b8804da",
+      "test_summaries": []
+    },
+    {
+      "name": "compatibility-storage",
+      "command": "cargo test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro-store -p oojuro-nine",
+      "exit_code": 0,
+      "log_sha256": "806d7228fe58fc34b28fafd207b7f5ae504d50ac1fe32545cfedffd88571f084",
+      "test_summaries": [
+        "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 94 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 10.72s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.14s",
+        "test result: ok. 7 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 2.48s",
+        "test result: ok. 13 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.83s",
+        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.15s",
+        "test result: ok. 12 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 145.16s"
+      ]
+    },
+    {
+      "name": "compatibility-native",
+      "command": "cargo test --locked --no-default-features --lib --tests -p oojuro-engine -p oojuro-rank -- --test-threads=1",
+      "exit_code": 0,
+      "log_sha256": "4e199969726ed5b39e6a99cc29c06291d6a9e212b7a8ca5fe996edf5e731ae23",
+      "test_summaries": [
+        "test result: ok. 169 passed; 0 failed; 10 ignored; 0 measured; 0 filtered out; finished in 85.43s",
+        "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+        "test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    },
+    {
+      "name": "compatibility-trace",
+      "command": "cargo test --locked --no-default-features --lib --tests -p oojuro-trace",
+      "exit_code": 0,
+      "log_sha256": "bf6c9bba679870338a1cd251dd937533113ad29a62ba3b41141a57368e6c02e3",
+      "test_summaries": [
+        "test result: ok. 5 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 0.10s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 1.16s",
+        "test result: ok. 4 passed; 0 failed; 1 ignored; 0 measured; 0 filtered out; finished in 2.11s",
+        "test result: ok. 5 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 2.86s",
+        "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.74s",
+        "test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 28.52s"
+      ]
+    },
+    {
+      "name": "final-documentation",
+      "command": "cargo test --locked -p ojo --doc",
+      "exit_code": 0,
+      "log_sha256": "1a9d90149e2145ac234cfae0f95c629f5128742ae527d252896dc1b67911b42d",
+      "test_summaries": [
+        "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s"
+      ]
+    }
+  ],
+  "benchmark_runtime_sources_match": true,
+  "all_selected_checks_passed": true
+}

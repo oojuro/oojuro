@@ -4,9 +4,10 @@
 database file. Use lowercase, for example `memory.ojo`. The product and
 command names remain Oojuro and `oojuro`.
 
-**Status:** the name is adopted; the standalone container is not implemented.
-This document records the naming decision, not a released binary format or a
-promise of compatibility with future versions.
+**Status:** experimental standalone wire 0.1 is implemented by the minimal
+[`ojo` crate](../crates/ojo/README.md). The [specification](../spec/0.1/FORMAT.md)
+defines direct writes, locks, synced commits, recovery, integrity, bounds,
+encryption and exact retries. This is not a stable-format promise.
 
 ## Current storage
 
@@ -30,23 +31,12 @@ The [Journal application's JSONL export](https://github.com/oojuro/o-journal/blo
 defined Oojuro container. The `~/.oojuro/` application directory and
 `.oojuro.toml` configuration files retain their existing names.
 
-## Standalone container work
+## Standalone files
 
-A future implementation will use `.ojo` for its user-facing database files.
-Before adding commands that produce or consume those files, its format and
-reader/writer contract must define:
+The standalone implementation writes one regular `.ojo` file, appending atomic
+transactions without a sidecar WAL or persistent index. It is independent of the
+historical directory libraries. Normal writes are raw. Optional archives are
+separate compressed files with fresh identities; originals are preserved.
 
-- Whether a file is a portable snapshot or a database that supports direct
-  writes, including any required companion files.
-- A recognizable header, an explicit format version, and rejection of
-  unsupported versions independently of the filename.
-- The contents required to reopen a complete database, including dictionaries,
-  metadata, and the treatment of rebuildable indexes.
-- Integrity checks, resource bounds, and behavior on truncated or corrupt input.
-- Snapshot consistency and safe publication of a completed file; locking and
-  recovery rules if direct writes are supported.
-- Encryption and key handling when the source journal is encrypted.
-
-That implementation needs synthetic round-trip and corruption tests. Adopting
-the extension does not select snapshot versus direct-write semantics, freeze a
-header or version, change the current storage layout, or add `.ojo` CLI support.
+The specification is authoritative; see its frozen interoperability vectors and
+`crates/ojo/tests` for compatibility, partial writes, truncation and corruption.

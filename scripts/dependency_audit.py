@@ -15,6 +15,8 @@ TARGET = "x86_64-unknown-linux-gnu"
 WORKSPACE_NAMES = set()
 SCOPES = {
     "default": [],
+    "ojo": ["-p", "ojo"],
+    "ojo-archive": ["-p", "ojo", "--features", "archive"],
     "rank": ["-p", "oojuro-rank"],
     "store": ["-p", "oojuro-store"],
     "engine": ["-p", "oojuro-engine"],
@@ -80,7 +82,7 @@ def check(report):
     allow = set(policy["engine_allowlist"])
     direct = set(policy["direct_foundations"]) | set(policy["algorithm_exceptions"])
     internal = {"oojuro-engine", "oojuro-rank", "oojuro-store"}
-    for scope in ("default", "rank", "store", "engine", "engine-all-platforms"):
+    for scope in ("rank", "store", "engine", "engine-all-platforms"):
         for package in report["graphs"][scope]["packages"].values():
             name = package["name"]
             if name not in internal and name not in allow:
@@ -99,10 +101,23 @@ def check(report):
     store = report["graphs"]["store"]["packages"]
     if any(p["name"] == "serde_json" for p in store.values()):
         raise ValueError("store library includes benchmark JSON dependency")
-    expected = {"oojuro-engine", "oojuro-rank", "oojuro-store"}
+    for scope in ("default", "ojo", "ojo-all-platforms", "ojo-archive", "ojo-archive-all-platforms"):
+        if scope not in report["graphs"]:
+            raise ValueError(f"missing minimal engine graph: {scope}")
+        allowed = set(policy["ojo_allowlist"])
+        if "archive" in scope:
+            allowed.update(policy["ojo_archive_additions"])
+        direct = set(policy["ojo_direct_foundations"])
+        for package in report["graphs"][scope]["packages"].values():
+            name = package["name"]
+            if name != "ojo" and name not in allowed:
+                raise ValueError(f"{scope}: dependency outside minimal engine allowlist: {name}")
+            if any(parent.partition("@")[0] == "ojo" for parent in package["used_by"]) and name not in direct:
+                raise ValueError(f"{scope}: unreviewed direct file engine dependency: {name}")
+    expected = {"ojo"}
     roots = {key.partition("@")[0] for key in report["graphs"]["default"]["roots"]}
     if roots != expected:
-        raise ValueError("default build must select only engine, rank and store")
+        raise ValueError("default build must select only ojo")
 
 
 def main():
@@ -117,7 +132,7 @@ def main():
     args = parser.parse_args()
     if args.scope and (args.check or args.engine_only):
         parser.error("--check/--engine-only require the standard policy scopes; omit --scope")
-    scopes = ["default", "rank", "store", "engine"] if args.engine_only else (args.scope or SCOPES)
+    scopes = ["default", "ojo", "ojo-archive", "rank", "store", "engine"] if args.engine_only else (args.scope or SCOPES)
     ROOT = args.root.resolve()
     metadata_args = ["metadata", "--locked", "--format-version", "1"]
     if args.engine_only:
@@ -140,6 +155,9 @@ def main():
                          for name in scopes}}
     if not args.scope or "engine" in args.scope:
         report["graphs"]["engine-all-platforms"] = graph(SCOPES["engine"], "all")
+    for name in ("ojo", "ojo-archive"):
+        if name in scopes:
+            report["graphs"][name + "-all-platforms"] = graph(SCOPES[name], "all")
     if args.edge_breakdown:
         report["comparison_graphs"] = {
             name: {"normal-only": graph(SCOPES[name], TARGET, "normal"),
@@ -148,7 +166,10 @@ def main():
         }
     used = {key for graph_ in report["graphs"].values() for key in graph_["packages"]}
     report["inventory"] = {}
-    engine_keys = report["graphs"].get("engine-all-platforms", {}).get("packages", {})
+    engine_keys = {
+        key for scope in ("engine-all-platforms", "ojo-all-platforms", "ojo-archive-all-platforms")
+        for key in report["graphs"].get(scope, {}).get("packages", {})
+    }
     application_keys = {
         key for scope, graph_ in report["graphs"].items()
         if scope in {"legacy-core", "legacy-nine", "legacy-trace", "capture", "proxy", "cli"}

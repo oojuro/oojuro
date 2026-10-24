@@ -18,11 +18,15 @@ Those are application and service responsibilities.
 
 ## Format
 
-`.ojo` is the selected user-facing extension for a future standalone database
-file. It is a naming decision; current stores still use multiple files inside
-a directory. Existing `.ojl`, `.ojc` and `.ojd` components retain their formats.
-A standalone container needs its own versioned reader/writer and recovery
-contract; see [the format decision](OJO_FORMAT.md).
+The new `crates/ojo` engine implements the experimental, independently versioned
+[wire 0.1](../spec/0.1/FORMAT.md). It is a standalone synchronous library with no
+dependency on the older storage/search crates. It stores opaque bytes with raw
+writes, inode locks, synced atomic commits, exact retries and verified recovery.
+Compression is an optional separate-archive operation. Agent timestamps and
+session lifecycle remain caller policy. See [API and limits](../crates/ojo/README.md).
+
+Historical stores remain directories with their existing component formats;
+there is no automatic conversion or change to existing consumer pins.
 
 Existing record types retain their current agent-oriented field and enum names
 for compatibility. Separating repository ownership does not rewrite stored data

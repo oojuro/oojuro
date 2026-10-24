@@ -14,6 +14,11 @@ class DependencyPolicy(unittest.TestCase):
     def setUpClass(cls):
         with gzip.open(Path(__file__).resolve().parents[1] / "docs/dependencies/main-native-after.json.gz", "rt") as source:
             cls.report = json.load(source)
+        # Retain frozen compatibility graphs; the new file-engine scopes are checked independently.
+        minimal = {"roots": ["ojo@0.1.0"], "packages": {
+            "ojo@0.1.0": {"name": "ojo", "features": [], "used_by": []}}}
+        for scope in ("default", "ojo", "ojo-all-platforms", "ojo-archive", "ojo-archive-all-platforms"):
+            cls.report["graphs"][scope] = copy.deepcopy(minimal)
 
     def report_copy(self):
         return copy.deepcopy(self.report)
@@ -62,8 +67,17 @@ class DependencyPolicy(unittest.TestCase):
     def test_plain_build_does_not_select_cli(self):
         report = self.report_copy()
         report["graphs"]["default"]["roots"].append("oojuro@0.1.0")
-        with self.assertRaisesRegex(ValueError, "only engine, rank and store"):
+        with self.assertRaisesRegex(ValueError, "only ojo"):
             audit.check(report)
+
+    def test_minimal_core_refuses_codecs_and_benchmark_engines(self):
+        for name in ("zstd", "rusqlite", "serde_json", "oojuro-engine"):
+            with self.subTest(name=name):
+                report = self.report_copy()
+                report["graphs"]["ojo"]["packages"][name + "@1"] = {
+                    "name": name, "features": [], "used_by": ["ojo@0.1.0"]}
+                with self.assertRaisesRegex(ValueError, "outside minimal engine allowlist"):
+                    audit.check(report)
 
 
 if __name__ == "__main__":

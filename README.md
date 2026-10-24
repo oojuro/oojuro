@@ -1,14 +1,25 @@
 # Oojuro
 
-An embedded database engine for durable, compressed, searchable records.
-Applications own the meaning of their records; Oojuro owns storage, exact reads,
-time/version views, compression, recovery and retrieval. No model runs inside
-the database.
+A minimal Rust engine for durable `.ojo` files: opaque bytes, atomic batches,
+exact reads, crash recovery and optional authenticated encryption. Normal writes
+are uncompressed. The fresh implementation in [`crates/ojo`](crates/ojo/README.md)
+is independent of the older storage/search crates.
 
-**Status: pre-release.** `.ojo` is the selected extension for a future standalone
-Oojuro database file, such as `memory.ojo`. Current stores use directories;
-standalone `.ojo` read/write support is not implemented. See the
-[format decision](docs/OJO_FORMAT.md).
+**Status: experimental.** The standalone [wire 0.1 specification](spec/README.md)
+and frozen interoperability vectors are versioned separately from the engine.
+The default build selects only `ojo` and needs no C compiler. Existing libraries
+remain available through explicit package selection for compatibility.
+
+```sh
+cargo build --locked
+cargo test --locked -p ojo
+cargo test --locked -p ojo --features archive
+```
+
+The optional archive feature creates a separate compressed `.ojo` file while
+preserving the original, its checkpoints and encryption. Session lifecycle and
+24-hour idle scheduling belong to ojo-journal/ojo-cloud. See the
+[engine API, guarantees and limits](crates/ojo/README.md).
 
 ## One responsibility per repository
 
@@ -27,8 +38,9 @@ in their own repositories. See [source boundaries](docs/REPOSITORY_BOUNDARIES.md
 
 ## Build and test
 
-Use stable Rust supporting edition 2024 and a C compiler. Linux is the primary
-platform. Default workspace members are the engine, rank and store libraries.
+The new `ojo` crate requires Rust 1.89+; Linux is the primary platform. The
+optional archive/benchmark features and older libraries require a C compiler.
+The following explicit checks cover the retained compatibility libraries:
 
 ```sh
 cargo build --locked
