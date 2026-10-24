@@ -13,9 +13,12 @@ fn stats(samples: &[f64]) -> Value {
     };
     json!({"n":values.len(),"p50":p(0.5),"p95":p(0.95),"p99":p(0.99)})
 }
-fn sqlite(path: &Path) -> Result<Connection> {
+fn sqlite(path: &Path, rowid: bool) -> Result<Connection> {
     let connection = Connection::open(path)?;
     connection.execute_batch("PRAGMA journal_mode=WAL; PRAGMA synchronous=FULL;")?;
+    if rowid {
+        connection.execute_batch("PRAGMA cache_size=-65536;")?;
+    }
     Ok(connection)
 }
 fn key(index: usize) -> [u8; 8] {
@@ -24,10 +27,14 @@ fn key(index: usize) -> [u8; 8] {
 fn run() -> Result<()> {
     let args: Vec<_> = std::env::args().skip(1).collect();
     if args.len() != 5 {
-        return Err("usage: acid_bench ojo|sqlite NEW_DIRECTORY RECORDS BATCH VALUE_BYTES".into());
+        return Err(
+            "usage: acid_bench ojo|sqlite|sqlite-rowid NEW_DIRECTORY RECORDS BATCH VALUE_BYTES"
+                .into(),
+        );
     }
     let arm = &args[0];
-    if arm != "ojo" && arm != "sqlite" {
+    let rowid = arm == "sqlite-rowid";
+    if arm != "ojo" && arm != "sqlite" && !rowid {
         return Err("unknown arm".into());
     }
     let root = Path::new(&args[1]);
@@ -76,10 +83,12 @@ fn run() -> Result<()> {
             commits.push(t.elapsed().as_secs_f64() * 1e6);
         }
     } else {
-        let mut db = sqlite(&path)?;
-        db.execute_batch(
-            "CREATE TABLE records(key BLOB PRIMARY KEY, value BLOB NOT NULL) WITHOUT ROWID;",
-        )?;
+        let mut db = sqlite(&path, rowid)?;
+        db.execute_batch(if rowid {
+            "CREATE TABLE records(key INTEGER PRIMARY KEY, value BLOB NOT NULL);"
+        } else {
+            "CREATE TABLE records(key BLOB PRIMARY KEY, value BLOB NOT NULL) WITHOUT ROWID;"
+        })?;
         for (ordinal, chunk) in values.chunks(batch).enumerate() {
             let t = Instant::now();
             let transaction = db.transaction()?;
@@ -87,7 +96,12 @@ fn run() -> Result<()> {
                 let mut statement =
                     transaction.prepare_cached("INSERT INTO records VALUES(?1,?2)")?;
                 for (j, value) in chunk.iter().enumerate() {
-                    statement.execute(params![&keys[ordinal * batch + j], value])?;
+                    let index = ordinal * batch + j;
+                    if rowid {
+                        statement.execute(params![index as i64, value])?;
+                    } else {
+                        statement.execute(params![&keys[index], value])?;
+                    }
                 }
             }
             transaction.commit()?;
@@ -121,11 +135,15 @@ fn run() -> Result<()> {
         scan_seconds = scan_start.elapsed().as_secs_f64();
         assert_eq!(seen, count);
     } else {
-        let db = sqlite(&path)?;
+        let db = sqlite(&path, rowid)?;
         let mut query = db.prepare_cached("SELECT value FROM records WHERE key=?1")?;
         for &i in &ids {
             let t = Instant::now();
-            let value: Vec<u8> = query.query_row([&keys[i]], |row| row.get(0))?;
+            let value: Vec<u8> = if rowid {
+                query.query_row([i as i64], |row| row.get(0))?
+            } else {
+                query.query_row([&keys[i]], |row| row.get(0))?
+            };
             read.push(t.elapsed().as_secs_f64() * 1e6);
             assert_eq!(value, values[i]);
         }
@@ -134,9 +152,13 @@ fn run() -> Result<()> {
         scan_start = Instant::now();
         let mut rows = query.query([])?;
         while let Some(row) = rows.next()? {
-            let key: Vec<u8> = row.get(0)?;
             let value: Vec<u8> = row.get(1)?;
-            let i = u64::from_be_bytes(key.try_into().unwrap()) as usize;
+            let i = if rowid {
+                row.get::<_, i64>(0)? as usize
+            } else {
+                let key: Vec<u8> = row.get(0)?;
+                u64::from_be_bytes(key.try_into().unwrap()) as usize
+            };
             assert_eq!(value, values[i]);
             seen += 1;
         }
@@ -150,11 +172,13 @@ fn run() -> Result<()> {
             let mut db = Database::open(&path, None, false)?;
             assert_eq!(db.get(&keys[0])?.unwrap(), values[0]);
         } else {
-            let db = sqlite(&path)?;
-            let value: Vec<u8> =
-                db.query_row("SELECT value FROM records WHERE key=?1", [&keys[0]], |r| {
-                    r.get(0)
-                })?;
+            let db = sqlite(&path, rowid)?;
+            let sql = "SELECT value FROM records WHERE key=?1";
+            let value: Vec<u8> = if rowid {
+                db.query_row(sql, [0i64], |r| r.get(0))?
+            } else {
+                db.query_row(sql, [&keys[0]], |r| r.get(0))?
+            };
             assert_eq!(value, values[0]);
         }
         reopen.push(t.elapsed().as_secs_f64() * 1e3);
@@ -168,7 +192,8 @@ fn run() -> Result<()> {
         "write_seconds":write_seconds,"records_per_second":count as f64/write_seconds,
         "durable_commit_us":stats(&commits),"warm_get_us":stats(&read),"scan_seconds":scan_seconds,
         "reopen_and_get_ms":stats(&reopen),"stored_bytes":stored,"sqlite_version":rusqlite::version(),
-        "scope":"plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, WITHOUT ROWID; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read"})
+        "sqlite_key_schema":if rowid {"INTEGER PRIMARY KEY; cache_size=-65536"} else {"BLOB PRIMARY KEY WITHOUT ROWID; default cache"},
+        "scope":"plaintext, raw bytes; warm OS cache; SQLite WAL/FULL, prepared statements, key schema reported separately; ojo sync_all per batch; unique inserts; SQLite does not retain retry IDs or verify a cryptographic value digest on every read"})
     );
     Ok(())
 }

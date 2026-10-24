@@ -127,22 +127,24 @@ fn every_torn_byte_recovers_only_whole_batches() {
 
 #[test]
 fn every_corrupted_byte_is_refused_without_repair() {
-    let scratch = Scratch::new();
-    let path = scratch.file();
-    let mut db = Database::create(&path, None).unwrap();
-    db.commit(id(1), &[put(b"a", b"first"), put(b"b", b"second")])
-        .unwrap();
-    drop(db);
-    let all = fs::read(&path).unwrap();
-    for at in 0..all.len() {
-        let mut corrupt = all.clone();
-        corrupt[at] ^= 0x80;
-        fs::write(&path, &corrupt).unwrap();
-        assert!(
-            Database::open(&path, None, true).is_err(),
-            "corruption at {at}"
-        );
-        assert_eq!(fs::read(&path).unwrap(), corrupt);
+    for key in [None, Some([42; 32])] {
+        let scratch = Scratch::new();
+        let path = scratch.file();
+        let mut db = Database::create(&path, key.as_ref()).unwrap();
+        db.commit(id(1), &[put(b"a", b"first"), put(b"b", b"second")])
+            .unwrap();
+        drop(db);
+        let all = fs::read(&path).unwrap();
+        for at in 0..all.len() {
+            let mut corrupt = all.clone();
+            corrupt[at] ^= 0x80;
+            fs::write(&path, &corrupt).unwrap();
+            assert!(
+                Database::open(&path, key.as_ref(), true).is_err(),
+                "corruption at {at}"
+            );
+            assert_eq!(fs::read(&path).unwrap(), corrupt);
+        }
     }
 }
 
@@ -363,4 +365,23 @@ fn separate_archive_preserves_history_encryption_retries_and_original() {
         assert_eq!(old, new);
         assert_eq!(fs::read_dir(&scratch.0).unwrap().count(), 2);
     }
+}
+
+#[cfg(feature = "archive")]
+#[test]
+fn archive_failure_removes_only_its_temporary_file() {
+    use std::io::{Seek, SeekFrom, Write};
+    let scratch = Scratch::new();
+    let path = scratch.file();
+    let destination = scratch.0.join("archive.ojo");
+    let mut db = Database::create(&path, None).unwrap();
+    db.commit(id(1), &[put(b"a", b"first")]).unwrap();
+    let mut external = fs::OpenOptions::new().write(true).open(&path).unwrap();
+    external.seek(SeekFrom::Start(64 + 96 + 16 + 1)).unwrap();
+    external.write_all(b"X").unwrap();
+    let original = fs::read(&path).unwrap();
+    assert!(db.archive_to(&destination).is_err());
+    assert_eq!(fs::read(&path).unwrap(), original);
+    assert!(!destination.exists());
+    assert_eq!(fs::read_dir(&scratch.0).unwrap().count(), 1);
 }

@@ -11,7 +11,9 @@ use ojo::{Change, Database};
 # let root = std::env::temp_dir().join(format!("ojo-example-{:032x}",u128::from_le_bytes(ojo::request_id()?)));
 # std::fs::create_dir(&root)?;
 let key = ojo::generate_key()?; // retain securely outside the database
-let mut db = Database::create(root.join("session.ojo"), Some(&key))?;
+let path = std::path::Path::new("session.ojo");
+# let path = root.join(path);
+let mut db = Database::create(&path, Some(&key))?;
 let request = ojo::request_id()?; // retain this ID until success is certain
 db.commit(request, &[Change {
     key: b"2026-10-24T12:00:00Z/0001",
@@ -46,8 +48,9 @@ agent integration runs inside this library.
   directly to the selected value and verify its SHA-256 against the trusted
   in-memory index built at commit/open. They detect changes to that value;
   unrelated bytes are checked on scan/reopen. Encrypted/compressed point reads
-  verify and decode the containing transaction. Scans expose all versions in commit/operation order. Tombstones
-  hide current values; they do not physically erase earlier content.
+  verify and decode the containing transaction. Scans expose all versions in
+  commit/operation order. Tombstones hide current values; they do not physically
+  erase earlier content.
 - Optional per-file XChaCha20-Poly1305 encryption authenticates the headers and
   body, with a fresh random nonce per transaction. Keys are caller-supplied;
   missing/wrong keys and plaintext downgrades are refused.
@@ -96,5 +99,9 @@ values and transaction sizes, verifies all returned bytes, and reports commit
 latencies, throughput, warm reads, scan and reopen separately. SQLite uses WAL,
 FULL synchronous, a prepared statement and a WITHOUT ROWID key table. It lacks
 Ojo's persistent retry IDs and per-read value digest, so the operations
-have matched durability but different validation/history contracts. Use persistent
+have matched durability but different validation/history contracts. The
+`sqlite-rowid` arm also measures an integer primary key and a 64 MiB page cache
+for applications that can use ordinal keys. Use persistent
 disk; tmpfs numbers cannot establish durable device performance.
+
+See the [measured results and limitations](../../docs/benchmarks/OJO_MINIMAL_ACID.md).
