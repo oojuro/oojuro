@@ -89,8 +89,9 @@ scale cost to measure; no SLA or hosted latency result follows from this API.
 `Append { request, inputs }` entries. Caller order assigns new request sequences,
 IDs and monotonic engine clocks. Repeated identities retain their first exact
 receipt, even when retries are reordered or regrouped. Changed inputs conflict.
-Validation, conflict and capacity checks for the entire submitted group finish
-before any new authority append.
+Input validation, per-request conflicts and authority admission bounds for the
+entire submitted group finish before any new authority append. Derived index
+publication can still fail afterward, as described above.
 
 A group accepts at most 1000 requests, 1000 submitted input rows (including
 retries), and 32 MiB total new encoded authority batches. It adds no collection
@@ -108,3 +109,20 @@ compatibility with `RecordLog`, and SIGKILL across the actual grouped Store,
 directory, visibility, segment and searchable descriptor publication. Direct and
 grouped performance must be reported separately. A grouped native run is not an
 equivalent comparison to SQLite/JSONL runs that sync every request separately.
+
+## Request-local search profiling
+
+`Index::search_profiled` returns the same search result plus phase times and work
+counts for that one authorized request. It separates the term-frequency pass,
+visible-term presence, statistics, scoring and selected-original reads. Byte
+counts describe encrypted segment/visibility bytes processed, not physical disk
+I/O. Corpus row visits, fallback authority visits and logical original requests
+are distinct; original requests can decode an entire authority batch internally.
+The ordinary search entrypoint does not collect phase clocks.
+
+The `profile_record_search` example opens an existing synthetic `profile_disk`
+fixture and probes broad words, a common compound, a missing term, a half-history
+time bound, a typed source filter and a rare literal. It checks no new latency
+contract. Broad phrase verification and cold-open work remain separate costs;
+a rare-literal probe cannot qualify them. Phase profiles must be measured on an
+available benchmark lane before choosing a larger-scale optimization.

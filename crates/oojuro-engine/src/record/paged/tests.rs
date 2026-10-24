@@ -1573,7 +1573,11 @@ fn disk_visibility_metadata_matches_native_clocks_filters_versions_and_literal_b
         .map(|(text, as_of, filter)| {
             let mut q = query(text, *as_of);
             q.filter = filter.clone();
-            signature(index.search(writer.reader().unwrap(), &q).unwrap())
+            let expected = signature(index.search(writer.reader().unwrap(), &q).unwrap());
+            let (profiled, work) = index.search_profiled(writer.reader().unwrap(), &q).unwrap();
+            assert_eq!(signature(profiled), expected);
+            assert_eq!(work.fallback_authority_rows, 0);
+            expected
         })
         .collect::<Vec<_>>();
     index.merge(writer.reader().unwrap()).unwrap();
