@@ -652,3 +652,30 @@ fn rescore_rechecks_lifecycle_before_each_callback() {
     assert_eq!(first.dispatches.load(Ordering::SeqCst), 1);
     assert_eq!(second.dispatches.load(Ordering::SeqCst), 0);
 }
+
+#[test]
+fn ranked_exact_wire_budget_counts_receipts_deltas_and_escaped_originals() {
+    let large = format!("needle {} λ🦀", "\0\"\\\n".repeat(32_768));
+    let f = Fixture::new(&[(&large, true, Some("large"), 1), ("needle small", true, None, 2)]);
+    let view = f.view();
+    let index = Index::rebuild(&f.log).unwrap();
+    let plugin = Plugin::new("rescore", Mode::Delta(0.5));
+    let table = f.table(&view, "rescore");
+    let stages = [stage(Hook::Rescore, &plugin, Some(&table))];
+    for enabled in [false, true] {
+        let p = Pipeline { enabled, ..pipeline(&stages) };
+        let mut q = query("needle", 10);
+        q.max_bytes = MAX_OUTPUT_BYTES;
+        let full = index.search_ranked(&f.log, &view, &q, &f.guard, &p).unwrap();
+        let bytes = serde_json::to_vec(&full).unwrap();
+        assert!(bytes.len() > 300_000 && full.hits.len() == 2);
+        assert!(!full.receipt.stages.is_empty());
+        assert!(full.hits.iter().all(|h| h.deltas.len() == 1));
+        q.max_bytes = bytes.len();
+        assert_eq!(serde_json::to_vec(&index.search_ranked(&f.log, &view, &q, &f.guard, &p).unwrap()).unwrap(), bytes);
+        q.max_bytes -= 1;
+        assert!(matches!(index.search_ranked(&f.log, &view, &q, &f.guard, &p), Err(Error::Bounds)));
+        q.max_bytes = bytes.len() + 1;
+        assert_eq!(serde_json::to_vec(&index.search_ranked(&f.log, &view, &q, &f.guard, &p).unwrap()).unwrap(), bytes);
+    }
+}
