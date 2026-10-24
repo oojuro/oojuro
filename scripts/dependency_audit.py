@@ -122,8 +122,14 @@ def main():
         parser.error("--check/--engine-only require the standard policy scopes; omit --scope")
     scopes = ["default", "rank", "store", "engine"] if args.engine_only else (args.scope or SCOPES)
     ROOT = args.root.resolve()
-    metadata = json.loads(cargo("metadata", "--locked", "--format-version", "1",
-                               "--filter-platform", TARGET, *( ["--no-deps"] if args.engine_only else [])))
+    metadata_args = ["metadata", "--locked", "--format-version", "1"]
+    if args.engine_only:
+        metadata_args.append("--no-deps")
+    elif "store-tools" in scopes:
+        metadata_args += ["--features", "oojuro-store/baselines,oojuro-store/codecs"]
+    # Inventory the actual selected tool features and all-platform engine graph;
+    # --all-features would incorrectly include unrelated optional benchmark arms.
+    metadata = json.loads(cargo(*metadata_args))
     workspace_ids = set(metadata["workspace_members"])
     WORKSPACE_NAMES = {p["name"] for p in metadata["packages"] if p["id"] in workspace_ids}
     report = {"format": 1, "target": TARGET,

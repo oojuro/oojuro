@@ -33,7 +33,9 @@ The larger transitive set is not permission to add new direct dependencies.
 `--engine-only --check` is a policy-only CI graph check: metadata uses
 `--no-deps`, so its external package inventory is intentionally omitted and
 reported as such. The full audit records the selected external metadata inventory
-and refuses an unexplained coverage gap. Current core/workspace dependencies
+and refuses an unexplained coverage gap. Its metadata includes requested Store
+comparison features and all platform predicates, matching the graph union rather
+than silently omitting optional codecs or Windows/WASI support. Current core/workspace dependencies
 have no Git-sourced external packages; source-qualified graph keys preserve Git
 identity, and any unsupported inventory mapping must fail rather than disappear.
 
