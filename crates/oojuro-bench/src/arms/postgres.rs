@@ -186,7 +186,9 @@ pub struct PostgresArm {
 impl PostgresArm {
     /// Separate comparison arm: frequency ranking is not cover-density parity.
     pub fn frequency() -> Self {
-        Self { frequency: true, ..Self::default() }
+        let mut arm = Self::default();
+        arm.frequency = true;
+        arm
     }
     fn search_sql(&self) -> String {
         if self.frequency {
