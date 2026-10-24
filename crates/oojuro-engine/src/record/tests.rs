@@ -1105,3 +1105,64 @@ fn counted_json_preserves_exact_escaped_wire_bounds() {
         assert_eq!(json_size(&value, expected.len()).unwrap(), expected.len());
     }
 }
+
+#[test]
+fn exact_id_lookup_matches_snapshot_scan_with_nondefault_ids_and_two_clocks() {
+    let f = Fixture::new();
+    let mut log = f.clock(100);
+    log.append("first", &[input("first", None, 10), input("second", None, 20)])
+        .unwrap();
+    let old = view(&log);
+    log.append("next", &[input("third", None, 30), input("fourth", None, 40)])
+        .unwrap();
+    let cases = [
+        AsOf::default(),
+        AsOf { from: 20, valid_at: 30, ..AsOf::default() },
+        AsOf { known_at: 100, ..AsOf::default() },
+        AsOf { known_at: 99, ..AsOf::default() },
+    ];
+    for selected in std::iter::once(old).chain(cases.into_iter().map(|as_of| {
+        View::open(&log, scope(), as_of).unwrap()
+    })) {
+        let end = selected.watermark().records as usize;
+        let at = selected.as_of();
+        for id in [0, 8, 9, 10, 11, 12, 13, u64::MAX] {
+            let expected = log.records[..end]
+                .iter()
+                .find(|row| row.id == id && row.input.valid_at >= at.from
+                    && row.input.valid_at <= at.valid_at && row.recorded_at <= at.known_at)
+                .map(|row| row.record(WRITER, &identity().adapter));
+            assert_eq!(selected.get_id(&log, id, 4096).unwrap(), expected);
+        }
+    }
+    let selected = view(&log);
+    let row = selected.get_id(&log, 12, 4096).unwrap();
+    let bytes = serde_json::to_vec(&row).unwrap().len();
+    assert_eq!(selected.get_id(&log, 12, bytes).unwrap(), row);
+    assert_eq!(selected.get_id(&log, 12, bytes - 1), Err(Error::Bounds));
+    let other = Fixture::new();
+    assert!(selected.get_id(&other.clock(100), 12, 4096).is_err());
+}
+
+#[test]
+fn exact_id_lookup_preserves_large_header_id_and_reopen() {
+    let f = Fixture::new();
+    let identity = Identity { first_id: u64::MAX - 4, ..identity() };
+    let mut log = RecordLog::open(&f.root.join("authority"), &KEY, identity.clone()).unwrap();
+    let ack = log.append("large-id", &[input("large first battery", None, 10),
+        input("large second battery", None, 20)]).unwrap();
+    let originals: Vec<_> = ack.ids.iter().map(|id| view(&log).get_id(&log, *id, 4096).unwrap()).collect();
+    let index = Index::rebuild(&log).unwrap();
+    let searched = index.search(&log, &query("battery", AsOf::default())).unwrap();
+    for hit in searched.hits {
+        assert_eq!(Some(hit.record.clone()), originals.iter().flatten().find(|row| row.id == hit.record.id).cloned());
+    }
+    drop(log);
+    let log = RecordLog::open(&f.root.join("authority"), &KEY, identity).unwrap();
+    for (id, original) in ack.ids.iter().zip(originals) {
+        assert_eq!(view(&log).get_id(&log, *id, 4096).unwrap(), original);
+    }
+    for absent in [0, u64::MAX - 5, u64::MAX - 2, u64::MAX] {
+        assert!(view(&log).get_id(&log, absent, 4096).unwrap().is_none());
+    }
+}

@@ -1,7 +1,6 @@
 //! Version visibility precedes every scorer stage; legacy arithmetic remains shared.
 use super::*;
 use crate::lexical::{self, RecordVisibility};
-use std::collections::BTreeMap;
 pub struct Query<'a> {
     pub scope: Scope<'a>,
     pub as_of: AsOf,
@@ -109,14 +108,14 @@ impl Index {
                 lexical::Error::Invalid => Error::Bounds,
                 _ => Error::Unavailable,
             })?;
-        let rows: BTreeMap<_, _> = log.records.iter().map(|r| (r.id, r)).collect();
         let hits = hits
             .into_iter()
             .map(|h| {
                 Ok(Hit {
-                    record: rows
-                        .get(&h.id)
+                    record: log
+                        .record_by_id(h.id)
                         .ok_or(Error::Authority)?
+                        .1
                         .record(query.scope.writer, &identity.adapter),
                     bits: h.bits,
                     continued: h.continued,
