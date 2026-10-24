@@ -196,7 +196,7 @@ pub(crate) fn decode_payload<F: Frames + ?Sized>(fs: &F, payload: &[u8], head: &
             };
             let dctx = &mut owned;
             dctx.reset(zstd_safe::ResetDirective::SessionOnly).map_err(zerr)?;
-            let mut out = vec![0u8; meta_len];
+            let mut out = vec![0u8; if need.is_none() { raw_len } else { meta_len }];
             let mut input = zstd_safe::InBuffer::around(packed);
             let mut pos = 0;
             let mut fill = |target: usize, out: &mut Vec<u8>, pos: &mut usize, input: &mut zstd_safe::InBuffer| -> Result<()> {
