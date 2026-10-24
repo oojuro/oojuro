@@ -96,3 +96,11 @@ joined test of this main-based composition. Real owner instrumentation/history,
 Temporal peer integration, hosted/AWS recovery, performance and package release
 remain separate gates. Actions remains disabled pending owner review; no remote
 CI result, main merge, hosted pin change, release or deployment is claimed.
+
+Actual local compiler selection is separately verified: the task-local
+`RUSTUP_HOME` and `cargo +1.99.1` commands selected rustc 1.99.1 commit
+58cf8f9c35b355199727627d07ae34a4e2846d67. The target's existing `.rustc_info.json`
+records that compiler; `RUSTC`, wrapper and toolchain override variables were
+unset. The receipt includes resolved paths, verbose command provenance and the
+raw proof hash. This docs-only proof collection reran no gate and is distinct
+from performance fixtures using system stable 1.99.0.

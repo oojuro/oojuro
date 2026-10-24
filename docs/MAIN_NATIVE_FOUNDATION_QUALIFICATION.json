@@ -152,5 +152,29 @@
     "No SDK JavaScript/type/package qualification claimed.",
     "No Actions enablement or administrative/rules change.",
     "No main merge, binary/package release, deployment or hosted pin change."
-  ]
+  ],
+  "actual_toolchain_provenance": {
+    "selection": "cargo +1.99.1; task-local RUSTUP_HOME, not a PATH-prepended compiler assumption",
+    "rustup_home": "<workspace>/work/public-ci-rustup",
+    "resolved_rustc": "<workspace>/work/public-ci-rustup/toolchains/1.99.1-x86_64-unknown-linux-gnu/bin/rustc",
+    "rustc_release": "1.99.1",
+    "rustc_commit": "58cf8f9c35b355199727627d07ae34a4e2846d67",
+    "cargo_release": "1.99.1",
+    "cargo_commit": "5f94df4789f005f9a352888e8355ffc645b7ed0e",
+    "overrides": {
+      "RUSTC": null,
+      "RUSTC_WRAPPER": null,
+      "RUSTUP_TOOLCHAIN": null,
+      "CARGO_BUILD_RUSTC": null
+    },
+    "cached_build_evidence": "work/public-ci-target/.rustc_info.json records rustc1.99.1 and same compiler commit",
+    "raw_proof": "work/main-client-sdk-toolchain-proof.json",
+    "raw_proof_sha256": "33e2136c246261aac12f6cde675da696dcb35e48a90fe593020914704855e42f",
+    "proof_commands": [
+      "RUSTUP_HOME=<task-local> rustc +1.99.1 --version --verbose",
+      "RUSTUP_HOME=<task-local> cargo +1.99.1 --version --verbose",
+      "RUSTUP_HOME=<task-local> rustup which --toolchain 1.99.1 rustc"
+    ],
+    "no_gate_rerun": true
+  }
 }

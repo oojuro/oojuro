@@ -109,3 +109,10 @@ Repository Actions remains disabled pending owner review. No admin setting, bran
 rule, token permission, required-review count, package/release job or deployment is
 changed. Public source topic branches/draft PRs are review artifacts; merging main,
 publishing binaries/packages and deploying still require the owner's approval.
+
+The local 1.99.1 selection is verified by the build target's cached `.rustc_info.json`
+and verbose compiler/Cargo output, not inferred from PATH or the workflow pin.
+The receipt records compiler commit 58cf8f9c35b355199727627d07ae34a4e2846d67,
+task-local `RUSTUP_HOME`/resolved binary path and absent compiler overrides. This
+proof was read without rerunning any gate; performance work using a separate
+system stable 1.99.0 environment is not this qualification.
