@@ -1186,6 +1186,8 @@ fn disk_writer_sigkill_actual_append_directory_and_index_publication_recovers_re
         "directory:RootTemp",
         "directory:RootPublished",
         "directory:RootDurable",
+        "index:VisibilityTemp",
+        "index:VisibilityPublished",
         "index:SegmentTemp",
         "index:SegmentPublished",
         "index:DirectoryPagesDurable",
@@ -1430,5 +1432,146 @@ fn disk_writer_evicted_births_old_prefix_and_copied_origin_fork_are_checked() {
             .unwrap()
             .text,
         "alpha original"
+    );
+}
+
+#[test]
+fn disk_visibility_metadata_matches_native_clocks_filters_versions_and_literal_bits() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 1000);
+    let mut index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    for start in (0..120).step_by(5) {
+        let inputs = (start..start + 5)
+            .map(|n| {
+                let mut value = row(
+                    &format!("alpha beta foo_bar literal group{}", n % 4),
+                    if n % 3 == 0 { Some("revision") } else { None },
+                    (n % 71) as i64 - 5,
+                );
+                value.agent_id = format!("source{}", n % 3);
+                value.kind = if n % 2 == 0 {
+                    Kind::Input
+                } else {
+                    Kind::ToolResult
+                };
+                value.tool = Some(format!("tool{}", n % 2));
+                value.status = Some(if n % 5 == 0 {
+                    Status::Error
+                } else {
+                    Status::Ok
+                });
+                value.indexed = n % 7 != 0;
+                value
+            })
+            .collect::<Vec<_>>();
+        writer
+            .append_indexed(&mut index, &format!("batch-{start}"), &inputs)
+            .unwrap();
+    }
+    let mut queries = Vec::new();
+    for text in [
+        "alpha",
+        "foo_bar",
+        "foo_missing",
+        "\"alpha beta\"",
+        "\"literal group3\"",
+        "key:revision",
+        "",
+        "absent",
+    ] {
+        for clock in [
+            AsOf::default(),
+            AsOf {
+                valid_at: 25,
+                ..AsOf::default()
+            },
+            AsOf {
+                known_at: 150,
+                ..AsOf::default()
+            },
+            AsOf {
+                from: 15,
+                valid_at: 40,
+                known_at: 180,
+            },
+        ] {
+            for filter in [
+                Filter::default(),
+                Filter {
+                    agent_id: Some("source1".into()),
+                    ..Filter::default()
+                },
+                Filter {
+                    kind: Some(Kind::ToolResult),
+                    tool: Some("tool1".into()),
+                    status: Some(Status::Ok),
+                    agent_id: None,
+                },
+            ] {
+                queries.push((text.to_owned(), clock, filter));
+            }
+        }
+    }
+    let expected = queries
+        .iter()
+        .map(|(text, as_of, filter)| {
+            let mut q = query(text, *as_of);
+            q.filter = filter.clone();
+            signature(index.search(writer.reader().unwrap(), &q).unwrap())
+        })
+        .collect::<Vec<_>>();
+    index.merge(writer.reader().unwrap()).unwrap();
+    for (at, (text, as_of, filter)) in queries.iter().enumerate() {
+        let mut q = query(text, *as_of);
+        q.filter = filter.clone();
+        assert_eq!(
+            signature(index.search(writer.reader().unwrap(), &q).unwrap()),
+            expected[at],
+            "after merge {text}"
+        );
+    }
+    drop(index);
+    drop(writer);
+    let log = f.log();
+    let native = super::super::Index::rebuild(&log).unwrap();
+    for (at, (text, as_of, filter)) in queries.iter().enumerate() {
+        let mut q = query(text, *as_of);
+        q.filter = filter.clone();
+        assert_eq!(
+            signature(native.search(&log, &q).unwrap()),
+            expected[at],
+            "native {text}"
+        );
+    }
+    drop(native);
+    drop(log);
+    let writer = disk_writer(&f, 1000);
+    let index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    assert_eq!(index.opened(), Opened::Loaded);
+    let page = fs::read_dir(f.root.join("disk-index"))
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .find(|p| p.file_name().unwrap().to_str().unwrap().starts_with("vis-"))
+        .unwrap();
+    let sealed = fs::read(&page).unwrap();
+    let mut corrupted = sealed.clone();
+    let at = corrupted.len() / 2;
+    corrupted[at] ^= 1;
+    fs::write(&page, corrupted).unwrap();
+    assert!(
+        index
+            .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+            .is_err()
+    );
+    drop(index);
+    let index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    assert_eq!(index.opened(), Opened::Rebuilt);
+    assert_eq!(
+        signature(
+            index
+                .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+                .unwrap()
+        ),
+        expected[0]
     );
 }

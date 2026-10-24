@@ -22,6 +22,12 @@ struct Roots {
     record: Root,
     key_version: Root,
 }
+// The complete source Batch was verified before exposing this Reader. A birth
+// proof needs only its authenticated watermark, not a second payload population.
+#[derive(Deserialize)]
+struct BirthHeader {
+    watermark: Watermark,
+}
 pub(super) struct Directory {
     path: PathBuf,
     roots: Roots,
@@ -280,8 +286,9 @@ impl Authority for Reader {
             if encoded.len() > MAX_BATCH_BYTES {
                 return Err(Error::Bounds);
             }
-            let batch: Batch = serde_json::from_slice(&encoded).map_err(|_| Error::Authority)?;
-            self.check(&batch.watermark, sequence, records, digest)?;
+            let header: BirthHeader =
+                serde_json::from_slice(&encoded).map_err(|_| Error::Authority)?;
+            self.check(&header.watermark, sequence, records, digest)?;
         }
         if records > self.tip.records {
             return Err(Error::Authority);

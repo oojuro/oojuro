@@ -291,7 +291,35 @@ impl Index {
             bytes: bytes.len(),
             decoded,
             digest: [0; 32],
+            visibility: None,
         };
+        if reader.capacity != DiskLimits::LEGACY {
+            let (metadata, sealed) = visibility::build(reader, &draft.manifest, &reference)?;
+            draft.bytes = draft
+                .bytes
+                .checked_add(metadata.bytes)
+                .ok_or(Error::Bounds)?;
+            draft.decoded = draft
+                .decoded
+                .checked_add(metadata.decoded)
+                .ok_or(Error::Bounds)?;
+            if draft.bytes > reader.capacity.index_bytes
+                || draft.decoded > reader.capacity.index_bytes
+            {
+                return Err(Error::Bounds);
+            }
+            let temporary = self.directory.join(format!("vis-tmp-{}.idx", reference.id));
+            write_new(&temporary, &sealed)?;
+            self.phase(Phase::VisibilityTemp);
+            fs::rename(
+                temporary,
+                self.directory.join(format!("vis-{}.idx", reference.id)),
+            )
+            .map_err(|_| Error::Unavailable)?;
+            directory_sync(&self.directory)?;
+            self.phase(Phase::VisibilityPublished);
+            reference.visibility = Some(metadata);
+        }
         let sealed = reader.seal(&segment_aad(&draft.manifest, &reference)?, bytes);
         reference.digest = *blake3::hash(&sealed).as_bytes();
         let tmp = self.directory.join(format!("tmp-{}.idx", reference.id));
@@ -313,7 +341,11 @@ impl Index {
         let root = draft.sink.finish()?;
         self.phase(Phase::DirectoryPagesDurable);
         let descriptor = Descriptor {
-            format: 1,
+            format: if reader.capacity == DiskLimits::LEGACY {
+                1
+            } else {
+                2
+            },
             origin: draft.manifest.origin,
             identity: draft.manifest.identity,
             prefix: draft.manifest.prefix.clone(),
@@ -458,7 +490,9 @@ impl Index {
             }
             let keep = if let Some(id) = name
                 .strip_prefix("seg-")
+                .or_else(|| name.strip_prefix("vis-"))
                 .and_then(|n| n.strip_suffix(".idx"))
+                .filter(|id| id_valid(id))
             {
                 let mut key = vec![1];
                 key.extend(decode_hex(id)?);
@@ -507,7 +541,7 @@ fn load_descriptor(reader: &Reader, path: &Path) -> Result<Descriptor> {
 }
 fn validate_descriptor_header(reader: &Reader, d: &Descriptor) -> Result<()> {
     let tip = reader.watermark()?;
-    if d.format != 1
+    if !matches!(d.format, 1 | 2)
         || d.origin != tip.origin
         || d.identity != tip.identity
         || d.rows > reader.capacity.records
@@ -552,8 +586,10 @@ fn validate_descriptor(reader: &Reader, path: &Path, d: &Descriptor) -> Result<(
             return Err(Error::Authority);
         }
         rows = rows.checked_add(r.rows as usize).ok_or(Error::Bounds)?;
-        bytes = bytes.checked_add(r.bytes).ok_or(Error::Bounds)?;
-        decoded = decoded.checked_add(r.decoded).ok_or(Error::Bounds)?;
+        bytes = bytes.checked_add(r.total_bytes()?).ok_or(Error::Bounds)?;
+        decoded = decoded
+            .checked_add(r.total_decoded()?)
+            .ok_or(Error::Bounds)?;
         count += 1;
         if rows > d.rows
             || rows > reader.validate(&r.prefix)?
@@ -564,6 +600,7 @@ fn validate_descriptor(reader: &Reader, path: &Path, d: &Descriptor) -> Result<(
         }
         let segment = load_segment(reader, path, &m, r)?;
         check_original(reader, &d.prefix, &segment)?;
+        visibility::check(reader, path, &m, r)?;
         Ok(true)
     })?;
     if rows != d.rows || bytes != d.bytes || decoded != d.decoded || count as u64 != d.refs.count {
@@ -648,6 +685,8 @@ fn known(name: &str) -> bool {
     }
     for (a, b) in [
         ("seg-", ".idx"),
+        ("vis-tmp-", ".idx"),
+        ("vis-", ".idx"),
         ("tmp-", ".idx"),
         ("disk-", ".tmp"),
         ("queue-", ".bin"),

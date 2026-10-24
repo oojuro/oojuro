@@ -1,4 +1,5 @@
 mod disk;
+mod visibility;
 use super::*;
 use crate::lexical::{self, paged, record_cache as projection, segments::codec};
 use oojuro_store::crypto::{SEAL_OVERHEAD, random_key};
@@ -30,6 +31,20 @@ struct Reference {
     bytes: usize,
     decoded: usize,
     digest: [u8; 32],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    visibility: Option<visibility::Reference>,
+}
+impl Reference {
+    fn total_bytes(&self) -> Result<usize> {
+        self.bytes
+            .checked_add(self.visibility.as_ref().map_or(0, |v| v.bytes))
+            .ok_or(Error::Bounds)
+    }
+    fn total_decoded(&self) -> Result<usize> {
+        self.decoded
+            .checked_add(self.visibility.as_ref().map_or(0, |v| v.decoded))
+            .ok_or(Error::Bounds)
+    }
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
@@ -62,6 +77,8 @@ pub struct Index {
 enum Phase {
     SegmentTemp,
     SegmentPublished,
+    VisibilityTemp,
+    VisibilityPublished,
     DirectoryPagesDurable,
     ManifestTemp,
     ManifestPublished,
@@ -291,6 +308,7 @@ impl Index {
             bytes: bytes.len(),
             decoded,
             digest: [0; 32],
+            visibility: None,
         };
         let sealed = reader.seal(&segment_aad(m, &r)?, bytes);
         r.digest = *blake3::hash(&sealed).as_bytes();
@@ -449,23 +467,24 @@ impl Index {
         }
         let mut out = Vec::new();
         let mut bytes = 0usize;
-        for h in hits {
-            let record = reader
-                .assigned(snapshot.watermark(), h.id)?
-                .ok_or(Error::Authority)?
-                .record(&reader.identity().writer, &reader.identity().adapter);
-            bytes = bytes
-                .checked_add(json(&record, query.max_bytes)?.len())
-                .ok_or(Error::Bounds)?;
-            if bytes > query.max_bytes {
-                return Err(Error::Bounds);
+        for selected in hits.chunks(1000) {
+            let ids: Vec<_> = selected.iter().map(|h| h.id).collect();
+            let originals = reader.get_ids(snapshot, &ids, query.max_bytes)?;
+            for (h, original) in selected.iter().zip(originals) {
+                let record = original.ok_or(Error::Authority)?;
+                bytes = bytes
+                    .checked_add(json(&record, query.max_bytes)?.len())
+                    .ok_or(Error::Bounds)?;
+                if bytes > query.max_bytes {
+                    return Err(Error::Bounds);
+                }
+                out.push(Hit {
+                    record,
+                    bits: h.bits,
+                    continued: h.continued,
+                    row: h.row,
+                });
             }
-            out.push(Hit {
-                record,
-                bits: h.bits,
-                continued: h.continued,
-                row: h.row,
-            });
         }
         let result = Search {
             watermark: snapshot.watermark().clone(),
@@ -515,6 +534,7 @@ impl Index {
             snapshot,
             &query.filter,
             &raw,
+            false,
             |_, _, tf, visible| {
                 if visible {
                     for ((term, _), n) in raw.iter().zip(tf) {
@@ -533,6 +553,7 @@ impl Index {
             snapshot,
             &query.filter,
             &plan.terms,
+            lexical_literal(query.text),
             |r, row, tf, visible| {
                 stats
                     .visit(
@@ -554,6 +575,7 @@ impl Index {
             snapshot,
             &query.filter,
             &model.plan.terms,
+            lexical_literal(query.text),
             |r, row, tf, visible| {
                 if model
                     .plan
@@ -576,6 +598,7 @@ impl Index {
         snapshot: &Snapshot,
         filter: &Filter,
         terms: &[(String, usize)],
+        need_text: bool,
         mut visit: impl FnMut(&Assigned, &codec::Row, &[u32], bool) -> Result<()>,
     ) -> Result<()> {
         let bound = reader.snapshot(snapshot)?;
@@ -586,13 +609,8 @@ impl Index {
             }
             let segment = load_segment(reader, &self.directory, &self.manifest, reference)?;
             let end = (start + segment.rows.len()).min(bound);
-            let mut local = 0usize;
-            reader.scan(snapshot.watermark(), start, end, |r| {
-                let row = segment.rows.get(local).ok_or(Error::Authority)?;
-                if row.id != r.id {
-                    return Err(Error::Authority);
-                }
-                let tf: Vec<_> = terms
+            let tf_at = |local: usize| -> Vec<u32> {
+                terms
                     .iter()
                     .map(|(t, _)| {
                         segment
@@ -605,12 +623,44 @@ impl Index {
                             })
                             .unwrap_or(0)
                     })
-                    .collect();
-                let visible = reader.visible(snapshot, r, filter)?;
-                visit(r, row, &tf, visible)?;
-                local += 1;
-                Ok(true)
-            })?;
+                    .collect()
+            };
+            if let Some(metadata) =
+                visibility::load(reader, &self.directory, &self.manifest, reference)?
+            {
+                for (local, meta) in metadata.rows.into_iter().take(end - start).enumerate() {
+                    let row = segment.rows.get(local).ok_or(Error::Authority)?;
+                    let mut assigned = meta.assigned();
+                    if row.id != assigned.id {
+                        return Err(Error::Authority);
+                    }
+                    let tf = tf_at(local);
+                    let visible = reader.visible(snapshot, &assigned, filter)?;
+                    if need_text
+                        && visible
+                        && assigned.input.indexed
+                        && (terms.is_empty() || tf.iter().any(|n| *n > 0))
+                    {
+                        assigned = reader
+                            .assigned(snapshot.watermark(), assigned.id)?
+                            .ok_or(Error::Authority)?;
+                    }
+                    visit(&assigned, row, &tf, visible)?;
+                }
+            } else {
+                let mut local = 0usize;
+                reader.scan(snapshot.watermark(), start, end, |r| {
+                    let row = segment.rows.get(local).ok_or(Error::Authority)?;
+                    if row.id != r.id {
+                        return Err(Error::Authority);
+                    }
+                    let tf = tf_at(local);
+                    let visible = reader.visible(snapshot, r, filter)?;
+                    visit(r, row, &tf, visible)?;
+                    local += 1;
+                    Ok(true)
+                })?;
+            }
             Ok(true)
         })?;
         Ok(())
