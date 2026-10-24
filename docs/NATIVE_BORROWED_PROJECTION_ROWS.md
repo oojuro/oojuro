@@ -1,0 +1,15 @@
+# Borrowed fresh native rows into the streaming projection
+
+Source-only descendant of qualified shared refresh `9190cb7` (optimized normal engine/libtest; 12 passing projection checks, one preexisting ignored measurement). This caller slice is not compiled or tested yet. No performance result, automatic CLI search gain, hosted gain or authority-cache claim.
+
+`RecordRef` borrows every Record field from an immutable log; its fields serialize in the owned Record order. `BorrowedPage` preserves Page's exact field order, watermark, limits and protected continuation format. Both owned and borrowed pages now use the SAME existing selection, time/key/filter order, scope/healthy/prefix validation and exact JSON byte/cursor-budget code. Owned pages clone only their final chosen records. The original `Assigned::record` implementation remains an independent full-field test oracle. No stateless sorting/traversal algorithm is changed or retained between pages.
+
+Every borrowed page/continuation freshly validates scope and the pinned prefix. Source mutation is excluded while a returned immutable log borrow is live. This is the existing local View contract, not proof of remote current authority or response-EOF authorization.
+
+The native benchmark search now validates all imports from borrowed originals, including losing/future rows. It checks imported timestamp units, ID/key/known clock and the string-valued metadata map before applying imported cutoffs. Valid metadata needs no deserialization; malformed metadata follows the previous serde rejection. Imported reported clocks never become native assigned clocks. Winners keep the same key-or-ID fallback and `(valid, reported known, native ID)` order, then feed bounded RowRefs to the already-reviewed consuming refresh. Only the first build owns all winning rows; subsequent refresh owns only changed/new originals. Original get/range and public Doc contracts remain owned.
+
+The previous second fresh View/binding and all winning unit conversions before taking the old projection are preserved. There is no retained second plaintext cache. Temporary winner and row-reference collections are bounded by the existing 100k-record/128MiB-state limits, with additional metadata allocation; no hard RSS bound is inferred.
+
+Three new source tests cover >1000-row full fields, actual text/attrs pointer borrowing, ordering/multirow byte truncation/cross-cursor pinned snapshots, large escaped exact JSON budgets/scope/known/fork refusals, and malformed losing/time-hidden import rejection. The existing cross-page import/winner test now also compares exact ranked IDs and score bits with an independent old owned-Record/Doc plus fresh-projection reference.
+
+Hosted body-streaming integration remains separate: the actual hosted body verifier must still authenticate every selected fresh body and preserve current grant/root/generation/witness/EOF checks. Actual CLI record search uses `record::Index`, not this benchmark projection. Owned range/export allocation changes are source deductions only, without a measured gain.

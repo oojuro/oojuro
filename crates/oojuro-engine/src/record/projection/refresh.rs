@@ -42,7 +42,7 @@ impl RowRef<'_> {
             && status == other.status && agent_id == other.agent_id
             && indexed == other.indexed
     }
-    fn to_owned(self) -> Row {
+    pub fn into_owned(self) -> Row {
         let Self {
             id, key, text, valid_at, reported_recorded_at, kind, tool, status,
             agent_id, indexed,
@@ -95,7 +95,7 @@ impl Refresh {
         match self.check(row)? {
             Some(at) => self.order.push(Pending::Matched(at)),
             None => {
-                self.fresh.push(row.to_owned());
+                self.fresh.push(row.into_owned());
                 self.order.push(Pending::Fresh);
             }
         }

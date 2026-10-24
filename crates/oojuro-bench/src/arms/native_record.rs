@@ -5,7 +5,7 @@ use crate::{Arm, ArmInfo, Doc, Hit, Result, SearchReq, protocol::PROTOCOL};
 use oojuro_engine::{
     capture_log::Identity,
     record::{
-        self, AsOf, Filter, Input, Kind, Limits, Record, RecordLog, Scope, Versions, View,
+        self, AsOf, Filter, Input, Kind, Limits, Record, RecordRef, RecordLog, Scope, Versions, View,
         projection,
     },
 };
@@ -67,6 +67,34 @@ fn document(mut row: Record) -> Result<Doc> {
     })
 }
 
+#[derive(Clone, Copy)]
+struct Imported<'a> {
+    id: &'a str,
+    key: &'a str,
+    text: &'a str,
+    valid_at: i64,
+    recorded_at: i64,
+}
+impl Imported<'_> {
+    fn key(&self) -> &str {
+        if self.key.is_empty() { self.id } else { self.key }
+    }
+}
+fn imported<'a>(row: RecordRef<'a>) -> Result<Imported<'a>> {
+    if row.valid_at % 1_000_000 != 0 {
+        return Err("invalid imported timestamp units".into());
+    }
+    let id = row.attrs.get("benchmark_id").and_then(|v| v.as_str()).ok_or("missing imported ID")?;
+    let key = row.attrs.get("benchmark_key").and_then(|v| v.as_str()).ok_or("missing imported key")?;
+    let recorded_at = row.attrs.get("benchmark_known_at").and_then(|v| v.as_i64()).ok_or("missing imported clock")?;
+    let meta = row.attrs.get("benchmark_meta").ok_or("missing imported metadata")?;
+    if !meta.as_object().is_some_and(|values| values.values().all(|value| value.is_string())) {
+        // Preserve the owned path's rejection/diagnostic for malformed imports.
+        let _: BTreeMap<String, String> = serde_json::from_value(meta.clone())?;
+    }
+    Ok(Imported { id, key, text: row.text, valid_at: row.valid_at / 1_000_000, recorded_at })
+}
+
 impl NativeRecordArm {
     fn log(&self) -> Result<&RecordLog> {
         self.log.as_ref().ok_or_else(|| "store not open".into())
@@ -85,6 +113,17 @@ impl NativeRecordArm {
             }
             let Some(cursor) = page.next else { break };
             page = native(View::continue_page(log, scope(), &cursor, limits))?;
+        }
+        Ok(())
+    }
+    fn visit_borrowed<'a>(log: &'a RecordLog, mut visit: impl FnMut(RecordRef<'a>) -> Result<()>) -> Result<()> {
+        let view = native(View::open(log, scope(), AsOf::default()))?;
+        let limits = Limits { entries: 1000, bytes: record::MAX_OUTPUT_BYTES };
+        let mut page = native(view.range_borrowed(log, Versions::All, Filter::default(), limits))?;
+        loop {
+            for row in page.records { visit(row)?; }
+            let Some(cursor) = page.next else { break };
+            page = native(View::continue_page_borrowed(log, scope(), &cursor, limits))?;
         }
         Ok(())
     }
@@ -193,53 +232,47 @@ impl Arm for NativeRecordArm {
         if query.text.trim().is_empty() {
             return Ok(Vec::new());
         }
-        let mut winners: BTreeMap<String, (u64, Doc)> = BTreeMap::new();
-        self.visit_records(|row| {
+        let log = self.log.as_ref().ok_or("store not open")?;
+        let mut winners: BTreeMap<&str, (u64, Imported<'_>)> = BTreeMap::new();
+        Self::visit_borrowed(log, |row| {
             let id = row.id;
-            let doc = document(row)?;
+            // Validate even losing/future rows, just as owned document() did.
+            let doc = imported(row)?;
             if doc.valid_at > query.valid_at || doc.recorded_at > query.known_at {
                 return Ok(());
             }
             let order = (doc.valid_at, doc.recorded_at, id);
-            if winners
-                .get(doc.key())
-                .is_none_or(|(seq, old)| order > (old.valid_at, old.recorded_at, *seq))
-            {
-                winners.insert(doc.key().into(), (id, doc));
+            if winners.get(doc.key()).is_none_or(|(seq, old)| {
+                order > (old.valid_at, old.recorded_at, *seq)
+            }) {
+                winners.insert(if doc.key.is_empty() { doc.id } else { doc.key }, (id, doc));
             }
             Ok(())
         })?;
-        let view = native(View::open(self.log()?, scope(), AsOf::default()))?;
+        let view = native(View::open(log, scope(), AsOf::default()))?;
         let binding = projection::Binding {
             namespace: view.watermark().origin,
             writer: WRITER.into(),
             view: *blake3::hash(&serde_json::to_vec(&(
-                view.watermark(),
-                query.valid_at,
-                query.known_at,
-            ))?)
-            .as_bytes(),
+                view.watermark(), query.valid_at, query.known_at,
+            ))?).as_bytes(),
         };
-        let rows = winners
-            .into_values()
-            .map(|(_, d)| {
-                Ok(projection::Row {
-                    key: Some(d.key().into()),
-                    id: d.id,
-                    text: d.text,
-                    valid_at: micros(d.valid_at)?,
-                    reported_recorded_at: micros(d.recorded_at)?,
-                    kind: Kind::Raw,
-                    tool: None,
-                    status: None,
-                    agent_id: "benchmark".into(),
-                    indexed: true,
-                })
+        // Bounded typed references only; no second complete set of originals.
+        // Validate all winning unit conversions before taking the old projection.
+        let rows = winners.into_values().map(|(_, d)| {
+            Ok(projection::RowRef {
+                id: d.id, key: Some(if d.key.is_empty() { d.id } else { d.key }), text: d.text,
+                valid_at: micros(d.valid_at)?, reported_recorded_at: micros(d.recorded_at)?,
+                kind: Kind::Raw, tool: None, status: None, agent_id: "benchmark", indexed: true,
             })
-            .collect::<Result<_>>()?;
+        }).collect::<Result<Vec<_>>>()?;
         let index = native(match self.projection.take() {
-            Some(index) => index.refresh(binding.clone(), rows),
-            None => projection::Index::build(binding.clone(), rows),
+            Some(index) => {
+                let mut refresh = native(index.begin_refresh(binding.clone(), rows.len()))?;
+                for row in rows { native(refresh.push(row))?; }
+                refresh.finish()
+            }
+            None => projection::Index::build(binding.clone(), rows.into_iter().map(projection::RowRef::into_owned).collect()),
         })?;
         let hits = native(index.search(
             &binding,
@@ -300,6 +333,28 @@ impl Arm for NativeRecordArm {
 #[cfg(test)]
 mod tests {
     use super::*;
+    fn owned_projection_hits(arm: &NativeRecordArm, query: &SearchReq) -> Vec<Hit> {
+        // Independent old owned-Record/Doc path plus a fresh projection oracle.
+        let mut winners: BTreeMap<String, (u64, Doc)> = BTreeMap::new();
+        for row in arm.records().unwrap() {
+            let id = row.id;
+            let doc = document(row).unwrap();
+            if doc.valid_at > query.valid_at || doc.recorded_at > query.known_at { continue; }
+            if winners.get(doc.key()).is_none_or(|(seq, old)| {
+                (doc.valid_at, doc.recorded_at, id) > (old.valid_at, old.recorded_at, *seq)
+            }) { winners.insert(doc.key().into(), (id, doc)); }
+        }
+        let binding = projection::Binding { namespace: [7;32], writer: WRITER.into(), view: [8;32] };
+        let rows = winners.into_values().map(|(_, d)| projection::Row {
+            key: Some(d.key().into()), id: d.id, text: d.text, valid_at: micros(d.valid_at).unwrap(),
+            reported_recorded_at: micros(d.recorded_at).unwrap(), kind: Kind::Raw,
+            tool: None, status: None, agent_id: "benchmark".into(), indexed: true,
+        }).collect();
+        projection::Index::build(binding.clone(), rows).unwrap().search(&binding, &projection::Query {
+            text: &query.text, k: query.k, from: i64::MIN, to: query.valid_at.saturating_mul(1_000_000),
+            filter: Filter::default(), excerpt_bytes: 320, max_bytes: record::MAX_OUTPUT_BYTES,
+        }).unwrap().into_iter().map(|h| Hit { id: h.id, score: h.bits }).collect()
+    }
     #[test]
     fn streamed_pages_preserve_metadata_and_cross_page_revision_winners() {
         let dir = std::env::temp_dir().join(format!(
@@ -350,15 +405,13 @@ mod tests {
             (i64::MAX, 1999, "rev-old"),
             (i64::MAX, 2000, "rev-tie"),
         ] {
-            let hits = arm
-                .search(&SearchReq {
-                    text: "sessionwinner".into(),
-                    valid_at,
-                    known_at,
-                    k: 10,
-                    context: BTreeMap::new(),
-                })
-                .unwrap();
+            let query = SearchReq {
+                text: "sessionwinner".into(), valid_at, known_at, k: 10, context: BTreeMap::new(),
+            };
+            let want = owned_projection_hits(&arm, &query);
+            let hits = arm.search(&query).unwrap();
+            assert_eq!(hits.iter().map(|h| (&h.id,h.score.to_bits())).collect::<Vec<_>>(),
+                want.iter().map(|h| (&h.id,h.score.to_bits())).collect::<Vec<_>>());
             assert_eq!(hits.len(), 1);
             assert_eq!(hits[0].id, id);
             let original = docs.iter().find(|doc| doc.id == id).unwrap();
@@ -424,4 +477,31 @@ mod tests {
         arm.close().unwrap();
         std::fs::remove_dir_all(dir).unwrap();
     }
+    #[test]
+    fn borrowed_search_rejects_malformed_import_even_when_time_or_winner_would_hide_it() {
+        let dir = std::env::temp_dir().join(format!("oojuro-borrowed-import-{}-{}",std::process::id(),crate::sys::unique_suffix()));
+        let mut arm = NativeRecordArm::default();
+        arm.open(&dir, &BTreeMap::new()).unwrap();
+        arm.append_batch(&[Doc { id:"winner".into(),key:"shared".into(),text:"battery".into(),
+            valid_at:0,recorded_at:0,meta:BTreeMap::new() }]).unwrap();
+        let malformed = Input {
+            agent_id:"benchmark".into(),parent_id:None,valid_at:-1_000_000,kind:Kind::Raw,
+            tool:None,status:None,exit:None,key:Some("shared".into()),text:"hidden original".into(),
+            attrs:BTreeMap::from([
+                ("benchmark_id".into(),serde_json::json!("losing")),
+                ("benchmark_key".into(),serde_json::json!("shared")),
+                ("benchmark_known_at".into(),serde_json::json!(1)),
+                ("benchmark_meta".into(),serde_json::json!(0)),
+            ]),indexed:true,
+        };
+        arm.log.as_mut().unwrap().append("invalid-hidden-import",std::slice::from_ref(&malformed)).unwrap();
+        let query = SearchReq {text:"battery".into(),valid_at:0,known_at:0,k:10,context:BTreeMap::new()};
+        assert!(arm.search(&query).is_err());
+        // Both clock-hidden and losing-key cases must validate imported metadata.
+        let mut all_known = query;all_known.known_at=i64::MAX;
+        assert!(arm.search(&all_known).is_err());
+        arm.close().unwrap();
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
 }

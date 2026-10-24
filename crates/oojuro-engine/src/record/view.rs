@@ -80,6 +80,13 @@ pub struct Page {
     pub records: Vec<Record>,
     pub next: Option<String>,
 }
+/// Exact Page wire representation, borrowing only immutable log originals.
+#[derive(Serialize)]
+pub struct BorrowedPage<'a> {
+    pub watermark: Watermark,
+    pub records: Vec<RecordRef<'a>>,
+    pub next: Option<String>,
+}
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Context {
@@ -176,6 +183,18 @@ impl View {
         filter.validate()?;
         self.page(log, Mode::Range { versions, filter }, 0, limits)
     }
+    /// Freshly validate the same pinned scope/prefix and page budget as range().
+    /// The immutable log borrow prevents source mutation while rows are retained.
+    pub fn range_borrowed<'a>(
+        &self,
+        log: &'a RecordLog,
+        versions: Versions,
+        filter: Filter,
+        limits: Limits,
+    ) -> Result<BorrowedPage<'a>> {
+        filter.validate()?;
+        self.page_borrowed(log, Mode::Range { versions, filter }, 0, limits)
+    }
     pub fn export(
         &self,
         log: &RecordLog,
@@ -194,6 +213,19 @@ impl View {
         cursor: &str,
         limits: Limits,
     ) -> Result<Page> {
+        let (view, mode, next) = Self::resume(log, scope, cursor)?;
+        view.page(log, mode, next, limits)
+    }
+    pub fn continue_page_borrowed<'a>(
+        log: &'a RecordLog,
+        scope: Scope<'_>,
+        cursor: &str,
+        limits: Limits,
+    ) -> Result<BorrowedPage<'a>> {
+        let (view, mode, next) = Self::resume(log, scope, cursor)?;
+        view.page_borrowed(log, mode, next, limits)
+    }
+    fn resume(log: &RecordLog, scope: Scope<'_>, cursor: &str) -> Result<(Self, Mode, usize)> {
         check_scope(log, scope)?;
         let encoded = unhex(cursor)?;
         let plain = log.unseal(CURSOR_AAD, &encoded)?;
@@ -206,10 +238,7 @@ impl View {
         {
             return Err(Error::Invalid);
         }
-        let view = Self {
-            context: cursor.context,
-        };
-        view.page(log, cursor.mode, cursor.next, limits)
+        Ok((Self { context: cursor.context }, cursor.mode, cursor.next))
     }
     pub(super) fn latest<'a>(&self, log: &'a RecordLog) -> Result<Vec<&'a Assigned>> {
         let end = self.validate(log)?;
@@ -258,6 +287,16 @@ impl View {
         Ok(rows)
     }
     fn page(&self, log: &RecordLog, mode: Mode, start: usize, limits: Limits) -> Result<Page> {
+        let page = self.page_borrowed(log, mode, start, limits)?;
+        Ok(Page {
+            watermark: page.watermark,
+            records: page.records.into_iter().map(RecordRef::into_owned).collect(),
+            next: page.next,
+        })
+    }
+    fn page_borrowed<'a>(
+        &self, log: &'a RecordLog, mode: Mode, start: usize, limits: Limits,
+    ) -> Result<BorrowedPage<'a>> {
         if limits.entries == 0 || limits.entries > 1000 {
             return Err(Error::Bounds);
         }
@@ -272,7 +311,7 @@ impl View {
         let stop = rows.len().min(start + limits.entries);
         let mut records: Vec<_> = rows[start..stop]
             .iter()
-            .map(|row| row.record(&self.context.writer, &log.identity().adapter))
+            .map(|row| row.borrowed(&log.identity().writer, &log.identity().adapter))
             .collect();
         let mut sizes = vec![0usize];
         for record in &records {
@@ -315,7 +354,7 @@ impl View {
             }
         };
         records.truncate(end - start);
-        let page = Page {
+        let page = BorrowedPage {
             watermark: self.context.watermark.clone(),
             records,
             next,
