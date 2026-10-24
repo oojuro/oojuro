@@ -561,11 +561,8 @@ mod tests {
             Ok(Self(path))
         }
     }
-    impl Drop for Scratch {
-        fn drop(&mut self) {
-            let _ = fs::remove_dir_all(&self.0);
-        }
-    }
+    // Preserve failed clusters/logs for the outside controller; remove explicitly
+    // only after every assertion and clean shutdown succeeds.
     fn doc(id: &str, key: &str, text: &str, valid: i64, known: i64) -> Doc {
         Doc {
             id: id.into(),
@@ -669,6 +666,7 @@ mod tests {
             expected
         );
         arm.close()?;
+        fs::remove_dir_all(&scratch.0)?;
         Ok(())
     }
     #[test]
@@ -680,6 +678,7 @@ mod tests {
         assert!(arm.open(&scratch.0, &config()?).is_err());
         assert!(!scratch.0.join("data/PG_VERSION").exists());
         assert!(arm.server.is_none());
+        fs::remove_dir_all(&scratch.0)?;
         Ok(())
     }
 }
