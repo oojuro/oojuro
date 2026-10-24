@@ -10,6 +10,7 @@ pub mod beir;
 pub mod gates;
 pub mod memqa;
 pub mod metrics;
+mod owned_scope;
 pub mod protocol;
 pub mod report;
 pub mod scorecard;
@@ -103,7 +104,9 @@ pub struct Isolation {
 /// An arm living in a child process; the driver talks JSON lines to it.
 pub struct ProcessArm {
     child: Child,
-    stdin: BufWriter<ChildStdin>,
+    stdin: Option<BufWriter<ChildStdin>>,
+    scope: Option<owned_scope::OwnedScope>,
+    reaped: bool,
     stdout: BufReader<ChildStdout>,
     pub cgroup: Option<PathBuf>,
     pub argv: Vec<String>,
@@ -111,6 +114,7 @@ pub struct ProcessArm {
 
 impl ProcessArm {
     pub fn spawn(label: &str, argv: &[String], isolation: Option<&Isolation>, stderr: &Path) -> Result<Self> {
+        let mut scope_unit = None;
         let mut command = if let Some(iso) = isolation {
             let unit = format!(
                 "oojuro-arm-{}-{}-{}",
@@ -118,11 +122,15 @@ impl ProcessArm {
                 std::process::id(),
                 sys::unique_suffix()
             );
+            scope_unit = Some(format!("{unit}.scope"));
             let mut c = Command::new("systemd-run");
             c.args(["--user", "--scope", "--quiet", "--collect"])
                 .arg(format!("--unit={unit}"))
                 .arg(format!("--property=MemoryMax={}", iso.memory_max))
                 .arg("--property=MemorySwapMax=0")
+                .arg("--property=TasksMax=512")
+                .arg("--property=RuntimeMaxSec=600")
+                .arg("--property=TimeoutStopSec=5")
                 .arg("--")
                 .args(argv);
             c
@@ -140,11 +148,13 @@ impl ProcessArm {
             .map_err(|e| format!("spawn {argv:?}: {e}"))?;
         let stdin = BufWriter::new(child.stdin.take().ok_or("no stdin")?);
         let stdout = BufReader::new(child.stdout.take().ok_or("no stdout")?);
-        let mut arm = Self { child, stdin, stdout, cgroup: None, argv: argv.to_vec() };
+        let mut arm = Self { child, stdin: Some(stdin), stdout, scope: None, reaped: false, cgroup: None, argv: argv.to_vec() };
         // The hello round trip guarantees systemd-run has exec'd into the scope.
         arm.call(&Request::Hello)?;
-        if isolation.is_some() {
-            arm.cgroup = sys::cgroup_of(arm.child.id());
+        if let Some(unit) = scope_unit {
+            let scope = owned_scope::OwnedScope::capture(unit, arm.child.id())?;
+            arm.cgroup = Some(scope.cgroup.clone());
+            arm.scope = Some(scope);
         }
         Ok(arm)
     }
@@ -152,12 +162,14 @@ impl ProcessArm {
         self.child.id()
     }
     pub fn call(&mut self, request: &Request) -> Result<Response> {
-        serde_json::to_writer(&mut self.stdin, request)?;
-        self.stdin.write_all(b"\n")?;
-        self.stdin.flush()?;
+        let stdin = self.stdin.as_mut().ok_or("arm input already closed")?;
+        serde_json::to_writer(&mut *stdin, request)?;
+        stdin.write_all(b"\n")?;
+        stdin.flush()?;
         let mut line = String::new();
         if self.stdout.read_line(&mut line)? == 0 {
             let status = self.child.try_wait()?;
+            self.reaped = status.is_some();
             return Err(format!(
                 "arm process exited ({status:?}); see its stderr log. An exit under a MemoryMax scope is usually an OOM kill"
             )
@@ -171,23 +183,53 @@ impl ProcessArm {
     }
     /// Write a request without reading its answer (crash tests kill next).
     pub fn send_only(&mut self, request: &Request) -> Result<()> {
-        serde_json::to_writer(&mut self.stdin, request)?;
-        self.stdin.write_all(b"\n")?;
-        self.stdin.flush()?;
+        let stdin = self.stdin.as_mut().ok_or("arm input already closed")?;
+        serde_json::to_writer(&mut *stdin, request)?;
+        stdin.write_all(b"\n")?;
+        stdin.flush()?;
         Ok(())
     }
+    /// Kill every process in the exact isolated scope before recovery. A
+    /// leader-only kill cannot qualify an engine with server descendants.
     pub fn kill(&mut self) -> Result<()> {
-        let _ = self.child.kill();
-        let _ = self.child.wait();
+        if let Some(scope) = &self.scope {
+            scope.kill_all()?;
+        } else if !self.reaped {
+            // Single-process compatibility path. Forking arms require isolation.
+            self.child.kill()?;
+        }
+        self.stdin.take();
+        self.wait_leader(std::time::Duration::from_secs(5))?;
         Ok(())
+    }
+    fn wait_leader(&mut self, timeout: std::time::Duration) -> Result<Option<std::process::ExitStatus>> {
+        if self.reaped { return Ok(None); }
+        let deadline = Instant::now() + timeout;
+        loop {
+            if let Some(status) = self.child.try_wait()? {
+                self.reaped = true;
+                return Ok(Some(status));
+            }
+            if Instant::now() >= deadline { return Err("benchmark leader did not exit by deadline".into()); }
+            std::thread::sleep(std::time::Duration::from_millis(10));
+        }
     }
     pub fn finish(mut self) -> Result<()> {
-        drop(self.stdin);
-        let status = self.child.wait()?;
-        if !status.success() {
-            return Err(format!("arm exited with {status}").into());
+        self.stdin.take();
+        let status = self.wait_leader(std::time::Duration::from_secs(30))?
+            .ok_or("benchmark leader already reaped before finish")?;
+        if !status.success() { return Err(format!("arm exited with {status}").into()); }
+        if let Some(scope) = &self.scope {
+            scope.wait_empty(std::time::Duration::from_secs(5))?;
         }
         Ok(())
+    }
+}
+impl Drop for ProcessArm {
+    fn drop(&mut self) {
+        // Error paths retain no live owned leader/scope. A cleanup failure is
+        // still an outer-controller failure; the finite scope is the last bound.
+        let _ = self.kill();
     }
 }
 

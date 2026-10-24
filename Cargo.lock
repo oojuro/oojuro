@@ -4634,9 +4634,11 @@ name = "oojuro-bench"
 version = "0.1.0"
 dependencies = [
  "blake3",
+ "libc",
  "oojuro-core",
  "oojuro-engine",
  "oojuro-nine",
+ "postgres",
  "rusqlite",
  "serde",
  "serde_json",

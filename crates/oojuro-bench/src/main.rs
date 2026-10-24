@@ -13,6 +13,8 @@ const USAGE: &str = "usage: oojuro-bench <command> [flags]
            [--thinking index|drop] [--config key=value]... [--pool 200 --dump-pools FILE]
   memqa    --set longmemeval [--split dev] [--k 50] [--limit N] [--dump-pools FILE]
   gates                                         byte-exact, as-of, freshness, crash, determinism
+  postgres arm: Linux only, explicit --features postgres-arm; owned local server, no external DSN
+                pinned pg_bin/pg_lib config or OOJURO_BENCH_POSTGRES_BIN/OOJURO_BENCH_POSTGRES_LIB
   report   SCORECARD.json... [--baseline LABEL] [--out report.md]
 common: --arm [label=]native-record|nine|tantivy|sqlite|jsonl|jsonl-zstd|cmd:<argv> (repeat)  --runs 3  --out FILE
         --data DIR (default $OOJURO_DATA or ~/.cache/oojuro-data)  --work DIR  --mem-max 3G  --in-process  --keep  --no-lock (smoke tests only)";
