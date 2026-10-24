@@ -428,3 +428,108 @@ fn projected_query_exact_utf8_passages_match_dev_oracle() {
         }
     }
 }
+
+#[test]
+fn streamed_rows_preserve_owned_serialization_and_exact_byte_bounds() {
+    for optional in [false, true] {
+        let mut owned = row("escaped-λ", "quoted \"line\"\0\r\n🦀", -7);
+        owned.key = optional.then(|| "key\\quoted".into());
+        owned.tool = optional.then(|| "tool\nλ".into());
+        owned.status = optional.then_some(Status::Error);
+        owned.agent_id = "agent\"🦀".into();
+        owned.indexed = optional;
+        let borrowed = owned.as_borrowed();
+        let bytes = serde_json::to_vec(&owned).unwrap();
+        assert_eq!(serde_json::to_vec(&borrowed).unwrap(), bytes);
+        assert_eq!(json_size(&borrowed, bytes.len()).unwrap(), bytes.len());
+        assert!(matches!(json_size(&borrowed, bytes.len() - 1), Err(Error::Bounds)));
+        assert!(matches!(json_size(&owned, bytes.len() - 1), Err(Error::Bounds)));
+    }
+}
+
+#[test]
+fn streamed_refresh_preserves_fresh_scores_originals_and_every_metadata_field() {
+    let original = vec![
+        row("a", "battery electrode café\0", -2),
+        row("b", "battery worker resolved_epoch=91", 2),
+        row("c", "electrode tool", 4),
+    ];
+    for phase in 0..14 {
+        let mut rows = original.clone();
+        match phase {
+            0 => rows.reverse(),
+            1 => rows.insert(1, row("added", "battery worker", 3)),
+            2 => { rows.remove(1); }
+            3 => rows.clear(),
+            4 => rows[1].id = "replacement".into(),
+            5 => rows[1].key = Some("other-key".into()),
+            6 => rows[1].text = "changed original electrode".into(),
+            7 => rows[1].valid_at = -3,
+            8 => rows[1].reported_recorded_at = 99,
+            9 => rows[1].kind = Kind::ToolResult,
+            10 => rows[1].tool = Some("changed-tool".into()),
+            11 => rows[1].status = Some(Status::Error),
+            12 => rows[1].agent_id = "changed-agent".into(),
+            13 => rows[1].indexed = false,
+            _ => unreachable!(),
+        }
+        let mut next = binding();
+        next.view[0] += 1;
+        let old = Index::build(binding(), original.clone()).unwrap();
+        let mut stream = old.begin_refresh(next.clone(), rows.len()).unwrap();
+        for fresh in &rows {
+            stream.push(fresh.as_borrowed()).unwrap();
+        }
+        let got = stream.finish().unwrap();
+        let want = Index::build(next.clone(), rows).unwrap();
+        assert_same_projection(&got, &want, &next);
+        assert_eq!(got.row_count(), want.row_count());
+        assert_eq!(got.text_bytes(), want.text_bytes());
+        assert!(matches!(got.search(&binding(), &query("battery", 10)), Err(Error::Scope)));
+    }
+}
+
+#[test]
+fn streamed_refresh_refuses_partial_excess_duplicate_invalid_and_changed_same_view() {
+    let original = row("a", "battery", 1);
+    let make = || Index::build(binding(), vec![original.clone()]).unwrap();
+    let mut next = binding();
+    next.view[0] += 1;
+    assert!(matches!(make().begin_refresh(next.clone(), MAX_RECORDS + 1), Err(Error::Bounds)));
+    let mut foreign = next.clone();
+    foreign.namespace[0] ^= 1;
+    assert!(matches!(make().begin_refresh(foreign, 1), Err(Error::Scope)));
+    assert!(matches!(make().begin_refresh(next.clone(), 1).unwrap().finish(), Err(Error::Bounds)));
+    let mut excess = make().begin_refresh(next.clone(), 0).unwrap();
+    assert!(matches!(excess.push(original.as_borrowed()), Err(Error::Bounds)));
+    assert!(matches!(excess.finish(), Err(Error::Bounds)));
+    for key_duplicate in [false, true] {
+        let mut duplicate = make().begin_refresh(next.clone(), 2).unwrap();
+        duplicate.push(original.as_borrowed()).unwrap();
+        let mut other = original.clone();
+        if key_duplicate { other.id = "b".into(); }
+        assert!(matches!(duplicate.push(other.as_borrowed()), Err(Error::Conflict)));
+        assert!(matches!(duplicate.finish(), Err(Error::Conflict)));
+    }
+    let mut invalid = make().begin_refresh(next, 1).unwrap();
+    let mut bad = original.clone();
+    bad.id = String::new();
+    assert!(matches!(invalid.push(bad.as_borrowed()), Err(Error::Bounds)));
+    assert!(matches!(invalid.push(original.as_borrowed()), Err(Error::Bounds)));
+    assert!(matches!(invalid.finish(), Err(Error::Bounds)));
+    let mut changed = make().begin_refresh(binding(), 1).unwrap();
+    bad.id = original.id.clone();
+    bad.text = "changed bytes".into();
+    changed.push(bad.as_borrowed()).unwrap();
+    assert!(matches!(changed.finish(), Err(Error::Conflict)));
+    // Complete validation precedes the same-view conflict, even when an
+    // earlier fresh row changed. A late malformed row must still win.
+    let mut late_invalid = make().begin_refresh(binding(), 2).unwrap();
+    late_invalid.push(bad.as_borrowed()).unwrap();
+    bad.id.clear();
+    assert!(matches!(late_invalid.push(bad.as_borrowed()), Err(Error::Bounds)));
+    assert!(matches!(late_invalid.finish(), Err(Error::Bounds)));
+    let mut unchanged = make().begin_refresh(binding(), 1).unwrap();
+    unchanged.push(original.as_borrowed()).unwrap();
+    assert_same_projection(&unchanged.finish().unwrap(), &make(), &binding());
+}

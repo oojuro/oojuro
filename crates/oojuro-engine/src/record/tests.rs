@@ -1251,3 +1251,73 @@ fn borrowed_record_text_preserves_full_originals_score_bits_and_reopen_without_r
     let log = fixture.open();
     compare(&log);
 }
+
+#[test]
+fn borrowed_pages_keep_original_fields_pointers_snapshot_order_and_cross_cursors() {
+    let f = Fixture::new();
+    let mut log = f.clock(100);
+    let mut inputs: Vec<_> = (0..1004).map(|n| {
+        let key = if n == 0 || n == 1003 { "shared".into() } else { format!("key-{n}") };
+        let mut row = input(&format!("original {n} \"λ🦀\"\0\r\n"), Some(&key), n);
+        row.kind = if n == 0 { Kind::Thinking } else { Kind::Raw };
+        row.tool = Some("tool-λ".into());row.status=Some(Status::Error);row.exit=Some(-3);
+        row.indexed=n!=1003;row.attrs.insert("metadata".into(),serde_json::json!({"escaped":"\0\"🦀"}));
+        row
+    }).collect();
+    inputs.reverse();
+    for (part, chunk) in inputs.chunks(1000).enumerate() { log.append(&format!("chunk-{part}"),chunk).unwrap(); }
+    let pinned = view(&log);
+    let count = pinned.watermark().records as usize;
+    log.append("later-excluded", &[input("not in prefix", None, 2000)]).unwrap();
+    for versions in [Versions::All, Versions::Current] {
+        for limits in [Limits {entries:1000,bytes:MAX_OUTPUT_BYTES},Limits {entries:1000,bytes:4096}] {
+            let mut owned = pinned.range(&log,versions,Filter::default(),limits).unwrap();
+            let mut borrowed = pinned.range_borrowed(&log,versions,Filter::default(),limits).unwrap();
+            let mut actual = Vec::new();let mut pages=0;
+            loop {
+                pages+=1;assert!(pages<=count+1);
+                assert_eq!(borrowed.watermark,pinned.watermark().clone());
+                assert_eq!(owned.records,borrowed.records.iter().copied().map(RecordRef::into_owned).collect::<Vec<_>>());
+                assert_eq!(owned.next.is_some(),borrowed.next.is_some());
+                for row in &borrowed.records {
+                    let source=log.records[..count].iter().find(|r| r.id==row.id).unwrap();
+                    assert_eq!(row.text.as_ptr(),source.input.text.as_ptr());
+                    assert!(std::ptr::eq(row.attrs,&source.input.attrs));
+                    assert_eq!(serde_json::to_vec(row).unwrap(),serde_json::to_vec(&source.record(WRITER,&identity().adapter)).unwrap());
+                    actual.push(row.id);
+                }
+                let (Some(old_cursor),Some(new_cursor))=(owned.next,borrowed.next) else {break};
+                // Both opaque cursor paths interoperate, preserving one scope/prefix.
+                owned=View::continue_page(&log,scope(),&new_cursor,limits).unwrap();
+                borrowed=View::continue_page_borrowed(&log,scope(),&old_cursor,limits).unwrap();
+            }
+            let mut expected:Vec<_>=log.records[..count].iter().collect();
+            if matches!(versions,Versions::Current) {expected.retain(|r| r.input.key.as_deref()!=Some("shared") || r.input.valid_at==1003);}
+            expected.sort_by_key(|r|(r.input.valid_at,r.recorded_at,r.id));
+            assert_eq!(actual,expected.iter().map(|r|r.id).collect::<Vec<_>>());
+            if limits.bytes==4096 {assert!(pages>2);}
+        }
+    }
+    let filtered=pinned.range_borrowed(&log,Versions::Current,Filter {kind:Some(Kind::Thinking),..Filter::default()},Limits::default()).unwrap();
+    assert!(filtered.records.is_empty(),"new unindexed winner precedes metadata filtering");
+
+}
+
+#[test]
+fn borrowed_pages_preserve_large_escaped_wire_budget_and_scope_time_refusals() {
+    let f=Fixture::new();let mut log=f.clock(100);
+    let text="\0\"\\λ🦀\n".repeat(8192);
+    let row=input(&text,Some("shared"),1);log.append("one",&[row]).unwrap();
+    let pinned=view(&log);
+    let original=pinned.range(&log,Versions::All,Filter::default(),Limits {entries:1,bytes:MAX_OUTPUT_BYTES}).unwrap();
+    let bytes=serde_json::to_vec(&original).unwrap().len();
+    let borrowed=pinned.range_borrowed(&log,Versions::All,Filter::default(),Limits {entries:1,bytes}).unwrap();
+    assert_eq!(serde_json::to_vec(&borrowed).unwrap(),serde_json::to_vec(&original).unwrap());
+    assert_eq!(borrowed.records[0].text,text);
+    assert!(matches!(pinned.range_borrowed(&log,Versions::All,Filter::default(),Limits {entries:1,bytes:bytes-1}),Err(Error::Bounds)));
+    let old=View::open(&log,scope(),AsOf {known_at:99,..AsOf::default()}).unwrap();
+    assert!(old.range_borrowed(&log,Versions::All,Filter::default(),Limits::default()).unwrap().records.is_empty());
+    let foreign=Fixture::new();let foreign_log=foreign.clock(100);
+    assert!(pinned.range_borrowed(&foreign_log,Versions::All,Filter::default(),Limits::default()).is_err());
+    assert!(matches!(View::continue_page_borrowed(&log,Scope {writer:"wrong",owner:1},"00",Limits::default()),Err(Error::Scope)));
+}
