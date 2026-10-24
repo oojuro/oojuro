@@ -412,10 +412,7 @@ fn load(
         if segment.start != r.start || segment.rows.len() != r.rows as usize {
             return Err(Error::Invalid);
         }
-        projection::hydrate(&mut index.inner, segment, &|row, id| {
-            Index::original_text(log, row, id)
-        })
-        .map_err(map_codec)?;
+        projection::hydrate(&mut index.inner, segment, log).map_err(map_codec)?;
         expected = end;
     }
     if expected != m.rows {

@@ -218,11 +218,10 @@ fn search_inner(
     }
     let visible = view.visible(log, &q.filter)?;
     let keys = view.keys(log)?;
-    let original_text = |row, id| Index::original_text(log, row, id);
     let mask = lexical::RecordVisibility {
         ids: &visible,
         keys: &keys,
-        original_text: Some(&original_text),
+        original_text: Some(log),
     };
     let rows = log
         .records

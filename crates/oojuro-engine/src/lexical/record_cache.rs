@@ -66,7 +66,7 @@ pub(crate) fn snapshot(index: &Index, start: usize, count: usize) -> Result<code
 pub(crate) fn hydrate(
     index: &mut Index,
     segment: codec::Segment,
-    original_text: &OriginalText<'_>,
+    original_text: &dyn OriginalTextSource,
 ) -> Result<()> {
     let start = segment.start as usize;
     let end = start
@@ -102,7 +102,7 @@ pub(crate) fn hydrate(
     for (offset, doc) in index.documents[start..end].iter().enumerate() {
         if lengths[offset] != u64::from(doc.length)
             || scopes[offset] != u64::from(doc.scope)
-            || ((!doc.event.indexed || original_text(start + offset, doc.event.id)?.is_empty())
+            || ((!doc.event.indexed || original_text.text(start + offset, doc.event.id)?.is_empty())
                 && (doc.length != 0 || doc.scope != 0))
         {
             return Err(Error::Invalid);
@@ -114,6 +114,16 @@ pub(crate) fn hydrate(
 #[cfg(test)]
 mod tests {
     use super::*;
+    struct Originals<'a>(&'a [&'a str]);
+    impl OriginalTextSource for Originals<'_> {
+        fn text(&self, row: usize, expected_id: u64) -> Result<&str> {
+            self.0
+                .get(row)
+                .filter(|_| expected_id == 17 + row as u64)
+                .copied()
+                .ok_or(Error::Authority)
+        }
+    }
     #[test]
     fn borrowed_hydration_checks_actual_empty_original_and_row_identity() {
         let texts = ["", "!!!", "quartz", "\0raw"];
@@ -124,13 +134,7 @@ mod tests {
                 .map(|(i, text)| (17 + i as u64, 1, *text, true))
         };
         let retained = Index::from_record_rows("writer", 1, rows()).unwrap();
-        let original = |row: usize, id| {
-            texts
-                .get(row)
-                .filter(|_| id == 17 + row as u64)
-                .copied()
-                .ok_or(Error::Authority)
-        };
+        let original = Originals(&texts);
         let mut borrowed = Index::borrowed_record_rows("writer", 1, rows(), false).unwrap();
         hydrate(&mut borrowed, snapshot(&retained, 0, 4).unwrap(), &original).unwrap();
         assert_eq!(borrowed.original_text_allocation(), (0, 0));

@@ -68,13 +68,6 @@ impl Index {
         let view = View::open(log, query.scope, query.as_of)?;
         self.search_view(log, &view, query)
     }
-    pub(super) fn original_text(log: &RecordLog, row: usize, id: u64) -> lexical::Result<&str> {
-        log.records
-            .get(row)
-            .filter(|record| record.id == id)
-            .map(|record| record.input.text.as_str())
-            .ok_or(lexical::Error::Authority)
-    }
     pub fn search_view(&self, log: &RecordLog, view: &View, query: &Query<'_>) -> Result<Search> {
         if self.failed {
             return Err(Error::Unavailable);
@@ -96,11 +89,10 @@ impl Index {
         }
         let visible = view.visible(log, &query.filter)?;
         let keys = view.keys(log)?;
-        let original_text = |row, id| Self::original_text(log, row, id);
         let mask = RecordVisibility {
             ids: &visible,
             keys: &keys,
-            original_text: Some(&original_text),
+            original_text: Some(log),
         };
         let hits = self
             .inner
@@ -140,5 +132,14 @@ impl Index {
         };
         json_size(&result, query.max_bytes)?;
         Ok(result)
+    }
+}
+impl lexical::OriginalTextSource for RecordLog {
+    fn text(&self, row: usize, expected_id: u64) -> lexical::Result<&str> {
+        self.records
+            .get(row)
+            .filter(|record| record.id == expected_id)
+            .map(|record| record.input.text.as_str())
+            .ok_or(lexical::Error::Authority)
     }
 }

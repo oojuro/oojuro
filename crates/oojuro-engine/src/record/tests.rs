@@ -1174,8 +1174,8 @@ fn borrowed_record_text_preserves_full_originals_score_bits_and_reopen_without_r
         let (owned_len, owned_capacity) = retained.inner.original_text_allocation();
         assert_eq!(owned_len, bytes);
         assert!(owned_capacity >= bytes);
-        assert!(Index::original_text(log, 0, log.records[0].id + 1).is_err());
-        assert!(Index::original_text(log, log.records.len(), 0).is_err());
+        assert!(crate::lexical::OriginalTextSource::text(log, 0, log.records[0].id + 1).is_err());
+        assert!(crate::lexical::OriginalTextSource::text(log, log.records.len(), 0).is_err());
         for (text, id) in [("\"raw slash\"", 9), ("\"!!!\"", 11), ("\"日本語\"", 9)] {
             let found = borrowed.search(log, &query(text, AsOf::default())).unwrap();
             assert_eq!(found.hits.len(), 1);

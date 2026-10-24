@@ -56,9 +56,11 @@ struct Document {
 pub(crate) struct RecordVisibility<'a> {
     pub ids: &'a BTreeSet<u64>,
     pub keys: &'a BTreeMap<String, u64>,
-    pub original_text: Option<&'a OriginalText<'a>>,
+    pub original_text: Option<&'a dyn OriginalTextSource>,
 }
-pub(crate) type OriginalText<'a> = dyn Fn(usize, u64) -> Result<&'a str> + 'a;
+pub(crate) trait OriginalTextSource {
+    fn text(&self, row: usize, expected_id: u64) -> Result<&str>;
+}
 /// Derived plaintext exists in process memory only. Dropping/rebuilding it does
 /// not mutate authority, policy, source cursors, IDs or original bytes.
 pub struct Index {
@@ -235,7 +237,9 @@ impl Index {
         if self.retain_text {
             Ok(&doc.event.text)
         } else {
-            view.and_then(|v| v.original_text).ok_or(Error::Authority)?(row, doc.event.id)
+            view.and_then(|v| v.original_text)
+                .ok_or(Error::Authority)?
+                .text(row, doc.event.id)
         }
     }
     fn apply(&mut self, batch: &ParsedBatch) -> Result<()> {
