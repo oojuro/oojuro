@@ -19,6 +19,21 @@ env:
   RUST_TOOLCHAIN: 1.99.1
 
 jobs:
+  ojo:
+    name: Minimal file engine, ACID and archive compatibility
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust
+        run: rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --no-self-update
+      - name: Test raw core and compressed archive feature
+        run: |
+          cargo +"$RUST_TOOLCHAIN" test --locked -p ojo
+          cargo +"$RUST_TOOLCHAIN" test --locked -p ojo --features archive
+
   storage:
     name: Legacy engine and shared storage
     runs-on: ubuntu-24.04

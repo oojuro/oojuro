@@ -83,8 +83,54 @@
     "No general database, provider/cloud, network runtime, benchmark database or experimental codec in the minimal engine graph.",
     "Crypto, cryptographic randomness and standard codec implementations are not to be rewritten to reduce counts.",
     "Changes to this reviewed allowlist or Cargo.lock require scope/use/security/format review and meaningful affected gates.",
-    "Normal build graph is cargo build (engine/rank/store); CLI and tool packages require explicit package/feature selection.",
+    "Normal build graph is cargo build (ojo); compatibility libraries and tools require explicit package/feature selection.",
     "Cargo.lock is a workspace resolution, not a production dependency inventory. Run scripts/dependency_audit.py --check.",
     "Features are additive: explicitly selecting benchmark packages or --workspace intentionally includes their dependencies."
-  ]
+  ],
+  "ojo_allowlist": [
+    "aead",
+    "block-buffer",
+    "cfg-if",
+    "chacha20",
+    "chacha20poly1305",
+    "cipher",
+    "cpufeatures",
+    "crc32fast",
+    "crypto-common",
+    "digest",
+    "generic-array",
+    "getrandom",
+    "inout",
+    "libc",
+    "opaque-debug",
+    "poly1305",
+    "r-efi",
+    "rand_core",
+    "sha2",
+    "subtle",
+    "typenum",
+    "universal-hash",
+    "version_check",
+    "wasi",
+    "wasip2",
+    "wit-bindgen",
+    "zeroize"
+  ],
+  "ojo_archive_additions": [
+    "cc",
+    "find-msvc-tools",
+    "jobserver",
+    "pkg-config",
+    "shlex",
+    "zstd",
+    "zstd-safe",
+    "zstd-sys"
+  ],
+  "ojo_direct_foundations": {
+    "chacha20poly1305": "Existing wire 0.1 authenticated encryption; do not reimplement.",
+    "crc32fast": "Wire 0.1 header checksums.",
+    "getrandom": "Fallible OS cryptographic randomness for file IDs, keys, request IDs and nonces.",
+    "sha2": "Pure Rust SHA-256 required by wire 0.1; no C compiler in the default build.",
+    "zstd": "Optional archive codec only; normal commits always remain raw."
+  }
 }
