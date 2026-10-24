@@ -210,6 +210,51 @@ fn projected_query_binding_duplicate_and_budget_fail_closed() {
     assert!(index.search(&binding(), &query("", 5)).is_err());
 }
 
+#[test]
+fn projected_key_candidate_matches_complete_key_map_for_query_grammar_and_filters() {
+    let mut rows = vec![
+        row("opaque-zero", "quartz exact zero", 1),
+        row("opaque-one", "battery electrode exact one", 3),
+        row("opaque-two", "battery exact λ", 5),
+        row("opaque-three", "lookup_needle battery", 7),
+    ];
+    rows[0].key = Some("battery".into());
+    rows[1].key = Some("key:battery".into());
+    rows[2].key = Some("λ-key".into());
+    rows[2].kind = Kind::ToolResult;
+    rows[3].indexed = false;
+    let index = Index::build(binding(), rows).unwrap();
+    // The pre-change scorer received every source key, including keys excluded
+    // by eligibility/time/type. Compare that exact boundary to public search.
+    let all_keys = index.rows.iter().enumerate()
+        .filter_map(|(at, row)| row.key.as_ref().map(|key| (key.clone(), (at + 1) as u64)))
+        .collect();
+    for text in ["battery", "key:battery", "key:key:battery", "λ-key", "key:λ-key",
+        "key:missing", "missing", "lookup_needle battery", "\"battery electrode\"", "\"???\""] {
+        for kind in [None, Some(Kind::Output), Some(Kind::ToolResult)] {
+            for (from, to) in [(i64::MIN, i64::MAX), (2, 6), (6, 2)] {
+                let mut q = query(text, 10); q.filter.kind = kind; q.from = from; q.to = to;
+                let ids = index.rows.iter().enumerate()
+                    .filter(|(_, row)| row.indexed && kind.is_none_or(|kind| row.kind == kind))
+                    .map(|(at, _)| (at + 1) as u64).collect();
+                let expected = index.inner.search_projected(&lexical::Query {
+                    writer: &binding().writer, agent: 1, text, from, to, k: 10,
+                }, &RecordVisibility { ids: &ids, keys: &all_keys }, &index.ids).unwrap();
+                let actual = index.search(&binding(), &q).unwrap();
+                assert_eq!(actual.iter().map(|hit| (hit.id.as_str(), hit.bits.to_bits(), hit.continued, hit.valid_at))
+                    .collect::<Vec<_>>(), expected.iter().map(|hit| (index.ids[(hit.id - 1) as usize].as_str(),
+                        hit.bits.to_bits(), hit.continued, hit.time)).collect::<Vec<_>>(),
+                    "query={text}, kind={kind:?}, time={from}..{to}");
+                for hit in actual {
+                    let at = index.ids.iter().position(|id| id == &hit.id).unwrap();
+                    assert_eq!(hit.excerpt, index.inner.record_text(at).unwrap()[hit.start..hit.end]);
+                    assert_eq!(hit.reported_recorded_at, -99);
+                }
+            }
+        }
+    }
+}
+
 fn assert_same_projection(a: &Index, b: &Index, binding: &Binding) {
     for text in [
         "battery",
