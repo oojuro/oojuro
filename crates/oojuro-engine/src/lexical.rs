@@ -56,6 +56,10 @@ struct Document {
 pub(crate) struct RecordVisibility<'a> {
     pub ids: &'a BTreeSet<u64>,
     pub keys: &'a BTreeMap<String, u64>,
+    pub original_text: Option<&'a dyn OriginalTextSource>,
+}
+pub(crate) trait OriginalTextSource {
+    fn text(&self, row: usize, expected_id: u64) -> Result<&str>;
 }
 /// Derived plaintext exists in process memory only. Dropping/rebuilding it does
 /// not mutate authority, policy, source cursors, IDs or original bytes.
@@ -65,6 +69,8 @@ pub struct Index {
     authority: u64,
     applied: usize,
     failed: bool,
+    // Native Record callers already own originals in the independently checked log.
+    retain_text: bool,
     documents: Vec<Document>,
     // Both authorities cap rows at 100k; checked u32 handles avoid tuple padding.
     postings: BTreeMap<String, Vec<(u32, u32)>>,
@@ -80,6 +86,7 @@ impl Index {
             authority: log.instance(),
             applied: 0,
             failed: false,
+            retain_text: true,
             documents: vec![],
             postings: BTreeMap::new(),
             seen: HashMap::new(),
@@ -115,13 +122,22 @@ impl Index {
         owner: u32,
         rows: impl Iterator<Item = (u64, i64, &'a str, bool)>,
     ) -> Result<Self> {
-        Self::record_rows_mode(writer, owner, rows, true)
+        Self::record_rows_mode(writer, owner, rows, true, true)
     }
-    pub(crate) fn record_rows_mode<'a>(
+    pub(crate) fn borrowed_record_rows<'a>(
         writer: &str,
         owner: u32,
         rows: impl Iterator<Item = (u64, i64, &'a str, bool)>,
         tokenize: bool,
+    ) -> Result<Self> {
+        Self::record_rows_mode(writer, owner, rows, tokenize, false)
+    }
+    fn record_rows_mode<'a>(
+        writer: &str,
+        owner: u32,
+        rows: impl Iterator<Item = (u64, i64, &'a str, bool)>,
+        tokenize: bool,
+        retain_text: bool,
     ) -> Result<Self> {
         let mut index = Self {
             writer: writer.into(),
@@ -129,6 +145,7 @@ impl Index {
             authority: 0,
             applied: 0,
             failed: false,
+            retain_text,
             documents: vec![],
             postings: BTreeMap::new(),
             seen: HashMap::new(),
@@ -183,7 +200,11 @@ impl Index {
                 duration_us: 0,
                 tool: String::new(),
                 args: String::new(),
-                text: text.into(),
+                text: if self.retain_text {
+                    text.into()
+                } else {
+                    String::new()
+                },
                 indexed,
                 line_start: 0,
                 line_end: 0,
@@ -202,7 +223,24 @@ impl Index {
         self.applied
     }
     pub(crate) fn record_text(&self, row: usize) -> Option<&str> {
+        if !self.retain_text {
+            return None;
+        }
         self.documents.get(row).map(|d| d.event.text.as_str())
+    }
+    fn original_text<'a>(
+        &'a self,
+        row: usize,
+        view: Option<&RecordVisibility<'a>>,
+    ) -> Result<&'a str> {
+        let doc = self.documents.get(row).ok_or(Error::Authority)?;
+        if self.retain_text {
+            Ok(&doc.event.text)
+        } else {
+            view.and_then(|v| v.original_text)
+                .ok_or(Error::Authority)?
+                .text(row, doc.event.id)
+        }
     }
     fn apply(&mut self, batch: &ParsedBatch) -> Result<()> {
         self.apply_mode(batch, true)
@@ -304,9 +342,9 @@ impl Index {
         let mut want = q.k;
         loop {
             let ranked = if let Some(view) = view {
-                self.continued_view(q, want, true, Some(view), original_ids)
+                self.continued_view(q, want, true, Some(view), original_ids)?
             } else {
-                self.continued(q, want, true)
+                self.continued(q, want, true)?
             };
             let got = ranked.len();
             let mut out = Vec::new();
@@ -330,7 +368,7 @@ impl Index {
             && event.ts_us <= q.to
             && view.is_none_or(|v| v.ids.contains(&event.id))
     }
-    fn continued(&self, q: &Query<'_>, k: usize, prune: bool) -> Vec<(usize, Hit)> {
+    fn continued(&self, q: &Query<'_>, k: usize, prune: bool) -> Result<Vec<(usize, Hit)>> {
         self.continued_view(q, k, prune, None, None)
     }
     fn continued_view(
@@ -340,10 +378,10 @@ impl Index {
         prune: bool,
         view: Option<&RecordVisibility<'_>>,
         original_ids: Option<&[String]>,
-    ) -> Vec<(usize, Hit)> {
-        let (mut first, anchored) = self.rank(q, k, false, prune, view, original_ids);
+    ) -> Result<Vec<(usize, Hit)>> {
+        let (mut first, anchored) = self.rank(q, k, false, prune, view, original_ids)?;
         if anchored && first.len() < k {
-            let (rest, _) = self.rank(q, k, true, prune, view, original_ids);
+            let (rest, _) = self.rank(q, k, true, prune, view, original_ids)?;
             let listed: BTreeSet<usize> = first.iter().map(|(row, _)| *row).collect();
             for (row, mut hit) in rest {
                 if first.len() == k {
@@ -355,7 +393,7 @@ impl Index {
                 }
             }
         }
-        first
+        Ok(first)
     }
     fn rank(
         &self,
@@ -365,7 +403,7 @@ impl Index {
         prune: bool,
         view: Option<&RecordVisibility<'_>>,
         original_ids: Option<&[String]>,
-    ) -> (Vec<(usize, Hit)>, bool) {
+    ) -> Result<(Vec<(usize, Hit)>, bool)> {
         prepared::rank(
             self,
             q,

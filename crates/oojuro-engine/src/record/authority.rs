@@ -249,6 +249,7 @@ impl RecordLog {
             self.prefixes.last().ok_or(Error::Authority)?.digest,
             &canonical,
         );
+        drop(canonical);
         let watermark = self.seal_prefix(
             sequence,
             (self.records.len() + assigned.len()) as u64,
@@ -262,6 +263,7 @@ impl RecordLog {
             watermark,
         };
         let encoded = json(&batch, MAX_BATCH_BYTES)?;
+        drop(batch);
         self.capacity(encoded.len())?;
         #[cfg(test)]
         if let Some(h) = &self.hook {

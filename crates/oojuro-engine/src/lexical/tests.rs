@@ -359,6 +359,7 @@ fn native_bitwise_oracle_port_covers_time_phrases_identifiers_dedupe_filters_and
                 native_sig(
                     index
                         .continued(&q, k, true)
+                        .unwrap()
                         .into_iter()
                         .map(|(_, h)| h)
                         .collect()
@@ -366,6 +367,7 @@ fn native_bitwise_oracle_port_covers_time_phrases_identifiers_dedupe_filters_and
                 native_sig(
                     index
                         .continued(&q, k, false)
+                        .unwrap()
                         .into_iter()
                         .map(|(_, h)| h)
                         .collect()
@@ -481,6 +483,7 @@ fn native_above_floor_large_candidate_pruning_and_full_decimal_prefix_ties_match
                 native_sig(
                     index
                         .continued(&q, k, true)
+                        .unwrap()
                         .into_iter()
                         .map(|(_, h)| h)
                         .collect()
@@ -488,6 +491,7 @@ fn native_above_floor_large_candidate_pruning_and_full_decimal_prefix_ties_match
                 native_sig(
                     index
                         .continued(&q, k, false)
+                        .unwrap()
                         .into_iter()
                         .map(|(_, h)| h)
                         .collect()
