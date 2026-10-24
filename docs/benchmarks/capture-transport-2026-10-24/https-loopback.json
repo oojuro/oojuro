@@ -1,0 +1,184 @@
+{
+  "schema": 1,
+  "node": "v24.22.1",
+  "transport": "verified HTTPS loopback; reused default fetch connections",
+  "tls_connections": 2,
+  "complete_acknowledgments": 240,
+  "exact_originals": true,
+  "limits": [
+    "synthetic transport fixture, not Oojuro Cloud",
+    "no disk durability, PostgreSQL, S3, KMS, WAN delay or capacity claim",
+    "shared development host; timing is indicative",
+    "p95 is descriptive with few samples; no deployment throughput or latency claim"
+  ],
+  "results": [
+    {
+      "kind": "repeated-tool-output",
+      "text_bytes": 130,
+      "runs": 12,
+      "modes": {
+        "identity": {
+          "encoding": "identity",
+          "wire_body_bytes_min": 627,
+          "wire_body_bytes_max": 628,
+          "p50_ms": 1.0360830000000192,
+          "p95_ms": 2.273352999999986
+        },
+        "auto": {
+          "encoding": "identity",
+          "wire_body_bytes_min": 627,
+          "wire_body_bytes_max": 628,
+          "p50_ms": 1.0249040000000065,
+          "p95_ms": 1.5647950000000037
+        }
+      }
+    },
+    {
+      "kind": "repeated-tool-output",
+      "text_bytes": 8352,
+      "runs": 12,
+      "modes": {
+        "identity": {
+          "encoding": "identity",
+          "wire_body_bytes_min": 8851,
+          "wire_body_bytes_max": 8852,
+          "p50_ms": 1.0468500000000063,
+          "p95_ms": 3.918601999999993
+        },
+        "auto": {
+          "encoding": "gzip",
+          "wire_body_bytes_min": 310,
+          "wire_body_bytes_max": 311,
+          "p50_ms": 2.021726000000001,
+          "p95_ms": 3.799273999999997
+        }
+      }
+    },
+    {
+      "kind": "repeated-tool-output",
+      "text_bytes": 133642,
+      "runs": 12,
+      "modes": {
+        "identity": {
+          "encoding": "identity",
+          "wire_body_bytes_min": 134145,
+          "wire_body_bytes_max": 134146,
+          "p50_ms": 2.8669060000000286,
+          "p95_ms": 3.3496860000000197
+        },
+        "auto": {
+          "encoding": "gzip",
+          "wire_body_bytes_min": 699,
+          "wire_body_bytes_max": 700,
+          "p50_ms": 3.600490999999977,
+          "p95_ms": 5.499214000000052
+        }
+      }
+    },
+    {
+      "kind": "repeated-tool-output",
+      "text_bytes": 1069136,
+      "runs": 12,
+      "modes": {
+        "identity": {
+          "encoding": "identity",
+          "wire_body_bytes_min": 1069641,
+          "wire_body_bytes_max": 1069642,
+          "p50_ms": 12.140037000000007,
+          "p95_ms": 16.533296000000007
+        },
+        "auto": {
+          "encoding": "gzip",
+          "wire_body_bytes_min": 3422,
+          "wire_body_bytes_max": 3423,
+          "p50_ms": 13.644337000000007,
+          "p95_ms": 21.001586999999972
+        }
+      }
+    },
+    {
+      "kind": "random-printable",
+      "text_bytes": 128,
+      "runs": 12,
+      "modes": {
+        "identity": {
+          "encoding": "identity",
+          "wire_body_bytes_min": 621,
+          "wire_body_bytes_max": 622,
+          "p50_ms": 0.8185620000000426,
+          "p95_ms": 5.052887000000055
+        },
+        "auto": {
+          "encoding": "identity",
+          "wire_body_bytes_min": 621,
+          "wire_body_bytes_max": 622,
+          "p50_ms": 0.8039270000000442,
+          "p95_ms": 1.1986180000000104
+        }
+      }
+    },
+    {
+      "kind": "random-printable",
+      "text_bytes": 8192,
+      "runs": 12,
+      "modes": {
+        "identity": {
+          "encoding": "identity",
+          "wire_body_bytes_min": 8687,
+          "wire_body_bytes_max": 8688,
+          "p50_ms": 0.8836000000000013,
+          "p95_ms": 1.201231000000007
+        },
+        "auto": {
+          "encoding": "gzip",
+          "wire_body_bytes_min": 6461,
+          "wire_body_bytes_max": 6462,
+          "p50_ms": 1.3976430000000164,
+          "p95_ms": 2.2260100000000875
+        }
+      }
+    },
+    {
+      "kind": "random-printable",
+      "text_bytes": 131072,
+      "runs": 12,
+      "modes": {
+        "identity": {
+          "encoding": "identity",
+          "wire_body_bytes_min": 131571,
+          "wire_body_bytes_max": 131572,
+          "p50_ms": 1.964112,
+          "p95_ms": 2.7083260000000564
+        },
+        "auto": {
+          "encoding": "gzip",
+          "wire_body_bytes_min": 99007,
+          "wire_body_bytes_max": 99008,
+          "p50_ms": 7.620719000000008,
+          "p95_ms": 11.063766999999984
+        }
+      }
+    },
+    {
+      "kind": "random-printable",
+      "text_bytes": 1048576,
+      "runs": 12,
+      "modes": {
+        "identity": {
+          "encoding": "identity",
+          "wire_body_bytes_min": 1049077,
+          "wire_body_bytes_max": 1049078,
+          "p50_ms": 17.01654099999996,
+          "p95_ms": 22.95664899999997
+        },
+        "auto": {
+          "encoding": "gzip",
+          "wire_body_bytes_min": 790060,
+          "wire_body_bytes_max": 790061,
+          "p50_ms": 66.05629799999997,
+          "p95_ms": 69.7704960000001
+        }
+      }
+    }
+  ]
+}

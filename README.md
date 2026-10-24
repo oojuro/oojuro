@@ -6,6 +6,10 @@ losslessly compressed, and lets it search its own history in milliseconds. No LL
 **Status:** pre-release. The engine, the recorder and CLI, and the benchmark harnesses are published here; the v1
 architecture is still being finalized, so formats and interfaces may change.
 
+See the [open-source readiness assessment](docs/OPEN_SOURCE_READINESS.md) for the
+current main/candidate boundary and remaining release gates, and
+[capture transport](docs/CAPTURE_TRANSPORT.md) for optional compressed HTTPS uploads.
+
 For local application records, start with the [local journal quickstart](docs/LOCAL_JOURNAL_QUICKSTART.md):
 append typed JSONL, retry safely, search, retrieve original text and export bounded pages.
 For Codex/Claude capture and shared hosted history, see [combined agent setup](docs/COMBINED_AGENT_SETUP.md).

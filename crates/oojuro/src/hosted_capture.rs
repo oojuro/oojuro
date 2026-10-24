@@ -24,6 +24,7 @@ const MIB: usize = 1 << 20;
 const STATE_LIMIT: usize = 40 * MIB;
 const LINE_LIMIT: usize = 16 * MIB;
 const FILE_LIMIT: usize = 10_000;
+const CAPTURE_ENCODING: &str = "x-oojuro-capture-encoding";
 type Result<T> = std::result::Result<T, &'static str>;
 fn opaque(s: &str) -> bool {
     s.len() == 64
@@ -214,6 +215,8 @@ struct CaptureClient {
     cfg: Connection,
     http: Client,
     auth: HeaderValue,
+    gzip: std::cell::Cell<bool>,
+    compression: bool,
 }
 impl CaptureClient {
     fn open(path: &Path) -> Result<Self> {
@@ -264,9 +267,21 @@ impl CaptureClient {
             .timeout(Duration::from_secs(30))
             .build()
             .map_err(|_| "transport_unavailable")?;
-        Ok(Self { cfg, http, auth })
+        let compression = match std::env::var("OOJURO_CAPTURE_COMPRESSION").as_deref() {
+            Err(std::env::VarError::NotPresent) | Ok("identity") => false,
+            Ok("gzip") => true,
+            _ => return Err("invalid_capture_compression"),
+        };
+        Ok(Self {
+            cfg,
+            http,
+            auth,
+            gzip: std::cell::Cell::new(false),
+            compression,
+        })
     }
     fn discovery(&self) -> Result<Discovery> {
+        self.gzip.set(false);
         let r = self
             .http
             .get(format!("{}/api/capture", self.cfg.base_url))
@@ -276,6 +291,8 @@ impl CaptureClient {
         if r.status().as_u16() == 404 {
             return Err("capture_not_authorized_or_expired");
         }
+        let gzip = r.headers().get_all(CAPTURE_ENCODING).iter().count() == 1
+            && r.headers().get(CAPTURE_ENCODING).is_some_and(|value| value == "gzip");
         let info: Discovery =
             serde_json::from_slice(&response(r)?).map_err(|_| "invalid_capture_discovery")?;
         if info.format != 1
@@ -298,6 +315,7 @@ impl CaptureClient {
         {
             return Err("invalid_capture_discovery");
         }
+        self.gzip.set(gzip);
         Ok(info)
     }
     fn send(&self, batch: &Batch, route: Option<&session::Route>) -> Result<()> {
@@ -305,6 +323,7 @@ impl CaptureClient {
             return Err("capture_route_required");
         }
         let (body, total) = wire(batch)?;
+        let (body, encoding) = capture_payload(body, self.compression && self.gzip.get())?;
         let r = self
             .http
             .post(format!(
@@ -314,7 +333,7 @@ impl CaptureClient {
             ))
             .header(AUTHORIZATION, self.auth.clone())
             .header("content-type", "application/vnd.oojuro.capture.v1")
-            .header("content-encoding", "identity")
+            .header("content-encoding", encoding)
             .body(body)
             .send()
             .map_err(|_| "capture_outcome_unknown")?;
@@ -333,6 +352,21 @@ impl CaptureClient {
         }
         Ok(())
     }
+}
+/// Compress only after successful capability discovery and only for useful savings.
+/// This changes transport bytes, never the durable request/event identities.
+fn capture_payload(body: Vec<u8>, supported: bool) -> Result<(Vec<u8>, &'static str)> {
+    if supported && body.len() >= 1024 {
+        let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::fast());
+        encoder
+            .write_all(&body)
+            .map_err(|_| "capture_compression_failed")?;
+        let packed = encoder.finish().map_err(|_| "capture_compression_failed")?;
+        if packed.len() + 64 < body.len() {
+            return Ok((packed, "gzip"));
+        }
+    }
+    Ok((body, "identity"))
 }
 fn response(mut r: Response) -> Result<Vec<u8>> {
     if r.status().as_u16() != 200
@@ -1017,6 +1051,38 @@ pub fn capture(
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn capture_gzip_requires_capability_savings_and_preserves_original_bytes() {
+        let original = "tool output π\0\n".repeat(8192).into_bytes();
+        assert_eq!(
+            capture_payload(original.clone(), false).unwrap(),
+            (original.clone(), "identity")
+        );
+        assert_eq!(
+            capture_payload(b"tiny".to_vec(), true).unwrap(),
+            (b"tiny".to_vec(), "identity")
+        );
+        let (packed, encoding) = capture_payload(original.clone(), true).unwrap();
+        assert_eq!(encoding, "gzip");
+        assert!(packed.len() * 20 < original.len());
+        let mut recovered = Vec::new();
+        flate2::read::GzDecoder::new(packed.as_slice())
+            .read_to_end(&mut recovered)
+            .unwrap();
+        assert_eq!(recovered, original);
+        assert_eq!(
+            capture_payload(recovered, true).unwrap().0,
+            packed,
+            "stable retry representation"
+        );
+        let random: Vec<u8> = (0u64..512)
+            .flat_map(|i| blake3::hash(&i.to_le_bytes()).as_bytes().to_vec())
+            .collect();
+        assert_eq!(
+            capture_payload(random.clone(), true).unwrap(),
+            (random, "identity")
+        );
+    }
     use std::os::unix::fs::PermissionsExt;
     use std::{
         net::TcpListener,
@@ -1032,9 +1098,47 @@ mod tests {
         stop: Arc<AtomicBool>,
         lost: Arc<AtomicBool>,
         wires: Arc<Mutex<Vec<Vec<u8>>>>,
+        gzip: Arc<AtomicBool>,
+        transports: Arc<Mutex<Vec<(bool, Vec<u8>)>>>,
         provision_lost: Arc<AtomicBool>,
         provisions: Arc<Mutex<Vec<serde_json::Value>>>,
         handle: Option<thread::JoinHandle<()>>,
+    }
+    #[test]
+    fn capture_gzip_negotiates_over_http_and_retries_the_original_after_ack_loss() {
+        let fixture = Fixture::new();
+        let path = fixture.connection();
+        let mut client = CaptureClient::open(&path).unwrap();
+        client.compression = true;
+        fixture.gzip.store(true, Ordering::SeqCst);
+        let info = client.discovery().unwrap();
+        let input = serde_json::from_value(json!({"agent_id":info.agent_id,"parent_id":null,
+            "valid_at":1,"kind":"output","tool":null,"status":null,"exit":null,"key":null,
+            "text":"exact tool output π\0\n".repeat(8192),"indexed":true,"attrs":{}}))
+        .unwrap();
+        let batch = Batch {
+            request: "gzip_original".into(),
+            events: vec![Event {
+                event_id: "c".repeat(64),
+                run_id: "d".repeat(64),
+                adapter: "fixture".into(),
+                input,
+            }],
+        };
+        fixture.lost.store(true, Ordering::SeqCst);
+        assert_eq!(client.send(&batch, None), Err("capture_outcome_unknown"));
+        client.send(&batch, None).unwrap();
+        fixture.gzip.store(false, Ordering::SeqCst);
+        client.discovery().unwrap();
+        client.send(&batch, None).unwrap();
+        let transports = fixture.transports.lock().unwrap();
+        assert_eq!(transports.len(), 3);
+        assert!(transports[0].0 && transports[1].0 && !transports[2].0);
+        assert_eq!(transports[0], transports[1]);
+        let raw = fixture.wires.lock().unwrap();
+        assert_eq!(raw[0], raw[1]);
+        assert_eq!(raw[0], raw[2]);
+        assert!(transports[0].1.len() * 20 < raw[0].len());
     }
     impl Drop for Fixture {
         fn drop(&mut self) {
@@ -1055,6 +1159,9 @@ mod tests {
             let stop = Arc::new(AtomicBool::new(false));
             let lost = Arc::new(AtomicBool::new(false));
             let wires = Arc::new(Mutex::new(Vec::new()));
+            let gzip = Arc::new(AtomicBool::new(false));
+            let transports = Arc::new(Mutex::new(Vec::new()));
+            let (capability, sent) = (gzip.clone(), transports.clone());
             let provision_lost = Arc::new(AtomicBool::new(false));
             let provisions = Arc::new(Mutex::new(Vec::new()));
             let (pl, ps) = (provision_lost.clone(), provisions.clone());
@@ -1100,6 +1207,15 @@ mod tests {
                         cfg.capture_key.to_ascii_lowercase()
                     )));
                     let provisioning = header.starts_with("POST /api/capture/sessions ");
+                    let compressed = header.lines().any(|line| line.eq_ignore_ascii_case("content-encoding: gzip"));
+                    if header.starts_with("POST ") && !provisioning {
+                        sent.lock().unwrap().push((compressed, body.clone()));
+                    }
+                    let body = if compressed {
+                        let mut decoded = Vec::new();
+                        flate2::read::GzDecoder::new(body.as_slice()).read_to_end(&mut decoded).unwrap();
+                        decoded
+                    } else { body };
                     let value = if header.starts_with("GET ") {
                         let mut value = json!({"format":1,"journal":if cfg.version==2 {"2".repeat(64)} else {cfg.journal.clone()},"agent_id":"a".repeat(64),"key_id":cfg.credential_id,"producer_id":"b".repeat(64),"label":"Fixture","expires_us":oojuro_capture::time::now_us()+600_000_000,"limits":{"events":100,"metadata_bytes":65536,"text_bytes":16*MIB}});
                         if cfg.version == 2 {
@@ -1127,7 +1243,10 @@ mod tests {
                     } else {
                         header.starts_with("POST ") && ls.swap(false, Ordering::SeqCst)
                     };
-                    write!(s,"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\nConnection: close\r\n\r\n",bytes.len()+usize::from(truncated)).unwrap();
+                    let support = if header.starts_with("GET ") && capability.load(Ordering::SeqCst) {
+                        "X-Oojuro-Capture-Encoding: gzip\r\n"
+                    } else { "" };
+                    write!(s,"HTTP/1.1 200 OK\r\nContent-Type: application/json\r\nContent-Length: {}\r\n{support}Connection: close\r\n\r\n",bytes.len()+usize::from(truncated)).unwrap();
                     s.write_all(&bytes).unwrap();
                 }
             });
@@ -1137,6 +1256,8 @@ mod tests {
                 stop,
                 lost,
                 wires,
+                gzip,
+                transports,
                 provision_lost,
                 provisions,
                 handle: Some(handle),

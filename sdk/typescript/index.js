@@ -1460,23 +1460,54 @@ function sessionRoute(input) {
 export function captureSession(input) {
   try { return sessionRoute(input); } catch { fail("invalid_request"); }
 }
+async function capturePayload(wire, supported, signal) {
+  if (!supported || wire.length < 1024 || typeof globalThis.CompressionStream !== "function") {
+    return { body: wire.slice(), encoding: "identity" };
+  }
+  abort(signal);
+  const reader = new Blob([wire]).stream().pipeThrough(new CompressionStream("gzip")).getReader();
+  const chunks = [];
+  let total = 0;
+  try {
+    for (;;) {
+      abort(signal);
+      const { done, value } = await reader.read();
+      if (done) break;
+      total += value.byteLength;
+      if (total + 64 >= wire.length) {
+        await reader.cancel();
+        return { body: wire.slice(), encoding: "identity" };
+      }
+      chunks.push(value.slice());
+    }
+  } finally { await reader.cancel().catch(() => {}); reader.releaseLock(); }
+  abort(signal);
+  const body = new Uint8Array(total);
+  let at = 0;
+  for (const chunk of chunks) { body.set(chunk, at); at += chunk.length; }
+  return { body, encoding: "gzip" };
+}
 /** Append-only hosted capture adapter in the existing SDK. It accepts no read/admin key. */
 export class OojuroCaptureClient {
   #origin;
   #token;
   #fetch;
+  #compression;
+  #gzip = false;
   constructor(configuration) {
     try {
-      const { baseUrl, token, fetch: transport = globalThis.fetch } = configuration;
+      const { baseUrl, token, fetch: transport = globalThis.fetch, compression = "identity" } = configuration;
       const url = new URL(baseUrl);
       const local = url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
       if ((!local && url.protocol !== "https:") || url.username || url.password ||
           url.search || url.hash || url.pathname !== "/" || typeof transport !== "function" ||
           typeof token !== "string" || !/^ojc_[0-9a-f]{64}_[A-Za-z0-9_-]{43}$/.test(token) ||
-          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_".indexOf(token.at(-1)) % 4 !== 0) fail();
+          "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_".indexOf(token.at(-1)) % 4 !== 0 ||
+          !["auto", "identity"].includes(compression)) fail();
       this.#origin = url.origin;
       this.#token = token;
       this.#fetch = transport;
+      this.#compression = compression;
     } catch { fail("invalid_configuration"); }
   }
   get origin() { return this.#origin; }
@@ -1486,12 +1517,16 @@ export class OojuroCaptureClient {
   [inspect]() { return "OojuroCaptureClient {}"; }
   async #request(body, signal, path = "/api/capture" + (body ? "/events" : ""), media = "application/vnd.oojuro.capture.v1") {
     abort(signal);
+    const payload = body && media === "application/vnd.oojuro.capture.v1"
+      ? await capturePayload(body, this.#gzip && this.#compression === "auto", signal)
+      : { body, encoding: "identity" };
+    abort(signal);
     const response = await this.#fetch(this.#origin + path, {
       method: body ? "POST" : "GET",
       headers: { authorization: `Bearer ${this.#token}`,
         ...(body ? { "content-type": media,
-          "content-length": String(body.byteLength), "content-encoding": "identity" } : {}) },
-      ...(body ? { body } : {}), signal, redirect: "error", cache: "no-store",
+          "content-length": String(payload.body.byteLength), "content-encoding": payload.encoding } : {}) },
+      ...(body ? { body: payload.body } : {}), signal, redirect: "error", cache: "no-store",
       credentials: "omit", referrerPolicy: "no-referrer",
     });
     if (response.status !== 200) {
@@ -1500,12 +1535,14 @@ export class OojuroCaptureClient {
       throw new OojuroError("http", { status: response.status });
     }
     contentType(response, "application/json");
-    return frameMetadata(new TextDecoder("utf-8", { fatal: true }).decode(
+    const value = frameMetadata(new TextDecoder("utf-8", { fatal: true }).decode(
       await bytes(response, recordMetadataLimit, signal, true)));
+    return { value, gzip: response.headers.get("x-oojuro-capture-encoding") === "gzip" };
   }
   async discover({ signal } = {}) {
+    this.#gzip = false;
     try {
-      const value = await this.#request(undefined, signal);
+      const { value, gzip } = await this.#request(undefined, signal);
       const session = Object.hasOwn(value, "journal_mode") || Object.hasOwn(value, "session_endpoint");
       keys(value, ["format", "journal", "agent_id", "key_id", "producer_id", "label", "expires_us", "limits",
         ...(session ? ["journal_mode", "session_endpoint"] : [])]);
@@ -1518,6 +1555,7 @@ export class OojuroCaptureClient {
       integer(value.limits, "events", 100, 100);
       integer(value.limits, "metadata_bytes", recordMetadataLimit, recordMetadataLimit);
       integer(value.limits, "text_bytes", recordTextLimit, recordTextLimit);
+      this.#gzip = gzip;
       return value;
     } catch (error) { throw safeError(error, false); }
   }
@@ -1536,7 +1574,8 @@ export class OojuroCaptureClient {
           const info = await this.discover({ signal });
           if (info.journal_mode !== "session") fail("session_capture_required");
           attempted = true;
-          const route = sessionRoute(await this.#request(body.slice(), signal, "/api/capture/sessions", "application/json"));
+          const { value: accepted } = await this.#request(body.slice(), signal, "/api/capture/sessions", "application/json");
+          const route = sessionRoute(accepted);
           if (route.source !== this.source ||
               route.agent_id !== info.agent_id || route.run_id !== value.runId ||
               hasTarget && route.journal !== value.reuseJournal) fail();
@@ -1584,7 +1623,7 @@ export class OojuroCaptureClient {
       }
       return new PreparedCapture(async (signal) => {
         try {
-          const receipt = await this.#request(wire.slice(), signal, session?.events_url);
+          const { value: receipt } = await this.#request(wire, signal, session?.events_url);
           keys(receipt, ["request_id", "generation", "recorded_bytes", "records"]);
           if (receipt.request_id !== original.requestId || !Array.isArray(receipt.records) || receipt.records.length !== ids.length) fail();
           integer(receipt, "generation", 1);

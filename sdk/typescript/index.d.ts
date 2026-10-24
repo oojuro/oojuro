@@ -398,7 +398,9 @@ export class PreparedCapture {
   send(options?: { signal?: AbortSignal }): Promise<CaptureReceipt>;
 }
 export class OojuroCaptureClient {
-  constructor(options: { baseUrl: string; token: string; fetch?: typeof globalThis.fetch });
+  constructor(options: { baseUrl: string; token: string; fetch?: typeof globalThis.fetch;
+    /** Opt in with auto to compress useful batches after gzip discovery. Default identity; no automatic retry. */
+    compression?: "auto" | "identity" });
   readonly origin: string;
   readonly source: OpaqueId;
   discover(options?: { signal?: AbortSignal }): Promise<CaptureDiscovery>;

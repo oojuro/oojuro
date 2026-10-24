@@ -1,6 +1,9 @@
 import { OojuroCaptureClient, type CaptureEvent, captureEvent } from "../index.js";
 import { CaptureSpool } from "../capture.js";
 const client = new OojuroCaptureClient({ baseUrl: "https://example.invalid", token: "provided" });
+new OojuroCaptureClient({ baseUrl: "https://example.invalid", token: "provided", compression: "identity" });
+// @ts-expect-error Capture compression is negotiated gzip or identity, not arbitrary coding.
+new OojuroCaptureClient({ baseUrl: "https://example.invalid", token: "provided", compression: "br" });
 declare const event: CaptureEvent;
 client.prepareBatch({ requestId: "original", events: [captureEvent(event)] }).send();
 client.discover().then(v => v.producer_id);
