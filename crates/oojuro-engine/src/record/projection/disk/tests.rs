@@ -1406,3 +1406,377 @@ fn ten_concurrent_queries_share_one_immutable_index() {
     fn send_sync<T: Send + Sync>() {}
     send_sync::<Index>();
 }
+
+#[test]
+fn positional_literals_match_full_oracle_across_unicode_filters_refresh_and_reopen() {
+    let samples = [
+        "battery electrode",
+        "Battery electrode",
+        "battery  electrode",
+        "battery\telectrode",
+        "x_battery electrode",
+        "battery electrode_x",
+        "λ_電池\r\n終",
+        "λ_電池\n終",
+        "___ ___",
+        "battery electrode battery electrode",
+        "e\u{301} exact\0終",
+        "終\0exact",
+        ".battery electrode.",
+    ];
+    let mut rows: Vec<_> = (0..300)
+        .map(|i| {
+            let mut value = row(i);
+            value.text = samples[i % samples.len()].into();
+            value
+        })
+        .collect();
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("positional");
+        let limits = Limits {
+            compression,
+            ..Limits::default()
+        };
+        let mut builder = Builder::create_positional(&path, &[9; 32], binding(), limits).unwrap();
+        for row in &rows {
+            builder.push(row.clone()).unwrap();
+        }
+        let mut index = builder.finish().unwrap();
+        assert_eq!(index.manifest.format, POSITIONAL_FORMAT);
+        assert!(index.manifest.positions.is_some());
+        for round in 0..2 {
+            let bound = index.binding().clone();
+            let live: Vec<_> = rows
+                .iter()
+                .filter(|row| round == 0 || row.id != rows[1].id)
+                .cloned()
+                .collect();
+            let reference = super::super::Index::build(bound.clone(), live.clone()).unwrap();
+            let originals: BTreeMap<_, _> =
+                live.into_iter().map(|row| (row.id.clone(), row)).collect();
+            for needle in samples.iter().chain(
+                [
+                    " battery",
+                    "battery ",
+                    ".",
+                    "absent",
+                    "battery electrode missing",
+                ]
+                .iter(),
+            ) {
+                let text = format!("\"{needle}\"");
+                for filter in [
+                    Filter::default(),
+                    Filter {
+                        agent_id: Some("agent-3".into()),
+                        ..Filter::default()
+                    },
+                ] {
+                    let q = query(&text, filter, -8, 7);
+                    let ranked = index.rank_uncached(&bound, &q).unwrap();
+                    assert_eq!(
+                        fingerprint(
+                            &index
+                                .materialize(&bound, &q, &ranked, |id| Ok(originals[id].clone()))
+                                .unwrap()
+                        ),
+                        fingerprint(&reference.search(&bound, &q).unwrap()),
+                        "{text} {compression:?} round {round}"
+                    );
+                }
+            }
+            if round == 0 {
+                let mut next = bound.clone();
+                next.view[0] ^= 1;
+                let mut append =
+                    Appender::extend_validated_prefix(&index, next.clone(), limits).unwrap();
+                append.retire(&rows[1].id).unwrap();
+                let mut addition = row(400);
+                addition.text = "battery electrode λ_電池\r\n終".into();
+                append.push(addition.clone()).unwrap();
+                rows.push(addition);
+                let updated = append.finish().unwrap();
+                drop(updated);
+                drop(index);
+                index = Index::open(&path, &[9; 32], &next).unwrap();
+            }
+        }
+        rows.pop();
+    }
+}
+
+#[test]
+fn positional_literal_counts_and_block_bounds_preserve_exact_dense_scores() {
+    let rows: Vec<_> = (0..5001)
+        .map(|i| {
+            let mut row = row(i);
+            row.text = format!(
+                "the battery electrode original {} λ_電池\r\n終 {}",
+                "battery electrode ".repeat(i % 5),
+                if i.is_multiple_of(3) {
+                    "Battery  electrode"
+                } else {
+                    "battery  electrode"
+                }
+            );
+            row
+        })
+        .collect();
+    let reference = super::super::Index::build(binding(), rows.clone()).unwrap();
+    let originals: BTreeMap<_, _> = rows
+        .iter()
+        .map(|row| (row.id.clone(), row.clone()))
+        .collect();
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let mut builder = Builder::create_positional(
+            scratch.0.join("index"),
+            &[9; 32],
+            binding(),
+            Limits {
+                compression,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        for row in &rows {
+            builder.push(row.clone()).unwrap();
+        }
+        let index = builder.finish().unwrap();
+        for text in [
+            "\"battery electrode\"",
+            "\"battery  electrode\"",
+            "\"Battery  electrode\"",
+            "\"battery electrode original\"",
+            "\"the battery\"",
+            "\"λ_電池\r\n終\"",
+        ] {
+            for (from, to) in [(i64::MIN, i64::MAX), (-8, 7)] {
+                let q = query(text, Filter::default(), from, to);
+                let ranked = index.rank_uncached(&binding(), &q).unwrap();
+                assert_eq!(
+                    fingerprint(
+                        &index
+                            .materialize(&binding(), &q, &ranked, |id| Ok(originals[id].clone()))
+                            .unwrap()
+                    ),
+                    fingerprint(&reference.search(&binding(), &q).unwrap()),
+                    "{text} {compression:?}"
+                );
+            }
+        }
+        let q = query(
+            "\"battery electrode\"",
+            Filter::default(),
+            i64::MIN,
+            i64::MAX,
+        );
+        let plan = scorer::Plan::new(q.text, false, None, &BTreeSet::new(), &BTreeMap::new());
+        let mut proof = index
+            .literal_candidates("battery electrode")
+            .unwrap()
+            .unwrap();
+        let model = index
+            .literal_statistics(&plan, None, &mut proof)
+            .unwrap()
+            .unwrap()
+            .finish(plan);
+        assert!(
+            index
+                .rank_compact_blocks(&model, &Selection::new(&q), q.k, Some(&proof))
+                .unwrap()
+                .is_some()
+        );
+    }
+}
+
+#[test]
+fn positional_proof_ranks_without_cached_originals_and_fallback_still_authenticates_text() {
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("index");
+        let mut original = row(1);
+        original.text = "battery electrode ".into();
+        let mut builder = Builder::create_positional(
+            &path,
+            &[9; 32],
+            binding(),
+            Limits {
+                compression,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        builder.push(original.clone()).unwrap();
+        let index = builder.finish().unwrap();
+        let metadata = index.metadata(0).unwrap();
+        let mut file = fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(
+                index
+                    .directory
+                    .join(&index.manifest.files[metadata.text.file as usize]),
+            )
+            .unwrap();
+        file.seek(SeekFrom::Start(metadata.text.offset)).unwrap();
+        let mut byte = [0];
+        file.read_exact(&mut byte).unwrap();
+        byte[0] ^= 1;
+        file.seek(SeekFrom::Start(metadata.text.offset)).unwrap();
+        file.write_all(&byte).unwrap();
+        file.sync_all().unwrap();
+        let q = query(
+            "\"battery electrode\"",
+            Filter::default(),
+            i64::MIN,
+            i64::MAX,
+        );
+        let ranked = index.rank_uncached(&binding(), &q).unwrap();
+        assert_eq!(ranked.len(), 1);
+        assert_eq!(
+            index
+                .materialize(&binding(), &q, &ranked, |_| Ok(original.clone()))
+                .unwrap()
+                .len(),
+            1
+        );
+        let fallback = query(
+            "\"battery electrode \"",
+            Filter::default(),
+            i64::MIN,
+            i64::MAX,
+        );
+        assert!(matches!(
+            index.rank_uncached(&binding(), &fallback),
+            Err(Error::Authority)
+        ));
+        let tight = Index::open_with_limits(
+            &path,
+            &[9; 32],
+            &binding(),
+            Limits {
+                compression,
+                original_bytes_per_query: 1,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        let mut called = false;
+        assert!(matches!(
+            tight.search(&binding(), &q, |_| {
+                called = true;
+                Ok(original.clone())
+            }),
+            Err(Error::Bounds)
+        ));
+        assert!(!called);
+    }
+}
+
+#[test]
+fn positional_codec_requirement_refuses_unknown_and_undeclared_codecs_before_original_callbacks() {
+    let scratch = Scratch::new();
+    let path = scratch.0.join("index");
+    let mut original = row(1);
+    original.text = "battery electrode".into();
+    let mut builder =
+        Builder::create_positional(&path, &[9; 32], binding(), Limits::default()).unwrap();
+    builder.push(original).unwrap();
+    let index = builder.finish().unwrap();
+    assert_eq!(index.manifest.position_codec, Some(2));
+    for codec in [Some(1), Some(3)] {
+        let mut manifest = index.manifest.clone();
+        manifest.position_codec = codec;
+        publish(&path, &index.cipher, &index.authority, &mut manifest).unwrap();
+        assert!(matches!(
+            Index::open(&path, &[9; 32], &binding()),
+            Err(Error::Bounds)
+        ));
+    }
+    let mut undeclared = index.manifest.clone();
+    undeclared.position_codec = None;
+    publish(&path, &index.cipher, &index.authority, &mut undeclared).unwrap();
+    let undeclared = Index::open(&path, &[9; 32], &binding()).unwrap();
+    let q = query(
+        "\"battery electrode\"",
+        Filter::default(),
+        i64::MIN,
+        i64::MAX,
+    );
+    let mut called = false;
+    assert!(matches!(
+        undeclared.search(&binding(), &q, |_| {
+            called = true;
+            unreachable!()
+        }),
+        Err(Error::Authority)
+    ));
+    assert!(!called);
+}
+
+#[test]
+fn positional_legacy_codec_generation_reopens_and_extends_with_mixed_codec_pages() {
+    let scratch = Scratch::new();
+    let path = scratch.0.join("index");
+    let mut rows: Vec<_> = (0..2).map(row).collect();
+    for row in &mut rows {
+        row.text = "battery electrode".into();
+    }
+    let mut builder =
+        Builder::create_positional(&path, &[9; 32], binding(), Limits::default()).unwrap();
+    for row in &rows {
+        builder.push(row.clone()).unwrap();
+    }
+    let index = builder.finish().unwrap();
+    let mut legacy = tree::Builder::new(index.context(tree::Purpose::ProjectionPostings)).unwrap();
+    // Frozen codec-1 grammar: one group, two row bits, one absolute u32 offset.
+    for (hash, positions) in literal::analyze("battery electrode") {
+        let mut key = hash.to_vec();
+        key.extend(0u32.to_be_bytes());
+        key.extend(positions[0].to_be_bytes());
+        let mut value = vec![1, 1, 0];
+        for word in [3u64, 0, 0, 0] {
+            value.extend(word.to_le_bytes());
+        }
+        value.extend(1u16.to_le_bytes());
+        value.extend(positions[0].to_le_bytes());
+        legacy.push(tree::Entry::new(key, value).unwrap()).unwrap();
+    }
+    let mut manifest = index.manifest.clone();
+    manifest.positions = Some(legacy.finish().unwrap());
+    manifest.position_codec = None;
+    publish(&path, &index.cipher, &index.authority, &mut manifest).unwrap();
+    drop(index);
+    let legacy = Index::open(&path, &[9; 32], &binding()).unwrap();
+    let mut next = binding();
+    next.view[0] ^= 1;
+    let mut append =
+        Appender::extend_validated_prefix(&legacy, next.clone(), Limits::default()).unwrap();
+    let mut addition = row(2);
+    addition.text = "extra battery electrode".into();
+    append.push(addition.clone()).unwrap();
+    rows.push(addition);
+    let updated = append.finish().unwrap();
+    assert_eq!(updated.manifest.position_codec, Some(2));
+    drop(updated);
+    drop(legacy);
+    let updated = Index::open(&path, &[9; 32], &next).unwrap();
+    let reference = super::super::Index::build(next.clone(), rows.clone()).unwrap();
+    let originals: BTreeMap<_, _> = rows.into_iter().map(|row| (row.id.clone(), row)).collect();
+    let q = query(
+        "\"battery electrode\"",
+        Filter::default(),
+        i64::MIN,
+        i64::MAX,
+    );
+    assert_eq!(
+        fingerprint(
+            &updated
+                .search(&next, &q, |id| Ok(originals[id].clone()))
+                .unwrap()
+        ),
+        fingerprint(&reference.search(&next, &q).unwrap())
+    );
+}

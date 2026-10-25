@@ -32,6 +32,33 @@ pub(super) enum Pairs {
     },
 }
 impl Pairs {
+    pub fn frequency(&self, mask: &[u64]) -> Result<u64> {
+        let mut total = 0u64;
+        match self {
+            Self::Plain(pairs) => {
+                for &(row, tf) in pairs {
+                    let word = mask.get(row as usize / 64).ok_or(Error::Authority)?;
+                    if word & (1 << (row % 64)) != 0 {
+                        total = total.checked_add(u64::from(tf)).ok_or(Error::Bounds)?;
+                    }
+                }
+            }
+            Self::Compact { blocks, .. } => {
+                for block in blocks {
+                    let begin = block.base() as usize / 64;
+                    if begin >= mask.len() {
+                        return Err(Error::Authority);
+                    }
+                    let selected =
+                        std::array::from_fn(|at| mask.get(begin + at).copied().unwrap_or(0));
+                    total = total
+                        .checked_add(block.frequency(selected))
+                        .ok_or(Error::Bounds)?;
+                }
+            }
+        }
+        Ok(total)
+    }
     fn new(compact: bool, upper: usize) -> Self {
         if compact {
             Self::Compact {
@@ -196,6 +223,7 @@ struct CacheKey {
 enum Entry {
     Postings(Arc<TermList>),
     Selection(Arc<Selected>),
+    Literal(Arc<literal::Proof>),
     Joint(Arc<joint::Groups>),
 }
 impl Entry {
@@ -203,6 +231,7 @@ impl Entry {
         match self {
             Self::Postings(list) => list.bytes,
             Self::Selection(view) => view.bits.capacity() * 8 + 512,
+            Self::Literal(proof) => proof.bytes(),
             Self::Joint(groups) => groups.bytes(),
         }
     }
@@ -210,6 +239,7 @@ impl Entry {
         match self {
             Self::Postings(list) => Arc::strong_count(list) == 1,
             Self::Selection(view) => Arc::strong_count(view) == 1,
+            Self::Literal(proof) => Arc::strong_count(proof) == 1,
             Self::Joint(groups) => Arc::strong_count(groups) == 1,
         }
     }
@@ -274,6 +304,33 @@ impl TermCache {
         )?;
         match entry {
             Some(Entry::Joint(groups)) => Ok(Some(groups)),
+            None => Ok(None),
+            _ => Err(Error::Authority),
+        }
+    }
+    pub fn literal(&self, index: &Index, needle: &str) -> Result<Option<Arc<literal::Proof>>> {
+        if index.manifest.positions.is_none() {
+            return Ok(None);
+        }
+        let mut key = blake3::Hasher::new_derive_key("oojuro exact raw literal proof v1");
+        key.update(needle.as_bytes());
+        let entry = self.entry(
+            CacheKey {
+                kind: 3,
+                hash: *key.finalize().as_bytes(),
+            },
+            || {
+                let bytes = literal::Proof::estimate(index.manifest.rows)?;
+                Ok((bytes, bytes))
+            },
+            |_| {
+                Ok(Entry::Literal(Arc::new(literal::Proof {
+                    bits: index.literal_candidates_uncached(needle)?,
+                })))
+            },
+        )?;
+        match entry {
+            Some(Entry::Literal(proof)) => Ok(Some(proof)),
             None => Ok(None),
             _ => Err(Error::Authority),
         }
@@ -366,7 +423,7 @@ impl TermCache {
                     &index.manifest.postings,
                     &term,
                 )?;
-                if index.manifest.format == COMPACT_FORMAT {
+                if compact_format(index.manifest.format) {
                     let upper = usize::try_from(chunks).map_err(|_| Error::Bounds)?;
                     let reserved = upper
                         .checked_mul(std::mem::size_of::<compact::TfBlock>() + 1283)
@@ -414,13 +471,13 @@ impl TermCache {
 }
 fn load(index: &Index, term: [u8; 32], upper: usize) -> Result<TermList> {
     let mut input = DiskPostings::new_hash(index, term)?;
-    let mut pairs = Pairs::new(index.manifest.format == COMPACT_FORMAT, upper);
+    let mut pairs = Pairs::new(compact_format(index.manifest.format), upper);
     let mut pending = Vec::with_capacity(256);
     let mut maximum_scope_mass = 0.0f64;
     let mut statistics = Statistics::default();
     let mut groups = Some(BTreeMap::<(u32, u32, u32), BinaryHeap<GroupHit>>::new());
     while let Some((ordinal, tf)) = input.next()? {
-        if index.manifest.format != COMPACT_FORMAT && pairs.len() == upper {
+        if !compact_format(index.manifest.format) && pairs.len() == upper {
             return Err(Error::Authority);
         }
         let column = index.column(ordinal)?;
@@ -628,7 +685,79 @@ mod tests {
         }));
         assert!(state.used <= index.terms.capacity && state.inflight.is_empty());
     }
-
+    #[test]
+    fn literal_proof_singleflight_leases_and_admission_share_the_existing_policy() {
+        let root = Scratch(std::env::temp_dir().join(format!(
+            "literal-cache-{}",
+            hex(&oojuro_store::crypto::random_key())
+        )));
+        fs::create_dir(&root.0).unwrap();
+        let binding = Binding {
+            namespace: [1; 32],
+            writer: "literal-fixture".into(),
+            view: [2; 32],
+        };
+        let mut builder =
+            Builder::create_positional(root.0.join("index"), &[9; 32], binding, Limits::default())
+                .unwrap();
+        for i in 0..128 {
+            builder
+                .push(Row {
+                    id: format!("{i:08x}"),
+                    key: None,
+                    text: "alpha beta".into(),
+                    valid_at: i,
+                    reported_recorded_at: i,
+                    kind: Kind::Raw,
+                    tool: None,
+                    status: None,
+                    agent_id: String::new(),
+                    indexed: true,
+                })
+                .unwrap();
+        }
+        let mut index = builder.finish().unwrap();
+        index.terms.capacity = literal::Proof::estimate(index.manifest.rows).unwrap();
+        let index = Arc::new(index);
+        let barrier = Arc::new(std::sync::Barrier::new(10));
+        let leases: Vec<_> = std::thread::scope(|scope| {
+            let threads: Vec<_> = (0..10)
+                .map(|_| {
+                    let index = index.clone();
+                    let barrier = barrier.clone();
+                    scope.spawn(move || {
+                        barrier.wait();
+                        index.terms.literal(&index, "alpha beta").unwrap().unwrap()
+                    })
+                })
+                .collect();
+            threads
+                .into_iter()
+                .map(|thread| thread.join().unwrap())
+                .collect()
+        });
+        let lease = leases[0].clone();
+        assert!(leases.iter().all(|other| Arc::ptr_eq(other, &lease)));
+        drop(leases);
+        assert_eq!(lease.bits.as_deref(), Some([u64::MAX; 2].as_slice()));
+        let mut copy = index.literal_candidates("alpha beta").unwrap().unwrap();
+        copy.fill(0);
+        assert_eq!(lease.bits.as_deref(), Some([u64::MAX; 2].as_slice()));
+        let charged = index.terms.state.lock().unwrap().used;
+        assert_eq!(charged, lease.bytes());
+        assert!(index.terms.literal(&index, "beta alpha").unwrap().is_none());
+        assert_eq!(
+            index.literal_candidates("beta alpha").unwrap(),
+            Some(vec![0; 2])
+        );
+        assert_eq!(index.terms.state.lock().unwrap().used, charged);
+        drop(lease);
+        let replacement = index.terms.literal(&index, "beta alpha").unwrap().unwrap();
+        assert_eq!(replacement.bits.as_deref(), Some([0; 2].as_slice()));
+        let state = index.terms.state.lock().unwrap();
+        assert_eq!(state.ready.len(), 1);
+        assert!(state.used <= index.terms.capacity && state.inflight.is_empty());
+    }
     #[test]
     fn joint_shape_leases_share_budget_and_rejected_proofs_remain_incomplete() {
         let root = Scratch(std::env::temp_dir().join(format!(

@@ -1,0 +1,180 @@
+{
+  "revision": "353d078d04f0d6cfea95a4f25c59b6769b83e0f9",
+  "checks": [
+    {
+      "step": "compile-tests",
+      "args": [
+        "cargo",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--lib",
+        "--no-run",
+        "--message-format=json"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        }
+      ],
+      "source_fence": {
+        "cleaned_mutable_packages": true,
+        "cleaned_profiles": [
+          "dev",
+          "release"
+        ],
+        "revisions": [
+          "353d078d04f0d6cfea95a4f25c59b6769b83e0f9"
+        ],
+        "source_fence": "c2a60a3e04efc00e1f9d716115b71f3cb0f4fa64f4a648490d97fc6d2e603130",
+        "source_fence_format": 2
+      },
+      "elf_sha256": "9a37b44070bc23765a6040a4176f038b98bcad5e42b46c59bac1bfe66dec02e9"
+    },
+    {
+      "step": "focused",
+      "filter": "record::projection::disk::literal::tests::",
+      "returncode": 0,
+      "test_summaries": [
+        [
+          "6",
+          "0",
+          "0"
+        ]
+      ],
+      "elf_sha256": "9a37b44070bc23765a6040a4176f038b98bcad5e42b46c59bac1bfe66dec02e9"
+    },
+    {
+      "step": "focused",
+      "filter": "record::projection::disk::tests::positional_",
+      "returncode": 0,
+      "test_summaries": [
+        [
+          "5",
+          "0",
+          "0"
+        ]
+      ],
+      "elf_sha256": "9a37b44070bc23765a6040a4176f038b98bcad5e42b46c59bac1bfe66dec02e9"
+    },
+    {
+      "step": "clippy",
+      "args": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--lib",
+        "--tests",
+        "--example",
+        "profile_juro_projection",
+        "--no-deps",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "returncode": 0,
+      "artifacts": [],
+      "source_fence": {
+        "cleaned_mutable_packages": false,
+        "cleaned_profiles": [],
+        "revisions": [
+          "353d078d04f0d6cfea95a4f25c59b6769b83e0f9"
+        ],
+        "source_fence": "c2a60a3e04efc00e1f9d716115b71f3cb0f4fa64f4a648490d97fc6d2e603130",
+        "source_fence_format": 2
+      }
+    },
+    {
+      "step": "release",
+      "args": [
+        "cargo",
+        "build",
+        "--locked",
+        "--release",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--example",
+        "profile_juro_projection",
+        "--message-format=json"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        },
+        {
+          "target": "profile_juro_projection",
+          "fresh": false
+        }
+      ],
+      "source_fence": {
+        "cleaned_mutable_packages": false,
+        "cleaned_profiles": [],
+        "revisions": [
+          "353d078d04f0d6cfea95a4f25c59b6769b83e0f9"
+        ],
+        "source_fence": "c2a60a3e04efc00e1f9d716115b71f3cb0f4fa64f4a648490d97fc6d2e603130",
+        "source_fence_format": 2
+      },
+      "elf_sha256": "9d6211d02d59313153338298f8100152eb18d60b8dc74b894e67ba3d3a8e42bd"
+    }
+  ],
+  "scope": "Focused source-fenced position codec2/mixed-legacy/refusal qualification. Full base208+8 is recorded separately; final combined current-main gate remains pending."
+}

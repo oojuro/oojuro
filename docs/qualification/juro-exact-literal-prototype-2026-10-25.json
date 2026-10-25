@@ -1,0 +1,362 @@
+{
+  "scope": "Disposable exact-literal layout3 prototype; source wire0.1 and Event profile1 unchanged. Full base gate and focused join followup are separate qualified revisions; no larger-scale or hosted claim.",
+  "base": {
+    "revision": "f0b540ba26b45d0948904cd7fd73e0c037992dbf",
+    "scope": "Source-fenced literal layout3 qualification; no performance claims",
+    "checks": [
+      {
+        "step": "full",
+        "args": [
+          "cargo",
+          "test",
+          "--locked",
+          "--no-default-features",
+          "--lib",
+          "--tests",
+          "-p",
+          "oojuro-engine",
+          "-p",
+          "oojuro-rank",
+          "--message-format=json",
+          "--",
+          "--test-threads=1"
+        ],
+        "returncode": 0,
+        "mutable_artifacts": [
+          {
+            "target": "oojuro_rank",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_rank",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_core",
+            "fresh": false
+          },
+          {
+            "target": "conformance",
+            "fresh": false
+          },
+          {
+            "target": "ojo",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_store",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_nine",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_trace",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_engine",
+            "fresh": false
+          }
+        ],
+        "source_fence": {
+          "cleaned_mutable_packages": true,
+          "cleaned_profiles": [
+            "dev",
+            "release"
+          ],
+          "revisions": [
+            "f0b540ba26b45d0948904cd7fd73e0c037992dbf"
+          ],
+          "source_fence": "e62315c8ce8007af91eb8777456c0809da0e864dbc235d131f86f7dbd22a4755",
+          "source_fence_format": 2
+        },
+        "test_summaries": [
+          [
+            "208",
+            "0",
+            "10"
+          ],
+          [
+            "0",
+            "0",
+            "0"
+          ],
+          [
+            "8",
+            "0",
+            "0"
+          ]
+        ],
+        "required_cases": [
+          "positional_literal_counts_and_block_bounds_preserve_exact_dense_scores",
+          "positional_literals_match_full_oracle_across_unicode_filters_refresh_and_reopen",
+          "positional_proof_ranks_without_cached_originals_and_fallback_still_authenticates_text",
+          "literal_tf_sums_and_penalty_bounds_match_complete_integer_and_score_oracles",
+          "bitplane_mass_matches_complete_integer_oracle_and_admits_before_allocation",
+          "raw_runs_prove_exact_unicode_case_and_separators",
+          "bounded_position_fragments_round_trip_and_refuse_corruption",
+          "mask_join_is_complete_across_fragments_and_refuses_partial_budget_proofs"
+        ],
+        "copied_test_executables": [
+          {
+            "target": "oojuro_rank",
+            "sha256": "ace368af1ef3105afcdbf770bbb1a0a6b568c6c865126a36ed210d11c07591aa",
+            "case_count": 0
+          },
+          {
+            "target": "conformance",
+            "sha256": "7c09c33d637682a448f79216fddf85b3025629e7c8e83948f75bac0c193b14a2",
+            "case_count": 8
+          },
+          {
+            "target": "oojuro_engine",
+            "sha256": "0fe153fb8f198baac5ec50151a7e738bc48ad2e45eb858356061f3157796e43b",
+            "case_count": 218
+          }
+        ]
+      },
+      {
+        "step": "release",
+        "args": [
+          "cargo",
+          "build",
+          "--locked",
+          "--release",
+          "--no-default-features",
+          "-p",
+          "oojuro-engine",
+          "--example",
+          "profile_juro_projection",
+          "--message-format=json"
+        ],
+        "returncode": 0,
+        "mutable_artifacts": [
+          {
+            "target": "oojuro_rank",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_core",
+            "fresh": false
+          },
+          {
+            "target": "ojo",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_store",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_nine",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_trace",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_engine",
+            "fresh": false
+          },
+          {
+            "target": "profile_juro_projection",
+            "fresh": false
+          }
+        ],
+        "source_fence": {
+          "cleaned_mutable_packages": false,
+          "cleaned_profiles": [],
+          "revisions": [
+            "f0b540ba26b45d0948904cd7fd73e0c037992dbf"
+          ],
+          "source_fence": "e62315c8ce8007af91eb8777456c0809da0e864dbc235d131f86f7dbd22a4755",
+          "source_fence_format": 2
+        },
+        "test_summaries": [],
+        "elf_sha256": "287876a177448de4787f57c124891987dd580323f61593fbb3d447baaaa7c740"
+      }
+    ]
+  },
+  "join": {
+    "revision": "37cfb85d1cd6b424a8e7bafa15d25efa81030de0",
+    "checks": [
+      {
+        "step": "compile-tests",
+        "args": [
+          "cargo",
+          "test",
+          "--locked",
+          "--no-default-features",
+          "-p",
+          "oojuro-engine",
+          "--lib",
+          "--no-run",
+          "--message-format=json"
+        ],
+        "returncode": 0,
+        "artifacts": [
+          {
+            "target": "oojuro_rank",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_core",
+            "fresh": false
+          },
+          {
+            "target": "ojo",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_store",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_nine",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_trace",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_engine",
+            "fresh": false
+          }
+        ],
+        "source_fence": {
+          "cleaned_mutable_packages": true,
+          "cleaned_profiles": [
+            "dev",
+            "release"
+          ],
+          "revisions": [
+            "37cfb85d1cd6b424a8e7bafa15d25efa81030de0"
+          ],
+          "source_fence": "7a98f93bde8172d67362893384bad28fb3c6ef2a7f1e5875131606a563b354bd",
+          "source_fence_format": 2
+        },
+        "elf_sha256": "7fbcb1d62f1abc0906bd4d1553e201a0229377190f4473f68623e0aa722287f4"
+      },
+      {
+        "step": "focused",
+        "filter": "record::projection::disk::literal::tests::",
+        "returncode": 0,
+        "test_summaries": [
+          [
+            "5",
+            "0",
+            "0"
+          ]
+        ],
+        "elf_sha256": "7fbcb1d62f1abc0906bd4d1553e201a0229377190f4473f68623e0aa722287f4"
+      },
+      {
+        "step": "focused",
+        "filter": "record::projection::disk::tests::positional_",
+        "returncode": 0,
+        "test_summaries": [
+          [
+            "3",
+            "0",
+            "0"
+          ]
+        ],
+        "elf_sha256": "7fbcb1d62f1abc0906bd4d1553e201a0229377190f4473f68623e0aa722287f4"
+      },
+      {
+        "step": "clippy",
+        "args": [
+          "cargo",
+          "clippy",
+          "--locked",
+          "--no-default-features",
+          "-p",
+          "oojuro-engine",
+          "--lib",
+          "--tests",
+          "--example",
+          "profile_juro_projection",
+          "--no-deps",
+          "--",
+          "-D",
+          "warnings"
+        ],
+        "returncode": 0,
+        "artifacts": [],
+        "source_fence": {
+          "cleaned_mutable_packages": false,
+          "cleaned_profiles": [],
+          "revisions": [
+            "37cfb85d1cd6b424a8e7bafa15d25efa81030de0"
+          ],
+          "source_fence": "7a98f93bde8172d67362893384bad28fb3c6ef2a7f1e5875131606a563b354bd",
+          "source_fence_format": 2
+        }
+      },
+      {
+        "step": "release",
+        "args": [
+          "cargo",
+          "build",
+          "--locked",
+          "--release",
+          "--no-default-features",
+          "-p",
+          "oojuro-engine",
+          "--example",
+          "profile_juro_projection",
+          "--message-format=json"
+        ],
+        "returncode": 0,
+        "artifacts": [
+          {
+            "target": "oojuro_rank",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_core",
+            "fresh": false
+          },
+          {
+            "target": "ojo",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_store",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_nine",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_trace",
+            "fresh": false
+          },
+          {
+            "target": "oojuro_engine",
+            "fresh": false
+          },
+          {
+            "target": "profile_juro_projection",
+            "fresh": false
+          }
+        ],
+        "source_fence": {
+          "cleaned_mutable_packages": false,
+          "cleaned_profiles": [],
+          "revisions": [
+            "37cfb85d1cd6b424a8e7bafa15d25efa81030de0"
+          ],
+          "source_fence": "7a98f93bde8172d67362893384bad28fb3c6ef2a7f1e5875131606a563b354bd",
+          "source_fence_format": 2
+        },
+        "elf_sha256": "2200d0139595861098fd5c4ec280169b8c9b7f4122460fb4ab84f0f88f091544"
+      }
+    ]
+  }
+}
