@@ -198,3 +198,26 @@ A shared Cargo target could reuse mutable worktree libraries through relative de
 Clean compilations reproduce both frozen ELFs in the numeric append comparison (8661394 and b328f79) byte for byte, and reproduce the 4e9c514 actual-million query ELF byte for byte. Every mutable library reports non-Fresh compilation. These existing performance receipts retain source attribution without repeating timings. The baseline first compiled in a fresh source root under guard1; its complete non-Fresh artifact record independently establishes that compilation.
 
 The separate diverse prototype's clean ELF differs from the earlier prototype ELF. No diverse timing had begun. Its pending campaign will use only the corrected frozen ELF after source-fenced, nonzero correctness gates. Historical test output and copied test ELFs remain preserved; final runtime correctness still requires the source-fenced final gate. Both the failed initial audit and successful attribution proof are in [the audit receipt](qualification/juro-compact-source-binary-audit-2026-10-25.json).
+
+
+Varied actual-source diagnostic
+-------------------------------
+
+Source 85e1125 adds varied TF, length and scope to the synthetic Event-file fixture. Its clean source-fence2 ELF is independently verified; the full 201-engine/eight-rank gate and strict lib/tests/two-harness Clippy pass. The earlier prototype ELF did not reproduce and was replaced before any timing.
+
+The complete 1k/100k cohort has 18 source/build/query observations with exact cross-layout/codec signatures. Each query observation includes one initial warmup and 30 rank-result-bypassing requests under ten clients on one CPU and a 2 GiB child address cap. OS caches remain retained; selected originals come from the actual Journal. This is one observation per layout/codec, not a counterbalanced replicated latency qualification.
+
+At 100k varied rows, p95 milliseconds are adverse:
+
+| Query | Raw v1 | Raw v2 | Zstd v1 | Zstd v2 |
+| --- | ---: | ---: | ---: | ---: |
+| common | 69.91 | 81.00 | 94.94 | 72.76 |
+| pair | 128.03 | 133.72 | 132.22 | 145.93 |
+| three matching terms | 157.97 | 162.23 | 163.35 | 173.64 |
+| pair plus absent term | 124.32 | 142.81 | 133.88 | 142.47 |
+
+The 100 ms target is unqualified for these cases. The fast homogeneous-million result does not generalize. At 1k varied rows, the dense quoted phrase remains adverse at 321.26 ms raw and 354.02 ms Zstd in v2 (v1: 317.76/407.14 ms). No 100k or 1M varied dense-literal timing is implied.
+
+Read-only syscall profiles keep the frozen ELF and host libc/libm unchanged. Compared with one measured request after identical opens/initial warmup, 30 measured 100k pair requests add 0.35 seconds user CPU, 0.02 seconds system time, 580 preads and one open. Those are 29 additional requests, each fetching 20 selected originals. The corresponding 1k dense-phrase difference adds28,943opens/closes and29,522preads. Instrumented timings are diagnostic, not latency qualification: the pair points to numeric CPU work, while the phrase repeatedly opens and reads cached originals.
+
+All observations, individual samples, initial-query/build/open times, combined footprint inputs, build/allocated peaks, RSS and syscall summaries are preserved in [the diagnostic receipt](benchmarks/JURO_DIVERSE_SCOPE_DIAGNOSTICS_2026_10_25.json). The independent source gate is [recorded separately](qualification/juro-diverse-scope-gate-2026-10-25.json). Further exact grouping and positional work remains pending; no universal latency/storage claim follows.
