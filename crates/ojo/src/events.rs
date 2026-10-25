@@ -348,6 +348,30 @@ impl Journal {
         Ok(())
     }
 
+    /// Resolves a retained engine intent to its exact accepted event, if present.
+    /// Validates the journal, original engine time and original data hash. Works
+    /// through read-only handles and never confirms durability or acknowledges a
+    /// write; use confirm or an exact append retry before returning a write ACK.
+    pub fn get_prepared(&mut self, intent: &AppendIntent) -> Result<Option<Event>> {
+        self.db.healthy()?;
+        if intent.journal != self.id {
+            return Err(Error::Conflict);
+        }
+        let Some(&index) = self.db.requests.get(&intent.request) else {
+            return Ok(None);
+        };
+        if index == 0 || self.events[index - 1].accepted_at != intent.accepted_at {
+            return Err(Error::Conflict);
+        }
+        let event = self
+            .get(self.cursor(index as u64, self.events[index - 1]))?
+            .ok_or(Error::Corrupt("missing retry original"))?;
+        if wire::hash(&[&event.data]) != intent.data_hash {
+            return Err(Error::Conflict);
+        }
+        Ok(Some(event))
+    }
+
     fn check_intent_data(&self, intent: &AppendIntent, data: &[u8]) -> Result<()> {
         self.db.healthy()?;
         if data.len() > wire::MAX_VALUE {
@@ -613,6 +637,12 @@ impl Collector {
             .lock()
             .map_err(|_| Error::Poisoned)?
             .get(cursor)
+    }
+    pub fn get_prepared(&self, intent: &AppendIntent) -> Result<Option<Event>> {
+        self.journal
+            .lock()
+            .map_err(|_| Error::Poisoned)?
+            .get_prepared(intent)
     }
     /// A bounded live page. None starts at the beginning; resume with Page.cursor.
     /// Timeout returns an empty page retaining the supplied cursor.
@@ -891,6 +921,42 @@ mod tests {
         let receipts = journal.append_prepared_batch(&[item]).unwrap();
         assert_eq!(journal.get(receipts[0].cursor).unwrap().unwrap().data, data);
         assert_eq!(journal.db.transactions.last().unwrap().head[36], 0);
+    }
+
+    #[test]
+    fn retained_intent_reads_bind_exact_original_time_and_receipt_without_writing() {
+        for key in [None, Some([85; 32])] {
+            let root = Scratch::new();
+            let path = root.file("intent-read.juro");
+            let mut journal = Journal::create(&path, key.as_ref()).unwrap();
+            let intent = journal.prepare(b"original\0\xff").unwrap();
+            assert!(journal.get_prepared(&intent).unwrap().is_none());
+            let receipt = journal.append_prepared(&intent, b"original\0\xff").unwrap();
+            let expected = journal.get(receipt.cursor).unwrap().unwrap();
+            assert_eq!(journal.get_prepared(&intent).unwrap(), Some(expected));
+            drop(journal);
+            let bytes = std::fs::read(&path).unwrap();
+            let mut reader = Journal::open(&path, key.as_ref(), false).unwrap();
+            let event = reader.get_prepared(&intent).unwrap().unwrap();
+            assert_eq!(event.cursor, receipt.cursor);
+            assert_eq!(event.accepted_at, receipt.accepted_at);
+            assert_eq!(event.data, b"original\0\xff");
+            let mut wrong = intent;
+            wrong.accepted_at += 1;
+            assert!(matches!(reader.get_prepared(&wrong), Err(Error::Conflict)));
+            wrong = intent;
+            wrong.data_hash[0] ^= 1;
+            assert!(matches!(reader.get_prepared(&wrong), Err(Error::Conflict)));
+            wrong = intent;
+            wrong.journal[0] ^= 1;
+            assert!(matches!(reader.get_prepared(&wrong), Err(Error::Conflict)));
+            let collector = Collector::new(reader);
+            assert_eq!(
+                collector.get_prepared(&intent).unwrap().unwrap().cursor,
+                receipt.cursor
+            );
+            assert_eq!(std::fs::read(&path).unwrap(), bytes);
+        }
     }
 
     #[test]
