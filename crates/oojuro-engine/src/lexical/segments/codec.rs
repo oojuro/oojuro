@@ -256,13 +256,25 @@ fn rice_k(rows: u32, df: u32) -> u32 {
 fn prefix(a: &[u8], b: &[u8]) -> usize {
     a.iter().zip(b).take_while(|(a, b)| a == b).count()
 }
+const CRC_TABLE: [u32; 256] = {
+    let mut table = [0; 256];
+    let mut byte = 0;
+    while byte < table.len() {
+        let mut crc = byte as u32;
+        let mut bit = 0;
+        while bit < 8 {
+            crc = (crc >> 1) ^ (0xedb8_8320 & 0u32.wrapping_sub(crc & 1));
+            bit += 1;
+        }
+        table[byte] = crc;
+        byte += 1;
+    }
+    table
+};
 fn crc32(bytes: &[u8]) -> u32 {
     let mut crc = !0u32;
-    for b in bytes {
-        crc ^= u32::from(*b);
-        for _ in 0..8 {
-            crc = (crc >> 1) ^ (0xedb8_8320 & 0u32.wrapping_sub(crc & 1));
-        }
+    for byte in bytes {
+        crc = (crc >> 8) ^ CRC_TABLE[((crc ^ u32::from(*byte)) & 255) as usize];
     }
     !crc
 }
@@ -708,6 +720,37 @@ mod tests {
         assert_eq!(bits.finish().unwrap(), vec![0x59, 0x01]);
         assert_eq!(crc32(b"123456789"), 0xcbf4_3926);
         assert_eq!((rice_k(8, 2), rice_k(8192, 1), rice_k(1, 1)), (2, 13, 0));
+    }
+    #[test]
+    fn table_crc_matches_frozen_bitwise_format_across_lengths_and_bytes() {
+        fn bitwise(bytes: &[u8]) -> u32 {
+            let mut crc = !0u32;
+            for byte in bytes {
+                crc ^= u32::from(*byte);
+                for _ in 0..8 {
+                    crc = (crc >> 1) ^ (0xedb8_8320 & 0u32.wrapping_sub(crc & 1));
+                }
+            }
+            !crc
+        }
+        // Include all byte values and block boundaries with deterministic mixed data.
+        let bytes = (0..32769)
+            .map(|i| ((i * 131 + i / 257) & 255) as u8)
+            .collect::<Vec<_>>();
+        for length in (0..=257).chain([511, 512, 513, 8191, 8192, 8193, 32768, 32769]) {
+            assert_eq!(
+                crc32(&bytes[..length]),
+                bitwise(&bytes[..length]),
+                "{length}"
+            );
+        }
+        // Encoding must retain the old footer checksum, not merely round-trip itself.
+        let encoded = encode(&sample(129)).unwrap();
+        let end = encoded.len() - FOOTER;
+        assert_eq!(
+            Read::new(&encoded[end..]).u32().unwrap(),
+            bitwise(&encoded[..end])
+        );
     }
     #[test]
     fn rejects_all_truncations_and_single_bit_corruption() {
