@@ -1,0 +1,3437 @@
+{
+  "scope": "Codec-only comparison on frozen independent artifacts; prefix API functional gates are separate and do not establish1M/concurrent/hosted latency.",
+  "qualified_codec_campaign": {
+    "provenance": {
+      "baseline": "1a9a99ca92660d984cb6af4b87e218aecd714d99",
+      "rust": "1.99.1",
+      "rustflags": "-Ctarget-cpu=x86-64",
+      "features": [
+        "archive",
+        "bench"
+      ],
+      "cpu": 0,
+      "filesystem": "Btrfs no compression; inherited chattr+m checked",
+      "shared_host": true,
+      "order": [
+        "baseline",
+        "candidate",
+        "candidate",
+        "baseline"
+      ],
+      "source_sha256": {
+        "baseline": {
+          "crates/ojo/src/lib.rs": "30a63677d28d6af6a9198eaca7324d8ec856d25ffdc82a8db3556b0009918cba",
+          "crates/ojo/src/wire.rs": "f108b62b0b9eb90424f04294442e6f45628ce242560b05dc4b428cfa6fac03f2",
+          "crates/ojo/examples/io_profile.rs": "7ed8e3c1e6d65e1b90aad858d88743fab2c0348e492bcacd25b875bd5721e509",
+          "Cargo.lock": "61f3bcee5ba7cc797f44246d3765dfdaed7371ef66c73c2316c8e2bec1a40f7a"
+        },
+        "candidate": {
+          "crates/ojo/src/lib.rs": "ced8ab61b7202f04ef8cfd4bf8bc0581b35a84ffcb7d1f84f12df9b7868efc0c",
+          "crates/ojo/src/wire.rs": "098dac41756907534317415d72ecf34b78d3ebaa176ebe8d102323d42dd7149f",
+          "crates/ojo/examples/io_profile.rs": "7ed8e3c1e6d65e1b90aad858d88743fab2c0348e492bcacd25b875bd5721e509",
+          "Cargo.lock": "61f3bcee5ba7cc797f44246d3765dfdaed7371ef66c73c2316c8e2bec1a40f7a"
+        }
+      },
+      "binary_sha256": {
+        "baseline": "61bf88ca7b0f8f94f109e68b53134813ae3f1ae65c7ce4e5c6541e6fe314d810",
+        "candidate": "bd222c5884fb463fb1c76a5f886fb1926ec71e0e4fe4165d522033a049325be5"
+      },
+      "independent_target_directories": true,
+      "candidate_runtime_commit": "786252f5637823b926c2fc3b1b1122d137710486",
+      "source_integrity_verified_against_git": true
+    },
+    "runs": [
+      {
+        "case": "raw-1k",
+        "build": "baseline",
+        "iteration": 0,
+        "metrics": {
+          "archive_seconds": null,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 16.561,
+            "p95": 17.314,
+            "p99": 19.245
+          },
+          "durable_commit_us": {
+            "n": 512,
+            "p50": 7819.767,
+            "p95": 12537.161999999998,
+            "p99": 13615.04
+          },
+          "first_retry_us": 70.522,
+          "initial_open_seconds": 0.030587938,
+          "mode": "raw",
+          "read_signature": 164267880,
+          "records": 32768,
+          "records_per_second": 7233.911495004211,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 22.73585,
+            "p95": 22.815529,
+            "p99": 22.815529
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 12.976414,
+            "p95": 12.984215,
+            "p99": 12.984215
+          },
+          "scan_records_verified": 98304,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 34414656,
+          "source_bytes": 34414656,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 0.884,
+            "p95": 1.2750000000000001,
+            "p99": 1.527
+          },
+          "write_seconds": 4.529776183
+        },
+        "peak_rss_kib": 48576,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "raw-1k",
+        "build": "candidate",
+        "iteration": 1,
+        "metrics": {
+          "archive_seconds": null,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 17.236,
+            "p95": 18.533,
+            "p99": 18.552
+          },
+          "durable_commit_us": {
+            "n": 512,
+            "p50": 8041.4349999999995,
+            "p95": 12499.867,
+            "p99": 13203.88
+          },
+          "first_retry_us": 61.479,
+          "initial_open_seconds": 0.058315968,
+          "mode": "raw",
+          "read_signature": 164267880,
+          "records": 32768,
+          "records_per_second": 7253.831052495276,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 22.668409,
+            "p95": 23.826063,
+            "p99": 23.826063
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 13.973899999999999,
+            "p95": 14.062414,
+            "p99": 14.062414
+          },
+          "scan_records_verified": 98304,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 34414656,
+          "source_bytes": 34414656,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 1.129,
+            "p95": 1.539,
+            "p99": 1.808
+          },
+          "write_seconds": 4.517337082
+        },
+        "peak_rss_kib": 48648,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "raw-1k",
+        "build": "candidate",
+        "iteration": 2,
+        "metrics": {
+          "archive_seconds": null,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 16.866,
+            "p95": 18.615000000000002,
+            "p99": 19.184
+          },
+          "durable_commit_us": {
+            "n": 512,
+            "p50": 8872.914,
+            "p95": 12725.162,
+            "p99": 13641.304
+          },
+          "first_retry_us": 62.149,
+          "initial_open_seconds": 0.033905269,
+          "mode": "raw",
+          "read_signature": 164267880,
+          "records": 32768,
+          "records_per_second": 7022.386317049649,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 23.183813,
+            "p95": 23.641810999999997,
+            "p99": 23.641810999999997
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 13.175249,
+            "p95": 13.649692,
+            "p99": 13.649692
+          },
+          "scan_records_verified": 98304,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 34414656,
+          "source_bytes": 34414656,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 0.893,
+            "p95": 1.286,
+            "p99": 1.569
+          },
+          "write_seconds": 4.666220074
+        },
+        "peak_rss_kib": 48588,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "raw-1k",
+        "build": "baseline",
+        "iteration": 3,
+        "metrics": {
+          "archive_seconds": null,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 16.624,
+            "p95": 17.389,
+            "p99": 19.582
+          },
+          "durable_commit_us": {
+            "n": 512,
+            "p50": 8937.021999999999,
+            "p95": 12756.244999999999,
+            "p99": 13466.219
+          },
+          "first_retry_us": 63.983,
+          "initial_open_seconds": 0.032607285,
+          "mode": "raw",
+          "read_signature": 164267880,
+          "records": 32768,
+          "records_per_second": 6881.275381425589,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 22.712333,
+            "p95": 23.019268999999998,
+            "p99": 23.019268999999998
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 12.790873,
+            "p95": 12.928622,
+            "p99": 12.928622
+          },
+          "scan_records_verified": 98304,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 34414656,
+          "source_bytes": 34414656,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 0.869,
+            "p95": 1.221,
+            "p99": 1.414
+          },
+          "write_seconds": 4.761907958
+        },
+        "peak_rss_kib": 48460,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "encrypted-1k",
+        "build": "baseline",
+        "iteration": 0,
+        "metrics": {
+          "archive_seconds": null,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 17.236,
+            "p95": 18.549000000000003,
+            "p99": 19.335
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 8852.109,
+            "p95": 14701.119,
+            "p99": 18586.119000000002
+          },
+          "first_retry_us": 92.557,
+          "initial_open_seconds": 0.004268234,
+          "mode": "encrypted",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 6884.846696483477,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 3.860184,
+            "p95": 4.101725,
+            "p99": 4.101725
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 3.618451,
+            "p95": 3.693329,
+            "p99": 3.693329
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 4304448,
+          "source_bytes": 4304448,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 51.216,
+            "p95": 57.101,
+            "p99": 62.016
+          },
+          "write_seconds": 0.594929732
+        },
+        "peak_rss_kib": 8504,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "encrypted-1k",
+        "build": "candidate",
+        "iteration": 1,
+        "metrics": {
+          "archive_seconds": null,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 16.569,
+            "p95": 17.323999999999998,
+            "p99": 18.102
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 8889.496000000001,
+            "p95": 12492.908000000001,
+            "p99": 13280.695
+          },
+          "first_retry_us": 85.152,
+          "initial_open_seconds": 0.012083287,
+          "mode": "encrypted",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 6995.949905227424,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 3.70432,
+            "p95": 3.809558,
+            "p99": 3.809558
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 3.610945,
+            "p95": 3.7272030000000003,
+            "p99": 3.7272030000000003
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 4304448,
+          "source_bytes": 4304448,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 50.656,
+            "p95": 56.951,
+            "p99": 62.085
+          },
+          "write_seconds": 0.585481608
+        },
+        "peak_rss_kib": 8492,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "encrypted-1k",
+        "build": "candidate",
+        "iteration": 2,
+        "metrics": {
+          "archive_seconds": null,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 16.563,
+            "p95": 18.558,
+            "p99": 18.78
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 8778.473,
+            "p95": 14813.365,
+            "p99": 20695.47
+          },
+          "first_retry_us": 88.688,
+          "initial_open_seconds": 0.010836002,
+          "mode": "encrypted",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 6460.482705974695,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 3.9124880000000006,
+            "p95": 3.955026,
+            "p99": 3.955026
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 3.567036,
+            "p95": 3.651161,
+            "p99": 3.651161
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 4304448,
+          "source_bytes": 4304448,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 51.035999999999994,
+            "p95": 57.507,
+            "p99": 62.059
+          },
+          "write_seconds": 0.634008353
+        },
+        "peak_rss_kib": 8592,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "encrypted-1k",
+        "build": "baseline",
+        "iteration": 3,
+        "metrics": {
+          "archive_seconds": null,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 16.541999999999998,
+            "p95": 16.707,
+            "p99": 19.354000000000003
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 8821.145,
+            "p95": 12467.023000000001,
+            "p99": 13381.383
+          },
+          "first_retry_us": 89.601,
+          "initial_open_seconds": 0.011762148,
+          "mode": "encrypted",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 6966.306015312382,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 3.832991,
+            "p95": 3.900633,
+            "p99": 3.900633
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 3.573293,
+            "p95": 3.602183,
+            "p99": 3.602183
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 4304448,
+          "source_bytes": 4304448,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 49.203,
+            "p95": 55.751999999999995,
+            "p99": 61.034
+          },
+          "write_seconds": 0.587973022
+        },
+        "peak_rss_kib": 8524,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "archive-1k",
+        "build": "baseline",
+        "iteration": 0,
+        "metrics": {
+          "archive_seconds": 0.053743604,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 17.301,
+            "p95": 18.601,
+            "p99": 18.634
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 7761.201,
+            "p95": 12202.715,
+            "p99": 12477.827000000001
+          },
+          "first_retry_us": 41.809,
+          "initial_open_seconds": 0.002418301,
+          "mode": "archive",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 7109.7299596634775,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 0.6817449999999999,
+            "p95": 0.748085,
+            "p99": 0.748085
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 0.354008,
+            "p95": 0.382604,
+            "p99": 0.382604
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 30099,
+          "source_bytes": 4301888,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 4.513,
+            "p95": 8.292,
+            "p99": 13.644
+          },
+          "write_seconds": 0.576111895
+        },
+        "peak_rss_kib": 10100,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "archive-1k",
+        "build": "candidate",
+        "iteration": 1,
+        "metrics": {
+          "archive_seconds": 0.068254588,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 17.273,
+            "p95": 18.541999999999998,
+            "p99": 19.77
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 8912.885,
+            "p95": 12600.292000000001,
+            "p99": 13438.502
+          },
+          "first_retry_us": 35.726000000000006,
+          "initial_open_seconds": 0.002402299,
+          "mode": "archive",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 6963.223664515624,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 0.45659500000000003,
+            "p95": 0.518428,
+            "p99": 0.518428
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 0.286866,
+            "p95": 0.35777200000000003,
+            "p99": 0.35777200000000003
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 30099,
+          "source_bytes": 4301888,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 3.6550000000000002,
+            "p95": 9.993,
+            "p99": 14.475
+          },
+          "write_seconds": 0.588233295
+        },
+        "peak_rss_kib": 10152,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "archive-1k",
+        "build": "candidate",
+        "iteration": 2,
+        "metrics": {
+          "archive_seconds": 0.065507619,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 16.642,
+            "p95": 18.65,
+            "p99": 19.45
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 8713.037,
+            "p95": 12695.872000000001,
+            "p99": 13914.584
+          },
+          "first_retry_us": 38.097,
+          "initial_open_seconds": 0.000689955,
+          "mode": "archive",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 7071.383513802027,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 0.466354,
+            "p95": 0.48329500000000003,
+            "p99": 0.48329500000000003
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 0.272407,
+            "p95": 0.333383,
+            "p99": 0.333383
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 30099,
+          "source_bytes": 4301888,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 3.317,
+            "p95": 4.279999999999999,
+            "p99": 6.319999999999999
+          },
+          "write_seconds": 0.579236014
+        },
+        "peak_rss_kib": 10128,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "archive-1k",
+        "build": "baseline",
+        "iteration": 3,
+        "metrics": {
+          "archive_seconds": 0.052987715,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 16.631,
+            "p95": 17.394,
+            "p99": 20.434
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 8927.459,
+            "p95": 12635.929,
+            "p99": 12912.015000000001
+          },
+          "first_retry_us": 39.906,
+          "initial_open_seconds": 0.002271596,
+          "mode": "archive",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 6806.375070236856,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 0.683481,
+            "p95": 0.739468,
+            "p99": 0.739468
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 0.351825,
+            "p95": 0.38455,
+            "p99": 0.38455
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 30099,
+          "source_bytes": 4301888,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 4.564,
+            "p95": 9.648,
+            "p99": 14.231
+          },
+          "write_seconds": 0.601788758
+        },
+        "peak_rss_kib": 10044,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "archive-8k",
+        "build": "baseline",
+        "iteration": 0,
+        "metrics": {
+          "archive_seconds": 0.076644672,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 127.764,
+            "p95": 140.979,
+            "p99": 142.865
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 8920.541000000001,
+            "p95": 14238.743999999999,
+            "p99": 23402.145
+          },
+          "first_retry_us": 310.526,
+          "initial_open_seconds": 0.002920973,
+          "mode": "archive",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 5972.597890026397,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 1.312823,
+            "p95": 1.419193,
+            "p99": 1.419193
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 2.487136,
+            "p95": 2.614153,
+            "p99": 2.614153
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 39022,
+          "source_bytes": 33662016,
+          "value_bytes": 8192,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 16.862,
+            "p95": 18.903,
+            "p99": 21.399
+          },
+          "write_seconds": 0.685798722
+        },
+        "peak_rss_kib": 40520,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "archive-8k",
+        "build": "candidate",
+        "iteration": 1,
+        "metrics": {
+          "archive_seconds": 0.082623207,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 127.138,
+            "p95": 131.626,
+            "p99": 138.354
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 8835.853,
+            "p95": 13975.179,
+            "p99": 14620.858
+          },
+          "first_retry_us": 545.4350000000001,
+          "initial_open_seconds": 0.004269829,
+          "mode": "archive",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 6147.83122698144,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 1.249219,
+            "p95": 1.340635,
+            "p99": 1.340635
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 2.389476,
+            "p95": 2.561227,
+            "p99": 2.561227
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 39022,
+          "source_bytes": 33662016,
+          "value_bytes": 8192,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 16.104,
+            "p95": 18.195,
+            "p99": 25.84
+          },
+          "write_seconds": 0.666251211
+        },
+        "peak_rss_kib": 39908,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "archive-8k",
+        "build": "candidate",
+        "iteration": 2,
+        "metrics": {
+          "archive_seconds": 0.076268912,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 127.045,
+            "p95": 132.585,
+            "p99": 138.013
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 9064.722000000002,
+            "p95": 13133.774000000001,
+            "p99": 14285.298999999999
+          },
+          "first_retry_us": 532.732,
+          "initial_open_seconds": 0.004206919,
+          "mode": "archive",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 6192.070542099389,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 1.263736,
+            "p95": 1.320635,
+            "p99": 1.320635
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 2.370867,
+            "p95": 2.730264,
+            "p99": 2.730264
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 39022,
+          "source_bytes": 33662016,
+          "value_bytes": 8192,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 16.059,
+            "p95": 18.079,
+            "p99": 25.794
+          },
+          "write_seconds": 0.661491172
+        },
+        "peak_rss_kib": 40200,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "archive-8k",
+        "build": "baseline",
+        "iteration": 3,
+        "metrics": {
+          "archive_seconds": 0.078738354,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 130.877,
+            "p95": 143.047,
+            "p99": 143.935
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 9349.975999999999,
+            "p95": 12992.942000000001,
+            "p99": 15373.411
+          },
+          "first_retry_us": 336.941,
+          "initial_open_seconds": 0.004234349,
+          "mode": "archive",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 6013.916043153807,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 1.34049,
+            "p95": 1.454639,
+            "p99": 1.454639
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 2.583708,
+            "p95": 2.81131,
+            "p99": 2.81131
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 39022,
+          "source_bytes": 33662016,
+          "value_bytes": 8192,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 16.847,
+            "p95": 19.266000000000002,
+            "p99": 26.284000000000002
+          },
+          "write_seconds": 0.681086994
+        },
+        "peak_rss_kib": 40732,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "encrypted-archive-1k",
+        "build": "baseline",
+        "iteration": 0,
+        "metrics": {
+          "archive_seconds": 0.064840981,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 16.622,
+            "p95": 17.376,
+            "p99": 20.979
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 7304.938,
+            "p95": 12206.479,
+            "p99": 13700.798999999999
+          },
+          "first_retry_us": 46.244,
+          "initial_open_seconds": 0.001180864,
+          "mode": "encrypted-archive",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 7264.382519682291,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 0.769478,
+            "p95": 0.864436,
+            "p99": 0.864436
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 0.447937,
+            "p95": 0.573844,
+            "p99": 0.573844
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 32659,
+          "source_bytes": 4304448,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 6.0329999999999995,
+            "p95": 9.860999999999999,
+            "p99": 12.641
+          },
+          "write_seconds": 0.56384696
+        },
+        "peak_rss_kib": 10156,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "encrypted-archive-1k",
+        "build": "candidate",
+        "iteration": 1,
+        "metrics": {
+          "archive_seconds": 0.060276235,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 17.054,
+            "p95": 18.584,
+            "p99": 19.907
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 7549.832,
+            "p95": 12984.707,
+            "p99": 14299.956
+          },
+          "first_retry_us": 37.707,
+          "initial_open_seconds": 0.00076183,
+          "mode": "encrypted-archive",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 7158.327639060791,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 0.5230630000000001,
+            "p95": 0.584957,
+            "p99": 0.584957
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 0.37039700000000003,
+            "p95": 0.401694,
+            "p99": 0.401694
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 32659,
+          "source_bytes": 4304448,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 5.141,
+            "p95": 6.515000000000001,
+            "p99": 8.134
+          },
+          "write_seconds": 0.572200688
+        },
+        "peak_rss_kib": 10156,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "encrypted-archive-1k",
+        "build": "candidate",
+        "iteration": 2,
+        "metrics": {
+          "archive_seconds": 0.061220407,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 16.578,
+            "p95": 18.576,
+            "p99": 19.552
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 7224.159,
+            "p95": 11925.965,
+            "p99": 12137.287
+          },
+          "first_retry_us": 41.982,
+          "initial_open_seconds": 0.002063869,
+          "mode": "encrypted-archive",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 7395.389885469334,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 0.523053,
+            "p95": 0.651023,
+            "p99": 0.651023
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 0.409321,
+            "p95": 0.484638,
+            "p99": 0.484638
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 32659,
+          "source_bytes": 4304448,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 5.128,
+            "p95": 10.456,
+            "p99": 16.126
+          },
+          "write_seconds": 0.553858561
+        },
+        "peak_rss_kib": 10092,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "encrypted-archive-1k",
+        "build": "baseline",
+        "iteration": 3,
+        "metrics": {
+          "archive_seconds": 0.053988858,
+          "batch": 64,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 16.673000000000002,
+            "p95": 18.704,
+            "p99": 18.770000000000003
+          },
+          "durable_commit_us": {
+            "n": 64,
+            "p50": 7135.873,
+            "p95": 12348.052,
+            "p99": 14181.258
+          },
+          "first_retry_us": 38.794999999999995,
+          "initial_open_seconds": 0.002496868,
+          "mode": "encrypted-archive",
+          "read_signature": 20465512,
+          "records": 4096,
+          "records_per_second": 7494.948188087401,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 0.740957,
+            "p95": 0.9233950000000001,
+            "p99": 0.9233950000000001
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 0.456938,
+            "p95": 0.554568,
+            "p99": 0.554568
+          },
+          "scan_records_verified": 12288,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 32659,
+          "source_bytes": 4304448,
+          "value_bytes": 1024,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 6.016,
+            "p95": 10.152999999999999,
+            "p99": 16.733999999999998
+          },
+          "write_seconds": 0.546501443
+        },
+        "peak_rss_kib": 10232,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "small-archive",
+        "build": "baseline",
+        "iteration": 0,
+        "metrics": {
+          "archive_seconds": 0.047689494,
+          "batch": 1,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 0.113,
+            "p95": 0.11499999999999999,
+            "p99": 0.153
+          },
+          "durable_commit_us": {
+            "n": 256,
+            "p50": 6832.954,
+            "p95": 12122.012,
+            "p99": 18572.536
+          },
+          "first_retry_us": 3.306,
+          "initial_open_seconds": 0.00193434,
+          "mode": "archive",
+          "read_signature": 1279080,
+          "records": 256,
+          "records_per_second": 120.11744706730384,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 0.534579,
+            "p95": 0.594061,
+            "p99": 0.594061
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 0.48824300000000004,
+            "p95": 0.495043,
+            "p99": 0.495043
+          },
+          "scan_records_verified": 768,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 58607,
+          "source_bytes": 75840,
+          "value_bytes": 128,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 2.36,
+            "p95": 6.941,
+            "p99": 8.148000000000001
+          },
+          "write_seconds": 2.131247427
+        },
+        "peak_rss_kib": 3756,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "small-archive",
+        "build": "candidate",
+        "iteration": 1,
+        "metrics": {
+          "archive_seconds": 0.050104156,
+          "batch": 1,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 0.13,
+            "p95": 0.154,
+            "p99": 0.18
+          },
+          "durable_commit_us": {
+            "n": 256,
+            "p50": 8306.237,
+            "p95": 12460.425000000001,
+            "p99": 13973.855
+          },
+          "first_retry_us": 2.537,
+          "initial_open_seconds": 0.001304357,
+          "mode": "archive",
+          "read_signature": 1279080,
+          "records": 256,
+          "records_per_second": 115.17300474914175,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 0.347559,
+            "p95": 0.369004,
+            "p99": 0.369004
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 0.254786,
+            "p95": 0.259351,
+            "p99": 0.259351
+          },
+          "scan_records_verified": 768,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 58607,
+          "source_bytes": 75840,
+          "value_bytes": 128,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 1.774,
+            "p95": 5.576,
+            "p99": 6.406000000000001
+          },
+          "write_seconds": 2.222743086
+        },
+        "peak_rss_kib": 3676,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "small-archive",
+        "build": "candidate",
+        "iteration": 2,
+        "metrics": {
+          "archive_seconds": 0.045028807,
+          "batch": 1,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 0.117,
+            "p95": 0.12100000000000001,
+            "p99": 0.16999999999999998
+          },
+          "durable_commit_us": {
+            "n": 256,
+            "p50": 8431.763,
+            "p95": 12382.927,
+            "p99": 12998.844000000001
+          },
+          "first_retry_us": 2.0820000000000003,
+          "initial_open_seconds": 0.001176163,
+          "mode": "archive",
+          "read_signature": 1279080,
+          "records": 256,
+          "records_per_second": 112.60961928954427,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 0.33521100000000004,
+            "p95": 0.35259199999999996,
+            "p99": 0.35259199999999996
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 0.256322,
+            "p95": 0.25953899999999996,
+            "p99": 0.25953899999999996
+          },
+          "scan_records_verified": 768,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 58607,
+          "source_bytes": 75840,
+          "value_bytes": 128,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 1.781,
+            "p95": 5.104,
+            "p99": 5.788
+          },
+          "write_seconds": 2.273340427
+        },
+        "peak_rss_kib": 3756,
+        "file_flags": "---------------------m"
+      },
+      {
+        "case": "small-archive",
+        "build": "baseline",
+        "iteration": 3,
+        "metrics": {
+          "archive_seconds": 0.039873914,
+          "batch": 1,
+          "cached_retry_us": {
+            "n": 100,
+            "p50": 0.113,
+            "p95": 0.117,
+            "p99": 0.149
+          },
+          "durable_commit_us": {
+            "n": 256,
+            "p50": 7974.765,
+            "p95": 12271.864,
+            "p99": 12766.336
+          },
+          "first_retry_us": 3.2279999999999998,
+          "initial_open_seconds": 0.001788812,
+          "mode": "archive",
+          "read_signature": 1279080,
+          "records": 256,
+          "records_per_second": 115.58494782049821,
+          "reopen_and_get_ms": {
+            "n": 5,
+            "p50": 0.546225,
+            "p95": 0.548911,
+            "p99": 0.548911
+          },
+          "scan_ms": {
+            "n": 3,
+            "p50": 0.481756,
+            "p95": 0.514555,
+            "p99": 0.514555
+          },
+          "scan_records_verified": 768,
+          "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+          "selected_bytes": 58607,
+          "source_bytes": 75840,
+          "value_bytes": 128,
+          "warm_get_us": {
+            "n": 10000,
+            "p50": 2.42,
+            "p95": 7.0600000000000005,
+            "p99": 8.361
+          },
+          "write_seconds": 2.214821262
+        },
+        "peak_rss_kib": 3748,
+        "file_flags": "---------------------m"
+      }
+    ]
+  },
+  "summary": [
+    {
+      "case": "raw-1k",
+      "build": "baseline",
+      "metrics": {
+        "records_per_second": {
+          "median_of_runs": 7057.593438214901,
+          "min": 6881.275381425589,
+          "max": 7233.911495004211
+        },
+        "warm_get_us": {
+          "median_of_runs": 0.8765000000000001,
+          "min": 0.869,
+          "max": 0.884
+        },
+        "scan_ms": {
+          "median_of_runs": 12.8836435,
+          "min": 12.790873,
+          "max": 12.976414
+        },
+        "reopen_and_get_ms": {
+          "median_of_runs": 22.7240915,
+          "min": 22.712333,
+          "max": 22.73585
+        },
+        "first_retry_us": {
+          "median_of_runs": 67.2525,
+          "min": 63.983,
+          "max": 70.522
+        },
+        "cached_retry_us": {
+          "median_of_runs": 16.5925,
+          "min": 16.561,
+          "max": 16.624
+        },
+        "peak_rss_kib": {
+          "median_of_runs": 48518.0,
+          "min": 48460,
+          "max": 48576
+        }
+      }
+    },
+    {
+      "case": "raw-1k",
+      "build": "candidate",
+      "metrics": {
+        "records_per_second": {
+          "median_of_runs": 7138.108684772462,
+          "min": 7022.386317049649,
+          "max": 7253.831052495276
+        },
+        "warm_get_us": {
+          "median_of_runs": 1.0110000000000001,
+          "min": 0.893,
+          "max": 1.129
+        },
+        "scan_ms": {
+          "median_of_runs": 13.5745745,
+          "min": 13.175249,
+          "max": 13.973899999999999
+        },
+        "reopen_and_get_ms": {
+          "median_of_runs": 22.926111,
+          "min": 22.668409,
+          "max": 23.183813
+        },
+        "first_retry_us": {
+          "median_of_runs": 61.814,
+          "min": 61.479,
+          "max": 62.149
+        },
+        "cached_retry_us": {
+          "median_of_runs": 17.051000000000002,
+          "min": 16.866,
+          "max": 17.236
+        },
+        "peak_rss_kib": {
+          "median_of_runs": 48618.0,
+          "min": 48588,
+          "max": 48648
+        }
+      }
+    },
+    {
+      "case": "encrypted-1k",
+      "build": "baseline",
+      "metrics": {
+        "records_per_second": {
+          "median_of_runs": 6925.57635589793,
+          "min": 6884.846696483477,
+          "max": 6966.306015312382
+        },
+        "warm_get_us": {
+          "median_of_runs": 50.209500000000006,
+          "min": 49.203,
+          "max": 51.216
+        },
+        "scan_ms": {
+          "median_of_runs": 3.595872,
+          "min": 3.573293,
+          "max": 3.618451
+        },
+        "reopen_and_get_ms": {
+          "median_of_runs": 3.8465875,
+          "min": 3.832991,
+          "max": 3.860184
+        },
+        "first_retry_us": {
+          "median_of_runs": 91.07900000000001,
+          "min": 89.601,
+          "max": 92.557
+        },
+        "cached_retry_us": {
+          "median_of_runs": 16.889,
+          "min": 16.541999999999998,
+          "max": 17.236
+        },
+        "peak_rss_kib": {
+          "median_of_runs": 8514.0,
+          "min": 8504,
+          "max": 8524
+        }
+      }
+    },
+    {
+      "case": "encrypted-1k",
+      "build": "candidate",
+      "metrics": {
+        "records_per_second": {
+          "median_of_runs": 6728.2163056010595,
+          "min": 6460.482705974695,
+          "max": 6995.949905227424
+        },
+        "warm_get_us": {
+          "median_of_runs": 50.846,
+          "min": 50.656,
+          "max": 51.035999999999994
+        },
+        "scan_ms": {
+          "median_of_runs": 3.5889905,
+          "min": 3.567036,
+          "max": 3.610945
+        },
+        "reopen_and_get_ms": {
+          "median_of_runs": 3.8084040000000003,
+          "min": 3.70432,
+          "max": 3.9124880000000006
+        },
+        "first_retry_us": {
+          "median_of_runs": 86.92,
+          "min": 85.152,
+          "max": 88.688
+        },
+        "cached_retry_us": {
+          "median_of_runs": 16.566,
+          "min": 16.563,
+          "max": 16.569
+        },
+        "peak_rss_kib": {
+          "median_of_runs": 8542.0,
+          "min": 8492,
+          "max": 8592
+        }
+      }
+    },
+    {
+      "case": "archive-1k",
+      "build": "baseline",
+      "metrics": {
+        "records_per_second": {
+          "median_of_runs": 6958.052514950166,
+          "min": 6806.375070236856,
+          "max": 7109.7299596634775
+        },
+        "warm_get_us": {
+          "median_of_runs": 4.5385,
+          "min": 4.513,
+          "max": 4.564
+        },
+        "scan_ms": {
+          "median_of_runs": 0.35291649999999997,
+          "min": 0.351825,
+          "max": 0.354008
+        },
+        "reopen_and_get_ms": {
+          "median_of_runs": 0.6826129999999999,
+          "min": 0.6817449999999999,
+          "max": 0.683481
+        },
+        "archive_seconds": {
+          "median_of_runs": 0.053365659499999996,
+          "min": 0.052987715,
+          "max": 0.053743604
+        },
+        "first_retry_us": {
+          "median_of_runs": 40.8575,
+          "min": 39.906,
+          "max": 41.809
+        },
+        "cached_retry_us": {
+          "median_of_runs": 16.966,
+          "min": 16.631,
+          "max": 17.301
+        },
+        "peak_rss_kib": {
+          "median_of_runs": 10072.0,
+          "min": 10044,
+          "max": 10100
+        }
+      }
+    },
+    {
+      "case": "archive-1k",
+      "build": "candidate",
+      "metrics": {
+        "records_per_second": {
+          "median_of_runs": 7017.303589158825,
+          "min": 6963.223664515624,
+          "max": 7071.383513802027
+        },
+        "warm_get_us": {
+          "median_of_runs": 3.486,
+          "min": 3.317,
+          "max": 3.6550000000000002
+        },
+        "scan_ms": {
+          "median_of_runs": 0.2796365,
+          "min": 0.272407,
+          "max": 0.286866
+        },
+        "reopen_and_get_ms": {
+          "median_of_runs": 0.4614745,
+          "min": 0.45659500000000003,
+          "max": 0.466354
+        },
+        "archive_seconds": {
+          "median_of_runs": 0.06688110350000001,
+          "min": 0.065507619,
+          "max": 0.068254588
+        },
+        "first_retry_us": {
+          "median_of_runs": 36.911500000000004,
+          "min": 35.726000000000006,
+          "max": 38.097
+        },
+        "cached_retry_us": {
+          "median_of_runs": 16.9575,
+          "min": 16.642,
+          "max": 17.273
+        },
+        "peak_rss_kib": {
+          "median_of_runs": 10140.0,
+          "min": 10128,
+          "max": 10152
+        }
+      }
+    },
+    {
+      "case": "archive-8k",
+      "build": "baseline",
+      "metrics": {
+        "records_per_second": {
+          "median_of_runs": 5993.256966590102,
+          "min": 5972.597890026397,
+          "max": 6013.916043153807
+        },
+        "warm_get_us": {
+          "median_of_runs": 16.8545,
+          "min": 16.847,
+          "max": 16.862
+        },
+        "scan_ms": {
+          "median_of_runs": 2.535422,
+          "min": 2.487136,
+          "max": 2.583708
+        },
+        "reopen_and_get_ms": {
+          "median_of_runs": 1.3266565,
+          "min": 1.312823,
+          "max": 1.34049
+        },
+        "archive_seconds": {
+          "median_of_runs": 0.07769151299999999,
+          "min": 0.076644672,
+          "max": 0.078738354
+        },
+        "first_retry_us": {
+          "median_of_runs": 323.7335,
+          "min": 310.526,
+          "max": 336.941
+        },
+        "cached_retry_us": {
+          "median_of_runs": 129.3205,
+          "min": 127.764,
+          "max": 130.877
+        },
+        "peak_rss_kib": {
+          "median_of_runs": 40626.0,
+          "min": 40520,
+          "max": 40732
+        }
+      }
+    },
+    {
+      "case": "archive-8k",
+      "build": "candidate",
+      "metrics": {
+        "records_per_second": {
+          "median_of_runs": 6169.950884540414,
+          "min": 6147.83122698144,
+          "max": 6192.070542099389
+        },
+        "warm_get_us": {
+          "median_of_runs": 16.0815,
+          "min": 16.059,
+          "max": 16.104
+        },
+        "scan_ms": {
+          "median_of_runs": 2.3801715000000003,
+          "min": 2.370867,
+          "max": 2.389476
+        },
+        "reopen_and_get_ms": {
+          "median_of_runs": 1.2564775,
+          "min": 1.249219,
+          "max": 1.263736
+        },
+        "archive_seconds": {
+          "median_of_runs": 0.0794460595,
+          "min": 0.076268912,
+          "max": 0.082623207
+        },
+        "first_retry_us": {
+          "median_of_runs": 539.0835,
+          "min": 532.732,
+          "max": 545.4350000000001
+        },
+        "cached_retry_us": {
+          "median_of_runs": 127.0915,
+          "min": 127.045,
+          "max": 127.138
+        },
+        "peak_rss_kib": {
+          "median_of_runs": 40054.0,
+          "min": 39908,
+          "max": 40200
+        }
+      }
+    },
+    {
+      "case": "encrypted-archive-1k",
+      "build": "baseline",
+      "metrics": {
+        "records_per_second": {
+          "median_of_runs": 7379.665353884846,
+          "min": 7264.382519682291,
+          "max": 7494.948188087401
+        },
+        "warm_get_us": {
+          "median_of_runs": 6.0245,
+          "min": 6.016,
+          "max": 6.0329999999999995
+        },
+        "scan_ms": {
+          "median_of_runs": 0.4524375,
+          "min": 0.447937,
+          "max": 0.456938
+        },
+        "reopen_and_get_ms": {
+          "median_of_runs": 0.7552175,
+          "min": 0.740957,
+          "max": 0.769478
+        },
+        "archive_seconds": {
+          "median_of_runs": 0.0594149195,
+          "min": 0.053988858,
+          "max": 0.064840981
+        },
+        "first_retry_us": {
+          "median_of_runs": 42.519499999999994,
+          "min": 38.794999999999995,
+          "max": 46.244
+        },
+        "cached_retry_us": {
+          "median_of_runs": 16.6475,
+          "min": 16.622,
+          "max": 16.673000000000002
+        },
+        "peak_rss_kib": {
+          "median_of_runs": 10194.0,
+          "min": 10156,
+          "max": 10232
+        }
+      }
+    },
+    {
+      "case": "encrypted-archive-1k",
+      "build": "candidate",
+      "metrics": {
+        "records_per_second": {
+          "median_of_runs": 7276.858762265063,
+          "min": 7158.327639060791,
+          "max": 7395.389885469334
+        },
+        "warm_get_us": {
+          "median_of_runs": 5.1345,
+          "min": 5.128,
+          "max": 5.141
+        },
+        "scan_ms": {
+          "median_of_runs": 0.389859,
+          "min": 0.37039700000000003,
+          "max": 0.409321
+        },
+        "reopen_and_get_ms": {
+          "median_of_runs": 0.523058,
+          "min": 0.523053,
+          "max": 0.5230630000000001
+        },
+        "archive_seconds": {
+          "median_of_runs": 0.060748320999999994,
+          "min": 0.060276235,
+          "max": 0.061220407
+        },
+        "first_retry_us": {
+          "median_of_runs": 39.8445,
+          "min": 37.707,
+          "max": 41.982
+        },
+        "cached_retry_us": {
+          "median_of_runs": 16.816,
+          "min": 16.578,
+          "max": 17.054
+        },
+        "peak_rss_kib": {
+          "median_of_runs": 10124.0,
+          "min": 10092,
+          "max": 10156
+        }
+      }
+    },
+    {
+      "case": "small-archive",
+      "build": "baseline",
+      "metrics": {
+        "records_per_second": {
+          "median_of_runs": 117.85119744390103,
+          "min": 115.58494782049821,
+          "max": 120.11744706730384
+        },
+        "warm_get_us": {
+          "median_of_runs": 2.3899999999999997,
+          "min": 2.36,
+          "max": 2.42
+        },
+        "scan_ms": {
+          "median_of_runs": 0.48499950000000003,
+          "min": 0.481756,
+          "max": 0.48824300000000004
+        },
+        "reopen_and_get_ms": {
+          "median_of_runs": 0.540402,
+          "min": 0.534579,
+          "max": 0.546225
+        },
+        "archive_seconds": {
+          "median_of_runs": 0.043781704000000005,
+          "min": 0.039873914,
+          "max": 0.047689494
+        },
+        "first_retry_us": {
+          "median_of_runs": 3.267,
+          "min": 3.2279999999999998,
+          "max": 3.306
+        },
+        "cached_retry_us": {
+          "median_of_runs": 0.113,
+          "min": 0.113,
+          "max": 0.113
+        },
+        "peak_rss_kib": {
+          "median_of_runs": 3752.0,
+          "min": 3748,
+          "max": 3756
+        }
+      }
+    },
+    {
+      "case": "small-archive",
+      "build": "candidate",
+      "metrics": {
+        "records_per_second": {
+          "median_of_runs": 113.89131201934302,
+          "min": 112.60961928954427,
+          "max": 115.17300474914175
+        },
+        "warm_get_us": {
+          "median_of_runs": 1.7774999999999999,
+          "min": 1.774,
+          "max": 1.781
+        },
+        "scan_ms": {
+          "median_of_runs": 0.255554,
+          "min": 0.254786,
+          "max": 0.256322
+        },
+        "reopen_and_get_ms": {
+          "median_of_runs": 0.34138500000000005,
+          "min": 0.33521100000000004,
+          "max": 0.347559
+        },
+        "archive_seconds": {
+          "median_of_runs": 0.047566481499999994,
+          "min": 0.045028807,
+          "max": 0.050104156
+        },
+        "first_retry_us": {
+          "median_of_runs": 2.3095,
+          "min": 2.0820000000000003,
+          "max": 2.537
+        },
+        "cached_retry_us": {
+          "median_of_runs": 0.1235,
+          "min": 0.117,
+          "max": 0.13
+        },
+        "peak_rss_kib": {
+          "median_of_runs": 3716.0,
+          "min": 3676,
+          "max": 3756
+        }
+      }
+    }
+  ],
+  "invalid_initial_attempt": {
+    "qualified": false,
+    "reason": "Both labels used identical baseline executable due shared-target Cargo freshness reuse; all24 timings discarded from candidate comparison.",
+    "observations": {
+      "provenance": {
+        "baseline": "1a9a99ca92660d984cb6af4b87e218aecd714d99",
+        "rust": "1.99.1",
+        "rustflags": "-Ctarget-cpu=x86-64",
+        "features": [
+          "archive",
+          "bench"
+        ],
+        "cpu": 0,
+        "filesystem": "Btrfs no compression; inherited chattr+m checked",
+        "shared_host": true,
+        "order": [
+          "baseline",
+          "candidate",
+          "candidate",
+          "baseline"
+        ],
+        "source_sha256": {
+          "baseline": {
+            "crates/ojo/src/lib.rs": "30a63677d28d6af6a9198eaca7324d8ec856d25ffdc82a8db3556b0009918cba",
+            "crates/ojo/src/wire.rs": "f108b62b0b9eb90424f04294442e6f45628ce242560b05dc4b428cfa6fac03f2",
+            "crates/ojo/examples/io_profile.rs": "7ed8e3c1e6d65e1b90aad858d88743fab2c0348e492bcacd25b875bd5721e509",
+            "Cargo.lock": "61f3bcee5ba7cc797f44246d3765dfdaed7371ef66c73c2316c8e2bec1a40f7a"
+          },
+          "candidate": {
+            "crates/ojo/src/lib.rs": "ced8ab61b7202f04ef8cfd4bf8bc0581b35a84ffcb7d1f84f12df9b7868efc0c",
+            "crates/ojo/src/wire.rs": "098dac41756907534317415d72ecf34b78d3ebaa176ebe8d102323d42dd7149f",
+            "crates/ojo/examples/io_profile.rs": "7ed8e3c1e6d65e1b90aad858d88743fab2c0348e492bcacd25b875bd5721e509",
+            "Cargo.lock": "61f3bcee5ba7cc797f44246d3765dfdaed7371ef66c73c2316c8e2bec1a40f7a"
+          }
+        },
+        "binary_sha256": {
+          "baseline": "61bf88ca7b0f8f94f109e68b53134813ae3f1ae65c7ce4e5c6541e6fe314d810",
+          "candidate": "61bf88ca7b0f8f94f109e68b53134813ae3f1ae65c7ce4e5c6541e6fe314d810"
+        }
+      },
+      "runs": [
+        {
+          "case": "raw-1k",
+          "build": "baseline",
+          "iteration": 0,
+          "metrics": {
+            "archive_seconds": null,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 16.575999999999997,
+              "p95": 18.601,
+              "p99": 19.157999999999998
+            },
+            "durable_commit_us": {
+              "n": 512,
+              "p50": 7047.829000000001,
+              "p95": 10572.593,
+              "p99": 14384.067000000001
+            },
+            "first_retry_us": 67.607,
+            "initial_open_seconds": 0.032489214,
+            "mode": "raw",
+            "read_signature": 164267880,
+            "records": 32768,
+            "records_per_second": 8480.279110540243,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 22.643773999999997,
+              "p95": 22.97363,
+              "p99": 22.97363
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 12.692472,
+              "p95": 12.889721,
+              "p99": 12.889721
+            },
+            "scan_records_verified": 98304,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 34414656,
+            "source_bytes": 34414656,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 0.868,
+              "p95": 1.2389999999999999,
+              "p99": 1.488
+            },
+            "write_seconds": 3.864023763
+          },
+          "peak_rss_kib": 48712,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "raw-1k",
+          "build": "candidate",
+          "iteration": 1,
+          "metrics": {
+            "archive_seconds": null,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 16.585,
+              "p95": 19.338,
+              "p99": 19.458
+            },
+            "durable_commit_us": {
+              "n": 512,
+              "p50": 7100.648999999999,
+              "p95": 9359.941,
+              "p99": 12605.854
+            },
+            "first_retry_us": 68.911,
+            "initial_open_seconds": 0.033702378,
+            "mode": "raw",
+            "read_signature": 164267880,
+            "records": 32768,
+            "records_per_second": 8601.328860632877,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 22.589016,
+              "p95": 22.821738,
+              "p99": 22.821738
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 12.648759,
+              "p95": 12.685452,
+              "p99": 12.685452
+            },
+            "scan_records_verified": 98304,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 34414656,
+            "source_bytes": 34414656,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 0.864,
+              "p95": 1.1880000000000002,
+              "p99": 1.4100000000000001
+            },
+            "write_seconds": 3.809643897
+          },
+          "peak_rss_kib": 48660,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "raw-1k",
+          "build": "candidate",
+          "iteration": 2,
+          "metrics": {
+            "archive_seconds": null,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 16.586,
+              "p95": 17.363999999999997,
+              "p99": 18.054000000000002
+            },
+            "durable_commit_us": {
+              "n": 512,
+              "p50": 7103.21,
+              "p95": 8498.446,
+              "p99": 9896.711000000001
+            },
+            "first_retry_us": 64.85799999999999,
+            "initial_open_seconds": 0.03380825,
+            "mode": "raw",
+            "read_signature": 164267880,
+            "records": 32768,
+            "records_per_second": 8780.217449405556,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 22.806766999999997,
+              "p95": 23.111116000000003,
+              "p99": 23.111116000000003
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 12.723783000000001,
+              "p95": 12.846409,
+              "p99": 12.846409
+            },
+            "scan_records_verified": 98304,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 34414656,
+            "source_bytes": 34414656,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 0.88,
+              "p95": 1.244,
+              "p99": 1.476
+            },
+            "write_seconds": 3.732026022
+          },
+          "peak_rss_kib": 48484,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "raw-1k",
+          "build": "baseline",
+          "iteration": 3,
+          "metrics": {
+            "archive_seconds": null,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 16.669,
+              "p95": 18.622,
+              "p99": 18.913999999999998
+            },
+            "durable_commit_us": {
+              "n": 512,
+              "p50": 7207.206,
+              "p95": 12079.664999999999,
+              "p99": 13208.375
+            },
+            "first_retry_us": 61.813,
+            "initial_open_seconds": 0.032298323,
+            "mode": "raw",
+            "read_signature": 164267880,
+            "records": 32768,
+            "records_per_second": 7865.976292690651,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 22.520834999999998,
+              "p95": 22.657814,
+              "p99": 22.657814
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 12.649725,
+              "p95": 12.848616,
+              "p99": 12.848616
+            },
+            "scan_records_verified": 98304,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 34414656,
+            "source_bytes": 34414656,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 0.894,
+              "p95": 1.233,
+              "p99": 1.454
+            },
+            "write_seconds": 4.165789316
+          },
+          "peak_rss_kib": 48448,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "encrypted-1k",
+          "build": "baseline",
+          "iteration": 0,
+          "metrics": {
+            "archive_seconds": null,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 18.595000000000002,
+              "p95": 18.729999999999997,
+              "p99": 22.127
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 8911.021,
+              "p95": 12173.729,
+              "p99": 12523.777
+            },
+            "first_retry_us": 97.944,
+            "initial_open_seconds": 0.012051969,
+            "mode": "encrypted",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 6831.365348066721,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 4.339417,
+              "p95": 4.478544,
+              "p99": 4.478544
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 3.7969890000000004,
+              "p95": 3.875789,
+              "p99": 3.875789
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 4304448,
+            "source_bytes": 4304448,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 50.07,
+              "p95": 56.229,
+              "p99": 61.470000000000006
+            },
+            "write_seconds": 0.599587314
+          },
+          "peak_rss_kib": 8564,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "encrypted-1k",
+          "build": "candidate",
+          "iteration": 1,
+          "metrics": {
+            "archive_seconds": null,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 18.453,
+              "p95": 18.601,
+              "p99": 19.223
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 8818.036,
+              "p95": 12599.925,
+              "p99": 14385.261999999999
+            },
+            "first_retry_us": 93.624,
+            "initial_open_seconds": 0.013634402,
+            "mode": "encrypted",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 6825.247015287487,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 3.8840749999999997,
+              "p95": 4.011182000000001,
+              "p99": 4.011182000000001
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 3.489673,
+              "p95": 3.806093,
+              "p99": 3.806093
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 4304448,
+            "source_bytes": 4304448,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 50.644,
+              "p95": 57.079,
+              "p99": 62.057
+            },
+            "write_seconds": 0.6001248
+          },
+          "peak_rss_kib": 8560,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "encrypted-1k",
+          "build": "candidate",
+          "iteration": 2,
+          "metrics": {
+            "archive_seconds": null,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 17.241,
+              "p95": 18.576999999999998,
+              "p99": 19.425
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 7409.3859999999995,
+              "p95": 12795.288999999999,
+              "p99": 21245.607
+            },
+            "first_retry_us": 84.55199999999999,
+            "initial_open_seconds": 0.012303228,
+            "mode": "encrypted",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 6951.768019093874,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 3.84226,
+              "p95": 3.922465,
+              "p99": 3.922465
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 3.492679,
+              "p95": 3.6286709999999998,
+              "p99": 3.6286709999999998
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 4304448,
+            "source_bytes": 4304448,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 50.374,
+              "p95": 56.93,
+              "p99": 61.971999999999994
+            },
+            "write_seconds": 0.58920263
+          },
+          "peak_rss_kib": 8412,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "encrypted-1k",
+          "build": "baseline",
+          "iteration": 3,
+          "metrics": {
+            "archive_seconds": null,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 16.601,
+              "p95": 16.671,
+              "p99": 20.1
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 8097.963999999999,
+              "p95": 12365.731,
+              "p99": 12692.636999999999
+            },
+            "first_retry_us": 88.739,
+            "initial_open_seconds": 0.012605582,
+            "mode": "encrypted",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 7083.847644423501,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 3.790044,
+              "p95": 3.9161400000000004,
+              "p99": 3.9161400000000004
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 3.513701,
+              "p95": 3.780427,
+              "p99": 3.780427
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 4304448,
+            "source_bytes": 4304448,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 50.536,
+              "p95": 56.661,
+              "p99": 61.88400000000001
+            },
+            "write_seconds": 0.57821684
+          },
+          "peak_rss_kib": 8552,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "archive-1k",
+          "build": "baseline",
+          "iteration": 0,
+          "metrics": {
+            "archive_seconds": 0.049115094,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 16.66,
+              "p95": 18.663999999999998,
+              "p99": 19.105999999999998
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 7480.369,
+              "p95": 12469.778,
+              "p99": 22531.796
+            },
+            "first_retry_us": 44.611,
+            "initial_open_seconds": 0.002266041,
+            "mode": "archive",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 6835.942550798884,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 0.652507,
+              "p95": 0.728902,
+              "p99": 0.728902
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 0.35051,
+              "p95": 0.370593,
+              "p99": 0.370593
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 30099,
+            "source_bytes": 4301888,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 4.547,
+              "p95": 10.417,
+              "p99": 14.547
+            },
+            "write_seconds": 0.599185843
+          },
+          "peak_rss_kib": 10284,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "archive-1k",
+          "build": "candidate",
+          "iteration": 1,
+          "metrics": {
+            "archive_seconds": 0.048422288,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 16.634,
+              "p95": 17.392,
+              "p99": 19.425
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 8710.254,
+              "p95": 12650.444,
+              "p99": 13334.382000000001
+            },
+            "first_retry_us": 39.41,
+            "initial_open_seconds": 0.002427194,
+            "mode": "archive",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 6974.06172942609,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 0.674612,
+              "p95": 0.813497,
+              "p99": 0.813497
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 0.337561,
+              "p95": 0.401455,
+              "p99": 0.401455
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 30099,
+            "source_bytes": 4301888,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 4.531000000000001,
+              "p95": 8.908,
+              "p99": 14.14
+            },
+            "write_seconds": 0.587319149
+          },
+          "peak_rss_kib": 10104,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "archive-1k",
+          "build": "candidate",
+          "iteration": 2,
+          "metrics": {
+            "archive_seconds": 0.06349114,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 16.578999999999997,
+              "p95": 17.334,
+              "p99": 19.88
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 8047.865,
+              "p95": 12096.417,
+              "p99": 20252.054
+            },
+            "first_retry_us": 43.779,
+            "initial_open_seconds": 0.002981443,
+            "mode": "archive",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 6863.155789720608,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 0.6804520000000001,
+              "p95": 0.755963,
+              "p99": 0.755963
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 0.348778,
+              "p95": 0.38554000000000005,
+              "p99": 0.38554000000000005
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 30099,
+            "source_bytes": 4301888,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 4.54,
+              "p95": 9.43,
+              "p99": 15.993
+            },
+            "write_seconds": 0.596809999
+          },
+          "peak_rss_kib": 9980,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "archive-1k",
+          "build": "baseline",
+          "iteration": 3,
+          "metrics": {
+            "archive_seconds": 0.05521245,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 16.792,
+              "p95": 18.559,
+              "p99": 19.464
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 9006.887999999999,
+              "p95": 13018.676,
+              "p99": 13681.056
+            },
+            "first_retry_us": 44.440999999999995,
+            "initial_open_seconds": 0.002616382,
+            "mode": "archive",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 6704.275107545877,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 0.700274,
+              "p95": 0.8077810000000001,
+              "p99": 0.8077810000000001
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 0.339812,
+              "p95": 0.39902699999999997,
+              "p99": 0.39902699999999997
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 30099,
+            "source_bytes": 4301888,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 4.578,
+              "p95": 11.355,
+              "p99": 16.796
+            },
+            "write_seconds": 0.610953449
+          },
+          "peak_rss_kib": 10296,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "archive-8k",
+          "build": "baseline",
+          "iteration": 0,
+          "metrics": {
+            "archive_seconds": 0.083913202,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 130.359,
+              "p95": 142.911,
+              "p99": 145.447
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 10547.310000000001,
+              "p95": 13385.75,
+              "p99": 14581.003999999999
+            },
+            "first_retry_us": 292.471,
+            "initial_open_seconds": 0.004207235,
+            "mode": "archive",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 5820.504670807923,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 1.440165,
+              "p95": 1.478595,
+              "p99": 1.478595
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 2.57335,
+              "p95": 2.590098,
+              "p99": 2.590098
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 39022,
+            "source_bytes": 33662016,
+            "value_bytes": 8192,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 17.355,
+              "p95": 19.407,
+              "p99": 25.988
+            },
+            "write_seconds": 0.703719047
+          },
+          "peak_rss_kib": 40764,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "archive-8k",
+          "build": "candidate",
+          "iteration": 1,
+          "metrics": {
+            "archive_seconds": 0.074151241,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 129.115,
+              "p95": 142.852,
+              "p99": 142.939
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 10443.659,
+              "p95": 14500.631,
+              "p99": 20370.256999999998
+            },
+            "first_retry_us": 284.237,
+            "initial_open_seconds": 0.00314035,
+            "mode": "archive",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 5881.837258325507,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 1.3739990000000002,
+              "p95": 1.490859,
+              "p99": 1.490859
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 2.6840789999999997,
+              "p95": 2.770973,
+              "p99": 2.770973
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 39022,
+            "source_bytes": 33662016,
+            "value_bytes": 8192,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 18.873,
+              "p95": 22.615,
+              "p99": 26.427
+            },
+            "write_seconds": 0.696381049
+          },
+          "peak_rss_kib": 40696,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "archive-8k",
+          "build": "candidate",
+          "iteration": 2,
+          "metrics": {
+            "archive_seconds": 0.076257298,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 127.96300000000001,
+              "p95": 142.876,
+              "p99": 142.996
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 9130.447999999999,
+              "p95": 13132.692,
+              "p99": 14381.268
+            },
+            "first_retry_us": 302.118,
+            "initial_open_seconds": 0.003559301,
+            "mode": "archive",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 6261.749130401883,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 1.342247,
+              "p95": 1.454887,
+              "p99": 1.454887
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 2.533449,
+              "p95": 3.269863,
+              "p99": 3.269863
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 39022,
+            "source_bytes": 33662016,
+            "value_bytes": 8192,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 16.938,
+              "p95": 20.435,
+              "p99": 23.108999999999998
+            },
+            "write_seconds": 0.654130326
+          },
+          "peak_rss_kib": 40636,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "archive-8k",
+          "build": "baseline",
+          "iteration": 3,
+          "metrics": {
+            "archive_seconds": 0.073756857,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 130.06300000000002,
+              "p95": 142.922,
+              "p99": 146.04500000000002
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 9170.147,
+              "p95": 12869.244999999999,
+              "p99": 13967.044
+            },
+            "first_retry_us": 279.493,
+            "initial_open_seconds": 0.004185391,
+            "mode": "archive",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 6336.981295415741,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 1.359719,
+              "p95": 1.456254,
+              "p99": 1.456254
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 2.628142,
+              "p95": 2.7893000000000003,
+              "p99": 2.7893000000000003
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 39022,
+            "source_bytes": 33662016,
+            "value_bytes": 8192,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 18.088,
+              "p95": 21.345,
+              "p99": 26.732
+            },
+            "write_seconds": 0.64636454
+          },
+          "peak_rss_kib": 40344,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "encrypted-archive-1k",
+          "build": "baseline",
+          "iteration": 0,
+          "metrics": {
+            "archive_seconds": 0.057892738,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 16.650000000000002,
+              "p95": 17.371,
+              "p99": 17.544999999999998
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 7368.421,
+              "p95": 12587.56,
+              "p99": 13143.306
+            },
+            "first_retry_us": 38.902,
+            "initial_open_seconds": 0.003111697,
+            "mode": "encrypted-archive",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 7187.067811967567,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 0.772744,
+              "p95": 0.952137,
+              "p99": 0.952137
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 0.456832,
+              "p95": 0.600995,
+              "p99": 0.600995
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 32659,
+            "source_bytes": 4304448,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 5.999,
+              "p95": 8.739,
+              "p99": 14.267999999999999
+            },
+            "write_seconds": 0.56991253
+          },
+          "peak_rss_kib": 10232,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "encrypted-archive-1k",
+          "build": "candidate",
+          "iteration": 1,
+          "metrics": {
+            "archive_seconds": 0.057616673,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 17.304,
+              "p95": 18.589000000000002,
+              "p99": 19.395999999999997
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 8505.419,
+              "p95": 12624.881,
+              "p99": 12833.433
+            },
+            "first_retry_us": 39.674,
+            "initial_open_seconds": 0.002575295,
+            "mode": "encrypted-archive",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 6933.2953879854485,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 0.774371,
+              "p95": 0.844,
+              "p99": 0.844
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 0.424322,
+              "p95": 0.47648900000000005,
+              "p99": 0.47648900000000005
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 32659,
+            "source_bytes": 4304448,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 6.032,
+              "p95": 11.031,
+              "p99": 17.98
+            },
+            "write_seconds": 0.590772464
+          },
+          "peak_rss_kib": 10288,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "encrypted-archive-1k",
+          "build": "candidate",
+          "iteration": 2,
+          "metrics": {
+            "archive_seconds": 0.064704779,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 16.594,
+              "p95": 18.607,
+              "p99": 19.131999999999998
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 9020.323,
+              "p95": 12100.494999999999,
+              "p99": 14554.131
+            },
+            "first_retry_us": 51.276999999999994,
+            "initial_open_seconds": 0.002789806,
+            "mode": "encrypted-archive",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 6741.691510414359,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 0.788635,
+              "p95": 0.872164,
+              "p99": 0.872164
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 0.445464,
+              "p95": 0.464729,
+              "p99": 0.464729
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 32659,
+            "source_bytes": 4304448,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 6.0,
+              "p95": 9.181000000000001,
+              "p99": 15.703
+            },
+            "write_seconds": 0.607562656
+          },
+          "peak_rss_kib": 10048,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "encrypted-archive-1k",
+          "build": "baseline",
+          "iteration": 3,
+          "metrics": {
+            "archive_seconds": 0.071151652,
+            "batch": 64,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 16.529999999999998,
+              "p95": 18.512,
+              "p99": 19.139
+            },
+            "durable_commit_us": {
+              "n": 64,
+              "p50": 8984.430999999999,
+              "p95": 13073.544,
+              "p99": 14646.397
+            },
+            "first_retry_us": 41.175,
+            "initial_open_seconds": 0.002897384,
+            "mode": "encrypted-archive",
+            "read_signature": 20465512,
+            "records": 4096,
+            "records_per_second": 6660.900629415755,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 0.782082,
+              "p95": 0.9856909999999999,
+              "p99": 0.9856909999999999
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 0.462268,
+              "p95": 0.480458,
+              "p99": 0.480458
+            },
+            "scan_records_verified": 12288,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 32659,
+            "source_bytes": 4304448,
+            "value_bytes": 1024,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 6.039,
+              "p95": 10.839,
+              "p99": 17.927
+            },
+            "write_seconds": 0.614931858
+          },
+          "peak_rss_kib": 10048,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "small-archive",
+          "build": "baseline",
+          "iteration": 0,
+          "metrics": {
+            "archive_seconds": 0.04280837,
+            "batch": 1,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 0.127,
+              "p95": 0.129,
+              "p99": 0.17700000000000002
+            },
+            "durable_commit_us": {
+              "n": 256,
+              "p50": 8331.487000000001,
+              "p95": 12559.125,
+              "p99": 13004.756
+            },
+            "first_retry_us": 3.11,
+            "initial_open_seconds": 0.002136018,
+            "mode": "archive",
+            "read_signature": 1279080,
+            "records": 256,
+            "records_per_second": 114.44503966296257,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 0.570312,
+              "p95": 0.6048,
+              "p99": 0.6048
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 0.51734,
+              "p95": 0.5359959999999999,
+              "p99": 0.5359959999999999
+            },
+            "scan_records_verified": 768,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 58607,
+            "source_bytes": 75840,
+            "value_bytes": 128,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 2.592,
+              "p95": 8.988999999999999,
+              "p99": 10.334
+            },
+            "write_seconds": 2.23688157
+          },
+          "peak_rss_kib": 3460,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "small-archive",
+          "build": "candidate",
+          "iteration": 1,
+          "metrics": {
+            "archive_seconds": 0.039373107,
+            "batch": 1,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 0.113,
+              "p95": 0.131,
+              "p99": 0.155
+            },
+            "durable_commit_us": {
+              "n": 256,
+              "p50": 7787.838,
+              "p95": 12147.969,
+              "p99": 16837.43
+            },
+            "first_retry_us": 2.8880000000000003,
+            "initial_open_seconds": 0.001956871,
+            "mode": "archive",
+            "read_signature": 1279080,
+            "records": 256,
+            "records_per_second": 117.58026469564469,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 0.544791,
+              "p95": 0.5548620000000001,
+              "p99": 0.5548620000000001
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 0.507823,
+              "p95": 0.554429,
+              "p99": 0.554429
+            },
+            "scan_records_verified": 768,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 58607,
+            "source_bytes": 75840,
+            "value_bytes": 128,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 2.426,
+              "p95": 6.972,
+              "p99": 8.328000000000001
+            },
+            "write_seconds": 2.177236126
+          },
+          "peak_rss_kib": 3652,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "small-archive",
+          "build": "candidate",
+          "iteration": 2,
+          "metrics": {
+            "archive_seconds": 0.051614209,
+            "batch": 1,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 0.117,
+              "p95": 0.12200000000000001,
+              "p99": 0.155
+            },
+            "durable_commit_us": {
+              "n": 256,
+              "p50": 7816.328,
+              "p95": 12405.149000000001,
+              "p99": 15410.164
+            },
+            "first_retry_us": 2.984,
+            "initial_open_seconds": 0.00222517,
+            "mode": "archive",
+            "read_signature": 1279080,
+            "records": 256,
+            "records_per_second": 114.42502409625628,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 0.548815,
+              "p95": 0.629427,
+              "p99": 0.629427
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 0.479777,
+              "p95": 0.480987,
+              "p99": 0.480987
+            },
+            "scan_records_verified": 768,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 58607,
+            "source_bytes": 75840,
+            "value_bytes": 128,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 2.4370000000000003,
+              "p95": 7.737000000000001,
+              "p99": 8.953000000000001
+            },
+            "write_seconds": 2.237272852
+          },
+          "peak_rss_kib": 3648,
+          "file_flags": "---------------------m"
+        },
+        {
+          "case": "small-archive",
+          "build": "baseline",
+          "iteration": 3,
+          "metrics": {
+            "archive_seconds": 0.037517939,
+            "batch": 1,
+            "cached_retry_us": {
+              "n": 100,
+              "p50": 0.113,
+              "p95": 0.118,
+              "p99": 0.155
+            },
+            "durable_commit_us": {
+              "n": 256,
+              "p50": 6682.036,
+              "p95": 11986.201000000001,
+              "p99": 12814.815
+            },
+            "first_retry_us": 2.972,
+            "initial_open_seconds": 0.002315063,
+            "mode": "archive",
+            "read_signature": 1279080,
+            "records": 256,
+            "records_per_second": 131.32479959204608,
+            "reopen_and_get_ms": {
+              "n": 5,
+              "p50": 0.583762,
+              "p95": 0.595329,
+              "p99": 0.595329
+            },
+            "scan_ms": {
+              "n": 3,
+              "p50": 0.502553,
+              "p95": 0.5279459999999999,
+              "p99": 0.5279459999999999
+            },
+            "scan_records_verified": 768,
+            "scope": "synthetic fixed bytes, verified complete values; durable local file writes; warm serial read/scan/reopen; archive timing includes separate-file creation/publication; no real agent data",
+            "selected_bytes": 58607,
+            "source_bytes": 75840,
+            "value_bytes": 128,
+            "warm_get_us": {
+              "n": 10000,
+              "p50": 2.47,
+              "p95": 7.9959999999999996,
+              "p99": 9.744
+            },
+            "write_seconds": 1.949365244
+          },
+          "peak_rss_kib": 3620,
+          "file_flags": "---------------------m"
+        }
+      ]
+    }
+  },
+  "final_runtime": {
+    "commit": "c54746931f17865953a93f6e373cf0d0e72a7ece",
+    "source_sha256": {
+      "crates/ojo/src/lib.rs": "04e52b053b10be3b0639c9a4e1c3b23367028ddd5e6d8c5b9d07dd5d226de3cb",
+      "crates/ojo/src/wire.rs": "098dac41756907534317415d72ecf34b78d3ebaa176ebe8d102323d42dd7149f",
+      "crates/ojo/tests/acid.rs": "0f0c63849d0feb63971e8b53c3d30e9f9fea96a08178701a4a24e76b430a58b3",
+      "crates/ojo/README.md": "d21f203b8e2ad684110cd93dea6e6fd6ee0931de5c4d9923591005feffa071c7",
+      "crates/ojo/Cargo.toml": "5484866968ec6dbfe91f685cfc3b830fd155b6affd37e0809f65ec1c87297e7c",
+      "Cargo.lock": "61f3bcee5ba7cc797f44246d3765dfdaed7371ef66c73c2316c8e2bec1a40f7a"
+    },
+    "checks": [
+      {
+        "name": "default-tests",
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "ojo"
+        ],
+        "exit_code": 0,
+        "seconds": 7.027902841567993,
+        "log_sha256": "dc06037fdad9cc1ab6b4944ed5376e95b407d976e458fc9a1f2379f0b64fd965",
+        "results": [
+          "test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+          "test result: ok. 17 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.20s",
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s"
+        ]
+      },
+      {
+        "name": "archive-tests",
+        "command": [
+          "cargo",
+          "test",
+          "--locked",
+          "-p",
+          "ojo",
+          "--features",
+          "archive"
+        ],
+        "exit_code": 0,
+        "seconds": 7.470545291900635,
+        "log_sha256": "7066aa9e14a26b57bfad8c37969703d7eaf4e2584ebb671721b8e551c6b1c5ce",
+        "results": [
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s",
+          "test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 6.64s",
+          "test result: ok. 2 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s",
+          "test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s"
+        ]
+      },
+      {
+        "name": "format",
+        "command": [
+          "cargo",
+          "fmt",
+          "-p",
+          "ojo",
+          "--",
+          "--check"
+        ],
+        "exit_code": 0,
+        "seconds": 0.28615713119506836,
+        "log_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "results": []
+      },
+      {
+        "name": "clippy",
+        "command": [
+          "cargo",
+          "clippy",
+          "--locked",
+          "-p",
+          "ojo",
+          "--all-targets",
+          "--features",
+          "archive,bench",
+          "--",
+          "-D",
+          "warnings"
+        ],
+        "exit_code": 0,
+        "seconds": 0.5248968601226807,
+        "log_sha256": "aa9d7371bb94485d6ff695ae448f2f2976883ee500a9aa408a0449d639af3086",
+        "results": []
+      },
+      {
+        "name": "default-release",
+        "command": [
+          "cargo",
+          "build",
+          "--locked",
+          "--release",
+          "-p",
+          "ojo"
+        ],
+        "exit_code": 0,
+        "seconds": 0.7411181926727295,
+        "log_sha256": "d98b38cedcf7e087d61fde246c6bf1c805692642a0573a3f9f7f6f355f18423e",
+        "results": []
+      }
+    ]
+  },
+  "cross_version_codec_files": {
+    "helper_sha256": "f33330e043d573cf2018ff1c959787c8b17a273f192625926621cc86e529afce",
+    "checks": [
+      {
+        "case": "raw-1k",
+        "writer": "baseline",
+        "reader": "candidate",
+        "file": "data.ojo",
+        "records": 32768,
+        "sha256_before_and_after": "3cb3bcc1bbdc3bc4701c92ca83e01b21c49c81fa0338c138358281f7a7ec1e39"
+      },
+      {
+        "case": "raw-1k",
+        "writer": "candidate",
+        "reader": "baseline",
+        "file": "data.ojo",
+        "records": 32768,
+        "sha256_before_and_after": "b32d0f2609999275e19f70b63907c98af9c749b7762fa2e8eb2cc8580abb35b2"
+      },
+      {
+        "case": "encrypted-1k",
+        "writer": "baseline",
+        "reader": "candidate",
+        "file": "data.ojo",
+        "records": 4096,
+        "sha256_before_and_after": "fbeef020cab5dad63bb00067d478643fbb26700b0725455261c00974d1e0a41f"
+      },
+      {
+        "case": "encrypted-1k",
+        "writer": "candidate",
+        "reader": "baseline",
+        "file": "data.ojo",
+        "records": 4096,
+        "sha256_before_and_after": "aa3b2d20896ab2ad2588417b1fccb0de49a52a5c8b6ab6467a1af69c27d83e1f"
+      },
+      {
+        "case": "archive-1k",
+        "writer": "baseline",
+        "reader": "candidate",
+        "file": "archive.ojo",
+        "records": 4096,
+        "sha256_before_and_after": "ba251b89c9f82fd732d8cc95708ac4ec22987bc016dcd738fad0e997e116695b"
+      },
+      {
+        "case": "archive-1k",
+        "writer": "baseline",
+        "reader": "candidate",
+        "file": "data.ojo",
+        "records": 4096,
+        "sha256_before_and_after": "6a952ca63d1cfa1f65c65713b91767501af45d50343d9625d363749af7ed4432"
+      },
+      {
+        "case": "archive-1k",
+        "writer": "candidate",
+        "reader": "baseline",
+        "file": "archive.ojo",
+        "records": 4096,
+        "sha256_before_and_after": "3c7cc6075726575c8156f8eef46d047c2f050f3fb46a2a5006890b96db183f2b"
+      },
+      {
+        "case": "archive-1k",
+        "writer": "candidate",
+        "reader": "baseline",
+        "file": "data.ojo",
+        "records": 4096,
+        "sha256_before_and_after": "9a1bc0e1d897924b93de4ec7eb6a7a425edfeb6e8aa0af544be456ac422e47e4"
+      },
+      {
+        "case": "archive-8k",
+        "writer": "baseline",
+        "reader": "candidate",
+        "file": "archive.ojo",
+        "records": 4096,
+        "sha256_before_and_after": "d5f6b2bdc1b7bdc30a076e6aca641122f5b7d82dee9ac16c160a5a2b9aea94d0"
+      },
+      {
+        "case": "archive-8k",
+        "writer": "baseline",
+        "reader": "candidate",
+        "file": "data.ojo",
+        "records": 4096,
+        "sha256_before_and_after": "daf41ed378fcc1115b98a46c662037215a00c10e43606bd9005e7cb9dbe36ffc"
+      },
+      {
+        "case": "archive-8k",
+        "writer": "candidate",
+        "reader": "baseline",
+        "file": "archive.ojo",
+        "records": 4096,
+        "sha256_before_and_after": "2cd2854e6e49a04a5eca5defc834fab9024bef24239c6394d5f7af81ca3e9b3d"
+      },
+      {
+        "case": "archive-8k",
+        "writer": "candidate",
+        "reader": "baseline",
+        "file": "data.ojo",
+        "records": 4096,
+        "sha256_before_and_after": "9e6457750e7e0eaf0bd6c911deca026e49fdda89f12a09ea9848d94aaeeabb5f"
+      },
+      {
+        "case": "encrypted-archive-1k",
+        "writer": "baseline",
+        "reader": "candidate",
+        "file": "archive.ojo",
+        "records": 4096,
+        "sha256_before_and_after": "d73761f6826b82c60b612ab5fb42f82087d9db2fe784c2fd5c376d95832fa4b9"
+      },
+      {
+        "case": "encrypted-archive-1k",
+        "writer": "baseline",
+        "reader": "candidate",
+        "file": "data.ojo",
+        "records": 4096,
+        "sha256_before_and_after": "b5b849a897e7bea3206dce98f5ecbfc9d8ed2670a0424ca212caf18461ae3b52"
+      },
+      {
+        "case": "encrypted-archive-1k",
+        "writer": "candidate",
+        "reader": "baseline",
+        "file": "archive.ojo",
+        "records": 4096,
+        "sha256_before_and_after": "e0d69db7509aa624363316679a52965be0a04c56efe7241916536f6e3320e9ad"
+      },
+      {
+        "case": "encrypted-archive-1k",
+        "writer": "candidate",
+        "reader": "baseline",
+        "file": "data.ojo",
+        "records": 4096,
+        "sha256_before_and_after": "8e0816784304364c78c3b10f8ca4449d22e568bc7848c866336affe7a30031d6"
+      },
+      {
+        "case": "small-archive",
+        "writer": "baseline",
+        "reader": "candidate",
+        "file": "archive.ojo",
+        "records": 256,
+        "sha256_before_and_after": "44737260fd40c950a52f03e424fcbc9e699851879c41b673ecd2ccb52f95e354"
+      },
+      {
+        "case": "small-archive",
+        "writer": "baseline",
+        "reader": "candidate",
+        "file": "data.ojo",
+        "records": 256,
+        "sha256_before_and_after": "b7a6208ba2b2ed769d08e8acdc7741f6577389c7fb9442f2659a8160e4ab8510"
+      },
+      {
+        "case": "small-archive",
+        "writer": "candidate",
+        "reader": "baseline",
+        "file": "archive.ojo",
+        "records": 256,
+        "sha256_before_and_after": "cc357cc7040a32a28fa2ba9a9b658379cb9e9b3f220719b05188a251aca56c03"
+      },
+      {
+        "case": "small-archive",
+        "writer": "candidate",
+        "reader": "baseline",
+        "file": "data.ojo",
+        "records": 256,
+        "sha256_before_and_after": "84bcfdaca06bea3adc73b7162dad34c7241e331c5860d20be07bfe4510464e5a"
+      }
+    ]
+  },
+  "temporary_artifacts": "Synthetic benchmark files, frozen exported sources and independent targets are task-owned under ignored .scratch; shared compiler and Cargo cache are root-owned. Cleanup occurs after ongoing qualification no longer needs them."
+}
