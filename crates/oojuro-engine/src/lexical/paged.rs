@@ -16,6 +16,7 @@ pub(crate) fn possible_terms(text: &str) -> BTreeSet<String> {
     }
     terms
 }
+#[derive(Clone)]
 pub(crate) struct Plan {
     pub terms: Vec<(String, usize)>,
     pub anchored: bool,
@@ -126,6 +127,17 @@ impl Stats {
             total: 0,
             view_total: 0,
         }
+    }
+    pub fn single_scope(plan: &Plan, matches: u64, scope: u64, view_scope: u64) -> Result<Self> {
+        if !plan.scope_model || plan.terms.len() != 1 || plan.scan || plan.direct.is_some() {
+            return Err(Error::Invalid);
+        }
+        Ok(Self {
+            collection: vec![matches],
+            view: vec![matches],
+            total: scope,
+            view_total: view_scope,
+        })
     }
     /// Sparse postings visits already cover every visible term occurrence.
     /// Only a small candidate collection needs mass from nonmatching rows.

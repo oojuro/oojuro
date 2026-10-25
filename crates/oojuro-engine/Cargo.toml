@@ -21,6 +21,8 @@ zstd = { version = "0.13.3", default-features = false }
 libc = "0.2"
 
 [dev-dependencies]
+# Opt-in actual-file projection diagnostics; never a runtime engine dependency.
+ojo = { path = "../ojo", features = ["archive"] }
 oojuro-nine = { path = "../oojuro-nine" }
 oojuro-core = { path = "../oojuro-core" }
 oojuro-trace = { path = "../oojuro-trace" }

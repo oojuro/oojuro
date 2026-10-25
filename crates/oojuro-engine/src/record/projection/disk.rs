@@ -8,6 +8,7 @@ mod build;
 mod events;
 mod query_cache;
 mod storage;
+mod term_cache;
 use super::*;
 use crate::lexical::paged as scorer;
 use crate::record::paged::tree;
@@ -99,6 +100,7 @@ pub struct Index {
     columns: Vec<Arc<[Column]>>,
     totals: Totals,
     queries: query_cache::QueryCache,
+    terms: term_cache::TermCache,
     retained_disk_bytes: u64,
     retained_allocated_bytes: u64,
     _lock: File,
@@ -180,6 +182,7 @@ impl Index {
             // plus equal headroom for small-allocation bookkeeping.
             .saturating_add(8 << 20)
             .saturating_add(query_cache::RESERVED_BYTES)
+            .saturating_add(term_cache::RESERVED_BYTES)
             .saturating_add(std::mem::size_of::<Self>() + std::mem::size_of::<FrameCipher>())
     }
     fn current(&self, binding: &Binding) -> Result<()> {
@@ -399,6 +402,18 @@ impl Index {
         if raw.len() > self.manifest.limits.query_terms {
             return Err(Error::Bounds);
         }
+        let selected = if selection.unfiltered() {
+            None
+        } else {
+            Some(match self.terms.selection(self, q, &selection)? {
+                Some(view) => view,
+                None => Arc::new(self.select(&selection)?),
+            })
+        };
+        let sparse = selected
+            .as_ref()
+            .filter(|view| view.count <= 65536)
+            .map(|view| view.bits.as_slice());
         for term in scorer::possible_terms(q.text) {
             if !scorer::is_literal(q.text) && (split || !term.contains('_')) {
                 continue;
@@ -425,13 +440,64 @@ impl Index {
         if plan.terms.len() > self.manifest.limits.query_terms {
             return Err(Error::Bounds);
         }
+        if selected.as_ref().is_some_and(|view| view.count == 0) {
+            return Ok((vec![], false));
+        }
+        if plan.terms.is_empty() && plan.literal.is_none() {
+            return Ok((vec![], false));
+        }
+        if selection.unfiltered() && plan.scope_model() && plan.terms.len() == 1 {
+            let term = *blake3::hash(plan.terms[0].0.as_bytes()).as_bytes();
+            if let Some(list) = self.terms.get(self, term)? {
+                let model = scorer::Stats::single_scope(
+                    &plan,
+                    list.statistics.df,
+                    list.statistics.scope,
+                    self.totals.scope,
+                )
+                .map_err(|_| Error::Bounds)?
+                .finish(plan);
+                let mut top = Top::new(q.k);
+                if let Some(groups) = list
+                    .groups
+                    .as_ref()
+                    .filter(|_| q.k <= term_cache::GROUP_TOP)
+                {
+                    for group in groups {
+                        let (length, scope, tf) = group.shape;
+                        let bits = model.score(length, scope, &[tf]);
+                        for row in &group.top {
+                            top.push(Scored {
+                                ordinal: row.ordinal,
+                                label: row.label,
+                                time: row.time,
+                                bits,
+                            });
+                        }
+                    }
+                } else {
+                    for &(ordinal, tf) in &list.pairs {
+                        let column = self.column(ordinal)?;
+                        if column.live() {
+                            top.push(Scored {
+                                ordinal,
+                                label: column.label,
+                                time: column.valid_at,
+                                bits: model.score(column.length, column.scope, &[tf]),
+                            });
+                        }
+                    }
+                }
+                return Ok((self.ranked(top)?, false));
+            }
+        }
         let mut stats = scorer::Stats::new(&plan);
         let mut literal = plan
             .literal
             .as_ref()
             .map(|_| vec![0u64; (self.manifest.rows as usize).div_ceil(64)]);
         let mut read = 0usize;
-        self.walk(&plan, direct, true, |ordinal, tf| {
+        self.walk(&plan, direct, true, sparse, |ordinal, tf| {
             let column = self.column(ordinal)?;
             let visible = column.visible(&selection);
             let mut candidate =
@@ -451,7 +517,7 @@ impl Index {
         if stats.needs_view_total() {
             if plan.anchored_driver() {
                 stats.reset_view();
-                self.walk(&plan, direct, false, |ordinal, tf| {
+                self.walk(&plan, direct, false, sparse, |ordinal, tf| {
                     let col = self.column(ordinal)?;
                     stats
                         .visit(
@@ -465,33 +531,25 @@ impl Index {
                         .map_err(|_| Error::Bounds)
                 })?;
             }
-            let total = if selection.unfiltered() {
+            let total = if let Some(selected) = &selected {
+                if plan.scope_model() {
+                    selected.totals.scope
+                } else {
+                    selected.totals.length
+                }
+            } else {
                 if plan.scope_model() {
                     self.totals.scope
                 } else {
                     self.totals.length
                 }
-            } else {
-                let mut total = 0u64;
-                for block in &self.columns {
-                    for col in block.iter().filter(|c| c.visible(&selection)) {
-                        total = total
-                            .checked_add(u64::from(if plan.scope_model() {
-                                col.scope
-                            } else {
-                                col.length
-                            }))
-                            .ok_or(Error::Bounds)?;
-                    }
-                }
-                total
             };
             stats.set_view_total(total);
         }
         let anchored = plan.continues();
         let model = stats.finish(plan);
         let mut top = Top::new(q.k);
-        self.walk(&model.plan, direct, true, |ordinal, tf| {
+        self.walk(&model.plan, direct, true, sparse, |ordinal, tf| {
             let col = self.column(ordinal)?;
             let candidate = model.plan.candidate_terms(
                 u64::from(ordinal),
@@ -511,6 +569,9 @@ impl Index {
             }
             Ok(())
         })?;
+        Ok((self.ranked(top)?, anchored))
+    }
+    fn ranked(&self, top: Top) -> Result<Vec<Ranked>> {
         let mut output = Vec::new();
         for hit in top.finish() {
             output.push(Ranked {
@@ -520,13 +581,32 @@ impl Index {
                 ordinal: hit.ordinal,
             });
         }
-        Ok((output, anchored))
+        Ok(output)
+    }
+    fn select(&self, selection: &Selection) -> Result<Selected> {
+        let mut selected = Selected {
+            bits: vec![0; (self.manifest.rows as usize).div_ceil(64)],
+            count: 0,
+            totals: Totals::default(),
+        };
+        for (block, rows) in self.columns.iter().enumerate() {
+            for (offset, column) in rows.iter().enumerate() {
+                if column.visible(selection) {
+                    let ordinal = block * COLUMN_ROWS + offset;
+                    selected.bits[ordinal / 64] |= 1 << (ordinal % 64);
+                    selected.count += 1;
+                    selected.totals.add(column)?;
+                }
+            }
+        }
+        Ok(selected)
     }
     fn walk(
         &self,
         plan: &scorer::Plan,
         direct: Option<Option<u64>>,
         candidates_only: bool,
+        selected: Option<&[u64]>,
         mut visit: impl FnMut(u32, &[u32]) -> Result<()>,
     ) -> Result<()> {
         let mut tf = vec![0; plan.terms.len()];
@@ -536,7 +616,7 @@ impl Index {
             }
             return Ok(());
         }
-        if plan.terms.is_empty() {
+        if plan.terms.is_empty() && selected.is_none() {
             for row in 0..self.manifest.rows {
                 visit(row as u32, &tf)?;
             }
@@ -551,6 +631,29 @@ impl Index {
             .iter_mut()
             .map(Postings::next)
             .collect::<Result<Vec<_>>>()?;
+        if let Some(selected) = selected {
+            for (word, &bits) in selected.iter().enumerate() {
+                let mut bits = bits;
+                while bits != 0 {
+                    let bit = bits.trailing_zeros();
+                    bits &= bits - 1;
+                    let ordinal =
+                        u32::try_from(word * 64 + bit as usize).map_err(|_| Error::Bounds)?;
+                    tf.fill(0);
+                    for (i, head) in heads.iter_mut().enumerate() {
+                        if head.is_some_and(|(row, _)| row < ordinal) {
+                            *head = cursors[i].at_least(ordinal)?;
+                        }
+                        if head.is_some_and(|(row, _)| row == ordinal) {
+                            tf[i] = head.unwrap().1;
+                            *head = cursors[i].next()?;
+                        }
+                    }
+                    visit(ordinal, &tf)?;
+                }
+            }
+            return Ok(());
+        }
         let anchored = candidates_only && plan.anchored_driver();
         while let Some(row) = heads
             .iter()
@@ -576,7 +679,7 @@ impl Index {
     }
 }
 
-struct Postings<'a> {
+struct DiskPostings<'a> {
     cursor: tree::Cursor<'a>,
     term: [u8; 32],
     buffer: Vec<(u32, u32)>,
@@ -584,9 +687,8 @@ struct Postings<'a> {
     last: Option<u32>,
     done: bool,
 }
-impl<'a> Postings<'a> {
-    fn new(index: &'a Index, term: &str) -> Result<Self> {
-        let term = *blake3::hash(term.as_bytes()).as_bytes();
+impl<'a> DiskPostings<'a> {
+    fn new_hash(index: &'a Index, term: [u8; 32]) -> Result<Self> {
         Ok(Self {
             cursor: tree::Cursor::seek(
                 index.context(tree::Purpose::ProjectionPostings),
@@ -643,6 +745,42 @@ impl<'a> Postings<'a> {
             let found = self.next()?;
             if found.is_none_or(|(row, _)| row >= wanted) {
                 return Ok(found);
+            }
+        }
+    }
+}
+enum Postings<'a> {
+    Cached {
+        list: Arc<term_cache::TermList>,
+        at: usize,
+    },
+    Disk(Box<DiskPostings<'a>>),
+}
+impl<'a> Postings<'a> {
+    fn new(index: &'a Index, term: &str) -> Result<Self> {
+        let term = *blake3::hash(term.as_bytes()).as_bytes();
+        if let Some(list) = index.terms.get(index, term)? {
+            Ok(Self::Cached { list, at: 0 })
+        } else {
+            Ok(Self::Disk(Box::new(DiskPostings::new_hash(index, term)?)))
+        }
+    }
+    fn next(&mut self) -> Result<Option<(u32, u32)>> {
+        match self {
+            Self::Disk(disk) => disk.next(),
+            Self::Cached { list, at } => {
+                let value = list.pairs.get(*at).copied();
+                *at += usize::from(value.is_some());
+                Ok(value)
+            }
+        }
+    }
+    fn at_least(&mut self, wanted: u32) -> Result<Option<(u32, u32)>> {
+        match self {
+            Self::Disk(disk) => disk.at_least(wanted),
+            Self::Cached { list, at } => {
+                *at += list.pairs[*at..].partition_point(|(row, _)| *row < wanted);
+                self.next()
             }
         }
     }

@@ -178,6 +178,11 @@ pub(super) struct Selection {
     tool: Option<[u8; 32]>,
     agent: Option<[u8; 32]>,
 }
+pub(super) struct Selected {
+    pub bits: Vec<u64>,
+    pub count: usize,
+    pub totals: Totals,
+}
 #[derive(Clone, Copy, Default)]
 pub(super) struct Totals {
     pub length: u64,
@@ -891,6 +896,7 @@ pub(super) fn open_with_cipher(
         columns,
         totals,
         queries: query_cache::QueryCache::default(),
+        terms: term_cache::TermCache::default(),
         retained_disk_bytes,
         retained_allocated_bytes,
         _lock: lock,
