@@ -424,29 +424,53 @@ pub(super) fn matches(
         }
     }
     for (offset, fragments) in &atoms[1..] {
-        let Some((&first, _)) = starts.first_key_value() else {
+        if starts.is_empty() {
             return Ok(Some([0; 4]));
-        };
-        let last = *starts.last_key_value().ok_or(Error::Authority)?.0;
-        let Some(first) = first.checked_add(*offset) else {
-            return Ok(Some([0; 4]));
-        };
-        let last = last.saturating_add(*offset);
-        let allowed = starts.values().fold([0u64; 4], |mut mask, rows| {
-            for (mask, rows) in mask.iter_mut().zip(rows) {
-                *mask |= rows;
+        }
+        let mut allowed = [0u64; 4];
+        let mut ranges = [(u32::MAX, 0u32); 256];
+        for (position, masks) in &starts {
+            for (word, mask) in masks.iter().copied().enumerate() {
+                allowed[word] |= mask;
+                let mut active = mask;
+                while active != 0 {
+                    if !charge(work) {
+                        return Ok(None);
+                    }
+                    let at = word * 64 + active.trailing_zeros() as usize;
+                    active &= active - 1;
+                    ranges[at].0 = ranges[at].0.min(*position);
+                    ranges[at].1 = ranges[at].1.max(*position);
+                }
             }
-            mask
-        });
+        }
         let mut next = BTreeMap::new();
         for fragment in *fragments {
             for group in &fragment.groups {
                 if !charge(work) {
                     return Ok(None);
                 }
-                if group.rows.iter().zip(allowed).all(|(a, b)| a & b == 0) {
+                let mut minimum = u32::MAX;
+                let mut maximum = 0;
+                for (word, mask) in group.rows.iter().copied().enumerate() {
+                    let mut active = mask & allowed[word];
+                    while active != 0 {
+                        if !charge(work) {
+                            return Ok(None);
+                        }
+                        let at = word * 64 + active.trailing_zeros() as usize;
+                        active &= active - 1;
+                        minimum = minimum.min(ranges[at].0);
+                        maximum = maximum.max(ranges[at].1);
+                    }
+                }
+                if minimum == u32::MAX {
                     continue;
                 }
+                let Some(first) = minimum.checked_add(*offset) else {
+                    continue;
+                };
+                let last = maximum.saturating_add(*offset);
                 let begin = group.positions.partition_point(|at| *at < first);
                 let end = group.positions.partition_point(|at| *at <= last);
                 for position in &group.positions[begin..end] {
@@ -763,7 +787,7 @@ mod tests {
             matches(0, &[(0, &a), (8, &b), (19, &c)], &mut budget).unwrap(),
             Some([1023, 0, 0, 0])
         );
-        assert!(budget >= 1_000_000 - 200);
+        assert!(budget >= 1_000_000 - 400);
     }
     #[test]
     fn offset_map_masks_match_exhaustive_randomized_row_position_joins() {
@@ -864,5 +888,24 @@ mod tests {
         for bytes in [vec![3, 1, 0], vec![2, 0, 0], vec![2, 1]] {
             assert!(Block::decoded_charge(&bytes).is_err());
         }
+    }
+    #[test]
+    fn per_row_start_ranges_prove_heterogeneous_fragments_within_the_original_work_cap() {
+        let rows: Vec<_> = (0..256u32)
+            .map(|row| (row, if row == 0 { vec![0, 50_000] } else { vec![0] }))
+            .collect();
+        let first = vec![Block::decode(0, 256, &Block::encode(0, &rows).unwrap()).unwrap()];
+        let others: Vec<_> = (0..256u32)
+            .map(|row| {
+                let positions = std::iter::once(8).chain(1000 + row..3000 + row).collect();
+                Block::decode(0, 256, &Block::encode(0, &[(row, positions)]).unwrap()).unwrap()
+            })
+            .collect();
+        let mut work = 20_000;
+        assert_eq!(
+            matches(0, &[(0, &first), (8, &others)], &mut work).unwrap(),
+            Some([u64::MAX; 4])
+        );
+        assert!(work >= 10_000);
     }
 }
