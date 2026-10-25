@@ -212,6 +212,56 @@ fn source_work_budget_refuses_before_fetching_an_oversized_original() {
 }
 
 #[test]
+fn stricter_open_work_caps_apply_to_fresh_and_reused_queries() {
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("index");
+        let mut original = row(1);
+        original.text.push_str(&" long original".repeat(64));
+        let previous = build(&path, &[original.clone()], compression);
+        let both = query("alpha beta", Filter::default(), i64::MIN, i64::MAX);
+        assert_eq!(
+            previous
+                .search(&binding(), &both, |_| Ok(original.clone()))
+                .unwrap()
+                .len(),
+            1
+        );
+        let index = Index::open_with_limits(
+            &path,
+            &[9; 32],
+            &binding(),
+            Limits {
+                original_bytes_per_query: 64,
+                query_terms: 1,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        let mut calls = 0;
+        assert!(matches!(
+            index.search(&binding(), &both, |_| {
+                calls += 1;
+                Ok(original.clone())
+            }),
+            Err(Error::Bounds)
+        ));
+        let one = query("alpha", Filter::default(), i64::MIN, i64::MAX);
+        assert_eq!(index.rank(&binding(), &one).unwrap().len(), 1);
+        for _ in 0..2 {
+            assert!(matches!(
+                index.search(&binding(), &one, |_| {
+                    calls += 1;
+                    Ok(original.clone())
+                }),
+                Err(Error::Bounds)
+            ));
+        }
+        assert_eq!(calls, 0);
+    }
+}
+
+#[test]
 fn ambiguous_descriptor_publication_keeps_its_complete_generation_readable() {
     let scratch = Scratch::new();
     let path = scratch.0.join("index");

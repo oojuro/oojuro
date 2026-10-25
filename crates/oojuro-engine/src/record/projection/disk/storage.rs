@@ -784,8 +784,16 @@ pub(super) fn open_with_cipher(
     let plain = cipher
         .open_frame(&manifest_aad(&authority), &sealed)
         .map_err(|_| Error::Authority)?;
-    let manifest: Manifest = serde_json::from_slice(&plain).map_err(|_| Error::Authority)?;
+    let mut manifest: Manifest = serde_json::from_slice(&plain).map_err(|_| Error::Authority)?;
     manifest.limits.validate()?;
+    // Stored policy cannot loosen this handle's caller-supplied work caps.
+    // Both policies are positive/validated; retaining the stricter one also
+    // prevents a default reopen from silently raising a deliberately low cap.
+    manifest.limits.original_bytes_per_query = manifest
+        .limits
+        .original_bytes_per_query
+        .min(limits.original_bytes_per_query);
+    manifest.limits.query_terms = manifest.limits.query_terms.min(limits.query_terms);
     if manifest.format != FORMAT
         || manifest.binding != authority.binding
         || !valid_generation(&manifest.generation)
