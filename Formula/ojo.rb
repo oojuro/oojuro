@@ -1,5 +1,5 @@
 class Ojo < Formula
-  desc "Inspect, verify and manipulate portable .ojo databases"
+  desc "Inspect, verify and manipulate portable .juro databases"
   homepage "https://github.com/oojuro/oojuro"
   url "https://github.com/oojuro/oojuro/releases/download/ojo-v0.1.0/ojo-v0.1.0-x86_64-unknown-linux-gnu.tar.gz"
   version "0.1.0"
@@ -15,7 +15,7 @@ class Ojo < Formula
   end
 
   test do
-    system bin/"ojo", "create", testpath/"empty.ojo"
-    system bin/"ojo", "verify", testpath/"empty.ojo"
+    system bin/"ojo", "create", testpath/"empty.juro"
+    system bin/"ojo", "verify", testpath/"empty.juro"
   end
 end

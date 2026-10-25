@@ -4595,7 +4595,7 @@ dependencies = [
 
 [[package]]
 name = "ojo"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "chacha20poly1305",
  "crc32fast",
@@ -4609,7 +4609,7 @@ dependencies = [
 
 [[package]]
 name = "ojo-tools"
-version = "0.1.0"
+version = "0.2.0"
 dependencies = [
  "ojo",
  "oojuro-engine",
