@@ -5,6 +5,8 @@
 //! The optional disk representation preserves the existing projection ranker.
 mod budget;
 mod build;
+#[cfg(test)]
+mod compact;
 mod events;
 mod query_cache;
 mod storage;

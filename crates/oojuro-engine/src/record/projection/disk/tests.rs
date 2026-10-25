@@ -151,8 +151,10 @@ fn construction_quota_covers_temporary_files_before_publication() {
     assert!(metrics.peak_allocated_bytes_observed > 0);
     assert!(metrics.peak_files >= 5);
     let descriptor = fs::read(path.join("PROJECTION_CURRENT")).unwrap();
-    let mut limits = Limits::default();
-    limits.index_bytes = metrics.peak_logical_bytes / 2;
+    let limits = Limits {
+        index_bytes: metrics.peak_logical_bytes / 2,
+        ..Limits::default()
+    };
     let mut builder = Builder::create(&path, &[9; 32], binding(), limits).unwrap();
     let mut rejected = false;
     for row in rows {
@@ -443,7 +445,7 @@ fn incremental_prefix_append_retire_and_reopen_match_complete_global_model() {
 fn sparse_identifier_driver_keeps_exact_floor_and_filtered_view_statistics() {
     let mut rows = (0..1300).map(row).collect::<Vec<_>>();
     for (i, row) in rows.iter_mut().enumerate() {
-        if i % 97 == 0 {
+        if i.is_multiple_of(97) {
             row.text.push_str(" needle_exact");
         }
     }
@@ -485,10 +487,10 @@ fn sparse_identifier_driver_keeps_exact_floor_and_filtered_view_statistics() {
 fn row(i: usize) -> Row {
     Row {
         id: format!("id/{i:08x}"),
-        key: (i % 3 == 0).then(|| format!("k-{i:08}")),
+        key: (i.is_multiple_of(3)).then(|| format!("k-{i:08}")),
         text: format!(
             "alpha beta create_config exact id {i} café\r\n ++ alpha {}",
-            if i % 4 == 0 {
+            if i.is_multiple_of(4) {
                 "rare literal"
             } else {
                 "ordinary result"
@@ -496,19 +498,19 @@ fn row(i: usize) -> Row {
         ),
         valid_at: (i % 33) as i64 - 16,
         reported_recorded_at: 1000 + i as i64,
-        kind: if i % 2 == 0 {
+        kind: if i.is_multiple_of(2) {
             Kind::ToolResult
         } else {
             Kind::Output
         },
-        tool: (i % 3 == 0).then(|| "compiler".into()),
-        status: Some(if i % 2 == 0 {
+        tool: (i.is_multiple_of(3)).then(|| "compiler".into()),
+        status: Some(if i.is_multiple_of(2) {
             Status::Ok
         } else {
             Status::Error
         }),
         agent_id: format!("agent-{}", i % 5),
-        indexed: i % 7 != 0,
+        indexed: !i.is_multiple_of(7),
     }
 }
 fn query<'a>(text: &'a str, filter: Filter, from: i64, to: i64) -> Query<'a> {
@@ -538,7 +540,8 @@ fn build(path: &Path, rows: &[Row], compression: Compression) -> Index {
     }
     b.finish().unwrap()
 }
-fn fingerprint(hits: &[Hit]) -> Vec<(String, u64, bool, i64, i64, usize, usize, String)> {
+type HitFingerprint = (String, u64, bool, i64, i64, usize, usize, String);
+fn fingerprint(hits: &[Hit]) -> Vec<HitFingerprint> {
     hits.iter()
         .map(|h| {
             (
@@ -681,7 +684,7 @@ fn callback_originals_and_snapshot_binding_are_independently_checked() {
         });
         assert!(matches!(result, Err(Error::Authority)), "field{field}");
     }
-    assert!(Index::open(&scratch.0.join("index"), &[8; 32], &binding()).is_err());
+    assert!(Index::open(scratch.0.join("index"), &[8; 32], &binding()).is_err());
 }
 
 #[test]

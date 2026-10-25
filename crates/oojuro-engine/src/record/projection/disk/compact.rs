@@ -1,0 +1,453 @@
+//! Private version2 block-codec prototype. Not selected by any public builder
+//! until the descriptor, authority purposes and complete pipeline are qualified.
+use super::*;
+
+const ROWS: usize = 256;
+struct TfBlock {
+    base: u32,
+    bytes: Vec<u8>,
+    present: [u64; 4],
+    count: usize,
+}
+impl TfBlock {
+    fn encode(base: u32, pairs: &[(u32, u32)]) -> Result<Vec<u8>> {
+        if base & 255 != 0 || pairs.is_empty() || pairs.len() > ROWS {
+            return Err(Error::Invalid);
+        }
+        let mut last = None;
+        let mut present = [0u64; 4];
+        let mut maximum = 0u32;
+        let mut uniform = true;
+        for &(ordinal, tf) in pairs {
+            let offset = ordinal.checked_sub(base).ok_or(Error::Invalid)? as usize;
+            if offset >= ROWS || tf == 0 || last.is_some_and(|previous| previous >= ordinal) {
+                return Err(Error::Invalid);
+            }
+            last = Some(ordinal);
+            present[offset / 64] |= 1 << (offset % 64);
+            maximum = maximum.max(tf);
+            uniform &= tf == pairs[0].1;
+        }
+        let bits = (u32::BITS - maximum.leading_zeros()) as usize;
+        let sparse_bytes = 3 + pairs.len() * 5;
+        let dense_bytes = 2 + bits * 32;
+        if sparse_bytes <= dense_bytes && (!uniform || sparse_bytes <= 37) {
+            let mut bytes = Vec::with_capacity(sparse_bytes);
+            bytes.push(0);
+            bytes.extend((pairs.len() as u16).to_le_bytes());
+            for &(ordinal, tf) in pairs {
+                bytes.push((ordinal - base) as u8);
+                bytes.extend(tf.to_le_bytes());
+            }
+            return Ok(bytes);
+        }
+        if uniform && 37 <= dense_bytes {
+            let mut bytes = vec![2];
+            bytes.extend(maximum.to_le_bytes());
+            for word in present {
+                bytes.extend(word.to_le_bytes());
+            }
+            return Ok(bytes);
+        }
+        let mut planes = vec![[0u64; 4]; bits];
+        for &(ordinal, tf) in pairs {
+            let offset = (ordinal - base) as usize;
+            for (bit, plane) in planes.iter_mut().enumerate() {
+                if tf & (1 << bit) != 0 {
+                    plane[offset / 64] |= 1 << (offset % 64);
+                }
+            }
+        }
+        let mut bytes = vec![1, bits as u8];
+        for plane in planes {
+            for word in plane {
+                bytes.extend(word.to_le_bytes());
+            }
+        }
+        Ok(bytes)
+    }
+    fn decode(base: u32, rows: u64, bytes: Vec<u8>) -> Result<Self> {
+        if base & 255 != 0
+            || u64::from(base) >= rows
+            || rows > u64::from(u32::MAX)
+            || bytes.is_empty()
+        {
+            return Err(Error::Authority);
+        }
+        let mut present = [0u64; 4];
+        match bytes[0] {
+            0 => {
+                let raw: [u8; 2] = bytes.get(1..3).ok_or(Error::Authority)?.try_into().unwrap();
+                let count = usize::from(u16::from_le_bytes(raw));
+                if count == 0 || count > ROWS || bytes.len() != 3 + count * 5 {
+                    return Err(Error::Authority);
+                }
+                let mut last = None;
+                for pair in bytes[3..].as_chunks::<5>().0 {
+                    let offset = pair[0] as usize;
+                    if last.is_some_and(|previous| previous >= offset)
+                        || u32::from_le_bytes(pair[1..].try_into().unwrap()) == 0
+                    {
+                        return Err(Error::Authority);
+                    }
+                    present[offset / 64] |= 1 << (offset % 64);
+                    last = Some(offset);
+                }
+            }
+            1 => {
+                let bits = *bytes.get(1).ok_or(Error::Authority)? as usize;
+                if !(1..=32).contains(&bits) || bytes.len() != 2 + bits * 32 {
+                    return Err(Error::Authority);
+                }
+                for plane in bytes[2..].as_chunks::<32>().0 {
+                    for (word, value) in present.iter_mut().zip(plane.as_chunks::<8>().0) {
+                        *word |= u64::from_le_bytes(*value);
+                    }
+                }
+                if bytes[bytes.len() - 32..].iter().all(|byte| *byte == 0) {
+                    return Err(Error::Authority);
+                }
+            }
+            2 => {
+                if bytes.len() != 37 || u32::from_le_bytes(bytes[1..5].try_into().unwrap()) == 0 {
+                    return Err(Error::Authority);
+                }
+                for (word, value) in present.iter_mut().zip(bytes[5..].as_chunks::<8>().0) {
+                    *word = u64::from_le_bytes(*value);
+                }
+            }
+            _ => return Err(Error::Authority),
+        }
+        let count = present.iter().map(|word| word.count_ones() as usize).sum();
+        if count == 0 {
+            return Err(Error::Authority);
+        }
+        for offset in 0..ROWS {
+            if present[offset / 64] & (1 << (offset % 64)) != 0
+                && u64::from(base) + offset as u64 >= rows
+            {
+                return Err(Error::Authority);
+            }
+        }
+        Ok(Self {
+            base,
+            bytes,
+            present,
+            count,
+        })
+    }
+    fn tf(&self, offset: u8) -> u32 {
+        let at = usize::from(offset);
+        if self.present[at / 64] & (1 << (at % 64)) == 0 {
+            return 0;
+        }
+        match self.bytes[0] {
+            0 => {
+                let mut left = 0;
+                let mut right = self.count;
+                while left < right {
+                    let middle = left + (right - left) / 2;
+                    let start = 3 + middle * 5;
+                    match self.bytes[start].cmp(&offset) {
+                        std::cmp::Ordering::Less => left = middle + 1,
+                        std::cmp::Ordering::Greater => right = middle,
+                        std::cmp::Ordering::Equal => {
+                            return u32::from_le_bytes(
+                                self.bytes[start + 1..start + 5].try_into().unwrap(),
+                            );
+                        }
+                    }
+                }
+                unreachable!("validated presence belongs to its sparse entry")
+            }
+            1 => self.bytes[2..].as_chunks::<32>().0.iter().enumerate().fold(
+                0,
+                |value, (bit, plane)| {
+                    let start = (at / 64) * 8;
+                    value
+                        | ((((u64::from_le_bytes(plane[start..start + 8].try_into().unwrap())
+                            >> (at % 64))
+                            & 1) as u32)
+                            << bit)
+                },
+            ),
+            2 => u32::from_le_bytes(self.bytes[1..5].try_into().unwrap()),
+            _ => unreachable!("validated encoding mode"),
+        }
+    }
+}
+
+// Exact integer mass over arbitrary candidate unions without rescoring every
+// numeric row. Allocation is admitted before any full-width plane is created.
+struct Mass {
+    live: Vec<u64>,
+    length: Vec<(u8, Vec<u64>)>,
+    scope: Vec<(u8, Vec<u64>)>,
+}
+
+// Under a fixed exact (length,scope) shape, score is monotone in every TF.
+// Scope also appears positively as TF*scope/length, so independently minimizing
+// length/scope is unsafe. Heterogeneous/empty shapes deliberately do not prune.
+fn shape_bound(model: &scorer::Model, shapes: &[(u32, u32)], maximum_tf: &[u32]) -> Option<f64> {
+    if shapes.is_empty() || shapes.len() > 16 || maximum_tf.len() != model.plan.terms.len() {
+        return None;
+    }
+    let mut bound = f64::NEG_INFINITY;
+    for &(length, scope) in shapes {
+        if length == 0 && model.plan.scope_model() && maximum_tf.iter().any(|tf| *tf != 0) {
+            return None;
+        }
+        let score = model.score(length, scope, maximum_tf);
+        if !score.is_finite() {
+            return None;
+        }
+        if score.total_cmp(&bound).is_gt() {
+            bound = score;
+        }
+    }
+    Some(bound)
+}
+
+#[test]
+fn scope_bounds_preserve_positive_scope_mass_and_exact_shape_arithmetic() {
+    let plan = scorer::Plan::new("battery", false, None, &BTreeSet::new(), &BTreeMap::new());
+    let model = scorer::Stats::single_scope(&plan, 1, 100, 1_000_000)
+        .unwrap()
+        .finish(plan);
+    let shapes = [(100, 1), (100, 100)];
+    let unsafe_minima = model.score(100, 1, &[1]);
+    assert!(
+        model.score(100, 100, &[1]) > unsafe_minima,
+        "scope contributes positively to TF mass"
+    );
+    let bound = shape_bound(&model, &shapes, &[7]).unwrap();
+    for &(length, scope) in &shapes {
+        for tf in 0..=7 {
+            assert!(model.score(length, scope, &[tf]).total_cmp(&bound).is_le());
+        }
+    }
+    assert!(shape_bound(&model, &[(0, 0)], &[1]).is_none());
+    assert!(shape_bound(&model, &[(100, 10); 17], &[1]).is_none());
+}
+impl Mass {
+    fn new(columns: &[Arc<[Column]>], limit: usize) -> Result<Self> {
+        let rows = columns.iter().try_fold(0usize, |rows, block| {
+            rows.checked_add(block.len()).ok_or(Error::Bounds)
+        })?;
+        if rows > u32::MAX as usize {
+            return Err(Error::Bounds);
+        }
+        let words = rows.div_ceil(64);
+        let mut length = 0u32;
+        let mut scope = 0u32;
+        for column in columns.iter().flat_map(|block| block.iter()) {
+            if column.live() && column.indexed() {
+                length |= column.length;
+                scope |= column.scope;
+            }
+        }
+        let planes = (length.count_ones() + scope.count_ones()) as usize;
+        let bytes = words
+            .checked_mul(8)
+            .and_then(|bytes| bytes.checked_mul(1 + planes))
+            .and_then(|bytes| {
+                bytes.checked_add(
+                    planes * std::mem::size_of::<(u8, Vec<u64>)>() + std::mem::size_of::<Self>(),
+                )
+            })
+            .ok_or(Error::Bounds)?;
+        if bytes > limit {
+            return Err(Error::Bounds);
+        }
+        let make = |mask: u32| {
+            let mut planes = Vec::with_capacity(mask.count_ones() as usize);
+            for bit in 0..32u8 {
+                if mask & (1 << bit) != 0 {
+                    planes.push((bit, vec![0u64; words]));
+                }
+            }
+            planes
+        };
+        let mut result = Self {
+            live: vec![0; words],
+            length: make(length),
+            scope: make(scope),
+        };
+        for (ordinal, column) in columns.iter().flat_map(|block| block.iter()).enumerate() {
+            if !column.live() || !column.indexed() {
+                continue;
+            }
+            let word = ordinal / 64;
+            let flag = 1u64 << (ordinal % 64);
+            result.live[word] |= flag;
+            for (value, planes) in [
+                (column.length, &mut result.length),
+                (column.scope, &mut result.scope),
+            ] {
+                for (bit, plane) in planes.iter_mut() {
+                    if value & (1 << *bit) != 0 {
+                        plane[word] |= flag;
+                    }
+                }
+            }
+        }
+        Ok(result)
+    }
+    fn validate(&self, mask: &[u64]) -> Result<()> {
+        if mask.len() != self.live.len()
+            || mask
+                .iter()
+                .zip(&self.live)
+                .any(|(mask, live)| mask & !live != 0)
+        {
+            return Err(Error::Authority);
+        }
+        Ok(())
+    }
+    fn sum(&self, mask: &[u64], scope: bool) -> Result<u64> {
+        self.validate(mask)?;
+        let mut total = 0u64;
+        for (bit, plane) in if scope { &self.scope } else { &self.length } {
+            let count: u64 = mask
+                .iter()
+                .zip(plane)
+                .map(|(a, b)| u64::from((a & b).count_ones()))
+                .sum();
+            total = total
+                .checked_add(count.checked_mul(1u64 << bit).ok_or(Error::Bounds)?)
+                .ok_or(Error::Bounds)?;
+        }
+        Ok(total)
+    }
+    fn bytes(&self) -> usize {
+        self.live.capacity() * 8
+            + (self.length.capacity() + self.scope.capacity())
+                * std::mem::size_of::<(u8, Vec<u64>)>()
+            + self
+                .length
+                .iter()
+                .chain(&self.scope)
+                .map(|(_, plane)| plane.capacity() * 8)
+                .sum::<usize>()
+            + std::mem::size_of::<Self>()
+    }
+}
+
+#[test]
+fn bitplane_mass_matches_complete_integer_oracle_and_admits_before_allocation() {
+    let columns: Vec<_> = (0..1025u32)
+        .map(|n| Column {
+            valid_at: i64::from(n),
+            length: if n.is_multiple_of(17) {
+                u32::MAX
+            } else {
+                n * 17
+            },
+            scope: n,
+            kind: 0,
+            status: 0,
+            flags: if n.is_multiple_of(7) { 0 } else { 3 },
+            tool: [0; 32],
+            agent: [0; 32],
+            label: u128::from(n) + 1,
+        })
+        .collect();
+    let blocks: Vec<_> = columns
+        .chunks(COLUMN_ROWS)
+        .map(Arc::<[Column]>::from)
+        .collect();
+    let mass = Mass::new(&blocks, 1 << 20).unwrap();
+    assert!(mass.bytes() < 1 << 20);
+    assert_eq!(
+        Mass::new(&blocks, mass.bytes()).unwrap().bytes(),
+        mass.bytes()
+    );
+    assert!(Mass::new(&blocks, mass.bytes() - 1).is_err());
+    assert!(matches!(Mass::new(&blocks, 1), Err(Error::Bounds)));
+    for selection in 0..100u32 {
+        let mut mask = vec![0u64; columns.len().div_ceil(64)];
+        let mut expected = (0u64, 0u64);
+        for (ordinal, column) in columns.iter().enumerate() {
+            if column.live()
+                && column.indexed()
+                && (ordinal as u32 + selection).is_multiple_of(3 + selection % 17)
+            {
+                mask[ordinal / 64] |= 1 << (ordinal % 64);
+                expected.0 += u64::from(column.length);
+                expected.1 += u64::from(column.scope);
+            }
+        }
+        assert_eq!(mass.sum(&mask, false).unwrap(), expected.0);
+        assert_eq!(mass.sum(&mask, true).unwrap(), expected.1);
+    }
+    let mut bad = mass.live.clone();
+    bad[0] |= 1;
+    assert!(mass.sum(&bad, true).is_err());
+    assert!(mass.sum(&[], true).is_err());
+}
+
+#[test]
+fn adaptive_blocks_preserve_every_tf_and_ordinal_with_bounded_payloads() {
+    let mut state = 42u64;
+    for iteration in 0..1000 {
+        let base = (iteration as u32) * 256;
+        let mut pairs = Vec::new();
+        for offset in 0..256u32 {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            if state & 3 == 0 {
+                continue;
+            }
+            let tf = match iteration % 5 {
+                0 => 1,
+                1 => 2,
+                2 => u32::MAX,
+                3 => (state as u32).max(1),
+                _ => 1 + (state % 16) as u32,
+            };
+            pairs.push((base + offset, tf));
+        }
+        let bytes = TfBlock::encode(base, &pairs).unwrap();
+        assert!(bytes.len() <= 1026);
+        let block = TfBlock::decode(base, u64::from(base) + 256, bytes).unwrap();
+        assert_eq!(block.base, base);
+        assert_eq!(block.count, pairs.len());
+        for offset in 0..256u32 {
+            assert_eq!(
+                block.tf(offset as u8),
+                pairs
+                    .iter()
+                    .find(|(row, _)| *row == base + offset)
+                    .map_or(0, |(_, tf)| *tf)
+            );
+        }
+    }
+}
+#[test]
+fn malformed_and_out_of_range_blocks_refuse_before_any_query() {
+    let mut zero_tf = vec![0; 37];
+    zero_tf[0] = 2;
+    for bytes in [
+        vec![],
+        vec![3],
+        vec![0, 0, 0],
+        vec![1, 0],
+        vec![1, 33],
+        zero_tf,
+    ] {
+        assert!(TfBlock::decode(0, 256, bytes).is_err());
+    }
+    let pairs = [(0, 7), (255, u32::MAX)];
+    let bytes = TfBlock::encode(0, &pairs).unwrap();
+    assert!(TfBlock::decode(0, 255, bytes.clone()).is_err());
+    for end in 0..bytes.len() {
+        assert!(TfBlock::decode(0, 256, bytes[..end].to_vec()).is_err());
+    }
+    assert!(TfBlock::encode(1, &pairs).is_err());
+    assert!(TfBlock::encode(0, &[(1, 0)]).is_err());
+    assert!(TfBlock::encode(0, &[(1, 1), (1, 1)]).is_err());
+    assert!(TfBlock::encode(0, &[(256, 1)]).is_err());
+    let block = TfBlock::decode(0, 256, bytes).unwrap();
+    assert_eq!(block.tf(255), u32::MAX);
+}
