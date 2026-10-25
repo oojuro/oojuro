@@ -3,7 +3,7 @@
 `oojuro_engine::record::projection::disk` adds an experimental persistent
 projection alongside the existing compatibility API. It is derived data: the
 authoritative database retains every original and the index can be deleted and
-rebuilt. It neither changes `.ojo` wire 0.1 nor converts historical stores.
+rebuilt. It neither changes `.juro` wire 0.1 nor converts historical stores.
 
 `Builder::create(directory, cache_key, binding, limits)` accepts a private cache
 directory, a disposable 32-byte cache key, the caller's snapshot `Binding`, and
@@ -64,6 +64,21 @@ precomputed complete-view mass rather than scanning all numeric columns.
 Identifier queries drive their exact passes from anchored postings; a separate
 full-view pass runs when the unchanged ranker's probability floor requires it.
 
+An additional 12 MiB policy bounds validated posting lists, sufficient statistics
+and exact shape summaries. Active readers prevent a list's eviction, so its
+bytes stay charged through the last lease. When space is unavailable, queries
+use the existing disk cursor. Single-term unfiltered queries can reuse global
+statistics and the best 32 rows in each identical (length,scope,term-frequency)
+class; larger result limits or heterogeneous classes use complete scoring.
+This preserves the shared ranker's exact arithmetic. Metadata-filter/time
+selection bitmaps share this same 12 MiB pool and retain active-lease charges.
+They contain about 125 KiB per million retained rows; when the cache cannot
+admit one, the query uses a temporary bitmap instead. Sparse views visit only
+eligible ordinals. All cache
+capacities are reserved by estimated_heap_bytes before they warm. These
+mechanisms cache index work; source validation and original reads still occur
+for every materialized response.
+
 `Limits.index_bytes` bounds logical bytes of the new generation's entire build,
 including encrypted text, row spool, sort queues/runs, tree packs, numeric
 columns and the descriptor. Each extending write reserves its bytes first;
@@ -122,3 +137,10 @@ The opt-in `profile_disk_projection` example reports build, reopen and concurren
 synthetic query diagnostics. Its callback regenerates exact fixture rows rather
 than reading a `.ojo` file or provider, and its initial queries warm pages. Keep
 those measurements separate from event-log, durable storage and hosted results.
+
+The [bounded postings/selection qualification](benchmarks/JURO_DISK_QUERY_HOTPATH.md)
+retains repeated, distinct and dense query results, including the cases that
+still exceed the latency target. The [actual Event-file diagnostics](benchmarks/JURO_ACTUAL_FILE_PROJECTION.md)
+measure real source scan/get/checkpoints, retained/reopened/rebuilt handles and
+combined source-plus-index storage through 100k events. These are local synthetic
+observations, not hosted acceptance or a general space advantage.

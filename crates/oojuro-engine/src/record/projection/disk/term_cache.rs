@@ -1,0 +1,362 @@
+use super::*;
+use std::{
+    collections::VecDeque,
+    sync::{Condvar, Mutex},
+};
+
+pub(super) const RESERVED_BYTES: usize = 12 << 20;
+pub(super) const GROUP_TOP: usize = 32;
+const GROUP_BYTES: usize = 2 << 20;
+const MAX_GROUPS: usize = 1024;
+const MAX_ENTRIES: usize = 128;
+#[derive(Clone, Copy, Default)]
+pub(super) struct Statistics {
+    pub df: u64,
+    pub scope: u64,
+}
+pub(super) struct Group {
+    pub shape: (u32, u32, u32),
+    pub top: Vec<GroupHit>,
+}
+pub(super) struct TermList {
+    pub pairs: Vec<(u32, u32)>,
+    pub statistics: Statistics,
+    pub groups: Option<Vec<Group>>,
+    bytes: usize,
+}
+#[derive(Clone, Copy, Eq, PartialEq)]
+pub(super) struct GroupHit {
+    pub ordinal: u32,
+    pub time: i64,
+    pub label: u128,
+}
+impl Ord for GroupHit {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        other
+            .time
+            .cmp(&self.time)
+            .then_with(|| self.label.cmp(&other.label))
+    }
+}
+impl PartialOrd for GroupHit {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+struct CacheKey {
+    kind: u8,
+    hash: [u8; 32],
+}
+#[derive(Clone)]
+enum Entry {
+    Postings(Arc<TermList>),
+    Selection(Arc<Selected>),
+}
+impl Entry {
+    fn bytes(&self) -> usize {
+        match self {
+            Self::Postings(list) => list.bytes,
+            Self::Selection(view) => view.bits.capacity() * 8 + 512,
+        }
+    }
+    fn idle(&self) -> bool {
+        match self {
+            Self::Postings(list) => Arc::strong_count(list) == 1,
+            Self::Selection(view) => Arc::strong_count(view) == 1,
+        }
+    }
+}
+#[derive(Default)]
+struct State {
+    ready: BTreeMap<CacheKey, Entry>,
+    order: VecDeque<CacheKey>,
+    inflight: BTreeSet<CacheKey>,
+    used: usize,
+}
+pub(super) struct TermCache {
+    state: Mutex<State>,
+    changed: Condvar,
+    capacity: usize,
+}
+impl Default for TermCache {
+    fn default() -> Self {
+        Self {
+            state: Mutex::new(State::default()),
+            changed: Condvar::new(),
+            capacity: RESERVED_BYTES,
+        }
+    }
+}
+struct Claim<'a> {
+    cache: &'a TermCache,
+    key: CacheKey,
+    reserved: usize,
+    active: bool,
+}
+impl Drop for Claim<'_> {
+    fn drop(&mut self) {
+        if self.active
+            && let Ok(mut state) = self.cache.state.lock()
+        {
+            state.inflight.remove(&self.key);
+            state.used -= self.reserved;
+        }
+        self.cache.changed.notify_all();
+    }
+}
+impl TermCache {
+    fn entry(
+        &self,
+        key: CacheKey,
+        estimate: impl FnOnce() -> Result<(usize, usize)>,
+        load: impl FnOnce(usize) -> Result<Entry>,
+    ) -> Result<Option<Entry>> {
+        let mut estimate = Some(estimate);
+        let mut estimated = None;
+        let mut load = Some(load);
+        loop {
+            let mut state = self.state.lock().map_err(|_| Error::Unavailable)?;
+            if let Some(entry) = state.ready.get(&key) {
+                let entry = entry.clone();
+                if let Some(at) = state.order.iter().position(|old| *old == key) {
+                    state.order.remove(at);
+                }
+                state.order.push_back(key);
+                return Ok(Some(entry));
+            }
+            if state.inflight.contains(&key) {
+                drop(self.changed.wait(state).map_err(|_| Error::Unavailable)?);
+                continue;
+            }
+            drop(state);
+            if estimated.is_none() {
+                estimated = Some(estimate.take().unwrap()()?);
+            }
+            let (reserved, argument) = estimated.unwrap();
+            if reserved > self.capacity {
+                return Ok(None);
+            }
+            let mut state = self.state.lock().map_err(|_| Error::Unavailable)?;
+            if state.ready.contains_key(&key) || state.inflight.contains(&key) {
+                drop(state);
+                continue;
+            }
+            while state.used + reserved > self.capacity
+                || state.ready.len() + state.inflight.len() >= MAX_ENTRIES
+            {
+                let Some(at) = state
+                    .order
+                    .iter()
+                    .position(|key| state.ready.get(key).is_some_and(Entry::idle))
+                else {
+                    return Ok(None);
+                };
+                let old = state.order.remove(at).unwrap();
+                if let Some(entry) = state.ready.remove(&old) {
+                    state.used -= entry.bytes();
+                }
+            }
+            state.used += reserved;
+            state.inflight.insert(key);
+            drop(state);
+            let mut claim = Claim {
+                cache: self,
+                key,
+                reserved,
+                active: true,
+            };
+            let entry = load.take().unwrap()(argument)?;
+            if entry.bytes() > reserved {
+                return Err(Error::Bounds);
+            }
+            let mut state = self.state.lock().map_err(|_| Error::Unavailable)?;
+            state.inflight.remove(&key);
+            state.used -= reserved;
+            state.used += entry.bytes();
+            state.order.push_back(key);
+            state.ready.insert(key, entry.clone());
+            claim.active = false;
+            drop(state);
+            self.changed.notify_all();
+            return Ok(Some(entry));
+        }
+    }
+    pub fn get(&self, index: &Index, term: [u8; 32]) -> Result<Option<Arc<TermList>>> {
+        let entry = self.entry(
+            CacheKey {
+                kind: 0,
+                hash: term,
+            },
+            || {
+                let chunks = tree::count_prefix(
+                    index.context(tree::Purpose::ProjectionPostings),
+                    &index.manifest.postings,
+                    &term,
+                )?;
+                let upper = chunks.saturating_mul(256).min(index.manifest.rows) as usize;
+                let reserved = upper
+                    .checked_mul(8)
+                    .and_then(|n| n.checked_add(GROUP_BYTES + 512))
+                    .ok_or(Error::Bounds)?;
+                Ok((reserved, upper))
+            },
+            |upper| Ok(Entry::Postings(Arc::new(load(index, term, upper)?))),
+        )?;
+        match entry {
+            Some(Entry::Postings(list)) => Ok(Some(list)),
+            None => Ok(None),
+            _ => Err(Error::Authority),
+        }
+    }
+    pub fn selection(
+        &self,
+        index: &Index,
+        q: &Query<'_>,
+        selection: &Selection,
+    ) -> Result<Option<Arc<Selected>>> {
+        let bytes = serde_json::to_vec(&(q.from, q.to, &q.filter)).map_err(|_| Error::Invalid)?;
+        let key = CacheKey {
+            kind: 1,
+            hash: *blake3::hash(&bytes).as_bytes(),
+        };
+        let entry = self.entry(
+            key,
+            || Ok((((index.manifest.rows as usize).div_ceil(64)) * 8 + 512, 0)),
+            |_| Ok(Entry::Selection(Arc::new(index.select(selection)?))),
+        )?;
+        match entry {
+            Some(Entry::Selection(view)) => Ok(Some(view)),
+            None => Ok(None),
+            _ => Err(Error::Authority),
+        }
+    }
+}
+fn load(index: &Index, term: [u8; 32], upper: usize) -> Result<TermList> {
+    let mut input = DiskPostings::new_hash(index, term)?;
+    let mut pairs = Vec::with_capacity(upper);
+    let mut statistics = Statistics::default();
+    let mut groups = Some(BTreeMap::<(u32, u32, u32), BinaryHeap<GroupHit>>::new());
+    while let Some((ordinal, tf)) = input.next()? {
+        if pairs.len() == upper {
+            return Err(Error::Authority);
+        }
+        let column = index.column(ordinal)?;
+        if !column.indexed() {
+            return Err(Error::Authority);
+        }
+        if column.live() {
+            statistics.df = statistics.df.checked_add(1).ok_or(Error::Bounds)?;
+            statistics.scope = statistics
+                .scope
+                .checked_add(u64::from(column.scope))
+                .ok_or(Error::Bounds)?;
+            let shape = (column.length, column.scope, tf);
+            if groups
+                .as_ref()
+                .is_some_and(|groups| groups.len() >= MAX_GROUPS && !groups.contains_key(&shape))
+            {
+                groups = None;
+            }
+            if let Some(groups) = &mut groups {
+                let top = groups.entry(shape).or_default();
+                let row = GroupHit {
+                    ordinal,
+                    time: column.valid_at,
+                    label: column.label,
+                };
+                if top.len() < GROUP_TOP {
+                    top.push(row);
+                } else if top.peek().is_some_and(|worst| row < *worst) {
+                    top.pop();
+                    top.push(row);
+                }
+            }
+        }
+        pairs.push((ordinal, tf));
+    }
+    let groups = groups.map(|groups| {
+        groups
+            .into_iter()
+            .map(|(shape, top)| Group {
+                shape,
+                top: top.into_vec(),
+            })
+            .collect::<Vec<_>>()
+    });
+    let bytes = pairs.capacity() * 8
+        + 512
+        + groups.as_ref().map_or(0, |groups| {
+            groups.capacity() * std::mem::size_of::<Group>()
+                + groups
+                    .iter()
+                    .map(|group| group.top.capacity() * std::mem::size_of::<GroupHit>())
+                    .sum::<usize>()
+        });
+    Ok(TermList {
+        pairs,
+        statistics,
+        groups,
+        bytes,
+    })
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::fs;
+    struct Scratch(PathBuf);
+    impl Drop for Scratch {
+        fn drop(&mut self) {
+            let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+    #[test]
+    fn active_posting_leases_stay_charged_until_the_last_reader_releases_them() {
+        let root = Scratch(std::env::temp_dir().join(format!(
+            "term-cache-{}",
+            hex(&oojuro_store::crypto::random_key())
+        )));
+        fs::create_dir(&root.0).unwrap();
+        let binding = Binding {
+            namespace: [1; 32],
+            writer: "numeric-fixture".into(),
+            view: [2; 32],
+        };
+        let mut builder =
+            Builder::create(root.0.join("index"), &[9; 32], binding, Limits::default()).unwrap();
+        for i in 0..128 {
+            builder
+                .push(Row {
+                    id: format!("{i:08x}"),
+                    key: None,
+                    text: "alpha beta".into(),
+                    valid_at: i,
+                    reported_recorded_at: i,
+                    kind: Kind::Raw,
+                    tool: None,
+                    status: None,
+                    agent_id: String::new(),
+                    indexed: true,
+                })
+                .unwrap();
+        }
+        let mut index = builder.finish().unwrap();
+        index.terms.capacity = GROUP_BYTES + 2048;
+        let alpha = *blake3::hash(b"alpha").as_bytes();
+        let beta = *blake3::hash(b"beta").as_bytes();
+        let lease = index.terms.get(&index, alpha).unwrap().unwrap();
+        let charged = index.terms.state.lock().unwrap().used;
+        assert!(index.terms.get(&index, beta).unwrap().is_none());
+        assert_eq!(index.terms.state.lock().unwrap().used, charged);
+        assert_eq!(lease.pairs.len(), 128);
+        drop(lease);
+        assert!(index.terms.get(&index, beta).unwrap().is_some());
+        let state = index.terms.state.lock().unwrap();
+        assert!(!state.ready.contains_key(&CacheKey {
+            kind: 0,
+            hash: alpha
+        }));
+        assert!(state.used <= index.terms.capacity && state.inflight.is_empty());
+    }
+}

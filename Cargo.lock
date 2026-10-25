@@ -4662,6 +4662,7 @@ dependencies = [
  "aho-corasick",
  "blake3",
  "libc",
+ "ojo",
  "oojuro-core",
  "oojuro-nine",
  "oojuro-rank",

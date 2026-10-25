@@ -5,7 +5,7 @@
 //! journal has no required application keys or provider/session/agent fields.
 //! This profile is additive: ordinary wire 0.1 key/value files are refused.
 
-use crate::{Change, CommitMode, Database, Error, Replay, Result, request_id, wire};
+use crate::{Change, CommitMode, Database, Error, Replay as WireReplay, Result, request_id, wire};
 use std::{
     collections::{BTreeMap, BTreeSet},
     fs::File,
@@ -61,6 +61,15 @@ pub struct Event {
     pub cursor: Cursor,
 }
 
+/// Borrowed verified events during open, before any writable tail recovery.
+/// Finish follows validation of the complete committed wire/profile prefix.
+/// Returning an error refuses open without truncation. Do not publish derived
+/// state or write acknowledgements from this callback: open can still fail.
+pub enum Replay<'a> {
+    Event { receipt: Receipt, data: &'a [u8] },
+    Finish,
+}
+
 /// Persist this engine-issued intent alongside the exact data before submitting
 /// a write when an acknowledgement might be lost. It binds the accepted bytes,
 /// original engine time and request nonce, without requiring a caller key.
@@ -73,6 +82,20 @@ pub struct AppendIntent {
 }
 
 impl AppendIntent {
+    /// Checks a retained intent against an engine-verified read/replay event.
+    /// This checks identity/time/data relation; it is not an authentication or
+    /// durability attestation for caller-constructed receipts and bytes.
+    pub fn check_event(&self, receipt: Receipt, data: &[u8]) -> Result<()> {
+        if receipt.cursor.0[..16] != self.journal
+            || receipt.cursor.request() != self.request
+            || receipt.accepted_at != self.accepted_at
+            || wire::hash(&[data]) != self.data_hash
+        {
+            return Err(Error::Conflict);
+        }
+        Ok(())
+    }
+
     pub fn to_bytes(self) -> [u8; 80] {
         let mut bytes = [0; 80];
         bytes[..8].copy_from_slice(INTENT_MAGIC);
@@ -168,23 +191,41 @@ impl Journal {
     /// Validates the Event grammar during the existing wire replay, without a
     /// second scan. A profile mismatch refuses before writable tail recovery.
     pub fn open(path: impl AsRef<Path>, key: Option<&[u8; 32]>, writable: bool) -> Result<Self> {
+        Self::open_observed(path, key, writable, |_| Ok(()))
+    }
+
+    /// Observes each verified Event original once in the existing wire replay.
+    /// Application grammar validation can refuse at Event/Finish before writable
+    /// tail recovery. Retain derived state only after this call succeeds; replay
+    /// receipts alone do not confirm an earlier ambiguous durable write.
+    pub fn open_observed(
+        path: impl AsRef<Path>,
+        key: Option<&[u8; 32]>,
+        writable: bool,
+        mut visit: impl FnMut(Replay<'_>) -> Result<()>,
+    ) -> Result<Self> {
         let mut id = None;
         let mut events = Vec::new();
         let db = Database::open_observed(path.as_ref(), key, writable, |item| {
             match item {
-                Replay::Finish => {
+                WireReplay::Finish => {
                     if id.is_none() {
                         return Err(Error::Invalid("Event profile required"));
                     }
+                    visit(Replay::Finish)?;
                 }
-                Replay::Transaction {
+                WireReplay::Transaction {
                     sequence,
                     request,
                     operations,
                     body,
                 } => {
                     if operations != 1 {
-                        return Err(Error::Invalid("Event transaction shape"));
+                        return Err(Error::Invalid(if sequence == 1 {
+                            "Event profile required"
+                        } else {
+                            "Event transaction shape"
+                        }));
                     }
                     let mut parsed = Err(Error::Invalid("Event transaction"));
                     wire::walk(body, operations, |_, key, value| {
@@ -205,11 +246,18 @@ impl Journal {
                             parse_key(key, sequence - 1, request).and_then(|mut meta| {
                                 let data = value.ok_or(Error::Invalid("Event deletion"))?;
                                 meta.length = data.len();
-                                Ok(Some(meta))
+                                Ok(Some((meta, data)))
                             })
                         };
                     })?;
-                    if let Some(metadata) = parsed? {
+                    if let Some((metadata, data)) = parsed? {
+                        visit(Replay::Event {
+                            receipt: Receipt {
+                                cursor: cursor_for(id.unwrap(), sequence - 1, metadata),
+                                accepted_at: metadata.accepted_at,
+                            },
+                            data,
+                        })?;
                         events.push(metadata);
                     }
                 }
@@ -452,11 +500,7 @@ impl Journal {
     }
 
     fn cursor(&self, ordinal: u64, metadata: Metadata) -> Cursor {
-        let mut cursor = [0; 40];
-        cursor[..16].copy_from_slice(&self.id);
-        cursor[16..24].copy_from_slice(&ordinal.to_be_bytes());
-        cursor[24..].copy_from_slice(&metadata.request);
-        Cursor(cursor)
+        cursor_for(self.id, ordinal, metadata)
     }
 
     fn position(&self, cursor: Cursor) -> Result<Option<usize>> {
@@ -698,6 +742,13 @@ fn page_limit(limit: usize) -> Result<()> {
         return Err(Error::Invalid("event page bound"));
     }
     Ok(())
+}
+fn cursor_for(id: [u8; 16], ordinal: u64, metadata: Metadata) -> Cursor {
+    let mut cursor = [0; 40];
+    cursor[..16].copy_from_slice(&id);
+    cursor[16..24].copy_from_slice(&ordinal.to_be_bytes());
+    cursor[24..].copy_from_slice(&metadata.request);
+    Cursor(cursor)
 }
 fn event_key(ordinal: u64, metadata: Metadata) -> [u8; 36] {
     let mut key = [0; 36];
@@ -960,6 +1011,133 @@ mod tests {
     }
 
     #[test]
+    fn observed_replay_validates_app_grammar_before_any_tail_recovery() {
+        for key in [None, Some([86; 32])] {
+            let root = Scratch::new();
+            let path = root.file("observed.juro");
+            let mut journal = Journal::create(&path, key.as_ref()).unwrap();
+            let data = [b"app/profile1".as_slice(), b"exact\0\xff original", b""];
+            let mut intents = Vec::new();
+            let mut receipts = Vec::new();
+            for original in data {
+                let intent = journal.prepare(original).unwrap();
+                receipts.push(journal.append_prepared(&intent, original).unwrap());
+                intents.push(intent);
+            }
+            let checkpoint = journal.checkpoint();
+            drop(journal);
+            let complete = std::fs::read(&path).unwrap();
+            std::fs::OpenOptions::new()
+                .append(true)
+                .open(&path)
+                .unwrap()
+                .write_all(b"torn")
+                .unwrap();
+            let before = std::fs::read(&path).unwrap();
+            // A later complete application record or final grammar refusal
+            // must happen before a writer can recover the engine tail.
+            for writable in [false, true] {
+                for reject_at_finish in [false, true] {
+                    let mut count = 0;
+                    let result = Journal::open_observed(&path, key.as_ref(), writable, |item| {
+                        match item {
+                            Replay::Event {
+                                receipt,
+                                data: original,
+                            } => {
+                                intents[count].check_event(receipt, original)?;
+                                assert_eq!(receipt, receipts[count]);
+                                assert_eq!(original, data[count]);
+                                count += 1;
+                                if !reject_at_finish && count == 2 {
+                                    return Err(Error::Invalid("application grammar"));
+                                }
+                            }
+                            Replay::Finish => return Err(Error::Invalid("application grammar")),
+                        }
+                        Ok(())
+                    });
+                    assert!(matches!(result, Err(Error::Invalid("application grammar"))));
+                    assert_eq!(count, if reject_at_finish { 3 } else { 2 });
+                    assert_eq!(std::fs::read(&path).unwrap(), before);
+                }
+            }
+            let mut seen = 0;
+            let mut finishes = 0;
+            let recovered = Journal::open_observed(&path, key.as_ref(), true, |item| {
+                match item {
+                    Replay::Event {
+                        receipt,
+                        data: original,
+                    } => {
+                        intents[seen].check_event(receipt, original)?;
+                        seen += 1;
+                    }
+                    Replay::Finish => finishes += 1,
+                }
+                Ok(())
+            })
+            .unwrap();
+            assert_eq!((seen, finishes), (3, 1));
+            assert_eq!(recovered.checkpoint(), checkpoint);
+            assert_eq!(recovered.recovered_tail_bytes(), 4);
+            assert_eq!(std::fs::read(&path).unwrap(), complete);
+            drop(recovered);
+            let empty = root.file("empty-app.juro");
+            drop(Journal::create(&empty, key.as_ref()).unwrap());
+            std::fs::OpenOptions::new()
+                .append(true)
+                .open(&empty)
+                .unwrap()
+                .write_all(b"torn")
+                .unwrap();
+            let bytes = std::fs::read(&empty).unwrap();
+            assert!(matches!(
+                Journal::open_observed(&empty, key.as_ref(), true, |item| {
+                    match item {
+                        Replay::Finish => Err(Error::Invalid("application marker required")),
+                        Replay::Event { .. } => panic!("empty journal emitted an event"),
+                    }
+                }),
+                Err(Error::Invalid("application marker required"))
+            ));
+            assert_eq!(std::fs::read(&empty).unwrap(), bytes);
+        }
+    }
+
+    #[test]
+    fn intent_relation_checks_engine_identity_time_and_exact_data() {
+        let root = Scratch::new();
+        let mut journal = Journal::create(root.file("relation.juro"), None).unwrap();
+        let intent = journal.prepare(b"same exact data").unwrap();
+        let receipt = journal
+            .append_prepared(&intent, b"same exact data")
+            .unwrap();
+        intent.check_event(receipt, b"same exact data").unwrap();
+        assert!(matches!(
+            intent.check_event(receipt, b"changed"),
+            Err(Error::Conflict)
+        ));
+        let mut changed = receipt;
+        changed.accepted_at += 1;
+        assert!(matches!(
+            intent.check_event(changed, b"same exact data"),
+            Err(Error::Conflict)
+        ));
+        changed = journal.append(b"same exact data").unwrap();
+        assert!(matches!(
+            intent.check_event(changed, b"same exact data"),
+            Err(Error::Conflict)
+        ));
+        let mut other = Journal::create(root.file("other.juro"), None).unwrap();
+        let foreign = other.append(b"same exact data").unwrap();
+        assert!(matches!(
+            intent.check_event(foreign, b"same exact data"),
+            Err(Error::Conflict)
+        ));
+    }
+
+    #[test]
     fn event_recovery_preserves_receipt_at_every_torn_boundary() {
         for key in [None, Some([29; 32])] {
             let root = Scratch::new();
@@ -1063,6 +1241,58 @@ mod tests {
             })
             .unwrap();
         assert_eq!(equal, [receipts[0].cursor, receipts[2].cursor]);
+    }
+
+    #[test]
+    fn first_multi_operation_kv_is_wrong_profile_but_later_event_shape_is_invalid() {
+        for key in [None, Some([73; 32])] {
+            let root = Scratch::new();
+            let changes = [
+                Change {
+                    key: b"manifest",
+                    value: Some(b"original metadata"),
+                },
+                Change {
+                    key: b"original",
+                    value: Some(b"exact\0 original"),
+                },
+            ];
+            let legacy = root.file("legacy.juro");
+            let mut db = Database::create(&legacy, key.as_ref()).unwrap();
+            db.commit(request_id().unwrap(), &changes).unwrap();
+            drop(db);
+            let established = root.file("established.juro");
+            drop(Journal::create(&established, key.as_ref()).unwrap());
+            let mut db = Database::open(&established, key.as_ref(), true).unwrap();
+            db.commit(request_id().unwrap(), &changes).unwrap();
+            drop(db);
+            for (path, expected) in [
+                (&legacy, "Event profile required"),
+                (&established, "Event transaction shape"),
+            ] {
+                for torn in [false, true] {
+                    if torn {
+                        std::fs::OpenOptions::new()
+                            .append(true)
+                            .open(path)
+                            .unwrap()
+                            .write_all(b"torn tail")
+                            .unwrap();
+                    }
+                    let before = std::fs::read(path).unwrap();
+                    for writable in [false, true] {
+                        assert!(
+                            matches!(Journal::open(path, key.as_ref(), writable), Err(Error::Invalid(message)) if message == expected)
+                        );
+                        assert_eq!(
+                            std::fs::read(path).unwrap(),
+                            before,
+                            "profile refusal recovered a tail"
+                        );
+                    }
+                }
+            }
+        }
     }
 
     #[test]

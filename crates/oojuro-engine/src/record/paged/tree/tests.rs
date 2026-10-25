@@ -115,6 +115,41 @@ fn packed_sorted_build_point_seek_and_complete_cursor_do_not_need_population_met
     let bytes = fs::read(&files[0]).unwrap();
     assert!(!bytes.windows(23).any(|b| b == b"synthetic-private-value"));
 }
+
+#[test]
+fn prefix_counts_cover_subtrees_ff_bounds_and_authority_changes() {
+    let f = Fixture::new();
+    let mut b = Builder::new(f.ctx()).unwrap();
+    let mut keys = Vec::new();
+    for first in [0u8, 1, 2, 254, 255] {
+        for second in 0u16..400 {
+            keys.push(vec![first, (second >> 8) as u8, second as u8]);
+        }
+    }
+    for key in &keys {
+        b.push(Entry::new(key.clone(), vec![]).unwrap()).unwrap();
+    }
+    let root = b.finish().unwrap();
+    for prefix in [
+        vec![],
+        vec![0],
+        vec![1],
+        vec![3],
+        vec![254],
+        vec![255],
+        vec![255, 0],
+        vec![255, 1],
+        vec![255, 255],
+        vec![1, 0, 17],
+    ] {
+        assert_eq!(
+            count_prefix(f.ctx(), &root, &prefix).unwrap(),
+            keys.iter().filter(|key| key.starts_with(&prefix)).count() as u64
+        );
+    }
+    f.authority.advance();
+    assert!(count_prefix(f.ctx(), &root, b"").is_err());
+}
 #[test]
 fn cow_preserves_birth_bindings_and_refuses_same_number_fork_or_midread_advance() {
     let f = Fixture::new();

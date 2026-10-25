@@ -55,6 +55,14 @@ text is a normal byte value; binary attachments also round-trip exactly. No text
 conversion, JSON parsing, network runtime, search/ranking, background worker or
 agent integration runs inside this library.
 
+Applications with their own KV schema can use `Database::open_checked` to read
+and validate that schema after verified replay but before writable tail recovery.
+The callback sees a temporarily read-only handle: `get`/scans work, while
+`commit` and `confirm` refuse. A callback error leaves the source bytes unchanged.
+Publish application state or write acknowledgements only after the whole open
+succeeds, since recovery I/O can still fail after validation. Existing `open`
+behavior and the Event replay-observer API remain unchanged.
+
 ## Guarantees
 
 - A transaction contains 1–1,024 puts/deletes. All become visible together.

@@ -73,6 +73,18 @@ times. Applications migrating old data must preserve a recovery artifact and
 label new acceptance times as migration acceptance, while retaining original
 source times in their own data.
 
+`Journal::open_observed(path,key,writable,visit)` exposes borrowed verified
+`Replay::Event { receipt, data }` values and a final `Replay::Finish` during the
+existing single wire replay. Application grammars can refuse a complete foreign
+or malformed prefix before writable tail recovery changes any bytes. The engine
+profile marker remains internal. An observer must wait for successful open before
+publishing derived state; callback receipts do not prove durability of an earlier
+ambiguous write. Finish may still be followed by a recovery I/O failure.
+`AppendIntent::check_event(receipt,data)` checks the retained journal/nonce/time/
+hash relation without decoding opaque fields in the application. Obtain its
+receipt and exact bytes from a verified engine read/replay; it is not an
+authentication or durability attestation for caller-constructed values.
+
 The healthy collector owns one underlying handle. Local append/read/follow calls
 share it; followers release its mutex while waiting. Wire 0.1 still excludes
 external read handles while a writer is open. Cross-process applications must
