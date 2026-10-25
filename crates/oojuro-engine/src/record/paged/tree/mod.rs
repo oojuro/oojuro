@@ -749,6 +749,66 @@ pub(crate) fn get(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Ve
     let mut c = Cursor::seek(ctx, root, key)?;
     Ok(c.next()?.filter(|e| e.key == key).map(|e| e.value))
 }
+/// Counts authenticated entries in a prefix using covered subtree counts.
+/// This is an allocation bound; consumers still validate every selected page.
+pub(crate) fn count_prefix(ctx: Context<'_>, root: &Root, prefix: &[u8]) -> Result<u64> {
+    root.check(&ctx)?;
+    if prefix.len() > ctx.key_bound() {
+        return Err(Error::Bounds);
+    }
+    let mut upper = prefix.to_vec();
+    let end = loop {
+        match upper.pop() {
+            Some(255) => {}
+            Some(byte) => {
+                upper.push(byte + 1);
+                break Some(upper);
+            }
+            None => break None,
+        }
+    };
+    fn count(
+        ctx: &Context<'_>,
+        reference: &Reference,
+        low: &[u8],
+        high: Option<&[u8]>,
+        binding: &[u8],
+    ) -> Result<u64> {
+        if !ctx.authority.matches_current(binding)? {
+            return Err(Error::Conflict);
+        }
+        if reference.last.as_slice() < low
+            || high.is_some_and(|high| reference.first.as_slice() >= high)
+        {
+            return Ok(0);
+        }
+        if reference.first.as_slice() >= low
+            && high.is_none_or(|high| reference.last.as_slice() < high)
+        {
+            return Ok(reference.count);
+        }
+        match load(ctx, reference)? {
+            Node::Leaf(rows) => Ok(rows
+                .iter()
+                .filter(|row| {
+                    row.key.as_slice() >= low && high.is_none_or(|high| row.key.as_slice() < high)
+                })
+                .count() as u64),
+            Node::Branch(children) => children.iter().try_fold(0u64, |total, child| {
+                total
+                    .checked_add(count(ctx, child, low, high, binding)?)
+                    .ok_or(Error::Bounds)
+            }),
+        }
+    }
+    let count = root.node.as_ref().map_or(Ok(0), |node| {
+        count(&ctx, node, prefix, end.as_deref(), &root.binding)
+    })?;
+    if !ctx.authority.matches_current(&root.binding)? {
+        return Err(Error::Conflict);
+    }
+    Ok(count)
+}
 pub(crate) fn get_ancestor(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
     let mut c = Cursor::seek_ancestor(ctx, root, key)?;
     Ok(c.next()?.filter(|e| e.key == key).map(|e| e.value))

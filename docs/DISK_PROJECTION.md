@@ -3,7 +3,7 @@
 `oojuro_engine::record::projection::disk` adds an experimental persistent
 projection alongside the existing compatibility API. It is derived data: the
 authoritative database retains every original and the index can be deleted and
-rebuilt. It neither changes `.ojo` wire 0.1 nor converts historical stores.
+rebuilt. It neither changes `.juro` wire 0.1 nor converts historical stores.
 
 `Builder::create(directory, cache_key, binding, limits)` accepts a private cache
 directory, a disposable 32-byte cache key, the caller's snapshot `Binding`, and
@@ -63,6 +63,19 @@ diagnostics; warmed page reuse can still occur. Default unfiltered queries use
 precomputed complete-view mass rather than scanning all numeric columns.
 Identifier queries drive their exact passes from anchored postings; a separate
 full-view pass runs when the unchanged ranker's probability floor requires it.
+
+An additional12 MiB policy bounds validated posting lists, sufficient statistics
+and exact shape summaries. Active readers prevent a list's eviction, so its
+bytes stay charged through the last lease. When space is unavailable, queries
+use the existing disk cursor. Single-term unfiltered queries can reuse global
+statistics and the best32 rows in each identical (length,scope,term-frequency)
+class; larger result limits or heterogeneous classes use complete scoring.
+This preserves the shared ranker's exact arithmetic. Sparse metadata filters
+use a temporary bitmap and visit eligible ordinals; it is about125 KiB per
+million retained rows, separate from retained-cache admission. All cache
+capacities are reserved by estimated_heap_bytes before they warm. These
+mechanisms cache index work; source validation and original reads still occur
+for every materialized response.
 
 `Limits.index_bytes` bounds logical bytes of the new generation's entire build,
 including encrypted text, row spool, sort queues/runs, tree packs, numeric
