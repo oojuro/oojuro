@@ -429,6 +429,10 @@ pub(super) fn matches(
         }
         let mut allowed = [0u64; 4];
         let mut ranges = [(u32::MAX, 0u32); 256];
+        // Up to 16384 logical row starts. Vec growth plus 256 containers is
+        // conservatively bounded by 144 KiB; admission precedes every push.
+        let mut row_starts: Option<[Vec<u32>; 256]> = Some(std::array::from_fn(|_| Vec::new()));
+        let mut row_start_count = 0usize;
         for (position, masks) in &starts {
             for (word, mask) in masks.iter().copied().enumerate() {
                 allowed[word] |= mask;
@@ -441,6 +445,12 @@ pub(super) fn matches(
                     active &= active - 1;
                     ranges[at].0 = ranges[at].0.min(*position);
                     ranges[at].1 = ranges[at].1.max(*position);
+                    if row_start_count == 16384 {
+                        row_starts = None;
+                    } else if let Some(rows) = &mut row_starts {
+                        rows[at].push(*position);
+                        row_start_count += 1;
+                    }
                 }
             }
         }
@@ -452,6 +462,7 @@ pub(super) fn matches(
                 }
                 let mut minimum = u32::MAX;
                 let mut maximum = 0;
+                let mut checks = 0usize;
                 for (word, mask) in group.rows.iter().copied().enumerate() {
                     let mut active = mask & allowed[word];
                     while active != 0 {
@@ -462,6 +473,7 @@ pub(super) fn matches(
                         active &= active - 1;
                         minimum = minimum.min(ranges[at].0);
                         maximum = maximum.max(ranges[at].1);
+                        checks += row_starts.as_ref().map_or(0, |rows| rows[at].len());
                     }
                 }
                 if minimum == u32::MAX {
@@ -473,15 +485,41 @@ pub(super) fn matches(
                 let last = maximum.saturating_add(*offset);
                 let begin = group.positions.partition_point(|at| *at < first);
                 let end = group.positions.partition_point(|at| *at <= last);
-                for position in &group.positions[begin..end] {
-                    if !charge(work) {
-                        return Ok(None);
+                if let Some(rows) = row_starts.as_ref().filter(|_| checks < end - begin) {
+                    for (word, mask) in group.rows.iter().copied().enumerate() {
+                        let mut active = mask & allowed[word];
+                        while active != 0 {
+                            let bit = active.trailing_zeros();
+                            active &= active - 1;
+                            for start in &rows[word * 64 + bit as usize] {
+                                if !charge(work) {
+                                    return Ok(None);
+                                }
+                                let Some(wanted) = start.checked_add(*offset) else {
+                                    continue;
+                                };
+                                if group.positions.binary_search(&wanted).is_ok() {
+                                    let mut matched = [0u64; 4];
+                                    matched[word] = 1 << bit;
+                                    if !insert(&mut next, *start, matched) {
+                                        return Ok(None);
+                                    }
+                                }
+                            }
+                        }
                     }
-                    let at = *position - offset;
-                    if let Some(previous) = starts.get(&at) {
-                        let rows = std::array::from_fn(|word| previous[word] & group.rows[word]);
-                        if rows.iter().any(|word| *word != 0) && !insert(&mut next, at, rows) {
+                } else {
+                    for position in &group.positions[begin..end] {
+                        if !charge(work) {
                             return Ok(None);
+                        }
+                        let at = *position - offset;
+                        if let Some(previous) = starts.get(&at) {
+                            let rows =
+                                std::array::from_fn(|word| previous[word] & group.rows[word]);
+                            if rows.iter().any(|word| *word != 0) && !insert(&mut next, at, rows) {
+                                return Ok(None);
+                            }
                         }
                     }
                 }
@@ -898,6 +936,26 @@ mod tests {
         let others: Vec<_> = (0..256u32)
             .map(|row| {
                 let positions = std::iter::once(8).chain(1000 + row..3000 + row).collect();
+                Block::decode(0, 256, &Block::encode(0, &[(row, positions)]).unwrap()).unwrap()
+            })
+            .collect();
+        let mut work = 20_000;
+        assert_eq!(
+            matches(0, &[(0, &first), (8, &others)], &mut work).unwrap(),
+            Some([u64::MAX; 4])
+        );
+        assert!(work >= 10_000);
+    }
+    #[test]
+    fn row_start_lookup_avoids_irrelevant_positions_inside_each_rows_span() {
+        let rows: Vec<_> = (0..256u32).map(|row| (row, vec![0, 10_000])).collect();
+        let first = vec![Block::decode(0, 256, &Block::encode(0, &rows).unwrap()).unwrap()];
+        let others: Vec<_> = (0..256u32)
+            .map(|row| {
+                let positions = std::iter::once(8)
+                    .chain(1000 + row..3000 + row)
+                    .chain(std::iter::once(10_008))
+                    .collect();
                 Block::decode(0, 256, &Block::encode(0, &[(row, positions)]).unwrap()).unwrap()
             })
             .collect();
