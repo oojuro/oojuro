@@ -116,3 +116,44 @@ outside ACK and recovery timing. The recovery timer covers source verification
 and locator/index reconstruction, not the later complete-original comparison,
 visibility assertions or explicit cache checkpoint. Small fixture recovery
 results do not qualify one-million-record recovery or production availability.
+
+`cache-concurrent.jsonl` retains all 32 fresh frozen-binary trials, one JSON
+object per trial, with source/binary provenance in `cache-concurrent-binary.json`.
+These use the same complete-field/original/reopen oracles, ten closed-loop
+clients, six query classes and direct/grouped queue policy as the group smoke.
+There is one trial per size/phase/mode/arm cell, ordered native then SQLite then
+raw JSONL then Zstd JSONL. This is not repeated or randomized competitor evidence.
+All raw operation samples, search details, group scheduling, physical allocation,
+peak RSS and before/after host pressure are retained. The lane excludes other
+cooperating build/benchmark owners; it does not make the workstation isolated.
+
+The native trial explicitly uses rebuildable derived caches. Source/header/receipt
+durability and current validated searchable ACK remain enabled. The baseline
+arms retain their own original stronger cache/index durability settings. This
+policy difference is explicit; these are not equal cache-durability contracts or
+a general performance ranking. The raw data includes direct writes as well as
+grouped writes, and controls keep equivalent grouping/queue policy.
+
+| 10k records, grouped | Phase | Read 1 p95 (ms) | Read 20 p95 (ms) | Search p95 (ms) | Indexed write p95 (ms) | Post-write allocation (bytes) |
+| --- | --- | --- | --- | --- | --- | --- |
+| Record2, rebuildable caches | separated | 7.617 | 54.897 | 122.090 | 98.991 | 4,247,552 |
+| SQLite WAL/FULL/FTS5 | separated | 0.112 | 1.415 | 261.922 | 37.162 | 4,706,304 |
+| Raw indexed JSONL | separated | 0.375 | 5.037 | 261.982 | 44.059 | 6,144,000 |
+| Indexed JSONL + Zstd | separated | 0.281 | 6.976 | 239.853 | 36.285 | 4,100,096 |
+| Record2, rebuildable caches | mixed | 9.529 | 61.505 | 133.628 | 124.769 | 4,665,344 |
+| SQLite WAL/FULL/FTS5 | mixed | 0.180 | 1.945 | 267.240 | 32.737 | 4,706,304 |
+| Raw indexed JSONL | mixed | 0.384 | 7.781 | 244.957 | 45.519 | 6,164,480 |
+| Indexed JSONL + Zstd | mixed | 0.541 | 7.567 | 256.955 | 86.681 | 4,128,768 |
+
+Native direct-write p95 still fails the 250 ms target: 1677.561 ms in separated
+phases and 352.537 ms in mixed phases. Queueing remains inside the write timer.
+The immediate post-ACK original/search visibility probes are outside that
+request's ACK timer and can contend with later requests. A small one-writer
+phase cost is therefore not a concurrent write-tail result.
+
+The native grouped cells fit the numerical targets at 10k in this particular
+small cohort. They do not establish the 1M/ten-client target, cold-open behavior,
+sustained offered-load capacity, a Cloud result, or an SLA. Lexical work still
+walks whole-project posting/visibility pages. Native and comparator scoring,
+encryption, original field materialization and independent retry/receipt
+contracts still differ as documented above.
