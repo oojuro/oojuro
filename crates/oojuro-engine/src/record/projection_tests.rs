@@ -109,10 +109,10 @@ fn compare(rows: Vec<Row>, texts: &[&str]) {
 #[test]
 fn projected_query_preserves_opaque_ids_bits_time_continuation_and_pre_topk_ties() {
     let mut rows = vec![];
-    for i in (0..1200).rev() {
+    for i in (0usize..1200).rev() {
         let text = if i < 4 {
             "lookup_needle battery electrode".into()
-        } else if i % 3 == 0 {
+        } else if i.is_multiple_of(3) {
             "battery electrode ".repeat(20)
         } else {
             format!("battery material{i} substrate ").repeat(15)
@@ -226,28 +226,83 @@ fn projected_key_candidate_matches_complete_key_map_for_query_grammar_and_filter
     let index = Index::build(binding(), rows).unwrap();
     // The pre-change scorer received every source key, including keys excluded
     // by eligibility/time/type. Compare that exact boundary to public search.
-    let all_keys = index.rows.iter().enumerate()
+    let all_keys = index
+        .rows
+        .iter()
+        .enumerate()
         .filter_map(|(at, row)| row.key.as_ref().map(|key| (key.clone(), (at + 1) as u64)))
         .collect();
-    for text in ["battery", "key:battery", "key:key:battery", "λ-key", "key:λ-key",
-        "key:missing", "missing", "lookup_needle battery", "\"battery electrode\"", "\"???\""] {
+    for text in [
+        "battery",
+        "key:battery",
+        "key:key:battery",
+        "λ-key",
+        "key:λ-key",
+        "key:missing",
+        "missing",
+        "lookup_needle battery",
+        "\"battery electrode\"",
+        "\"???\"",
+    ] {
         for kind in [None, Some(Kind::Output), Some(Kind::ToolResult)] {
             for (from, to) in [(i64::MIN, i64::MAX), (2, 6), (6, 2)] {
-                let mut q = query(text, 10); q.filter.kind = kind; q.from = from; q.to = to;
-                let ids = index.rows.iter().enumerate()
+                let mut q = query(text, 10);
+                q.filter.kind = kind;
+                q.from = from;
+                q.to = to;
+                let ids = index
+                    .rows
+                    .iter()
+                    .enumerate()
                     .filter(|(_, row)| row.indexed && kind.is_none_or(|kind| row.kind == kind))
-                    .map(|(at, _)| (at + 1) as u64).collect();
-                let expected = index.inner.search_projected(&lexical::Query {
-                    writer: &binding().writer, agent: 1, text, from, to, k: 10,
-                }, &RecordVisibility { ids: &ids, keys: &all_keys }, &index.ids).unwrap();
+                    .map(|(at, _)| (at + 1) as u64)
+                    .collect();
+                let expected = index
+                    .inner
+                    .search_projected(
+                        &lexical::Query {
+                            writer: &binding().writer,
+                            agent: 1,
+                            text,
+                            from,
+                            to,
+                            k: 10,
+                        },
+                        &RecordVisibility {
+                            ids: &ids,
+                            keys: &all_keys,
+                        },
+                        &index.ids,
+                    )
+                    .unwrap();
                 let actual = index.search(&binding(), &q).unwrap();
-                assert_eq!(actual.iter().map(|hit| (hit.id.as_str(), hit.bits.to_bits(), hit.continued, hit.valid_at))
-                    .collect::<Vec<_>>(), expected.iter().map(|hit| (index.ids[(hit.id - 1) as usize].as_str(),
-                        hit.bits.to_bits(), hit.continued, hit.time)).collect::<Vec<_>>(),
-                    "query={text}, kind={kind:?}, time={from}..{to}");
+                assert_eq!(
+                    actual
+                        .iter()
+                        .map(|hit| (
+                            hit.id.as_str(),
+                            hit.bits.to_bits(),
+                            hit.continued,
+                            hit.valid_at
+                        ))
+                        .collect::<Vec<_>>(),
+                    expected
+                        .iter()
+                        .map(|hit| (
+                            index.ids[(hit.id - 1) as usize].as_str(),
+                            hit.bits.to_bits(),
+                            hit.continued,
+                            hit.time
+                        ))
+                        .collect::<Vec<_>>(),
+                    "query={text}, kind={kind:?}, time={from}..{to}"
+                );
                 for hit in actual {
                     let at = index.ids.iter().position(|id| id == &hit.id).unwrap();
-                    assert_eq!(hit.excerpt, index.inner.record_text(at).unwrap()[hit.start..hit.end]);
+                    assert_eq!(
+                        hit.excerpt,
+                        index.inner.record_text(at).unwrap()[hit.start..hit.end]
+                    );
                     assert_eq!(hit.reported_recorded_at, -99);
                 }
             }
@@ -302,19 +357,23 @@ fn refreshed_projection_matches_fresh_build_for_growth_reorder_replacement_and_r
     let make = |i: usize| {
         let mut r = row(
             &format!("{i:04}"),
-            if i % 3 == 0 {
+            if i.is_multiple_of(3) {
                 "lookup_needle battery electrode"
             } else {
                 "battery electrode"
             },
             (i % 7) as i64,
         );
-        if i % 5 == 0 {
+        if i.is_multiple_of(5) {
             r.kind = Kind::ToolResult;
         }
         r
     };
-    let mut rows: Vec<_> = (1..1000).rev().filter(|i| i % 2 == 0).map(make).collect();
+    let mut rows: Vec<_> = (1usize..1000)
+        .rev()
+        .filter(|i| i.is_multiple_of(2))
+        .map(make)
+        .collect();
     let mut current = binding();
     let mut index = Index::build(current.clone(), rows.clone()).unwrap();
     assert_eq!(index.row_count(), rows.len());
