@@ -924,7 +924,7 @@ fn compact_block_bounds_match_complete_rank_bits_ties_filters_and_retirement() {
         // cohort actually prunes blocks and can complete under that work cap.
         assert!(
             index
-                .rank_compact_blocks(&model, &Selection::new(&q), q.k)
+                .rank_compact_blocks(&model, &Selection::new(&q), q.k, None)
                 .unwrap()
                 .is_some()
         );
