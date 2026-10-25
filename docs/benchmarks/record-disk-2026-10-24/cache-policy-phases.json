@@ -1,0 +1,2766 @@
+[
+  {
+    "run": "1000-durable-group1",
+    "exit_code": 0,
+    "wall_seconds": 10.961311815000954,
+    "result": {
+      "acknowledged_rows": 50,
+      "base_rows": 1000,
+      "cache_durability": "durable",
+      "cache_loss_rebuild_ns": 363690483,
+      "complete_original_clock_digest": "594fbe0926f2438caff853657da17f717c1dadb46a6a4770aca5673e680940cc",
+      "complete_originals_after_total_cache_loss": 1050,
+      "deferred_cache_checkpoint_ns": 464584920,
+      "dirty_footprint": {
+        "allocated_bytes": 3321856,
+        "apparent_bytes": 2422350,
+        "files": 316
+      },
+      "flushed_footprint": {
+        "allocated_bytes": 3321856,
+        "apparent_bytes": 2422350,
+        "files": 316
+      },
+      "group_size": 1,
+      "groups": 50,
+      "minimum_watermark_and_old_prefix_verified": true,
+      "profiles": [
+        {
+          "admission_ns": 85613,
+          "authority_append_ns": 12015316,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 98625146,
+          "locator_publish_ns": 125213346,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1183,
+          "submitted_rows": 1,
+          "total_ns": 235943367
+        },
+        {
+          "admission_ns": 89448,
+          "authority_append_ns": 15004257,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 72197810,
+          "locator_publish_ns": 105631581,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1187,
+          "submitted_rows": 1,
+          "total_ns": 192927554
+        },
+        {
+          "admission_ns": 90154,
+          "authority_append_ns": 7148050,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 64808553,
+          "locator_publish_ns": 69985124,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1188,
+          "submitted_rows": 1,
+          "total_ns": 142035783
+        },
+        {
+          "admission_ns": 83046,
+          "authority_append_ns": 6443934,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 115344633,
+          "locator_publish_ns": 100382775,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 222259034
+        },
+        {
+          "admission_ns": 78372,
+          "authority_append_ns": 6489949,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 76301628,
+          "locator_publish_ns": 119459277,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 202333575
+        },
+        {
+          "admission_ns": 69209,
+          "authority_append_ns": 7961285,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 75812823,
+          "locator_publish_ns": 59606049,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 143453288
+        },
+        {
+          "admission_ns": 49256,
+          "authority_append_ns": 6600585,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 91598507,
+          "locator_publish_ns": 91040932,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1191,
+          "submitted_rows": 1,
+          "total_ns": 189293017
+        },
+        {
+          "admission_ns": 58032,
+          "authority_append_ns": 20674857,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 112021245,
+          "locator_publish_ns": 116806243,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1196,
+          "submitted_rows": 1,
+          "total_ns": 249565039
+        },
+        {
+          "admission_ns": 48329,
+          "authority_append_ns": 11686811,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 89637407,
+          "locator_publish_ns": 119109582,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1194,
+          "submitted_rows": 1,
+          "total_ns": 220486356
+        },
+        {
+          "admission_ns": 82774,
+          "authority_append_ns": 8115535,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 66187719,
+          "locator_publish_ns": 71949451,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1191,
+          "submitted_rows": 1,
+          "total_ns": 146339880
+        },
+        {
+          "admission_ns": 75238,
+          "authority_append_ns": 12136481,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 88380808,
+          "locator_publish_ns": 77243420,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1190,
+          "submitted_rows": 1,
+          "total_ns": 177839998
+        },
+        {
+          "admission_ns": 62489,
+          "authority_append_ns": 12361991,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 113292315,
+          "locator_publish_ns": 109825715,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1194,
+          "submitted_rows": 1,
+          "total_ns": 235546329
+        },
+        {
+          "admission_ns": 58122,
+          "authority_append_ns": 6400735,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 132150897,
+          "locator_publish_ns": 101043859,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1188,
+          "submitted_rows": 1,
+          "total_ns": 239657643
+        },
+        {
+          "admission_ns": 54179,
+          "authority_append_ns": 12878523,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 103789482,
+          "locator_publish_ns": 140528276,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1194,
+          "submitted_rows": 1,
+          "total_ns": 257254539
+        },
+        {
+          "admission_ns": 59584,
+          "authority_append_ns": 12092445,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 101673831,
+          "locator_publish_ns": 125039301,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1180,
+          "submitted_rows": 1,
+          "total_ns": 238869025
+        },
+        {
+          "admission_ns": 94981,
+          "authority_append_ns": 18237392,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 108718417,
+          "locator_publish_ns": 116675050,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1189,
+          "submitted_rows": 1,
+          "total_ns": 243730887
+        },
+        {
+          "admission_ns": 59816,
+          "authority_append_ns": 6497291,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 77798095,
+          "locator_publish_ns": 64428166,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1200,
+          "submitted_rows": 1,
+          "total_ns": 148787083
+        },
+        {
+          "admission_ns": 74881,
+          "authority_append_ns": 6388579,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 136797974,
+          "locator_publish_ns": 71480843,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1194,
+          "submitted_rows": 1,
+          "total_ns": 214747129
+        },
+        {
+          "admission_ns": 56732,
+          "authority_append_ns": 12367141,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 103484783,
+          "locator_publish_ns": 105215759,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1187,
+          "submitted_rows": 1,
+          "total_ns": 221128337
+        },
+        {
+          "admission_ns": 86965,
+          "authority_append_ns": 9466148,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 88537818,
+          "locator_publish_ns": 68484673,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1204,
+          "submitted_rows": 1,
+          "total_ns": 166579973
+        },
+        {
+          "admission_ns": 91442,
+          "authority_append_ns": 10201480,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 105413656,
+          "locator_publish_ns": 66911765,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1190,
+          "submitted_rows": 1,
+          "total_ns": 182622601
+        },
+        {
+          "admission_ns": 91638,
+          "authority_append_ns": 12657116,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 93034576,
+          "locator_publish_ns": 105961748,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1192,
+          "submitted_rows": 1,
+          "total_ns": 211748976
+        },
+        {
+          "admission_ns": 63140,
+          "authority_append_ns": 12670028,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 68375634,
+          "locator_publish_ns": 114894354,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1183,
+          "submitted_rows": 1,
+          "total_ns": 196006816
+        },
+        {
+          "admission_ns": 90428,
+          "authority_append_ns": 6378430,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 63459845,
+          "locator_publish_ns": 72026302,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1199,
+          "submitted_rows": 1,
+          "total_ns": 141959536
+        },
+        {
+          "admission_ns": 62113,
+          "authority_append_ns": 6555365,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 103269259,
+          "locator_publish_ns": 99466797,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1196,
+          "submitted_rows": 1,
+          "total_ns": 209357875
+        },
+        {
+          "admission_ns": 73709,
+          "authority_append_ns": 6385091,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 88807894,
+          "locator_publish_ns": 109617389,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1192,
+          "submitted_rows": 1,
+          "total_ns": 204889204
+        },
+        {
+          "admission_ns": 81486,
+          "authority_append_ns": 11726607,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 86686388,
+          "locator_publish_ns": 108750201,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1202,
+          "submitted_rows": 1,
+          "total_ns": 207249643
+        },
+        {
+          "admission_ns": 67907,
+          "authority_append_ns": 6598262,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 99211480,
+          "locator_publish_ns": 118538618,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1191,
+          "submitted_rows": 1,
+          "total_ns": 224420866
+        },
+        {
+          "admission_ns": 74082,
+          "authority_append_ns": 18127561,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 83619742,
+          "locator_publish_ns": 119241945,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1194,
+          "submitted_rows": 1,
+          "total_ns": 221067097
+        },
+        {
+          "admission_ns": 93528,
+          "authority_append_ns": 8784426,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 112052490,
+          "locator_publish_ns": 71377781,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1188,
+          "submitted_rows": 1,
+          "total_ns": 192312805
+        },
+        {
+          "admission_ns": 101868,
+          "authority_append_ns": 20000422,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 109299912,
+          "locator_publish_ns": 121586288,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1174,
+          "submitted_rows": 1,
+          "total_ns": 250993291
+        },
+        {
+          "admission_ns": 82321,
+          "authority_append_ns": 14315959,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 68560502,
+          "locator_publish_ns": 67972601,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1191,
+          "submitted_rows": 1,
+          "total_ns": 150936988
+        },
+        {
+          "admission_ns": 83933,
+          "authority_append_ns": 6753478,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 77815938,
+          "locator_publish_ns": 80920486,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1186,
+          "submitted_rows": 1,
+          "total_ns": 165578971
+        },
+        {
+          "admission_ns": 92829,
+          "authority_append_ns": 6851077,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 81874450,
+          "locator_publish_ns": 70215250,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1190,
+          "submitted_rows": 1,
+          "total_ns": 159038449
+        },
+        {
+          "admission_ns": 78823,
+          "authority_append_ns": 13833140,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 84603552,
+          "locator_publish_ns": 76230959,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1187,
+          "submitted_rows": 1,
+          "total_ns": 174751036
+        },
+        {
+          "admission_ns": 92055,
+          "authority_append_ns": 11628483,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 68060339,
+          "locator_publish_ns": 74843420,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1194,
+          "submitted_rows": 1,
+          "total_ns": 154628709
+        },
+        {
+          "admission_ns": 85588,
+          "authority_append_ns": 8315271,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 81128598,
+          "locator_publish_ns": 71399448,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 160934000
+        },
+        {
+          "admission_ns": 83553,
+          "authority_append_ns": 13100369,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 78732718,
+          "locator_publish_ns": 77648437,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1187,
+          "submitted_rows": 1,
+          "total_ns": 169569929
+        },
+        {
+          "admission_ns": 91544,
+          "authority_append_ns": 6695750,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 81776620,
+          "locator_publish_ns": 67002280,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 155572835
+        },
+        {
+          "admission_ns": 105236,
+          "authority_append_ns": 7147237,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 59856552,
+          "locator_publish_ns": 70586042,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1178,
+          "submitted_rows": 1,
+          "total_ns": 137699324
+        },
+        {
+          "admission_ns": 101436,
+          "authority_append_ns": 12836604,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 112955889,
+          "locator_publish_ns": 88272036,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 214170636
+        },
+        {
+          "admission_ns": 103137,
+          "authority_append_ns": 7876089,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 72416609,
+          "locator_publish_ns": 87738048,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1205,
+          "submitted_rows": 1,
+          "total_ns": 168138188
+        },
+        {
+          "admission_ns": 67589,
+          "authority_append_ns": 9291133,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 70399957,
+          "locator_publish_ns": 71835627,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1185,
+          "submitted_rows": 1,
+          "total_ns": 151598536
+        },
+        {
+          "admission_ns": 68081,
+          "authority_append_ns": 6633130,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 81347086,
+          "locator_publish_ns": 74511457,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1192,
+          "submitted_rows": 1,
+          "total_ns": 162564330
+        },
+        {
+          "admission_ns": 99517,
+          "authority_append_ns": 7831116,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 102337771,
+          "locator_publish_ns": 90316113,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1188,
+          "submitted_rows": 1,
+          "total_ns": 200589116
+        },
+        {
+          "admission_ns": 88178,
+          "authority_append_ns": 12626970,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 103080214,
+          "locator_publish_ns": 67981683,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1199,
+          "submitted_rows": 1,
+          "total_ns": 183782070
+        },
+        {
+          "admission_ns": 145518,
+          "authority_append_ns": 18014959,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 117162145,
+          "locator_publish_ns": 74380359,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1189,
+          "submitted_rows": 1,
+          "total_ns": 209707115
+        },
+        {
+          "admission_ns": 96588,
+          "authority_append_ns": 18197764,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 64090247,
+          "locator_publish_ns": 80312080,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1190,
+          "submitted_rows": 1,
+          "total_ns": 162701519
+        },
+        {
+          "admission_ns": 93980,
+          "authority_append_ns": 7333228,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 58419371,
+          "locator_publish_ns": 69804502,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1189,
+          "submitted_rows": 1,
+          "total_ns": 135654911
+        },
+        {
+          "admission_ns": 117150,
+          "authority_append_ns": 7591032,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 64189706,
+          "locator_publish_ns": 70698655,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1196,
+          "submitted_rows": 1,
+          "total_ns": 142600608
+        }
+      ],
+      "recovered_dirty_footprint": {
+        "allocated_bytes": 430080,
+        "apparent_bytes": 396071,
+        "files": 17
+      },
+      "recovered_flushed_footprint": {
+        "allocated_bytes": 430080,
+        "apparent_bytes": 396071,
+        "files": 17
+      },
+      "recovery_checkpoint_ns": 147263568,
+      "scope": "synthetic one-writer phase probe; source always sync=true, cache mode explicit; not an SLA"
+    },
+    "resources": "\tCommand being timed: \"/home/rocket3/Projects/.readiness/ojo-performance/rebased-record-binaries/profile_record_write /home/rocket3/Projects/.readiness/ojo-performance/rebased-cache-policy-probes/1000-durable-group1 1000 1 50 durable\"\n\tUser time (seconds): 0.15\n\tSystem time (seconds): 0.31\n\tPercent of CPU this job got: 4%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:10.92\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 10804\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 2487\n\tVoluntary context switches: 4223\n\tInvoluntary context switches: 244\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 138248\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "stderr": "synthetic base progress 0/1000\n"
+  },
+  {
+    "run": "1000-durable-group10",
+    "exit_code": 0,
+    "wall_seconds": 2.1765271780022886,
+    "result": {
+      "acknowledged_rows": 50,
+      "base_rows": 1000,
+      "cache_durability": "durable",
+      "cache_loss_rebuild_ns": 378168808,
+      "complete_original_clock_digest": "364810d6cdee700da2a0d2181acbc2b6d76659b70abf87cef4c2b255ea38ccc3",
+      "complete_originals_after_total_cache_loss": 1050,
+      "deferred_cache_checkpoint_ns": 391958918,
+      "dirty_footprint": {
+        "allocated_bytes": 569344,
+        "apparent_bytes": 456194,
+        "files": 46
+      },
+      "flushed_footprint": {
+        "allocated_bytes": 569344,
+        "apparent_bytes": 456194,
+        "files": 46
+      },
+      "group_size": 10,
+      "groups": 5,
+      "minimum_watermark_and_old_prefix_verified": true,
+      "profiles": [
+        {
+          "admission_ns": 497403,
+          "authority_append_ns": 7152316,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 58297659,
+          "locator_publish_ns": 72738817,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11950,
+          "submitted_rows": 10,
+          "total_ns": 138699819
+        },
+        {
+          "admission_ns": 183781,
+          "authority_append_ns": 7836560,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 71672133,
+          "locator_publish_ns": 72554295,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11954,
+          "submitted_rows": 10,
+          "total_ns": 152260323
+        },
+        {
+          "admission_ns": 200122,
+          "authority_append_ns": 6939285,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 74368407,
+          "locator_publish_ns": 71513759,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11957,
+          "submitted_rows": 10,
+          "total_ns": 153035165
+        },
+        {
+          "admission_ns": 204734,
+          "authority_append_ns": 7023888,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 70683201,
+          "locator_publish_ns": 71073902,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11926,
+          "submitted_rows": 10,
+          "total_ns": 148998172
+        },
+        {
+          "admission_ns": 206633,
+          "authority_append_ns": 11559857,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 98038000,
+          "locator_publish_ns": 96052032,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11953,
+          "submitted_rows": 10,
+          "total_ns": 205869972
+        }
+      ],
+      "recovered_dirty_footprint": {
+        "allocated_bytes": 405504,
+        "apparent_bytes": 374825,
+        "files": 17
+      },
+      "recovered_flushed_footprint": {
+        "allocated_bytes": 405504,
+        "apparent_bytes": 374825,
+        "files": 17
+      },
+      "recovery_checkpoint_ns": 145431526,
+      "scope": "synthetic one-writer phase probe; source always sync=true, cache mode explicit; not an SLA"
+    },
+    "resources": "\tCommand being timed: \"/home/rocket3/Projects/.readiness/ojo-performance/rebased-record-binaries/profile_record_write /home/rocket3/Projects/.readiness/ojo-performance/rebased-cache-policy-probes/1000-durable-group10 1000 10 5 durable\"\n\tUser time (seconds): 0.10\n\tSystem time (seconds): 0.05\n\tPercent of CPU this job got: 7%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:02.15\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 10580\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 2147\n\tVoluntary context switches: 691\n\tInvoluntary context switches: 90\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 23544\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "stderr": "synthetic base progress 0/1000\n"
+  },
+  {
+    "run": "1000-rebuildable-group1",
+    "exit_code": 0,
+    "wall_seconds": 2.1740972390034585,
+    "result": {
+      "acknowledged_rows": 50,
+      "base_rows": 1000,
+      "cache_durability": "rebuildable",
+      "cache_loss_rebuild_ns": 95387900,
+      "complete_original_clock_digest": "516c922fa24db3250f13423be0401ff50c7bdc4f587216b8bf729641eda45318",
+      "complete_originals_after_total_cache_loss": 1050,
+      "deferred_cache_checkpoint_ns": 935915678,
+      "dirty_footprint": {
+        "allocated_bytes": 3325952,
+        "apparent_bytes": 2425402,
+        "files": 316
+      },
+      "flushed_footprint": {
+        "allocated_bytes": 3325952,
+        "apparent_bytes": 2425402,
+        "files": 316
+      },
+      "group_size": 1,
+      "groups": 50,
+      "minimum_watermark_and_old_prefix_verified": true,
+      "profiles": [
+        {
+          "admission_ns": 33882,
+          "authority_append_ns": 9328812,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1870199,
+          "locator_publish_ns": 764916,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1183,
+          "submitted_rows": 1,
+          "total_ns": 12000715
+        },
+        {
+          "admission_ns": 35539,
+          "authority_append_ns": 10162987,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 434746,
+          "locator_publish_ns": 513186,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1190,
+          "submitted_rows": 1,
+          "total_ns": 11149152
+        },
+        {
+          "admission_ns": 33088,
+          "authority_append_ns": 7491229,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 446654,
+          "locator_publish_ns": 1021567,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1186,
+          "submitted_rows": 1,
+          "total_ns": 8995385
+        },
+        {
+          "admission_ns": 22168,
+          "authority_append_ns": 8334314,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 524594,
+          "locator_publish_ns": 603234,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1199,
+          "submitted_rows": 1,
+          "total_ns": 9486748
+        },
+        {
+          "admission_ns": 26385,
+          "authority_append_ns": 7984790,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 455845,
+          "locator_publish_ns": 554202,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1205,
+          "submitted_rows": 1,
+          "total_ns": 9023851
+        },
+        {
+          "admission_ns": 25076,
+          "authority_append_ns": 10289091,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 510128,
+          "locator_publish_ns": 573798,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1201,
+          "submitted_rows": 1,
+          "total_ns": 11400816
+        },
+        {
+          "admission_ns": 24837,
+          "authority_append_ns": 9232397,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 482140,
+          "locator_publish_ns": 513657,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1199,
+          "submitted_rows": 1,
+          "total_ns": 10255665
+        },
+        {
+          "admission_ns": 38030,
+          "authority_append_ns": 6621840,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 882136,
+          "locator_publish_ns": 560687,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1204,
+          "submitted_rows": 1,
+          "total_ns": 8105277
+        },
+        {
+          "admission_ns": 30683,
+          "authority_append_ns": 9474030,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 473887,
+          "locator_publish_ns": 485985,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1202,
+          "submitted_rows": 1,
+          "total_ns": 10467360
+        },
+        {
+          "admission_ns": 26242,
+          "authority_append_ns": 10419664,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 497227,
+          "locator_publish_ns": 538530,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1181,
+          "submitted_rows": 1,
+          "total_ns": 11484463
+        },
+        {
+          "admission_ns": 26698,
+          "authority_append_ns": 7572719,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 542323,
+          "locator_publish_ns": 1293559,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1201,
+          "submitted_rows": 1,
+          "total_ns": 9438339
+        },
+        {
+          "admission_ns": 27230,
+          "authority_append_ns": 7514212,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 528372,
+          "locator_publish_ns": 521253,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 8593751
+        },
+        {
+          "admission_ns": 27948,
+          "authority_append_ns": 9865669,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 473104,
+          "locator_publish_ns": 493778,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1185,
+          "submitted_rows": 1,
+          "total_ns": 10863227
+        },
+        {
+          "admission_ns": 26321,
+          "authority_append_ns": 10319069,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 482430,
+          "locator_publish_ns": 519701,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1196,
+          "submitted_rows": 1,
+          "total_ns": 11350150
+        },
+        {
+          "admission_ns": 27859,
+          "authority_append_ns": 9421397,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 904873,
+          "locator_publish_ns": 557304,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1194,
+          "submitted_rows": 1,
+          "total_ns": 10913860
+        },
+        {
+          "admission_ns": 39228,
+          "authority_append_ns": 6420523,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 544255,
+          "locator_publish_ns": 574683,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1191,
+          "submitted_rows": 1,
+          "total_ns": 7581748
+        },
+        {
+          "admission_ns": 27939,
+          "authority_append_ns": 9435287,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 518876,
+          "locator_publish_ns": 496526,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1191,
+          "submitted_rows": 1,
+          "total_ns": 10481155
+        },
+        {
+          "admission_ns": 28926,
+          "authority_append_ns": 10288775,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 3726453,
+          "locator_publish_ns": 984320,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 15033073
+        },
+        {
+          "admission_ns": 84098,
+          "authority_append_ns": 7022875,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1080738,
+          "locator_publish_ns": 1884294,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1206,
+          "submitted_rows": 1,
+          "total_ns": 10076820
+        },
+        {
+          "admission_ns": 65070,
+          "authority_append_ns": 9646896,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1084577,
+          "locator_publish_ns": 1252184,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1190,
+          "submitted_rows": 1,
+          "total_ns": 12053602
+        },
+        {
+          "admission_ns": 95234,
+          "authority_append_ns": 18227340,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1085594,
+          "locator_publish_ns": 915815,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1194,
+          "submitted_rows": 1,
+          "total_ns": 20328170
+        },
+        {
+          "admission_ns": 65407,
+          "authority_append_ns": 12058977,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1418739,
+          "locator_publish_ns": 1410306,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1185,
+          "submitted_rows": 1,
+          "total_ns": 14958047
+        },
+        {
+          "admission_ns": 89121,
+          "authority_append_ns": 20564489,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 999471,
+          "locator_publish_ns": 933652,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1196,
+          "submitted_rows": 1,
+          "total_ns": 22591739
+        },
+        {
+          "admission_ns": 133722,
+          "authority_append_ns": 12225150,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 859178,
+          "locator_publish_ns": 834674,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1193,
+          "submitted_rows": 1,
+          "total_ns": 14057604
+        },
+        {
+          "admission_ns": 95586,
+          "authority_append_ns": 13152865,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 889152,
+          "locator_publish_ns": 1020777,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 15163132
+        },
+        {
+          "admission_ns": 52138,
+          "authority_append_ns": 16346682,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1161845,
+          "locator_publish_ns": 837943,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 18402784
+        },
+        {
+          "admission_ns": 68170,
+          "authority_append_ns": 14845304,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1749645,
+          "locator_publish_ns": 1160983,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1201,
+          "submitted_rows": 1,
+          "total_ns": 17828800
+        },
+        {
+          "admission_ns": 113932,
+          "authority_append_ns": 17751948,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 568150,
+          "locator_publish_ns": 2809056,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1192,
+          "submitted_rows": 1,
+          "total_ns": 21246412
+        },
+        {
+          "admission_ns": 31734,
+          "authority_append_ns": 16999035,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 2030821,
+          "locator_publish_ns": 1322740,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1181,
+          "submitted_rows": 1,
+          "total_ns": 20388525
+        },
+        {
+          "admission_ns": 91774,
+          "authority_append_ns": 14175115,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1265168,
+          "locator_publish_ns": 1105605,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 16642885
+        },
+        {
+          "admission_ns": 74296,
+          "authority_append_ns": 12643800,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 982000,
+          "locator_publish_ns": 1187046,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1180,
+          "submitted_rows": 1,
+          "total_ns": 14892184
+        },
+        {
+          "admission_ns": 51064,
+          "authority_append_ns": 15527516,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 818580,
+          "locator_publish_ns": 636440,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 17038054
+        },
+        {
+          "admission_ns": 52154,
+          "authority_append_ns": 11243552,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1146842,
+          "locator_publish_ns": 1277898,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1200,
+          "submitted_rows": 1,
+          "total_ns": 13725058
+        },
+        {
+          "admission_ns": 72145,
+          "authority_append_ns": 18295634,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1239408,
+          "locator_publish_ns": 807605,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1187,
+          "submitted_rows": 1,
+          "total_ns": 20419141
+        },
+        {
+          "admission_ns": 75939,
+          "authority_append_ns": 16404597,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1076671,
+          "locator_publish_ns": 1274775,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1192,
+          "submitted_rows": 1,
+          "total_ns": 18836008
+        },
+        {
+          "admission_ns": 61816,
+          "authority_append_ns": 10500084,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 2719481,
+          "locator_publish_ns": 938543,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1192,
+          "submitted_rows": 1,
+          "total_ns": 14224754
+        },
+        {
+          "admission_ns": 94652,
+          "authority_append_ns": 7157780,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1796142,
+          "locator_publish_ns": 940224,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1188,
+          "submitted_rows": 1,
+          "total_ns": 9993820
+        },
+        {
+          "admission_ns": 192964,
+          "authority_append_ns": 13097548,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1226733,
+          "locator_publish_ns": 1067031,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1183,
+          "submitted_rows": 1,
+          "total_ns": 15589065
+        },
+        {
+          "admission_ns": 76477,
+          "authority_append_ns": 9356403,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1750946,
+          "locator_publish_ns": 1067368,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1201,
+          "submitted_rows": 1,
+          "total_ns": 12255712
+        },
+        {
+          "admission_ns": 73520,
+          "authority_append_ns": 6550930,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1243099,
+          "locator_publish_ns": 981673,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1188,
+          "submitted_rows": 1,
+          "total_ns": 8853822
+        },
+        {
+          "admission_ns": 76576,
+          "authority_append_ns": 12158376,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1390733,
+          "locator_publish_ns": 1016321,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1199,
+          "submitted_rows": 1,
+          "total_ns": 14646750
+        },
+        {
+          "admission_ns": 82400,
+          "authority_append_ns": 9963094,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 5323241,
+          "locator_publish_ns": 2512900,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1203,
+          "submitted_rows": 1,
+          "total_ns": 17886875
+        },
+        {
+          "admission_ns": 94709,
+          "authority_append_ns": 10465351,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1684023,
+          "locator_publish_ns": 3246896,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1194,
+          "submitted_rows": 1,
+          "total_ns": 15496679
+        },
+        {
+          "admission_ns": 78977,
+          "authority_append_ns": 9229692,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 4745182,
+          "locator_publish_ns": 1250847,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1195,
+          "submitted_rows": 1,
+          "total_ns": 15309984
+        },
+        {
+          "admission_ns": 81581,
+          "authority_append_ns": 9563119,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1272002,
+          "locator_publish_ns": 1029893,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1200,
+          "submitted_rows": 1,
+          "total_ns": 11951985
+        },
+        {
+          "admission_ns": 73217,
+          "authority_append_ns": 17338850,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1227027,
+          "locator_publish_ns": 1043047,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 19687208
+        },
+        {
+          "admission_ns": 95776,
+          "authority_append_ns": 13656315,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1031517,
+          "locator_publish_ns": 859631,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1187,
+          "submitted_rows": 1,
+          "total_ns": 15647811
+        },
+        {
+          "admission_ns": 60742,
+          "authority_append_ns": 18711084,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1096244,
+          "locator_publish_ns": 948566,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1199,
+          "submitted_rows": 1,
+          "total_ns": 20821246
+        },
+        {
+          "admission_ns": 60685,
+          "authority_append_ns": 11686319,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1004724,
+          "locator_publish_ns": 755310,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1196,
+          "submitted_rows": 1,
+          "total_ns": 13511291
+        },
+        {
+          "admission_ns": 55630,
+          "authority_append_ns": 22113957,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 965741,
+          "locator_publish_ns": 820703,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1203,
+          "submitted_rows": 1,
+          "total_ns": 23960087
+        }
+      ],
+      "recovered_dirty_footprint": {
+        "allocated_bytes": 430080,
+        "apparent_bytes": 396542,
+        "files": 17
+      },
+      "recovered_flushed_footprint": {
+        "allocated_bytes": 430080,
+        "apparent_bytes": 396542,
+        "files": 17
+      },
+      "recovery_checkpoint_ns": 227438268,
+      "scope": "synthetic one-writer phase probe; source always sync=true, cache mode explicit; not an SLA"
+    },
+    "resources": "\tCommand being timed: \"/home/rocket3/Projects/.readiness/ojo-performance/rebased-record-binaries/profile_record_write /home/rocket3/Projects/.readiness/ojo-performance/rebased-cache-policy-probes/1000-rebuildable-group1 1000 1 50 rebuildable\"\n\tUser time (seconds): 0.14\n\tSystem time (seconds): 0.09\n\tPercent of CPU this job got: 11%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:02.14\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 10884\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 2070\n\tVoluntary context switches: 869\n\tInvoluntary context switches: 206\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 32240\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "stderr": "synthetic base progress 0/1000\n"
+  },
+  {
+    "run": "1000-rebuildable-group10",
+    "exit_code": 0,
+    "wall_seconds": 1.0686955779965501,
+    "result": {
+      "acknowledged_rows": 50,
+      "base_rows": 1000,
+      "cache_durability": "rebuildable",
+      "cache_loss_rebuild_ns": 72517795,
+      "complete_original_clock_digest": "82e87e44b388ecc0668f3896d53c61653b0fb788d5147aaba8245c16371aea09",
+      "complete_originals_after_total_cache_loss": 1050,
+      "deferred_cache_checkpoint_ns": 511778817,
+      "dirty_footprint": {
+        "allocated_bytes": 569344,
+        "apparent_bytes": 456121,
+        "files": 46
+      },
+      "flushed_footprint": {
+        "allocated_bytes": 569344,
+        "apparent_bytes": 456121,
+        "files": 46
+      },
+      "group_size": 10,
+      "groups": 5,
+      "minimum_watermark_and_old_prefix_verified": true,
+      "profiles": [
+        {
+          "admission_ns": 166009,
+          "authority_append_ns": 17888988,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 1468002,
+          "locator_publish_ns": 812608,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11962,
+          "submitted_rows": 10,
+          "total_ns": 20349114
+        },
+        {
+          "admission_ns": 151100,
+          "authority_append_ns": 9985410,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 1463914,
+          "locator_publish_ns": 792031,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11963,
+          "submitted_rows": 10,
+          "total_ns": 12403830
+        },
+        {
+          "admission_ns": 164576,
+          "authority_append_ns": 21349771,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 2070623,
+          "locator_publish_ns": 922181,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11985,
+          "submitted_rows": 10,
+          "total_ns": 24519050
+        },
+        {
+          "admission_ns": 186888,
+          "authority_append_ns": 6538745,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 2381445,
+          "locator_publish_ns": 1285559,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11970,
+          "submitted_rows": 10,
+          "total_ns": 10405430
+        },
+        {
+          "admission_ns": 204551,
+          "authority_append_ns": 9803350,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 3371461,
+          "locator_publish_ns": 785072,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11952,
+          "submitted_rows": 10,
+          "total_ns": 14181092
+        }
+      ],
+      "recovered_dirty_footprint": {
+        "allocated_bytes": 405504,
+        "apparent_bytes": 374913,
+        "files": 17
+      },
+      "recovered_flushed_footprint": {
+        "allocated_bytes": 405504,
+        "apparent_bytes": 374913,
+        "files": 17
+      },
+      "recovery_checkpoint_ns": 120665261,
+      "scope": "synthetic one-writer phase probe; source always sync=true, cache mode explicit; not an SLA"
+    },
+    "resources": "\tCommand being timed: \"/home/rocket3/Projects/.readiness/ojo-performance/rebased-record-binaries/profile_record_write /home/rocket3/Projects/.readiness/ojo-performance/rebased-cache-policy-probes/1000-rebuildable-group10 1000 10 5 rebuildable\"\n\tUser time (seconds): 0.08\n\tSystem time (seconds): 0.02\n\tPercent of CPU this job got: 10%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.05\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 10704\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 2023\n\tVoluntary context switches: 362\n\tInvoluntary context switches: 71\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 10136\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "stderr": "synthetic base progress 0/1000\n"
+  },
+  {
+    "run": "10000-durable-group1",
+    "exit_code": 0,
+    "wall_seconds": 13.557834623999952,
+    "result": {
+      "acknowledged_rows": 50,
+      "base_rows": 10000,
+      "cache_durability": "durable",
+      "cache_loss_rebuild_ns": 985512881,
+      "complete_original_clock_digest": "0acf37d743631b0b0ca655b6277849cd03c79d06c431023f20a17e68e5041868",
+      "complete_originals_after_total_cache_loss": 10050,
+      "deferred_cache_checkpoint_ns": 2719518419,
+      "dirty_footprint": {
+        "allocated_bytes": 7802880,
+        "apparent_bytes": 6918953,
+        "files": 370
+      },
+      "flushed_footprint": {
+        "allocated_bytes": 7802880,
+        "apparent_bytes": 6918953,
+        "files": 370
+      },
+      "group_size": 1,
+      "groups": 50,
+      "minimum_watermark_and_old_prefix_verified": true,
+      "profiles": [
+        {
+          "admission_ns": 52901,
+          "authority_append_ns": 10042720,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 68751724,
+          "locator_publish_ns": 64749575,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1199,
+          "submitted_rows": 1,
+          "total_ns": 143601340
+        },
+        {
+          "admission_ns": 57821,
+          "authority_append_ns": 8095092,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 113783042,
+          "locator_publish_ns": 65416527,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1210,
+          "submitted_rows": 1,
+          "total_ns": 187356345
+        },
+        {
+          "admission_ns": 58101,
+          "authority_append_ns": 14579709,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 136501817,
+          "locator_publish_ns": 91219677,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1203,
+          "submitted_rows": 1,
+          "total_ns": 242363427
+        },
+        {
+          "admission_ns": 95172,
+          "authority_append_ns": 6526594,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 54033091,
+          "locator_publish_ns": 70910440,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1208,
+          "submitted_rows": 1,
+          "total_ns": 131570386
+        },
+        {
+          "admission_ns": 74252,
+          "authority_append_ns": 6523688,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 56794783,
+          "locator_publish_ns": 64028450,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1208,
+          "submitted_rows": 1,
+          "total_ns": 127426223
+        },
+        {
+          "admission_ns": 61433,
+          "authority_append_ns": 6383846,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 64099879,
+          "locator_publish_ns": 73580562,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1202,
+          "submitted_rows": 1,
+          "total_ns": 144130481
+        },
+        {
+          "admission_ns": 83889,
+          "authority_append_ns": 6565766,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 63758441,
+          "locator_publish_ns": 64537500,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1215,
+          "submitted_rows": 1,
+          "total_ns": 134950325
+        },
+        {
+          "admission_ns": 87334,
+          "authority_append_ns": 8247928,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 60989578,
+          "locator_publish_ns": 68367775,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1202,
+          "submitted_rows": 1,
+          "total_ns": 137697812
+        },
+        {
+          "admission_ns": 67075,
+          "authority_append_ns": 8136066,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 71596384,
+          "locator_publish_ns": 64317662,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 144121340
+        },
+        {
+          "admission_ns": 56373,
+          "authority_append_ns": 8909317,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 74537556,
+          "locator_publish_ns": 56967992,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1206,
+          "submitted_rows": 1,
+          "total_ns": 140476025
+        },
+        {
+          "admission_ns": 88821,
+          "authority_append_ns": 6521030,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 96240422,
+          "locator_publish_ns": 64739673,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1192,
+          "submitted_rows": 1,
+          "total_ns": 167594576
+        },
+        {
+          "admission_ns": 67131,
+          "authority_append_ns": 7958210,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 61817330,
+          "locator_publish_ns": 81990269,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1216,
+          "submitted_rows": 1,
+          "total_ns": 151836890
+        },
+        {
+          "admission_ns": 63904,
+          "authority_append_ns": 6484535,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 93381416,
+          "locator_publish_ns": 110592777,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1202,
+          "submitted_rows": 1,
+          "total_ns": 210526842
+        },
+        {
+          "admission_ns": 89872,
+          "authority_append_ns": 7787323,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 116492865,
+          "locator_publish_ns": 84798729,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1199,
+          "submitted_rows": 1,
+          "total_ns": 209174368
+        },
+        {
+          "admission_ns": 72154,
+          "authority_append_ns": 9671790,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 66681758,
+          "locator_publish_ns": 69545315,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1207,
+          "submitted_rows": 1,
+          "total_ns": 145975250
+        },
+        {
+          "admission_ns": 102843,
+          "authority_append_ns": 6987234,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 65482404,
+          "locator_publish_ns": 75868397,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1196,
+          "submitted_rows": 1,
+          "total_ns": 148445986
+        },
+        {
+          "admission_ns": 89056,
+          "authority_append_ns": 8425417,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 71050406,
+          "locator_publish_ns": 70602231,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1205,
+          "submitted_rows": 1,
+          "total_ns": 150172334
+        },
+        {
+          "admission_ns": 106491,
+          "authority_append_ns": 7378252,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 77555026,
+          "locator_publish_ns": 80512383,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 165556414
+        },
+        {
+          "admission_ns": 67843,
+          "authority_append_ns": 9145595,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 70535995,
+          "locator_publish_ns": 63948508,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1204,
+          "submitted_rows": 1,
+          "total_ns": 143702868
+        },
+        {
+          "admission_ns": 61202,
+          "authority_append_ns": 6469779,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 74931287,
+          "locator_publish_ns": 74984380,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1208,
+          "submitted_rows": 1,
+          "total_ns": 156450876
+        },
+        {
+          "admission_ns": 68562,
+          "authority_append_ns": 6635268,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 71065805,
+          "locator_publish_ns": 74851720,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 152625607
+        },
+        {
+          "admission_ns": 99886,
+          "authority_append_ns": 6733227,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 70642482,
+          "locator_publish_ns": 76985839,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1204,
+          "submitted_rows": 1,
+          "total_ns": 154465798
+        },
+        {
+          "admission_ns": 67798,
+          "authority_append_ns": 11442611,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 70184088,
+          "locator_publish_ns": 70271824,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1207,
+          "submitted_rows": 1,
+          "total_ns": 151971075
+        },
+        {
+          "admission_ns": 60129,
+          "authority_append_ns": 6451553,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 70015163,
+          "locator_publish_ns": 70298699,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1202,
+          "submitted_rows": 1,
+          "total_ns": 146829684
+        },
+        {
+          "admission_ns": 85397,
+          "authority_append_ns": 15014600,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 72523051,
+          "locator_publish_ns": 66618732,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 154245493
+        },
+        {
+          "admission_ns": 68993,
+          "authority_append_ns": 6441605,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 72874923,
+          "locator_publish_ns": 58162881,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1204,
+          "submitted_rows": 1,
+          "total_ns": 137552848
+        },
+        {
+          "admission_ns": 84751,
+          "authority_append_ns": 6563492,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 68927764,
+          "locator_publish_ns": 59341170,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1208,
+          "submitted_rows": 1,
+          "total_ns": 134922142
+        },
+        {
+          "admission_ns": 94597,
+          "authority_append_ns": 8844746,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 74169628,
+          "locator_publish_ns": 70555315,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1201,
+          "submitted_rows": 1,
+          "total_ns": 153667853
+        },
+        {
+          "admission_ns": 84285,
+          "authority_append_ns": 6511348,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 77556709,
+          "locator_publish_ns": 74911056,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1200,
+          "submitted_rows": 1,
+          "total_ns": 159068139
+        },
+        {
+          "admission_ns": 69288,
+          "authority_append_ns": 7629701,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 79733860,
+          "locator_publish_ns": 82781490,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1188,
+          "submitted_rows": 1,
+          "total_ns": 170219243
+        },
+        {
+          "admission_ns": 82582,
+          "authority_append_ns": 6586620,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 67301591,
+          "locator_publish_ns": 73455132,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1202,
+          "submitted_rows": 1,
+          "total_ns": 147431438
+        },
+        {
+          "admission_ns": 96394,
+          "authority_append_ns": 7236300,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 64318802,
+          "locator_publish_ns": 69042606,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1202,
+          "submitted_rows": 1,
+          "total_ns": 140698957
+        },
+        {
+          "admission_ns": 104802,
+          "authority_append_ns": 8354614,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 79680895,
+          "locator_publish_ns": 70337616,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1209,
+          "submitted_rows": 1,
+          "total_ns": 158482240
+        },
+        {
+          "admission_ns": 72329,
+          "authority_append_ns": 6560633,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 58606579,
+          "locator_publish_ns": 54318747,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1202,
+          "submitted_rows": 1,
+          "total_ns": 119562475
+        },
+        {
+          "admission_ns": 85750,
+          "authority_append_ns": 7129510,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 58574234,
+          "locator_publish_ns": 56901089,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1202,
+          "submitted_rows": 1,
+          "total_ns": 122695276
+        },
+        {
+          "admission_ns": 89113,
+          "authority_append_ns": 7895434,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 58167268,
+          "locator_publish_ns": 58278808,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1194,
+          "submitted_rows": 1,
+          "total_ns": 124435508
+        },
+        {
+          "admission_ns": 98437,
+          "authority_append_ns": 6621316,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 53119399,
+          "locator_publish_ns": 54539178,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1191,
+          "submitted_rows": 1,
+          "total_ns": 114383711
+        },
+        {
+          "admission_ns": 65089,
+          "authority_append_ns": 7322185,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 53638988,
+          "locator_publish_ns": 55292630,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1193,
+          "submitted_rows": 1,
+          "total_ns": 116323985
+        },
+        {
+          "admission_ns": 97881,
+          "authority_append_ns": 6415313,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 54208240,
+          "locator_publish_ns": 53749031,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 114474869
+        },
+        {
+          "admission_ns": 79780,
+          "authority_append_ns": 7442122,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 63162369,
+          "locator_publish_ns": 60012481,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1205,
+          "submitted_rows": 1,
+          "total_ns": 130701935
+        },
+        {
+          "admission_ns": 69995,
+          "authority_append_ns": 6995127,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 57298157,
+          "locator_publish_ns": 56919507,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1186,
+          "submitted_rows": 1,
+          "total_ns": 121287590
+        },
+        {
+          "admission_ns": 70877,
+          "authority_append_ns": 6684611,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 59564089,
+          "locator_publish_ns": 54427105,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1208,
+          "submitted_rows": 1,
+          "total_ns": 120751327
+        },
+        {
+          "admission_ns": 110253,
+          "authority_append_ns": 7147427,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 58881411,
+          "locator_publish_ns": 59920363,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1187,
+          "submitted_rows": 1,
+          "total_ns": 126064413
+        },
+        {
+          "admission_ns": 125455,
+          "authority_append_ns": 6924040,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 66954925,
+          "locator_publish_ns": 58057176,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1199,
+          "submitted_rows": 1,
+          "total_ns": 132066433
+        },
+        {
+          "admission_ns": 87158,
+          "authority_append_ns": 8247429,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 57872410,
+          "locator_publish_ns": 57769195,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 123981459
+        },
+        {
+          "admission_ns": 117354,
+          "authority_append_ns": 7083417,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 68635672,
+          "locator_publish_ns": 66620714,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1202,
+          "submitted_rows": 1,
+          "total_ns": 142473793
+        },
+        {
+          "admission_ns": 115686,
+          "authority_append_ns": 7670059,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 60684569,
+          "locator_publish_ns": 66859462,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1180,
+          "submitted_rows": 1,
+          "total_ns": 135335358
+        },
+        {
+          "admission_ns": 1021121,
+          "authority_append_ns": 12649916,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 87002938,
+          "locator_publish_ns": 96472541,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1193,
+          "submitted_rows": 1,
+          "total_ns": 197151970
+        },
+        {
+          "admission_ns": 104676,
+          "authority_append_ns": 8816202,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 63928571,
+          "locator_publish_ns": 64941251,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 137795606
+        },
+        {
+          "admission_ns": 501078,
+          "authority_append_ns": 13407523,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 70886175,
+          "locator_publish_ns": 61078529,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1202,
+          "submitted_rows": 1,
+          "total_ns": 145877660
+        }
+      ],
+      "recovered_dirty_footprint": {
+        "allocated_bytes": 3325952,
+        "apparent_bytes": 3258219,
+        "files": 33
+      },
+      "recovered_flushed_footprint": {
+        "allocated_bytes": 3325952,
+        "apparent_bytes": 3258219,
+        "files": 33
+      },
+      "recovery_checkpoint_ns": 269988915,
+      "scope": "synthetic one-writer phase probe; source always sync=true, cache mode explicit; not an SLA"
+    },
+    "resources": "\tCommand being timed: \"/home/rocket3/Projects/.readiness/ojo-performance/rebased-record-binaries/profile_record_write /home/rocket3/Projects/.readiness/ojo-performance/rebased-cache-policy-probes/10000-durable-group1 10000 1 50 durable\"\n\tUser time (seconds): 0.84\n\tSystem time (seconds): 0.43\n\tPercent of CPU this job got: 9%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:13.54\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 12940\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 5907\n\tVoluntary context switches: 5976\n\tInvoluntary context switches: 221\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 209760\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "stderr": "synthetic base progress 0/10000\n"
+  },
+  {
+    "run": "10000-durable-group10",
+    "exit_code": 0,
+    "wall_seconds": 5.025798224996834,
+    "result": {
+      "acknowledged_rows": 50,
+      "base_rows": 10000,
+      "cache_durability": "durable",
+      "cache_loss_rebuild_ns": 1029744949,
+      "complete_original_clock_digest": "5699d764c3bd879d8fa371c7cf5a210baba8b9d0411501c91cb55d63fefe1c39",
+      "complete_originals_after_total_cache_loss": 10050,
+      "deferred_cache_checkpoint_ns": 850323480,
+      "dirty_footprint": {
+        "allocated_bytes": 3903488,
+        "apparent_bytes": 3701055,
+        "files": 100
+      },
+      "flushed_footprint": {
+        "allocated_bytes": 3903488,
+        "apparent_bytes": 3701055,
+        "files": 100
+      },
+      "group_size": 10,
+      "groups": 5,
+      "minimum_watermark_and_old_prefix_verified": true,
+      "profiles": [
+        {
+          "admission_ns": 157334,
+          "authority_append_ns": 6722625,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 66254162,
+          "locator_publish_ns": 71104540,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11917,
+          "submitted_rows": 10,
+          "total_ns": 144252076
+        },
+        {
+          "admission_ns": 171653,
+          "authority_append_ns": 11593847,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 66813745,
+          "locator_publish_ns": 60176365,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11984,
+          "submitted_rows": 10,
+          "total_ns": 138770547
+        },
+        {
+          "admission_ns": 199907,
+          "authority_append_ns": 9422484,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 74827003,
+          "locator_publish_ns": 67869473,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11937,
+          "submitted_rows": 10,
+          "total_ns": 152333326
+        },
+        {
+          "admission_ns": 201485,
+          "authority_append_ns": 6644239,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 68126553,
+          "locator_publish_ns": 66093576,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11943,
+          "submitted_rows": 10,
+          "total_ns": 141079507
+        },
+        {
+          "admission_ns": 148508,
+          "authority_append_ns": 12001859,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 70789058,
+          "locator_publish_ns": 64835438,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11933,
+          "submitted_rows": 10,
+          "total_ns": 147789697
+        }
+      ],
+      "recovered_dirty_footprint": {
+        "allocated_bytes": 3305472,
+        "apparent_bytes": 3236374,
+        "files": 33
+      },
+      "recovered_flushed_footprint": {
+        "allocated_bytes": 3305472,
+        "apparent_bytes": 3236374,
+        "files": 33
+      },
+      "recovery_checkpoint_ns": 246088302,
+      "scope": "synthetic one-writer phase probe; source always sync=true, cache mode explicit; not an SLA"
+    },
+    "resources": "\tCommand being timed: \"/home/rocket3/Projects/.readiness/ojo-performance/rebased-record-binaries/profile_record_write /home/rocket3/Projects/.readiness/ojo-performance/rebased-cache-policy-probes/10000-durable-group10 10000 10 5 durable\"\n\tUser time (seconds): 0.76\n\tSystem time (seconds): 0.14\n\tPercent of CPU this job got: 18%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:04.98\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 12796\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 3365\n\tVoluntary context switches: 2107\n\tInvoluntary context switches: 99\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 72144\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "stderr": "synthetic base progress 0/10000\n"
+  },
+  {
+    "run": "10000-rebuildable-group1",
+    "exit_code": 0,
+    "wall_seconds": 4.8752371950031375,
+    "result": {
+      "acknowledged_rows": 50,
+      "base_rows": 10000,
+      "cache_durability": "rebuildable",
+      "cache_loss_rebuild_ns": 399594284,
+      "complete_original_clock_digest": "94a4233931d182eb58d4d065d1ea9a664bcc7c36897665ababdd35e2ab4077e7",
+      "complete_originals_after_total_cache_loss": 10050,
+      "deferred_cache_checkpoint_ns": 3218098087,
+      "dirty_footprint": {
+        "allocated_bytes": 7798784,
+        "apparent_bytes": 6917899,
+        "files": 370
+      },
+      "flushed_footprint": {
+        "allocated_bytes": 7798784,
+        "apparent_bytes": 6917899,
+        "files": 370
+      },
+      "group_size": 1,
+      "groups": 50,
+      "minimum_watermark_and_old_prefix_verified": true,
+      "profiles": [
+        {
+          "admission_ns": 66324,
+          "authority_append_ns": 9537846,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 694323,
+          "locator_publish_ns": 1047603,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 11350149
+        },
+        {
+          "admission_ns": 33208,
+          "authority_append_ns": 9607724,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 726271,
+          "locator_publish_ns": 828011,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1209,
+          "submitted_rows": 1,
+          "total_ns": 11199144
+        },
+        {
+          "admission_ns": 35003,
+          "authority_append_ns": 8779064,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 656978,
+          "locator_publish_ns": 739934,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1204,
+          "submitted_rows": 1,
+          "total_ns": 10214639
+        },
+        {
+          "admission_ns": 33351,
+          "authority_append_ns": 6443268,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 531476,
+          "locator_publish_ns": 561323,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1192,
+          "submitted_rows": 1,
+          "total_ns": 7571726
+        },
+        {
+          "admission_ns": 24128,
+          "authority_append_ns": 9603332,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1938507,
+          "locator_publish_ns": 949083,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1195,
+          "submitted_rows": 1,
+          "total_ns": 12523566
+        },
+        {
+          "admission_ns": 92545,
+          "authority_append_ns": 8314439,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 693578,
+          "locator_publish_ns": 832976,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1201,
+          "submitted_rows": 1,
+          "total_ns": 9938111
+        },
+        {
+          "admission_ns": 36485,
+          "authority_append_ns": 8961821,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 840104,
+          "locator_publish_ns": 869920,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1211,
+          "submitted_rows": 1,
+          "total_ns": 10712410
+        },
+        {
+          "admission_ns": 41009,
+          "authority_append_ns": 6478747,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 712470,
+          "locator_publish_ns": 721763,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1195,
+          "submitted_rows": 1,
+          "total_ns": 7957727
+        },
+        {
+          "admission_ns": 36794,
+          "authority_append_ns": 8763888,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 872491,
+          "locator_publish_ns": 1429137,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 11110104
+        },
+        {
+          "admission_ns": 31071,
+          "authority_append_ns": 10644256,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 653649,
+          "locator_publish_ns": 592169,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 11923690
+        },
+        {
+          "admission_ns": 33877,
+          "authority_append_ns": 7655196,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 860636,
+          "locator_publish_ns": 738464,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1204,
+          "submitted_rows": 1,
+          "total_ns": 9292127
+        },
+        {
+          "admission_ns": 38050,
+          "authority_append_ns": 6421102,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 722921,
+          "locator_publish_ns": 706845,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1215,
+          "submitted_rows": 1,
+          "total_ns": 7892973
+        },
+        {
+          "admission_ns": 36521,
+          "authority_append_ns": 9012541,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 538926,
+          "locator_publish_ns": 544517,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1201,
+          "submitted_rows": 1,
+          "total_ns": 10135463
+        },
+        {
+          "admission_ns": 25277,
+          "authority_append_ns": 8816138,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 683156,
+          "locator_publish_ns": 585880,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1213,
+          "submitted_rows": 1,
+          "total_ns": 10112832
+        },
+        {
+          "admission_ns": 32907,
+          "authority_append_ns": 6497787,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1023310,
+          "locator_publish_ns": 775174,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1203,
+          "submitted_rows": 1,
+          "total_ns": 8332265
+        },
+        {
+          "admission_ns": 59785,
+          "authority_append_ns": 8986229,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 619053,
+          "locator_publish_ns": 670174,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 10337976
+        },
+        {
+          "admission_ns": 31821,
+          "authority_append_ns": 8590376,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 904334,
+          "locator_publish_ns": 860756,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1196,
+          "submitted_rows": 1,
+          "total_ns": 10391283
+        },
+        {
+          "admission_ns": 45231,
+          "authority_append_ns": 6443477,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 763171,
+          "locator_publish_ns": 672142,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1204,
+          "submitted_rows": 1,
+          "total_ns": 7927538
+        },
+        {
+          "admission_ns": 39805,
+          "authority_append_ns": 8976558,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 750358,
+          "locator_publish_ns": 682206,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1202,
+          "submitted_rows": 1,
+          "total_ns": 10452474
+        },
+        {
+          "admission_ns": 38392,
+          "authority_append_ns": 8446084,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1311704,
+          "locator_publish_ns": 1214812,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 11019301
+        },
+        {
+          "admission_ns": 82547,
+          "authority_append_ns": 6659291,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1682240,
+          "locator_publish_ns": 1203340,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 9632322
+        },
+        {
+          "admission_ns": 84023,
+          "authority_append_ns": 8863090,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 766376,
+          "locator_publish_ns": 773198,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1193,
+          "submitted_rows": 1,
+          "total_ns": 10490495
+        },
+        {
+          "admission_ns": 45867,
+          "authority_append_ns": 10178865,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 813858,
+          "locator_publish_ns": 792313,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1189,
+          "submitted_rows": 1,
+          "total_ns": 11834112
+        },
+        {
+          "admission_ns": 39361,
+          "authority_append_ns": 7361419,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 907942,
+          "locator_publish_ns": 831537,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 9143667
+        },
+        {
+          "admission_ns": 43572,
+          "authority_append_ns": 6370066,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 2077995,
+          "locator_publish_ns": 1402078,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1200,
+          "submitted_rows": 1,
+          "total_ns": 9901106
+        },
+        {
+          "admission_ns": 118027,
+          "authority_append_ns": 12263513,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 795901,
+          "locator_publish_ns": 748558,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 13929776
+        },
+        {
+          "admission_ns": 46420,
+          "authority_append_ns": 11800239,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 835028,
+          "locator_publish_ns": 761002,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1196,
+          "submitted_rows": 1,
+          "total_ns": 13447000
+        },
+        {
+          "admission_ns": 43177,
+          "authority_append_ns": 6421169,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 872171,
+          "locator_publish_ns": 725601,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1195,
+          "submitted_rows": 1,
+          "total_ns": 8066051
+        },
+        {
+          "admission_ns": 44756,
+          "authority_append_ns": 6325581,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1217819,
+          "locator_publish_ns": 1106528,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1205,
+          "submitted_rows": 1,
+          "total_ns": 8699332
+        },
+        {
+          "admission_ns": 57023,
+          "authority_append_ns": 10318023,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1238602,
+          "locator_publish_ns": 1064189,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1182,
+          "submitted_rows": 1,
+          "total_ns": 12682076
+        },
+        {
+          "admission_ns": 69268,
+          "authority_append_ns": 6627041,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 880216,
+          "locator_publish_ns": 784976,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1195,
+          "submitted_rows": 1,
+          "total_ns": 8365220
+        },
+        {
+          "admission_ns": 44021,
+          "authority_append_ns": 6492738,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1065487,
+          "locator_publish_ns": 694579,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1208,
+          "submitted_rows": 1,
+          "total_ns": 8301296
+        },
+        {
+          "admission_ns": 49131,
+          "authority_append_ns": 10004589,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 621562,
+          "locator_publish_ns": 512778,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1204,
+          "submitted_rows": 1,
+          "total_ns": 11190973
+        },
+        {
+          "admission_ns": 32363,
+          "authority_append_ns": 6265568,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 590652,
+          "locator_publish_ns": 493889,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1200,
+          "submitted_rows": 1,
+          "total_ns": 7384432
+        },
+        {
+          "admission_ns": 32956,
+          "authority_append_ns": 6267235,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 676247,
+          "locator_publish_ns": 446155,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 7424243
+        },
+        {
+          "admission_ns": 32961,
+          "authority_append_ns": 11938306,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 615629,
+          "locator_publish_ns": 504670,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1183,
+          "submitted_rows": 1,
+          "total_ns": 13093292
+        },
+        {
+          "admission_ns": 29599,
+          "authority_append_ns": 10422646,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 829250,
+          "locator_publish_ns": 536489,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1198,
+          "submitted_rows": 1,
+          "total_ns": 11822074
+        },
+        {
+          "admission_ns": 33172,
+          "authority_append_ns": 6429733,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 605580,
+          "locator_publish_ns": 486806,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1207,
+          "submitted_rows": 1,
+          "total_ns": 7557220
+        },
+        {
+          "admission_ns": 33262,
+          "authority_append_ns": 7374286,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 2524313,
+          "locator_publish_ns": 850237,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1190,
+          "submitted_rows": 1,
+          "total_ns": 10790584
+        },
+        {
+          "admission_ns": 129579,
+          "authority_append_ns": 10028110,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1060925,
+          "locator_publish_ns": 1233558,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1209,
+          "submitted_rows": 1,
+          "total_ns": 12457617
+        },
+        {
+          "admission_ns": 57259,
+          "authority_append_ns": 6553877,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 810663,
+          "locator_publish_ns": 852845,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1191,
+          "submitted_rows": 1,
+          "total_ns": 8279031
+        },
+        {
+          "admission_ns": 36503,
+          "authority_append_ns": 6417162,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 718385,
+          "locator_publish_ns": 639134,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1192,
+          "submitted_rows": 1,
+          "total_ns": 7813736
+        },
+        {
+          "admission_ns": 37322,
+          "authority_append_ns": 10906878,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1222232,
+          "locator_publish_ns": 780107,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1196,
+          "submitted_rows": 1,
+          "total_ns": 12951819
+        },
+        {
+          "admission_ns": 49735,
+          "authority_append_ns": 9673033,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1051760,
+          "locator_publish_ns": 960803,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1197,
+          "submitted_rows": 1,
+          "total_ns": 11740365
+        },
+        {
+          "admission_ns": 56297,
+          "authority_append_ns": 6468357,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 932540,
+          "locator_publish_ns": 808783,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1196,
+          "submitted_rows": 1,
+          "total_ns": 8270075
+        },
+        {
+          "admission_ns": 51152,
+          "authority_append_ns": 6482249,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1334200,
+          "locator_publish_ns": 1003658,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1200,
+          "submitted_rows": 1,
+          "total_ns": 8876591
+        },
+        {
+          "admission_ns": 66351,
+          "authority_append_ns": 9753818,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1415493,
+          "locator_publish_ns": 1534502,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1196,
+          "submitted_rows": 1,
+          "total_ns": 12779402
+        },
+        {
+          "admission_ns": 55028,
+          "authority_append_ns": 8997045,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 1116915,
+          "locator_publish_ns": 907407,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1200,
+          "submitted_rows": 1,
+          "total_ns": 11080406
+        },
+        {
+          "admission_ns": 63371,
+          "authority_append_ns": 6419550,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 2613440,
+          "locator_publish_ns": 1918303,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1200,
+          "submitted_rows": 1,
+          "total_ns": 11023591
+        },
+        {
+          "admission_ns": 117327,
+          "authority_append_ns": 9803927,
+          "fresh_requests": 1,
+          "lexical_publish_ns": 2057175,
+          "locator_publish_ns": 1993732,
+          "rows_committed": 1,
+          "source_encoded_bytes": 1196,
+          "submitted_rows": 1,
+          "total_ns": 13981276
+        }
+      ],
+      "recovered_dirty_footprint": {
+        "allocated_bytes": 3325952,
+        "apparent_bytes": 3258165,
+        "files": 33
+      },
+      "recovered_flushed_footprint": {
+        "allocated_bytes": 3325952,
+        "apparent_bytes": 3258165,
+        "files": 33
+      },
+      "recovery_checkpoint_ns": 146434567,
+      "scope": "synthetic one-writer phase probe; source always sync=true, cache mode explicit; not an SLA"
+    },
+    "resources": "\tCommand being timed: \"/home/rocket3/Projects/.readiness/ojo-performance/rebased-record-binaries/profile_record_write /home/rocket3/Projects/.readiness/ojo-performance/rebased-cache-policy-probes/10000-rebuildable-group1 10000 1 50 rebuildable\"\n\tUser time (seconds): 0.74\n\tSystem time (seconds): 0.19\n\tPercent of CPU this job got: 19%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:04.83\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 13344\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 5642\n\tVoluntary context switches: 2399\n\tInvoluntary context switches: 144\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 83064\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "stderr": "synthetic base progress 0/10000\n"
+  },
+  {
+    "run": "10000-rebuildable-group10",
+    "exit_code": 0,
+    "wall_seconds": 1.9190557460024138,
+    "result": {
+      "acknowledged_rows": 50,
+      "base_rows": 10000,
+      "cache_durability": "rebuildable",
+      "cache_loss_rebuild_ns": 385431504,
+      "complete_original_clock_digest": "786709a52631cd6fd4702b45a926c9f212e93d978e7b7c60e80491e4a6e10263",
+      "complete_originals_after_total_cache_loss": 10050,
+      "deferred_cache_checkpoint_ns": 715132906,
+      "dirty_footprint": {
+        "allocated_bytes": 3907584,
+        "apparent_bytes": 3702165,
+        "files": 100
+      },
+      "flushed_footprint": {
+        "allocated_bytes": 3907584,
+        "apparent_bytes": 3702165,
+        "files": 100
+      },
+      "group_size": 10,
+      "groups": 5,
+      "minimum_watermark_and_old_prefix_verified": true,
+      "profiles": [
+        {
+          "admission_ns": 131976,
+          "authority_append_ns": 6569016,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 1015372,
+          "locator_publish_ns": 805357,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11988,
+          "submitted_rows": 10,
+          "total_ns": 8536174
+        },
+        {
+          "admission_ns": 125374,
+          "authority_append_ns": 6409744,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 1072138,
+          "locator_publish_ns": 655923,
+          "rows_committed": 10,
+          "source_encoded_bytes": 12016,
+          "submitted_rows": 10,
+          "total_ns": 8270043
+        },
+        {
+          "admission_ns": 119250,
+          "authority_append_ns": 9142328,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 1100289,
+          "locator_publish_ns": 662437,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11981,
+          "submitted_rows": 10,
+          "total_ns": 11030992
+        },
+        {
+          "admission_ns": 136429,
+          "authority_append_ns": 7387282,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 1652719,
+          "locator_publish_ns": 932589,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11986,
+          "submitted_rows": 10,
+          "total_ns": 10120778
+        },
+        {
+          "admission_ns": 179711,
+          "authority_append_ns": 6516659,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 1923565,
+          "locator_publish_ns": 811321,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11981,
+          "submitted_rows": 10,
+          "total_ns": 9443048
+        }
+      ],
+      "recovered_dirty_footprint": {
+        "allocated_bytes": 3305472,
+        "apparent_bytes": 3236809,
+        "files": 33
+      },
+      "recovered_flushed_footprint": {
+        "allocated_bytes": 3305472,
+        "apparent_bytes": 3236809,
+        "files": 33
+      },
+      "recovery_checkpoint_ns": 202737731,
+      "scope": "synthetic one-writer phase probe; source always sync=true, cache mode explicit; not an SLA"
+    },
+    "resources": "\tCommand being timed: \"/home/rocket3/Projects/.readiness/ojo-performance/rebased-record-binaries/profile_record_write /home/rocket3/Projects/.readiness/ojo-performance/rebased-cache-policy-probes/10000-rebuildable-group10 10000 10 5 rebuildable\"\n\tUser time (seconds): 0.66\n\tSystem time (seconds): 0.08\n\tPercent of CPU this job got: 39%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.89\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 12948\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 2815\n\tVoluntary context switches: 846\n\tInvoluntary context switches: 173\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 32600\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "stderr": "synthetic base progress 0/10000\n"
+  }
+]

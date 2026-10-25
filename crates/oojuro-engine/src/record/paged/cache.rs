@@ -1,4 +1,5 @@
 mod disk;
+mod visibility;
 use super::*;
 use crate::lexical::{self, paged, record_cache as projection, segments::codec};
 use oojuro_store::crypto::{SEAL_OVERHEAD, random_key};
@@ -30,11 +31,27 @@ struct Reference {
     bytes: usize,
     decoded: usize,
     digest: [u8; 32],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    visibility: Option<visibility::Reference>,
+}
+impl Reference {
+    fn total_bytes(&self) -> Result<usize> {
+        self.bytes
+            .checked_add(self.visibility.as_ref().map_or(0, |v| v.bytes))
+            .ok_or(Error::Bounds)
+    }
+    fn total_decoded(&self) -> Result<usize> {
+        self.decoded
+            .checked_add(self.visibility.as_ref().map_or(0, |v| v.decoded))
+            .ok_or(Error::Bounds)
+    }
 }
 #[derive(Clone, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
 struct Manifest {
     format: u32,
+    #[serde(default, skip_serializing_if = "CacheDurability::is_durable")]
+    cache_durability: CacheDurability,
     origin: [u8; 32],
     identity: [u8; 32],
     prefix: Watermark,
@@ -46,6 +63,28 @@ pub enum Opened {
     Loaded,
     Extended,
     Rebuilt,
+}
+/// Opt-in per-request measurements. Counts cover this query, not other clients.
+/// Times include validation and I/O inside each phase; they are not an SLA.
+/// Byte counts are encrypted page bytes processed, not physical disk I/O.
+/// Row counts describe corpus visits or original requests, not the internal
+/// number of rows decoded from a selected authority batch.
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct SearchProfile {
+    pub total_ns: u128,
+    pub term_pass_ns: u128,
+    pub presence_pass_ns: u128,
+    pub statistics_pass_ns: u128,
+    pub scoring_pass_ns: u128,
+    pub originals_ns: u128,
+    pub segment_loads: u64,
+    pub segment_bytes: u64,
+    pub visibility_pages: u64,
+    pub visibility_bytes: u64,
+    pub rows_examined: u64,
+    pub fallback_authority_rows: u64,
+    pub literal_originals: u64,
+    pub selected_originals: u64,
 }
 /// Retains only bounded manifest references, not payload rows, terms or a hydrated Index.
 pub struct Index {
@@ -62,6 +101,8 @@ pub struct Index {
 enum Phase {
     SegmentTemp,
     SegmentPublished,
+    VisibilityTemp,
+    VisibilityPublished,
     DirectoryPagesDurable,
     ManifestTemp,
     ManifestPublished,
@@ -69,6 +110,9 @@ enum Phase {
 }
 impl Index {
     pub fn open(reader: &Reader, directory: &Path) -> Result<Self> {
+        if !reader.cache_durability.is_durable() {
+            return Err(Error::Invalid);
+        }
         let tip = reader.watermark()?;
         let lock = directory_lock(directory)?;
         let loaded = (|| {
@@ -96,6 +140,7 @@ impl Index {
             Err(_) => (
                 Manifest {
                     format: FORMAT,
+                    cache_durability: reader.cache_durability,
                     origin: tip.origin,
                     identity: tip.identity,
                     prefix: tip,
@@ -132,7 +177,22 @@ impl Index {
             .as_ref()
             .map_or(self.manifest.segments.len(), |d| d.count())
     }
+    pub(super) fn compatible(&self, reader: &Reader) -> Result<()> {
+        if self.failed {
+            return Err(Error::Unavailable);
+        }
+        let tip = reader.watermark()?;
+        if self.manifest.origin != tip.origin
+            || self.manifest.identity != tip.identity
+            || self.manifest.cache_durability != reader.cache_durability
+        {
+            return Err(Error::Authority);
+        }
+        reader.validate(&self.manifest.prefix)?;
+        Ok(())
+    }
     fn current(&self, reader: &Reader) -> Result<()> {
+        self.compatible(reader)?;
         if self.failed {
             return Err(Error::Unavailable);
         }
@@ -183,6 +243,7 @@ impl Index {
         };
         let mut next = Manifest {
             format: FORMAT,
+            cache_durability: reader.cache_durability,
             origin: prefix.origin,
             identity: prefix.identity,
             prefix: prefix.clone(),
@@ -291,6 +352,7 @@ impl Index {
             bytes: bytes.len(),
             decoded,
             digest: [0; 32],
+            visibility: None,
         };
         let sealed = reader.seal(&segment_aad(m, &r)?, bytes);
         r.digest = *blake3::hash(&sealed).as_bytes();
@@ -329,6 +391,7 @@ impl Index {
         let result = (|| {
             let mut next = Manifest {
                 format: FORMAT,
+                cache_durability: reader.cache_durability,
                 origin: self.manifest.origin,
                 identity: self.manifest.identity,
                 prefix: reader.watermark()?,
@@ -391,11 +454,32 @@ impl Index {
         let s = reader.view(query.scope, query.as_of)?;
         self.search_view(reader, &s, query)
     }
+    pub fn search_profiled(
+        &self,
+        reader: &Reader,
+        query: &Query<'_>,
+    ) -> Result<(Search, SearchProfile)> {
+        let began = std::time::Instant::now();
+        let snapshot = reader.view(query.scope, query.as_of)?;
+        let mut profile = SearchProfile::default();
+        let found = self.search_view_work(reader, &snapshot, query, Some(&mut profile))?;
+        profile.total_ns = began.elapsed().as_nanos();
+        Ok((found, profile))
+    }
     pub fn search_view(
         &self,
         reader: &Reader,
         snapshot: &Snapshot,
         query: &Query<'_>,
+    ) -> Result<Search> {
+        self.search_view_work(reader, snapshot, query, None)
+    }
+    fn search_view_work(
+        &self,
+        reader: &Reader,
+        snapshot: &Snapshot,
+        query: &Query<'_>,
+        mut work: Option<&mut SearchProfile>,
     ) -> Result<Search> {
         self.current(reader)?;
         reader.snapshot(snapshot)?;
@@ -432,10 +516,12 @@ impl Index {
         } else {
             direct
         };
-        let (first, anchored) = self.rank(reader, snapshot, query, false, direct)?;
+        let (first, anchored) =
+            self.rank(reader, snapshot, query, false, direct, work.as_deref_mut())?;
         let mut hits = first;
         if anchored && hits.len() < query.k {
-            let (rest, _) = self.rank(reader, snapshot, query, true, direct)?;
+            let (rest, _) =
+                self.rank(reader, snapshot, query, true, direct, work.as_deref_mut())?;
             let listed: BTreeSet<_> = hits.iter().map(|h| h.id).collect();
             for mut h in rest {
                 if hits.len() == query.k {
@@ -449,23 +535,31 @@ impl Index {
         }
         let mut out = Vec::new();
         let mut bytes = 0usize;
-        for h in hits {
-            let record = reader
-                .assigned(snapshot.watermark(), h.id)?
-                .ok_or(Error::Authority)?
-                .record(&reader.identity().writer, &reader.identity().adapter);
-            bytes = bytes
-                .checked_add(json(&record, query.max_bytes)?.len())
-                .ok_or(Error::Bounds)?;
-            if bytes > query.max_bytes {
-                return Err(Error::Bounds);
+        let originals_began = work.as_ref().map(|_| std::time::Instant::now());
+        for selected in hits.chunks(1000) {
+            let ids: Vec<_> = selected.iter().map(|h| h.id).collect();
+            let originals = reader.get_ids(snapshot, &ids, query.max_bytes)?;
+            if let Some(work) = work.as_deref_mut() {
+                work.selected_originals += ids.len() as u64;
             }
-            out.push(Hit {
-                record,
-                bits: h.bits,
-                continued: h.continued,
-                row: h.row,
-            });
+            for (h, original) in selected.iter().zip(originals) {
+                let record = original.ok_or(Error::Authority)?;
+                bytes = bytes
+                    .checked_add(json(&record, query.max_bytes)?.len())
+                    .ok_or(Error::Bounds)?;
+                if bytes > query.max_bytes {
+                    return Err(Error::Bounds);
+                }
+                out.push(Hit {
+                    record,
+                    bits: h.bits,
+                    continued: h.continued,
+                    row: h.row,
+                });
+            }
+        }
+        if let Some(work) = work.as_deref_mut() {
+            work.originals_ns += originals_began.unwrap().elapsed().as_nanos();
         }
         let result = Search {
             watermark: snapshot.watermark().clone(),
@@ -496,43 +590,72 @@ impl Index {
         query: &Query<'_>,
         split: bool,
         direct: Option<Option<u64>>,
+        mut work: Option<&mut SearchProfile>,
     ) -> Result<(Vec<lexical::Hit>, bool)> {
-        let possible = paged::possible_terms(query.text);
-        let mut df: BTreeMap<String, u64> = possible.iter().map(|t| (t.clone(), 0)).collect();
+        let mut df = BTreeMap::new();
         let mut present = BTreeSet::new();
         let raw: Vec<_> = paged::terms(query.text).into_iter().collect();
-        self.visit_references(reader, |reference| {
-            let segment = load_segment(reader, &self.directory, &self.manifest, reference)?;
-            for (term, n) in &mut df {
-                *n = n
-                    .checked_add(segment.postings.get(term).map_or(0, |p| p.len() as u64))
-                    .ok_or(Error::Bounds)?;
+        // Plan consults population DF only to choose a literal's rarest term.
+        // Ordinary word/identifier queries must not load every segment for unused DF.
+        if lexical_literal(query.text) {
+            df = paged::possible_terms(query.text)
+                .into_iter()
+                .map(|term| (term, 0u64))
+                .collect();
+            let began = work.as_ref().map(|_| std::time::Instant::now());
+            self.visit_references(reader, |reference| {
+                let segment = load_segment(reader, &self.directory, &self.manifest, reference)?;
+                if let Some(work) = work.as_deref_mut() {
+                    work.segment_loads += 1;
+                    work.segment_bytes += (reference.bytes + SEAL_OVERHEAD) as u64;
+                }
+                for (term, n) in &mut df {
+                    *n = n
+                        .checked_add(segment.postings.get(term).map_or(0, |p| p.len() as u64))
+                        .ok_or(Error::Bounds)?;
+                }
+                Ok(true)
+            })?;
+            if let Some(work) = work.as_deref_mut() {
+                work.term_pass_ns += began.unwrap().elapsed().as_nanos();
             }
-            Ok(true)
-        })?;
-        self.walk(
-            reader,
-            snapshot,
-            &query.filter,
-            &raw,
-            |_, _, tf, visible| {
-                if visible {
-                    for ((term, _), n) in raw.iter().zip(tf) {
-                        if *n > 0 {
-                            present.insert(term.clone());
+        }
+        // Visible presence chooses underscore backoff only. In the split pass
+        // backoff is unconditional; queries without underscores do not consult it.
+        if !split && raw.iter().any(|(term, _)| term.contains('_')) {
+            let began = work.as_ref().map(|_| std::time::Instant::now());
+            self.walk(
+                reader,
+                snapshot,
+                &query.filter,
+                &raw,
+                false,
+                work.as_deref_mut(),
+                |_, _, tf, visible| {
+                    if visible {
+                        for ((term, _), n) in raw.iter().zip(tf) {
+                            if *n > 0 {
+                                present.insert(term.clone());
+                            }
                         }
                     }
-                }
-                Ok(())
-            },
-        )?;
+                    Ok(())
+                },
+            )?;
+            if let Some(work) = work.as_deref_mut() {
+                work.presence_pass_ns += began.unwrap().elapsed().as_nanos();
+            }
+        }
         let plan = paged::Plan::new(query.text, split, direct, &present, &df);
+        let statistics_began = work.as_ref().map(|_| std::time::Instant::now());
         let mut stats = paged::Stats::new(&plan);
         self.walk(
             reader,
             snapshot,
             &query.filter,
             &plan.terms,
+            lexical_literal(query.text),
+            work.as_deref_mut(),
             |r, row, tf, visible| {
                 stats
                     .visit(
@@ -546,14 +669,20 @@ impl Index {
                     .map_err(map_codec)
             },
         )?;
+        if let Some(work) = work.as_deref_mut() {
+            work.statistics_pass_ns += statistics_began.unwrap().elapsed().as_nanos();
+        }
         let model = stats.finish(plan);
         let anchored = model.plan.continues();
         let mut top = paged::Top::new(query.k);
+        let scoring_began = work.as_ref().map(|_| std::time::Instant::now());
         self.walk(
             reader,
             snapshot,
             &query.filter,
             &model.plan.terms,
+            lexical_literal(query.text),
+            work.as_deref_mut(),
             |r, row, tf, visible| {
                 if model
                     .plan
@@ -568,6 +697,9 @@ impl Index {
                 Ok(())
             },
         )?;
+        if let Some(work) = work.as_deref_mut() {
+            work.scoring_pass_ns += scoring_began.unwrap().elapsed().as_nanos();
+        }
         Ok((top.finish(), anchored))
     }
     fn walk(
@@ -576,6 +708,8 @@ impl Index {
         snapshot: &Snapshot,
         filter: &Filter,
         terms: &[(String, usize)],
+        need_text: bool,
+        mut work: Option<&mut SearchProfile>,
         mut visit: impl FnMut(&Assigned, &codec::Row, &[u32], bool) -> Result<()>,
     ) -> Result<()> {
         let bound = reader.snapshot(snapshot)?;
@@ -586,13 +720,13 @@ impl Index {
             }
             let segment = load_segment(reader, &self.directory, &self.manifest, reference)?;
             let end = (start + segment.rows.len()).min(bound);
-            let mut local = 0usize;
-            reader.scan(snapshot.watermark(), start, end, |r| {
-                let row = segment.rows.get(local).ok_or(Error::Authority)?;
-                if row.id != r.id {
-                    return Err(Error::Authority);
-                }
-                let tf: Vec<_> = terms
+            if let Some(work) = work.as_deref_mut() {
+                work.segment_loads += 1;
+                work.segment_bytes += (reference.bytes + SEAL_OVERHEAD) as u64;
+                work.rows_examined += (end - start) as u64;
+            }
+            let tf_at = |local: usize| -> Vec<u32> {
+                terms
                     .iter()
                     .map(|(t, _)| {
                         segment
@@ -605,12 +739,56 @@ impl Index {
                             })
                             .unwrap_or(0)
                     })
-                    .collect();
-                let visible = reader.visible(snapshot, r, filter)?;
-                visit(r, row, &tf, visible)?;
-                local += 1;
-                Ok(true)
-            })?;
+                    .collect()
+            };
+            if let Some(metadata) =
+                visibility::load(reader, &self.directory, &self.manifest, reference)?
+            {
+                if let Some(work) = work.as_deref_mut() {
+                    work.visibility_pages += 1;
+                    work.visibility_bytes +=
+                        (reference.visibility.as_ref().ok_or(Error::Authority)?.bytes
+                            + SEAL_OVERHEAD) as u64;
+                }
+                for (local, meta) in metadata.rows.into_iter().take(end - start).enumerate() {
+                    let row = segment.rows.get(local).ok_or(Error::Authority)?;
+                    let mut assigned = meta.assigned();
+                    if row.id != assigned.id {
+                        return Err(Error::Authority);
+                    }
+                    let tf = tf_at(local);
+                    let visible = reader.visible(snapshot, &assigned, filter)?;
+                    if need_text
+                        && visible
+                        && assigned.input.indexed
+                        && (terms.is_empty() || tf.iter().any(|n| *n > 0))
+                    {
+                        if let Some(work) = work.as_deref_mut() {
+                            work.literal_originals += 1;
+                        }
+                        assigned = reader
+                            .assigned(snapshot.watermark(), assigned.id)?
+                            .ok_or(Error::Authority)?;
+                    }
+                    visit(&assigned, row, &tf, visible)?;
+                }
+            } else {
+                if let Some(work) = work.as_deref_mut() {
+                    work.fallback_authority_rows += (end - start) as u64;
+                }
+                let mut local = 0usize;
+                reader.scan(snapshot.watermark(), start, end, |r| {
+                    let row = segment.rows.get(local).ok_or(Error::Authority)?;
+                    if row.id != r.id {
+                        return Err(Error::Authority);
+                    }
+                    let tf = tf_at(local);
+                    let visible = reader.visible(snapshot, r, filter)?;
+                    visit(r, row, &tf, visible)?;
+                    local += 1;
+                    Ok(true)
+                })?;
+            }
             Ok(true)
         })?;
         Ok(())
@@ -648,11 +826,13 @@ fn segment_aad(m: &Manifest, r: &Reference) -> Result<Vec<u8>> {
     a.extend(r.rows.to_le_bytes());
     a.extend((r.bytes as u64).to_le_bytes());
     a.extend((r.decoded as u64).to_le_bytes());
+    m.cache_durability.bind(&mut a);
     Ok(a)
 }
 fn check_manifest(reader: &Reader, m: &Manifest) -> Result<()> {
     let tip = reader.watermark()?;
     if m.format != FORMAT
+        || m.cache_durability != reader.cache_durability
         || m.origin != tip.origin
         || m.identity != tip.identity
         || m.rows > MAX_RECORDS
@@ -789,7 +969,20 @@ fn read_bounded(path: &Path, bound: usize) -> Result<Vec<u8>> {
     }
     Ok(bytes)
 }
+fn write_cache_new(reader: &Reader, path: &Path, bytes: &[u8]) -> Result<()> {
+    write_new_sync(path, bytes, reader.cache_durability.is_durable())
+}
+fn cache_directory_sync(reader: &Reader, path: &Path) -> Result<()> {
+    if reader.cache_durability.is_durable() {
+        directory_sync(path)
+    } else {
+        Ok(())
+    }
+}
 fn write_new(path: &Path, bytes: &[u8]) -> Result<()> {
+    write_new_sync(path, bytes, true)
+}
+fn write_new_sync(path: &Path, bytes: &[u8], durable: bool) -> Result<()> {
     let mut file = OpenOptions::new()
         .write(true)
         .create_new(true)
@@ -797,9 +990,12 @@ fn write_new(path: &Path, bytes: &[u8]) -> Result<()> {
         .custom_flags(libc::O_NOFOLLOW)
         .open(path)
         .map_err(|_| Error::Unavailable)?;
-    file.write_all(bytes)
-        .and_then(|_| file.sync_all())
-        .map_err(|_| Error::Unavailable)
+    file.write_all(bytes).map_err(|_| Error::Unavailable)?;
+    if durable {
+        file.sync_all().map_err(|_| Error::Unavailable)
+    } else {
+        Ok(())
+    }
 }
 fn directory_sync(dir: &Path) -> Result<()> {
     File::open(dir)

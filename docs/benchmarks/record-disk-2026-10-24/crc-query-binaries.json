@@ -1,0 +1,10 @@
+{
+  "control": {
+    "source": "980c0f57566251aa49f4321521badc2833b8d3c4",
+    "sha256": "849a70e8868cdb5f45a6f09fe2bc5efb3aaaf1815fa3bbf218272df0684388f7"
+  },
+  "candidate": {
+    "source": "2415b8c4c8b8d044d12053a233a5e7e73183bdee",
+    "sha256": "a04ac02109c703c5cdca62da76e2cfa36cbe97e6f2baafeded9aca6d3668ce41"
+  }
+}

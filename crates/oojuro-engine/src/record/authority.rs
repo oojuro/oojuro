@@ -439,7 +439,7 @@ impl RecordLog {
             .map_err(|_| Error::Authority)
     }
 }
-fn carrier(bytes: &[u8]) -> NewRecord<'_> {
+pub(super) fn carrier(bytes: &[u8]) -> NewRecord<'_> {
     NewRecord {
         kind: 7,
         valid_at: 0,
@@ -464,7 +464,7 @@ pub(super) fn aad(w: &Watermark) -> Result<Vec<u8>> {
     );
     Ok(bytes)
 }
-fn now() -> Result<i64> {
+pub(super) fn now() -> Result<i64> {
     i64::try_from(
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
@@ -473,7 +473,7 @@ fn now() -> Result<i64> {
     )
     .map_err(|_| Error::Bounds)
 }
-fn namespace(dir: &Path) -> Result<()> {
+pub(super) fn namespace(dir: &Path) -> Result<()> {
     use std::os::unix::fs::{DirBuilderExt, OpenOptionsExt};
     if let Ok(meta) = fs::symlink_metadata(dir) {
         if !meta.is_dir() || meta.file_type().is_symlink() {

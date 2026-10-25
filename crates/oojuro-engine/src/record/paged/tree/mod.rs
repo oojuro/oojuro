@@ -2,6 +2,7 @@
 //! Ref birth bindings are authenticated by parents and independently checked as ancestors.
 mod sort;
 use super::super::*;
+use super::CacheDurability;
 use oojuro_store::crypto::{FrameCipher, SEAL_OVERHEAD, random_key};
 pub(super) use sort::Sorter;
 use std::{
@@ -62,6 +63,7 @@ pub(super) struct Context<'a> {
     pub class: KeyClass,
     pub sort_of: Option<Purpose>,
     pub cache: Option<&'a PageCache>,
+    pub cache_durability: CacheDurability,
 }
 impl<'a> Context<'a> {
     pub fn check(&self) -> Result<Vec<u8>> {
@@ -73,6 +75,9 @@ impl<'a> Context<'a> {
             }
             self.purpose
         };
+        if self.class == KeyClass::RetainedControl && !self.cache_durability.is_durable() {
+            return Err(Error::Scope);
+        }
         if self.class == KeyClass::RetainedControl
             && !matches!(purpose, Purpose::Prefix | Purpose::Request)
         {
@@ -213,6 +218,8 @@ pub(super) struct Reference {
 #[serde(deny_unknown_fields)]
 pub(super) struct Root {
     pub format: u32,
+    #[serde(default, skip_serializing_if = "CacheDurability::is_durable")]
+    pub cache_durability: CacheDurability,
     pub purpose: Purpose,
     pub binding: Vec<u8>,
     pub node: Option<Reference>,
@@ -222,6 +229,7 @@ pub(super) struct Root {
 impl Root {
     pub fn check(&self, ctx: &Context<'_>) -> Result<()> {
         if self.format != 1
+            || self.cache_durability != ctx.cache_durability
             || self.purpose != ctx.purpose
             || self.binding != ctx.check()?
             || self.node.as_ref().map_or(0, |n| n.count) != self.count
@@ -265,6 +273,7 @@ fn aad(ctx: &Context<'_>, r: &Reference) -> Result<Vec<u8>> {
     bytes.push(u8::from(ctx.class == KeyClass::RetainedControl));
     bytes.extend(ctx.identity);
     bytes.extend(encode_ref(r)?);
+    ctx.cache_durability.bind(&mut bytes);
     Ok(bytes)
 }
 fn path(dir: &Path, generation: [u8; 32], file: u64, temp: bool) -> PathBuf {
@@ -287,7 +296,12 @@ pub(super) fn prepare_directory(dir: &Path) -> Result<()> {
         Ok(m) if !m.is_dir() || m.file_type().is_symlink() => return Err(Error::Invalid),
         Ok(_) => (),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            fs::create_dir(dir).map_err(|_| Error::Unavailable)?
+            fs::create_dir(dir).map_err(|_| Error::Unavailable)?;
+            sync_dir(
+                dir.parent()
+                    .filter(|p| !p.as_os_str().is_empty())
+                    .unwrap_or(Path::new(".")),
+            )?;
         }
         Err(_) => return Err(Error::Unavailable),
     }
@@ -330,13 +344,17 @@ impl<'a> Pack<'a> {
         }
         if let Some(file) = self.current.take() {
             self.poisoned = true;
-            file.sync_all().map_err(|_| Error::Unavailable)?;
+            if self.ctx.cache_durability.is_durable() {
+                file.sync_all().map_err(|_| Error::Unavailable)?;
+            }
             fs::rename(
                 path(self.ctx.directory, self.generation, self.number, true),
                 path(self.ctx.directory, self.generation, self.number, false),
             )
             .map_err(|_| Error::Unavailable)?;
-            sync_dir(self.ctx.directory)?;
+            if self.ctx.cache_durability.is_durable() {
+                sync_dir(self.ctx.directory)?;
+            }
             #[cfg(test)]
             test_phase("PackPublished");
             self.poisoned = false;
@@ -568,6 +586,7 @@ impl<'a> Builder<'a> {
         };
         let root = Root {
             format: 1,
+            cache_durability: self.pack.ctx.cache_durability,
             purpose: self.pack.ctx.purpose,
             binding: self.pack.binding.clone(),
             node,
@@ -702,6 +721,7 @@ pub(super) fn get_ancestor(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<
 pub(super) fn validate_ancestor_root(ctx: &Context<'_>, root: &Root) -> Result<()> {
     ctx.check()?;
     if root.format != 1
+        || root.cache_durability != ctx.cache_durability
         || root.purpose != ctx.purpose
         || root.node.as_ref().map_or(0, |n| n.count) != root.count
     {
@@ -737,8 +757,48 @@ impl<'a> Editor<'a> {
         };
         self.root = Root {
             format: 1,
+            cache_durability: self.pack.ctx.cache_durability,
             purpose: self.pack.ctx.purpose,
             binding: self.pack.ctx.check()?,
+            count: r.count,
+            node: Some(r),
+            fresh: None,
+        };
+        Ok(())
+    }
+    /// One bounded batch rewrites each affected path once, rather than once per entry.
+    pub fn insert_batch(&mut self, mut entries: Vec<Entry>) -> Result<()> {
+        if entries.is_empty() || entries.len() > 1000 {
+            return Err(Error::Bounds);
+        }
+        let mut bytes = 0usize;
+        for entry in &entries {
+            Entry::new(entry.key.clone(), entry.value.clone())?;
+            bytes = bytes
+                .checked_add(entry.key.len() + entry.value.len())
+                .ok_or(Error::Bounds)?;
+            if bytes > MAX_BATCH_BYTES {
+                return Err(Error::Bounds);
+            }
+        }
+        entries.sort_by(|a, b| a.key.cmp(&b.key));
+        if entries.windows(2).any(|w| w[0].key == w[1].key) {
+            return Err(Error::Conflict);
+        }
+        let (mut refs, mut level) = match &self.root.node {
+            Some(r) => (insert_batch_at(&mut self.pack, r, entries)?, r.level),
+            None => (put_split(&mut self.pack, Node::Leaf(entries), 0)?, 0),
+        };
+        while refs.len() > 1 {
+            level = level.checked_add(1).ok_or(Error::Bounds)?;
+            refs = put_split(&mut self.pack, Node::Branch(refs), level)?;
+        }
+        let r = refs.pop().ok_or(Error::Authority)?;
+        self.root = Root {
+            format: 1,
+            cache_durability: self.pack.ctx.cache_durability,
+            purpose: self.pack.ctx.purpose,
+            binding: self.pack.binding.clone(),
             count: r.count,
             node: Some(r),
             fresh: None,
@@ -782,6 +842,64 @@ fn insert_at(pack: &mut Pack<'_>, reference: &Reference, entry: Entry) -> Result
         pack.put(&node, reference.level)?,
         pack.put(&second, reference.level)?,
     ])
+}
+fn insert_batch_at(
+    pack: &mut Pack<'_>,
+    reference: &Reference,
+    entries: Vec<Entry>,
+) -> Result<Vec<Reference>> {
+    match pack.load(reference)? {
+        Node::Leaf(old) => {
+            let mut old = old.into_iter().peekable();
+            let mut new = entries.into_iter().peekable();
+            let mut merged = Vec::new();
+            while let (Some(a), Some(b)) = (old.peek(), new.peek()) {
+                match a.key.cmp(&b.key) {
+                    std::cmp::Ordering::Less => merged.push(old.next().unwrap()),
+                    std::cmp::Ordering::Greater => merged.push(new.next().unwrap()),
+                    std::cmp::Ordering::Equal => return Err(Error::Conflict),
+                }
+            }
+            merged.extend(old);
+            merged.extend(new);
+            put_split(pack, Node::Leaf(merged), reference.level)
+        }
+        Node::Branch(children) => {
+            let last = children.len() - 1;
+            let mut incoming = entries.into_iter().peekable();
+            let mut merged = Vec::new();
+            for (at, child) in children.into_iter().enumerate() {
+                let mut batch = Vec::new();
+                while incoming
+                    .peek()
+                    .is_some_and(|e| at == last || e.key <= child.last)
+                {
+                    batch.push(incoming.next().unwrap());
+                }
+                if batch.is_empty() {
+                    merged.push(child);
+                } else {
+                    merged.extend(insert_batch_at(pack, &child, batch)?);
+                }
+            }
+            put_split(pack, Node::Branch(merged), reference.level)
+        }
+    }
+}
+fn put_split(pack: &mut Pack<'_>, mut node: Node, level: u8) -> Result<Vec<Reference>> {
+    if node_len(&node) <= MAX_CHILDREN && encode_node(&node, level).is_ok() {
+        return Ok(vec![pack.put(&node, level)?]);
+    }
+    if node_len(&node) < 2 {
+        return Err(Error::Bounds);
+    }
+    let second = match &mut node {
+        Node::Leaf(rows) => Node::Leaf(rows.split_off(rows.len() / 2)),
+        Node::Branch(rows) => Node::Branch(rows.split_off(rows.len() / 2)),
+    };
+    let mut refs = put_split(pack, node, level)?;
+    refs.extend(put_split(pack, second, level)?);
+    Ok(refs)
 }
 fn node_len(node: &Node) -> usize {
     match node {

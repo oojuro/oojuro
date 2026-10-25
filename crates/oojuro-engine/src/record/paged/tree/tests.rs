@@ -69,6 +69,7 @@ impl Fixture {
             class: KeyClass::Data,
             sort_of: None,
             cache: None,
+            cache_durability: CacheDurability::Durable,
         }
     }
 }
@@ -248,4 +249,71 @@ fn bounded_page_cache_cannot_reuse_plaintext_under_a_different_cipher() {
     let mut wrong = ctx;
     wrong.cipher = &other;
     assert!(get(wrong, &root, &0u64.to_be_bytes()).is_err());
+}
+
+#[test]
+fn bounded_batch_editor_matches_sorted_map_and_preserves_ancestor_pages() {
+    let f = Fixture::new();
+    let mut b = Builder::new(f.ctx()).unwrap();
+    for n in (0..6000).step_by(2) {
+        b.push(entry(n)).unwrap();
+    }
+    let old = b.finish().unwrap();
+    f.authority.advance();
+    let mut edit = Editor::new(f.ctx(), old.clone()).unwrap();
+    for start in (1..6000).step_by(2000) {
+        let mut batch: Vec<_> = (start..start + 2000).step_by(2).map(entry).collect();
+        batch.reverse();
+        edit.insert_batch(batch).unwrap();
+    }
+    let current = edit.finish().unwrap();
+    assert_eq!(current.count, 6000);
+    let mut cursor = Cursor::seek(f.ctx(), &current, &[]).unwrap();
+    for n in 0..6000 {
+        assert_eq!(cursor.next().unwrap().unwrap().key, entry(n).key);
+    }
+    assert!(cursor.next().unwrap().is_none());
+    let mut old_cursor = Cursor::seek_ancestor(f.ctx(), &old, &[]).unwrap();
+    for n in (0..6000).step_by(2) {
+        assert_eq!(old_cursor.next().unwrap().unwrap().key, entry(n).key);
+    }
+    assert!(old_cursor.next().unwrap().is_none());
+    let mut edit = Editor::new(f.ctx(), current).unwrap();
+    assert_eq!(edit.insert_batch(vec![entry(2)]), Err(Error::Conflict));
+    assert_eq!(
+        edit.insert_batch(vec![entry(7000), entry(7000)]),
+        Err(Error::Conflict)
+    );
+    assert_eq!(
+        edit.insert_batch((7000..8001).map(entry).collect()),
+        Err(Error::Bounds)
+    );
+}
+
+#[test]
+fn cache_mode_is_bound_to_roots_pages_and_plaintext_reuse_and_cannot_weaken_control() {
+    let f = Fixture::new();
+    let cipher = Arc::new(FrameCipher::new(&[99; 32]));
+    let cache = PageCache::new(cipher.clone());
+    let mut weak = f.ctx();
+    weak.cipher = &cipher;
+    weak.cache = Some(&cache);
+    weak.cache_durability = CacheDurability::Rebuildable;
+    let mut builder = Builder::new(weak.clone()).unwrap();
+    builder.push(entry(1)).unwrap();
+    let root = builder.finish().unwrap();
+    assert!(
+        get(weak.clone(), &root, &1u64.to_be_bytes())
+            .unwrap()
+            .is_some()
+    );
+    let mut strong = weak.clone();
+    strong.cache_durability = CacheDurability::Durable;
+    assert!(root.check(&strong).is_err());
+    let mut forged = root.clone();
+    forged.cache_durability = CacheDurability::Durable;
+    assert!(get(strong, &forged, &1u64.to_be_bytes()).is_err());
+    weak.class = KeyClass::RetainedControl;
+    weak.purpose = Purpose::Prefix;
+    assert_eq!(weak.check(), Err(Error::Scope));
 }

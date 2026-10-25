@@ -805,3 +805,1396 @@ fn future_rows_change_literal_df_but_old_snapshot_keeps_native_bits_and_identifi
         );
     }
 }
+
+fn disk_policy(records: usize) -> DiskLimits {
+    DiskLimits::new(records, 1 << 30, 1 << 30, 10000).unwrap()
+}
+fn disk_writer(f: &Fixture, records: usize) -> Writer {
+    disk_writer_mode(f, records, CacheDurability::Durable, None)
+}
+fn disk_writer_mode(
+    f: &Fixture,
+    records: usize,
+    mode: CacheDurability,
+    minimum: Option<&Watermark>,
+) -> Writer {
+    Writer::open_clock_with_cache_policy(
+        &f.root.join("authority"),
+        &KEY,
+        identity(),
+        &f.root.join("directory"),
+        minimum,
+        disk_policy(records),
+        Arc::new(|| Ok(100)),
+        mode,
+    )
+    .unwrap()
+}
+
+#[test]
+fn disk_writer_exact_retry_current_index_old_snapshot_and_native_rank_match() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 50);
+    assert_eq!(writer.reader().unwrap().locator_count(), 0);
+    let mut index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    let first = vec![
+        row("alpha old foo_bar", Some("memory"), 10),
+        row("alpha original duplicate", None, 11),
+    ];
+    let ack = writer.append_indexed(&mut index, "first", &first).unwrap();
+    let old = writer
+        .reader()
+        .unwrap()
+        .view(scope(), AsOf::default())
+        .unwrap();
+    let old_hits = signature(
+        index
+            .search_view(
+                writer.reader().unwrap(),
+                &old,
+                &query("alpha", AsOf::default()),
+            )
+            .unwrap(),
+    );
+    let second = vec![
+        row("alpha newest", Some("memory"), 20),
+        row("alpha backdated", Some("memory"), 5),
+    ];
+    let next = writer.append("second", &second).unwrap();
+    assert!(
+        index
+            .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+            .is_err()
+    );
+    index.refresh(writer.reader().unwrap()).unwrap();
+    assert_eq!(
+        writer.append_indexed(&mut index, "first", &first).unwrap(),
+        ack
+    );
+    assert_eq!(writer.reader().unwrap().watermark().unwrap().records, 4);
+    let mut changed = first.clone();
+    changed[0].text.push('x');
+    assert_eq!(writer.append("first", &changed), Err(Error::Conflict));
+    assert_eq!(
+        signature(
+            index
+                .search_view(
+                    writer.reader().unwrap(),
+                    &old,
+                    &query("alpha", AsOf::default())
+                )
+                .unwrap()
+        ),
+        old_hits
+    );
+    let snapshot = writer
+        .reader()
+        .unwrap()
+        .view(scope(), AsOf::default())
+        .unwrap();
+    assert_eq!(
+        writer
+            .reader()
+            .unwrap()
+            .get_key(&snapshot, "memory", 10000)
+            .unwrap()
+            .unwrap()
+            .id,
+        next.ids[0]
+    );
+    let actual: Vec<_> = ["alpha", "foo_bar", "\"alpha original\"", "key:memory", ""]
+        .iter()
+        .map(|text| {
+            signature(
+                index
+                    .search(writer.reader().unwrap(), &query(text, AsOf::default()))
+                    .unwrap(),
+            )
+        })
+        .collect();
+    let originals = writer
+        .reader()
+        .unwrap()
+        .read_ordinals(
+            &snapshot,
+            0,
+            Limits {
+                entries: 1000,
+                bytes: 1 << 20,
+            },
+        )
+        .unwrap();
+    assert_eq!(originals.len(), 4);
+    assert_eq!(originals[0].text, first[0].text);
+    assert!(
+        writer
+            .reader()
+            .unwrap()
+            .read_ordinals(
+                &snapshot,
+                0,
+                Limits {
+                    entries: 1000,
+                    bytes: 8
+                }
+            )
+            .is_err()
+    );
+    let past = writer
+        .reader()
+        .unwrap()
+        .view(
+            scope(),
+            AsOf {
+                known_at: ack.recorded_at[1],
+                ..AsOf::default()
+            },
+        )
+        .unwrap();
+    assert_eq!(
+        writer
+            .reader()
+            .unwrap()
+            .read_ordinals(
+                &past,
+                0,
+                Limits {
+                    entries: 1000,
+                    bytes: 1 << 20
+                }
+            )
+            .unwrap()
+            .len(),
+        2
+    );
+    let minimum = writer.reader().unwrap().watermark().unwrap();
+    drop(index);
+    drop(writer);
+    // Small new-path stores remain byte-format compatible with the bounded API.
+    let log = f.log();
+    let native = super::super::Index::rebuild(&log).unwrap();
+    for (at, text) in ["alpha", "foo_bar", "\"alpha original\"", "key:memory", ""]
+        .iter()
+        .enumerate()
+    {
+        assert_eq!(
+            signature(native.search(&log, &query(text, AsOf::default())).unwrap()),
+            actual[at]
+        );
+    }
+    drop(native);
+    drop(log);
+    let writer = Writer::open_disk(
+        &f.root.join("authority"),
+        &KEY,
+        identity(),
+        &f.root.join("directory"),
+        Some(&minimum),
+        disk_policy(50),
+    )
+    .unwrap();
+    assert_eq!(
+        writer.reader().unwrap().receipt("first").unwrap(),
+        Some(ack)
+    );
+    let index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    assert_eq!(index.opened(), Opened::Loaded);
+    assert_eq!(
+        signature(
+            index
+                .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+                .unwrap()
+        ),
+        actual[0]
+    );
+    std::thread::scope(|threads| {
+        for _ in 0..10 {
+            let reader = writer.reader().unwrap();
+            let snapshot = &snapshot;
+            threads.spawn(move || {
+                assert_eq!(
+                    reader.get_id(snapshot, 10, 10000).unwrap().unwrap().text,
+                    "alpha original duplicate"
+                );
+            });
+        }
+    });
+}
+#[test]
+fn disk_writer_admission_does_not_expand_legacy_guards_and_retries_survive_full_store() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 2);
+    let inputs = vec![
+        row("bounded original", None, 1),
+        row("bounded second", None, 2),
+    ];
+    assert_eq!(
+        writer.append("too many", &[inputs.clone(), inputs.clone()].concat()),
+        Err(Error::Bounds)
+    );
+    let ack = writer.append("full", &inputs).unwrap();
+    assert_eq!(writer.append("full", &inputs).unwrap(), ack);
+    assert_eq!(writer.append("overflow", &inputs[..1]), Err(Error::Bounds));
+    assert_eq!(MAX_RECORDS, 100000);
+    assert_eq!(MAX_STATE_BYTES, 128 << 20);
+    drop(writer);
+    assert!(
+        Reader::open_disk_with_limits(
+            &f.root.join("authority"),
+            &KEY,
+            identity(),
+            &f.root.join("directory"),
+            None,
+            disk_policy(1)
+        )
+        .is_err()
+    );
+    let mut writer = disk_writer(&f, 2);
+    assert_eq!(writer.append("full", &inputs).unwrap(), ack);
+}
+#[test]
+fn disk_writer_unknown_ack_and_failed_search_publication_recover_exact_receipts() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 100);
+    writer.hook = Some(Box::new(|phase| {
+        if matches!(phase, authority::Phase::AfterStore) {
+            panic!("synthetic lost ACK");
+        }
+    }));
+    let original = vec![row("alpha exact after lost acknowledgement", None, 1)];
+    assert!(
+        std::panic::catch_unwind(std::panic::AssertUnwindSafe(
+            || writer.append("uncertain", &original)
+        ))
+        .is_err()
+    );
+    assert!(writer.reader().is_err());
+    drop(writer);
+    let mut writer = disk_writer(&f, 100);
+    let ack = writer
+        .reader()
+        .unwrap()
+        .receipt("uncertain")
+        .unwrap()
+        .unwrap();
+    assert_eq!(writer.append("uncertain", &original).unwrap(), ack);
+    let cache = f.root.join("disk-index");
+    let mut index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    fs::remove_file(cache.join("DISK_RECORD_INDEX")).unwrap();
+    fs::create_dir(cache.join("DISK_RECORD_INDEX")).unwrap();
+    let input = vec![row(
+        "alpha committed despite disposable cache failure",
+        None,
+        2,
+    )];
+    assert!(
+        writer
+            .append_indexed(&mut index, "cache failure", &input)
+            .is_err()
+    );
+    assert!(
+        index
+            .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+            .is_err()
+    );
+    let committed = writer
+        .reader()
+        .unwrap()
+        .receipt("cache failure")
+        .unwrap()
+        .unwrap();
+    fs::remove_dir(cache.join("DISK_RECORD_INDEX")).unwrap();
+    drop(index);
+    let mut index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    assert_eq!(
+        writer
+            .append_indexed(&mut index, "cache failure", &input)
+            .unwrap(),
+        committed
+    );
+    assert_eq!(
+        index
+            .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+            .unwrap()
+            .hits
+            .len(),
+        2
+    );
+    drop(index);
+    drop(writer);
+    fs::remove_file(cache.join("DISK_RECORD_INDEX")).unwrap();
+    fs::remove_file(f.root.join("directory/DIRECTORY")).unwrap();
+    let writer = disk_writer(&f, 100);
+    let index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    assert_eq!(
+        writer.reader().unwrap().receipt("cache failure").unwrap(),
+        Some(committed)
+    );
+    assert_eq!(
+        index
+            .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+            .unwrap()
+            .hits
+            .len(),
+        2
+    );
+}
+
+#[test]
+#[ignore]
+fn disk_writer_crash_child() {
+    let f = Fixture {
+        root: PathBuf::from(std::env::var("OOJURO_WRITER_CRASH_ROOT").unwrap()),
+    };
+    let phase = std::env::var("OOJURO_WRITER_CRASH_PHASE").unwrap();
+    let mode = if std::env::var_os("OOJURO_WRITER_REBUILDABLE").is_some() {
+        CacheDurability::Rebuildable
+    } else {
+        CacheDurability::Durable
+    };
+    let mut writer = disk_writer_mode(&f, 1000, mode, None);
+    let mut index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    if phase == "AfterStore" {
+        writer.hook = Some(Box::new(|at| {
+            if matches!(at, authority::Phase::AfterStore) {
+                writer_boundary();
+            }
+        }));
+    } else if let Some(phase) = phase.strip_prefix("index:") {
+        let phase = phase.to_owned();
+        index.hook_for_test(Box::new(move |at| {
+            if at == phase {
+                writer_boundary()
+            }
+        }));
+    }
+    if std::env::var_os("OOJURO_WRITER_GROUP").is_some() {
+        let first = [row("alpha child exact", Some("memory"), 20)];
+        let second = [row("alpha grouped independent", None, 21)];
+        writer
+            .append_group_indexed(
+                &mut index,
+                &[
+                    Append {
+                        request: "child",
+                        inputs: &first,
+                    },
+                    Append {
+                        request: "child-2",
+                        inputs: &second,
+                    },
+                ],
+            )
+            .unwrap();
+    } else {
+        writer
+            .append_indexed(
+                &mut index,
+                "child",
+                &[row("alpha child exact", Some("memory"), 20)],
+            )
+            .unwrap();
+    }
+    panic!("writer boundary not reached");
+}
+fn writer_boundary() {
+    use std::io::Write;
+    println!("WRITER_BOUNDARY_READY");
+    std::io::stdout().flush().unwrap();
+    loop {
+        std::thread::park()
+    }
+}
+#[test]
+fn disk_writer_sigkill_actual_append_directory_and_index_publication_recovers_receipts() {
+    writer_crash_matrix(false, CacheDurability::Durable);
+}
+#[test]
+fn disk_group_sigkill_independent_receipts_and_searchable_ack_boundaries() {
+    writer_crash_matrix(true, CacheDurability::Durable);
+}
+#[test]
+fn disk_rebuildable_group_sigkill_preserves_source_receipts_and_old_snapshots() {
+    writer_crash_matrix(true, CacheDurability::Rebuildable);
+}
+fn writer_crash_matrix(grouped: bool, mode: CacheDurability) {
+    use std::{
+        io::{BufRead, BufReader},
+        process::{Command, Stdio},
+        sync::mpsc,
+        time::Duration,
+    };
+    for phase in [
+        "AfterStore",
+        "directory:PackTemp",
+        "directory:PackPublished",
+        "directory:RootPagesDurable",
+        "directory:RootTemp",
+        "directory:RootPublished",
+        "directory:RootDurable",
+        "index:VisibilityTemp",
+        "index:VisibilityPublished",
+        "index:SegmentTemp",
+        "index:SegmentPublished",
+        "index:DirectoryPagesDurable",
+        "index:ManifestTemp",
+        "index:ManifestPublished",
+        "index:ManifestDurable",
+    ] {
+        if !mode.is_durable() && phase.contains("Durable") {
+            continue;
+        }
+        let f = Fixture::new();
+        let mut writer = disk_writer_mode(&f, 1000, mode, None);
+        let mut index =
+            Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+        writer
+            .append_indexed(
+                &mut index,
+                "parent",
+                &[
+                    row("alpha parent exact", Some("memory"), 10),
+                    row("alpha independent", None, 11),
+                ],
+            )
+            .unwrap();
+        let old = writer
+            .reader()
+            .unwrap()
+            .view(scope(), AsOf::default())
+            .unwrap();
+        let old_signature = signature(
+            index
+                .search_view(
+                    writer.reader().unwrap(),
+                    &old,
+                    &query("alpha", AsOf::default()),
+                )
+                .unwrap(),
+        );
+        drop(index);
+        drop(writer);
+        let mut command = Command::new(std::env::current_exe().unwrap());
+        command
+            .args([
+                "record::paged::tests::disk_writer_crash_child",
+                "--ignored",
+                "--exact",
+                "--nocapture",
+            ])
+            .env("OOJURO_WRITER_CRASH_ROOT", &f.root)
+            .env("OOJURO_WRITER_CRASH_PHASE", phase)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped());
+        if let Some(phase) = phase.strip_prefix("directory:") {
+            command.env("OOJURO_DIRECTORY_CRASH_PHASE", phase);
+        }
+        if grouped {
+            command.env("OOJURO_WRITER_GROUP", "1");
+        }
+        if !mode.is_durable() {
+            command.env("OOJURO_WRITER_REBUILDABLE", "1");
+        }
+        let mut child = command.spawn().unwrap();
+        let output = child.stdout.take().unwrap();
+        let (tx, rx) = mpsc::channel();
+        let listen = std::thread::spawn(move || {
+            for line in BufReader::new(output).lines() {
+                if line.unwrap().contains("BOUNDARY_READY") {
+                    let _ = tx.send(());
+                    break;
+                }
+            }
+        });
+        let reached = rx.recv_timeout(Duration::from_secs(10));
+        let _ = child.kill();
+        let status = child.wait().unwrap();
+        listen.join().unwrap();
+        assert!(reached.is_ok(), "phase={phase}");
+        use std::os::unix::process::ExitStatusExt;
+        assert_eq!(status.signal(), Some(libc::SIGKILL));
+        let mut writer = disk_writer_mode(&f, 1000, mode, None);
+        let receipt = writer.reader().unwrap().receipt("child").unwrap().unwrap();
+        assert_eq!(receipt.ids, vec![11]);
+        if grouped {
+            let second = writer
+                .reader()
+                .unwrap()
+                .receipt("child-2")
+                .unwrap()
+                .unwrap();
+            assert_eq!(second.ids, vec![12]);
+            let first_input = [row("alpha child exact", Some("memory"), 20)];
+            let second_input = [row("alpha grouped independent", None, 21)];
+            assert_eq!(
+                writer
+                    .append_group(&[
+                        Append {
+                            request: "child-2",
+                            inputs: &second_input
+                        },
+                        Append {
+                            request: "child",
+                            inputs: &first_input
+                        }
+                    ])
+                    .unwrap(),
+                vec![second, receipt.clone()]
+            );
+        }
+        let mut index =
+            Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+        assert_eq!(
+            writer
+                .append_indexed(
+                    &mut index,
+                    "child",
+                    &[row("alpha child exact", Some("memory"), 20)]
+                )
+                .unwrap(),
+            receipt
+        );
+        assert_eq!(
+            signature(
+                index
+                    .search_view(
+                        writer.reader().unwrap(),
+                        &old,
+                        &query("alpha", AsOf::default())
+                    )
+                    .unwrap()
+            ),
+            old_signature,
+            "phase={phase}"
+        );
+        assert_eq!(
+            index
+                .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+                .unwrap()
+                .hits
+                .len(),
+            if grouped { 3 } else { 2 }
+        );
+        let snapshot = writer
+            .reader()
+            .unwrap()
+            .view(scope(), AsOf::default())
+            .unwrap();
+        let originals = writer
+            .reader()
+            .unwrap()
+            .get_ids(&snapshot, &[11, 10, 11, 0, 999], 1 << 20)
+            .unwrap();
+        assert_eq!(originals[0].as_ref().unwrap().text, "alpha child exact");
+        assert_eq!(originals[1].as_ref().unwrap().text, "alpha independent");
+        assert_eq!(
+            originals[0].as_ref().unwrap().id,
+            originals[2].as_ref().unwrap().id
+        );
+        assert!(originals[3].is_none() && originals[4].is_none());
+    }
+}
+#[test]
+fn disk_writer_evicted_births_old_prefix_and_copied_origin_fork_are_checked() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 1000);
+    writer
+        .append("genesis", &[row("alpha original", Some("memory"), 0)])
+        .unwrap();
+    let old = writer
+        .reader()
+        .unwrap()
+        .view(scope(), AsOf::default())
+        .unwrap();
+    for n in 1..90 {
+        writer
+            .append(
+                &format!("generation-{n}"),
+                &[row(&format!("alpha version {n}"), Some("memory"), n)],
+            )
+            .unwrap();
+    }
+    let latest = writer
+        .reader()
+        .unwrap()
+        .view(scope(), AsOf::default())
+        .unwrap();
+    assert_eq!(
+        writer
+            .reader()
+            .unwrap()
+            .get_key(&old, "memory", 10000)
+            .unwrap()
+            .unwrap()
+            .text,
+        "alpha original"
+    );
+    assert_eq!(
+        writer
+            .reader()
+            .unwrap()
+            .get_key(&latest, "memory", 10000)
+            .unwrap()
+            .unwrap()
+            .text,
+        "alpha version 89"
+    );
+    assert!(
+        writer
+            .reader()
+            .unwrap()
+            .get_ids(&old, &[9, 98], 10000)
+            .unwrap()[1]
+            .is_none()
+    );
+    let future = writer.reader().unwrap().watermark().unwrap();
+    drop(writer);
+    let fork = f.root.join("fork");
+    copy(&f.root.join("authority"), &fork);
+    // A same-origin fork keeps the old prefix but must not adopt a later main snapshot.
+    let mut fork_writer = Writer::open_clock(
+        &fork,
+        &KEY,
+        identity(),
+        &f.root.join("fork-directory"),
+        None,
+        disk_policy(1000),
+        Arc::new(|| Ok(100)),
+    )
+    .unwrap();
+    fork_writer
+        .append("fork-tail", &[row("alpha fork branch", Some("memory"), 90)])
+        .unwrap();
+    drop(fork_writer);
+    let mut writer = disk_writer(&f, 1000);
+    writer
+        .append("main-tail", &[row("alpha main branch", Some("memory"), 90)])
+        .unwrap();
+    let main = writer
+        .reader()
+        .unwrap()
+        .view(scope(), AsOf::default())
+        .unwrap();
+    let main_min = writer.reader().unwrap().watermark().unwrap();
+    drop(writer);
+    assert!(
+        Writer::open_disk(
+            &fork,
+            &KEY,
+            identity(),
+            &f.root.join("fork-directory"),
+            Some(&main_min),
+            disk_policy(1000)
+        )
+        .is_err()
+    );
+    let fork_writer = Writer::open_disk(
+        &fork,
+        &KEY,
+        identity(),
+        &f.root.join("fork-directory"),
+        Some(&future),
+        disk_policy(1000),
+    )
+    .unwrap();
+    assert!(
+        fork_writer
+            .reader()
+            .unwrap()
+            .get_id(&main, 99, 10000)
+            .is_err()
+    );
+    assert_eq!(
+        fork_writer
+            .reader()
+            .unwrap()
+            .get_key(&old, "memory", 10000)
+            .unwrap()
+            .unwrap()
+            .text,
+        "alpha original"
+    );
+}
+
+#[test]
+fn disk_visibility_metadata_matches_native_clocks_filters_versions_and_literal_bits() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 1000);
+    let mut index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    for start in (0..120).step_by(5) {
+        let inputs = (start..start + 5)
+            .map(|n| {
+                let mut value = row(
+                    &format!("alpha beta foo_bar literal group{}", n % 4),
+                    if n % 3 == 0 { Some("revision") } else { None },
+                    (n % 71) as i64 - 5,
+                );
+                value.agent_id = format!("source{}", n % 3);
+                value.kind = if n % 2 == 0 {
+                    Kind::Input
+                } else {
+                    Kind::ToolResult
+                };
+                value.tool = Some(format!("tool{}", n % 2));
+                value.status = Some(if n % 5 == 0 {
+                    Status::Error
+                } else {
+                    Status::Ok
+                });
+                value.indexed = n % 7 != 0;
+                value
+            })
+            .collect::<Vec<_>>();
+        writer
+            .append_indexed(&mut index, &format!("batch-{start}"), &inputs)
+            .unwrap();
+    }
+    let mut queries = Vec::new();
+    for text in [
+        "alpha",
+        "foo_bar",
+        "foo_missing",
+        "\"alpha beta\"",
+        "\"literal group3\"",
+        "key:revision",
+        "",
+        "absent",
+    ] {
+        for clock in [
+            AsOf::default(),
+            AsOf {
+                valid_at: 25,
+                ..AsOf::default()
+            },
+            AsOf {
+                known_at: 150,
+                ..AsOf::default()
+            },
+            AsOf {
+                from: 15,
+                valid_at: 40,
+                known_at: 180,
+            },
+        ] {
+            for filter in [
+                Filter::default(),
+                Filter {
+                    agent_id: Some("source1".into()),
+                    ..Filter::default()
+                },
+                Filter {
+                    kind: Some(Kind::ToolResult),
+                    tool: Some("tool1".into()),
+                    status: Some(Status::Ok),
+                    agent_id: None,
+                },
+            ] {
+                queries.push((text.to_owned(), clock, filter));
+            }
+        }
+    }
+    let expected = queries
+        .iter()
+        .map(|(text, as_of, filter)| {
+            let mut q = query(text, *as_of);
+            q.filter = filter.clone();
+            let expected = signature(index.search(writer.reader().unwrap(), &q).unwrap());
+            let (profiled, work) = index.search_profiled(writer.reader().unwrap(), &q).unwrap();
+            assert_eq!(signature(profiled), expected);
+            assert_eq!(work.fallback_authority_rows, 0);
+            expected
+        })
+        .collect::<Vec<_>>();
+    index.merge(writer.reader().unwrap()).unwrap();
+    for (at, (text, as_of, filter)) in queries.iter().enumerate() {
+        let mut q = query(text, *as_of);
+        q.filter = filter.clone();
+        assert_eq!(
+            signature(index.search(writer.reader().unwrap(), &q).unwrap()),
+            expected[at],
+            "after merge {text}"
+        );
+    }
+    drop(index);
+    drop(writer);
+    let log = f.log();
+    let native = super::super::Index::rebuild(&log).unwrap();
+    for (at, (text, as_of, filter)) in queries.iter().enumerate() {
+        let mut q = query(text, *as_of);
+        q.filter = filter.clone();
+        assert_eq!(
+            signature(native.search(&log, &q).unwrap()),
+            expected[at],
+            "native {text}"
+        );
+    }
+    drop(native);
+    drop(log);
+    let writer = disk_writer(&f, 1000);
+    let index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    assert_eq!(index.opened(), Opened::Loaded);
+    let page = fs::read_dir(f.root.join("disk-index"))
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .find(|p| p.file_name().unwrap().to_str().unwrap().starts_with("vis-"))
+        .unwrap();
+    let sealed = fs::read(&page).unwrap();
+    let mut corrupted = sealed.clone();
+    let at = corrupted.len() / 2;
+    corrupted[at] ^= 1;
+    fs::write(&page, corrupted).unwrap();
+    assert!(
+        index
+            .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+            .is_err()
+    );
+    drop(index);
+    let index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    assert_eq!(index.opened(), Opened::Rebuilt);
+    assert_eq!(
+        signature(
+            index
+                .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+                .unwrap()
+        ),
+        expected[0]
+    );
+}
+
+#[test]
+fn disk_group_preserves_independent_retries_clocks_order_conflicts_and_legacy_format() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 1000);
+    let seed = [row("alpha seed", None, 0)];
+    let seed_receipt = writer.append("seed", &seed).unwrap();
+    let first = [
+        row("alpha first version", Some("memory"), 10),
+        row("alpha independent", None, 11),
+    ];
+    let second = [row("alpha second version", Some("memory"), 20)];
+    let mut index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    let receipts = writer
+        .append_group_indexed(
+            &mut index,
+            &[
+                Append {
+                    request: "first",
+                    inputs: &first,
+                },
+                Append {
+                    request: "second",
+                    inputs: &second,
+                },
+                Append {
+                    request: "first",
+                    inputs: &first,
+                },
+                Append {
+                    request: "seed",
+                    inputs: &seed,
+                },
+            ],
+        )
+        .unwrap();
+    assert_eq!(receipts[0], receipts[2]);
+    assert_eq!(receipts[3], seed_receipt);
+    assert_eq!(receipts[0].ids, vec![10, 11]);
+    assert_eq!(receipts[1].ids, vec![12]);
+    assert_eq!(receipts[0].recorded_at, vec![101, 102]);
+    assert_eq!(receipts[1].recorded_at, vec![103]);
+    assert_eq!(receipts[0].watermark.sequence, 2);
+    assert_eq!(receipts[1].watermark.sequence, 3);
+    let before = writer.reader().unwrap().watermark().unwrap();
+    let conflict = [row("different input", Some("memory"), 10)];
+    assert_eq!(
+        writer.append_group(&[
+            Append {
+                request: "fresh-before-conflict",
+                inputs: &seed
+            },
+            Append {
+                request: "first",
+                inputs: &conflict
+            }
+        ]),
+        Err(Error::Conflict)
+    );
+    assert!(
+        writer
+            .reader()
+            .unwrap()
+            .receipt("fresh-before-conflict")
+            .unwrap()
+            .is_none()
+    );
+    assert_eq!(
+        writer.reader().unwrap().watermark().unwrap().records,
+        before.records
+    );
+    assert_eq!(writer.append_group(&[]), Err(Error::Bounds));
+    assert_eq!(
+        writer.append_group(&vec![
+            Append {
+                request: "repeated",
+                inputs: &seed
+            };
+            1001
+        ]),
+        Err(Error::Bounds)
+    );
+    let mut invalid = seed.clone();
+    invalid[0].agent_id.clear();
+    assert_eq!(
+        writer.append_group(&[
+            Append {
+                request: "fresh-before-invalid",
+                inputs: &seed
+            },
+            Append {
+                request: "invalid",
+                inputs: &invalid
+            }
+        ]),
+        Err(Error::Bounds)
+    );
+    assert!(
+        writer
+            .reader()
+            .unwrap()
+            .receipt("fresh-before-invalid")
+            .unwrap()
+            .is_none()
+    );
+    let mut q = query(
+        "alpha",
+        AsOf {
+            known_at: 102,
+            ..AsOf::default()
+        },
+    );
+    let past = signature(index.search(writer.reader().unwrap(), &q).unwrap());
+    q.as_of = AsOf::default();
+    let current = signature(index.search(writer.reader().unwrap(), &q).unwrap());
+    assert_eq!(past.len(), 3);
+    assert_eq!(current.len(), 3);
+    drop(index);
+    drop(writer);
+    let mut log = f.log();
+    let native = super::super::Index::rebuild(&log).unwrap();
+    q.as_of = AsOf {
+        known_at: 102,
+        ..AsOf::default()
+    };
+    assert_eq!(signature(native.search(&log, &q).unwrap()), past);
+    q.as_of = AsOf::default();
+    assert_eq!(signature(native.search(&log, &q).unwrap()), current);
+    drop(native);
+    assert_eq!(log.append("first", &first).unwrap(), receipts[0]);
+    assert_eq!(log.append("second", &second).unwrap(), receipts[1]);
+    drop(log);
+    let mut writer = disk_writer(&f, 1000);
+    assert_eq!(
+        writer
+            .append_group(&[
+                Append {
+                    request: "second",
+                    inputs: &second
+                },
+                Append {
+                    request: "first",
+                    inputs: &first
+                }
+            ])
+            .unwrap(),
+        vec![receipts[1].clone(), receipts[0].clone()]
+    );
+}
+#[test]
+fn disk_group_encoded_capacity_failure_does_not_publish_a_prefix() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 1000);
+    // Each individual input fits, but escaping makes the two fresh batches
+    // exceed the shared 32 MiB group bound. Nothing may commit first.
+    let first = [row(&"\\".repeat(9 << 20), None, 1)];
+    let second = [row(&"\\".repeat(9 << 20), None, 2)];
+    assert_eq!(
+        writer.append_group(&[
+            Append {
+                request: "first",
+                inputs: &first
+            },
+            Append {
+                request: "second",
+                inputs: &second
+            }
+        ]),
+        Err(Error::Bounds)
+    );
+    assert_eq!(writer.reader().unwrap().watermark().unwrap().records, 0);
+    assert!(writer.reader().unwrap().receipt("first").unwrap().is_none());
+}
+
+#[test]
+fn disk_write_phase_profile_preserves_receipts_and_distinguishes_fresh_from_retries() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 1000);
+    let mut index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    let first = [row("alpha first", None, 1)];
+    let second = [row("alpha second", None, 2)];
+    let requests = [
+        Append {
+            request: "first",
+            inputs: &first,
+        },
+        Append {
+            request: "second",
+            inputs: &second,
+        },
+    ];
+    let (receipts, profile) = writer
+        .append_group_indexed_profiled(&mut index, &requests)
+        .unwrap();
+    assert_eq!(profile.submitted_rows, 2);
+    assert_eq!(profile.rows_committed, 2);
+    assert_eq!(profile.fresh_requests, 2);
+    assert!(profile.source_encoded_bytes > 0);
+    let (retry, retry_work) = writer
+        .append_group_indexed_profiled(&mut index, &requests)
+        .unwrap();
+    assert_eq!(receipts, retry);
+    assert_eq!(retry_work.fresh_requests, 0);
+    assert_eq!(retry_work.rows_committed, 0);
+    assert_eq!(retry_work.authority_append_ns, 0);
+    assert_eq!(retry_work.locator_publish_ns, 0);
+    assert_eq!(
+        writer.reader().unwrap().receipt("first").unwrap(),
+        Some(receipts[0].clone())
+    );
+}
+
+#[test]
+fn disk_word_query_uses_only_required_scoring_passes_without_changing_results() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 1000);
+    let mut index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    for start in [0, 500] {
+        let inputs = (start..start + 500)
+            .map(|n| row("alpha foo_bar", None, n))
+            .collect::<Vec<_>>();
+        writer
+            .append_indexed(&mut index, &format!("batch-{start}"), &inputs)
+            .unwrap();
+    }
+    let q = query("alpha", AsOf::default());
+    let (found, work) = index.search_profiled(writer.reader().unwrap(), &q).unwrap();
+    assert_eq!(
+        signature(found),
+        signature(index.search(writer.reader().unwrap(), &q).unwrap())
+    );
+    assert_eq!(work.segment_loads, 2 * index.segment_count() as u64);
+    assert_eq!(work.visibility_pages, 2 * index.segment_count() as u64);
+    assert_eq!(work.rows_examined, 2000);
+    assert_eq!(work.term_pass_ns, 0);
+    assert_eq!(work.presence_pass_ns, 0);
+    let literal = query("\"absent_literal\"", AsOf::default());
+    let (_, literal_work) = index
+        .search_profiled(writer.reader().unwrap(), &literal)
+        .unwrap();
+    assert!(literal_work.segment_loads > work.segment_loads);
+}
+
+#[test]
+fn disk_rebuildable_cache_loss_mode_switches_and_publication_errors_preserve_authority() {
+    let f = Fixture::new();
+    let weak = CacheDurability::Rebuildable;
+    let mut writer = disk_writer_mode(&f, 1000, weak, None);
+    assert_eq!(writer.reader().unwrap().cache_durability(), weak);
+    let cache = f.root.join("disk-index");
+    let mut index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    let first = [
+        row("alpha exact original", Some("memory"), 10),
+        row("alpha independent", None, 11),
+    ];
+    let a = writer.append_indexed(&mut index, "first", &first).unwrap();
+    let old = writer
+        .reader()
+        .unwrap()
+        .view(scope(), AsOf::default())
+        .unwrap();
+    let old_hits = signature(
+        index
+            .search_view(
+                writer.reader().unwrap(),
+                &old,
+                &query("alpha", AsOf::default()),
+            )
+            .unwrap(),
+    );
+    let second = [row("alpha current", Some("memory"), 20)];
+    let b = writer
+        .append_indexed(&mut index, "second", &second)
+        .unwrap();
+    let current_hits = signature(
+        index
+            .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+            .unwrap(),
+    );
+    let minimum = writer.reader().unwrap().watermark().unwrap();
+    drop(index);
+    drop(writer);
+    fs::write(f.root.join("directory/DIRECTORY"), b"torn derived root").unwrap();
+    fs::write(cache.join("DISK_RECORD_INDEX"), b"torn derived descriptor").unwrap();
+    let writer = disk_writer_mode(&f, 1000, weak, Some(&minimum));
+    let index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    assert_eq!(
+        signature(
+            index
+                .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+                .unwrap()
+        ),
+        current_hits
+    );
+    assert_eq!(
+        signature(
+            index
+                .search_view(
+                    writer.reader().unwrap(),
+                    &old,
+                    &query("alpha", AsOf::default())
+                )
+                .unwrap()
+        ),
+        old_hits
+    );
+    assert_eq!(
+        writer.reader().unwrap().receipt("first").unwrap(),
+        Some(a.clone())
+    );
+    drop(index);
+    drop(writer);
+    fs::remove_dir_all(f.root.join("directory")).unwrap();
+    fs::remove_dir_all(&cache).unwrap();
+    let writer = disk_writer_mode(&f, 1000, weak, Some(&minimum));
+    let mut weak_index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    assert_eq!(
+        writer.reader().unwrap().receipt("second").unwrap(),
+        Some(b.clone())
+    );
+    drop(writer);
+    // Strong mode cannot claim durability for the old weak index object/pages.
+    let mut strong = disk_writer_mode(&f, 1000, CacheDurability::Durable, Some(&minimum));
+    assert!(
+        strong
+            .append_indexed(&mut weak_index, "must-not-commit", &second)
+            .is_err()
+    );
+    assert!(
+        strong
+            .reader()
+            .unwrap()
+            .receipt("must-not-commit")
+            .unwrap()
+            .is_none()
+    );
+    drop(weak_index);
+    let mut index = Index::open_disk(strong.reader().unwrap(), &cache).unwrap();
+    assert_eq!(index.opened(), Opened::Rebuilt);
+    assert_eq!(
+        signature(
+            index
+                .search(strong.reader().unwrap(), &query("alpha", AsOf::default()))
+                .unwrap()
+        ),
+        current_hits
+    );
+    assert_eq!(
+        strong.append_indexed(&mut index, "first", &first).unwrap(),
+        a
+    );
+    drop(index);
+    drop(strong);
+    // Moving back to weak mode also rebuilds with its own authenticated context.
+    let mut writer = disk_writer_mode(&f, 1000, weak, Some(&minimum));
+    let mut index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    assert_eq!(index.opened(), Opened::Rebuilt);
+    assert_eq!(
+        writer
+            .append_indexed(&mut index, "second", &second)
+            .unwrap(),
+        b
+    );
+    fs::remove_file(cache.join("DISK_RECORD_INDEX")).unwrap();
+    fs::create_dir(cache.join("DISK_RECORD_INDEX")).unwrap();
+    let failure = [row("alpha committed despite cache failure", None, 30)];
+    assert!(
+        writer
+            .append_indexed(&mut index, "failed publication", &failure)
+            .is_err()
+    );
+    assert!(
+        index
+            .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+            .is_err()
+    );
+    let receipt = writer
+        .reader()
+        .unwrap()
+        .receipt("failed publication")
+        .unwrap()
+        .unwrap();
+    fs::remove_dir(cache.join("DISK_RECORD_INDEX")).unwrap();
+    drop(index);
+    drop(writer);
+    let mut writer = disk_writer_mode(&f, 1000, weak, Some(&minimum));
+    let mut index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    assert_eq!(
+        writer
+            .append_indexed(&mut index, "failed publication", &failure)
+            .unwrap(),
+        receipt
+    );
+    assert_eq!(
+        signature(
+            index
+                .search_view(
+                    writer.reader().unwrap(),
+                    &old,
+                    &query("alpha", AsOf::default())
+                )
+                .unwrap()
+        ),
+        old_hits
+    );
+    let root = f.root.join("directory/DIRECTORY");
+    fs::remove_file(&root).unwrap();
+    fs::create_dir(&root).unwrap();
+    let unknown = [row("alpha directory publication failure", None, 40)];
+    assert!(
+        writer
+            .append_indexed(&mut index, "failed directory", &unknown)
+            .is_err()
+    );
+    assert!(writer.reader().is_err());
+    drop(index);
+    drop(writer);
+    fs::remove_dir(&root).unwrap();
+    let mut writer = disk_writer_mode(&f, 1000, weak, Some(&minimum));
+    let receipt = writer
+        .reader()
+        .unwrap()
+        .receipt("failed directory")
+        .unwrap()
+        .unwrap();
+    let mut index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    assert_eq!(
+        writer
+            .append_indexed(&mut index, "failed directory", &unknown)
+            .unwrap(),
+        receipt
+    );
+}
+
+#[test]
+fn disk_rebuildable_same_origin_fork_and_stale_cache_cannot_adopt_main_watermark() {
+    let f = Fixture::new();
+    let mode = CacheDurability::Rebuildable;
+    let mut main = disk_writer_mode(&f, 1000, mode, None);
+    main.append("shared", &[row("alpha shared", Some("memory"), 10)])
+        .unwrap();
+    let old = main
+        .reader()
+        .unwrap()
+        .view(scope(), AsOf::default())
+        .unwrap();
+    let fork = f.root.join("fork-source");
+    copy(&f.root.join("authority"), &fork);
+    let mut fork_writer = Writer::open_clock_with_cache_policy(
+        &fork,
+        &KEY,
+        identity(),
+        &f.root.join("fork-directory"),
+        None,
+        disk_policy(1000),
+        Arc::new(|| Ok(100)),
+        mode,
+    )
+    .unwrap();
+    fork_writer
+        .append(
+            "fork-tail",
+            &[row("alpha forkbranchneedle", Some("memory"), 20)],
+        )
+        .unwrap();
+    drop(fork_writer);
+    let mut index = Index::open_disk(main.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    main.append_indexed(
+        &mut index,
+        "main-tail",
+        &[row("alpha mainbranchneedle", Some("memory"), 20)],
+    )
+    .unwrap();
+    let minimum = main.reader().unwrap().watermark().unwrap();
+    drop(index);
+    drop(main);
+    assert!(
+        Reader::open_disk_with_cache_policy(
+            &fork,
+            &KEY,
+            identity(),
+            &f.root.join("directory"),
+            Some(&minimum),
+            disk_policy(1000),
+            mode
+        )
+        .is_err()
+    );
+    let fork_reader = Reader::open_disk_with_cache_policy(
+        &fork,
+        &KEY,
+        identity(),
+        &f.root.join("directory"),
+        None,
+        disk_policy(1000),
+        mode,
+    )
+    .unwrap();
+    let fork_index = Index::open_disk(&fork_reader, &f.root.join("disk-index")).unwrap();
+    assert!(
+        fork_index
+            .search(&fork_reader, &query("mainbranchneedle", AsOf::default()))
+            .unwrap()
+            .hits
+            .is_empty()
+    );
+    assert_eq!(
+        fork_index
+            .search(&fork_reader, &query("forkbranchneedle", AsOf::default()))
+            .unwrap()
+            .hits
+            .len(),
+        1
+    );
+    assert_eq!(
+        fork_reader
+            .get_key(&old, "memory", 10000)
+            .unwrap()
+            .unwrap()
+            .text,
+        "alpha shared"
+    );
+    drop(fork_index);
+    drop(fork_reader);
+    let main = disk_writer_mode(&f, 1000, mode, Some(&minimum));
+    let index = Index::open_disk(main.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    assert_eq!(
+        index
+            .search(
+                main.reader().unwrap(),
+                &query("mainbranchneedle", AsOf::default())
+            )
+            .unwrap()
+            .hits
+            .len(),
+        1
+    );
+}

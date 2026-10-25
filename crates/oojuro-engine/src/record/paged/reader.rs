@@ -1,4 +1,5 @@
 mod directory;
+mod writer;
 use super::*;
 use crate::capture_log::Identity;
 use crate::record::authority::{self, Batch, Unsigned};
@@ -9,6 +10,7 @@ use std::{
     path::Path,
     sync::{Arc, Mutex},
 };
+pub use writer::{Append, WriteProfile, Writer};
 const CURSOR_AAD: &[u8] = b"oojuro/record-paged/cursor/v1\0";
 const MAX_CURSOR: usize = 16 << 10;
 struct Intent([u8; 32]);
@@ -35,7 +37,8 @@ struct Winner {
     key: String,
     id: Option<u64>,
 }
-/// Owning/recovering Store reader, not a filesystem read-only open. No data writes/ACK API.
+/// Owning/recovering Store reader, not a filesystem read-only open.
+/// Use `Writer` for durable disk-backed appends.
 pub struct Reader {
     store: Store,
     cipher: Arc<FrameCipher>,
@@ -47,6 +50,10 @@ pub struct Reader {
     genesis: Ref,
     tip: Ref,
     sequence: u64,
+    pub(super) capacity: DiskLimits,
+    pub(super) cache_durability: CacheDurability,
+    encoded_bytes: usize,
+    failed: bool,
     disk: Option<directory::Directory>,
     births: Mutex<VecDeque<Vec<u8>>>,
     winners: Mutex<VecDeque<Winner>>,
@@ -83,13 +90,29 @@ struct Cursor {
     after: (i64, i64, u64),
 }
 impl Reader {
-    fn base(dir: &Path, key: &[u8; 32], identity: Identity) -> Result<(Self, usize)> {
+    fn base(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        initialize: bool,
+        capacity: DiskLimits,
+    ) -> Result<(Self, usize)> {
         if !name(&identity.writer, 256)
             || identity.agent == 0
             || identity.first_id == 0
             || !name(&identity.adapter, 128)
         {
             return Err(Error::Invalid);
+        }
+        if initialize {
+            let parent = dir
+                .parent()
+                .filter(|p| !p.as_os_str().is_empty())
+                .unwrap_or(Path::new("."));
+            if !parent.is_dir() {
+                return Err(Error::Invalid);
+            }
+            authority::namespace(dir)?;
         }
         let metadata = fs::symlink_metadata(dir).map_err(|_| Error::Unavailable)?;
         let marker = dir.join("RECORD_FORMAT");
@@ -103,7 +126,7 @@ impl Reader {
             return Err(Error::Authority);
         }
         let cipher = Arc::new(FrameCipher::new(key));
-        let store = Store::open(
+        let mut store = Store::open(
             dir,
             Options {
                 cipher: Some(cipher.clone()),
@@ -115,12 +138,14 @@ impl Reader {
             },
         )
         .map_err(|_| Error::Unavailable)?;
-        if store.is_empty() {
-            return Err(Error::Authority);
-        }
         let mut header = authority::FORMAT.to_vec();
         header.extend(serde_json::to_vec(&identity).map_err(|_| Error::Invalid)?);
-        if store.get(0).map_err(|_| Error::Unavailable)? != header {
+        if initialize && store.is_empty() {
+            store
+                .append(&[authority::carrier(&header)])
+                .map_err(|_| Error::Unavailable)?;
+        }
+        if store.is_empty() || store.get(0).map_err(|_| Error::Unavailable)? != header {
             return Err(Error::Authority);
         }
         let origin = store
@@ -148,6 +173,10 @@ impl Reader {
                 genesis: genesis.clone(),
                 tip: genesis,
                 sequence: 0,
+                capacity,
+                cache_durability: CacheDurability::Durable,
+                encoded_bytes: bytes,
+                failed: false,
                 disk: None,
                 births: Mutex::new(VecDeque::new()),
                 winners: Mutex::new(VecDeque::new()),
@@ -162,7 +191,7 @@ impl Reader {
         identity: Identity,
         minimum: Option<&Watermark>,
     ) -> Result<Self> {
-        let (mut reader, mut total) = Self::base(dir, key, identity)?;
+        let (mut reader, mut total) = Self::base(dir, key, identity, false, DiskLimits::LEGACY)?;
         let mut requests = BTreeSet::new();
         for sequence in 1..reader.store.len() {
             let encoded = reader.store.get(sequence).map_err(|_| Error::Unavailable)?;
@@ -184,10 +213,21 @@ impl Reader {
             reader.tip = next;
             reader.sequence = sequence;
         }
+        reader.encoded_bytes = total;
         if let Some(w) = minimum {
             reader.validate(w)?;
         }
         Ok(reader)
+    }
+    fn healthy(&self) -> Result<()> {
+        if self.failed {
+            Err(Error::Unavailable)
+        } else {
+            Ok(())
+        }
+    }
+    pub fn cache_durability(&self) -> CacheDurability {
+        self.cache_durability
     }
     pub fn identity(&self) -> &Identity {
         &self.identity
@@ -224,7 +264,7 @@ impl Reader {
             || previous
                 .records
                 .checked_add(batch.assigned.len() as u64)
-                .is_none_or(|n| n > MAX_RECORDS as u64)
+                .is_none_or(|n| n > self.capacity.records as u64)
         {
             return Err(Error::Authority);
         }
@@ -298,6 +338,7 @@ impl Reader {
         Ok(())
     }
     pub fn watermark(&self) -> Result<Watermark> {
+        self.healthy()?;
         let r = &self.tip;
         let mut w = Watermark {
             schema: 1,
@@ -324,6 +365,7 @@ impl Reader {
             .map_err(|_| Error::Authority)
     }
     pub fn receipt(&self, request: &str) -> Result<Option<Commit>> {
+        self.healthy()?;
         if !name(request, 1024) {
             return Err(Error::Bounds);
         }
@@ -489,6 +531,86 @@ impl Reader {
                 .agent_id
                 .as_ref()
                 .is_none_or(|v| v == &r.input.agent_id))
+    }
+    /// Read at most 1000 physical ordinals from a pinned prefix in ID order.
+    /// Time bounds apply within this window; advance by `limits.entries`, not
+    /// by the number returned. A byte limit error never silently skips a row.
+    pub fn read_ordinals(&self, s: &Snapshot, start: usize, limits: Limits) -> Result<Vec<Record>> {
+        let count = self.snapshot(s)?;
+        check_bytes(limits.bytes)?;
+        if limits.entries == 0 || limits.entries > 1000 || start > count {
+            return Err(Error::Bounds);
+        }
+        let end = start
+            .checked_add(limits.entries)
+            .ok_or(Error::Bounds)?
+            .min(count);
+        let mut rows = Vec::new();
+        let mut bytes = 0usize;
+        self.scan(&s.watermark, start, end, |r| {
+            if r.input.valid_at >= s.as_of.from
+                && r.input.valid_at <= s.as_of.valid_at
+                && r.recorded_at <= s.as_of.known_at
+            {
+                let record = r.record(&self.identity.writer, &self.identity.adapter);
+                bytes = bytes
+                    .checked_add(json(&record, limits.bytes)?.len())
+                    .ok_or(Error::Bounds)?;
+                if bytes > limits.bytes {
+                    return Err(Error::Bounds);
+                }
+                rows.push(record);
+            }
+            Ok(true)
+        })?;
+        json(&rows, limits.bytes)?;
+        Ok(rows)
+    }
+    /// One authorized bounded request decodes each selected authority batch once.
+    /// Output order, duplicate IDs and missing IDs match the caller's list.
+    pub fn get_ids(&self, s: &Snapshot, ids: &[u64], bytes: usize) -> Result<Vec<Option<Record>>> {
+        let count = self.snapshot(s)?;
+        check_bytes(bytes)?;
+        if ids.len() > 1000 {
+            return Err(Error::Bounds);
+        }
+        let mut selected: BTreeMap<u64, Vec<(usize, usize, u64)>> = BTreeMap::new();
+        for (at, id) in ids.iter().copied().enumerate() {
+            if let Some(ordinal) = id
+                .checked_sub(self.identity.first_id)
+                .and_then(|n| usize::try_from(n).ok())
+                .filter(|n| *n < count)
+            {
+                let (sequence, offset) = self.locate(ordinal)?;
+                selected.entry(sequence).or_default().push((at, offset, id));
+            }
+        }
+        let mut out = vec![None; ids.len()];
+        let mut total = 0usize;
+        for (sequence, positions) in selected {
+            let batch = self.batch(usize::try_from(sequence).map_err(|_| Error::Bounds)?)?;
+            for (at, offset, id) in positions {
+                let row = batch.assigned.get(offset).ok_or(Error::Authority)?;
+                if row.id != id {
+                    return Err(Error::Authority);
+                }
+                if row.input.valid_at >= s.as_of.from
+                    && row.input.valid_at <= s.as_of.valid_at
+                    && row.recorded_at <= s.as_of.known_at
+                {
+                    let record = row.record(&self.identity.writer, &self.identity.adapter);
+                    total = total
+                        .checked_add(json(&record, bytes)?.len())
+                        .ok_or(Error::Bounds)?;
+                    if total > bytes {
+                        return Err(Error::Bounds);
+                    }
+                    out[at] = Some(record);
+                }
+            }
+        }
+        json(&out, bytes)?;
+        Ok(out)
     }
     pub fn get_id(&self, s: &Snapshot, id: u64, bytes: usize) -> Result<Option<Record>> {
         self.snapshot(s)?;

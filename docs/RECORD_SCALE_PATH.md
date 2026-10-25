@@ -1,9 +1,10 @@
 # Record lookup and the million-record scale gate
 
-Oojuro is a generic embedded database. This work concerns exact records and
-lexical retrieval; o-journal owns agent integrations. The proposed standalone
-`.ojo` container is a separate storage-format project and is not implemented by
-this lookup change.
+This outline concerns the retained `oojuro-engine::record` directory authority
+and lexical consumers. The independent minimal standalone file engine lives in
+[crates/ojo](../crates/ojo/README.md); its wire 0.1, raw-byte ACID behavior and
+benchmarks are separate. Directory-store measurements must never be presented
+as `.ojo` file-engine performance. O-journal owns agent integrations.
 
 The current Record authority and disposable lexical projection enforce
 100,000-record and 128 MiB state limits. Keep those protections. Local warm
@@ -35,3 +36,8 @@ The next scale path must make work proportional to selected pages/terms:
 This is a scale acceptance outline, not a completed index implementation,
 throughput result, storage-saving claim or SLA. The checked ID lookup remains
 small and independently reviewable while the larger index path is developed.
+
+The initial opt-in implementation and its distinct remaining query costs are
+specified in [the disk-backed path](RECORD_DISK_PATH.md). Existing in-memory
+bounds remain unchanged; staged benchmark evidence is required before claiming
+that this path satisfies a million records with ten clients.

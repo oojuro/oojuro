@@ -16,11 +16,19 @@ const ROOT_BYTES: usize = 64 << 10;
 #[serde(deny_unknown_fields)]
 struct Roots {
     format: u32,
+    #[serde(default, skip_serializing_if = "CacheDurability::is_durable")]
+    cache_durability: CacheDurability,
     binding: Vec<u8>,
     prefix: Root,
     request: Root,
     record: Root,
     key_version: Root,
+}
+// The complete source Batch was verified before exposing this Reader. A birth
+// proof needs only its authenticated watermark, not a second payload population.
+#[derive(Deserialize)]
+struct BirthHeader {
+    watermark: Watermark,
 }
 pub(super) struct Directory {
     path: PathBuf,
@@ -36,19 +44,79 @@ impl Reader {
         directory: &Path,
         minimum: Option<&Watermark>,
     ) -> Result<Self> {
-        let (mut reader, mut total) = Self::base(dir, key, identity)?;
+        Self::open_disk_inner(
+            dir,
+            key,
+            identity,
+            directory,
+            minimum,
+            DiskLimits::LEGACY,
+            false,
+            CacheDurability::Durable,
+        )
+    }
+    /// Disk-backed admission policy; legacy constructors retain their original limits.
+    pub fn open_disk_with_limits(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        directory: &Path,
+        minimum: Option<&Watermark>,
+        limits: DiskLimits,
+    ) -> Result<Self> {
+        Self::open_disk_inner(
+            dir,
+            key,
+            identity,
+            directory,
+            minimum,
+            limits,
+            false,
+            CacheDurability::Durable,
+        )
+    }
+    pub fn open_disk_with_cache_policy(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        directory: &Path,
+        minimum: Option<&Watermark>,
+        limits: DiskLimits,
+        policy: CacheDurability,
+    ) -> Result<Self> {
+        Self::open_disk_inner(
+            dir, key, identity, directory, minimum, limits, false, policy,
+        )
+    }
+    pub(super) fn open_disk_inner(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        directory: &Path,
+        minimum: Option<&Watermark>,
+        limits: DiskLimits,
+        initialize: bool,
+        policy: CacheDurability,
+    ) -> Result<Self> {
+        // Source Store settings are fixed inside base and never receive this policy.
+        let (mut reader, mut total) = Self::base(dir, key, identity, initialize, limits)?;
+        reader.cache_durability = policy;
+        if total > limits.source_bytes {
+            return Err(Error::Bounds);
+        }
         reader.refs.clear();
         reader.refs.shrink_to_fit();
         for sequence in 1..reader.store.len() {
             let encoded = reader.store.get(sequence).map_err(|_| Error::Unavailable)?;
             total = total.checked_add(encoded.len()).ok_or(Error::Bounds)?;
-            if total > MAX_STATE_BYTES {
+            if total > limits.source_bytes {
                 return Err(Error::Bounds);
             }
             let (batch, digest) = reader.verify_after(sequence, &encoded, &reader.tip)?;
             reader.tip = next_ref(&reader.tip, &batch, digest)?;
             reader.sequence = sequence;
         }
+        reader.encoded_bytes = total;
         if let Some(w) = minimum {
             let r = reader.scalar_at(w.sequence)?;
             reader.check(w, w.sequence, r.records, r.digest)?;
@@ -56,6 +124,23 @@ impl Reader {
         let disk = Directory::open(&reader, directory)?;
         reader.disk = Some(disk);
         Ok(reader)
+    }
+    pub(super) fn publish_group(&mut self, batches: &[(Batch, [u8; 32])]) -> Result<()> {
+        let previous = self.tip.clone();
+        for (batch, digest) in batches {
+            if self.sequence.checked_add(1) != Some(batch.watermark.sequence) {
+                return Err(Error::Authority);
+            }
+            self.tip = next_ref(&self.tip, batch, *digest)?;
+            self.sequence = batch.watermark.sequence;
+        }
+        let mut disk = self.disk.take().ok_or(Error::Invalid)?;
+        let result = disk.advance(self, &previous, batches);
+        if result.is_err() {
+            disk.failed = true;
+        }
+        self.disk = Some(disk);
+        result
     }
     pub fn compact_directory(&mut self) -> Result<()> {
         let mut disk = self.disk.take().ok_or(Error::Invalid)?;
@@ -96,6 +181,7 @@ impl Reader {
             class: KeyClass::Data,
             sort_of: None,
             cache: Some(&self.pages),
+            cache_durability: self.cache_durability,
         }
     }
     fn binding_at(&self, sequence: u64, r: &Ref) -> Vec<u8> {
@@ -139,6 +225,7 @@ impl Reader {
         Ok(previous)
     }
     pub(super) fn reference(&self, sequence: u64) -> Result<Ref> {
+        self.healthy()?;
         if sequence > self.sequence {
             return Err(Error::Authority);
         }
@@ -222,8 +309,23 @@ impl Authority for Reader {
         {
             return Ok(());
         }
-        let scalar = self.scalar_at(sequence)?;
-        if scalar.records != records || scalar.digest != digest {
+        // Open verified the entire source chain. Store exposes immutable sealed
+        // sequence slots: authenticate that slot's watermark without replaying
+        // all its ancestors on every metadata-cache miss.
+        if sequence == 0 {
+            if self.genesis.records != records || self.genesis.digest != digest {
+                return Err(Error::Authority);
+            }
+        } else {
+            let encoded = self.store.get(sequence).map_err(|_| Error::Unavailable)?;
+            if encoded.len() > MAX_BATCH_BYTES {
+                return Err(Error::Bounds);
+            }
+            let header: BirthHeader =
+                serde_json::from_slice(&encoded).map_err(|_| Error::Authority)?;
+            self.check(&header.watermark, sequence, records, digest)?;
+        }
+        if records > self.tip.records {
             return Err(Error::Authority);
         }
         let mut cache = self.births.lock().map_err(|_| Error::Unavailable)?;
@@ -282,6 +384,7 @@ fn root_aad(reader: &Reader) -> Vec<u8> {
     let mut a = b"oojuro/record-directory/root/v1\0".to_vec();
     a.extend(reader.origin);
     a.extend(reader.identity_tag);
+    reader.cache_durability.bind(&mut a);
     a
 }
 fn lookup(
@@ -343,6 +446,97 @@ impl Directory {
             _lock: lock,
             failed: false,
         })
+    }
+    fn advance(
+        &mut self,
+        reader: &Reader,
+        previous: &Ref,
+        batches: &[(Batch, [u8; 32])],
+    ) -> Result<()> {
+        if self.failed {
+            return Err(Error::Unavailable);
+        }
+        let (old, records, digest) = reader.parse_binding(&self.roots.binding)?;
+        if batches.is_empty()
+            || batches.len() > 1000
+            || records != previous.records
+            || digest != previous.digest
+            || old.checked_add(batches.len() as u64) != Some(reader.sequence)
+        {
+            return Err(Error::Authority);
+        }
+        let mut prefix = Editor::new(
+            reader.tree_context(&self.path, Purpose::Prefix),
+            self.roots.prefix.clone(),
+        )?;
+        let mut request = Editor::new(
+            reader.tree_context(&self.path, Purpose::Request),
+            self.roots.request.clone(),
+        )?;
+        let mut record = Editor::new(
+            reader.tree_context(&self.path, Purpose::Record),
+            self.roots.record.clone(),
+        )?;
+        let mut keys = Editor::new(
+            reader.tree_context(&self.path, Purpose::KeyVersion),
+            self.roots.key_version.clone(),
+        )?;
+        let mut prefixes = Vec::new();
+        let mut requests = Vec::new();
+        let mut rows = Vec::new();
+        let mut versions = Vec::new();
+        let mut previous = previous.clone();
+        for (at, (batch, digest)) in batches.iter().enumerate() {
+            let sequence = old.checked_add(at as u64 + 1).ok_or(Error::Bounds)?;
+            let next = next_ref(&previous, batch, *digest)?;
+            reader.check(&batch.watermark, sequence, next.records, next.digest)?;
+            prefixes.push(Entry::new(
+                sequence.to_be_bytes().to_vec(),
+                json(&next, 32 << 10)?,
+            )?);
+            requests.push(Entry::new(
+                batch.request.to_vec(),
+                sequence.to_be_bytes().to_vec(),
+            )?);
+            for (offset, row) in batch.assigned.iter().enumerate() {
+                let value = slot(sequence, offset)?;
+                rows.push(Entry::new(row.id.to_be_bytes().to_vec(), value.clone())?);
+                if rows.len() > 1000 {
+                    return Err(Error::Bounds);
+                }
+                if let Some(key) = key_entry(reader, row)? {
+                    versions.push(Entry::new(key, value)?);
+                }
+            }
+            previous = next;
+        }
+        if previous != reader.tip {
+            return Err(Error::Authority);
+        }
+        prefix.insert_batch(prefixes)?;
+        request.insert_batch(requests)?;
+        record.insert_batch(rows)?;
+        if !versions.is_empty() {
+            keys.insert_batch(versions)?;
+        }
+        let roots = Roots {
+            format: 1,
+            cache_durability: reader.cache_durability,
+            binding: reader.current()?,
+            prefix: prefix.finish()?,
+            request: request.finish()?,
+            record: record.finish()?,
+            key_version: keys.finish()?,
+        };
+        if roots.prefix.count != reader.sequence + 1
+            || roots.request.count != reader.sequence
+            || roots.record.count != reader.tip.records
+        {
+            return Err(Error::Authority);
+        }
+        publish(reader, &self.path, &roots)?;
+        self.roots = roots;
+        Ok(())
     }
     pub(super) fn prefix(&self, reader: &Reader, sequence: u64) -> Result<Ref> {
         if self.failed {
@@ -450,7 +644,7 @@ fn validate_coverage(
     until: u64,
     historical: bool,
 ) -> Result<()> {
-    if roots.format != 1 {
+    if roots.format != 1 || roots.cache_durability != reader.cache_durability {
         return Err(Error::Authority);
     }
     let scalar = reader.scalar_at(until)?;
@@ -573,6 +767,7 @@ fn build(reader: &Reader, path: &Path) -> Result<Roots> {
     })?;
     let roots = Roots {
         format: 1,
+        cache_durability: reader.cache_durability,
         binding: reader.current()?,
         prefix: prefix.finish()?,
         request: request.finish().map_err(|e| {
@@ -621,6 +816,7 @@ fn extend(reader: &Reader, path: &Path, roots: Roots, old: u64) -> Result<Roots>
     })?;
     let roots = Roots {
         format: 1,
+        cache_durability: reader.cache_durability,
         binding: reader.current()?,
         prefix: prefix.finish()?,
         request: request.finish()?,
@@ -663,17 +859,20 @@ fn publish(reader: &Reader, path: &Path, roots: &Roots) -> Result<()> {
         .custom_flags(libc::O_NOFOLLOW)
         .open(&tmp)
         .map_err(|_| Error::Unavailable)?;
-    file.write_all(&sealed)
-        .and_then(|_| file.sync_all())
-        .map_err(|_| Error::Unavailable)?;
+    file.write_all(&sealed).map_err(|_| Error::Unavailable)?;
+    if reader.cache_durability.is_durable() {
+        file.sync_all().map_err(|_| Error::Unavailable)?;
+    }
     #[cfg(test)]
     tree::test_phase("RootTemp");
     fs::rename(tmp, path.join(ROOT)).map_err(|_| Error::Unavailable)?;
     #[cfg(test)]
     tree::test_phase("RootPublished");
-    File::open(path)
-        .and_then(|f| f.sync_all())
-        .map_err(|_| Error::Unavailable)?;
+    if reader.cache_durability.is_durable() {
+        File::open(path)
+            .and_then(|f| f.sync_all())
+            .map_err(|_| Error::Unavailable)?;
+    }
     #[cfg(test)]
     tree::test_phase("RootDurable");
     Ok(())
@@ -748,9 +947,13 @@ fn reap(path: &Path, roots: &Roots) -> Result<()> {
             fs::remove_file(entry.path()).map_err(|_| Error::Unavailable)?;
         }
     }
-    File::open(path)
-        .and_then(|f| f.sync_all())
-        .map_err(|_| Error::Unavailable)
+    if roots.cache_durability.is_durable() {
+        File::open(path)
+            .and_then(|f| f.sync_all())
+            .map_err(|_| Error::Unavailable)
+    } else {
+        Ok(())
+    }
 }
 #[cfg(test)]
 mod tests;

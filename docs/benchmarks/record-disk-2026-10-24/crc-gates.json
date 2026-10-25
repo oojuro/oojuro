@@ -1,0 +1,20 @@
+{
+  "source": "2415b8c4c8b8d044d12053a233a5e7e73183bdee",
+  "gates": [
+    {
+      "gate": "engine-rank",
+      "exit_code": 0,
+      "wall_seconds": 123.90293931999622
+    },
+    {
+      "gate": "engine-examples",
+      "exit_code": 0,
+      "wall_seconds": 15.640667249004764
+    },
+    {
+      "gate": "concurrent-example",
+      "exit_code": 0,
+      "wall_seconds": 10.605877105001127
+    }
+  ]
+}
