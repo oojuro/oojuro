@@ -569,48 +569,59 @@ impl Index {
         direct: Option<Option<u64>>,
         mut work: Option<&mut SearchProfile>,
     ) -> Result<(Vec<lexical::Hit>, bool)> {
-        let possible = paged::possible_terms(query.text);
-        let mut df: BTreeMap<String, u64> = possible.iter().map(|t| (t.clone(), 0)).collect();
+        let mut df = BTreeMap::new();
         let mut present = BTreeSet::new();
         let raw: Vec<_> = paged::terms(query.text).into_iter().collect();
-        let term_began = work.as_ref().map(|_| std::time::Instant::now());
-        self.visit_references(reader, |reference| {
-            let segment = load_segment(reader, &self.directory, &self.manifest, reference)?;
+        // Plan consults population DF only to choose a literal's rarest term.
+        // Ordinary word/identifier queries must not load every segment for unused DF.
+        if lexical_literal(query.text) {
+            df = paged::possible_terms(query.text)
+                .into_iter()
+                .map(|term| (term, 0u64))
+                .collect();
+            let began = work.as_ref().map(|_| std::time::Instant::now());
+            self.visit_references(reader, |reference| {
+                let segment = load_segment(reader, &self.directory, &self.manifest, reference)?;
+                if let Some(work) = work.as_deref_mut() {
+                    work.segment_loads += 1;
+                    work.segment_bytes += (reference.bytes + SEAL_OVERHEAD) as u64;
+                }
+                for (term, n) in &mut df {
+                    *n = n
+                        .checked_add(segment.postings.get(term).map_or(0, |p| p.len() as u64))
+                        .ok_or(Error::Bounds)?;
+                }
+                Ok(true)
+            })?;
             if let Some(work) = work.as_deref_mut() {
-                work.segment_loads += 1;
-                work.segment_bytes += (reference.bytes + SEAL_OVERHEAD) as u64;
+                work.term_pass_ns += began.unwrap().elapsed().as_nanos();
             }
-            for (term, n) in &mut df {
-                *n = n
-                    .checked_add(segment.postings.get(term).map_or(0, |p| p.len() as u64))
-                    .ok_or(Error::Bounds)?;
-            }
-            Ok(true)
-        })?;
-        if let Some(work) = work.as_deref_mut() {
-            work.term_pass_ns += term_began.unwrap().elapsed().as_nanos();
         }
-        let presence_began = work.as_ref().map(|_| std::time::Instant::now());
-        self.walk(
-            reader,
-            snapshot,
-            &query.filter,
-            &raw,
-            false,
-            work.as_deref_mut(),
-            |_, _, tf, visible| {
-                if visible {
-                    for ((term, _), n) in raw.iter().zip(tf) {
-                        if *n > 0 {
-                            present.insert(term.clone());
+        // Visible presence chooses underscore backoff only. In the split pass
+        // backoff is unconditional; queries without underscores do not consult it.
+        if !split && raw.iter().any(|(term, _)| term.contains('_')) {
+            let began = work.as_ref().map(|_| std::time::Instant::now());
+            self.walk(
+                reader,
+                snapshot,
+                &query.filter,
+                &raw,
+                false,
+                work.as_deref_mut(),
+                |_, _, tf, visible| {
+                    if visible {
+                        for ((term, _), n) in raw.iter().zip(tf) {
+                            if *n > 0 {
+                                present.insert(term.clone());
+                            }
                         }
                     }
-                }
-                Ok(())
-            },
-        )?;
-        if let Some(work) = work.as_deref_mut() {
-            work.presence_pass_ns += presence_began.unwrap().elapsed().as_nanos();
+                    Ok(())
+                },
+            )?;
+            if let Some(work) = work.as_deref_mut() {
+                work.presence_pass_ns += began.unwrap().elapsed().as_nanos();
+            }
         }
         let plan = paged::Plan::new(query.text, split, direct, &present, &df);
         let statistics_began = work.as_ref().map(|_| std::time::Instant::now());
