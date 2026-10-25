@@ -12,6 +12,22 @@ cargo install --locked --path crates/ojo-tools
 cargo install --locked --path crates/ojo-tools --no-default-features
 ```
 
+The published preview can also be installed by HTTPS or from its immutable
+source tag:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/oojuro/oojuro/ojo-v0.1.0/scripts/install-ojo.sh | sh
+cargo install --locked --git https://github.com/oojuro/oojuro \
+  --tag ojo-v0.1.0 --bin ojo ojo-tools
+```
+
+Homebrew uses this repository's formula and the same checksummed binary package:
+
+```sh
+brew tap oojuro/engine https://github.com/oojuro/oojuro
+brew install oojuro/engine/ojo
+```
+
 Rust 1.89+; Linux is the qualified platform. Archive support is enabled for the
 normal tool build and needs a C compiler. The default engine library remains
 raw-only and retains its four direct runtime dependencies.

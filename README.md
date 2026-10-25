@@ -24,6 +24,10 @@ cargo install --locked --path crates/ojo-tools
 ojo --help
 ```
 
+The [v0.1.0 preview release](https://github.com/oojuro/oojuro/releases/tag/ojo-v0.1.0)
+also provides a checksummed Linux x86-64 package. See the
+[curl, Cargo and Homebrew installation options](crates/ojo-tools/README.md#install-from-source).
+
 The optional archive feature creates a separate compressed `.ojo` file while
 preserving the original, its checkpoints and encryption. Session lifecycle and
 24-hour idle scheduling belong to ojo-journal/ojo-cloud. See the
