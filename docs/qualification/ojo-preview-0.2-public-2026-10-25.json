@@ -1,0 +1,27 @@
+{
+  "format": 1,
+  "release": "https://github.com/oojuro/oojuro/releases/tag/ojo-v0.2.0",
+  "source_commit": "86ed2bd87a1296bb4e87cf1d402ffab12e214404",
+  "archive_sha256": "865c5411c95c46a892df14d32e07d8a7a8966ac8fea09537f68c471e2bdd3056",
+  "binary_sha256": "8728e8c664a095553c3af85b7d297be64efb2c2cb80514857913f1ab8ecb28ec",
+  "archive_bytes": 1372516,
+  "selected_registry_dependencies": 53,
+  "glibc_minimum": "2.34",
+  "features": [
+    "archive",
+    "search"
+  ],
+  "public_verification": {
+    "published_url": "https://github.com/oojuro/oojuro/releases/tag/ojo-v0.2.0",
+    "source_commit": "86ed2bd87a1296bb4e87cf1d402ffab12e214404",
+    "anonymous_https_archive_checksum_verified": true,
+    "anonymous_versioned_installer_verified": true,
+    "installed_binary_sha256": "8728e8c664a095553c3af85b7d297be64efb2c2cb80514857913f1ab8ecb28ec",
+    "installed_notices_verified": true,
+    "actual_encrypted_lost_ack_retry_no_duplicate": true,
+    "raw_and_zstd_index_search_exact_original": true,
+    "legacy_export_and_encrypted_archive_exact": true,
+    "synthetic_keys_and_datasets_removed": true
+  },
+  "scope": "Actual published Linux x86-64 archive and anonymous installer; no hosted performance or production promotion claim."
+}
