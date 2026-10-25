@@ -1,0 +1,61 @@
+{
+  "status": "experimental foundation; not a final product or release",
+  "profile": "Event1, version1.0.0-draft.1",
+  "underlying_wire": "0.1 unchanged",
+  "synthetic_only": true,
+  "checks": [
+    {
+      "command": "cargo test --locked -p ojo",
+      "unit_passed": 7,
+      "acid_passed": 17,
+      "wire_compatibility_passed": 2,
+      "independent_event_vector_passed": 1,
+      "doctests_passed": 1,
+      "failed": 0
+    },
+    {
+      "command": "cargo test --locked -p ojo --features archive",
+      "unit_passed": 9,
+      "acid_passed": 19,
+      "wire_compatibility_passed": 2,
+      "independent_event_vector_passed": 1,
+      "doctests_passed": 1,
+      "failed": 0
+    },
+    {
+      "command": "cargo clippy --locked -p ojo --all-targets --features bench,archive -- -D warnings",
+      "exit": 0
+    },
+    {
+      "command": "python3 scripts/test_event_reader.py",
+      "passed": 3,
+      "cases": [
+        "independent vectors",
+        "every committed byte corrupted and refused without repair",
+        "torn tail reported without mutation"
+      ]
+    },
+    {
+      "command": "cargo build --locked --release -p ojo --features bench,archive --example event_bench --example sensor_journal",
+      "exit": 0
+    }
+  ],
+  "runtime_files_sha256": {
+    "crates/ojo/src/events.rs": "555132d0cd26ff7c10cca6ad06f109bd559cd2c3b955af2983aeb23d6c35e1e4",
+    "crates/ojo/src/lib.rs": "fa95844042173da89051dfb1955f4e45e85d932a1f36f85e5e3ae13ca5cccbfc",
+    "crates/ojo/tests/events_compatibility.rs": "c2654db171b8812d9b30658baa33846b251ba8d864e5a756551a797aa56d145b",
+    "crates/ojo/examples/sensor_journal.rs": "d9dd4d5a6d4bf3f4e97f16b09905b7f9c3ee9b14349f8c0af868f5f3479307f1",
+    "crates/ojo/examples/event_bench.rs": "8e8064951ded13f1d99b0f1e65e1323fd49f322ecf18624aa954e1cd496a617c",
+    "spec/events/1/FORMAT.md": "5bc6734787858dc6b903a5640da638876468d13c89c8eaaf2656de2c94eb3e3b",
+    "spec/events/1/vectors.json": "83e2bdf7282b5a85c4f70fbf01df709851b2543d85b0a5cae8a581da714fc85f",
+    "examples/read_events.py": "5bc46e3c93242cc365891947c3a6d84cab62095de21d5fdb3c1d2067cdb4df3e"
+  },
+  "remaining": [
+    "Separate Event benchmark evidence and Rust-writer/Python-reader proof",
+    "Generic Event CLI and indexed full-text search integration",
+    "Million-record and concurrent-client measurements",
+    "Journal migration and coherent consumer pins",
+    "Public Event release and actual Cloud deployment"
+  ],
+  "published": false
+}

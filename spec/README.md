@@ -16,6 +16,13 @@ application meaning does not alter the file grammar. A trace profile must name
 its own schema and preserve trace/span/parent IDs and original content. This
 draft does not standardize a universal agent event schema.
 
+The additive [Event profile 1](events/1/FORMAT.md) defines general journal
+records consisting of engine acceptance time and exact data. It identifies its
+own marker and grammar inside wire 0.1, without reinterpreting existing KV files.
+Its [version](events/1/VERSION), [independent vectors](events/1/vectors.json) and
+[Python reader](../examples/read_events.py) are separate from implementation
+releases. Agent/session/provider conventions remain application data.
+
 ## Versioning
 
 - `spec/VERSION` identifies the specification document release. Its patch or
