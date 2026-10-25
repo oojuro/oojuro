@@ -6,7 +6,7 @@ pub mod events;
 mod wire;
 use chacha20poly1305::XChaCha20Poly1305;
 use std::{
-    collections::{BTreeSet, HashMap},
+    collections::{BTreeSet, HashMap, VecDeque},
     fs::{File, OpenOptions},
     io::{BufReader, Read, Seek, SeekFrom, Write},
     path::Path,
@@ -96,9 +96,48 @@ struct Transaction {
     offset: u64,
     head: [u8; HEAD],
     digest: [u8; 32],
-    // Derived retry bookkeeping. Open already validates the committed body/digest;
-    // compute this second digest only if a caller actually retries that transaction.
-    fingerprint: Option<[u8; 32]>,
+}
+
+// An optional retry hint, never authority. Eviction recomputes the canonical
+// fingerprint from the complete verified frame, including its encryption/context.
+// A reopened read-only handle allocates no fingerprint population.
+// Retain a complete maximum Event batch without a population-sized cache.
+const CACHED_FINGERPRINTS: usize = 1024;
+#[derive(Default)]
+struct FingerprintCache {
+    values: HashMap<usize, [u8; 32]>,
+    order: VecDeque<usize>,
+}
+impl FingerprintCache {
+    fn promote(&mut self, transaction: usize) {
+        if self.order.back() == Some(&transaction) {
+            return;
+        }
+        let position = self
+            .order
+            .iter()
+            .position(|value| *value == transaction)
+            .unwrap();
+        self.order.remove(position);
+        self.order.push_back(transaction);
+    }
+    fn get(&mut self, transaction: usize) -> Option<[u8; 32]> {
+        let value = self.values.get(&transaction).copied()?;
+        self.promote(transaction);
+        Some(value)
+    }
+    fn insert(&mut self, transaction: usize, value: [u8; 32]) {
+        if let Some(previous) = self.values.get_mut(&transaction) {
+            *previous = value;
+            self.promote(transaction);
+            return;
+        }
+        if self.order.len() == CACHED_FINGERPRINTS {
+            self.values.remove(&self.order.pop_front().unwrap());
+        }
+        self.values.insert(transaction, value);
+        self.order.push_back(transaction);
+    }
 }
 #[derive(Clone, Copy)]
 enum CommitMode {
@@ -129,6 +168,7 @@ pub struct Database {
     end: u64,
     tail: u64,
     transactions: Vec<Transaction>,
+    fingerprints: FingerprintCache,
     // Replay validates bytes but cannot establish that an earlier failed sync
     // reached stable storage. Some(n) records a successful barrier on this
     // handle covering the first n transactions, including a synced header.
@@ -207,6 +247,7 @@ impl Database {
             end: FILE as u64,
             tail: 0,
             transactions: Vec::new(),
+            fingerprints: FingerprintCache::default(),
             durable_transactions: None,
             latest: HashMap::new(),
             ordered_keys: None,
@@ -331,7 +372,6 @@ impl Database {
                 offset: db.end,
                 head,
                 digest,
-                fingerprint: None,
             });
             db.operations += u32_at(&head, 32) as usize;
             db.key_bytes += key_bytes;
@@ -457,11 +497,11 @@ impl Database {
         }
         let fingerprint = hash(&[&frame[prefix..]]);
         if let Some(&transaction) = self.requests.get(&request) {
-            let previous = match self.transactions[transaction].fingerprint {
+            let previous = match self.fingerprints.get(transaction) {
                 Some(previous) => previous,
                 None => {
                     let previous = hash(&[&self.transaction_body(transaction)?]);
-                    self.transactions[transaction].fingerprint = Some(previous);
+                    self.fingerprints.insert(transaction, previous);
                     previous
                 }
             };
@@ -564,8 +604,8 @@ impl Database {
             offset: self.end,
             head,
             digest,
-            fingerprint: Some(fingerprint),
         });
+        self.fingerprints.insert(transaction, fingerprint);
         self.end = end;
         if durable {
             self.durable_transactions = Some(self.transactions.len());
