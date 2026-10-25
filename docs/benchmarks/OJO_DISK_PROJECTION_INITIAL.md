@@ -14,7 +14,7 @@ permission check, network response or durable source write was measured.
 Functional tests separately compare exact score bits/excerpts with the existing
 ranker and check incorrect originals/bindings/keys, corruption and quota refusal.
 
-The frozen release binary used Rust1.99.1, generic x86-64 instructions and CPU0
+The frozen release binary used Rust 1.99.1, generic x86-64 instructions and CPU 0
 affinity. The shared benchmark flock excluded concurrent compilation and other
 lanes' timings. Cache files used persistent Btrfs beneath an inherited
 `chattr +m` parent, so filesystem compression did not supply hidden compression.
@@ -22,7 +22,7 @@ This differs from the deployment's filesystem/hardware. Builds have one
 observation; each query has three rounds per client. Each query process first
 runs all cases, warming pages; these are not cold-cache measurements.
 
-| Rows | Cache encoding | Build seconds | Retained apparent MB | Observed build allocation peak MB | Query peak RSS MiB,10clients |
+| Rows | Cache encoding | Build seconds | Retained apparent MB | Observed build allocation peak MB | Query peak RSS MiB,10 clients |
 | ---: | --- | ---: | ---: | ---: | ---: |
 | 1,000 | Raw | .323 | 1.16 | 2.45 | 6.8 |
 | 1,000 | Zstd | .293 | .75 | 2.04 | 7.1 |
@@ -31,8 +31,8 @@ runs all cases, warming pages; these are not cold-cache measurements.
 | 1,000,000 | Raw | 150.46 | 1158.72 | 2444.32 | 135.9 |
 | 1,000,000 | Zstd | 165.36 | 753.86 | 2039.46 | 131.4 |
 
-One million rows retained an estimated120.48MB of heap including the reserved
-page cache. Build process peak RSS was134.4MiB raw and135.3MiB Zstd. Temporary
+One million rows retained an estimated 120.48 MB of heap including the reserved
+page cache. Build process peak RSS was 134.4 MiB raw and 135.3 MiB Zstd. Temporary
 sort/spool files are material: retained size alone understates cold-build disk
 reservation. Allocated observations are sampled at close/removal/phase
 boundaries; no hard arbitrary-filesystem quota or continuous peak claim follows.
@@ -48,20 +48,20 @@ boundaries; no hard arbitrary-filesystem quota or continuous peak claim follows.
 | 1,000,000 | Zstd | 1 | 68.9 | 62.0 | 60.5 |
 | 1,000,000 | Zstd | 10 | 743.6 | 679.0 | 650.6 |
 
-These cases **fail the100ms ten-client target** at one million rows; several
-compressed100k cases fail too. They establish diagnostic capacity, not the
+These cases **fail the 100 ms ten-client target** at one million rows; several
+compressed 100k cases fail too. They establish diagnostic capacity, not the
 requested concurrent latency acceptance. Full-query work remains linear in
 candidate postings and currently runs two exact passes. Unique-term queries
 also scan numeric columns when the ranker's floor needs full visible mass.
 
-The report retains adverse cases. A dense exact phrase over only1,000 rows
-already reached188.2ms raw and242.1ms Zstd p95 with ten clients; this opens and
+The report retains adverse cases. A dense exact phrase over only 1,000 rows
+already reached 188.2 ms raw and 242.1 ms Zstd p95 with ten clients; this opens and
 checks many cached exact originals before ranking. Compression is not a
-universal speed improvement. No dense-literal million-row latency qualification
+universal speed improvement. No dense literal million-row latency qualification
 was performed. Rebuilding the full index after an append cannot satisfy the
-250ms refresh requirement; incremental updates remain separate required work.
+250 ms refresh requirement; incremental updates remain separate required work.
 
 Default legacy in-memory admission limits were not raised. The new index has
 explicit independent limits and does not retain a population of original text
-or full Row/String objects. It is disposable: original recovery, wire0.1
+or full Row/String objects. It is disposable: original recovery, wire 0.1
 durability, encryption and exact retry behavior remain independent.

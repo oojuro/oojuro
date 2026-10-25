@@ -55,7 +55,7 @@ decoded-page policy before warming and an additional 4 MiB allowance for small
 allocation bookkeeping. This is an admission estimate, not a hard process RSS
 limit. Builder analysis vocabulary and run sorting have separate bounded
 working sets; measure process peak RSS when choosing a build reservation.
-An additional reserved4 MiB holds at most128 ranking results, with at most32
+An additional reserved 4 MiB holds at most 128 ranking results, with at most 32
 in-flight computations coordinated for identical queries. Every materialization
 still fetches and checks source originals. A new immutable Index/Binding starts
 with an empty result cache. `rank_uncached` bypasses result reuse for fresh-work
@@ -100,11 +100,20 @@ admission conservatively counts hard-linked files per generation. Order-label
 space exhaustion returns an explicit refusal requiring a full rebuild, without
 publishing a partial index. Monotonic event cursors use reserved tail spacing.
 
+Keep the private cache root's lease alive across all generation handles. A
+Binding entry must not independently delete the whole shared root while another
+generation is in use. The owner manages obsolete/orphan cleanup. Once descriptor
+publication can name a complete generation, an ambiguous publication error keeps
+its files; reopen either validates that binding or refuses and requires rebuild.
+Original source durability never depends on derived-cache publication success.
+Original-data work budgets may be smaller than the largest permitted document;
+oversized selections are refused before invoking the source callback.
+
 Current qualification covers exact legacy ranking across raw/Zstd, filter/time
 bounds, excerpts, reopen, duplicate raw keys, wrong keys/bindings, corrupted
 files, failed/over-budget builds, ten simultaneous immutable-handle queries,
 and the neutral event adapter, plus incremental append/retirement across a
-numeric-block boundary compared with a complete rebuild. Incremental latency,
+numeric-block boundary compared with a complete rebuild. End-to-end incremental latency,
 million-row concurrent latency acceptance and
 hosted end-to-end qualification remain open. No 1M, 250 ms or public service SLA
 claim follows from these functional checks.
