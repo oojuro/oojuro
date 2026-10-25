@@ -538,9 +538,7 @@ impl Index {
                         }
                     }
                 } else {
-                    if let Some(top) =
-                        self.rank_joint(&model, &selection, q.k, literal.as_deref())?
-                    {
+                    if let Some(top) = self.rank_joint(&model, &selection, q.k, None)? {
                         return Ok((self.ranked(top)?, false));
                     }
                     for (ordinal, tf) in list.pairs.iter() {

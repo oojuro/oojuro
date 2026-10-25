@@ -844,7 +844,7 @@ mod tests {
         let charged = index.terms.state.lock().unwrap().used;
         assert!(index.terms.joint(&index, &beta).unwrap().is_none());
         assert_eq!(index.terms.state.lock().unwrap().used, charged);
-        let incomplete = joint::Groups::build(&index, &alpha, 1024).unwrap();
+        let incomplete = joint::Groups::build(&index, &alpha, 1024, None).unwrap();
         assert!(!incomplete.complete && incomplete.groups.is_empty());
         drop(lease);
         assert!(index.terms.joint(&index, &beta).unwrap().is_some());
