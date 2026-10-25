@@ -1,0 +1,4409 @@
+{
+  "scope": "Adverse varied actual-source diagnostics. One source/build/query observation per layout/codec/size,30requests/query under10clients; not hosted and not1M varied qualification. Dense phrase default case only at1k. Exact signatures match v1/v2/raw/Zstd.",
+  "campaign": {
+    "source_qualification": {
+      "runtime": "85e11258b2db0a7ba322bca41ca2e60a6d791192",
+      "checks": [
+        {
+          "mutable_artifacts": [
+            {
+              "target": "oojuro_rank",
+              "fresh": false
+            },
+            {
+              "target": "oojuro_rank",
+              "fresh": false
+            },
+            {
+              "target": "conformance",
+              "fresh": false
+            },
+            {
+              "target": "oojuro_core",
+              "fresh": false
+            },
+            {
+              "target": "ojo",
+              "fresh": false
+            },
+            {
+              "target": "oojuro_store",
+              "fresh": false
+            },
+            {
+              "target": "oojuro_nine",
+              "fresh": false
+            },
+            {
+              "target": "oojuro_trace",
+              "fresh": false
+            },
+            {
+              "target": "oojuro_engine",
+              "fresh": false
+            }
+          ],
+          "label": "diverse-fullgate",
+          "command": [
+            "cargo",
+            "test",
+            "--locked",
+            "--no-default-features",
+            "--lib",
+            "--tests",
+            "-p",
+            "oojuro-engine",
+            "-p",
+            "oojuro-rank",
+            "--message-format=json",
+            "--",
+            "--test-threads=1"
+          ],
+          "returncode": 0,
+          "test_summaries": [
+            [
+              "201",
+              "0",
+              "10"
+            ],
+            [
+              "0",
+              "0",
+              "0"
+            ],
+            [
+              "8",
+              "0",
+              "0"
+            ]
+          ],
+          "source_fence": {
+            "cleaned_mutable_packages": true,
+            "cleaned_profiles": [
+              "dev",
+              "release"
+            ],
+            "cwd": "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source",
+            "revisions": {
+              "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source": "85e11258b2db0a7ba322bca41ca2e60a6d791192"
+            },
+            "source_fence": "f4b9efb443af70ef0c78d2a72866fb5c323f966600e9597a51365dbbe335c8c4",
+            "source_fence_format": 2,
+            "target": "/home/rocket3/Projects/.readiness/ojo-product-completion-2026-10-25/targets/engine-performance"
+          },
+          "new_bound_test_present": true
+        },
+        {
+          "mutable_artifacts": [],
+          "label": "diverse-clippy",
+          "command": [
+            "cargo",
+            "clippy",
+            "--locked",
+            "--no-default-features",
+            "-p",
+            "oojuro-engine",
+            "--lib",
+            "--tests",
+            "--example",
+            "profile_juro_append",
+            "--example",
+            "profile_juro_projection",
+            "--no-deps",
+            "--",
+            "-D",
+            "warnings"
+          ],
+          "returncode": 0,
+          "test_summaries": [],
+          "source_fence": {
+            "cleaned_mutable_packages": false,
+            "cleaned_profiles": [],
+            "cwd": "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source",
+            "revisions": {
+              "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source": "85e11258b2db0a7ba322bca41ca2e60a6d791192"
+            },
+            "source_fence": "f4b9efb443af70ef0c78d2a72866fb5c323f966600e9597a51365dbbe335c8c4",
+            "source_fence_format": 2,
+            "target": "/home/rocket3/Projects/.readiness/ojo-product-completion-2026-10-25/targets/engine-performance"
+          }
+        }
+      ]
+    },
+    "source_binary_provenance": {
+      "label": "diverse",
+      "command": [
+        "python3",
+        "/home/rocket3/Projects/.readiness/ojo-product-completion-2026-10-25/run-build.py",
+        "--lane",
+        "engine-performance",
+        "--cwd",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source",
+        "--",
+        "cargo",
+        "build",
+        "--locked",
+        "--release",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--message-format=json",
+        "--example",
+        "profile_juro_projection"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        {
+          "package_id": "path+file:///home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source/crates/oojuro-rank#0.1.0",
+          "target": "oojuro_rank",
+          "fresh": false,
+          "executable": null
+        },
+        {
+          "package_id": "path+file:///home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source/crates/oojuro-core#0.1.0",
+          "target": "oojuro_core",
+          "fresh": false,
+          "executable": null
+        },
+        {
+          "package_id": "path+file:///home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source/crates/ojo#0.2.0",
+          "target": "ojo",
+          "fresh": false,
+          "executable": null
+        },
+        {
+          "package_id": "path+file:///home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source/crates/oojuro-store#0.1.0",
+          "target": "oojuro_store",
+          "fresh": false,
+          "executable": null
+        },
+        {
+          "package_id": "path+file:///home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source/crates/oojuro-nine#0.1.0",
+          "target": "oojuro_nine",
+          "fresh": false,
+          "executable": null
+        },
+        {
+          "package_id": "path+file:///home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source/crates/oojuro-trace#0.1.0",
+          "target": "oojuro_trace",
+          "fresh": false,
+          "executable": null
+        },
+        {
+          "package_id": "path+file:///home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source/crates/oojuro-engine#0.1.0",
+          "target": "oojuro_engine",
+          "fresh": false,
+          "executable": null
+        },
+        {
+          "package_id": "path+file:///home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source/crates/oojuro-engine#0.1.0",
+          "target": "profile_juro_projection",
+          "fresh": false,
+          "executable": "/home/rocket3/Projects/.readiness/ojo-product-completion-2026-10-25/targets/engine-performance/release/examples/profile_juro_projection"
+        }
+      ],
+      "source_fence": {
+        "cleaned_mutable_packages": true,
+        "cleaned_profiles": [
+          "dev",
+          "release"
+        ],
+        "cwd": "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source",
+        "revisions": {
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source": "85e11258b2db0a7ba322bca41ca2e60a6d791192"
+        },
+        "source_fence": "f4b9efb443af70ef0c78d2a72866fb5c323f966600e9597a51365dbbe335c8c4",
+        "source_fence_format": 2,
+        "target": "/home/rocket3/Projects/.readiness/ojo-product-completion-2026-10-25/targets/engine-performance"
+      },
+      "clean_sha256": "0521996b97c400e1d4bf4afb8bf7e5890218969b5fdcbbbc7ed09370f66c5703",
+      "old_sha256": "f416914bdb2ace38f8e9cde49047ed90eb9ab5dcdd89464c833c3c53834738a8",
+      "byte_identical": false
+    },
+    "runtime": "85e11258b2db0a7ba322bca41ca2e60a6d791192",
+    "binary_sha256": "0521996b97c400e1d4bf4afb8bf7e5890218969b5fdcbbbc7ed09370f66c5703",
+    "scope": "Explicit diverse synthetic actual plaintext NOCOMPRESS source with varied TF/length/scope; same runtime v1/v2; oneCPU/2GiB child address cap; actual originals/checkpoint guards; retained OS caches; not hosted evidence",
+    "observations": [
+      {
+        "label": "1000-source",
+        "args": [
+          "source",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000",
+          "1000",
+          "plain"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 source /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000 1000 plain\"\n\tUser time (seconds): 0.01\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 36%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.07\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6528\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 1\n\tMinor (reclaiming a frame) page faults: 1033\n\tVoluntary context switches: 31\n\tInvoluntary context switches: 1\n\tSwaps: 0\n\tFile system inputs: 56\n\tFile system outputs: 4152\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "checkpoint_sequence": 1001,
+          "dataset": "diverse",
+          "group_durability_rows": 1024,
+          "phase": "source",
+          "rows": 1000,
+          "scope": "synthetic non-agent data, actual durable Event profile frames; includes prepare, append batches and final sync",
+          "source_bytes": 1935784,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_write_ns": 71913472
+        }
+      },
+      {
+        "label": "1000-raw-v1-build",
+        "args": [
+          "build",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000",
+          "1000",
+          "raw",
+          "1",
+          "1",
+          "plain"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000 1000 raw 1 1 plain\"\n\tUser time (seconds): 0.89\n\tSystem time (seconds): 0.04\n\tPercent of CPU this job got: 85%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.08\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 16640\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 3656\n\tVoluntary context switches: 207\n\tInvoluntary context switches: 11\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 23664\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "dataset": "diverse",
+          "derived_layout": 1,
+          "footprint": {
+            "allocated_index_bytes": 3260416,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 9895936,
+              "peak_files": 10,
+              "peak_logical_bytes": 9884089
+            },
+            "estimated_index_heap_bytes": 25281914,
+            "index_bytes": 3252909,
+            "indexed_rows": 998,
+            "text_bytes": 1739503
+          },
+          "index_build_ns": 1072042658,
+          "index_compression": "raw",
+          "phase": "build",
+          "rows": 1000,
+          "scope": "actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation",
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 6096316
+        }
+      },
+      {
+        "label": "1000-raw-v1-fresh",
+        "args": [
+          "retained-fresh",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000",
+          "1000",
+          "raw",
+          "10",
+          "3",
+          "plain"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000 1000 raw 10 3 plain\"\n\tUser time (seconds): 1.06\n\tSystem time (seconds): 0.08\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.15\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 8572\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1475\n\tVoluntary context switches: 547\n\tInvoluntary context switches: 683\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 1,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 3260416,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 9895936,
+              "peak_files": 10,
+              "peak_logical_bytes": 9884089
+            },
+            "estimated_index_heap_bytes": 25281914,
+            "index_bytes": 3252909,
+            "indexed_rows": 998,
+            "text_bytes": 1739503
+          },
+          "index_compression": "raw",
+          "index_open_ns": 1065154,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "unique",
+              "initial_query_ns": 574941,
+              "query_text": "needle00000999",
+              "signature": "d313a8d5cad552382ac6424b89d58e118fda55462c97b55cca734a16582097bf",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.0866,
+                "p95_ms": 0.139898,
+                "samples_ns": [
+                  75411,
+                  76380,
+                  77661,
+                  78183,
+                  78451,
+                  78902,
+                  81301,
+                  81506,
+                  82850,
+                  84035,
+                  84170,
+                  85187,
+                  85673,
+                  85837,
+                  86600,
+                  88559,
+                  89313,
+                  89575,
+                  90735,
+                  103351,
+                  104020,
+                  107374,
+                  109423,
+                  112193,
+                  120935,
+                  121497,
+                  125207,
+                  131290,
+                  139898,
+                  167513
+                ]
+              }
+            },
+            {
+              "case": "common",
+              "initial_query_ns": 4602222,
+              "query_text": "battery",
+              "signature": "9f3e98308faad45860c4474b8f14960acaea58826f910dd128883d3de38b4ff1",
+              "timing": {
+                "count": 30,
+                "p50_ms": 20.428292,
+                "p95_ms": 52.966701,
+                "samples_ns": [
+                  2642069,
+                  2682948,
+                  3414488,
+                  5629724,
+                  6108192,
+                  8263957,
+                  8814972,
+                  8881764,
+                  10910527,
+                  11021611,
+                  12019410,
+                  14389566,
+                  16712037,
+                  16909585,
+                  20428292,
+                  22379126,
+                  22502834,
+                  22593743,
+                  22685085,
+                  23583579,
+                  24914139,
+                  25887744,
+                  25944370,
+                  28601417,
+                  28927368,
+                  35518383,
+                  35971318,
+                  43648447,
+                  52966701,
+                  55710383
+                ]
+              }
+            },
+            {
+              "case": "common_pair",
+              "initial_query_ns": 2532596,
+              "query_text": "battery electrode",
+              "signature": "a9b1329ec06c3d129134d7ce3a29db18a217af38c438601ca06cbe9670d1c927",
+              "timing": {
+                "count": 30,
+                "p50_ms": 1.458203,
+                "p95_ms": 26.883106,
+                "samples_ns": [
+                  1415747,
+                  1420267,
+                  1426553,
+                  1430135,
+                  1430867,
+                  1433404,
+                  1433576,
+                  1433816,
+                  1435146,
+                  1439901,
+                  1445780,
+                  1454554,
+                  1455541,
+                  1456957,
+                  1458203,
+                  1467759,
+                  1468181,
+                  1501855,
+                  1515186,
+                  15498128,
+                  16752475,
+                  18409789,
+                  19708979,
+                  20944430,
+                  22226260,
+                  23487091,
+                  24721072,
+                  26004370,
+                  26883106,
+                  27203452
+                ]
+              }
+            },
+            {
+              "case": "common_triple",
+              "initial_query_ns": 2144355,
+              "query_text": "battery electrode original",
+              "signature": "ac308397dd516dad13b7051f3e7d5295dcee02857953f0287f04d4b3581365c0",
+              "timing": {
+                "count": 30,
+                "p50_ms": 4.839519,
+                "p95_ms": 25.757745,
+                "samples_ns": [
+                  1263687,
+                  1264086,
+                  1278070,
+                  1282529,
+                  1283329,
+                  1284184,
+                  1284332,
+                  1284693,
+                  1290749,
+                  1293731,
+                  1300158,
+                  1324606,
+                  1327794,
+                  2255750,
+                  4839519,
+                  7519802,
+                  8673228,
+                  9447622,
+                  10207316,
+                  10515253,
+                  12896515,
+                  14866089,
+                  16757255,
+                  19735070,
+                  21775903,
+                  22615750,
+                  22788885,
+                  24245161,
+                  25757745,
+                  30618331
+                ]
+              }
+            },
+            {
+              "case": "pair_with_absent",
+              "initial_query_ns": 1779806,
+              "query_text": "battery electrode transaction",
+              "signature": "a9b1329ec06c3d129134d7ce3a29db18a217af38c438601ca06cbe9670d1c927",
+              "timing": {
+                "count": 30,
+                "p50_ms": 1.473424,
+                "p95_ms": 26.903206,
+                "samples_ns": [
+                  1430109,
+                  1431812,
+                  1432900,
+                  1437963,
+                  1445063,
+                  1445675,
+                  1446256,
+                  1446712,
+                  1448838,
+                  1453633,
+                  1461137,
+                  1462133,
+                  1466272,
+                  1472493,
+                  1473424,
+                  1486778,
+                  1492673,
+                  1495414,
+                  6448111,
+                  8018664,
+                  17180590,
+                  18462764,
+                  19738529,
+                  20226300,
+                  21007916,
+                  22258986,
+                  25205634,
+                  26266232,
+                  26903206,
+                  27927623
+                ]
+              }
+            },
+            {
+              "case": "missing",
+              "initial_query_ns": 69546,
+              "query_text": "unseenword999",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.002358,
+                "p95_ms": 0.004773,
+                "samples_ns": [
+                  2152,
+                  2163,
+                  2182,
+                  2205,
+                  2267,
+                  2270,
+                  2274,
+                  2274,
+                  2299,
+                  2300,
+                  2303,
+                  2311,
+                  2312,
+                  2350,
+                  2358,
+                  2396,
+                  2486,
+                  2520,
+                  2819,
+                  2870,
+                  2937,
+                  2946,
+                  2993,
+                  3237,
+                  3318,
+                  3322,
+                  3340,
+                  3572,
+                  4773,
+                  9952
+                ]
+              }
+            },
+            {
+              "case": "identifier_anchor",
+              "initial_query_ns": 1679706,
+              "query_text": "lookup_needle battery",
+              "signature": "8934ad0bf5c0214d47054e67252b01b0da776e8cd089e9fc27faa8c38720c2af",
+              "timing": {
+                "count": 30,
+                "p50_ms": 7.876683,
+                "p95_ms": 27.391346,
+                "samples_ns": [
+                  1308865,
+                  1325767,
+                  1328012,
+                  1329465,
+                  1329579,
+                  1331904,
+                  1337585,
+                  1339967,
+                  1350816,
+                  1378029,
+                  1589750,
+                  2413372,
+                  2918521,
+                  6759155,
+                  7876683,
+                  8909366,
+                  9539395,
+                  11932512,
+                  12013459,
+                  12702770,
+                  14704217,
+                  17293481,
+                  18722477,
+                  19040212,
+                  19207316,
+                  21512654,
+                  26717973,
+                  27351918,
+                  27391346,
+                  30651089
+                ]
+              }
+            },
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 28953534,
+              "query_text": "\"battery electrode\"",
+              "signature": "387304e8fb80f71492d06969c1b0eba3fd5455a202f003c67963a4cf5279384b",
+              "timing": {
+                "count": 30,
+                "p50_ms": 269.161099,
+                "p95_ms": 317.756894,
+                "samples_ns": [
+                  216270451,
+                  218083036,
+                  243771621,
+                  245847381,
+                  248987140,
+                  252539393,
+                  260393967,
+                  261863635,
+                  262157622,
+                  262301885,
+                  262748141,
+                  266320525,
+                  267545432,
+                  268573145,
+                  269161099,
+                  274661618,
+                  277298438,
+                  280597017,
+                  280838486,
+                  282660889,
+                  284895865,
+                  285009798,
+                  287421112,
+                  288195342,
+                  297592116,
+                  302248308,
+                  314804053,
+                  317688408,
+                  317756894,
+                  375692933
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 1000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 1935784,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 5570333
+        }
+      },
+      {
+        "label": "1000-raw-v2-build",
+        "args": [
+          "build",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000",
+          "1000",
+          "raw",
+          "1",
+          "1",
+          "plain"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000 1000 raw 1 1 plain\"\n\tUser time (seconds): 0.86\n\tSystem time (seconds): 0.04\n\tPercent of CPU this job got: 85%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.06\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 16696\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 3646\n\tVoluntary context switches: 122\n\tInvoluntary context switches: 19\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 22296\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "footprint": {
+            "allocated_index_bytes": 2379776,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 9895936,
+              "peak_files": 10,
+              "peak_logical_bytes": 9883784
+            },
+            "estimated_index_heap_bytes": 25285419,
+            "index_bytes": 2368598,
+            "indexed_rows": 998,
+            "text_bytes": 1739503
+          },
+          "index_build_ns": 1053425876,
+          "index_compression": "raw",
+          "phase": "build",
+          "rows": 1000,
+          "scope": "actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation",
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 5718084
+        }
+      },
+      {
+        "label": "1000-raw-v2-fresh",
+        "args": [
+          "retained-fresh",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000",
+          "1000",
+          "raw",
+          "10",
+          "3",
+          "plain"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000 1000 raw 10 3 plain\"\n\tUser time (seconds): 1.03\n\tSystem time (seconds): 0.08\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.12\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 8688\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1550\n\tVoluntary context switches: 480\n\tInvoluntary context switches: 674\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 2379776,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 9895936,
+              "peak_files": 10,
+              "peak_logical_bytes": 9883784
+            },
+            "estimated_index_heap_bytes": 25285419,
+            "index_bytes": 2368598,
+            "indexed_rows": 998,
+            "text_bytes": 1739503
+          },
+          "index_compression": "raw",
+          "index_open_ns": 1247977,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "unique",
+              "initial_query_ns": 525229,
+              "query_text": "needle00000999",
+              "signature": "d313a8d5cad552382ac6424b89d58e118fda55462c97b55cca734a16582097bf",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.1071,
+                "p95_ms": 0.15644,
+                "samples_ns": [
+                  97938,
+                  99002,
+                  99421,
+                  99486,
+                  99770,
+                  99887,
+                  100138,
+                  100990,
+                  101367,
+                  102612,
+                  103732,
+                  104337,
+                  105523,
+                  105537,
+                  107100,
+                  109708,
+                  112406,
+                  121955,
+                  122670,
+                  133167,
+                  138163,
+                  138847,
+                  139200,
+                  139589,
+                  140009,
+                  142351,
+                  147904,
+                  148816,
+                  156440,
+                  234998
+                ]
+              }
+            },
+            {
+              "case": "common",
+              "initial_query_ns": 3770521,
+              "query_text": "battery",
+              "signature": "9f3e98308faad45860c4474b8f14960acaea58826f910dd128883d3de38b4ff1",
+              "timing": {
+                "count": 30,
+                "p50_ms": 18.318509,
+                "p95_ms": 49.648877,
+                "samples_ns": [
+                  1898096,
+                  1950866,
+                  2567200,
+                  4055554,
+                  6069182,
+                  8794385,
+                  10981492,
+                  11678274,
+                  11857832,
+                  13932639,
+                  13943213,
+                  14568369,
+                  15900393,
+                  17425140,
+                  18318509,
+                  18724580,
+                  18811853,
+                  19470314,
+                  20284176,
+                  22171817,
+                  23024201,
+                  23265503,
+                  24805950,
+                  26385835,
+                  26696129,
+                  35836126,
+                  41501468,
+                  45831468,
+                  49648877,
+                  50300480
+                ]
+              }
+            },
+            {
+              "case": "common_pair",
+              "initial_query_ns": 2589652,
+              "query_text": "battery electrode",
+              "signature": "a9b1329ec06c3d129134d7ce3a29db18a217af38c438601ca06cbe9670d1c927",
+              "timing": {
+                "count": 30,
+                "p50_ms": 9.261915,
+                "p95_ms": 25.834608,
+                "samples_ns": [
+                  1509377,
+                  1563961,
+                  1574339,
+                  1603570,
+                  1734779,
+                  2563544,
+                  2926188,
+                  4024485,
+                  5128809,
+                  5616012,
+                  7721726,
+                  8063132,
+                  8269665,
+                  9009861,
+                  9261915,
+                  10151884,
+                  10868404,
+                  10908095,
+                  12486976,
+                  13532946,
+                  15092553,
+                  16192095,
+                  17459481,
+                  18811477,
+                  20043546,
+                  22332990,
+                  24439987,
+                  25257937,
+                  25834608,
+                  32172487
+                ]
+              }
+            },
+            {
+              "case": "common_triple",
+              "initial_query_ns": 1877222,
+              "query_text": "battery electrode original",
+              "signature": "ac308397dd516dad13b7051f3e7d5295dcee02857953f0287f04d4b3581365c0",
+              "timing": {
+                "count": 30,
+                "p50_ms": 1.350939,
+                "p95_ms": 26.230481,
+                "samples_ns": [
+                  1311246,
+                  1317379,
+                  1320707,
+                  1321436,
+                  1323438,
+                  1324749,
+                  1328933,
+                  1330380,
+                  1331874,
+                  1332599,
+                  1332816,
+                  1333111,
+                  1337161,
+                  1350549,
+                  1350939,
+                  1354829,
+                  1378615,
+                  1394100,
+                  6970340,
+                  12603077,
+                  13789893,
+                  15266392,
+                  15394573,
+                  16950085,
+                  18520748,
+                  18982686,
+                  23019755,
+                  24648971,
+                  26230481,
+                  26674522
+                ]
+              }
+            },
+            {
+              "case": "pair_with_absent",
+              "initial_query_ns": 1692300,
+              "query_text": "battery electrode transaction",
+              "signature": "a9b1329ec06c3d129134d7ce3a29db18a217af38c438601ca06cbe9670d1c927",
+              "timing": {
+                "count": 30,
+                "p50_ms": 9.630789,
+                "p95_ms": 32.49808,
+                "samples_ns": [
+                  1507887,
+                  1508140,
+                  1519317,
+                  1519687,
+                  1522847,
+                  1523030,
+                  1530161,
+                  1595612,
+                  1596220,
+                  2730881,
+                  4152505,
+                  6837288,
+                  7869832,
+                  9357726,
+                  9630789,
+                  10688728,
+                  10813480,
+                  12699085,
+                  12833409,
+                  13326816,
+                  14595810,
+                  14982072,
+                  15153091,
+                  15855122,
+                  17617295,
+                  18189233,
+                  20659114,
+                  24902386,
+                  32498080,
+                  37769625
+                ]
+              }
+            },
+            {
+              "case": "missing",
+              "initial_query_ns": 52499,
+              "query_text": "unseenword999",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.002276,
+                "p95_ms": 0.003604,
+                "samples_ns": [
+                  2137,
+                  2144,
+                  2146,
+                  2170,
+                  2181,
+                  2182,
+                  2186,
+                  2211,
+                  2214,
+                  2219,
+                  2224,
+                  2224,
+                  2265,
+                  2268,
+                  2276,
+                  2297,
+                  2310,
+                  2355,
+                  2416,
+                  2742,
+                  2768,
+                  2812,
+                  2836,
+                  2899,
+                  2941,
+                  2962,
+                  3203,
+                  3289,
+                  3604,
+                  4714
+                ]
+              }
+            },
+            {
+              "case": "identifier_anchor",
+              "initial_query_ns": 1658261,
+              "query_text": "lookup_needle battery",
+              "signature": "8934ad0bf5c0214d47054e67252b01b0da776e8cd089e9fc27faa8c38720c2af",
+              "timing": {
+                "count": 30,
+                "p50_ms": 1.415046,
+                "p95_ms": 29.74246,
+                "samples_ns": [
+                  1381416,
+                  1390831,
+                  1392503,
+                  1393679,
+                  1399089,
+                  1399789,
+                  1401892,
+                  1402193,
+                  1403338,
+                  1406853,
+                  1406898,
+                  1407727,
+                  1407804,
+                  1408969,
+                  1415046,
+                  1417995,
+                  1418281,
+                  1423184,
+                  2830653,
+                  14492854,
+                  15744353,
+                  17966742,
+                  19093277,
+                  19270055,
+                  19326220,
+                  20648781,
+                  22646521,
+                  26808149,
+                  29742460,
+                  31237429
+                ]
+              }
+            },
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 27442303,
+              "query_text": "\"battery electrode\"",
+              "signature": "387304e8fb80f71492d06969c1b0eba3fd5455a202f003c67963a4cf5279384b",
+              "timing": {
+                "count": 30,
+                "p50_ms": 264.595099,
+                "p95_ms": 321.263503,
+                "samples_ns": [
+                  178316703,
+                  187264392,
+                  210006573,
+                  211876144,
+                  214965472,
+                  217449025,
+                  222677532,
+                  224366029,
+                  228584847,
+                  231698743,
+                  233337979,
+                  250888723,
+                  257150551,
+                  262845683,
+                  264595099,
+                  267426590,
+                  268154620,
+                  268275682,
+                  269418567,
+                  269885976,
+                  280959329,
+                  282763225,
+                  294159280,
+                  296436363,
+                  299333841,
+                  305104710,
+                  307675450,
+                  311452850,
+                  321263503,
+                  322295232
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 1000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 1935784,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 5241497
+        }
+      },
+      {
+        "label": "1000-zstd-v1-build",
+        "args": [
+          "build",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000",
+          "1000",
+          "zstd",
+          "1",
+          "1",
+          "plain"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000 1000 zstd 1 1 plain\"\n\tUser time (seconds): 0.91\n\tSystem time (seconds): 0.04\n\tPercent of CPU this job got: 84%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.13\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 16956\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 3686\n\tVoluntary context switches: 133\n\tInvoluntary context switches: 19\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 19840\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "dataset": "diverse",
+          "derived_layout": 1,
+          "footprint": {
+            "allocated_index_bytes": 1093632,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 8454144,
+              "peak_files": 10,
+              "peak_logical_bytes": 8443154
+            },
+            "estimated_index_heap_bytes": 25281917,
+            "index_bytes": 1081520,
+            "indexed_rows": 998,
+            "text_bytes": 1739503
+          },
+          "index_build_ns": 1129964587,
+          "index_compression": "zstd",
+          "phase": "build",
+          "rows": 1000,
+          "scope": "actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation",
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 5207855
+        }
+      },
+      {
+        "label": "1000-zstd-v1-fresh",
+        "args": [
+          "retained-fresh",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000",
+          "1000",
+          "zstd",
+          "10",
+          "3",
+          "plain"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000 1000 zstd 10 3 plain\"\n\tUser time (seconds): 1.36\n\tSystem time (seconds): 0.08\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.44\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 8616\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 3191\n\tVoluntary context switches: 605\n\tInvoluntary context switches: 864\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 1,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 1093632,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 8454144,
+              "peak_files": 10,
+              "peak_logical_bytes": 8443154
+            },
+            "estimated_index_heap_bytes": 25281917,
+            "index_bytes": 1081520,
+            "indexed_rows": 998,
+            "text_bytes": 1739503
+          },
+          "index_compression": "zstd",
+          "index_open_ns": 864934,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "unique",
+              "initial_query_ns": 647819,
+              "query_text": "needle00000999",
+              "signature": "d313a8d5cad552382ac6424b89d58e118fda55462c97b55cca734a16582097bf",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.146863,
+                "p95_ms": 0.217136,
+                "samples_ns": [
+                  121353,
+                  121496,
+                  122185,
+                  125107,
+                  131900,
+                  132274,
+                  133370,
+                  135374,
+                  136248,
+                  137317,
+                  138896,
+                  140193,
+                  141374,
+                  143453,
+                  146863,
+                  150155,
+                  154774,
+                  156548,
+                  166189,
+                  169101,
+                  181635,
+                  183734,
+                  188156,
+                  191663,
+                  195492,
+                  196372,
+                  197019,
+                  198188,
+                  217136,
+                  266696
+                ]
+              }
+            },
+            {
+              "case": "common",
+              "initial_query_ns": 4817486,
+              "query_text": "battery",
+              "signature": "9f3e98308faad45860c4474b8f14960acaea58826f910dd128883d3de38b4ff1",
+              "timing": {
+                "count": 30,
+                "p50_ms": 18.216621,
+                "p95_ms": 42.606309,
+                "samples_ns": [
+                  1621201,
+                  1674647,
+                  1982360,
+                  6752217,
+                  9962219,
+                  10211071,
+                  12086526,
+                  12679572,
+                  14685546,
+                  15541683,
+                  15841078,
+                  16295283,
+                  17135226,
+                  18161226,
+                  18216621,
+                  21867802,
+                  22220941,
+                  22544712,
+                  23367054,
+                  24513130,
+                  24669581,
+                  29179098,
+                  29601754,
+                  31540657,
+                  31960265,
+                  35551780,
+                  36958838,
+                  39728465,
+                  42606309,
+                  45469001
+                ]
+              }
+            },
+            {
+              "case": "common_pair",
+              "initial_query_ns": 2391387,
+              "query_text": "battery electrode",
+              "signature": "a9b1329ec06c3d129134d7ce3a29db18a217af38c438601ca06cbe9670d1c927",
+              "timing": {
+                "count": 30,
+                "p50_ms": 6.708505,
+                "p95_ms": 34.616074,
+                "samples_ns": [
+                  1638616,
+                  1647498,
+                  1648839,
+                  1654364,
+                  1656623,
+                  1659670,
+                  1661856,
+                  1674041,
+                  1676363,
+                  1716150,
+                  3561039,
+                  5384676,
+                  5651915,
+                  6282711,
+                  6708505,
+                  11238673,
+                  12633734,
+                  12995427,
+                  13849860,
+                  14480093,
+                  15111756,
+                  15728185,
+                  16151322,
+                  16267690,
+                  16576733,
+                  22922298,
+                  25730369,
+                  33618018,
+                  34616074,
+                  36361622
+                ]
+              }
+            },
+            {
+              "case": "common_triple",
+              "initial_query_ns": 2042520,
+              "query_text": "battery electrode original",
+              "signature": "ac308397dd516dad13b7051f3e7d5295dcee02857953f0287f04d4b3581365c0",
+              "timing": {
+                "count": 30,
+                "p50_ms": 1.526276,
+                "p95_ms": 30.189815,
+                "samples_ns": [
+                  1460394,
+                  1460685,
+                  1461479,
+                  1462509,
+                  1467018,
+                  1470281,
+                  1470558,
+                  1475499,
+                  1486880,
+                  1492106,
+                  1500254,
+                  1502168,
+                  1502979,
+                  1508646,
+                  1526276,
+                  1529624,
+                  1877117,
+                  4593562,
+                  7250473,
+                  7632596,
+                  8846026,
+                  9606186,
+                  16476928,
+                  23409742,
+                  27328710,
+                  27390420,
+                  29394258,
+                  29593933,
+                  30189815,
+                  30730026
+                ]
+              }
+            },
+            {
+              "case": "pair_with_absent",
+              "initial_query_ns": 1872857,
+              "query_text": "battery electrode transaction",
+              "signature": "a9b1329ec06c3d129134d7ce3a29db18a217af38c438601ca06cbe9670d1c927",
+              "timing": {
+                "count": 30,
+                "p50_ms": 1.713883,
+                "p95_ms": 33.561838,
+                "samples_ns": [
+                  1649967,
+                  1655984,
+                  1659632,
+                  1663684,
+                  1664930,
+                  1667300,
+                  1673475,
+                  1674349,
+                  1686030,
+                  1688817,
+                  1692307,
+                  1693359,
+                  1708463,
+                  1709077,
+                  1713883,
+                  1722484,
+                  1993370,
+                  4489058,
+                  4517614,
+                  4779971,
+                  4975231,
+                  11359972,
+                  12133464,
+                  23899855,
+                  27337932,
+                  28932607,
+                  31205919,
+                  31395122,
+                  33561838,
+                  44326156
+                ]
+              }
+            },
+            {
+              "case": "missing",
+              "initial_query_ns": 52696,
+              "query_text": "unseenword999",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.002268,
+                "p95_ms": 0.003786,
+                "samples_ns": [
+                  2112,
+                  2157,
+                  2170,
+                  2178,
+                  2183,
+                  2184,
+                  2196,
+                  2212,
+                  2223,
+                  2226,
+                  2234,
+                  2240,
+                  2250,
+                  2264,
+                  2268,
+                  2269,
+                  2283,
+                  2373,
+                  2429,
+                  2789,
+                  2876,
+                  2944,
+                  3004,
+                  3022,
+                  3060,
+                  3146,
+                  3241,
+                  3333,
+                  3786,
+                  5949
+                ]
+              }
+            },
+            {
+              "case": "identifier_anchor",
+              "initial_query_ns": 1919069,
+              "query_text": "lookup_needle battery",
+              "signature": "8934ad0bf5c0214d47054e67252b01b0da776e8cd089e9fc27faa8c38720c2af",
+              "timing": {
+                "count": 30,
+                "p50_ms": 7.298842,
+                "p95_ms": 34.238776,
+                "samples_ns": [
+                  1599477,
+                  1601855,
+                  1609822,
+                  1610266,
+                  1618274,
+                  1621844,
+                  1626162,
+                  1627194,
+                  1631017,
+                  1652282,
+                  1664029,
+                  1667892,
+                  1849387,
+                  4627379,
+                  7298842,
+                  10983584,
+                  13898525,
+                  15262587,
+                  16675002,
+                  16863932,
+                  17178877,
+                  17187813,
+                  17692502,
+                  19637814,
+                  23563075,
+                  32539279,
+                  33374459,
+                  33759178,
+                  34238776,
+                  34700488
+                ]
+              }
+            },
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 36698786,
+              "query_text": "\"battery electrode\"",
+              "signature": "387304e8fb80f71492d06969c1b0eba3fd5455a202f003c67963a4cf5279384b",
+              "timing": {
+                "count": 30,
+                "p50_ms": 354.108104,
+                "p95_ms": 407.136268,
+                "samples_ns": [
+                  285545723,
+                  296315874,
+                  317293574,
+                  323027040,
+                  323411055,
+                  340044530,
+                  342173901,
+                  344968766,
+                  347298875,
+                  347361601,
+                  350186478,
+                  351158655,
+                  351242581,
+                  353094628,
+                  354108104,
+                  356347268,
+                  358177866,
+                  359392058,
+                  364900191,
+                  365670274,
+                  369998519,
+                  370084022,
+                  375593370,
+                  375924947,
+                  387152349,
+                  388410803,
+                  390098618,
+                  406551584,
+                  407136268,
+                  407702200
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 1000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 1935784,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 5306887
+        }
+      },
+      {
+        "label": "1000-zstd-v2-build",
+        "args": [
+          "build",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000",
+          "1000",
+          "zstd",
+          "1",
+          "1",
+          "plain"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000 1000 zstd 1 1 plain\"\n\tUser time (seconds): 0.91\n\tSystem time (seconds): 0.03\n\tPercent of CPU this job got: 86%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.08\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 16824\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 3685\n\tVoluntary context switches: 100\n\tInvoluntary context switches: 11\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 19312\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "footprint": {
+            "allocated_index_bytes": 839680,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 8454144,
+              "peak_files": 10,
+              "peak_logical_bytes": 8443041
+            },
+            "estimated_index_heap_bytes": 25285422,
+            "index_bytes": 830599,
+            "indexed_rows": 998,
+            "text_bytes": 1739503
+          },
+          "index_build_ns": 1076283665,
+          "index_compression": "zstd",
+          "phase": "build",
+          "rows": 1000,
+          "scope": "actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation",
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 5518712
+        }
+      },
+      {
+        "label": "1000-zstd-v2-fresh",
+        "args": [
+          "retained-fresh",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000",
+          "1000",
+          "zstd",
+          "10",
+          "3",
+          "plain"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000 1000 zstd 10 3 plain\"\n\tUser time (seconds): 1.18\n\tSystem time (seconds): 0.07\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.27\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 9096\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 2188\n\tVoluntary context switches: 549\n\tInvoluntary context switches: 738\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 839680,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 8454144,
+              "peak_files": 10,
+              "peak_logical_bytes": 8443041
+            },
+            "estimated_index_heap_bytes": 25285422,
+            "index_bytes": 830599,
+            "indexed_rows": 998,
+            "text_bytes": 1739503
+          },
+          "index_compression": "zstd",
+          "index_open_ns": 1086476,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "unique",
+              "initial_query_ns": 526198,
+              "query_text": "needle00000999",
+              "signature": "d313a8d5cad552382ac6424b89d58e118fda55462c97b55cca734a16582097bf",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.119066,
+                "p95_ms": 0.171829,
+                "samples_ns": [
+                  111253,
+                  111512,
+                  111566,
+                  112157,
+                  114452,
+                  114557,
+                  114982,
+                  115193,
+                  116683,
+                  116795,
+                  117863,
+                  117986,
+                  118802,
+                  118824,
+                  119066,
+                  119744,
+                  120280,
+                  120904,
+                  123042,
+                  140205,
+                  157429,
+                  158402,
+                  161139,
+                  161895,
+                  162056,
+                  165077,
+                  166128,
+                  170950,
+                  171829,
+                  223754
+                ]
+              }
+            },
+            {
+              "case": "common",
+              "initial_query_ns": 4157371,
+              "query_text": "battery",
+              "signature": "9f3e98308faad45860c4474b8f14960acaea58826f910dd128883d3de38b4ff1",
+              "timing": {
+                "count": 30,
+                "p50_ms": 21.363199,
+                "p95_ms": 39.127427,
+                "samples_ns": [
+                  2664859,
+                  2689975,
+                  2691673,
+                  2718343,
+                  2756665,
+                  2775466,
+                  2789670,
+                  10735956,
+                  11575688,
+                  13381273,
+                  14193861,
+                  14218830,
+                  14813385,
+                  20751927,
+                  21363199,
+                  22848883,
+                  24805564,
+                  26903325,
+                  28333900,
+                  28517244,
+                  28783640,
+                  28798961,
+                  28832442,
+                  29741777,
+                  30069982,
+                  30087076,
+                  31758933,
+                  33926825,
+                  39127427,
+                  46119650
+                ]
+              }
+            },
+            {
+              "case": "common_pair",
+              "initial_query_ns": 2411975,
+              "query_text": "battery electrode",
+              "signature": "a9b1329ec06c3d129134d7ce3a29db18a217af38c438601ca06cbe9670d1c927",
+              "timing": {
+                "count": 30,
+                "p50_ms": 7.840487,
+                "p95_ms": 30.075487,
+                "samples_ns": [
+                  1568219,
+                  1569126,
+                  1573298,
+                  1573439,
+                  1580606,
+                  1588584,
+                  1591676,
+                  1597347,
+                  1602355,
+                  1634126,
+                  1647592,
+                  2527802,
+                  4737141,
+                  5189098,
+                  7840487,
+                  10495882,
+                  11479362,
+                  13151540,
+                  15306646,
+                  16333908,
+                  19257684,
+                  20855659,
+                  21812540,
+                  22672113,
+                  23187401,
+                  23791591,
+                  25567336,
+                  26392556,
+                  30075487,
+                  35033982
+                ]
+              }
+            },
+            {
+              "case": "common_triple",
+              "initial_query_ns": 1979159,
+              "query_text": "battery electrode original",
+              "signature": "ac308397dd516dad13b7051f3e7d5295dcee02857953f0287f04d4b3581365c0",
+              "timing": {
+                "count": 30,
+                "p50_ms": 1.450842,
+                "p95_ms": 26.803282,
+                "samples_ns": [
+                  1380112,
+                  1384858,
+                  1388992,
+                  1395442,
+                  1395625,
+                  1396840,
+                  1399010,
+                  1404238,
+                  1404700,
+                  1410781,
+                  1412461,
+                  1413188,
+                  1414085,
+                  1414327,
+                  1450842,
+                  1507033,
+                  4765417,
+                  7157101,
+                  9435439,
+                  14611351,
+                  15984152,
+                  17320463,
+                  18724534,
+                  18783107,
+                  20053363,
+                  20124230,
+                  21509922,
+                  26114690,
+                  26803282,
+                  27125952
+                ]
+              }
+            },
+            {
+              "case": "pair_with_absent",
+              "initial_query_ns": 1766009,
+              "query_text": "battery electrode transaction",
+              "signature": "a9b1329ec06c3d129134d7ce3a29db18a217af38c438601ca06cbe9670d1c927",
+              "timing": {
+                "count": 30,
+                "p50_ms": 1.873179,
+                "p95_ms": 30.998798,
+                "samples_ns": [
+                  1583368,
+                  1584223,
+                  1589363,
+                  1590077,
+                  1594553,
+                  1601434,
+                  1603355,
+                  1603550,
+                  1605668,
+                  1607605,
+                  1618542,
+                  1619012,
+                  1655031,
+                  1657446,
+                  1873179,
+                  4344688,
+                  7239284,
+                  9913945,
+                  11870794,
+                  12555896,
+                  15557500,
+                  17717039,
+                  18514076,
+                  19245787,
+                  22652068,
+                  25814322,
+                  26219308,
+                  26289161,
+                  30998798,
+                  37915949
+                ]
+              }
+            },
+            {
+              "case": "missing",
+              "initial_query_ns": 58679,
+              "query_text": "unseenword999",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.002323,
+                "p95_ms": 0.003758,
+                "samples_ns": [
+                  2156,
+                  2193,
+                  2202,
+                  2214,
+                  2224,
+                  2232,
+                  2252,
+                  2279,
+                  2284,
+                  2286,
+                  2298,
+                  2299,
+                  2306,
+                  2306,
+                  2323,
+                  2326,
+                  2340,
+                  2352,
+                  2574,
+                  2767,
+                  2805,
+                  2907,
+                  2967,
+                  2983,
+                  3322,
+                  3328,
+                  3478,
+                  3582,
+                  3758,
+                  5578
+                ]
+              }
+            },
+            {
+              "case": "identifier_anchor",
+              "initial_query_ns": 1854184,
+              "query_text": "lookup_needle battery",
+              "signature": "8934ad0bf5c0214d47054e67252b01b0da776e8cd089e9fc27faa8c38720c2af",
+              "timing": {
+                "count": 30,
+                "p50_ms": 10.034592,
+                "p95_ms": 33.169175,
+                "samples_ns": [
+                  1489417,
+                  1492582,
+                  1499690,
+                  1502620,
+                  1504311,
+                  1515685,
+                  1539297,
+                  1571257,
+                  1881507,
+                  4321919,
+                  4646389,
+                  6002876,
+                  6255220,
+                  7261245,
+                  10034592,
+                  12477641,
+                  12781292,
+                  15198819,
+                  15566054,
+                  17061417,
+                  17591237,
+                  18545573,
+                  18699352,
+                  19233174,
+                  19266419,
+                  21388183,
+                  21562634,
+                  27058190,
+                  33169175,
+                  38093101
+                ]
+              }
+            },
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 33174148,
+              "query_text": "\"battery electrode\"",
+              "signature": "387304e8fb80f71492d06969c1b0eba3fd5455a202f003c67963a4cf5279384b",
+              "timing": {
+                "count": 30,
+                "p50_ms": 305.835502,
+                "p95_ms": 354.016065,
+                "samples_ns": [
+                  254984032,
+                  258286337,
+                  261429354,
+                  269118092,
+                  276368275,
+                  276974740,
+                  277664383,
+                  279862691,
+                  284138593,
+                  286507435,
+                  294592501,
+                  296464536,
+                  296782817,
+                  302339637,
+                  305835502,
+                  308815691,
+                  313001863,
+                  313903718,
+                  314162596,
+                  315041534,
+                  318642751,
+                  323087578,
+                  328025495,
+                  328472966,
+                  329967516,
+                  337144480,
+                  345237404,
+                  348096366,
+                  354016065,
+                  359476441
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 1000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 1935784,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 5080640
+        }
+      },
+      {
+        "label": "100000-source",
+        "args": [
+          "source",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000",
+          "100000",
+          "plain"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 source /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000 100000 plain\"\n\tUser time (seconds): 1.08\n\tSystem time (seconds): 0.47\n\tPercent of CPU this job got: 64%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:02.40\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 43208\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 12804\n\tVoluntary context switches: 2687\n\tInvoluntary context switches: 19\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 401504\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "checkpoint_sequence": 100001,
+          "dataset": "diverse",
+          "group_durability_rows": 1024,
+          "phase": "source",
+          "rows": 100000,
+          "scope": "synthetic non-agent data, actual durable Event profile frames; includes prepare, append batches and final sync",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_write_ns": 2386996310
+        }
+      },
+      {
+        "label": "100000-raw-v1-build",
+        "args": [
+          "build",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000",
+          "100000",
+          "raw",
+          "1",
+          "1",
+          "plain"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000 100000 raw 1 1 plain\"\n\tUser time (seconds): 120.61\n\tSystem time (seconds): 3.54\n\tPercent of CPU this job got: 97%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 2:07.38\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 60140\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 1\n\tMinor (reclaiming a frame) page faults: 16915\n\tVoluntary context switches: 12860\n\tInvoluntary context switches: 4941\n\tSwaps: 0\n\tFile system inputs: 43984\n\tFile system outputs: 2898688\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "dataset": "diverse",
+          "derived_layout": 1,
+          "footprint": {
+            "allocated_index_bytes": 327806976,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 996638720,
+              "peak_files": 127,
+              "peak_logical_bytes": 996616175
+            },
+            "estimated_index_heap_bytes": 36368880,
+            "index_bytes": 327796084,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_build_ns": 127029375612,
+          "index_compression": "raw",
+          "phase": "build",
+          "rows": 100000,
+          "scope": "actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation",
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 336804654
+        }
+      },
+      {
+        "label": "100000-raw-v1-fresh",
+        "args": [
+          "retained-fresh",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000",
+          "100000",
+          "raw",
+          "10",
+          "3",
+          "plain"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000 100000 raw 10 3 plain\"\n\tUser time (seconds): 1.54\n\tSystem time (seconds): 0.09\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.64\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 58972\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 16526\n\tVoluntary context switches: 203\n\tInvoluntary context switches: 714\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 1,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 327806976,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 996638720,
+              "peak_files": 127,
+              "peak_logical_bytes": 996616175
+            },
+            "estimated_index_heap_bytes": 36368880,
+            "index_bytes": 327796084,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "raw",
+          "index_open_ns": 22959974,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "unique",
+              "initial_query_ns": 740181,
+              "query_text": "needle00099999",
+              "signature": "a1d13d666b49f58c6325d43e14c673f158977eb8cb7b27a5a77a8ead38a87958",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.067755,
+                "p95_ms": 0.102362,
+                "samples_ns": [
+                  62398,
+                  62429,
+                  62907,
+                  63164,
+                  63298,
+                  63327,
+                  63508,
+                  63674,
+                  63728,
+                  63888,
+                  64182,
+                  65299,
+                  65856,
+                  66240,
+                  67755,
+                  68390,
+                  69050,
+                  69492,
+                  72599,
+                  76386,
+                  83961,
+                  86595,
+                  86606,
+                  86770,
+                  89602,
+                  89729,
+                  91396,
+                  94347,
+                  102362,
+                  151880
+                ]
+              }
+            },
+            {
+              "case": "common",
+              "initial_query_ns": 12194291,
+              "query_text": "battery",
+              "signature": "8d7948606a7b3e2a9d936cbd869f0910e077755302c997f01f698a66e8bf4665",
+              "timing": {
+                "count": 30,
+                "p50_ms": 36.087774,
+                "p95_ms": 69.911341,
+                "samples_ns": [
+                  16424908,
+                  21237704,
+                  23549778,
+                  24019451,
+                  24482894,
+                  24962165,
+                  25012087,
+                  25262503,
+                  26334710,
+                  26796797,
+                  27029608,
+                  27168811,
+                  27455292,
+                  29027292,
+                  36087774,
+                  37162690,
+                  39772092,
+                  40149175,
+                  40487118,
+                  40571565,
+                  43965977,
+                  47741749,
+                  48210673,
+                  48372514,
+                  49015140,
+                  50373598,
+                  51014256,
+                  58476956,
+                  69911341,
+                  95803739
+                ]
+              }
+            },
+            {
+              "case": "common_pair",
+              "initial_query_ns": 18910948,
+              "query_text": "battery electrode",
+              "signature": "4cb1387588d7de2613679a440e6d11ab32c28c763ab018d5606e07afd487f84d",
+              "timing": {
+                "count": 30,
+                "p50_ms": 94.708677,
+                "p95_ms": 128.0329,
+                "samples_ns": [
+                  69113868,
+                  69167790,
+                  74375357,
+                  74454979,
+                  79565378,
+                  80206987,
+                  81431991,
+                  85696262,
+                  88235779,
+                  88727368,
+                  89839330,
+                  92519856,
+                  92799993,
+                  94498235,
+                  94708677,
+                  96986691,
+                  97339574,
+                  97621331,
+                  98396747,
+                  103333467,
+                  106079858,
+                  113805342,
+                  113929568,
+                  116942083,
+                  122833909,
+                  122936017,
+                  125531661,
+                  126120391,
+                  128032900,
+                  132790445
+                ]
+              }
+            },
+            {
+              "case": "common_triple",
+              "initial_query_ns": 19976835,
+              "query_text": "battery electrode original",
+              "signature": "fa85f999041761edc53a4d3f06a5d5c85d04f684d54971578a63e14222a9a177",
+              "timing": {
+                "count": 30,
+                "p50_ms": 108.961671,
+                "p95_ms": 157.966839,
+                "samples_ns": [
+                  74557010,
+                  83588640,
+                  87335739,
+                  87854795,
+                  88167798,
+                  89287397,
+                  89733445,
+                  91373647,
+                  91856737,
+                  92866751,
+                  100161154,
+                  100209044,
+                  105865224,
+                  108450889,
+                  108961671,
+                  111492678,
+                  112399318,
+                  112912549,
+                  118175295,
+                  122716002,
+                  125645268,
+                  129752095,
+                  136994896,
+                  138202562,
+                  138462403,
+                  139944532,
+                  156700563,
+                  157331028,
+                  157966839,
+                  177964246
+                ]
+              }
+            },
+            {
+              "case": "pair_with_absent",
+              "initial_query_ns": 12028849,
+              "query_text": "battery electrode transaction",
+              "signature": "4cb1387588d7de2613679a440e6d11ab32c28c763ab018d5606e07afd487f84d",
+              "timing": {
+                "count": 30,
+                "p50_ms": 107.895078,
+                "p95_ms": 124.318295,
+                "samples_ns": [
+                  84368764,
+                  84525771,
+                  85913580,
+                  87194827,
+                  87223168,
+                  87297187,
+                  88833209,
+                  90012940,
+                  91428433,
+                  94522585,
+                  95161212,
+                  96974592,
+                  102381562,
+                  102389949,
+                  107895078,
+                  109691523,
+                  109791414,
+                  110020791,
+                  112905090,
+                  112962374,
+                  113089938,
+                  115870977,
+                  115911979,
+                  116300882,
+                  118133715,
+                  121373854,
+                  121963633,
+                  124104622,
+                  124318295,
+                  124924214
+                ]
+              }
+            },
+            {
+              "case": "missing",
+              "initial_query_ns": 244492,
+              "query_text": "unseenword999",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.002336,
+                "p95_ms": 0.003512,
+                "samples_ns": [
+                  2157,
+                  2166,
+                  2176,
+                  2191,
+                  2204,
+                  2235,
+                  2240,
+                  2241,
+                  2256,
+                  2256,
+                  2257,
+                  2263,
+                  2276,
+                  2284,
+                  2336,
+                  2338,
+                  2427,
+                  2443,
+                  2549,
+                  2727,
+                  2835,
+                  2940,
+                  3011,
+                  3136,
+                  3170,
+                  3174,
+                  3297,
+                  3384,
+                  3512,
+                  7391
+                ]
+              }
+            },
+            {
+              "case": "identifier_anchor",
+              "initial_query_ns": 4899024,
+              "query_text": "lookup_needle battery",
+              "signature": "d4a057db4b6785c1e67791561dd63dfe949d94e6f1d3eccfa29697eac4030fd6",
+              "timing": {
+                "count": 30,
+                "p50_ms": 14.462534,
+                "p95_ms": 35.477029,
+                "samples_ns": [
+                  2105461,
+                  2501748,
+                  4466203,
+                  4712894,
+                  5237677,
+                  5819295,
+                  6531023,
+                  7169313,
+                  10106639,
+                  10285811,
+                  10632746,
+                  10955084,
+                  11771590,
+                  11813039,
+                  14462534,
+                  14501412,
+                  14750009,
+                  17022144,
+                  17244592,
+                  17429391,
+                  19704171,
+                  22367578,
+                  22380521,
+                  23119896,
+                  24719951,
+                  28680496,
+                  31575294,
+                  32053597,
+                  35477029,
+                  49016717
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 288489122
+        }
+      },
+      {
+        "label": "100000-raw-v2-build",
+        "args": [
+          "build",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000",
+          "100000",
+          "raw",
+          "1",
+          "1",
+          "plain"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000 100000 raw 1 1 plain\"\n\tUser time (seconds): 119.62\n\tSystem time (seconds): 3.59\n\tPercent of CPU this job got: 97%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 2:06.06\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 60164\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 16887\n\tVoluntary context switches: 11200\n\tInvoluntary context switches: 5310\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 2727568\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "footprint": {
+            "allocated_index_bytes": 238686208,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 996638720,
+              "peak_files": 127,
+              "peak_logical_bytes": 996615560
+            },
+            "estimated_index_heap_bytes": 36650617,
+            "index_bytes": 238679458,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_build_ns": 125758437276,
+          "index_compression": "raw",
+          "phase": "build",
+          "rows": 100000,
+          "scope": "actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation",
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 290658529
+        }
+      },
+      {
+        "label": "100000-raw-v2-fresh",
+        "args": [
+          "retained-fresh",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000",
+          "100000",
+          "raw",
+          "10",
+          "3",
+          "plain"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000 100000 raw 10 3 plain\"\n\tUser time (seconds): 1.69\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.77\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 57056\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 16076\n\tVoluntary context switches: 197\n\tInvoluntary context switches: 872\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 238686208,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 996638720,
+              "peak_files": 127,
+              "peak_logical_bytes": 996615560
+            },
+            "estimated_index_heap_bytes": 36650617,
+            "index_bytes": 238679458,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "raw",
+          "index_open_ns": 30846892,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "unique",
+              "initial_query_ns": 542298,
+              "query_text": "needle00099999",
+              "signature": "a1d13d666b49f58c6325d43e14c673f158977eb8cb7b27a5a77a8ead38a87958",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.05053,
+                "p95_ms": 0.076097,
+                "samples_ns": [
+                  45186,
+                  45314,
+                  45481,
+                  45489,
+                  45561,
+                  45564,
+                  45706,
+                  45710,
+                  45824,
+                  46048,
+                  46192,
+                  46249,
+                  47491,
+                  47971,
+                  50530,
+                  51257,
+                  56574,
+                  58437,
+                  58642,
+                  59749,
+                  60234,
+                  61016,
+                  61768,
+                  62264,
+                  63462,
+                  63709,
+                  65795,
+                  68869,
+                  76097,
+                  103239
+                ]
+              }
+            },
+            {
+              "case": "common",
+              "initial_query_ns": 11411789,
+              "query_text": "battery",
+              "signature": "8d7948606a7b3e2a9d936cbd869f0910e077755302c997f01f698a66e8bf4665",
+              "timing": {
+                "count": 30,
+                "p50_ms": 40.761751,
+                "p95_ms": 81.002875,
+                "samples_ns": [
+                  14409474,
+                  21319440,
+                  24481611,
+                  25535024,
+                  25971909,
+                  26153582,
+                  34607072,
+                  35037477,
+                  35047093,
+                  36759860,
+                  37092984,
+                  37110089,
+                  37340228,
+                  38880123,
+                  40761751,
+                  41991683,
+                  42665197,
+                  44866020,
+                  47110067,
+                  48896524,
+                  51168306,
+                  55025836,
+                  58050957,
+                  60583159,
+                  61553826,
+                  63627916,
+                  65852496,
+                  69784382,
+                  81002875,
+                  97528667
+                ]
+              }
+            },
+            {
+              "case": "common_pair",
+              "initial_query_ns": 17193025,
+              "query_text": "battery electrode",
+              "signature": "4cb1387588d7de2613679a440e6d11ab32c28c763ab018d5606e07afd487f84d",
+              "timing": {
+                "count": 30,
+                "p50_ms": 104.094342,
+                "p95_ms": 133.723144,
+                "samples_ns": [
+                  84370125,
+                  86092497,
+                  87845529,
+                  91529013,
+                  92561741,
+                  94353101,
+                  96502896,
+                  100283956,
+                  100342271,
+                  101301455,
+                  101809574,
+                  102783696,
+                  103380779,
+                  103691632,
+                  104094342,
+                  104097806,
+                  104819799,
+                  104995436,
+                  106110168,
+                  108226226,
+                  111578251,
+                  111706824,
+                  114053781,
+                  114636083,
+                  117047656,
+                  125803226,
+                  129507609,
+                  132256888,
+                  133723144,
+                  159553161
+                ]
+              }
+            },
+            {
+              "case": "common_triple",
+              "initial_query_ns": 20033251,
+              "query_text": "battery electrode original",
+              "signature": "fa85f999041761edc53a4d3f06a5d5c85d04f684d54971578a63e14222a9a177",
+              "timing": {
+                "count": 30,
+                "p50_ms": 134.018732,
+                "p95_ms": 162.23408,
+                "samples_ns": [
+                  112859833,
+                  113574317,
+                  117124756,
+                  118188038,
+                  119865267,
+                  121821639,
+                  121848849,
+                  124377171,
+                  125603468,
+                  128406226,
+                  128520345,
+                  130330261,
+                  132714383,
+                  132993278,
+                  134018732,
+                  135891844,
+                  135971667,
+                  138233723,
+                  138847542,
+                  139521278,
+                  139669605,
+                  141584556,
+                  141639959,
+                  141679821,
+                  142664660,
+                  149905965,
+                  157374855,
+                  162225840,
+                  162234080,
+                  180355358
+                ]
+              }
+            },
+            {
+              "case": "pair_with_absent",
+              "initial_query_ns": 13200937,
+              "query_text": "battery electrode transaction",
+              "signature": "4cb1387588d7de2613679a440e6d11ab32c28c763ab018d5606e07afd487f84d",
+              "timing": {
+                "count": 30,
+                "p50_ms": 112.524261,
+                "p95_ms": 142.805558,
+                "samples_ns": [
+                  70717909,
+                  78427680,
+                  97560387,
+                  99453708,
+                  100188459,
+                  101147685,
+                  102931684,
+                  105818008,
+                  106828922,
+                  111492804,
+                  111714995,
+                  112030101,
+                  112227294,
+                  112520735,
+                  112524261,
+                  115415723,
+                  121154239,
+                  125808126,
+                  127156800,
+                  129862504,
+                  131187652,
+                  131913718,
+                  136418183,
+                  136874176,
+                  137907217,
+                  140596067,
+                  141016781,
+                  141373250,
+                  142805558,
+                  165277217
+                ]
+              }
+            },
+            {
+              "case": "missing",
+              "initial_query_ns": 247962,
+              "query_text": "unseenword999",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.002293,
+                "p95_ms": 0.00379,
+                "samples_ns": [
+                  2181,
+                  2191,
+                  2196,
+                  2213,
+                  2216,
+                  2222,
+                  2230,
+                  2238,
+                  2239,
+                  2260,
+                  2261,
+                  2263,
+                  2273,
+                  2279,
+                  2293,
+                  2304,
+                  2328,
+                  2334,
+                  2569,
+                  2935,
+                  2983,
+                  3060,
+                  3185,
+                  3230,
+                  3302,
+                  3487,
+                  3558,
+                  3622,
+                  3790,
+                  7842
+                ]
+              }
+            },
+            {
+              "case": "identifier_anchor",
+              "initial_query_ns": 4638996,
+              "query_text": "lookup_needle battery",
+              "signature": "d4a057db4b6785c1e67791561dd63dfe949d94e6f1d3eccfa29697eac4030fd6",
+              "timing": {
+                "count": 30,
+                "p50_ms": 18.02105,
+                "p95_ms": 35.239153,
+                "samples_ns": [
+                  2110513,
+                  2127733,
+                  2906913,
+                  3010623,
+                  6253639,
+                  6433400,
+                  7159415,
+                  8880635,
+                  11043122,
+                  11855812,
+                  13478944,
+                  15271268,
+                  17048958,
+                  17615365,
+                  18021050,
+                  19945423,
+                  20193691,
+                  20785336,
+                  20857114,
+                  21999782,
+                  25436797,
+                  26771917,
+                  27546546,
+                  28425640,
+                  28916297,
+                  31084299,
+                  31166468,
+                  31880386,
+                  35239153,
+                  35872674
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 251277867
+        }
+      },
+      {
+        "label": "100000-zstd-v1-build",
+        "args": [
+          "build",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000",
+          "100000",
+          "zstd",
+          "1",
+          "1",
+          "plain"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000 100000 zstd 1 1 plain\"\n\tUser time (seconds): 123.37\n\tSystem time (seconds): 3.23\n\tPercent of CPU this job got: 97%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 2:09.77\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 60496\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 16877\n\tVoluntary context switches: 13146\n\tInvoluntary context switches: 5044\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 2471896\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "dataset": "diverse",
+          "derived_layout": 1,
+          "footprint": {
+            "allocated_index_bytes": 108429312,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 850280448,
+              "peak_files": 127,
+              "peak_logical_bytes": 850259983
+            },
+            "estimated_index_heap_bytes": 36368883,
+            "index_bytes": 108419914,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_build_ns": 129469983206,
+          "index_compression": "zstd",
+          "phase": "build",
+          "rows": 100000,
+          "scope": "actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation",
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 292211477
+        }
+      },
+      {
+        "label": "100000-zstd-v1-fresh",
+        "args": [
+          "retained-fresh",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000",
+          "100000",
+          "zstd",
+          "10",
+          "3",
+          "plain"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000 100000 zstd 10 3 plain\"\n\tUser time (seconds): 1.57\n\tSystem time (seconds): 0.08\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.66\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 60064\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 1\n\tMinor (reclaiming a frame) page faults: 16713\n\tVoluntary context switches: 215\n\tInvoluntary context switches: 754\n\tSwaps: 0\n\tFile system inputs: 56\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 1,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 108429312,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 850280448,
+              "peak_files": 127,
+              "peak_logical_bytes": 850259983
+            },
+            "estimated_index_heap_bytes": 36368883,
+            "index_bytes": 108419914,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "zstd",
+          "index_open_ns": 15121224,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "unique",
+              "initial_query_ns": 537140,
+              "query_text": "needle00099999",
+              "signature": "a1d13d666b49f58c6325d43e14c673f158977eb8cb7b27a5a77a8ead38a87958",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.068417,
+                "p95_ms": 0.103255,
+                "samples_ns": [
+                  60263,
+                  60279,
+                  62280,
+                  63351,
+                  63459,
+                  64008,
+                  64463,
+                  64843,
+                  64985,
+                  65681,
+                  66446,
+                  66550,
+                  66766,
+                  67987,
+                  68417,
+                  69264,
+                  70372,
+                  74048,
+                  74230,
+                  77651,
+                  87636,
+                  88746,
+                  90161,
+                  95695,
+                  96471,
+                  98524,
+                  102835,
+                  102910,
+                  103255,
+                  126809
+                ]
+              }
+            },
+            {
+              "case": "common",
+              "initial_query_ns": 12967257,
+              "query_text": "battery",
+              "signature": "8d7948606a7b3e2a9d936cbd869f0910e077755302c997f01f698a66e8bf4665",
+              "timing": {
+                "count": 30,
+                "p50_ms": 30.902172,
+                "p95_ms": 94.939449,
+                "samples_ns": [
+                  10261357,
+                  15130109,
+                  23714823,
+                  23816148,
+                  24121114,
+                  25679583,
+                  26753519,
+                  26992951,
+                  27014537,
+                  27359263,
+                  28935145,
+                  29798714,
+                  29810999,
+                  30417499,
+                  30902172,
+                  34268860,
+                  35037573,
+                  35635688,
+                  38479506,
+                  40820311,
+                  41430618,
+                  45446938,
+                  47244156,
+                  47587102,
+                  50755516,
+                  58917646,
+                  68717427,
+                  79912764,
+                  94939449,
+                  106344954
+                ]
+              }
+            },
+            {
+              "case": "common_pair",
+              "initial_query_ns": 17440509,
+              "query_text": "battery electrode",
+              "signature": "4cb1387588d7de2613679a440e6d11ab32c28c763ab018d5606e07afd487f84d",
+              "timing": {
+                "count": 30,
+                "p50_ms": 97.443367,
+                "p95_ms": 132.222001,
+                "samples_ns": [
+                  58771589,
+                  76799537,
+                  76839571,
+                  76855058,
+                  78028782,
+                  82538076,
+                  84695962,
+                  86501476,
+                  87421305,
+                  93858941,
+                  94867839,
+                  95135820,
+                  95895430,
+                  97351088,
+                  97443367,
+                  99720174,
+                  101211196,
+                  101217993,
+                  105273502,
+                  105846783,
+                  106077376,
+                  106105886,
+                  111172797,
+                  112185007,
+                  117625279,
+                  118355764,
+                  120091428,
+                  126297158,
+                  132222001,
+                  169034253
+                ]
+              }
+            },
+            {
+              "case": "common_triple",
+              "initial_query_ns": 19214349,
+              "query_text": "battery electrode original",
+              "signature": "fa85f999041761edc53a4d3f06a5d5c85d04f684d54971578a63e14222a9a177",
+              "timing": {
+                "count": 30,
+                "p50_ms": 111.59282,
+                "p95_ms": 163.348545,
+                "samples_ns": [
+                  83810976,
+                  87155610,
+                  88911076,
+                  91656015,
+                  92265852,
+                  99284724,
+                  103305575,
+                  103324836,
+                  104189888,
+                  105144699,
+                  105245467,
+                  106418863,
+                  109097487,
+                  109911882,
+                  111592820,
+                  114064618,
+                  115707354,
+                  117020965,
+                  121575976,
+                  123184595,
+                  125948509,
+                  128766138,
+                  134611371,
+                  137328733,
+                  137873145,
+                  143648740,
+                  145351267,
+                  149004251,
+                  163348545,
+                  177108981
+                ]
+              }
+            },
+            {
+              "case": "pair_with_absent",
+              "initial_query_ns": 12003982,
+              "query_text": "battery electrode transaction",
+              "signature": "4cb1387588d7de2613679a440e6d11ab32c28c763ab018d5606e07afd487f84d",
+              "timing": {
+                "count": 30,
+                "p50_ms": 101.419609,
+                "p95_ms": 133.877322,
+                "samples_ns": [
+                  86934789,
+                  86987813,
+                  89810275,
+                  89834583,
+                  90320937,
+                  90576606,
+                  92143706,
+                  93244627,
+                  95340351,
+                  95381766,
+                  95388736,
+                  95824641,
+                  98252163,
+                  98410733,
+                  101419609,
+                  105235703,
+                  105240405,
+                  106531450,
+                  108849532,
+                  112440186,
+                  112610141,
+                  113862266,
+                  118634466,
+                  119565764,
+                  124269514,
+                  125176586,
+                  127037786,
+                  132482401,
+                  133877322,
+                  140804563
+                ]
+              }
+            },
+            {
+              "case": "missing",
+              "initial_query_ns": 258381,
+              "query_text": "unseenword999",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.002304,
+                "p95_ms": 0.005152,
+                "samples_ns": [
+                  2100,
+                  2114,
+                  2202,
+                  2211,
+                  2224,
+                  2233,
+                  2236,
+                  2247,
+                  2257,
+                  2270,
+                  2271,
+                  2272,
+                  2276,
+                  2281,
+                  2304,
+                  2324,
+                  2341,
+                  2341,
+                  2397,
+                  2902,
+                  2925,
+                  3005,
+                  3054,
+                  3212,
+                  3316,
+                  3446,
+                  3450,
+                  3798,
+                  5152,
+                  7695
+                ]
+              }
+            },
+            {
+              "case": "identifier_anchor",
+              "initial_query_ns": 5069980,
+              "query_text": "lookup_needle battery",
+              "signature": "d4a057db4b6785c1e67791561dd63dfe949d94e6f1d3eccfa29697eac4030fd6",
+              "timing": {
+                "count": 30,
+                "p50_ms": 20.45918,
+                "p95_ms": 39.563586,
+                "samples_ns": [
+                  2338473,
+                  5580872,
+                  8180056,
+                  9740605,
+                  10381730,
+                  10560178,
+                  12065169,
+                  13764946,
+                  15327263,
+                  15801661,
+                  15876339,
+                  17003748,
+                  17133307,
+                  19231627,
+                  20459180,
+                  20889388,
+                  21451583,
+                  21539110,
+                  22099859,
+                  22676594,
+                  24157499,
+                  24306395,
+                  24331165,
+                  25920802,
+                  29382183,
+                  29997713,
+                  30689221,
+                  39254526,
+                  39563586,
+                  41247387
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 289443126
+        }
+      },
+      {
+        "label": "100000-zstd-v2-build",
+        "args": [
+          "build",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000",
+          "100000",
+          "zstd",
+          "1",
+          "1",
+          "plain"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000 100000 zstd 1 1 plain\"\n\tUser time (seconds): 122.14\n\tSystem time (seconds): 3.35\n\tPercent of CPU this job got: 97%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 2:08.68\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 60764\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 17024\n\tVoluntary context switches: 13573\n\tInvoluntary context switches: 2806\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 2422952\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "footprint": {
+            "allocated_index_bytes": 83419136,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 850280448,
+              "peak_files": 127,
+              "peak_logical_bytes": 850258824
+            },
+            "estimated_index_heap_bytes": 36650620,
+            "index_bytes": 83407726,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_build_ns": 128382661230,
+          "index_compression": "zstd",
+          "phase": "build",
+          "rows": 100000,
+          "scope": "actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation",
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 289983258
+        }
+      },
+      {
+        "label": "100000-zstd-v2-fresh",
+        "args": [
+          "retained-fresh",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000",
+          "100000",
+          "zstd",
+          "10",
+          "3",
+          "plain"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000 100000 zstd 10 3 plain\"\n\tUser time (seconds): 1.74\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 97%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.86\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 57832\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 16183\n\tVoluntary context switches: 285\n\tInvoluntary context switches: 773\n\tSwaps: 0\n\tFile system inputs: 9512\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 83419136,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 850280448,
+              "peak_files": 127,
+              "peak_logical_bytes": 850258824
+            },
+            "estimated_index_heap_bytes": 36650620,
+            "index_bytes": 83407726,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "zstd",
+          "index_open_ns": 34534182,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "unique",
+              "initial_query_ns": 1759776,
+              "query_text": "needle00099999",
+              "signature": "a1d13d666b49f58c6325d43e14c673f158977eb8cb7b27a5a77a8ead38a87958",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.059699,
+                "p95_ms": 0.075391,
+                "samples_ns": [
+                  52266,
+                  52614,
+                  52803,
+                  54014,
+                  55167,
+                  55904,
+                  56503,
+                  56665,
+                  56682,
+                  56832,
+                  57387,
+                  57920,
+                  58348,
+                  58717,
+                  59699,
+                  60641,
+                  60739,
+                  60902,
+                  65078,
+                  67350,
+                  67843,
+                  67876,
+                  68919,
+                  70880,
+                  72098,
+                  72467,
+                  72597,
+                  73219,
+                  75391,
+                  104878
+                ]
+              }
+            },
+            {
+              "case": "common",
+              "initial_query_ns": 17327840,
+              "query_text": "battery",
+              "signature": "8d7948606a7b3e2a9d936cbd869f0910e077755302c997f01f698a66e8bf4665",
+              "timing": {
+                "count": 30,
+                "p50_ms": 49.785322,
+                "p95_ms": 72.759975,
+                "samples_ns": [
+                  22872501,
+                  28703430,
+                  29018467,
+                  33921406,
+                  37432245,
+                  38183727,
+                  39112647,
+                  39261582,
+                  39661218,
+                  39965572,
+                  42221504,
+                  45313200,
+                  45605394,
+                  48428963,
+                  49785322,
+                  50038589,
+                  51003077,
+                  51213420,
+                  53626003,
+                  53740200,
+                  53745506,
+                  55717542,
+                  55955342,
+                  56074496,
+                  58059491,
+                  59658655,
+                  64365569,
+                  67979094,
+                  72759975,
+                  79286681
+                ]
+              }
+            },
+            {
+              "case": "common_pair",
+              "initial_query_ns": 32071188,
+              "query_text": "battery electrode",
+              "signature": "4cb1387588d7de2613679a440e6d11ab32c28c763ab018d5606e07afd487f84d",
+              "timing": {
+                "count": 30,
+                "p50_ms": 100.162109,
+                "p95_ms": 145.929497,
+                "samples_ns": [
+                  63923200,
+                  71800129,
+                  74329455,
+                  78806334,
+                  82972847,
+                  88044081,
+                  88059596,
+                  88197188,
+                  89043731,
+                  89084532,
+                  93102077,
+                  93460434,
+                  94202091,
+                  94416699,
+                  100162109,
+                  105713998,
+                  106535446,
+                  109349315,
+                  109360075,
+                  111395930,
+                  116990315,
+                  119735551,
+                  119854610,
+                  123421397,
+                  127909541,
+                  134276334,
+                  134758832,
+                  144559509,
+                  145929497,
+                  153466424
+                ]
+              }
+            },
+            {
+              "case": "common_triple",
+              "initial_query_ns": 34281370,
+              "query_text": "battery electrode original",
+              "signature": "fa85f999041761edc53a4d3f06a5d5c85d04f684d54971578a63e14222a9a177",
+              "timing": {
+                "count": 30,
+                "p50_ms": 133.17189,
+                "p95_ms": 173.635553,
+                "samples_ns": [
+                  101085583,
+                  107163447,
+                  113381599,
+                  114533023,
+                  115896570,
+                  116307881,
+                  118720241,
+                  120205915,
+                  124370874,
+                  124413938,
+                  124511194,
+                  127452467,
+                  130026380,
+                  130047677,
+                  133171890,
+                  133397410,
+                  134507485,
+                  134588779,
+                  135590932,
+                  136363663,
+                  138479053,
+                  138489105,
+                  141254317,
+                  141331752,
+                  144087331,
+                  159265284,
+                  162131482,
+                  162145550,
+                  173635553,
+                  179585094
+                ]
+              }
+            },
+            {
+              "case": "pair_with_absent",
+              "initial_query_ns": 22795751,
+              "query_text": "battery electrode transaction",
+              "signature": "4cb1387588d7de2613679a440e6d11ab32c28c763ab018d5606e07afd487f84d",
+              "timing": {
+                "count": 30,
+                "p50_ms": 118.343527,
+                "p95_ms": 142.468063,
+                "samples_ns": [
+                  87014251,
+                  94299848,
+                  97157785,
+                  104208945,
+                  105522533,
+                  106053639,
+                  108316239,
+                  111091944,
+                  113825424,
+                  113932307,
+                  113983042,
+                  114030182,
+                  114354099,
+                  115002135,
+                  118343527,
+                  118901823,
+                  119780576,
+                  122422823,
+                  125250950,
+                  126962266,
+                  128306807,
+                  130421433,
+                  133366907,
+                  133773640,
+                  135681145,
+                  136960201,
+                  139219366,
+                  139583911,
+                  142468063,
+                  143666951
+                ]
+              }
+            },
+            {
+              "case": "missing",
+              "initial_query_ns": 497430,
+              "query_text": "unseenword999",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+              "timing": {
+                "count": 30,
+                "p50_ms": 0.002291,
+                "p95_ms": 0.003711,
+                "samples_ns": [
+                  2098,
+                  2133,
+                  2160,
+                  2178,
+                  2179,
+                  2193,
+                  2193,
+                  2208,
+                  2225,
+                  2246,
+                  2254,
+                  2274,
+                  2276,
+                  2280,
+                  2291,
+                  2372,
+                  2393,
+                  2453,
+                  2463,
+                  2845,
+                  2914,
+                  2921,
+                  2935,
+                  2958,
+                  3173,
+                  3254,
+                  3537,
+                  3610,
+                  3711,
+                  9069
+                ]
+              }
+            },
+            {
+              "case": "identifier_anchor",
+              "initial_query_ns": 6948056,
+              "query_text": "lookup_needle battery",
+              "signature": "d4a057db4b6785c1e67791561dd63dfe949d94e6f1d3eccfa29697eac4030fd6",
+              "timing": {
+                "count": 30,
+                "p50_ms": 18.758906,
+                "p95_ms": 31.739813,
+                "samples_ns": [
+                  2221268,
+                  3856445,
+                  5512962,
+                  8287146,
+                  9348127,
+                  10506456,
+                  10774382,
+                  11346395,
+                  11457463,
+                  11988404,
+                  13504831,
+                  13654835,
+                  15952586,
+                  17632359,
+                  18758906,
+                  21361233,
+                  21953373,
+                  22392918,
+                  23061803,
+                  23308455,
+                  24773532,
+                  26336647,
+                  26702634,
+                  26886155,
+                  26891977,
+                  28907475,
+                  28940831,
+                  30726758,
+                  31739813,
+                  33191089
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 289423080
+        }
+      }
+    ]
+  },
+  "instrumented_profiles": {
+    "runtime": "85e11258b2db0a7ba322bca41ca2e60a6d791192",
+    "binary_sha256": "0521996b97c400e1d4bf4afb8bf7e5890218969b5fdcbbbc7ed09370f66c5703",
+    "tool_version": "strace6.13 copied read-only from shared compiler; host execution, host libc/libm unchanged",
+    "scope": "Instrumented read-only syscall/CPU diagnostics, not latency qualification. Each process has identical source/index opens and one initial query; measured requests differ1vs30. One CPU/2GiB child address cap, retained OS caches.",
+    "observations": [
+      {
+        "label": "100000-common_pair-1x1",
+        "args": [
+          "retained-fresh",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000",
+          "100000",
+          "raw",
+          "1",
+          "1",
+          "plain",
+          "common_pair"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/source-binary-audit-20261025/strace-profile-tool -f -c -o /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-syscall-profile-20261025/100000-common_pair-1x1.strace taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000 100000 raw 1 1 plain common_pair\"\n\tUser time (seconds): 0.30\n\tSystem time (seconds): 0.10\n\tPercent of CPU this job got: 88%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.46\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 51924\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 15088\n\tVoluntary context switches: 16176\n\tInvoluntary context switches: 7\n\tSwaps: 0\n\tFile system inputs: 18608\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "syscalls_raw": "% time     seconds  usecs/call     calls    errors syscall\n------ ----------- ----------- --------- --------- ------------------\n 50.34    0.006002           1      3004           read\n 17.40    0.002075          11       180           pread64\n 11.42    0.001361         104        13           munmap\n  7.81    0.000931         465         2           execve\n  3.71    0.000442           2       176        12 openat\n  3.18    0.000379           7        49           mmap\n  1.35    0.000161           0       253           statx\n  1.04    0.000124           0       164           close\n  0.68    0.000081           6        13           mprotect\n  0.67    0.000080           1        70           brk\n  0.63    0.000075          75         1           sched_setaffinity\n  0.60    0.000072           2        25           fstat\n  0.17    0.000020          10         2           lseek\n  0.13    0.000016           8         2         2 access\n  0.13    0.000015           2         6           rt_sigaction\n  0.10    0.000012           4         3           sched_getaffinity\n  0.09    0.000011           3         3           prlimit64\n  0.08    0.000009           2         4           getdents64\n  0.07    0.000008           2         4           getrandom\n  0.06    0.000007           2         3           flock\n  0.06    0.000007           2         3           rseq\n  0.05    0.000006           1         5           sigaltstack\n  0.05    0.000006           3         2           arch_prctl\n  0.04    0.000005           5         1           poll\n  0.04    0.000005           2         2           set_tid_address\n  0.04    0.000005           1         3           set_robust_list\n  0.03    0.000004           0         7           futex\n  0.02    0.000002           1         2           gettid\n  0.01    0.000001           0         7           mremap\n  0.00    0.000000           0         2           write\n  0.00    0.000000           0         9           rt_sigprocmask\n  0.00    0.000000           0         2           madvise\n  0.00    0.000000           0         1           clone3\n------ ----------- ----------- --------- --------- ------------------\n100.00    0.011922           2      4023        14 total\n",
+        "result": {
+          "clients": 1,
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 238686208,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 996638720,
+              "peak_files": 127,
+              "peak_logical_bytes": 996615560
+            },
+            "estimated_index_heap_bytes": 36650617,
+            "index_bytes": 238679458,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "raw",
+          "index_open_ns": 51734865,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "common_pair",
+              "initial_query_ns": 28747926,
+              "query_text": "battery electrode",
+              "signature": "4cb1387588d7de2613679a440e6d11ab32c28c763ab018d5606e07afd487f84d",
+              "timing": {
+                "count": 1,
+                "p50_ms": 12.414657,
+                "p95_ms": 12.414657,
+                "samples_ns": [
+                  12414657
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 1,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 348719488
+        },
+        "syscalls": {
+          "read": {
+            "calls": 3004,
+            "seconds": 0.006002
+          },
+          "pread64": {
+            "calls": 180,
+            "seconds": 0.002075
+          },
+          "munmap": {
+            "calls": 13,
+            "seconds": 0.001361
+          },
+          "execve": {
+            "calls": 2,
+            "seconds": 0.000931
+          },
+          "openat": {
+            "calls": 176,
+            "seconds": 0.000442
+          },
+          "mmap": {
+            "calls": 49,
+            "seconds": 0.000379
+          },
+          "statx": {
+            "calls": 253,
+            "seconds": 0.000161
+          },
+          "close": {
+            "calls": 164,
+            "seconds": 0.000124
+          },
+          "mprotect": {
+            "calls": 13,
+            "seconds": 8.1e-05
+          },
+          "brk": {
+            "calls": 70,
+            "seconds": 8e-05
+          },
+          "sched_setaffinity": {
+            "calls": 1,
+            "seconds": 7.5e-05
+          },
+          "fstat": {
+            "calls": 25,
+            "seconds": 7.2e-05
+          },
+          "lseek": {
+            "calls": 2,
+            "seconds": 2e-05
+          },
+          "access": {
+            "calls": 2,
+            "seconds": 1.6e-05
+          },
+          "rt_sigaction": {
+            "calls": 6,
+            "seconds": 1.5e-05
+          },
+          "sched_getaffinity": {
+            "calls": 3,
+            "seconds": 1.2e-05
+          },
+          "prlimit64": {
+            "calls": 3,
+            "seconds": 1.1e-05
+          },
+          "getdents64": {
+            "calls": 4,
+            "seconds": 9e-06
+          },
+          "getrandom": {
+            "calls": 4,
+            "seconds": 8e-06
+          },
+          "flock": {
+            "calls": 3,
+            "seconds": 7e-06
+          },
+          "rseq": {
+            "calls": 3,
+            "seconds": 7e-06
+          },
+          "sigaltstack": {
+            "calls": 5,
+            "seconds": 6e-06
+          },
+          "arch_prctl": {
+            "calls": 2,
+            "seconds": 6e-06
+          },
+          "poll": {
+            "calls": 1,
+            "seconds": 5e-06
+          },
+          "set_tid_address": {
+            "calls": 2,
+            "seconds": 5e-06
+          },
+          "set_robust_list": {
+            "calls": 3,
+            "seconds": 5e-06
+          },
+          "futex": {
+            "calls": 7,
+            "seconds": 4e-06
+          },
+          "gettid": {
+            "calls": 2,
+            "seconds": 2e-06
+          },
+          "mremap": {
+            "calls": 7,
+            "seconds": 1e-06
+          },
+          "write": {
+            "calls": 2,
+            "seconds": 0.0
+          },
+          "rt_sigprocmask": {
+            "calls": 9,
+            "seconds": 0.0
+          },
+          "madvise": {
+            "calls": 2,
+            "seconds": 0.0
+          },
+          "clone3": {
+            "calls": 1,
+            "seconds": 0.0
+          }
+        }
+      },
+      {
+        "label": "100000-common_pair-10x3",
+        "args": [
+          "retained-fresh",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000",
+          "100000",
+          "raw",
+          "10",
+          "3",
+          "plain",
+          "common_pair"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/source-binary-audit-20261025/strace-profile-tool -f -c -o /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-syscall-profile-20261025/100000-common_pair-10x3.strace taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/100000 100000 raw 10 3 plain common_pair\"\n\tUser time (seconds): 0.65\n\tSystem time (seconds): 0.12\n\tPercent of CPU this job got: 95%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.81\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 54276\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 15635\n\tVoluntary context switches: 23741\n\tInvoluntary context switches: 520\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "syscalls_raw": "% time     seconds  usecs/call     calls    errors syscall\n------ ----------- ----------- --------- --------- ------------------\n 75.42    0.053095          33      1593       327 futex\n  9.80    0.006897           2      3005           read\n  4.69    0.003299           4       760           pread64\n  2.46    0.001732          25        69           mprotect\n  1.82    0.001282          49        26           munmap\n  0.90    0.000635           8        76           mmap\n  0.88    0.000620           9        63           rt_sigprocmask\n  0.66    0.000465           2       177        12 openat\n  0.62    0.000439         219         2           execve\n  0.55    0.000389          38        10           clone3\n  0.33    0.000234           7        32           sigaltstack\n  0.27    0.000190           9        20           madvise\n  0.25    0.000175           0       253           statx\n  0.20    0.000143           0       165           close\n  0.16    0.000112           9        12           rseq\n  0.15    0.000107           8        12           sched_getaffinity\n  0.13    0.000090           7        12           set_robust_list\n  0.13    0.000089           8        11           gettid\n  0.12    0.000083           6        13           getrandom\n  0.11    0.000078           1        70           brk\n  0.10    0.000072          72         1           sched_setaffinity\n  0.09    0.000066           2        25           fstat\n  0.04    0.000031           7         4           getdents64\n  0.02    0.000016           8         2           lseek\n  0.02    0.000014           2         6           rt_sigaction\n  0.02    0.000012           1         7           mremap\n  0.01    0.000009           3         3           prlimit64\n  0.01    0.000006           3         2         2 access\n  0.01    0.000006           2         3           flock\n  0.01    0.000005           5         1           poll\n  0.00    0.000003           1         2           arch_prctl\n  0.00    0.000002           1         2           set_tid_address\n  0.00    0.000000           0         2           write\n------ ----------- ----------- --------- --------- ------------------\n100.00    0.070396          10      6441       341 total\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 238686208,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 996638720,
+              "peak_files": 127,
+              "peak_logical_bytes": 996615560
+            },
+            "estimated_index_heap_bytes": 36650617,
+            "index_bytes": 238679458,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "raw",
+          "index_open_ns": 40076333,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "common_pair",
+              "initial_query_ns": 22458732,
+              "query_text": "battery electrode",
+              "signature": "4cb1387588d7de2613679a440e6d11ab32c28c763ab018d5606e07afd487f84d",
+              "timing": {
+                "count": 30,
+                "p50_ms": 104.443389,
+                "p95_ms": 251.801524,
+                "samples_ns": [
+                  12625307,
+                  14831505,
+                  16041318,
+                  16927553,
+                  25303716,
+                  26526759,
+                  36260528,
+                  41832922,
+                  42512361,
+                  50815917,
+                  52559964,
+                  62589428,
+                  76572294,
+                  101652363,
+                  104443389,
+                  106689298,
+                  107230685,
+                  108894366,
+                  109032201,
+                  113284376,
+                  125823622,
+                  152706801,
+                  158791702,
+                  178528622,
+                  179501967,
+                  199398964,
+                  217063653,
+                  221027126,
+                  251801524,
+                  270421230
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 353361521
+        },
+        "syscalls": {
+          "futex": {
+            "calls": 1593,
+            "seconds": 0.053095
+          },
+          "read": {
+            "calls": 3005,
+            "seconds": 0.006897
+          },
+          "pread64": {
+            "calls": 760,
+            "seconds": 0.003299
+          },
+          "mprotect": {
+            "calls": 69,
+            "seconds": 0.001732
+          },
+          "munmap": {
+            "calls": 26,
+            "seconds": 0.001282
+          },
+          "mmap": {
+            "calls": 76,
+            "seconds": 0.000635
+          },
+          "rt_sigprocmask": {
+            "calls": 63,
+            "seconds": 0.00062
+          },
+          "openat": {
+            "calls": 177,
+            "seconds": 0.000465
+          },
+          "execve": {
+            "calls": 2,
+            "seconds": 0.000439
+          },
+          "clone3": {
+            "calls": 10,
+            "seconds": 0.000389
+          },
+          "sigaltstack": {
+            "calls": 32,
+            "seconds": 0.000234
+          },
+          "madvise": {
+            "calls": 20,
+            "seconds": 0.00019
+          },
+          "statx": {
+            "calls": 253,
+            "seconds": 0.000175
+          },
+          "close": {
+            "calls": 165,
+            "seconds": 0.000143
+          },
+          "rseq": {
+            "calls": 12,
+            "seconds": 0.000112
+          },
+          "sched_getaffinity": {
+            "calls": 12,
+            "seconds": 0.000107
+          },
+          "set_robust_list": {
+            "calls": 12,
+            "seconds": 9e-05
+          },
+          "gettid": {
+            "calls": 11,
+            "seconds": 8.9e-05
+          },
+          "getrandom": {
+            "calls": 13,
+            "seconds": 8.3e-05
+          },
+          "brk": {
+            "calls": 70,
+            "seconds": 7.8e-05
+          },
+          "sched_setaffinity": {
+            "calls": 1,
+            "seconds": 7.2e-05
+          },
+          "fstat": {
+            "calls": 25,
+            "seconds": 6.6e-05
+          },
+          "getdents64": {
+            "calls": 4,
+            "seconds": 3.1e-05
+          },
+          "lseek": {
+            "calls": 2,
+            "seconds": 1.6e-05
+          },
+          "rt_sigaction": {
+            "calls": 6,
+            "seconds": 1.4e-05
+          },
+          "mremap": {
+            "calls": 7,
+            "seconds": 1.2e-05
+          },
+          "prlimit64": {
+            "calls": 3,
+            "seconds": 9e-06
+          },
+          "access": {
+            "calls": 2,
+            "seconds": 6e-06
+          },
+          "flock": {
+            "calls": 3,
+            "seconds": 6e-06
+          },
+          "poll": {
+            "calls": 1,
+            "seconds": 5e-06
+          },
+          "arch_prctl": {
+            "calls": 2,
+            "seconds": 3e-06
+          },
+          "set_tid_address": {
+            "calls": 2,
+            "seconds": 2e-06
+          },
+          "write": {
+            "calls": 2,
+            "seconds": 0.0
+          }
+        }
+      },
+      {
+        "label": "1000-dense_phrase-1x1",
+        "args": [
+          "retained-fresh",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000",
+          "1000",
+          "raw",
+          "1",
+          "1",
+          "plain",
+          "dense_phrase"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/source-binary-audit-20261025/strace-profile-tool -f -c -o /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-syscall-profile-20261025/1000-dense_phrase-1x1.strace taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000 1000 raw 1 1 plain dense_phrase\"\n\tUser time (seconds): 0.10\n\tSystem time (seconds): 0.13\n\tPercent of CPU this job got: 63%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.37\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 5632\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 973\n\tVoluntary context switches: 41537\n\tInvoluntary context switches: 4\n\tSwaps: 0\n\tFile system inputs: 784\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "syscalls_raw": "% time     seconds  usecs/call     calls    errors syscall\n------ ----------- ----------- --------- --------- ------------------\n 63.83    0.025428        3632         7           futex\n  9.99    0.003978           0      4025           statx\n  9.81    0.003907           1      2050        12 openat\n  7.08    0.002819           1      2053           pread64\n  5.15    0.002051           1      2038           close\n  1.52    0.000605          14        43           read\n  0.85    0.000338         169         2           execve\n  0.66    0.000263           6        43           mmap\n  0.19    0.000077           6        12           mprotect\n  0.15    0.000059           2        25           fstat\n  0.13    0.000050           3        15           brk\n  0.13    0.000050          50         1           sched_setaffinity\n  0.09    0.000036           5         7           munmap\n  0.06    0.000024          24         1           clone3\n  0.06    0.000022           5         4           getdents64\n  0.05    0.000020           2         7           rt_sigprocmask\n  0.04    0.000015           7         2           lseek\n  0.04    0.000014           4         3           sched_getaffinity\n  0.03    0.000012           2         6           rt_sigaction\n  0.03    0.000010           2         5           sigaltstack\n  0.02    0.000009           3         3           getrandom\n  0.02    0.000008           2         3           flock\n  0.02    0.000007           2         3           prlimit64\n  0.02    0.000007           2         3           rseq\n  0.02    0.000006           3         2         2 access\n  0.02    0.000006           2         3           set_robust_list\n  0.01    0.000005           1         3           madvise\n  0.01    0.000004           4         1           poll\n  0.01    0.000004           2         2           gettid\n  0.01    0.000003           1         2           set_tid_address\n  0.01    0.000002           1         2           arch_prctl\n  0.00    0.000000           0         2           write\n------ ----------- ----------- --------- --------- ------------------\n100.00    0.039839           3     10378        14 total\n",
+        "result": {
+          "clients": 1,
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 2379776,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 9895936,
+              "peak_files": 10,
+              "peak_logical_bytes": 9883784
+            },
+            "estimated_index_heap_bytes": 25285419,
+            "index_bytes": 2368598,
+            "indexed_rows": 998,
+            "text_bytes": 1739503
+          },
+          "index_compression": "raw",
+          "index_open_ns": 11956016,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 166429035,
+              "query_text": "\"battery electrode\"",
+              "signature": "387304e8fb80f71492d06969c1b0eba3fd5455a202f003c67963a4cf5279384b",
+              "timing": {
+                "count": 1,
+                "p50_ms": 170.551623,
+                "p95_ms": 170.551623,
+                "samples_ns": [
+                  170551623
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 1,
+          "rows": 1000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 1935784,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 6592742
+        },
+        "syscalls": {
+          "futex": {
+            "calls": 7,
+            "seconds": 0.025428
+          },
+          "statx": {
+            "calls": 4025,
+            "seconds": 0.003978
+          },
+          "openat": {
+            "calls": 2050,
+            "seconds": 0.003907
+          },
+          "pread64": {
+            "calls": 2053,
+            "seconds": 0.002819
+          },
+          "close": {
+            "calls": 2038,
+            "seconds": 0.002051
+          },
+          "read": {
+            "calls": 43,
+            "seconds": 0.000605
+          },
+          "execve": {
+            "calls": 2,
+            "seconds": 0.000338
+          },
+          "mmap": {
+            "calls": 43,
+            "seconds": 0.000263
+          },
+          "mprotect": {
+            "calls": 12,
+            "seconds": 7.7e-05
+          },
+          "fstat": {
+            "calls": 25,
+            "seconds": 5.9e-05
+          },
+          "brk": {
+            "calls": 15,
+            "seconds": 5e-05
+          },
+          "sched_setaffinity": {
+            "calls": 1,
+            "seconds": 5e-05
+          },
+          "munmap": {
+            "calls": 7,
+            "seconds": 3.6e-05
+          },
+          "clone3": {
+            "calls": 1,
+            "seconds": 2.4e-05
+          },
+          "getdents64": {
+            "calls": 4,
+            "seconds": 2.2e-05
+          },
+          "rt_sigprocmask": {
+            "calls": 7,
+            "seconds": 2e-05
+          },
+          "lseek": {
+            "calls": 2,
+            "seconds": 1.5e-05
+          },
+          "sched_getaffinity": {
+            "calls": 3,
+            "seconds": 1.4e-05
+          },
+          "rt_sigaction": {
+            "calls": 6,
+            "seconds": 1.2e-05
+          },
+          "sigaltstack": {
+            "calls": 5,
+            "seconds": 1e-05
+          },
+          "getrandom": {
+            "calls": 3,
+            "seconds": 9e-06
+          },
+          "flock": {
+            "calls": 3,
+            "seconds": 8e-06
+          },
+          "prlimit64": {
+            "calls": 3,
+            "seconds": 7e-06
+          },
+          "rseq": {
+            "calls": 3,
+            "seconds": 7e-06
+          },
+          "access": {
+            "calls": 2,
+            "seconds": 6e-06
+          },
+          "set_robust_list": {
+            "calls": 3,
+            "seconds": 6e-06
+          },
+          "madvise": {
+            "calls": 3,
+            "seconds": 5e-06
+          },
+          "poll": {
+            "calls": 1,
+            "seconds": 4e-06
+          },
+          "gettid": {
+            "calls": 2,
+            "seconds": 4e-06
+          },
+          "set_tid_address": {
+            "calls": 2,
+            "seconds": 3e-06
+          },
+          "arch_prctl": {
+            "calls": 2,
+            "seconds": 2e-06
+          },
+          "write": {
+            "calls": 2,
+            "seconds": 0.0
+          }
+        }
+      },
+      {
+        "label": "1000-dense_phrase-10x3",
+        "args": [
+          "retained-fresh",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000",
+          "1000",
+          "raw",
+          "10",
+          "3",
+          "plain",
+          "dense_phrase"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/source-binary-audit-20261025/strace-profile-tool -f -c -o /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-syscall-profile-20261025/1000-dense_phrase-10x3.strace taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/profile-85e1125 retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-projection-bench-20261025/1000 1000 raw 10 3 plain dense_phrase\"\n\tUser time (seconds): 0.97\n\tSystem time (seconds): 2.01\n\tPercent of CPU this job got: 143%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:02.08\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 8264\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1600\n\tVoluntary context switches: 381621\n\tInvoluntary context switches: 7373\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "syscalls_raw": "% time     seconds  usecs/call     calls    errors syscall\n------ ----------- ----------- --------- --------- ------------------\n 33.50    1.858945          59     30993        12 openat\n 21.16    1.174422          37     30981           close\n 17.49    0.970891          15     61909           statx\n 17.19    0.953868         289      3293       973 futex\n 10.51    0.583120          18     31575           pread64\n  0.06    0.003387          57        59           mprotect\n  0.02    0.000854          12        70           mmap\n  0.01    0.000828         414         2           execve\n  0.01    0.000717          23        31           madvise\n  0.01    0.000534          16        32           sigaltstack\n  0.01    0.000431           9        44           read\n  0.01    0.000363           8        43           rt_sigprocmask\n  0.01    0.000363          36        10           clone3\n  0.00    0.000237          11        21           munmap\n  0.00    0.000141          11        12           sched_getaffinity\n  0.00    0.000123          11        11           gettid\n  0.00    0.000123          10        12           set_robust_list\n  0.00    0.000113           9        12           rseq\n  0.00    0.000094           3        25           fstat\n  0.00    0.000058           3        15           brk\n  0.00    0.000036          36         1           sched_setaffinity\n  0.00    0.000025           6         4           getdents64\n  0.00    0.000015           7         2           lseek\n  0.00    0.000015           5         3           getrandom\n  0.00    0.000014           7         2         2 access\n  0.00    0.000012           2         6           rt_sigaction\n  0.00    0.000012           4         3           flock\n  0.00    0.000012           4         3           prlimit64\n  0.00    0.000006           3         2           arch_prctl\n  0.00    0.000006           3         2           set_tid_address\n  0.00    0.000004           4         1           poll\n  0.00    0.000000           0         2           write\n------ ----------- ----------- --------- --------- ------------------\n100.00    5.549769          34    159181       987 total\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 2379776,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 9895936,
+              "peak_files": 10,
+              "peak_logical_bytes": 9883784
+            },
+            "estimated_index_heap_bytes": 25285419,
+            "index_bytes": 2368598,
+            "indexed_rows": 998,
+            "text_bytes": 1739503
+          },
+          "index_compression": "raw",
+          "index_open_ns": 2248226,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 166592360,
+              "query_text": "\"battery electrode\"",
+              "signature": "387304e8fb80f71492d06969c1b0eba3fd5455a202f003c67963a4cf5279384b",
+              "timing": {
+                "count": 30,
+                "p50_ms": 632.536696,
+                "p95_ms": 677.814574,
+                "samples_ns": [
+                  550273440,
+                  552948344,
+                  559192448,
+                  561621659,
+                  562465515,
+                  565698630,
+                  571023274,
+                  571718517,
+                  573072532,
+                  573109706,
+                  621675221,
+                  622975544,
+                  626669521,
+                  629144908,
+                  632536696,
+                  650630226,
+                  651261288,
+                  652287755,
+                  654094137,
+                  654145752,
+                  657296873,
+                  657641867,
+                  659521533,
+                  660683792,
+                  661854331,
+                  668160761,
+                  673087133,
+                  673941976,
+                  677814574,
+                  679073318
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 1000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 1935784,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 6661447
+        },
+        "syscalls": {
+          "openat": {
+            "calls": 30993,
+            "seconds": 1.858945
+          },
+          "close": {
+            "calls": 30981,
+            "seconds": 1.174422
+          },
+          "statx": {
+            "calls": 61909,
+            "seconds": 0.970891
+          },
+          "futex": {
+            "calls": 3293,
+            "seconds": 0.953868
+          },
+          "pread64": {
+            "calls": 31575,
+            "seconds": 0.58312
+          },
+          "mprotect": {
+            "calls": 59,
+            "seconds": 0.003387
+          },
+          "mmap": {
+            "calls": 70,
+            "seconds": 0.000854
+          },
+          "execve": {
+            "calls": 2,
+            "seconds": 0.000828
+          },
+          "madvise": {
+            "calls": 31,
+            "seconds": 0.000717
+          },
+          "sigaltstack": {
+            "calls": 32,
+            "seconds": 0.000534
+          },
+          "read": {
+            "calls": 44,
+            "seconds": 0.000431
+          },
+          "rt_sigprocmask": {
+            "calls": 43,
+            "seconds": 0.000363
+          },
+          "clone3": {
+            "calls": 10,
+            "seconds": 0.000363
+          },
+          "munmap": {
+            "calls": 21,
+            "seconds": 0.000237
+          },
+          "sched_getaffinity": {
+            "calls": 12,
+            "seconds": 0.000141
+          },
+          "gettid": {
+            "calls": 11,
+            "seconds": 0.000123
+          },
+          "set_robust_list": {
+            "calls": 12,
+            "seconds": 0.000123
+          },
+          "rseq": {
+            "calls": 12,
+            "seconds": 0.000113
+          },
+          "fstat": {
+            "calls": 25,
+            "seconds": 9.4e-05
+          },
+          "brk": {
+            "calls": 15,
+            "seconds": 5.8e-05
+          },
+          "sched_setaffinity": {
+            "calls": 1,
+            "seconds": 3.6e-05
+          },
+          "getdents64": {
+            "calls": 4,
+            "seconds": 2.5e-05
+          },
+          "lseek": {
+            "calls": 2,
+            "seconds": 1.5e-05
+          },
+          "getrandom": {
+            "calls": 3,
+            "seconds": 1.5e-05
+          },
+          "access": {
+            "calls": 2,
+            "seconds": 1.4e-05
+          },
+          "rt_sigaction": {
+            "calls": 6,
+            "seconds": 1.2e-05
+          },
+          "flock": {
+            "calls": 3,
+            "seconds": 1.2e-05
+          },
+          "prlimit64": {
+            "calls": 3,
+            "seconds": 1.2e-05
+          },
+          "arch_prctl": {
+            "calls": 2,
+            "seconds": 6e-06
+          },
+          "set_tid_address": {
+            "calls": 2,
+            "seconds": 6e-06
+          },
+          "poll": {
+            "calls": 1,
+            "seconds": 4e-06
+          },
+          "write": {
+            "calls": 2,
+            "seconds": 0.0
+          }
+        }
+      }
+    ]
+  }
+}

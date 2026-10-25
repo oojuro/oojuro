@@ -1,0 +1,347 @@
+{
+  "scope": "Public synthetic benchmark source/binary provenance audit; no new performance measurements. Historical raw receipts and frozen ELFs are preserved.",
+  "compiler": "Pinned shared Rust 1.99.1 generic x86-64; release, no default features",
+  "finding": "Shared-target relative Cargo dependency information could incorrectly reuse mutable worktree libraries. The initial fence cleaned dev only; release libraries remained Fresh. Corrected fence2 cleans dev/release/requested profiles and invalidates prior markers.",
+  "initial_profile_gap_audit": [
+    {
+      "source": "b328f79",
+      "label": "candidate",
+      "returncode": 0,
+      "old_sha256": "b6c604fdea1dd5ba4597f93fa391028c0501c9284a07e15030969c48c5275e31",
+      "clean_sha256": "7fbb2001385ec1c8e531cdce2d45801938903938bcb39dc61373cb37109532f7",
+      "byte_identical": false,
+      "source_fence_format": 1,
+      "cleaned_profiles": [
+        "dev"
+      ],
+      "source_fence": "0c43e398476da7741ca4338cce844492126ecb5ead0d03277c75ea28efd1c566",
+      "mutable_artifacts": [
+        {
+          "target": "oojuro_core",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_rank",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": true
+        },
+        {
+          "target": "ojo",
+          "fresh": true
+        },
+        {
+          "target": "profile_juro_append",
+          "fresh": false
+        }
+      ]
+    },
+    {
+      "source": "8661394dd6a4822819b806d27f5f066ee13e3ffd",
+      "label": "baseline",
+      "returncode": 0,
+      "old_sha256": "1ec0944335c96af17ef3f94c7150b835e18441e97a96703435b701180464120f",
+      "clean_sha256": "1ec0944335c96af17ef3f94c7150b835e18441e97a96703435b701180464120f",
+      "byte_identical": true,
+      "source_fence_format": 1,
+      "cleaned_profiles": [
+        "dev"
+      ],
+      "source_fence": "c9a3d63d12d0c2b65aab7c91db8cc661247f6df96eb335a1ae6bb5f52c0a74d2",
+      "mutable_artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        },
+        {
+          "target": "profile_juro_append",
+          "fresh": false
+        }
+      ]
+    },
+    {
+      "source": "85e11258b2db0a7ba322bca41ca2e60a6d791192",
+      "label": "diverse",
+      "returncode": 0,
+      "old_sha256": "0521996b97c400e1d4bf4afb8bf7e5890218969b5fdcbbbc7ed09370f66c5703",
+      "clean_sha256": "f416914bdb2ace38f8e9cde49047ed90eb9ab5dcdd89464c833c3c53834738a8",
+      "byte_identical": false,
+      "source_fence_format": 1,
+      "cleaned_profiles": [
+        "dev"
+      ],
+      "source_fence": "f4b9efb443af70ef0c78d2a72866fb5c323f966600e9597a51365dbbe335c8c4",
+      "mutable_artifacts": [
+        {
+          "target": "oojuro_store",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_rank",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": true
+        },
+        {
+          "target": "ojo",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": true
+        },
+        {
+          "target": "profile_juro_projection",
+          "fresh": false
+        }
+      ]
+    }
+  ],
+  "source_attribution_audit": [
+    {
+      "source": "8661394dd6a4822819b806d27f5f066ee13e3ffd",
+      "label": "baseline",
+      "returncode": 0,
+      "old_sha256": "1ec0944335c96af17ef3f94c7150b835e18441e97a96703435b701180464120f",
+      "clean_sha256": "1ec0944335c96af17ef3f94c7150b835e18441e97a96703435b701180464120f",
+      "byte_identical": true,
+      "source_fence_format": 1,
+      "cleaned_profiles": [
+        "dev"
+      ],
+      "source_fence": "c9a3d63d12d0c2b65aab7c91db8cc661247f6df96eb335a1ae6bb5f52c0a74d2",
+      "mutable_artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        },
+        {
+          "target": "profile_juro_append",
+          "fresh": false
+        }
+      ]
+    },
+    {
+      "source": "b328f79",
+      "label": "candidate",
+      "returncode": 0,
+      "old_sha256": "b6c604fdea1dd5ba4597f93fa391028c0501c9284a07e15030969c48c5275e31",
+      "clean_sha256": "b6c604fdea1dd5ba4597f93fa391028c0501c9284a07e15030969c48c5275e31",
+      "byte_identical": true,
+      "source_fence_format": 2,
+      "cleaned_profiles": [
+        "dev",
+        "release"
+      ],
+      "source_fence": "0c43e398476da7741ca4338cce844492126ecb5ead0d03277c75ea28efd1c566",
+      "mutable_artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        },
+        {
+          "target": "profile_juro_append",
+          "fresh": false
+        }
+      ]
+    },
+    {
+      "source": "85e11258b2db0a7ba322bca41ca2e60a6d791192",
+      "label": "diverse",
+      "returncode": 0,
+      "old_sha256": "f416914bdb2ace38f8e9cde49047ed90eb9ab5dcdd89464c833c3c53834738a8",
+      "clean_sha256": "0521996b97c400e1d4bf4afb8bf7e5890218969b5fdcbbbc7ed09370f66c5703",
+      "byte_identical": false,
+      "source_fence_format": 2,
+      "cleaned_profiles": [
+        "dev",
+        "release"
+      ],
+      "source_fence": "f4b9efb443af70ef0c78d2a72866fb5c323f966600e9597a51365dbbe335c8c4",
+      "mutable_artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        },
+        {
+          "target": "profile_juro_projection",
+          "fresh": false
+        }
+      ]
+    },
+    {
+      "source": "4e9c514",
+      "label": "warm_query",
+      "returncode": 0,
+      "old_sha256": "cf6d44f803db27ea65a8aa9f6ac83faf03c3d52f41468e5d746cdbe9c63b024d",
+      "clean_sha256": "cf6d44f803db27ea65a8aa9f6ac83faf03c3d52f41468e5d746cdbe9c63b024d",
+      "byte_identical": true,
+      "source_fence_format": 2,
+      "cleaned_profiles": [
+        "dev",
+        "release"
+      ],
+      "source_fence": "091f8ab0b68742b710c861f6300395638ac7a03c618538ec3e7f867a25f7db7b",
+      "mutable_artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        },
+        {
+          "target": "profile_juro_projection",
+          "fresh": false
+        }
+      ]
+    }
+  ],
+  "conclusions": {
+    "numeric_append_comparison": "Baseline and candidate both reproduce historical frozen ELFs byte-for-byte with every mutable library freshly compiled. The existing 36-observation comparison retains source attribution; no timing rerun needed.",
+    "warm_actual_million_query": "Frozen 4e9c514 query ELF reproduces byte-for-byte with every mutable library freshly compiled. Its same-binary v1/v2 actual-source query/storage diagnostics retain source attribution.",
+    "diverse": "The clean 85e1125 ELF differs from the historical prototype ELF. No timing had started. Only the clean ELF may be used; source-fenced nonzero correctness checks still required.",
+    "historical_tests": "Historical test output and copied test ELFs remain preserved. Final compact runtime correctness will be requalified from the eventual frozen source under fence2; this receipt alone does not retrospectively attribute every prior test executable."
+  }
+}

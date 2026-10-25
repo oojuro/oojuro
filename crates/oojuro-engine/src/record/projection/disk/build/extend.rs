@@ -7,6 +7,7 @@ use std::os::unix::fs::MetadataExt;
 pub struct Appender {
     builder: Builder,
     previous: Manifest,
+    previous_mass: Option<compact::Mass>,
     columns: Vec<Arc<[Column]>>,
     changed: BTreeSet<usize>,
     pages: Arc<tree::PageCache>,
@@ -33,11 +34,17 @@ impl Appender {
         {
             return Err(Error::Bounds);
         }
+        if let Some(mass) = &previous.mass
+            && mass.bytes() > mass_limit(&previous.columns, limits.metadata_bytes)?
+        {
+            return Err(Error::Bounds);
+        }
         let mut builder = Builder::create_with_cipher(
             &previous.root_directory,
             previous.cipher.clone(),
             binding,
             limits,
+            previous.manifest.format,
         )?;
         // Immutable pack names are cryptographically random and their bytes
         // remain authenticated by roots/blob references. Hard links avoid a
@@ -59,6 +66,7 @@ impl Appender {
         Ok(Self {
             builder,
             previous: previous.manifest.clone(),
+            previous_mass: previous.mass.clone(),
             columns: previous.columns.clone(),
             changed: BTreeSet::new(),
             pages: previous.pages.clone(),
@@ -259,7 +267,10 @@ impl Appender {
             key.extend(list[0].0.to_be_bytes());
             posting_batch.push(
                 &mut postings,
-                tree::Entry::new(key, encode_postings(list, b.limits.compression)?)?,
+                tree::Entry::new(
+                    key,
+                    encode_layout_postings(list, b.limits.compression, b.format)?,
+                )?,
             )?;
             list.clear();
             Ok(())
@@ -269,7 +280,13 @@ impl Appender {
                 return Err(Error::Authority);
             }
             let next: [u8; 32] = entry.key[..32].try_into().unwrap();
-            if term.is_some_and(|term| term != next) || list.len() == 256 {
+            if term.is_some_and(|term| term != next)
+                || list.len() == 256
+                || (b.format == COMPACT_FORMAT
+                    && list.first().is_some_and(|(row, _)| {
+                        row / 256 != parse_u32(&entry.key[32..]).unwrap_or(u32::MAX) / 256
+                    }))
+            {
                 emit(term.unwrap(), &mut list)?;
             }
             term = Some(next);
@@ -299,7 +316,7 @@ impl Appender {
                 u32::try_from(self.previous.rows + u64::from(offset)).map_err(|_| Error::Bounds)?;
             let entry = tree::Entry::new(
                 ordinal.to_be_bytes().to_vec(),
-                pack_json(&analysis.metadata, b.limits.compression)?,
+                encode_metadata(&analysis.metadata, b.limits.compression, b.format)?,
             )?;
             metadata_batch.push(&mut metadata, entry)?;
             let block = ordinal as usize / COLUMN_ROWS;
@@ -316,6 +333,15 @@ impl Appender {
         if !tail.is_empty() {
             self.columns.push(Arc::from(tail));
         }
+        let mass = if b.format == COMPACT_FORMAT {
+            Some(self.previous_mass.take().ok_or(Error::Authority)?.refresh(
+                &self.columns,
+                &self.changed,
+                mass_limit(&self.columns, b.limits.metadata_bytes)?,
+            )?)
+        } else {
+            None
+        };
         let mut columns = self.previous.columns.clone();
         for block in self.changed {
             let mut bytes = Vec::with_capacity(self.columns[block].len() * COLUMN_BYTES);
@@ -339,7 +365,7 @@ impl Appender {
         remove_tree(&directory, &authority, &flat_postings)?;
         tree::Authority::remove_file(&authority, &directory.join(SPOOL))?;
         let mut manifest = Manifest {
-            format: 1,
+            format: b.format,
             generation: b.generation.clone(),
             binding: authority.binding.clone(),
             rows: self.previous.rows + b.rows,
@@ -396,6 +422,7 @@ impl Appender {
             pages: self.pages,
             manifest,
             columns: self.columns,
+            mass,
             totals: self.totals,
             queries: query_cache::QueryCache::default(),
             terms: term_cache::TermCache::default(),

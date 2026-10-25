@@ -19,10 +19,143 @@ pub(super) struct Group {
     pub top: Vec<GroupHit>,
 }
 pub(super) struct TermList {
-    pub pairs: Vec<(u32, u32)>,
+    pub pairs: Pairs,
     pub statistics: Statistics,
     pub groups: Option<Vec<Group>>,
     bytes: usize,
+}
+pub(super) enum Pairs {
+    Plain(Vec<(u32, u32)>),
+    Compact {
+        blocks: Vec<compact::TfBlock>,
+        count: usize,
+    },
+}
+impl Pairs {
+    fn new(compact: bool, upper: usize) -> Self {
+        if compact {
+            Self::Compact {
+                blocks: Vec::with_capacity(upper),
+                count: 0,
+            }
+        } else {
+            Self::Plain(Vec::with_capacity(upper))
+        }
+    }
+    fn bytes(&self) -> usize {
+        match self {
+            Self::Plain(pairs) => pairs.capacity() * 8,
+            Self::Compact { blocks, .. } => {
+                blocks.capacity() * std::mem::size_of::<compact::TfBlock>()
+                    + blocks.iter().map(compact::TfBlock::bytes).sum::<usize>()
+            }
+        }
+    }
+    fn len(&self) -> usize {
+        match self {
+            Self::Plain(pairs) => pairs.len(),
+            Self::Compact { count, .. } => *count,
+        }
+    }
+    pub fn next(&self, block: &mut usize, at: &mut usize) -> Option<(u32, u32)> {
+        match self {
+            Self::Plain(pairs) => {
+                let pair = pairs.get(*at).copied();
+                *at += usize::from(pair.is_some());
+                pair
+            }
+            Self::Compact { blocks, .. } => loop {
+                let current = blocks.get(*block)?;
+                if let Some(pair) = current.next(*at) {
+                    *at = (pair.0 - current.base()) as usize + 1;
+                    return Some(pair);
+                }
+                *block += 1;
+                *at = 0;
+            },
+        }
+    }
+    pub fn at_least(&self, block: &mut usize, at: &mut usize, wanted: u32) -> Option<(u32, u32)> {
+        match self {
+            Self::Plain(pairs) => *at += pairs[*at..].partition_point(|(row, _)| *row < wanted),
+            Self::Compact { blocks, .. } => {
+                let skip = blocks[*block..]
+                    .partition_point(|block| u64::from(block.base()) + 256 <= u64::from(wanted));
+                *block += skip;
+                if skip != 0 {
+                    *at = 0;
+                }
+                if let Some(current) = blocks.get(*block) {
+                    *at = (*at).max(wanted.saturating_sub(current.base()) as usize);
+                }
+            }
+        }
+        self.next(block, at)
+    }
+    pub fn maximum(&self, base: u32) -> Option<u32> {
+        let Self::Compact { blocks, .. } = self else {
+            return None;
+        };
+        Some(
+            blocks
+                .binary_search_by_key(&base, compact::TfBlock::base)
+                .ok()
+                .map_or(0, |at| blocks[at].maximum()),
+        )
+    }
+    pub fn tf(&self, row: u32) -> Option<u32> {
+        let Self::Compact { blocks, .. } = self else {
+            return None;
+        };
+        Some(
+            blocks
+                .binary_search_by_key(&(row & !255), compact::TfBlock::base)
+                .ok()
+                .map_or(0, |at| blocks[at].tf(row as u8)),
+        )
+    }
+    pub fn presence(
+        &self,
+        union: &mut [u64],
+        live: &[u64],
+        selected: Option<&[u64]>,
+    ) -> Result<u64> {
+        if union.len() != live.len() || selected.is_some_and(|bits| bits.len() != live.len()) {
+            return Err(Error::Authority);
+        }
+        let mut count = 0u64;
+        let mut add = |word: usize, mask: u64| -> Result<()> {
+            let active = mask
+                & *live.get(word).ok_or(Error::Authority)?
+                & selected.map_or(u64::MAX, |bits| bits[word]);
+            union[word] |= active;
+            count = count
+                .checked_add(u64::from(active.count_ones()))
+                .ok_or(Error::Bounds)?;
+            Ok(())
+        };
+        match self {
+            Self::Plain(pairs) => {
+                for &(row, _) in pairs {
+                    add(row as usize / 64, 1 << (row % 64))?;
+                }
+            }
+            Self::Compact { blocks, .. } => {
+                for block in blocks {
+                    for (offset, mask) in block.presence().into_iter().enumerate() {
+                        if mask != 0 {
+                            add(block.base() as usize / 64 + offset, mask)?;
+                        }
+                    }
+                }
+            }
+        }
+        Ok(count)
+    }
+    pub fn iter(&self) -> impl Iterator<Item = (u32, u32)> + '_ {
+        let (mut block, mut at) = (0, 0);
+        std::iter::from_fn(move || self.next(&mut block, &mut at))
+    }
 }
 #[derive(Clone, Copy, Eq, PartialEq)]
 pub(super) struct GroupHit {
@@ -194,6 +327,14 @@ impl TermCache {
                     &index.manifest.postings,
                     &term,
                 )?;
+                if index.manifest.format == COMPACT_FORMAT {
+                    let upper = usize::try_from(chunks).map_err(|_| Error::Bounds)?;
+                    let reserved = upper
+                        .checked_mul(std::mem::size_of::<compact::TfBlock>() + 1283)
+                        .and_then(|bytes| bytes.checked_add(GROUP_BYTES + 512))
+                        .ok_or(Error::Bounds)?;
+                    return Ok((reserved, upper));
+                }
                 let upper = chunks.saturating_mul(256).min(index.manifest.rows) as usize;
                 let reserved = upper
                     .checked_mul(8)
@@ -234,11 +375,12 @@ impl TermCache {
 }
 fn load(index: &Index, term: [u8; 32], upper: usize) -> Result<TermList> {
     let mut input = DiskPostings::new_hash(index, term)?;
-    let mut pairs = Vec::with_capacity(upper);
+    let mut pairs = Pairs::new(index.manifest.format == COMPACT_FORMAT, upper);
+    let mut pending = Vec::with_capacity(256);
     let mut statistics = Statistics::default();
     let mut groups = Some(BTreeMap::<(u32, u32, u32), BinaryHeap<GroupHit>>::new());
     while let Some((ordinal, tf)) = input.next()? {
-        if pairs.len() == upper {
+        if index.manifest.format != COMPACT_FORMAT && pairs.len() == upper {
             return Err(Error::Authority);
         }
         let column = index.column(ordinal)?;
@@ -273,7 +415,36 @@ fn load(index: &Index, term: [u8; 32], upper: usize) -> Result<TermList> {
                 }
             }
         }
-        pairs.push((ordinal, tf));
+        match &mut pairs {
+            Pairs::Plain(pairs) => pairs.push((ordinal, tf)),
+            Pairs::Compact { blocks, count } => {
+                if pending
+                    .first()
+                    .is_some_and(|(row, _)| row / 256 != ordinal / 256)
+                    || pending.len() == 256
+                {
+                    let base = pending[0].0 & !255;
+                    blocks.push(compact::TfBlock::decode(
+                        base,
+                        index.manifest.rows,
+                        compact::TfBlock::encode(base, &pending)?,
+                    )?);
+                    pending.clear();
+                }
+                pending.push((ordinal, tf));
+                *count += 1;
+            }
+        }
+    }
+    if let Pairs::Compact { blocks, .. } = &mut pairs
+        && !pending.is_empty()
+    {
+        let base = pending[0].0 & !255;
+        blocks.push(compact::TfBlock::decode(
+            base,
+            index.manifest.rows,
+            compact::TfBlock::encode(base, &pending)?,
+        )?);
     }
     let groups = groups.map(|groups| {
         groups
@@ -284,7 +455,7 @@ fn load(index: &Index, term: [u8; 32], upper: usize) -> Result<TermList> {
             })
             .collect::<Vec<_>>()
     });
-    let bytes = pairs.capacity() * 8
+    let bytes = pairs.bytes()
         + 512
         + groups.as_ref().map_or(0, |groups| {
             groups.capacity() * std::mem::size_of::<Group>()
@@ -309,6 +480,48 @@ mod tests {
     impl Drop for Scratch {
         fn drop(&mut self) {
             let _ = fs::remove_dir_all(&self.0);
+        }
+    }
+    #[test]
+    fn compact_pair_seeks_match_sorted_reference_across_block_jumps_and_end() {
+        let rows: Vec<_> = (0..4096u32)
+            .filter(|n| n % 7 != 0)
+            .map(|n| (n, 1 + n % 17))
+            .collect();
+        let mut blocks = Vec::new();
+        for base in (0..4096u32).step_by(256) {
+            let pairs: Vec<_> = rows
+                .iter()
+                .copied()
+                .filter(|(row, _)| *row >= base && *row < base + 256)
+                .collect();
+            blocks.push(
+                compact::TfBlock::decode(
+                    base,
+                    4096,
+                    compact::TfBlock::encode(base, &pairs).unwrap(),
+                )
+                .unwrap(),
+            );
+        }
+        let pairs = Pairs::Compact {
+            blocks,
+            count: rows.len(),
+        };
+        assert_eq!(pairs.iter().collect::<Vec<_>>(), rows);
+        for step in [1, 3, 64, 257, 513, 4096] {
+            let (mut block, mut at) = (0, 0);
+            let mut previous = None;
+            for wanted in (0..5000).step_by(step) {
+                let expected = rows.iter().copied().find(|(row, _)| {
+                    *row >= wanted && previous.is_none_or(|previous| *row > previous)
+                });
+                let found = pairs.at_least(&mut block, &mut at, wanted);
+                assert_eq!(found, expected, "step={step} wanted={wanted}");
+                if let Some((row, _)) = found {
+                    previous = Some(row);
+                }
+            }
         }
     }
     #[test]

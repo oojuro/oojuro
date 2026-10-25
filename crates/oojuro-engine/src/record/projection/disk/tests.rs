@@ -278,6 +278,65 @@ fn generic_events_preserve_cursor_timestamp_and_exact_data_contract() {
 }
 
 #[test]
+fn compact_numeric_mass_is_admitted_before_publication_and_open_allocation() {
+    let scratch = Scratch::new();
+    let path = scratch.0.join("index");
+    let previous = build(&path, &[row(1)], Compression::Raw);
+    let descriptor = fs::read(path.join("PROJECTION_CURRENT")).unwrap();
+    let mut builder = Builder::create_compact(
+        &path,
+        &[9; 32],
+        binding(),
+        Limits {
+            metadata_bytes: std::mem::size_of::<Column>(),
+            ..Limits::default()
+        },
+    )
+    .unwrap();
+    assert!(matches!(builder.push(row(1)), Err(Error::Bounds)));
+    drop(builder);
+    assert_eq!(
+        fs::read(path.join("PROJECTION_CURRENT")).unwrap(),
+        descriptor
+    );
+    assert_eq!(previous.row_count(), 1);
+    let compact_path = scratch.0.join("compact");
+    let rows: Vec<_> = (0..500).map(row).collect();
+    let index = build_layout(&compact_path, &rows, Compression::Raw, true);
+    let columns = index
+        .columns
+        .iter()
+        .map(|block| std::mem::size_of_val(block.as_ref()) + 2 * std::mem::size_of::<usize>())
+        .sum::<usize>()
+        + index.columns.capacity() * std::mem::size_of::<Arc<[Column]>>();
+    let admitted = columns + index.mass.as_ref().unwrap().bytes();
+    assert!(
+        Index::open_with_limits(
+            &compact_path,
+            &[9; 32],
+            &binding(),
+            Limits {
+                metadata_bytes: admitted,
+                ..Limits::default()
+            }
+        )
+        .is_ok()
+    );
+    assert!(matches!(
+        Index::open_with_limits(
+            &compact_path,
+            &[9; 32],
+            &binding(),
+            Limits {
+                metadata_bytes: admitted - 1,
+                ..Limits::default()
+            }
+        ),
+        Err(Error::Bounds)
+    ));
+}
+
+#[test]
 fn original_read_plan_checks_every_identity_and_budget_before_provider_prefetch() {
     for compression in [Compression::Raw, Compression::Zstd] {
         let scratch = Scratch::new();
@@ -573,11 +632,50 @@ fn ambiguous_descriptor_publication_keeps_its_complete_generation_readable() {
 
 #[test]
 fn incremental_prefix_append_retire_and_reopen_match_complete_global_model() {
-    for compression in [Compression::Raw, Compression::Zstd] {
+    for (compression, compact) in [
+        (Compression::Raw, false),
+        (Compression::Zstd, false),
+        (Compression::Raw, true),
+        (Compression::Zstd, true),
+    ] {
         let scratch = Scratch::new();
         let path = scratch.0.join("index");
         let initial = (0..2040).step_by(2).rev().map(row).collect::<Vec<_>>();
-        let old = build(&path, &initial, compression);
+        let old = if compact {
+            let mut b = Builder::create_compact(
+                &path,
+                &[9; 32],
+                binding(),
+                Limits {
+                    compression,
+                    ..Limits::default()
+                },
+            )
+            .unwrap();
+            for row in &initial {
+                b.push(row.clone()).unwrap();
+            }
+            let index = b.finish().unwrap();
+            assert_eq!(index.manifest.format, COMPACT_FORMAT);
+            let sealed = fs::read(path.join("PROJECTION_CURRENT")).unwrap();
+            let old_authority = Authority::new(&binding()).unwrap();
+            assert!(
+                index
+                    .cipher
+                    .open_frame(
+                        &{
+                            let mut aad = b"oojuro/projection/manifest/v1\0".to_vec();
+                            aad.extend(&old_authority.binding);
+                            aad
+                        },
+                        &sealed
+                    )
+                    .is_err()
+            );
+            index
+        } else {
+            build(&path, &initial, compression)
+        };
         old.rank(
             &binding(),
             &query("alpha", Filter::default(), i64::MIN, i64::MAX),
@@ -683,10 +781,122 @@ fn incremental_prefix_append_retire_and_reopen_match_complete_global_model() {
 }
 
 #[test]
+fn compact_block_bounds_match_complete_rank_bits_ties_filters_and_retirement() {
+    let mut rows: Vec<_> = (0..20_001)
+        .map(|i| {
+            let mut row = row(i);
+            row.text = "alpha beta gamma".into();
+            row.indexed = true;
+            row
+        })
+        .collect();
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("compact");
+        let index = build_layout(&path, &rows, compression, true);
+        let q = query("alpha beta", Filter::default(), i64::MIN, i64::MAX);
+        let plan = scorer::Plan::new(q.text, false, None, &BTreeSet::new(), &BTreeMap::new());
+        let model = index
+            .compact_statistics(&plan, None)
+            .unwrap()
+            .unwrap()
+            .finish(plan);
+        // More rows than the bounded exhaustive trial: Some proves that this
+        // cohort actually prunes blocks and can complete under that work cap.
+        assert!(
+            index
+                .rank_compact_blocks(&model, &Selection::new(&q), q.k)
+                .unwrap()
+                .is_some()
+        );
+        let mut next = binding();
+        next.view[0] ^= 1;
+        let mut append = Appender::extend_validated_prefix(
+            &index,
+            next.clone(),
+            Limits {
+                compression,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        let retired = rows[58].id.clone();
+        append.retire(&retired).unwrap();
+        let index = append.finish().unwrap();
+        let live: Vec<_> = rows
+            .iter()
+            .filter(|row| row.id != retired)
+            .cloned()
+            .collect();
+        let originals: BTreeMap<_, _> = live
+            .iter()
+            .map(|row| (row.id.clone(), row.clone()))
+            .collect();
+        let reference = super::super::Index::build(next.clone(), live).unwrap();
+        for text in [
+            "alpha beta",
+            "alpha beta gamma",
+            "alpha alpha beta gamma",
+            "alpha absent",
+            "beta",
+        ] {
+            for filter in [
+                Filter::default(),
+                Filter {
+                    agent_id: Some("agent-3".into()),
+                    ..Filter::default()
+                },
+            ] {
+                for (from, to) in [(i64::MIN, i64::MAX), (-5, 7)] {
+                    let q = query(text, filter.clone(), from, to);
+                    let got = index.rank_uncached(&next, &q).unwrap();
+                    assert_eq!(
+                        fingerprint(
+                            &index
+                                .materialize(&next, &q, &got, |id| Ok(originals[id].clone()))
+                                .unwrap()
+                        ),
+                        fingerprint(&reference.search(&next, &q).unwrap()),
+                        "{text} {compression:?} {from} {to}"
+                    );
+                }
+            }
+        }
+    }
+    // Deliberately heterogeneous TF/shape correlations exercise a loose bound
+    // and the exact bounded-work fallback instead of independent minima.
+    for (i, row) in rows.iter_mut().enumerate() {
+        row.text = format!("{} beta", "alpha ".repeat(1 + i % 37));
+    }
+    let scratch = Scratch::new();
+    let index = build_layout(
+        &scratch.0.join("heterogeneous"),
+        &rows,
+        Compression::Raw,
+        true,
+    );
+    let reference = super::super::Index::build(binding(), rows.clone()).unwrap();
+    let originals: BTreeMap<_, _> = rows
+        .iter()
+        .map(|row| (row.id.clone(), row.clone()))
+        .collect();
+    let q = query("alpha beta", Filter::default(), i64::MIN, i64::MAX);
+    let ranked = index.rank_uncached(&binding(), &q).unwrap();
+    assert_eq!(
+        fingerprint(
+            &index
+                .materialize(&binding(), &q, &ranked, |id| Ok(originals[id].clone()))
+                .unwrap()
+        ),
+        fingerprint(&reference.search(&binding(), &q).unwrap())
+    );
+}
+
+#[test]
 fn sparse_identifier_driver_keeps_exact_floor_and_filtered_view_statistics() {
     let mut rows = (0..1300).map(row).collect::<Vec<_>>();
     for (i, row) in rows.iter_mut().enumerate() {
-        if i % 97 == 0 {
+        if i.is_multiple_of(97) {
             row.text.push_str(" needle_exact");
         }
     }
@@ -765,6 +975,25 @@ fn query<'a>(text: &'a str, filter: Filter, from: i64, to: i64) -> Query<'a> {
         max_bytes: 16384,
     }
 }
+fn build_layout(path: &Path, rows: &[Row], compression: Compression, compact: bool) -> Index {
+    if !compact {
+        return build(path, rows, compression);
+    }
+    let mut builder = Builder::create_compact(
+        path,
+        &[9; 32],
+        binding(),
+        Limits {
+            compression,
+            ..Limits::default()
+        },
+    )
+    .unwrap();
+    for row in rows {
+        builder.push(row.clone()).unwrap();
+    }
+    builder.finish().unwrap()
+}
 fn build(path: &Path, rows: &[Row], compression: Compression) -> Index {
     let mut b = Builder::create(
         path,
@@ -804,10 +1033,15 @@ fn disk_projection_matches_ram_bits_filters_excerpts_and_reopen() {
     let rows = (0..1200).rev().map(row).collect::<Vec<_>>();
     let originals: BTreeMap<_, _> = rows.iter().map(|r| (r.id.clone(), r.clone())).collect();
     let reference = super::super::Index::build(binding(), rows.clone()).unwrap();
-    for compression in [Compression::Raw, Compression::Zstd] {
+    for (compression, compact) in [
+        (Compression::Raw, false),
+        (Compression::Zstd, false),
+        (Compression::Raw, true),
+        (Compression::Zstd, true),
+    ] {
         let scratch = Scratch::new();
         let path = scratch.0.join("index");
-        let index = build(&path, &rows, compression);
+        let index = build_layout(&path, &rows, compression, compact);
         assert_eq!(index.row_count(), 1200);
         assert_eq!(
             index.text_bytes(),
@@ -825,6 +1059,8 @@ fn disk_projection_matches_ram_bits_filters_excerpts_and_reopen() {
             "k-00000003",
             "café",
             "alpha alpha",
+            "alpha beta",
+            "alpha ordinary rare",
             "\"create_config\"",
         ] {
             for filter in [

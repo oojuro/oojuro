@@ -27,11 +27,14 @@ pub struct Builder {
     authority: Authority,
     cipher: Arc<FrameCipher>,
     limits: Limits,
+    format: u32,
     blobs: Blobs,
     spool: BufWriter<File>,
     spool_bytes: u64,
     rows: u64,
     source_bytes: u64,
+    length_bits: u32,
+    scope_bits: u32,
     stems: HashMap<String, String>,
     failed: bool,
     finished: bool,
@@ -57,6 +60,22 @@ impl Builder {
             Arc::new(FrameCipher::new(cache_key)),
             binding,
             limits,
+            1,
+        )
+    }
+    /// Opt-in version 2 derived cache. Existing caches are not migrated.
+    pub fn create_compact(
+        directory: impl AsRef<Path>,
+        cache_key: &[u8; 32],
+        binding: Binding,
+        limits: Limits,
+    ) -> Result<Self> {
+        Self::create_with_cipher(
+            directory.as_ref(),
+            Arc::new(FrameCipher::new(cache_key)),
+            binding,
+            limits,
+            COMPACT_FORMAT,
         )
     }
     fn create_with_cipher(
@@ -64,9 +83,10 @@ impl Builder {
         cipher: Arc<FrameCipher>,
         binding: Binding,
         limits: Limits,
+        format: u32,
     ) -> Result<Self> {
         limits.validate()?;
-        let mut authority = Authority::new(&binding)?;
+        let mut authority = Authority::for_layout(&binding, format)?;
         let root = directory.to_path_buf();
         let (lock, work, generation) = prepare(&root)?;
         authority.budget = Some(Arc::new(budget::Budget::new(
@@ -93,11 +113,14 @@ impl Builder {
             authority,
             cipher,
             limits,
+            format,
             blobs,
             spool,
             spool_bytes: 0,
             rows: 0,
             source_bytes: 0,
+            length_bits: 0,
+            scope_bits: 0,
             stems: HashMap::new(),
             failed: false,
             finished: false,
@@ -138,10 +161,32 @@ impl Builder {
         let length = u32::try_from(terms.iter().map(|(_, n)| u64::from(*n)).sum::<u64>())
             .map_err(|_| Error::Bounds)?;
         let scope = u32::try_from(terms.len()).map_err(|_| Error::Bounds)?;
+        if self.format == COMPACT_FORMAT {
+            let rows = self.rows as usize + 1;
+            let blocks = rows.div_ceil(COLUMN_ROWS);
+            let columns = rows
+                .checked_mul(std::mem::size_of::<Column>())
+                .and_then(|bytes| {
+                    bytes.checked_add(
+                        blocks
+                            * (std::mem::size_of::<Arc<[Column]>>()
+                                + 2 * std::mem::size_of::<usize>()),
+                    )
+                })
+                .ok_or(Error::Bounds)?;
+            let mass =
+                compact::Mass::required(rows, self.length_bits | length, self.scope_bits | scope)?;
+            if columns
+                .checked_add(mass)
+                .is_none_or(|bytes| bytes > self.limits.metadata_bytes)
+            {
+                return Err(Error::Bounds);
+            }
+        }
         let text = self.blobs.put(TEXT, row.text.as_bytes())?;
         let metadata = Metadata::from_row(row, text, length, scope);
         // Refuse oversized individual metadata before it reaches a tree page.
-        pack_json(&metadata, self.limits.compression)?;
+        encode_metadata(&metadata, self.limits.compression, self.format)?;
         let plain = json(&Analysis { metadata, terms }, MAX_BATCH_BYTES)?;
         let sealed = self
             .cipher
@@ -158,6 +203,8 @@ impl Builder {
             .map_err(|_| Error::Unavailable)?;
         self.rows += 1;
         self.source_bytes = bytes;
+        self.length_bits |= length;
+        self.scope_bits |= scope;
         Ok(())
     }
     pub fn finish(mut self) -> Result<Index> {
@@ -239,7 +286,7 @@ impl Builder {
             key.extend(list[0].0.to_be_bytes());
             postings.push(tree::Entry::new(
                 key,
-                encode_postings(list, self.limits.compression)?,
+                encode_layout_postings(list, self.limits.compression, self.format)?,
             )?)?;
             list.clear();
             Ok(())
@@ -249,7 +296,13 @@ impl Builder {
                 return Err(Error::Authority);
             }
             let next: [u8; 32] = entry.key[..32].try_into().unwrap();
-            if term.is_some_and(|t| t != next) || list.len() == 256 {
+            if term.is_some_and(|t| t != next)
+                || list.len() == 256
+                || (self.format == COMPACT_FORMAT
+                    && list.first().is_some_and(|(row, _)| {
+                        row / 256 != parse_u32(&entry.key[32..]).unwrap_or(u32::MAX) / 256
+                    }))
+            {
                 emit(&mut postings, term.unwrap(), &mut list)?;
             }
             term = Some(next);
@@ -271,7 +324,7 @@ impl Builder {
         while let Some((ordinal, analysis)) = reader.next()? {
             metadata.push(tree::Entry::new(
                 ordinal.to_be_bytes().to_vec(),
-                pack_json(&analysis.metadata, self.limits.compression)?,
+                encode_metadata(&analysis.metadata, self.limits.compression, self.format)?,
             )?)?;
             block.push(analysis.metadata.column(labels[ordinal as usize]));
             if block.len() == COLUMN_ROWS {
@@ -289,7 +342,7 @@ impl Builder {
             return Err(Error::Bounds);
         }
         let mut manifest = Manifest {
-            format: 1,
+            format: self.format,
             generation: self.generation.clone(),
             binding: self.authority.binding.clone(),
             rows: self.rows,

@@ -95,9 +95,21 @@ fn search(index: &EventIndex, source: &mut Journal, text: &str) -> Result<String
     assert_eq!(source.checkpoint(), cp);
     Ok(signature(&hits))
 }
-fn oracle(source: &mut Journal, path: &Path, compression: Compression) -> Result<EventIndex> {
+fn oracle(
+    source: &mut Journal,
+    path: &Path,
+    compression: Compression,
+    compact: bool,
+) -> Result<EventIndex> {
     let cp = source.checkpoint();
-    let mut builder = checked(EventBuilder::create(
+    let create = |path: &Path, key: &[u8; 32], binding, limits| {
+        if compact {
+            EventBuilder::create_compact(path, key, binding, limits)
+        } else {
+            EventBuilder::create(path, key, binding, limits)
+        }
+    };
+    let mut builder = checked(create(
         path,
         &INDEX_KEY,
         binding(cp),
@@ -140,6 +152,11 @@ fn main() -> Result<()> {
     {
         return Err("prepare ROOT ROWS DELTA INTENTS plain|encrypted; append ROOT ROWS DELTA raw|zstd INTENTS plain|encrypted validate|measure".into());
     }
+    let compact = match std::env::var("JURO_BENCH_COMPACT").as_deref() {
+        Err(std::env::VarError::NotPresent) | Ok("0") => false,
+        Ok("1") => true,
+        _ => return Err("JURO_BENCH_COMPACT must be 0 or 1".into()),
+    };
     let root = Path::new(&args[2]);
     let rows: usize = args[3].parse()?;
     let delta: usize = args[4].parse()?;
@@ -229,7 +246,11 @@ fn main() -> Result<()> {
         .map(|(i, d)| (i, d.as_slice()))
         .collect();
     let previous = checked(EventIndex::open(
-        root.join(format!("index-{}", args[5])),
+        root.join(format!(
+            "index-{}{}",
+            args[5],
+            if compact { "-v2" } else { "" }
+        )),
         &INDEX_KEY,
         &binding(expected),
     ))?;
@@ -282,6 +303,7 @@ fn main() -> Result<()> {
             &mut source,
             &root.join(format!("oracle-{}", args[5])),
             compression,
+            compact,
         )?;
         for (case, result) in cases.iter().zip(&results) {
             assert_eq!(
@@ -293,7 +315,7 @@ fn main() -> Result<()> {
     }
     println!(
         "{}",
-        json!({"phase":"append","rows":rows,"delta":delta,"compression":args[5],"source_encrypted":encrypted,"source_compression":"NOCOMPRESS",
+        json!({"phase":"append","rows":rows,"delta":delta,"compression":args[5],"source_encrypted":encrypted,"source_compression":"NOCOMPRESS","derived_layout":if compact { 2 } else { 1 },
         "source_append_ns":source_ns,"index_refresh_ns":refresh_ns,"source_plus_refresh_ns":total_ns,"old_index_bytes":old_bytes,"new_index_bytes":index.index_bytes(),
         "allocated_index_bytes":index.allocated_index_bytes(),"estimated_heap_bytes":index.estimated_heap_bytes(),"build_metrics":index.build_metrics(),"queries":results,"oracle_ns":oracle_ns,
         "scope":"healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints"})

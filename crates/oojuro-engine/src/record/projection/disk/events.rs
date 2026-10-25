@@ -78,6 +78,17 @@ impl EventBuilder {
             inner: Builder::create(directory, cache_key, binding, limits)?,
         })
     }
+    /// Opt-in version 2 disposable cache; the source format is unchanged.
+    pub fn create_compact(
+        directory: impl AsRef<Path>,
+        cache_key: &[u8; 32],
+        binding: Binding,
+        limits: Limits,
+    ) -> Result<Self> {
+        Ok(Self {
+            inner: Builder::create_compact(directory, cache_key, binding, limits)?,
+        })
+    }
     /// Signed UTC Unix microseconds. Returns false for nonUTF8 data; those
     /// events remain exact/readable in the authoritative event log. Indexing
     /// never edits, converts or removes their original bytes.

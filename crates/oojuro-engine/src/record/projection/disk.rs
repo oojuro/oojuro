@@ -5,8 +5,10 @@
 //! The optional disk representation preserves the existing projection ranker.
 mod budget;
 mod build;
+mod compact;
 mod events;
 mod query_cache;
+mod score_blocks;
 mod storage;
 mod term_cache;
 use super::*;
@@ -98,6 +100,7 @@ pub struct Index {
     pages: Arc<tree::PageCache>,
     manifest: Manifest,
     columns: Vec<Arc<[Column]>>,
+    mass: Option<compact::Mass>,
     totals: Totals,
     queries: query_cache::QueryCache,
     terms: term_cache::TermCache,
@@ -156,6 +159,7 @@ impl Index {
             .map(|c| std::mem::size_of_val(c.as_ref()) + 2 * std::mem::size_of::<usize>())
             .sum::<usize>()
             .saturating_add(self.columns.capacity() * std::mem::size_of::<Arc<[Column]>>())
+            .saturating_add(self.mass.as_ref().map_or(0, compact::Mass::bytes))
             .saturating_add(self.manifest.files.capacity() * std::mem::size_of::<String>())
             .saturating_add(
                 self.manifest
@@ -213,7 +217,7 @@ impl Index {
             &ordinal.to_be_bytes(),
         )?
         .ok_or(Error::Authority)?;
-        unpack_json(&bytes, &self.manifest.limits)
+        decode_metadata(&bytes, &self.manifest.limits, self.manifest.format)
     }
     fn cached_text(&self, ordinal: u32, read: &mut usize) -> Result<String> {
         let meta = self.metadata(ordinal)?;
@@ -504,7 +508,7 @@ impl Index {
                         }
                     }
                 } else {
-                    for &(ordinal, tf) in &list.pairs {
+                    for (ordinal, tf) in list.pairs.iter() {
                         let column = self.column(ordinal)?;
                         if column.live() {
                             top.push(Scored {
@@ -519,63 +523,76 @@ impl Index {
                 return Ok((self.ranked(top)?, false));
             }
         }
-        let mut stats = scorer::Stats::new(&plan);
         let mut literal = plan
             .literal
             .as_ref()
             .map(|_| vec![0u64; (self.manifest.rows as usize).div_ceil(64)]);
-        let mut read = 0usize;
-        self.walk(&plan, direct, true, sparse, |ordinal, tf| {
-            let column = self.column(ordinal)?;
-            let visible = column.visible(&selection);
-            let mut candidate =
-                plan.candidate_terms(u64::from(ordinal), column.indexed(), visible, tf);
-            if candidate && plan.literal.is_some() {
-                let text = self.cached_text(ordinal, &mut read)?;
-                candidate =
-                    plan.candidate(u64::from(ordinal), column.indexed(), &text, visible, tf);
-                if candidate {
-                    literal.as_mut().unwrap()[ordinal as usize / 64] |= 1 << (ordinal % 64);
+        let compact_stats = self.compact_statistics(&plan, selected.as_deref())?;
+        let stats = if let Some(stats) = compact_stats {
+            stats
+        } else {
+            let mut stats = scorer::Stats::new(&plan);
+            let mut read = 0usize;
+            self.walk(&plan, direct, true, sparse, |ordinal, tf| {
+                let column = self.column(ordinal)?;
+                let visible = column.visible(&selection);
+                let mut candidate =
+                    plan.candidate_terms(u64::from(ordinal), column.indexed(), visible, tf);
+                if candidate && plan.literal.is_some() {
+                    let text = self.cached_text(ordinal, &mut read)?;
+                    candidate =
+                        plan.candidate(u64::from(ordinal), column.indexed(), &text, visible, tf);
+                    if candidate {
+                        literal.as_mut().unwrap()[ordinal as usize / 64] |= 1 << (ordinal % 64);
+                    }
                 }
+                stats
+                    .visit(&plan, column.length, column.scope, tf, visible, candidate)
+                    .map_err(|_| Error::Bounds)
+            })?;
+            if stats.needs_view_total() {
+                if plan.anchored_driver() {
+                    stats.reset_view();
+                    self.walk(&plan, direct, false, sparse, |ordinal, tf| {
+                        let col = self.column(ordinal)?;
+                        stats
+                            .visit(
+                                &plan,
+                                col.length,
+                                col.scope,
+                                tf,
+                                col.visible(&selection),
+                                false,
+                            )
+                            .map_err(|_| Error::Bounds)
+                    })?;
+                }
+                let total = if let Some(selected) = &selected {
+                    if plan.scope_model() {
+                        selected.totals.scope
+                    } else {
+                        selected.totals.length
+                    }
+                } else {
+                    if plan.scope_model() {
+                        self.totals.scope
+                    } else {
+                        self.totals.length
+                    }
+                };
+                stats.set_view_total(total);
             }
             stats
-                .visit(&plan, column.length, column.scope, tf, visible, candidate)
-                .map_err(|_| Error::Bounds)
-        })?;
-        if stats.needs_view_total() {
-            if plan.anchored_driver() {
-                stats.reset_view();
-                self.walk(&plan, direct, false, sparse, |ordinal, tf| {
-                    let col = self.column(ordinal)?;
-                    stats
-                        .visit(
-                            &plan,
-                            col.length,
-                            col.scope,
-                            tf,
-                            col.visible(&selection),
-                            false,
-                        )
-                        .map_err(|_| Error::Bounds)
-                })?;
-            }
-            let total = if let Some(selected) = &selected {
-                if plan.scope_model() {
-                    selected.totals.scope
-                } else {
-                    selected.totals.length
-                }
-            } else {
-                if plan.scope_model() {
-                    self.totals.scope
-                } else {
-                    self.totals.length
-                }
-            };
-            stats.set_view_total(total);
-        }
+        };
         let anchored = plan.continues();
         let model = stats.finish(plan);
+        if let Some(top) = self.rank_compact_blocks(&model, &selection, q.k)? {
+            return Ok((self.ranked(top)?, anchored));
+        }
+        let mut scores = self
+            .mass
+            .as_ref()
+            .and_then(|_| compact::Scores::new(model.plan.terms.len()));
         let mut top = Top::new(q.k);
         self.walk(&model.plan, direct, true, sparse, |ordinal, tf| {
             let col = self.column(ordinal)?;
@@ -592,7 +609,10 @@ impl Index {
                     ordinal,
                     label: col.label,
                     time: col.valid_at,
-                    bits: model.score(col.length, col.scope, tf),
+                    bits: scores.as_mut().map_or_else(
+                        || model.score(col.length, col.scope, tf),
+                        |scores| scores.score(&model, col.length, col.scope, tf),
+                    ),
                 });
             }
             Ok(())
@@ -610,6 +630,39 @@ impl Index {
             });
         }
         Ok(output)
+    }
+    fn compact_statistics(
+        &self,
+        plan: &scorer::Plan,
+        selected: Option<&Selected>,
+    ) -> Result<Option<scorer::Stats>> {
+        let Some(mass) = self.mass.as_ref().filter(|_| plan.scope_model()) else {
+            return Ok(None);
+        };
+        let mut lists = Vec::with_capacity(plan.terms.len());
+        for (term, _) in &plan.terms {
+            let Some(list) = self
+                .terms
+                .get(self, *blake3::hash(term.as_bytes()).as_bytes())?
+            else {
+                return Ok(None);
+            };
+            lists.push(list);
+        }
+        let mut union = vec![0u64; mass.live.len()];
+        let mut counts = Vec::with_capacity(lists.len());
+        for list in lists {
+            counts.push(list.pairs.presence(
+                &mut union,
+                &mass.live,
+                selected.map(|selected| selected.bits.as_slice()),
+            )?);
+        }
+        let total = mass.sum(&union, true)?;
+        let view = selected.map_or(self.totals.scope, |selected| selected.totals.scope);
+        Ok(Some(
+            scorer::Stats::scope_counts(plan, counts, total, view).map_err(|_| Error::Bounds)?,
+        ))
     }
     fn select(&self, selection: &Selection) -> Result<Selected> {
         let mut selected = Selected {
@@ -709,6 +762,8 @@ impl Index {
 
 struct DiskPostings<'a> {
     cursor: tree::Cursor<'a>,
+    rows: u64,
+    format: u32,
     term: [u8; 32],
     buffer: Vec<(u32, u32)>,
     at: usize,
@@ -724,6 +779,8 @@ impl<'a> DiskPostings<'a> {
                 &term,
             )?,
             term,
+            rows: index.manifest.rows,
+            format: index.manifest.format,
             buffer: vec![],
             at: 0,
             last: None,
@@ -754,7 +811,12 @@ impl<'a> DiskPostings<'a> {
             if entry.key.len() != 36 {
                 return Err(Error::Authority);
             }
-            self.buffer = decode_postings(&entry.value)?;
+            self.buffer = decode_layout_postings(
+                &entry.value,
+                parse_u32(&entry.key[32..])?,
+                self.rows,
+                self.format,
+            )?;
             self.at = 0;
             if self.buffer.first().map(|(r, _)| r.to_be_bytes().to_vec())
                 != Some(entry.key[32..].to_vec())
@@ -780,6 +842,7 @@ impl<'a> DiskPostings<'a> {
 enum Postings<'a> {
     Cached {
         list: Arc<term_cache::TermList>,
+        block: usize,
         at: usize,
     },
     Disk(Box<DiskPostings<'a>>),
@@ -788,7 +851,11 @@ impl<'a> Postings<'a> {
     fn new(index: &'a Index, term: &str) -> Result<Self> {
         let term = *blake3::hash(term.as_bytes()).as_bytes();
         if let Some(list) = index.terms.get(index, term)? {
-            Ok(Self::Cached { list, at: 0 })
+            Ok(Self::Cached {
+                list,
+                block: 0,
+                at: 0,
+            })
         } else {
             Ok(Self::Disk(Box::new(DiskPostings::new_hash(index, term)?)))
         }
@@ -796,20 +863,13 @@ impl<'a> Postings<'a> {
     fn next(&mut self) -> Result<Option<(u32, u32)>> {
         match self {
             Self::Disk(disk) => disk.next(),
-            Self::Cached { list, at } => {
-                let value = list.pairs.get(*at).copied();
-                *at += usize::from(value.is_some());
-                Ok(value)
-            }
+            Self::Cached { list, block, at } => Ok(list.pairs.next(block, at)),
         }
     }
     fn at_least(&mut self, wanted: u32) -> Result<Option<(u32, u32)>> {
         match self {
             Self::Disk(disk) => disk.at_least(wanted),
-            Self::Cached { list, at } => {
-                *at += list.pairs[*at..].partition_point(|(row, _)| *row < wanted);
-                self.next()
-            }
+            Self::Cached { list, block, at } => Ok(list.pairs.at_least(block, at, wanted)),
         }
     }
 }
@@ -852,6 +912,21 @@ impl Top {
             heap: BinaryHeap::new(),
             limit,
         }
+    }
+    fn admits_bound(&self, bits: f64, time: i64, label: u128) -> bool {
+        self.heap.len() < self.limit
+            || self.heap.peek().is_none_or(|worst| {
+                compare(
+                    &Scored {
+                        ordinal: 0,
+                        bits,
+                        time,
+                        label,
+                    },
+                    worst,
+                )
+                .is_le()
+            })
     }
     fn push(&mut self, value: Scored) {
         if self.limit == 0 {

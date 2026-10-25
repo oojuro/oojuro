@@ -139,6 +139,24 @@ impl Stats {
             view_total: view_scope,
         })
     }
+    /// Exact scope counts from authenticated posting/selection intersections.
+    /// All integer totals precede the unchanged floating-point model arithmetic.
+    pub fn scope_counts(plan: &Plan, counts: Vec<u64>, mass: u64, view_mass: u64) -> Result<Self> {
+        if !plan.scope_model
+            || plan.scan
+            || plan.direct.is_some()
+            || counts.len() != plan.terms.len()
+            || mass > view_mass
+        {
+            return Err(Error::Invalid);
+        }
+        Ok(Self {
+            collection: counts.clone(),
+            view: counts,
+            total: mass,
+            view_total: view_mass,
+        })
+    }
     /// Sparse postings visits already cover every visible term occurrence.
     /// Only a small candidate collection needs mass from nonmatching rows.
     pub fn needs_view_total(&self) -> bool {
