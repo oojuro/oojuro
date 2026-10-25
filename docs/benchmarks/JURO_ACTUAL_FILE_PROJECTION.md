@@ -100,3 +100,8 @@ The keys embedded in this synthetic diagnostic are public fixtures, never
 production keys. Remove only the owned generated fixture/cache directories
 after retaining receipts. Full source snapshots, captures and customer history
 must never be committed to this repository.
+
+The separately frozen [one-million-event actual-file diagnostic](JURO_ACTUAL_FILE_MILLION.md)
+adds retained ten-client, single-client reopen/rebuild and complete storage/peak
+accounting for one plain source with raw/Zstd indexes. Its remaining failed
+targets and resource scope stay explicit.
