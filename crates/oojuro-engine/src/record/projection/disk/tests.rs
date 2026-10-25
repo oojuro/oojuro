@@ -1780,3 +1780,86 @@ fn positional_legacy_codec_generation_reopens_and_extends_with_mixed_codec_pages
         fingerprint(&reference.search(&next, &q).unwrap())
     );
 }
+
+#[test]
+fn literal_numeric_groups_preserve_exact_case_spaces_weights_large_k_and_refresh() {
+    let mut rows: Vec<_> = (0..3001)
+        .map(|i| {
+            let mut value = row(i);
+            value.text = format!(
+                "battery electrode {} {} {}",
+                "battery electrode ".repeat(i % 7),
+                if i % 3 == 0 {
+                    "Original battery  electrode"
+                } else {
+                    "original battery electrode"
+                },
+                "response ".repeat(i % 31)
+            );
+            value
+        })
+        .collect();
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("index");
+        let limits = Limits {
+            compression,
+            ..Limits::default()
+        };
+        let mut builder = Builder::create_positional(&path, &[9; 32], binding(), limits).unwrap();
+        for value in &rows {
+            builder.push(value.clone()).unwrap();
+        }
+        let mut index = builder.finish().unwrap();
+        for round in 0..2 {
+            let bound = index.binding().clone();
+            let live: Vec<_> = rows
+                .iter()
+                .filter(|value| round == 0 || value.id != row(1).id)
+                .cloned()
+                .collect();
+            let reference = super::super::Index::build(bound.clone(), live.clone()).unwrap();
+            let originals: BTreeMap<_, _> = live
+                .into_iter()
+                .map(|value| (value.id.clone(), value))
+                .collect();
+            for text in [
+                "\"battery electrode\"",
+                "\"battery electrode battery\"",
+                "\"battery  electrode\"",
+                "\"Original battery\"",
+            ] {
+                for k in [1, 20, 21, 32] {
+                    let mut q = query(text, Filter::default(), i64::MIN, i64::MAX);
+                    q.k = k;
+                    let ranked = index.rank_uncached(&bound, &q).unwrap();
+                    assert_eq!(
+                        fingerprint(
+                            &index
+                                .materialize(&bound, &q, &ranked, |id| Ok(originals[id].clone()))
+                                .unwrap()
+                        ),
+                        fingerprint(&reference.search(&bound, &q).unwrap()),
+                        "{text} k={k} {compression:?} round={round}"
+                    );
+                }
+            }
+            if round == 0 {
+                let mut next = bound;
+                next.view[0] ^= 1;
+                let mut append =
+                    Appender::extend_validated_prefix(&index, next.clone(), limits).unwrap();
+                append.retire(&row(1).id).unwrap();
+                let mut addition = row(9000);
+                addition.text = "battery electrode battery electrode".into();
+                append.push(addition.clone()).unwrap();
+                rows.push(addition);
+                let updated = append.finish().unwrap();
+                drop(updated);
+                drop(index);
+                index = Index::open(&path, &[9; 32], &next).unwrap();
+            }
+        }
+        rows.pop();
+    }
+}

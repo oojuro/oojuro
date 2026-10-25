@@ -34,9 +34,19 @@ impl Groups {
             + (index.manifest.rows as usize).min(MAX_GROUPS) * Self::per_group(plan.terms.len()))
         .min(BYTES)
     }
-    pub fn build(index: &Index, plan: &scorer::Plan, budget: usize) -> Result<Self> {
-        if !plan.scope_model() || plan.terms.len() > 16 {
+    pub fn build(
+        index: &Index,
+        plan: &scorer::Plan,
+        budget: usize,
+        literal: Option<&[u64]>,
+    ) -> Result<Self> {
+        if !(plan.scope_model() && literal.is_none() || plan.literal.is_some() && literal.is_some())
+            || plan.terms.len() > 16
+        {
             return Err(Error::Invalid);
+        }
+        if literal.is_some_and(|bits| bits.len() != (index.manifest.rows as usize).div_ceil(64)) {
+            return Err(Error::Authority);
         }
         let terms: Vec<_> = plan
             .terms
@@ -53,7 +63,9 @@ impl Groups {
         let mut rejected = false;
         let walked = index.walk(plan, None, true, None, |ordinal, tf| {
             let column = index.column(ordinal)?;
-            if !plan.candidate_terms(u64::from(ordinal), column.indexed(), column.live(), tf) {
+            if literal.is_some_and(|bits| bits[ordinal as usize / 64] & (1 << (ordinal % 64)) == 0)
+                || !plan.candidate_terms(u64::from(ordinal), column.indexed(), column.live(), tf)
+            {
                 return Ok(());
             }
             shape.clear();
@@ -136,16 +148,23 @@ impl Index {
         model: &scorer::Model,
         selection: &Selection,
         limit: usize,
+        literal: Option<&[u64]>,
     ) -> Result<Option<Top>> {
         if self.mass.is_none()
             || !selection.unfiltered()
-            || !model.plan.scope_model()
             || model.plan.terms.len() > 16
             || limit > TOP
         {
             return Ok(None);
         }
-        let Some(groups) = self.terms.joint(self, &model.plan)? else {
+        let groups = if model.plan.scope_model() {
+            self.terms.joint(self, &model.plan)?
+        } else if let Some(literal) = literal.filter(|_| model.plan.literal.is_some()) {
+            self.terms.literal_groups(self, &model.plan, literal)?
+        } else {
+            None
+        };
+        let Some(groups) = groups else {
             return Ok(None);
         };
         if !groups.complete {

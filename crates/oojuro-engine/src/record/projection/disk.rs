@@ -538,7 +538,9 @@ impl Index {
                         }
                     }
                 } else {
-                    if let Some(top) = self.rank_joint(&model, &selection, q.k)? {
+                    if let Some(top) =
+                        self.rank_joint(&model, &selection, q.k, literal.as_deref())?
+                    {
                         return Ok((self.ranked(top)?, false));
                     }
                     for (ordinal, tf) in list.pairs.iter() {
@@ -642,7 +644,7 @@ impl Index {
         };
         let anchored = plan.continues();
         let model = stats.finish(plan);
-        if let Some(top) = self.rank_joint(&model, &selection, q.k)? {
+        if let Some(top) = self.rank_joint(&model, &selection, q.k, literal.as_deref())? {
             return Ok((self.ranked(top)?, anchored));
         }
         if let Some(top) = self.rank_compact_blocks(&model, &selection, q.k, literal.as_deref())? {

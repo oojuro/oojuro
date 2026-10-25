@@ -298,7 +298,47 @@ impl TermCache {
             },
             |budget| {
                 Ok(Entry::Joint(Arc::new(joint::Groups::build(
-                    index, plan, budget,
+                    index, plan, budget, None,
+                )?)))
+            },
+        )?;
+        match entry {
+            Some(Entry::Joint(groups)) => Ok(Some(groups)),
+            None => Ok(None),
+            _ => Err(Error::Authority),
+        }
+    }
+    pub fn literal_groups(
+        &self,
+        index: &Index,
+        plan: &scorer::Plan,
+        literal: &[u64],
+    ) -> Result<Option<Arc<joint::Groups>>> {
+        let Some(needle) = plan
+            .literal
+            .as_ref()
+            .filter(|_| !plan.scope_model() && plan.terms.len() <= 16)
+        else {
+            return Err(Error::Invalid);
+        };
+        let mut key = blake3::Hasher::new_derive_key("oojuro exact literal numeric groups v1");
+        key.update(&joint::key(plan));
+        key.update(needle.as_bytes());
+        let entry = self.entry(
+            CacheKey {
+                kind: 4,
+                hash: *key.finalize().as_bytes(),
+            },
+            || {
+                let bytes = joint::Groups::estimate(index, plan);
+                Ok((bytes, bytes))
+            },
+            |budget| {
+                Ok(Entry::Joint(Arc::new(joint::Groups::build(
+                    index,
+                    plan,
+                    budget,
+                    Some(literal),
                 )?)))
             },
         )?;
