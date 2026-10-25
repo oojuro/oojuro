@@ -284,3 +284,84 @@ fn bounded_page_cache_cannot_reuse_plaintext_under_a_different_cipher() {
     wrong.cipher = &other;
     assert!(get(wrong, &root, &0u64.to_be_bytes()).is_err());
 }
+
+#[test]
+fn sorted_batches_match_full_merge_across_splits_and_keep_old_roots() {
+    let f = Fixture::new();
+    let mut builder = Builder::new(f.ctx()).unwrap();
+    for n in (0..2050u64).step_by(2) {
+        builder.push(entry(n)).unwrap();
+    }
+    let old = builder.finish().unwrap();
+    f.authority.advance();
+    let mut editor = Editor::new(f.ctx(), old.clone()).unwrap();
+    let mut batch = Vec::new();
+    for n in (1..2050u64).step_by(2) {
+        batch.push(entry(n));
+        if batch.len() == MAX_BATCH_ENTRIES {
+            editor.insert_batch(std::mem::take(&mut batch)).unwrap();
+        }
+    }
+    if !batch.is_empty() {
+        editor.insert_batch(batch).unwrap();
+    }
+    let next = editor.finish().unwrap();
+    assert_eq!(old.count, 1025);
+    assert_eq!(next.count, 2050);
+    let mut cursor = Cursor::seek(f.ctx(), &next, b"").unwrap();
+    for n in 0..2050 {
+        let actual = cursor.next().unwrap().unwrap();
+        assert_eq!(actual.key, entry(n).key);
+        assert_eq!(actual.value, entry(n).value);
+    }
+    assert!(cursor.next().unwrap().is_none());
+    assert_eq!(
+        get_ancestor(f.ctx(), &old, &entry(10).key).unwrap(),
+        Some(entry(10).value)
+    );
+    assert!(
+        get_ancestor(f.ctx(), &old, &entry(11).key)
+            .unwrap()
+            .is_none()
+    );
+}
+
+#[test]
+fn sorted_batches_bound_inputs_refuse_duplicates_and_split_large_leaf_values() {
+    let f = Fixture::new();
+    let root = Builder::new(f.ctx()).unwrap().finish().unwrap();
+    let mut editor = Editor::new(f.ctx(), root).unwrap();
+    assert!(editor.insert_batch(vec![]).is_err());
+    assert!(editor.insert_batch(vec![entry(2), entry(1)]).is_err());
+    assert!(editor.insert_batch(vec![entry(1), entry(1)]).is_err());
+    assert!(editor.insert_batch((0..65).map(entry).collect()).is_err());
+    assert!(
+        editor
+            .insert_batch(
+                (0..64u64)
+                    .map(|n| Entry::new(n.to_be_bytes().to_vec(), vec![0; MAX_VALUE]).unwrap())
+                    .collect()
+            )
+            .is_err()
+    );
+    editor
+        .insert_batch(
+            (0..30u64)
+                .map(|n| Entry::new(n.to_be_bytes().to_vec(), vec![n as u8; 16 << 10]).unwrap())
+                .collect(),
+        )
+        .unwrap();
+    assert!(matches!(
+        editor.insert_batch(vec![entry(4)]),
+        Err(Error::Conflict)
+    ));
+    let root = editor.finish().unwrap();
+    assert_eq!(root.count, 30);
+    let mut cursor = Cursor::seek(f.ctx(), &root, b"").unwrap();
+    for n in 0..30u64 {
+        let value = cursor.next().unwrap().unwrap();
+        assert_eq!(value.key, n.to_be_bytes());
+        assert_eq!(value.value, vec![n as u8; 16 << 10]);
+    }
+    assert!(cursor.next().unwrap().is_none());
+}

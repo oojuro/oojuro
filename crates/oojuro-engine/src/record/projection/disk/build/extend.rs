@@ -7,6 +7,7 @@ use std::os::unix::fs::MetadataExt;
 pub struct Appender {
     builder: Builder,
     previous: Manifest,
+    previous_mass: Option<compact::Mass>,
     columns: Vec<Arc<[Column]>>,
     changed: BTreeSet<usize>,
     pages: Arc<tree::PageCache>,
@@ -30,6 +31,11 @@ impl Appender {
             || previous.manifest.rows as usize
                 > limits.metadata_bytes / std::mem::size_of::<Column>()
             || previous.manifest.source_bytes > limits.source_bytes
+        {
+            return Err(Error::Bounds);
+        }
+        if let Some(mass) = &previous.mass
+            && mass.bytes() > mass_limit(&previous.columns, limits.metadata_bytes)?
         {
             return Err(Error::Bounds);
         }
@@ -60,6 +66,7 @@ impl Appender {
         Ok(Self {
             builder,
             previous: previous.manifest.clone(),
+            previous_mass: previous.mass.clone(),
             columns: previous.columns.clone(),
             changed: BTreeSet::new(),
             pages: previous.pages.clone(),
@@ -156,6 +163,7 @@ impl Appender {
             make(tree::Purpose::ProjectionPostings),
             self.previous.postings.clone(),
         )?;
+        let mut key_batch = Pending::new();
         let mut reader = RowReader::new(&directory, &cipher, &authority, b.rows)?;
         while let Some((offset, analysis)) = reader.next()? {
             let ordinal =
@@ -167,7 +175,7 @@ impl Appender {
             if let Some(key) = &analysis.metadata.key {
                 let mut bytes = blake3::hash(key.as_bytes()).as_bytes().to_vec();
                 bytes.extend(ordinal.to_be_bytes());
-                keys.insert(tree::Entry::new(bytes, vec![])?)?;
+                key_batch.push(&mut keys, tree::Entry::new(bytes, vec![])?)?;
             }
             for (term, tf) in analysis.terms {
                 let mut key = blake3::hash(term.as_bytes()).as_bytes().to_vec();
@@ -175,12 +183,14 @@ impl Appender {
                 sorted_postings.push(tree::Entry::new(key, tf.to_le_bytes().to_vec())?)?;
             }
         }
+        key_batch.flush(&mut keys)?;
         let temporary_ids = sorted_ids.finish()?;
         let flat_postings = sorted_postings.finish()?;
         if temporary_ids.count != b.rows {
             return Err(Error::Conflict);
         }
         let mut labels = vec![0u128; b.rows as usize];
+        let mut id_batch = Pending::new();
         let mut input =
             tree::Cursor::seek(make(tree::Purpose::ProjectionIds), &temporary_ids, b"")?;
         while let Some(entry) = input.next()? {
@@ -190,7 +200,10 @@ impl Appender {
                 .ok_or(Error::Authority)? as usize;
             let (before, after) = ids.neighbors(&entry.key)?;
             let tail = after.is_none();
-            let low = before.map_or(Ok(0), |e| id_value(&e.value).map(|(_, label)| label))?;
+            let mut low = before.map_or(Ok(0), |e| id_value(&e.value).map(|(_, label)| label))?;
+            if let Some(previous) = id_batch.entries.last() {
+                low = low.max(id_value(&previous.value)?.1);
+            }
             let high = after.map_or(Ok(u128::MAX), |e| {
                 id_value(&e.value).map(|(_, label)| label)
             })?;
@@ -204,25 +217,33 @@ impl Appender {
             *labels.get_mut(offset).ok_or(Error::Authority)? = label;
             let mut value = ordinal.to_be_bytes().to_vec();
             value.extend(label.to_le_bytes());
-            ids.insert(tree::Entry {
-                key: entry.key,
-                value,
-            })?;
+            id_batch.push(
+                &mut ids,
+                tree::Entry {
+                    key: entry.key,
+                    value,
+                },
+            )?;
         }
+        id_batch.flush(&mut ids)?;
         let mut input =
             tree::Cursor::seek(make(tree::Purpose::ProjectionTerms), &flat_postings, b"")?;
         let mut term = None::<[u8; 32]>;
         let mut list = Vec::new();
+        let mut posting_batch = Pending::new();
         let mut emit = |term: [u8; 32], list: &mut Vec<(u32, u32)>| -> Result<()> {
             if list.is_empty() {
                 return Ok(());
             }
             let mut key = term.to_vec();
             key.extend(list[0].0.to_be_bytes());
-            postings.insert(tree::Entry::new(
-                key,
-                encode_layout_postings(list, b.limits.compression, b.format)?,
-            )?)?;
+            posting_batch.push(
+                &mut postings,
+                tree::Entry::new(
+                    key,
+                    encode_layout_postings(list, b.limits.compression, b.format)?,
+                )?,
+            )?;
             list.clear();
             Ok(())
         };
@@ -254,19 +275,22 @@ impl Appender {
         if let Some(term) = term {
             emit(term, &mut list)?;
         }
+        posting_batch.flush(&mut postings)?;
         let mut reader = RowReader::new(&directory, &cipher, &authority, b.rows)?;
         let mut tail = if !(self.previous.rows as usize).is_multiple_of(COLUMN_ROWS) {
             self.columns.pop().ok_or(Error::Authority)?.to_vec()
         } else {
             Vec::with_capacity(COLUMN_ROWS)
         };
+        let mut metadata_batch = Pending::new();
         while let Some((offset, analysis)) = reader.next()? {
             let ordinal =
                 u32::try_from(self.previous.rows + u64::from(offset)).map_err(|_| Error::Bounds)?;
-            metadata.insert(tree::Entry::new(
+            let entry = tree::Entry::new(
                 ordinal.to_be_bytes().to_vec(),
                 encode_metadata(&analysis.metadata, b.limits.compression, b.format)?,
-            )?)?;
+            )?;
+            metadata_batch.push(&mut metadata, entry)?;
             let block = ordinal as usize / COLUMN_ROWS;
             let column = analysis.metadata.column(labels[offset as usize]);
             self.totals.add(&column)?;
@@ -277,9 +301,19 @@ impl Appender {
             }
             self.changed.insert(block);
         }
+        metadata_batch.flush(&mut metadata)?;
         if !tail.is_empty() {
             self.columns.push(Arc::from(tail));
         }
+        let mass = if b.format == COMPACT_FORMAT {
+            Some(self.previous_mass.take().ok_or(Error::Authority)?.refresh(
+                &self.columns,
+                &self.changed,
+                mass_limit(&self.columns, b.limits.metadata_bytes)?,
+            )?)
+        } else {
+            None
+        };
         let mut columns = self.previous.columns.clone();
         for block in self.changed {
             let mut bytes = Vec::with_capacity(self.columns[block].len() * COLUMN_BYTES);
@@ -302,7 +336,6 @@ impl Appender {
         remove_tree(&directory, &authority, &temporary_ids)?;
         remove_tree(&directory, &authority, &flat_postings)?;
         tree::Authority::remove_file(&authority, &directory.join(SPOOL))?;
-        let mass = index_mass(&self.columns, b.format, b.limits.metadata_bytes)?;
         let mut manifest = Manifest {
             format: b.format,
             generation: b.generation.clone(),
@@ -379,4 +412,44 @@ fn id_value(bytes: &[u8]) -> Result<(u32, u128)> {
         parse_u32(&bytes[..4])?,
         u128::from_le_bytes(bytes[4..].try_into().unwrap()),
     ))
+}
+
+// A constant-size edit buffer; no source population is retained here.
+struct Pending {
+    entries: Vec<tree::Entry>,
+    bytes: usize,
+}
+impl Pending {
+    fn new() -> Self {
+        Self {
+            entries: Vec::with_capacity(tree::MAX_BATCH_ENTRIES),
+            bytes: 0,
+        }
+    }
+    fn push(&mut self, editor: &mut tree::Editor<'_>, entry: tree::Entry) -> Result<()> {
+        let bytes = entry.key.len() + entry.value.len() + 8;
+        if self.entries.len() == tree::MAX_BATCH_ENTRIES
+            || self.bytes + bytes > tree::MAX_BATCH_BYTES
+        {
+            self.flush(editor)?;
+        }
+        if bytes > tree::MAX_BATCH_BYTES {
+            return Err(Error::Bounds);
+        }
+        self.bytes += bytes;
+        self.entries.push(entry);
+        Ok(())
+    }
+    fn flush(&mut self, editor: &mut tree::Editor<'_>) -> Result<()> {
+        if self.entries.is_empty() {
+            return Ok(());
+        }
+        self.entries.sort_unstable_by(|a, b| a.key.cmp(&b.key));
+        editor.insert_batch(std::mem::replace(
+            &mut self.entries,
+            Vec::with_capacity(tree::MAX_BATCH_ENTRIES),
+        ))?;
+        self.bytes = 0;
+        Ok(())
+    }
 }

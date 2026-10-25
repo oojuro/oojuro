@@ -300,7 +300,9 @@ fn exact_score_memoization_includes_all_shape_fields_and_bounds_diversity() {
 
 // Exact integer mass over arbitrary candidate unions without rescoring every
 // numeric row. Allocation is admitted before any full-width plane is created.
+#[derive(Clone)]
 pub(super) struct Mass {
+    rows: usize,
     pub(super) live: Vec<u64>,
     length: Vec<(u8, Vec<u64>)>,
     scope: Vec<(u8, Vec<u64>)>,
@@ -405,6 +407,7 @@ fn scope_bounds_preserve_positive_scope_mass_and_exact_shape_arithmetic() {
     assert!(shape_bound(&model, &[(0, 0)], &[1]).is_none());
     assert!(shape_bound(&model, &[(100, 10); 17], &[1]).is_none());
 }
+#[derive(Clone)]
 pub(super) struct BlockShape {
     values: [(u32, u32); 16],
     count: usize,
@@ -488,6 +491,7 @@ impl Mass {
             planes
         };
         let mut result = Self {
+            rows,
             live: vec![0; words],
             length: make(length),
             scope: make(scope),
@@ -496,25 +500,121 @@ impl Mass {
                 .collect(),
         };
         for (ordinal, column) in columns.iter().flat_map(|block| block.iter()).enumerate() {
-            if !column.live() || !column.indexed() {
-                continue;
-            }
-            result.shapes[ordinal / 256].add(column);
-            let word = ordinal / 64;
-            let flag = 1u64 << (ordinal % 64);
-            result.live[word] |= flag;
-            for (value, planes) in [
-                (column.length, &mut result.length),
-                (column.scope, &mut result.scope),
-            ] {
-                for (bit, plane) in planes.iter_mut() {
-                    if value & (1 << *bit) != 0 {
-                        plane[word] |= flag;
-                    }
+            result.add(ordinal, column);
+        }
+        Ok(result)
+    }
+    fn add(&mut self, ordinal: usize, column: &Column) {
+        if !column.live() || !column.indexed() {
+            return;
+        }
+        self.shapes[ordinal / 256].add(column);
+        let word = ordinal / 64;
+        let flag = 1u64 << (ordinal % 64);
+        self.live[word] |= flag;
+        for (value, planes) in [
+            (column.length, &mut self.length),
+            (column.scope, &mut self.scope),
+        ] {
+            for (bit, plane) in planes.iter_mut() {
+                if value & (1 << *bit) != 0 {
+                    plane[word] |= flag;
                 }
             }
         }
-        Ok(result)
+    }
+    /// Copy already-admitted compact masks and revisit only changed numeric
+    /// blocks. Existing zeroed planes may remain after retirement; no old row
+    /// acquires visibility or a numeric contribution from that extra capacity.
+    pub(super) fn refresh(
+        mut self,
+        columns: &[Arc<[Column]>],
+        changed: &BTreeSet<usize>,
+        limit: usize,
+    ) -> Result<Self> {
+        let rows = columns.iter().try_fold(0usize, |rows, block| {
+            rows.checked_add(block.len()).ok_or(Error::Bounds)
+        })?;
+        if columns.iter().enumerate().any(|(at, block)| {
+            block.is_empty()
+                || block.len() > COLUMN_ROWS
+                || (at + 1 < columns.len() && block.len() != COLUMN_ROWS)
+        }) || rows < self.rows
+            || rows > u32::MAX as usize
+            || changed.iter().any(|block| *block >= columns.len())
+        {
+            return Err(Error::Authority);
+        }
+        if rows > self.rows
+            && (self.rows / COLUMN_ROWS..rows.div_ceil(COLUMN_ROWS))
+                .any(|block| !changed.contains(&block))
+        {
+            return Err(Error::Authority);
+        }
+        let mut length = self
+            .length
+            .iter()
+            .fold(0u32, |mask, (bit, _)| mask | (1 << *bit));
+        let mut scope = self
+            .scope
+            .iter()
+            .fold(0u32, |mask, (bit, _)| mask | (1 << *bit));
+        for block in changed {
+            for column in columns[*block]
+                .iter()
+                .filter(|column| column.live() && column.indexed())
+            {
+                length |= column.length;
+                scope |= column.scope;
+            }
+        }
+        if Self::required(rows, length, scope)? > limit {
+            return Err(Error::Bounds);
+        }
+        let words = rows.div_ceil(64);
+        fn grow(words: usize, mask: u32, planes: &mut Vec<(u8, Vec<u64>)>) {
+            let count = mask.count_ones() as usize;
+            planes.reserve_exact(count.saturating_sub(planes.len()));
+            for (_, plane) in planes.iter_mut() {
+                plane.reserve_exact(words.saturating_sub(plane.len()));
+                plane.resize(words, 0);
+            }
+            for bit in 0..32u8 {
+                if mask & (1 << bit) != 0 && !planes.iter().any(|(old, _)| *old == bit) {
+                    planes.push((bit, vec![0; words]));
+                }
+            }
+            planes.sort_unstable_by_key(|(bit, _)| *bit);
+        }
+        self.live
+            .reserve_exact(words.saturating_sub(self.live.len()));
+        self.live.resize(words, 0);
+        grow(words, length, &mut self.length);
+        grow(words, scope, &mut self.scope);
+        let blocks = rows.div_ceil(256);
+        self.shapes
+            .reserve_exact(blocks.saturating_sub(self.shapes.len()));
+        self.shapes.resize_with(blocks, BlockShape::default);
+        self.rows = rows;
+        for block in changed {
+            let start = block * COLUMN_ROWS;
+            let end = start + columns[*block].len();
+            let range = start / 64..end.div_ceil(64);
+            self.live[range.clone()].fill(0);
+            for (_, plane) in self.length.iter_mut().chain(&mut self.scope) {
+                plane[range.clone()].fill(0);
+            }
+            for shape in &mut self.shapes[start / 256..end.div_ceil(256)] {
+                *shape = BlockShape::default();
+            }
+            for (offset, column) in columns[*block].iter().enumerate() {
+                self.add(start + offset, column);
+            }
+        }
+        if self.bytes() > limit {
+            return Err(Error::Bounds);
+        }
+        Ok(self)
     }
     fn validate(&self, mask: &[u64]) -> Result<()> {
         if mask.len() != self.live.len()
@@ -608,6 +708,82 @@ fn bitplane_mass_matches_complete_integer_oracle_and_admits_before_allocation() 
     bad[0] |= 1;
     assert!(mass.sum(&bad, true).is_err());
     assert!(mass.sum(&[], true).is_err());
+}
+
+#[test]
+fn incremental_mass_refresh_matches_full_rebuild_through_growth_retirement_and_new_bits() {
+    let make = |n: usize| Column {
+        valid_at: (n as i64 % 71) - 35,
+        length: 1 + (n % 37) as u32,
+        scope: 1 + (n % 11) as u32,
+        kind: 0,
+        status: 0,
+        flags: if n.is_multiple_of(7) { 0 } else { 3 },
+        tool: [0; 32],
+        agent: [0; 32],
+        label: n as u128 + 1,
+    };
+    let mut rows: Vec<_> = (0..2305).map(make).collect();
+    let blocks = |rows: &[Column]| {
+        rows.chunks(COLUMN_ROWS)
+            .map(Arc::<[Column]>::from)
+            .collect::<Vec<_>>()
+    };
+    let mut mass = Mass::new(&blocks(&rows), 1 << 20).unwrap();
+    for step in 0..8usize {
+        let previous_rows = rows.len();
+        let mut changed = BTreeSet::new();
+        for offset in [0, 1023, 1024, previous_rows - 1] {
+            rows[offset].flags &= !2;
+            changed.insert(offset / COLUMN_ROWS);
+        }
+        for n in previous_rows..previous_rows + 83 + step * 17 {
+            let mut column = make(n);
+            if n == previous_rows {
+                column.length = 1 << (16 + step);
+                column.scope = 1 << (12 + step);
+                column.valid_at = i64::MAX - step as i64;
+            }
+            rows.push(column);
+            changed.insert(n / COLUMN_ROWS);
+        }
+        let columns = blocks(&rows);
+        assert!(matches!(
+            mass.clone().refresh(&columns, &BTreeSet::new(), 1 << 20),
+            Err(Error::Authority)
+        ));
+        assert!(matches!(
+            mass.clone().refresh(&columns, &changed, 1),
+            Err(Error::Bounds)
+        ));
+        let old_live = mass.live.clone();
+        let updated = mass.clone().refresh(&columns, &changed, 1 << 20).unwrap();
+        assert_eq!(mass.live, old_live);
+        let fresh = Mass::new(&columns, 1 << 20).unwrap();
+        assert_eq!(updated.live, fresh.live);
+        assert_eq!(updated.rows, fresh.rows);
+        for (actual, expected) in updated.shapes.iter().zip(&fresh.shapes) {
+            assert_eq!(actual.values(), expected.values());
+            assert_eq!((actual.time, actual.label), (expected.time, expected.label));
+        }
+        for filter in 0..10usize {
+            let mut mask = fresh.live.clone();
+            for ordinal in 0..rows.len() {
+                if !(ordinal + filter).is_multiple_of(3 + filter) {
+                    mask[ordinal / 64] &= !(1 << (ordinal % 64));
+                }
+            }
+            assert_eq!(
+                updated.sum(&mask, false).unwrap(),
+                fresh.sum(&mask, false).unwrap()
+            );
+            assert_eq!(
+                updated.sum(&mask, true).unwrap(),
+                fresh.sum(&mask, true).unwrap()
+            );
+        }
+        mass = updated;
+    }
 }
 
 #[test]

@@ -982,16 +982,19 @@ pub(super) fn index_mass(
     if format != COMPACT_FORMAT {
         return Ok(None);
     }
+    Ok(Some(compact::Mass::new(
+        columns,
+        mass_limit(columns, limit)?,
+    )?))
+}
+pub(super) fn mass_limit(columns: &Vec<Arc<[Column]>>, limit: usize) -> Result<usize> {
     let column_bytes = columns
         .iter()
         .map(|block| std::mem::size_of_val(block.as_ref()) + 2 * std::mem::size_of::<usize>())
         .sum::<usize>()
         .checked_add(columns.capacity() * std::mem::size_of::<Arc<[Column]>>())
         .ok_or(Error::Bounds)?;
-    Ok(Some(compact::Mass::new(
-        columns,
-        limit.checked_sub(column_bytes).ok_or(Error::Bounds)?,
-    )?))
+    limit.checked_sub(column_bytes).ok_or(Error::Bounds)
 }
 pub(super) fn allocated_directory_bytes(directory: &Path) -> Result<u64> {
     let mut bytes = fs::metadata(directory)

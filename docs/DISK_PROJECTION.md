@@ -22,6 +22,15 @@ uses one global plan/statistical model across the entire supplied snapshot,
 with the same floating-point operation order as the existing lexical ranker.
 It does not combine scores from independently ranked shards.
 
+`Index::originals_plan(&Binding, &Query, &[Ranked])` validates all selected IDs,
+live ordinals, finite scores and the cumulative original-byte budget before
+returning authenticated `(String, usize)` identity/length pairs in rank order.
+Call it before batched provider reads. It fetches no source originals and is not
+permission or source-freshness proof. Revalidate source/Binding around provider
+reads, then pass exact originals through `materialize` for complete field/hash
+checks. Existing `materialize` callbacks retain their incremental budget checks.
+
+
 The caller must authenticate its current source snapshot, selection, permissions
 and keys before reuse and again before delivering a response. `Binding` is a
 caller assertion. A cache hit does not prove freshness, authorization, an

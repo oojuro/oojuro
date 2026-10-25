@@ -200,6 +200,110 @@ fn compact_numeric_mass_is_admitted_before_publication_and_open_allocation() {
 }
 
 #[test]
+fn original_read_plan_checks_every_identity_and_budget_before_provider_prefetch() {
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let rows = vec![row(1), row(2)];
+        let originals: BTreeMap<_, _> = rows
+            .iter()
+            .map(|row| (row.id.clone(), row.clone()))
+            .collect();
+        let path = scratch.0.join("index");
+        let index = build(&path, &rows, compression);
+        let q = query("alpha", Filter::default(), i64::MIN, i64::MAX);
+        let ranked = index.rank(&binding(), &q).unwrap();
+        assert_eq!(ranked.len(), 2);
+        let expected: Vec<_> = ranked
+            .iter()
+            .map(|hit| (hit.id.clone(), originals[&hit.id].text.len()))
+            .collect();
+        assert_eq!(
+            index.originals_plan(&binding(), &q, &ranked).unwrap(),
+            expected
+        );
+        let mut foreign = binding();
+        foreign.view[0] ^= 1;
+        assert!(matches!(
+            index.originals_plan(&foreign, &q, &ranked),
+            Err(Error::Scope)
+        ));
+        let mut one = query("alpha", Filter::default(), i64::MIN, i64::MAX);
+        one.k = 1;
+        assert!(matches!(
+            index.originals_plan(&binding(), &one, &ranked),
+            Err(Error::Bounds)
+        ));
+        for change in 0..3 {
+            let mut wrong = ranked.clone();
+            match change {
+                0 => wrong[0].id.push('x'),
+                1 => wrong[0].ordinal = u32::MAX,
+                _ => wrong[0].bits = f64::NAN,
+            }
+            assert!(matches!(
+                index.originals_plan(&binding(), &q, &wrong),
+                Err(Error::Authority | Error::Invalid)
+            ));
+        }
+        let total: usize = expected.iter().map(|(_, bytes)| *bytes).sum();
+        let restricted = Index::open_with_limits(
+            &path,
+            &[9; 32],
+            &binding(),
+            Limits {
+                original_bytes_per_query: total - 1,
+                compression,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        let mut provider_calls = 0;
+        for _ in 0..2 {
+            // A reused rank result cannot bypass the stricter handle policy.
+            let reused = restricted.rank(&binding(), &q).unwrap();
+            let prefetch = (|| -> Result<()> {
+                for (id, _) in restricted.originals_plan(&binding(), &q, &reused)? {
+                    provider_calls += 1;
+                    let _ = &originals[&id];
+                }
+                Ok(())
+            })();
+            assert!(matches!(prefetch, Err(Error::Bounds)));
+        }
+        assert_eq!(provider_calls, 0);
+        // Existing materialize remains incremental: its first valid callback
+        // occurs before a later row exceeds the cumulative budget.
+        let result = restricted.materialize(&binding(), &q, &ranked, |id| {
+            provider_calls += 1;
+            Ok(originals[id].clone())
+        });
+        assert!(matches!(result, Err(Error::Bounds)));
+        assert_eq!(provider_calls, 1);
+        let mut next = binding();
+        next.view[1] ^= 1;
+        let mut append = Appender::extend_validated_prefix(
+            &index,
+            next.clone(),
+            Limits {
+                compression,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        append.retire(&ranked[0].id).unwrap();
+        let retired = append.finish().unwrap();
+        assert!(matches!(
+            retired.originals_plan(&next, &q, &ranked),
+            Err(Error::Authority)
+        ));
+        assert!(matches!(
+            retired.originals_plan(&binding(), &q, &ranked),
+            Err(Error::Scope)
+        ));
+    }
+}
+
+#[test]
 fn construction_quota_covers_temporary_files_before_publication() {
     let scratch = Scratch::new();
     let path = scratch.0.join("index");

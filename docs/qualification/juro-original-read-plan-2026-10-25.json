@@ -1,0 +1,39 @@
+{
+  "base": "9990cdb02fe8fdced440008c18969979b1e00dbd",
+  "runtime": "f4d17b1",
+  "scope": "Additive authenticated selected-original preflight only; no source/cache format or dependency change. Materialize retains incremental callback order. No performance, application or hosted claim.",
+  "checks": [
+    {
+      "command": "cargo test --locked -p oojuro-engine --lib original_read_plan -- --test-threads=1",
+      "exit_code": 0,
+      "tests": 1,
+      "seconds": 0.35
+    },
+    {
+      "command": "cargo test --locked -p oojuro-engine --lib record::projection::disk -- --test-threads=1",
+      "exit_code": 0,
+      "tests": 17,
+      "seconds": 49.18
+    },
+    {
+      "command": "cargo clippy --locked -p oojuro-engine --lib --no-deps -- -D warnings",
+      "exit_code": 0
+    },
+    {
+      "command": "rustfmt --edition 2024 --config skip_children=true --check changed runtime/test files; git diff --check",
+      "exit_code": 0
+    }
+  ],
+  "covered": [
+    "raw and Zstd metadata",
+    "authenticated selected IDs and exact byte lengths",
+    "foreign binding",
+    "ranked count bounds",
+    "mutated ID, invalid private ordinal and nonfinite score refusal",
+    "retired selected row refusal",
+    "stricter reopened byte caps with reused query results",
+    "full cumulative budget refusal before provider-prefetch calls",
+    "preserved existing incremental materialize callbacks",
+    "existing exact scorer/excerpt/original and cache/prefix/publication/concurrency gates"
+  ]
+}
