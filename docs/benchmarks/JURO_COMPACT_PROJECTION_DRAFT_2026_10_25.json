@@ -18453,5 +18453,2908 @@
         }
       }
     ]
+  },
+  "actual_incremental_before_numeric_delta": {
+    "runtime": "8661394dd6a4822819b806d27f5f066ee13e3ffd",
+    "source_base": "9abee38be0acab284bf68aed75f899e9fdbf0906",
+    "binary_sha256": {
+      "profile_juro_append": "1ec0944335c96af17ef3f94c7150b835e18441e97a96703435b701180464120f",
+      "profile_juro_projection": "e9109108fdec78dc19dcf4d9fecdb458bdee0e550606e0a495a8dc4a9d0f5143"
+    },
+    "scope": "Actual synthetic NOCOMPRESS source; raw/Zstd v1/v2 retained indexes; identical retained engine intents; one CPU /2 GiB address cap; source/index open and intent persistence excluded from append timer and reported separately; actual originals/checkpoint validation; no hosted claim",
+    "observations": [
+      {
+        "label": "1000-plain-prepare",
+        "binary": "profile_juro_append",
+        "args": [
+          "prepare",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-stage2-bench-20261025/1000",
+          "1000",
+          "100",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin",
+          "plain"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append prepare /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-stage2-bench-20261025/1000 1000 100 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin plain\"\n\tUser time (seconds): 0.00\n\tSystem time (seconds): 0.00\n\tPercent of CPU this job got: 23%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.02\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 3800\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 1\n\tMinor (reclaiming a frame) page faults: 475\n\tVoluntary context switches: 19\n\tInvoluntary context switches: 1\n\tSwaps: 0\n\tFile system inputs: 4936\n\tFile system outputs: 144\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "delta": 100,
+          "durable_intents_ns": 13092399,
+          "phase": "prepare",
+          "rows": 1000,
+          "source_checkpoint_unchanged": true
+        }
+      },
+      {
+        "label": "1000-plain-raw-v1-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-raw-v1-0",
+          "1000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin",
+          "plain",
+          "validate"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-raw-v1-0 1000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin plain validate\"\n\tUser time (seconds): 0.23\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 57%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.42\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 8476\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1558\n\tVoluntary context switches: 136\n\tInvoluntary context switches: 20\n\tSwaps: 0\n\tFile system inputs: 2448\n\tFile system outputs: 10176\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 1642496,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1769472,
+            "peak_files": 13,
+            "peak_logical_bytes": 1747613
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 25292754,
+          "index_refresh_ns": 102811831,
+          "new_index_bytes": 1625068,
+          "old_index_bytes": 1105476,
+          "oracle_ns": 288750367,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "eb7f1f45f902590cfda70d5c624e385208accf6a2641b21c233c99581fcd3454"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "beb9502f053fe05d1cacc26ff1b9e956d96c638bc0e3be73528cc7220be6b5ab"
+            },
+            {
+              "query": "needle00001099",
+              "signature": "996f2cb58f56bd8b2465783628a1d23e905e863b9946290701ed1f1bdc5c7c8a"
+            }
+          ],
+          "rows": 1000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 13439165,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 116251497
+        }
+      },
+      {
+        "label": "1000-plain-raw-v2-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-raw-v2-0",
+          "1000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin",
+          "plain",
+          "validate"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-raw-v2-0 1000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin plain validate\"\n\tUser time (seconds): 0.21\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 54%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.41\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 8204\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1442\n\tVoluntary context switches: 127\n\tInvoluntary context switches: 16\n\tSwaps: 0\n\tFile system inputs: 1488\n\tFile system outputs: 8816\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 1073152,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1200128,
+            "peak_files": 13,
+            "peak_logical_bytes": 1179800
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 25295032,
+          "index_refresh_ns": 95608630,
+          "new_index_bytes": 1057324,
+          "old_index_bytes": 665720,
+          "oracle_ns": 294110821,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "eb7f1f45f902590cfda70d5c624e385208accf6a2641b21c233c99581fcd3454"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "beb9502f053fe05d1cacc26ff1b9e956d96c638bc0e3be73528cc7220be6b5ab"
+            },
+            {
+              "query": "needle00001099",
+              "signature": "996f2cb58f56bd8b2465783628a1d23e905e863b9946290701ed1f1bdc5c7c8a"
+            }
+          ],
+          "rows": 1000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 13994335,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 109603562
+        }
+      },
+      {
+        "label": "1000-plain-raw-v2-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-raw-v2-1",
+          "1000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-raw-v2-1 1000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin plain measure\"\n\tUser time (seconds): 0.02\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 25%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.14\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6036\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 852\n\tVoluntary context switches: 69\n\tInvoluntary context switches: 2\n\tSwaps: 0\n\tFile system inputs: 544\n\tFile system outputs: 2520\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 1073152,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1200128,
+            "peak_files": 13,
+            "peak_logical_bytes": 1179839
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 25295032,
+          "index_refresh_ns": 103897061,
+          "new_index_bytes": 1057330,
+          "old_index_bytes": 665720,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "eb7f1f45f902590cfda70d5c624e385208accf6a2641b21c233c99581fcd3454"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "beb9502f053fe05d1cacc26ff1b9e956d96c638bc0e3be73528cc7220be6b5ab"
+            },
+            {
+              "query": "needle00001099",
+              "signature": "996f2cb58f56bd8b2465783628a1d23e905e863b9946290701ed1f1bdc5c7c8a"
+            }
+          ],
+          "rows": 1000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 16831488,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 120729414
+        }
+      },
+      {
+        "label": "1000-plain-raw-v1-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-raw-v1-1",
+          "1000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-raw-v1-1 1000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin plain measure\"\n\tUser time (seconds): 0.04\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 35%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.17\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6536\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 975\n\tVoluntary context switches: 58\n\tInvoluntary context switches: 5\n\tSwaps: 0\n\tFile system inputs: 544\n\tFile system outputs: 2736\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 1642496,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1769472,
+            "peak_files": 13,
+            "peak_logical_bytes": 1747517
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 25292754,
+          "index_refresh_ns": 131160440,
+          "new_index_bytes": 1625001,
+          "old_index_bytes": 1105476,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "eb7f1f45f902590cfda70d5c624e385208accf6a2641b21c233c99581fcd3454"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "beb9502f053fe05d1cacc26ff1b9e956d96c638bc0e3be73528cc7220be6b5ab"
+            },
+            {
+              "query": "needle00001099",
+              "signature": "996f2cb58f56bd8b2465783628a1d23e905e863b9946290701ed1f1bdc5c7c8a"
+            }
+          ],
+          "rows": 1000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 17772644,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 148934109
+        }
+      },
+      {
+        "label": "1000-plain-raw-v1-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-raw-v1-2",
+          "1000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-raw-v1-2 1000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin plain measure\"\n\tUser time (seconds): 0.04\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 35%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.17\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6556\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 978\n\tVoluntary context switches: 72\n\tInvoluntary context switches: 4\n\tSwaps: 0\n\tFile system inputs: 544\n\tFile system outputs: 2832\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 1642496,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1769472,
+            "peak_files": 13,
+            "peak_logical_bytes": 1747462
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 25292754,
+          "index_refresh_ns": 124902171,
+          "new_index_bytes": 1624971,
+          "old_index_bytes": 1105476,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "eb7f1f45f902590cfda70d5c624e385208accf6a2641b21c233c99581fcd3454"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "beb9502f053fe05d1cacc26ff1b9e956d96c638bc0e3be73528cc7220be6b5ab"
+            },
+            {
+              "query": "needle00001099",
+              "signature": "996f2cb58f56bd8b2465783628a1d23e905e863b9946290701ed1f1bdc5c7c8a"
+            }
+          ],
+          "rows": 1000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 19404942,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 144308510
+        }
+      },
+      {
+        "label": "1000-plain-raw-v2-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-raw-v2-2",
+          "1000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-raw-v2-2 1000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin plain measure\"\n\tUser time (seconds): 0.04\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 35%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.17\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6068\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 855\n\tVoluntary context switches: 71\n\tInvoluntary context switches: 5\n\tSwaps: 0\n\tFile system inputs: 544\n\tFile system outputs: 2648\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 1073152,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1200128,
+            "peak_files": 13,
+            "peak_logical_bytes": 1179840
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 25295032,
+          "index_refresh_ns": 131443498,
+          "new_index_bytes": 1057333,
+          "old_index_bytes": 665720,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "eb7f1f45f902590cfda70d5c624e385208accf6a2641b21c233c99581fcd3454"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "beb9502f053fe05d1cacc26ff1b9e956d96c638bc0e3be73528cc7220be6b5ab"
+            },
+            {
+              "query": "needle00001099",
+              "signature": "996f2cb58f56bd8b2465783628a1d23e905e863b9946290701ed1f1bdc5c7c8a"
+            }
+          ],
+          "rows": 1000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 14194028,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 145638600
+        }
+      },
+      {
+        "label": "1000-plain-zstd-v1-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-zstd-v1-0",
+          "1000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin",
+          "plain",
+          "validate"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-zstd-v1-0 1000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin plain validate\"\n\tUser time (seconds): 0.28\n\tSystem time (seconds): 0.03\n\tPercent of CPU this job got: 60%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.53\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 9184\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1646\n\tVoluntary context switches: 139\n\tInvoluntary context switches: 25\n\tSwaps: 0\n\tFile system inputs: 1656\n\tFile system outputs: 9104\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 1114112,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1241088,
+            "peak_files": 13,
+            "peak_logical_bytes": 1219859
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 25292758,
+          "index_refresh_ns": 137469201,
+          "new_index_bytes": 1097390,
+          "old_index_bytes": 751335,
+          "oracle_ns": 350385025,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "eb7f1f45f902590cfda70d5c624e385208accf6a2641b21c233c99581fcd3454"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "beb9502f053fe05d1cacc26ff1b9e956d96c638bc0e3be73528cc7220be6b5ab"
+            },
+            {
+              "query": "needle00001099",
+              "signature": "996f2cb58f56bd8b2465783628a1d23e905e863b9946290701ed1f1bdc5c7c8a"
+            }
+          ],
+          "rows": 1000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 15720148,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 153190507
+        }
+      },
+      {
+        "label": "1000-plain-zstd-v2-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-zstd-v2-0",
+          "1000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin",
+          "plain",
+          "validate"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-zstd-v2-0 1000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin plain validate\"\n\tUser time (seconds): 0.24\n\tSystem time (seconds): 0.03\n\tPercent of CPU this job got: 57%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.48\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 8944\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1563\n\tVoluntary context switches: 136\n\tInvoluntary context switches: 23\n\tSwaps: 0\n\tFile system inputs: 1288\n\tFile system outputs: 8712\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 868352,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 995328,
+            "peak_files": 13,
+            "peak_logical_bytes": 970846
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 25295036,
+          "index_refresh_ns": 144796485,
+          "new_index_bytes": 848314,
+          "old_index_bytes": 561293,
+          "oracle_ns": 308624184,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "eb7f1f45f902590cfda70d5c624e385208accf6a2641b21c233c99581fcd3454"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "beb9502f053fe05d1cacc26ff1b9e956d96c638bc0e3be73528cc7220be6b5ab"
+            },
+            {
+              "query": "needle00001099",
+              "signature": "996f2cb58f56bd8b2465783628a1d23e905e863b9946290701ed1f1bdc5c7c8a"
+            }
+          ],
+          "rows": 1000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 18159656,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 162957508
+        }
+      },
+      {
+        "label": "1000-plain-zstd-v2-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-zstd-v2-1",
+          "1000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-zstd-v2-1 1000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin plain measure\"\n\tUser time (seconds): 0.02\n\tSystem time (seconds): 0.00\n\tPercent of CPU this job got: 25%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.14\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6552\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 953\n\tVoluntary context switches: 67\n\tInvoluntary context switches: 2\n\tSwaps: 0\n\tFile system inputs: 544\n\tFile system outputs: 2448\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 868352,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 995328,
+            "peak_files": 13,
+            "peak_logical_bytes": 970842
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 25295036,
+          "index_refresh_ns": 108128971,
+          "new_index_bytes": 848306,
+          "old_index_bytes": 561293,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "eb7f1f45f902590cfda70d5c624e385208accf6a2641b21c233c99581fcd3454"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "beb9502f053fe05d1cacc26ff1b9e956d96c638bc0e3be73528cc7220be6b5ab"
+            },
+            {
+              "query": "needle00001099",
+              "signature": "996f2cb58f56bd8b2465783628a1d23e905e863b9946290701ed1f1bdc5c7c8a"
+            }
+          ],
+          "rows": 1000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 16363370,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 124493079
+        }
+      },
+      {
+        "label": "1000-plain-zstd-v1-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-zstd-v1-1",
+          "1000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-zstd-v1-1 1000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin plain measure\"\n\tUser time (seconds): 0.02\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 23%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.14\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6864\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1007\n\tVoluntary context switches: 70\n\tInvoluntary context switches: 1\n\tSwaps: 0\n\tFile system inputs: 544\n\tFile system outputs: 2528\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 1114112,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1241088,
+            "peak_files": 13,
+            "peak_logical_bytes": 1219951
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 25292758,
+          "index_refresh_ns": 114723783,
+          "new_index_bytes": 1097423,
+          "old_index_bytes": 751335,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "eb7f1f45f902590cfda70d5c624e385208accf6a2641b21c233c99581fcd3454"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "beb9502f053fe05d1cacc26ff1b9e956d96c638bc0e3be73528cc7220be6b5ab"
+            },
+            {
+              "query": "needle00001099",
+              "signature": "996f2cb58f56bd8b2465783628a1d23e905e863b9946290701ed1f1bdc5c7c8a"
+            }
+          ],
+          "rows": 1000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 13441647,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 128166197
+        }
+      },
+      {
+        "label": "1000-plain-zstd-v1-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-zstd-v1-2",
+          "1000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-zstd-v1-2 1000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin plain measure\"\n\tUser time (seconds): 0.02\n\tSystem time (seconds): 0.00\n\tPercent of CPU this job got: 25%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.13\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6820\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1012\n\tVoluntary context switches: 72\n\tInvoluntary context switches: 6\n\tSwaps: 0\n\tFile system inputs: 544\n\tFile system outputs: 2560\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 1114112,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1241088,
+            "peak_files": 13,
+            "peak_logical_bytes": 1219899
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 25292758,
+          "index_refresh_ns": 105126807,
+          "new_index_bytes": 1097408,
+          "old_index_bytes": 751335,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "eb7f1f45f902590cfda70d5c624e385208accf6a2641b21c233c99581fcd3454"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "beb9502f053fe05d1cacc26ff1b9e956d96c638bc0e3be73528cc7220be6b5ab"
+            },
+            {
+              "query": "needle00001099",
+              "signature": "996f2cb58f56bd8b2465783628a1d23e905e863b9946290701ed1f1bdc5c7c8a"
+            }
+          ],
+          "rows": 1000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 14046750,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 119174030
+        }
+      },
+      {
+        "label": "1000-plain-zstd-v2-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-zstd-v2-2",
+          "1000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000-plain-zstd-v2-2 1000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000-plain.bin plain measure\"\n\tUser time (seconds): 0.02\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 22%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.15\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6864\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 959\n\tVoluntary context switches: 64\n\tInvoluntary context switches: 8\n\tSwaps: 0\n\tFile system inputs: 544\n\tFile system outputs: 2384\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 868352,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 995328,
+            "peak_files": 13,
+            "peak_logical_bytes": 970841
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 25295036,
+          "index_refresh_ns": 115214749,
+          "new_index_bytes": 848305,
+          "old_index_bytes": 561293,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "eb7f1f45f902590cfda70d5c624e385208accf6a2641b21c233c99581fcd3454"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "beb9502f053fe05d1cacc26ff1b9e956d96c638bc0e3be73528cc7220be6b5ab"
+            },
+            {
+              "query": "needle00001099",
+              "signature": "996f2cb58f56bd8b2465783628a1d23e905e863b9946290701ed1f1bdc5c7c8a"
+            }
+          ],
+          "rows": 1000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 25145343,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 140361076
+        }
+      },
+      {
+        "label": "100000-plain-prepare",
+        "binary": "profile_juro_append",
+        "args": [
+          "prepare",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-stage2-bench-20261025/100000",
+          "100000",
+          "100",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin",
+          "plain"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append prepare /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-stage2-bench-20261025/100000 100000 100 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin plain\"\n\tUser time (seconds): 0.14\n\tSystem time (seconds): 0.04\n\tPercent of CPU this job got: 80%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.23\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 56104\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 21929\n\tVoluntary context switches: 36\n\tInvoluntary context switches: 17\n\tSwaps: 0\n\tFile system inputs: 54968\n\tFile system outputs: 464\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "delta": 100,
+          "durable_intents_ns": 23558391,
+          "phase": "prepare",
+          "rows": 100000,
+          "source_checkpoint_unchanged": true
+        }
+      },
+      {
+        "label": "100000-plain-raw-v1-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-raw-v1-0",
+          "100000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin",
+          "plain",
+          "validate"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-raw-v1-0 100000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin plain validate\"\n\tUser time (seconds): 16.53\n\tSystem time (seconds): 0.93\n\tPercent of CPU this job got: 95%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:18.21\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 76916\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 26926\n\tVoluntary context switches: 3048\n\tInvoluntary context switches: 1321\n\tSwaps: 0\n\tFile system inputs: 91736\n\tFile system outputs: 580392\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 113070080,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 113176576,
+            "peak_files": 13,
+            "peak_logical_bytes": 113148175
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 36377974,
+          "index_refresh_ns": 173285974,
+          "new_index_bytes": 113045150,
+          "old_index_bytes": 110442233,
+          "oracle_ns": 17758827226,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "6d4aef9b8ce745bd6dae4398ccc98df95a38f0857a0fe173d7a6b6ba442a107c"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "6253d9bf88d84fd923d830bcb62ab009f56b6c813d81f2a405fab014d3d8a57b"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "3917ad07835dfdd34b6f425222c57515ed06e4ba0a24d59404057696e2ee6f28"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 13571875,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 186859122
+        }
+      },
+      {
+        "label": "100000-plain-raw-v2-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-raw-v2-0",
+          "100000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin",
+          "plain",
+          "validate"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-raw-v2-0 100000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin plain validate\"\n\tUser time (seconds): 15.84\n\tSystem time (seconds): 0.68\n\tPercent of CPU this job got: 95%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:17.30\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 76812\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 26921\n\tVoluntary context switches: 2758\n\tInvoluntary context switches: 1457\n\tSwaps: 0\n\tFile system inputs: 81160\n\tFile system outputs: 493112\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 68444160,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 68550656,
+            "peak_files": 13,
+            "peak_logical_bytes": 68527371
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 36540892,
+          "index_refresh_ns": 174220755,
+          "new_index_bytes": 68424270,
+          "old_index_bytes": 66212762,
+          "oracle_ns": 16832078392,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "6d4aef9b8ce745bd6dae4398ccc98df95a38f0857a0fe173d7a6b6ba442a107c"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "6253d9bf88d84fd923d830bcb62ab009f56b6c813d81f2a405fab014d3d8a57b"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "3917ad07835dfdd34b6f425222c57515ed06e4ba0a24d59404057696e2ee6f28"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 13646304,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 187867704
+        }
+      },
+      {
+        "label": "100000-plain-raw-v2-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-raw-v2-1",
+          "100000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-raw-v2-1 100000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin plain measure\"\n\tUser time (seconds): 0.25\n\tSystem time (seconds): 0.08\n\tPercent of CPU this job got: 73%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.45\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 57532\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22115\n\tVoluntary context switches: 85\n\tInvoluntary context switches: 29\n\tSwaps: 0\n\tFile system inputs: 54296\n\tFile system outputs: 9936\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 68444160,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 68550656,
+            "peak_files": 13,
+            "peak_logical_bytes": 68527379
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 36540892,
+          "index_refresh_ns": 145901776,
+          "new_index_bytes": 68424278,
+          "old_index_bytes": 66212762,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "6d4aef9b8ce745bd6dae4398ccc98df95a38f0857a0fe173d7a6b6ba442a107c"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "6253d9bf88d84fd923d830bcb62ab009f56b6c813d81f2a405fab014d3d8a57b"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "3917ad07835dfdd34b6f425222c57515ed06e4ba0a24d59404057696e2ee6f28"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 28086795,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 173989688
+        }
+      },
+      {
+        "label": "100000-plain-raw-v1-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-raw-v1-1",
+          "100000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-raw-v1-1 100000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin plain measure\"\n\tUser time (seconds): 0.25\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 73%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.43\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 57712\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22120\n\tVoluntary context switches: 71\n\tInvoluntary context switches: 28\n\tSwaps: 0\n\tFile system inputs: 54296\n\tFile system outputs: 6896\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 113070080,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 113176576,
+            "peak_files": 13,
+            "peak_logical_bytes": 113148185
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 36377974,
+          "index_refresh_ns": 137615480,
+          "new_index_bytes": 113045154,
+          "old_index_bytes": 110442233,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "6d4aef9b8ce745bd6dae4398ccc98df95a38f0857a0fe173d7a6b6ba442a107c"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "6253d9bf88d84fd923d830bcb62ab009f56b6c813d81f2a405fab014d3d8a57b"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "3917ad07835dfdd34b6f425222c57515ed06e4ba0a24d59404057696e2ee6f28"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 16548530,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 154164865
+        }
+      },
+      {
+        "label": "100000-plain-raw-v1-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-raw-v1-2",
+          "100000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-raw-v1-2 100000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin plain measure\"\n\tUser time (seconds): 0.26\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 74%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.43\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 57728\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22145\n\tVoluntary context switches: 91\n\tInvoluntary context switches: 22\n\tSwaps: 0\n\tFile system inputs: 54296\n\tFile system outputs: 6928\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 113070080,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 113176576,
+            "peak_files": 13,
+            "peak_logical_bytes": 113148362
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 36377974,
+          "index_refresh_ns": 140137320,
+          "new_index_bytes": 113045278,
+          "old_index_bytes": 110442233,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "6d4aef9b8ce745bd6dae4398ccc98df95a38f0857a0fe173d7a6b6ba442a107c"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "6253d9bf88d84fd923d830bcb62ab009f56b6c813d81f2a405fab014d3d8a57b"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "3917ad07835dfdd34b6f425222c57515ed06e4ba0a24d59404057696e2ee6f28"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 24226490,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 164364912
+        }
+      },
+      {
+        "label": "100000-plain-raw-v2-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-raw-v2-2",
+          "100000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-raw-v2-2 100000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin plain measure\"\n\tUser time (seconds): 0.26\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 75%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.43\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 56544\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 21840\n\tVoluntary context switches: 66\n\tInvoluntary context switches: 35\n\tSwaps: 0\n\tFile system inputs: 54296\n\tFile system outputs: 8944\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 68444160,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 68550656,
+            "peak_files": 13,
+            "peak_logical_bytes": 68527370
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 36540892,
+          "index_refresh_ns": 128354357,
+          "new_index_bytes": 68424288,
+          "old_index_bytes": 66212762,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "6d4aef9b8ce745bd6dae4398ccc98df95a38f0857a0fe173d7a6b6ba442a107c"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "6253d9bf88d84fd923d830bcb62ab009f56b6c813d81f2a405fab014d3d8a57b"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "3917ad07835dfdd34b6f425222c57515ed06e4ba0a24d59404057696e2ee6f28"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 15473597,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 143829455
+        }
+      },
+      {
+        "label": "100000-plain-zstd-v1-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-zstd-v1-0",
+          "100000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin",
+          "plain",
+          "validate"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-zstd-v1-0 100000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin plain validate\"\n\tUser time (seconds): 18.95\n\tSystem time (seconds): 0.76\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:20.53\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 77800\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 27023\n\tVoluntary context switches: 3350\n\tInvoluntary context switches: 2194\n\tSwaps: 0\n\tFile system inputs: 67240\n\tFile system outputs: 510848\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 78012416,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 78118912,
+            "peak_files": 13,
+            "peak_logical_bytes": 78100119
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 36377978,
+          "index_refresh_ns": 169206818,
+          "new_index_bytes": 77997001,
+          "old_index_bytes": 75658372,
+          "oracle_ns": 20090112652,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "6d4aef9b8ce745bd6dae4398ccc98df95a38f0857a0fe173d7a6b6ba442a107c"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "6253d9bf88d84fd923d830bcb62ab009f56b6c813d81f2a405fab014d3d8a57b"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "3917ad07835dfdd34b6f425222c57515ed06e4ba0a24d59404057696e2ee6f28"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 13761428,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 182969100
+        }
+      },
+      {
+        "label": "100000-plain-zstd-v2-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-zstd-v2-0",
+          "100000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin",
+          "plain",
+          "validate"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-zstd-v2-0 100000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin plain validate\"\n\tUser time (seconds): 18.17\n\tSystem time (seconds): 0.69\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:19.63\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 77216\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 26937\n\tVoluntary context switches: 2457\n\tInvoluntary context switches: 1323\n\tSwaps: 0\n\tFile system inputs: 67448\n\tFile system outputs: 473832\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 59052032,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 59158528,
+            "peak_files": 13,
+            "peak_logical_bytes": 59135029
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 36540896,
+          "index_refresh_ns": 159976701,
+          "new_index_bytes": 59031905,
+          "old_index_bytes": 56888708,
+          "oracle_ns": 19222168623,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "6d4aef9b8ce745bd6dae4398ccc98df95a38f0857a0fe173d7a6b6ba442a107c"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "6253d9bf88d84fd923d830bcb62ab009f56b6c813d81f2a405fab014d3d8a57b"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "3917ad07835dfdd34b6f425222c57515ed06e4ba0a24d59404057696e2ee6f28"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 10099464,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 170076707
+        }
+      },
+      {
+        "label": "100000-plain-zstd-v2-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-zstd-v2-1",
+          "100000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-zstd-v2-1 100000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin plain measure\"\n\tUser time (seconds): 0.24\n\tSystem time (seconds): 0.11\n\tPercent of CPU this job got: 78%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.45\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 58220\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22121\n\tVoluntary context switches: 82\n\tInvoluntary context switches: 42\n\tSwaps: 0\n\tFile system inputs: 54328\n\tFile system outputs: 27880\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 59052032,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 59158528,
+            "peak_files": 13,
+            "peak_logical_bytes": 59135086
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 36540896,
+          "index_refresh_ns": 129547451,
+          "new_index_bytes": 59031879,
+          "old_index_bytes": 56888708,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "6d4aef9b8ce745bd6dae4398ccc98df95a38f0857a0fe173d7a6b6ba442a107c"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "6253d9bf88d84fd923d830bcb62ab009f56b6c813d81f2a405fab014d3d8a57b"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "3917ad07835dfdd34b6f425222c57515ed06e4ba0a24d59404057696e2ee6f28"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 71058215,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 200606527
+        }
+      },
+      {
+        "label": "100000-plain-zstd-v1-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-zstd-v1-1",
+          "100000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-zstd-v1-1 100000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin plain measure\"\n\tUser time (seconds): 0.24\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 72%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.43\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 57340\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 21986\n\tVoluntary context switches: 96\n\tInvoluntary context switches: 24\n\tSwaps: 0\n\tFile system inputs: 54296\n\tFile system outputs: 6336\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 78012416,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 78118912,
+            "peak_files": 13,
+            "peak_logical_bytes": 78100215
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 36377978,
+          "index_refresh_ns": 134800389,
+          "new_index_bytes": 77997037,
+          "old_index_bytes": 75658372,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "6d4aef9b8ce745bd6dae4398ccc98df95a38f0857a0fe173d7a6b6ba442a107c"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "6253d9bf88d84fd923d830bcb62ab009f56b6c813d81f2a405fab014d3d8a57b"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "3917ad07835dfdd34b6f425222c57515ed06e4ba0a24d59404057696e2ee6f28"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 24245701,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 159047202
+        }
+      },
+      {
+        "label": "100000-plain-zstd-v1-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-zstd-v1-2",
+          "100000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-zstd-v1-2 100000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin plain measure\"\n\tUser time (seconds): 0.25\n\tSystem time (seconds): 0.07\n\tPercent of CPU this job got: 72%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.44\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 57368\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 21988\n\tVoluntary context switches: 66\n\tInvoluntary context switches: 24\n\tSwaps: 0\n\tFile system inputs: 54296\n\tFile system outputs: 6400\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 78012416,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 78118912,
+            "peak_files": 13,
+            "peak_logical_bytes": 78100024
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 36377978,
+          "index_refresh_ns": 147220175,
+          "new_index_bytes": 77996952,
+          "old_index_bytes": 75658372,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "6d4aef9b8ce745bd6dae4398ccc98df95a38f0857a0fe173d7a6b6ba442a107c"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "6253d9bf88d84fd923d830bcb62ab009f56b6c813d81f2a405fab014d3d8a57b"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "3917ad07835dfdd34b6f425222c57515ed06e4ba0a24d59404057696e2ee6f28"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 18535561,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 165756767
+        }
+      },
+      {
+        "label": "100000-plain-zstd-v2-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-zstd-v2-2",
+          "100000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-plain-zstd-v2-2 100000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-plain.bin plain measure\"\n\tUser time (seconds): 0.25\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 78%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.40\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 58128\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22128\n\tVoluntary context switches: 74\n\tInvoluntary context switches: 33\n\tSwaps: 0\n\tFile system inputs: 54328\n\tFile system outputs: 7976\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 59052032,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 59158528,
+            "peak_files": 13,
+            "peak_logical_bytes": 59135087
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 36540896,
+          "index_refresh_ns": 118297259,
+          "new_index_bytes": 59031890,
+          "old_index_bytes": 56888708,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "6d4aef9b8ce745bd6dae4398ccc98df95a38f0857a0fe173d7a6b6ba442a107c"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "6253d9bf88d84fd923d830bcb62ab009f56b6c813d81f2a405fab014d3d8a57b"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "3917ad07835dfdd34b6f425222c57515ed06e4ba0a24d59404057696e2ee6f28"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 20681115,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 138979423
+        }
+      },
+      {
+        "label": "100000-encrypted-raw-v1-build",
+        "binary": "profile_juro_projection",
+        "args": [
+          "build",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/template-100000-encrypted",
+          "100000",
+          "raw",
+          "1",
+          "1",
+          "encrypted"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_projection build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/template-100000-encrypted 100000 raw 1 1 encrypted\"\n\tUser time (seconds): 17.16\n\tSystem time (seconds): 0.72\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:18.45\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 61008\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 1\n\tMinor (reclaiming a frame) page faults: 18922\n\tVoluntary context switches: 3165\n\tInvoluntary context switches: 1404\n\tSwaps: 0\n\tFile system inputs: 66672\n\tFile system outputs: 572832\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "derived_layout": 1,
+          "footprint": {
+            "allocated_index_bytes": 110456832,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 239280128,
+              "peak_files": 26,
+              "peak_logical_bytes": 239264562
+            },
+            "estimated_index_heap_bytes": 36368926,
+            "index_bytes": 110443451,
+            "indexed_rows": 99899,
+            "text_bytes": 8195029
+          },
+          "index_build_ns": 18064514454,
+          "index_compression": "raw",
+          "phase": "build",
+          "rows": 100000,
+          "scope": "actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation",
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_open_ns": 371531571
+        }
+      },
+      {
+        "label": "100000-encrypted-raw-v2-build",
+        "binary": "profile_juro_projection",
+        "args": [
+          "build",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/template-100000-encrypted",
+          "100000",
+          "raw",
+          "1",
+          "1",
+          "encrypted"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_projection build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/template-100000-encrypted 100000 raw 1 1 encrypted\"\n\tUser time (seconds): 16.59\n\tSystem time (seconds): 0.67\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:17.94\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 60012\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 19435\n\tVoluntary context switches: 2686\n\tInvoluntary context switches: 1249\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 486112\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "derived_layout": 2,
+          "footprint": {
+            "allocated_index_bytes": 66224128,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 195043328,
+              "peak_files": 26,
+              "peak_logical_bytes": 195032699
+            },
+            "estimated_index_heap_bytes": 36531719,
+            "index_bytes": 66212841,
+            "indexed_rows": 99899,
+            "text_bytes": 8195029
+          },
+          "index_build_ns": 17586269002,
+          "index_compression": "raw",
+          "phase": "build",
+          "rows": 100000,
+          "scope": "actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation",
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_open_ns": 352638065
+        }
+      },
+      {
+        "label": "100000-encrypted-zstd-v1-build",
+        "binary": "profile_juro_projection",
+        "args": [
+          "build",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/template-100000-encrypted",
+          "100000",
+          "zstd",
+          "1",
+          "1",
+          "encrypted"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_projection build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/template-100000-encrypted 100000 zstd 1 1 encrypted\"\n\tUser time (seconds): 19.57\n\tSystem time (seconds): 0.71\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:20.95\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 59320\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 16623\n\tVoluntary context switches: 2209\n\tInvoluntary context switches: 1953\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 504568\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "derived_layout": 1,
+          "footprint": {
+            "allocated_index_bytes": 75640832,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 204460032,
+              "peak_files": 26,
+              "peak_logical_bytes": 204449445
+            },
+            "estimated_index_heap_bytes": 36368929,
+            "index_bytes": 75630180,
+            "indexed_rows": 99899,
+            "text_bytes": 8195029
+          },
+          "index_build_ns": 20579711187,
+          "index_compression": "zstd",
+          "phase": "build",
+          "rows": 100000,
+          "scope": "actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation",
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_open_ns": 357836642
+        }
+      },
+      {
+        "label": "100000-encrypted-zstd-v2-build",
+        "binary": "profile_juro_projection",
+        "args": [
+          "build",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/template-100000-encrypted",
+          "100000",
+          "zstd",
+          "1",
+          "1",
+          "encrypted"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_projection build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/template-100000-encrypted 100000 zstd 1 1 encrypted\"\n\tUser time (seconds): 19.08\n\tSystem time (seconds): 0.70\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:20.43\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 61116\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 19019\n\tVoluntary context switches: 2194\n\tInvoluntary context switches: 1892\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 467976\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "derived_layout": 2,
+          "footprint": {
+            "allocated_index_bytes": 56905728,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 185724928,
+              "peak_files": 26,
+              "peak_logical_bytes": 185712590
+            },
+            "estimated_index_heap_bytes": 36531722,
+            "index_bytes": 56892447,
+            "indexed_rows": 99899,
+            "text_bytes": 8195029
+          },
+          "index_build_ns": 20053180999,
+          "index_compression": "zstd",
+          "phase": "build",
+          "rows": 100000,
+          "scope": "actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation",
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_open_ns": 364405340
+        }
+      },
+      {
+        "label": "100000-encrypted-prepare",
+        "binary": "profile_juro_append",
+        "args": [
+          "prepare",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/template-100000-encrypted",
+          "100000",
+          "100",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin",
+          "encrypted"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append prepare /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/template-100000-encrypted 100000 100 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin encrypted\"\n\tUser time (seconds): 0.63\n\tSystem time (seconds): 0.04\n\tPercent of CPU this job got: 95%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.72\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 57448\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22272\n\tVoluntary context switches: 11\n\tInvoluntary context switches: 148\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 208\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "delta": 100,
+          "durable_intents_ns": 22474131,
+          "phase": "prepare",
+          "rows": 100000,
+          "source_checkpoint_unchanged": true
+        }
+      },
+      {
+        "label": "100000-encrypted-raw-v1-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-raw-v1-0",
+          "100000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin",
+          "encrypted",
+          "validate"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-raw-v1-0 100000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin encrypted validate\"\n\tUser time (seconds): 17.40\n\tSystem time (seconds): 0.71\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:18.76\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 76852\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 26981\n\tVoluntary context switches: 3410\n\tInvoluntary context switches: 1635\n\tSwaps: 0\n\tFile system inputs: 62392\n\tFile system outputs: 581064\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 113070080,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 113176576,
+            "peak_files": 13,
+            "peak_logical_bytes": 113149512
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 36377982,
+          "index_refresh_ns": 116089669,
+          "new_index_bytes": 113046495,
+          "old_index_bytes": 110443451,
+          "oracle_ns": 17864817565,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "881dab53b0a03f3630d64e1a5b889c6fbafebb64ea82ef96561377a03dac41ca"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "5d4aa8433eada09fde27cfbe214608ba113196b605d7d6eb0a0debc268e8f754"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "f903c4b3650b83f37c8db0b5ab80eda38ae59276346a5cecc47544926d004ba6"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 23131781,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_plus_refresh_ns": 139222419
+        }
+      },
+      {
+        "label": "100000-encrypted-raw-v2-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-raw-v2-0",
+          "100000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin",
+          "encrypted",
+          "validate"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-raw-v2-0 100000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin encrypted validate\"\n\tUser time (seconds): 16.29\n\tSystem time (seconds): 0.97\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:17.93\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 78784\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 27414\n\tVoluntary context switches: 2959\n\tInvoluntary context switches: 1901\n\tSwaps: 0\n\tFile system inputs: 62104\n\tFile system outputs: 493096\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 68444160,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 68550656,
+            "peak_files": 13,
+            "peak_logical_bytes": 68527367
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 36540900,
+          "index_refresh_ns": 116122007,
+          "new_index_bytes": 68424397,
+          "old_index_bytes": 66212841,
+          "oracle_ns": 17053303053,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "881dab53b0a03f3630d64e1a5b889c6fbafebb64ea82ef96561377a03dac41ca"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "5d4aa8433eada09fde27cfbe214608ba113196b605d7d6eb0a0debc268e8f754"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "f903c4b3650b83f37c8db0b5ab80eda38ae59276346a5cecc47544926d004ba6"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 23061405,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_plus_refresh_ns": 139184506
+        }
+      },
+      {
+        "label": "100000-encrypted-raw-v2-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-raw-v2-1",
+          "100000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin",
+          "encrypted",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-raw-v2-1 100000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin encrypted measure\"\n\tUser time (seconds): 0.71\n\tSystem time (seconds): 0.07\n\tPercent of CPU this job got: 88%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.88\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 57564\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22115\n\tVoluntary context switches: 69\n\tInvoluntary context switches: 56\n\tSwaps: 0\n\tFile system inputs: 62136\n\tFile system outputs: 10456\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 68444160,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 68550656,
+            "peak_files": 13,
+            "peak_logical_bytes": 68527350
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 36540900,
+          "index_refresh_ns": 119567214,
+          "new_index_bytes": 68424371,
+          "old_index_bytes": 66212841,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "881dab53b0a03f3630d64e1a5b889c6fbafebb64ea82ef96561377a03dac41ca"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "5d4aa8433eada09fde27cfbe214608ba113196b605d7d6eb0a0debc268e8f754"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "f903c4b3650b83f37c8db0b5ab80eda38ae59276346a5cecc47544926d004ba6"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 22453000,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_plus_refresh_ns": 142021094
+        }
+      },
+      {
+        "label": "100000-encrypted-raw-v1-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-raw-v1-1",
+          "100000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin",
+          "encrypted",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-raw-v1-1 100000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin encrypted measure\"\n\tUser time (seconds): 0.70\n\tSystem time (seconds): 0.07\n\tPercent of CPU this job got: 88%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.88\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 57628\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22137\n\tVoluntary context switches: 65\n\tInvoluntary context switches: 53\n\tSwaps: 0\n\tFile system inputs: 62104\n\tFile system outputs: 6936\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 113070080,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 113176576,
+            "peak_files": 13,
+            "peak_logical_bytes": 113149379
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 36377982,
+          "index_refresh_ns": 115867693,
+          "new_index_bytes": 113046445,
+          "old_index_bytes": 110443451,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "881dab53b0a03f3630d64e1a5b889c6fbafebb64ea82ef96561377a03dac41ca"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "5d4aa8433eada09fde27cfbe214608ba113196b605d7d6eb0a0debc268e8f754"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "f903c4b3650b83f37c8db0b5ab80eda38ae59276346a5cecc47544926d004ba6"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 22837188,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_plus_refresh_ns": 138707016
+        }
+      },
+      {
+        "label": "100000-encrypted-raw-v1-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-raw-v1-2",
+          "100000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin",
+          "encrypted",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-raw-v1-2 100000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin encrypted measure\"\n\tUser time (seconds): 0.71\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 88%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.88\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 57560\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22104\n\tVoluntary context switches: 89\n\tInvoluntary context switches: 57\n\tSwaps: 0\n\tFile system inputs: 62104\n\tFile system outputs: 6968\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 113070080,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 113176576,
+            "peak_files": 13,
+            "peak_logical_bytes": 113149394
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 36377982,
+          "index_refresh_ns": 115081815,
+          "new_index_bytes": 113046465,
+          "old_index_bytes": 110443451,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "881dab53b0a03f3630d64e1a5b889c6fbafebb64ea82ef96561377a03dac41ca"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "5d4aa8433eada09fde27cfbe214608ba113196b605d7d6eb0a0debc268e8f754"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "f903c4b3650b83f37c8db0b5ab80eda38ae59276346a5cecc47544926d004ba6"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 23015543,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_plus_refresh_ns": 138098360
+        }
+      },
+      {
+        "label": "100000-encrypted-raw-v2-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-raw-v2-2",
+          "100000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin",
+          "encrypted",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-raw-v2-2 100000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin encrypted measure\"\n\tUser time (seconds): 0.71\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 89%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.87\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 57816\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22120\n\tVoluntary context switches: 76\n\tInvoluntary context switches: 51\n\tSwaps: 0\n\tFile system inputs: 62104\n\tFile system outputs: 7608\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 68444160,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 68550656,
+            "peak_files": 13,
+            "peak_logical_bytes": 68527341
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 36540900,
+          "index_refresh_ns": 112409627,
+          "new_index_bytes": 68424354,
+          "old_index_bytes": 66212841,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "881dab53b0a03f3630d64e1a5b889c6fbafebb64ea82ef96561377a03dac41ca"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "5d4aa8433eada09fde27cfbe214608ba113196b605d7d6eb0a0debc268e8f754"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "f903c4b3650b83f37c8db0b5ab80eda38ae59276346a5cecc47544926d004ba6"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 21545579,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_plus_refresh_ns": 133956238
+        }
+      },
+      {
+        "label": "100000-encrypted-zstd-v1-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-zstd-v1-0",
+          "100000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin",
+          "encrypted",
+          "validate"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-zstd-v1-0 100000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin encrypted validate\"\n\tUser time (seconds): 19.74\n\tSystem time (seconds): 0.78\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:21.33\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 77720\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 27020\n\tVoluntary context switches: 3126\n\tInvoluntary context switches: 1999\n\tSwaps: 0\n\tFile system inputs: 62104\n\tFile system outputs: 511472\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 77983744,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 78090240,
+            "peak_files": 13,
+            "peak_logical_bytes": 78071862
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 36377986,
+          "index_refresh_ns": 116645340,
+          "new_index_bytes": 77968718,
+          "old_index_bytes": 75630180,
+          "oracle_ns": 20465797251,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "881dab53b0a03f3630d64e1a5b889c6fbafebb64ea82ef96561377a03dac41ca"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "5d4aa8433eada09fde27cfbe214608ba113196b605d7d6eb0a0debc268e8f754"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "f903c4b3650b83f37c8db0b5ab80eda38ae59276346a5cecc47544926d004ba6"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 22688516,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_plus_refresh_ns": 139334781
+        }
+      },
+      {
+        "label": "100000-encrypted-zstd-v2-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-zstd-v2-0",
+          "100000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin",
+          "encrypted",
+          "validate"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-zstd-v2-0 100000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin encrypted validate\"\n\tUser time (seconds): 19.10\n\tSystem time (seconds): 0.71\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:20.57\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 77416\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 26966\n\tVoluntary context switches: 1993\n\tInvoluntary context switches: 1897\n\tSwaps: 0\n\tFile system inputs: 62104\n\tFile system outputs: 473752\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 59056128,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 59162624,
+            "peak_files": 13,
+            "peak_logical_bytes": 59138706
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 36540904,
+          "index_refresh_ns": 155588826,
+          "new_index_bytes": 59035653,
+          "old_index_bytes": 56892447,
+          "oracle_ns": 19661855295,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "881dab53b0a03f3630d64e1a5b889c6fbafebb64ea82ef96561377a03dac41ca"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "5d4aa8433eada09fde27cfbe214608ba113196b605d7d6eb0a0debc268e8f754"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "f903c4b3650b83f37c8db0b5ab80eda38ae59276346a5cecc47544926d004ba6"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 33246751,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_plus_refresh_ns": 188836544
+        }
+      },
+      {
+        "label": "100000-encrypted-zstd-v2-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-zstd-v2-1",
+          "100000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin",
+          "encrypted",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-zstd-v2-1 100000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin encrypted measure\"\n\tUser time (seconds): 0.71\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 86%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.90\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 57788\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22087\n\tVoluntary context switches: 72\n\tInvoluntary context switches: 56\n\tSwaps: 0\n\tFile system inputs: 62104\n\tFile system outputs: 9168\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 59056128,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 59162624,
+            "peak_files": 13,
+            "peak_logical_bytes": 59138766
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 36540904,
+          "index_refresh_ns": 147309461,
+          "new_index_bytes": 59035647,
+          "old_index_bytes": 56892447,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "881dab53b0a03f3630d64e1a5b889c6fbafebb64ea82ef96561377a03dac41ca"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "5d4aa8433eada09fde27cfbe214608ba113196b605d7d6eb0a0debc268e8f754"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "f903c4b3650b83f37c8db0b5ab80eda38ae59276346a5cecc47544926d004ba6"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 28067889,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_plus_refresh_ns": 175378255
+        }
+      },
+      {
+        "label": "100000-encrypted-zstd-v1-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-zstd-v1-1",
+          "100000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin",
+          "encrypted",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-zstd-v1-1 100000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin encrypted measure\"\n\tUser time (seconds): 0.69\n\tSystem time (seconds): 0.07\n\tPercent of CPU this job got: 85%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.88\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 58012\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22125\n\tVoluntary context switches: 82\n\tInvoluntary context switches: 51\n\tSwaps: 0\n\tFile system inputs: 62104\n\tFile system outputs: 6376\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 77983744,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 78090240,
+            "peak_files": 13,
+            "peak_logical_bytes": 78071865
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 36377986,
+          "index_refresh_ns": 143656707,
+          "new_index_bytes": 77968759,
+          "old_index_bytes": 75630180,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "881dab53b0a03f3630d64e1a5b889c6fbafebb64ea82ef96561377a03dac41ca"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "5d4aa8433eada09fde27cfbe214608ba113196b605d7d6eb0a0debc268e8f754"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "f903c4b3650b83f37c8db0b5ab80eda38ae59276346a5cecc47544926d004ba6"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 28125203,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_plus_refresh_ns": 171782801
+        }
+      },
+      {
+        "label": "100000-encrypted-zstd-v1-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-zstd-v1-2",
+          "100000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin",
+          "encrypted",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-zstd-v1-2 100000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin encrypted measure\"\n\tUser time (seconds): 0.71\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 86%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.90\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 58016\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22124\n\tVoluntary context switches: 72\n\tInvoluntary context switches: 61\n\tSwaps: 0\n\tFile system inputs: 62104\n\tFile system outputs: 6504\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 77983744,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 78090240,
+            "peak_files": 13,
+            "peak_logical_bytes": 78071738
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 36377986,
+          "index_refresh_ns": 152887859,
+          "new_index_bytes": 77968687,
+          "old_index_bytes": 75630180,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "881dab53b0a03f3630d64e1a5b889c6fbafebb64ea82ef96561377a03dac41ca"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "5d4aa8433eada09fde27cfbe214608ba113196b605d7d6eb0a0debc268e8f754"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "f903c4b3650b83f37c8db0b5ab80eda38ae59276346a5cecc47544926d004ba6"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 28332259,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_plus_refresh_ns": 181220979
+        }
+      },
+      {
+        "label": "100000-encrypted-zstd-v2-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-zstd-v2-2",
+          "100000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin",
+          "encrypted",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/100000-encrypted-zstd-v2-2 100000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-100000-encrypted.bin encrypted measure\"\n\tUser time (seconds): 0.70\n\tSystem time (seconds): 0.08\n\tPercent of CPU this job got: 86%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.91\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 58192\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22154\n\tVoluntary context switches: 82\n\tInvoluntary context switches: 57\n\tSwaps: 0\n\tFile system inputs: 62232\n\tFile system outputs: 13392\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 59056128,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 59162624,
+            "peak_files": 13,
+            "peak_logical_bytes": 59138714
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 36540904,
+          "index_refresh_ns": 140596487,
+          "new_index_bytes": 59035668,
+          "old_index_bytes": 56892447,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "881dab53b0a03f3630d64e1a5b889c6fbafebb64ea82ef96561377a03dac41ca"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "5d4aa8433eada09fde27cfbe214608ba113196b605d7d6eb0a0debc268e8f754"
+            },
+            {
+              "query": "needle00100099",
+              "signature": "f903c4b3650b83f37c8db0b5ab80eda38ae59276346a5cecc47544926d004ba6"
+            }
+          ],
+          "rows": 100000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 34532108,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": true,
+          "source_plus_refresh_ns": 175129476
+        }
+      },
+      {
+        "label": "1000000-plain-prepare",
+        "binary": "profile_juro_append",
+        "args": [
+          "prepare",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/actual-1000000-plain",
+          "1000000",
+          "100",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin",
+          "plain"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append prepare /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/actual-1000000-plain 1000000 100 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin plain\"\n\tUser time (seconds): 2.09\n\tSystem time (seconds): 0.49\n\tPercent of CPU this job got: 97%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:02.66\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 506904\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 296797\n\tVoluntary context switches: 74\n\tInvoluntary context switches: 166\n\tSwaps: 0\n\tFile system inputs: 546864\n\tFile system outputs: 144\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "delta": 100,
+          "durable_intents_ns": 30031024,
+          "phase": "prepare",
+          "rows": 1000000,
+          "source_checkpoint_unchanged": true
+        }
+      },
+      {
+        "label": "1000000-plain-raw-v1-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-raw-v1-0",
+          "1000000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-raw-v1-0 1000000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin plain measure\"\n\tUser time (seconds): 2.39\n\tSystem time (seconds): 0.62\n\tPercent of CPU this job got: 94%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:03.17\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 555200\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 325946\n\tVoluntary context switches: 466\n\tInvoluntary context switches: 257\n\tSwaps: 0\n\tFile system inputs: 781880\n\tFile system outputs: 14888\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 1112735744,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1112662016,
+            "peak_files": 25,
+            "peak_logical_bytes": 1112690026
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 137154104,
+          "index_refresh_ns": 201282379,
+          "new_index_bytes": 1112690026,
+          "old_index_bytes": 1106391854,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "29e3c707ff2acd50110f2767ac044a1f08f01986d250e75980eeb2b59b58a045"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "4bed4cc746dd26925f7cb61aa5c0bb6ef0e947ad3b4d2c4dddb1ea8701c3dc25"
+            },
+            {
+              "query": "needle01000099",
+              "signature": "24a36fbb172b267c4c4981bee03706eac6cdf4a6694ab4acf9c0270c50976650"
+            }
+          ],
+          "rows": 1000000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 15474948,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 216758169
+        }
+      },
+      {
+        "label": "1000000-plain-raw-v2-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-raw-v2-0",
+          "1000000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin",
+          "plain",
+          "validate"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-raw-v2-0 1000000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin plain validate\"\n\tUser time (seconds): 202.13\n\tSystem time (seconds): 7.80\n\tPercent of CPU this job got: 97%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 3:35.52\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 682880\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 359398\n\tVoluntary context switches: 21975\n\tInvoluntary context switches: 20239\n\tSwaps: 0\n\tFile system inputs: 763176\n\tFile system outputs: 5712056\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 668610560,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 668536832,
+            "peak_files": 18,
+            "peak_logical_bytes": 668583268
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 138778014,
+          "index_refresh_ns": 219749963,
+          "new_index_bytes": 668583268,
+          "old_index_bytes": 663059132,
+          "oracle_ns": 212257755790,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "29e3c707ff2acd50110f2767ac044a1f08f01986d250e75980eeb2b59b58a045"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "4bed4cc746dd26925f7cb61aa5c0bb6ef0e947ad3b4d2c4dddb1ea8701c3dc25"
+            },
+            {
+              "query": "needle01000099",
+              "signature": "24a36fbb172b267c4c4981bee03706eac6cdf4a6694ab4acf9c0270c50976650"
+            }
+          ],
+          "rows": 1000000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 14373027,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 234124013
+        }
+      },
+      {
+        "label": "1000000-plain-raw-v2-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-raw-v2-1",
+          "1000000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-raw-v2-1 1000000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin plain measure\"\n\tUser time (seconds): 2.42\n\tSystem time (seconds): 0.61\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:03.14\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 551096\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 328550\n\tVoluntary context switches: 79\n\tInvoluntary context switches: 192\n\tSwaps: 0\n\tFile system inputs: 544848\n\tFile system outputs: 13216\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 668610560,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 668536832,
+            "peak_files": 18,
+            "peak_logical_bytes": 668583263
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 138778014,
+          "index_refresh_ns": 163013740,
+          "new_index_bytes": 668583263,
+          "old_index_bytes": 663059132,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "29e3c707ff2acd50110f2767ac044a1f08f01986d250e75980eeb2b59b58a045"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "4bed4cc746dd26925f7cb61aa5c0bb6ef0e947ad3b4d2c4dddb1ea8701c3dc25"
+            },
+            {
+              "query": "needle01000099",
+              "signature": "24a36fbb172b267c4c4981bee03706eac6cdf4a6694ab4acf9c0270c50976650"
+            }
+          ],
+          "rows": 1000000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 15953903,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 178968505
+        }
+      },
+      {
+        "label": "1000000-plain-raw-v1-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-raw-v1-1",
+          "1000000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-raw-v1-1 1000000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin plain measure\"\n\tUser time (seconds): 2.42\n\tSystem time (seconds): 0.61\n\tPercent of CPU this job got: 95%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:03.18\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 555372\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 327705\n\tVoluntary context switches: 82\n\tInvoluntary context switches: 270\n\tSwaps: 0\n\tFile system inputs: 544848\n\tFile system outputs: 14920\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 1112735744,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1112662016,
+            "peak_files": 25,
+            "peak_logical_bytes": 1112690157
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 137154104,
+          "index_refresh_ns": 174718938,
+          "new_index_bytes": 1112690157,
+          "old_index_bytes": 1106391854,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "29e3c707ff2acd50110f2767ac044a1f08f01986d250e75980eeb2b59b58a045"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "4bed4cc746dd26925f7cb61aa5c0bb6ef0e947ad3b4d2c4dddb1ea8701c3dc25"
+            },
+            {
+              "query": "needle01000099",
+              "signature": "24a36fbb172b267c4c4981bee03706eac6cdf4a6694ab4acf9c0270c50976650"
+            }
+          ],
+          "rows": 1000000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 31485902,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 206205693
+        }
+      },
+      {
+        "label": "1000000-plain-raw-v1-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-raw-v1-2",
+          "1000000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-raw-v1-2 1000000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin plain measure\"\n\tUser time (seconds): 2.39\n\tSystem time (seconds): 0.65\n\tPercent of CPU this job got: 95%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:03.17\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 554960\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 329555\n\tVoluntary context switches: 96\n\tInvoluntary context switches: 270\n\tSwaps: 0\n\tFile system inputs: 544848\n\tFile system outputs: 14760\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 1112735744,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1112662016,
+            "peak_files": 25,
+            "peak_logical_bytes": 1112690175
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 137154104,
+          "index_refresh_ns": 172333680,
+          "new_index_bytes": 1112690175,
+          "old_index_bytes": 1106391854,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "29e3c707ff2acd50110f2767ac044a1f08f01986d250e75980eeb2b59b58a045"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "4bed4cc746dd26925f7cb61aa5c0bb6ef0e947ad3b4d2c4dddb1ea8701c3dc25"
+            },
+            {
+              "query": "needle01000099",
+              "signature": "24a36fbb172b267c4c4981bee03706eac6cdf4a6694ab4acf9c0270c50976650"
+            }
+          ],
+          "rows": 1000000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 25188813,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 197523700
+        }
+      },
+      {
+        "label": "1000000-plain-raw-v2-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-raw-v2-2",
+          "1000000",
+          "100",
+          "raw",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-raw-v2-2 1000000 100 raw /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin plain measure\"\n\tUser time (seconds): 2.42\n\tSystem time (seconds): 0.62\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:03.15\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 551136\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 326979\n\tVoluntary context switches: 94\n\tInvoluntary context switches: 221\n\tSwaps: 0\n\tFile system inputs: 544848\n\tFile system outputs: 12704\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 668610560,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 668536832,
+            "peak_files": 18,
+            "peak_logical_bytes": 668583252
+          },
+          "compression": "raw",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 138778014,
+          "index_refresh_ns": 161002642,
+          "new_index_bytes": 668583252,
+          "old_index_bytes": 663059132,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "29e3c707ff2acd50110f2767ac044a1f08f01986d250e75980eeb2b59b58a045"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "4bed4cc746dd26925f7cb61aa5c0bb6ef0e947ad3b4d2c4dddb1ea8701c3dc25"
+            },
+            {
+              "query": "needle01000099",
+              "signature": "24a36fbb172b267c4c4981bee03706eac6cdf4a6694ab4acf9c0270c50976650"
+            }
+          ],
+          "rows": 1000000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 6992591,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 167995719
+        }
+      },
+      {
+        "label": "1000000-plain-zstd-v1-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-zstd-v1-0",
+          "1000000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-zstd-v1-0 1000000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin plain measure\"\n\tUser time (seconds): 2.38\n\tSystem time (seconds): 0.54\n\tPercent of CPU this job got: 94%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:03.11\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 555584\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 328010\n\tVoluntary context switches: 431\n\tInvoluntary context switches: 227\n\tSwaps: 0\n\tFile system inputs: 600704\n\tFile system outputs: 13464\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 765227008,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 765153280,
+            "peak_files": 20,
+            "peak_logical_bytes": 765195251
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 137154108,
+          "index_refresh_ns": 228784982,
+          "new_index_bytes": 765195251,
+          "old_index_bytes": 759609940,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "29e3c707ff2acd50110f2767ac044a1f08f01986d250e75980eeb2b59b58a045"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "4bed4cc746dd26925f7cb61aa5c0bb6ef0e947ad3b4d2c4dddb1ea8701c3dc25"
+            },
+            {
+              "query": "needle01000099",
+              "signature": "24a36fbb172b267c4c4981bee03706eac6cdf4a6694ab4acf9c0270c50976650"
+            }
+          ],
+          "rows": 1000000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 24042967,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 252828875
+        }
+      },
+      {
+        "label": "1000000-plain-zstd-v2-0",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-zstd-v2-0",
+          "1000000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-zstd-v2-0 1000000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin plain measure\"\n\tUser time (seconds): 2.40\n\tSystem time (seconds): 0.60\n\tPercent of CPU this job got: 94%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:03.20\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 552128\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 327136\n\tVoluntary context switches: 445\n\tInvoluntary context switches: 264\n\tSwaps: 0\n\tFile system inputs: 599280\n\tFile system outputs: 13312\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 576413696,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 576339968,
+            "peak_files": 18,
+            "peak_logical_bytes": 576381966
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 138778018,
+          "index_refresh_ns": 261752254,
+          "new_index_bytes": 576381966,
+          "old_index_bytes": 570925451,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "29e3c707ff2acd50110f2767ac044a1f08f01986d250e75980eeb2b59b58a045"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "4bed4cc746dd26925f7cb61aa5c0bb6ef0e947ad3b4d2c4dddb1ea8701c3dc25"
+            },
+            {
+              "query": "needle01000099",
+              "signature": "24a36fbb172b267c4c4981bee03706eac6cdf4a6694ab4acf9c0270c50976650"
+            }
+          ],
+          "rows": 1000000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 26917578,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 288670797
+        }
+      },
+      {
+        "label": "1000000-plain-zstd-v2-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-zstd-v2-1",
+          "1000000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-zstd-v2-1 1000000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin plain measure\"\n\tUser time (seconds): 2.38\n\tSystem time (seconds): 0.59\n\tPercent of CPU this job got: 95%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:03.12\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 551992\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 324561\n\tVoluntary context switches: 82\n\tInvoluntary context switches: 257\n\tSwaps: 0\n\tFile system inputs: 544848\n\tFile system outputs: 13280\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 576413696,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 576339968,
+            "peak_files": 18,
+            "peak_logical_bytes": 576381974
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 138778018,
+          "index_refresh_ns": 211919658,
+          "new_index_bytes": 576381974,
+          "old_index_bytes": 570925451,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "29e3c707ff2acd50110f2767ac044a1f08f01986d250e75980eeb2b59b58a045"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "4bed4cc746dd26925f7cb61aa5c0bb6ef0e947ad3b4d2c4dddb1ea8701c3dc25"
+            },
+            {
+              "query": "needle01000099",
+              "signature": "24a36fbb172b267c4c4981bee03706eac6cdf4a6694ab4acf9c0270c50976650"
+            }
+          ],
+          "rows": 1000000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 30337424,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 242257893
+        }
+      },
+      {
+        "label": "1000000-plain-zstd-v1-1",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-zstd-v1-1",
+          "1000000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-zstd-v1-1 1000000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin plain measure\"\n\tUser time (seconds): 2.34\n\tSystem time (seconds): 0.61\n\tPercent of CPU this job got: 95%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:03.11\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 555608\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 328002\n\tVoluntary context switches: 79\n\tInvoluntary context switches: 300\n\tSwaps: 0\n\tFile system inputs: 544848\n\tFile system outputs: 13560\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 765227008,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 765153280,
+            "peak_files": 20,
+            "peak_logical_bytes": 765195247
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 137154108,
+          "index_refresh_ns": 192982086,
+          "new_index_bytes": 765195247,
+          "old_index_bytes": 759609940,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "29e3c707ff2acd50110f2767ac044a1f08f01986d250e75980eeb2b59b58a045"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "4bed4cc746dd26925f7cb61aa5c0bb6ef0e947ad3b4d2c4dddb1ea8701c3dc25"
+            },
+            {
+              "query": "needle01000099",
+              "signature": "24a36fbb172b267c4c4981bee03706eac6cdf4a6694ab4acf9c0270c50976650"
+            }
+          ],
+          "rows": 1000000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 33086055,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 226069000
+        }
+      },
+      {
+        "label": "1000000-plain-zstd-v1-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-zstd-v1-2",
+          "1000000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": false,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-zstd-v1-2 1000000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin plain measure\"\n\tUser time (seconds): 2.35\n\tSystem time (seconds): 0.62\n\tPercent of CPU this job got: 94%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:03.14\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 555512\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 325477\n\tVoluntary context switches: 81\n\tInvoluntary context switches: 525\n\tSwaps: 0\n\tFile system inputs: 544848\n\tFile system outputs: 13784\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 765227008,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 765153280,
+            "peak_files": 20,
+            "peak_logical_bytes": 765195197
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 1,
+          "estimated_heap_bytes": 137154108,
+          "index_refresh_ns": 193377103,
+          "new_index_bytes": 765195197,
+          "old_index_bytes": 759609940,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "29e3c707ff2acd50110f2767ac044a1f08f01986d250e75980eeb2b59b58a045"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "4bed4cc746dd26925f7cb61aa5c0bb6ef0e947ad3b4d2c4dddb1ea8701c3dc25"
+            },
+            {
+              "query": "needle01000099",
+              "signature": "24a36fbb172b267c4c4981bee03706eac6cdf4a6694ab4acf9c0270c50976650"
+            }
+          ],
+          "rows": 1000000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 28283169,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 221661399
+        }
+      },
+      {
+        "label": "1000000-plain-zstd-v2-2",
+        "binary": "profile_juro_append",
+        "args": [
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-zstd-v2-2",
+          "1000000",
+          "100",
+          "zstd",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin",
+          "plain",
+          "measure"
+        ],
+        "compact": true,
+        "returncode": 0,
+        "stderr": "",
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/profile_juro_append append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/1000000-plain-zstd-v2-2 1000000 100 zstd /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/compact-v2-append-bench-20261025/intents-1000000-plain.bin plain measure\"\n\tUser time (seconds): 2.39\n\tSystem time (seconds): 0.60\n\tPercent of CPU this job got: 95%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:03.13\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 552132\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 327166\n\tVoluntary context switches: 110\n\tInvoluntary context switches: 207\n\tSwaps: 0\n\tFile system inputs: 544848\n\tFile system outputs: 13408\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "allocated_index_bytes": 576413696,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 576339968,
+            "peak_files": 18,
+            "peak_logical_bytes": 576381956
+          },
+          "compression": "zstd",
+          "delta": 100,
+          "derived_layout": 2,
+          "estimated_heap_bytes": 138778018,
+          "index_refresh_ns": 214667468,
+          "new_index_bytes": 576381956,
+          "old_index_bytes": 570925451,
+          "oracle_ns": null,
+          "phase": "append",
+          "queries": [
+            {
+              "query": "battery",
+              "signature": "29e3c707ff2acd50110f2767ac044a1f08f01986d250e75980eeb2b59b58a045"
+            },
+            {
+              "query": "lookup_needle battery",
+              "signature": "4bed4cc746dd26925f7cb61aa5c0bb6ef0e947ad3b4d2c4dddb1ea8701c3dc25"
+            },
+            {
+              "query": "needle01000099",
+              "signature": "24a36fbb172b267c4c4981bee03706eac6cdf4a6694ab4acf9c0270c50976650"
+            }
+          ],
+          "rows": 1000000,
+          "scope": "healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints",
+          "source_append_ns": 31907645,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_plus_refresh_ns": 246576002
+        }
+      }
+    ]
   }
 }

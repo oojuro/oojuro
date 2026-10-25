@@ -144,3 +144,28 @@ first retained-query observations peak at 550,660 /550,900 KiB. The complete
 196-engine-test/eight-rank gate passes for this runtime with ten documented
 helpers/opt-in tests ignored. This remains a draft until incremental, diverse
 and dense qualification and final review. No package or hosted service changed.
+
+After integrating main's bounded COW edits and original-read preflight, runtime
+`8661394` passes 26 disk tests and a 56-observation actual append campaign. The
+campaign covers 1k/100k plain sources, 100k encrypted sources and a 1M plain
+source, both layouts and codecs, with identical durably retained engine intents.
+Every exact original/checkpoint/signature comparison and thirteen complete
+rebuild oracles pass. Each layout/codec/fixture has three +100 append observations.
+The append timer still excludes source/index open, intent persistence and all
+provider/application work.
+
+Results include adverse cases: encrypted 100k Zstd layout-2 source+refresh ranges
+175–189 ms versus 139–181 ms layout 1; 1M raw ranges 168–234 versus 198–217 ms;
+1M Zstd ranges 242–289 versus 222–253 ms. The 250 ms target is not qualified by
+this cohort. Layout-2 delta growth is 5.52 MB raw /5.46 MB Zstd at 1M, compared
+with 6.30/5.59 MB layout 1. The one complete 1M compact-raw rebuild oracle takes
+212.26 seconds outside the append timer. All results remain in the receipts.
+
+The next local runtime avoids revisiting every numeric row during a small
+append. It copies already-admitted mass planes and rebuilds only affected
+1024-row numeric blocks, including their 256-row shape summaries. Retirements
+clear old contributions; new numeric bits and appended mask words are admitted
+before allocation. A focused multi-generation growth/retirement/new-bit test
+matches full rebuild sums and bounds, and the raw/Zstd append/retire rank oracle
+passes. Its performance is not yet qualified; the prior adverse observations
+remain authoritative until matched runs complete.
