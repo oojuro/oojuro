@@ -5,7 +5,7 @@
 mod wire;
 use chacha20poly1305::XChaCha20Poly1305;
 use std::{
-    collections::HashMap,
+    collections::{BTreeSet, HashMap},
     fs::{File, OpenOptions},
     io::{BufReader, Read, Seek, SeekFrom, Write},
     path::Path,
@@ -104,12 +104,16 @@ pub struct Database {
     file: File,
     header: [u8; FILE],
     cipher: Option<XChaCha20Poly1305>,
+    codecs: wire::Codecs,
     writable: bool,
     poisoned: bool,
     end: u64,
     tail: u64,
     transactions: Vec<Transaction>,
     latest: HashMap<Vec<u8>, Location>,
+    // Built only for prefix traversal. The ordinary point-read path retains its
+    // hash lookup and does not allocate this additional ordered key index.
+    ordered_keys: Option<BTreeSet<Vec<u8>>>,
     requests: HashMap<[u8; 16], usize>,
     operations: usize,
     key_bytes: usize,
@@ -171,12 +175,14 @@ impl Database {
             file,
             header,
             cipher,
+            codecs: wire::Codecs::default(),
             writable,
             poisoned: false,
             end: FILE as u64,
             tail: 0,
             transactions: Vec::new(),
             latest: HashMap::new(),
+            ordered_keys: None,
             requests: HashMap::new(),
             operations: 0,
             key_bytes: 0,
@@ -219,7 +225,13 @@ impl Database {
             if size > length - db.end {
                 break;
             }
-            let (body, digest) = read_body(&mut reader, &db.header, db.cipher.as_ref(), &head)?;
+            let (body, digest) = read_body(
+                &mut reader,
+                &db.header,
+                db.cipher.as_ref(),
+                &mut db.codecs,
+                &head,
+            )?;
             let mut key_bytes = 0;
             wire::walk(&body, u32_at(&head, 32), |_, key, _| key_bytes += key.len())?;
             db.admit(u32_at(&head, 32) as usize, key_bytes)?;
@@ -350,7 +362,7 @@ impl Database {
             return Err(Error::Unsupported);
             #[cfg(feature = "archive")]
             {
-                let packed = zstd::bulk::compress(&frame[prefix..], 3)?;
+                let packed = self.codecs.compress(&frame[prefix..])?;
                 if packed.len() < length {
                     frame.truncate(prefix);
                     frame.extend_from_slice(&packed);
@@ -423,6 +435,13 @@ impl Database {
                 }),
             });
             self.latest.insert(change.key.to_vec(), location);
+            if let Some(keys) = &mut self.ordered_keys {
+                if change.value.is_none() {
+                    keys.remove(change.key);
+                } else if !keys.contains(change.key) {
+                    keys.insert(change.key.to_vec());
+                }
+            }
             value_offset += change.value.map_or(0, <[u8]>::len) as u64;
         }
         self.requests.insert(request, transaction);
@@ -449,21 +468,7 @@ impl Database {
         } = location
         {
             let mut value = vec![0; length];
-            #[cfg(unix)]
-            {
-                use std::os::unix::fs::FileExt;
-                self.file
-                    .read_exact_at(&mut value, offset)
-                    .map_err(read_error)?;
-            }
-            #[cfg(not(unix))]
-            {
-                self.file.seek(SeekFrom::Start(offset))?;
-                read_exact(&mut self.file, &mut value)?;
-            }
-            if hash(&[&value]) != digest {
-                return Err(Error::Corrupt("changed value"));
-            }
+            read_raw(&mut self.file, offset, length, digest, &mut value)?;
             return Ok(Some(value));
         }
         let Location::Encoded { transaction, value } = location else {
@@ -482,6 +487,114 @@ impl Database {
         Ok(Some(value.to_vec()))
     }
 
+    /// Visits a bounded page of latest live values in bytewise key order.
+    /// `after` is an exclusive key cursor; `limit` must be 1..=1,024. The returned
+    /// cursor is the last visited key, only when another matching key exists.
+    /// Empty values are visited; deleted keys and older versions are omitted.
+    ///
+    /// The first call builds an optional ordered index of live keys in memory;
+    /// subsequent pages use a range lookup and decode only selected values.
+    /// This copies key metadata, not the complete journal or its values. Raw
+    /// selected values retain their SHA-256 check. Encoded values verify and
+    /// decode their containing transaction. At most one decoded transaction is
+    /// retained within the page, and it is dropped before returning.
+    ///
+    /// A callback error stops immediately and is returned unchanged. The file
+    /// lock remains attached to this handle; drop it before network operations
+    /// when a writer must proceed. Reopening still validates the whole history.
+    pub fn scan_prefix(
+        &mut self,
+        prefix: &[u8],
+        after: Option<&[u8]>,
+        limit: usize,
+        mut visit: impl FnMut(&[u8], &[u8]) -> Result<()>,
+    ) -> Result<Option<Vec<u8>>> {
+        use std::ops::Bound::{Excluded, Included, Unbounded};
+        self.healthy()?;
+        if !(1..=wire::MAX_OPS).contains(&limit)
+            || prefix.len() > wire::MAX_KEY
+            || after.is_some_and(|key| key.len() > wire::MAX_KEY)
+        {
+            return Err(Error::Invalid("prefix page bounds"));
+        }
+        let mut upper = prefix.to_vec();
+        while upper.last() == Some(&255) {
+            upper.pop();
+        }
+        let upper = if let Some(last) = upper.last_mut() {
+            *last += 1;
+            Some(upper)
+        } else {
+            None
+        };
+        if upper
+            .as_deref()
+            .is_some_and(|end| after.is_some_and(|key| key >= end))
+        {
+            return Ok(None);
+        }
+        let keys = self.ordered_keys.get_or_insert_with(|| {
+            self.latest
+                .iter()
+                .filter(|(_, location)| !matches!(location, Location::Encoded { value: None, .. }))
+                .map(|(key, _)| key.clone())
+                .collect()
+        });
+        let start = match after {
+            Some(key) if key >= prefix => Excluded(key),
+            _ => Included(prefix),
+        };
+        let end = upper.as_deref().map_or(Unbounded, Excluded);
+        let mut selected = keys
+            .range::<[u8], _>((start, end))
+            .take(limit + 1)
+            .cloned()
+            .collect::<Vec<_>>();
+        let continuation = if selected.len() > limit {
+            selected.pop();
+            selected.last().cloned()
+        } else {
+            None
+        };
+        let mut raw = Vec::new();
+        let mut decoded: Option<(usize, Body)> = None;
+        for key in selected {
+            match self.latest[&key] {
+                Location::Raw {
+                    offset,
+                    length,
+                    digest,
+                } => {
+                    read_raw(&mut self.file, offset, length, digest, &mut raw)?;
+                    visit(&key, &raw)?;
+                }
+                Location::Encoded {
+                    transaction,
+                    value: Some((start, length)),
+                } => {
+                    if decoded
+                        .as_ref()
+                        .is_none_or(|(index, _)| *index != transaction)
+                    {
+                        decoded = Some((transaction, self.transaction_body(transaction)?));
+                    }
+                    let end = start
+                        .checked_add(length)
+                        .ok_or(Error::Corrupt("value range"))?;
+                    let value = decoded
+                        .as_ref()
+                        .unwrap()
+                        .1
+                        .get(start..end)
+                        .ok_or(Error::Corrupt("value range"))?;
+                    visit(&key, value)?;
+                }
+                Location::Encoded { value: None, .. } => unreachable!("ordered live keys"),
+            }
+        }
+        Ok(continuation)
+    }
+
     /// Streams every committed version in order. Values are borrowed for the duration of the callback.
     /// A tombstone is `None`; an empty value is `Some(&[])`. This is a logical delete, not physical erasure.
     pub fn scan(&mut self, mut visit: impl FnMut(u64, u32, &[u8], Option<&[u8]>)) -> Result<()> {
@@ -495,7 +608,13 @@ impl Database {
         };
         let mut reader = BufReader::with_capacity(capacity, &self.file);
         for (index, tx) in self.transactions.iter().enumerate() {
-            let body = read_transaction(&mut reader, &self.header, self.cipher.as_ref(), tx)?;
+            let body = read_transaction(
+                &mut reader,
+                &self.header,
+                self.cipher.as_ref(),
+                &mut self.codecs,
+                tx,
+            )?;
             wire::walk(
                 &body,
                 u32_at(&self.transactions[index].head, 32),
@@ -541,13 +660,20 @@ impl Database {
     fn transaction_body(&mut self, index: usize) -> Result<Body> {
         let tx = &self.transactions[index];
         self.file.seek(SeekFrom::Start(tx.offset))?;
-        read_transaction(&mut &self.file, &self.header, self.cipher.as_ref(), tx)
+        read_transaction(
+            &mut &self.file,
+            &self.header,
+            self.cipher.as_ref(),
+            &mut self.codecs,
+            tx,
+        )
     }
 }
 fn read_transaction(
     reader: &mut impl Read,
     header: &[u8; FILE],
     cipher: Option<&XChaCha20Poly1305>,
+    codecs: &mut wire::Codecs,
     tx: &Transaction,
 ) -> Result<Body> {
     let mut head = [0; HEAD];
@@ -555,7 +681,7 @@ fn read_transaction(
     if head != tx.head {
         return Err(Error::Corrupt("changed transaction header"));
     }
-    let (body, digest) = read_body(reader, header, cipher, &head)?;
+    let (body, digest) = read_body(reader, header, cipher, codecs, &head)?;
     if digest != tx.digest {
         return Err(Error::Corrupt("changed transaction"));
     }
@@ -565,6 +691,7 @@ fn read_body(
     reader: &mut impl Read,
     header: &[u8; FILE],
     cipher: Option<&XChaCha20Poly1305>,
+    codecs: &mut wire::Codecs,
     head: &[u8; HEAD],
 ) -> Result<(Body, [u8; 32])> {
     let length = u64_at(head, 16) as usize;
@@ -576,7 +703,7 @@ fn read_body(
         return Err(Error::Corrupt("commit footer or digest"));
     }
     stored.truncate(length);
-    Ok((wire::decode(cipher, header, head, stored)?, digest))
+    Ok((wire::decode(codecs, cipher, header, head, stored)?, digest))
 }
 
 fn location(
@@ -617,6 +744,29 @@ fn read_error(error: std::io::Error) -> Error {
     } else {
         Error::Io(error)
     }
+}
+fn read_raw(
+    file: &mut File,
+    offset: u64,
+    length: usize,
+    digest: [u8; 32],
+    value: &mut Vec<u8>,
+) -> Result<()> {
+    value.resize(length, 0);
+    #[cfg(unix)]
+    {
+        use std::os::unix::fs::FileExt;
+        file.read_exact_at(value, offset).map_err(read_error)?;
+    }
+    #[cfg(not(unix))]
+    {
+        file.seek(SeekFrom::Start(offset))?;
+        read_exact(file, value)?;
+    }
+    if hash(&[value]) != digest {
+        return Err(Error::Corrupt("changed value"));
+    }
+    Ok(())
 }
 fn read_exact(reader: &mut impl Read, bytes: &mut [u8]) -> Result<()> {
     reader.read_exact(bytes).map_err(read_error)
