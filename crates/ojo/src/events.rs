@@ -236,6 +236,11 @@ impl Journal {
     pub fn checkpoint(&self) -> crate::Checkpoint {
         self.db.checkpoint()
     }
+    /// Confirms a replayed prefix before an application acknowledges its own
+    /// reconstructed retry, without generating a new timestamp or event.
+    pub fn confirm(&mut self) -> Result<crate::Checkpoint> {
+        self.db.confirm()
+    }
     pub fn require_checkpoint(&self, checkpoint: &crate::Checkpoint) -> Result<()> {
         self.db.require_checkpoint(checkpoint)
     }
