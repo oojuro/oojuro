@@ -141,6 +141,30 @@ fn retry(
         "scope":"exact durable duplicate KV commits after confirmation and one warm pass; source/values unchanged; no new writes"}),
     )
 }
+fn point(path: &Path, rows: usize, bytes: usize, encrypted: bool) -> Result<Value> {
+    let mut db = Database::open(path, key(encrypted), false)?;
+    assert_eq!(db.checkpoint().sequence, rows as u64);
+    assert_eq!(db.recovered_tail_bytes(), 0);
+    let checkpoint = db.checkpoint();
+    let samples: Vec<_> = [0, rows - 1]
+        .into_iter()
+        .map(|n| (name(n), payload(n, bytes)))
+        .collect();
+    let mut times = Vec::new();
+    for _ in 0..1000 {
+        for (key, expected) in &samples {
+            let began = Instant::now();
+            let value = db.get(key)?.ok_or("missing point original")?;
+            times.push(began.elapsed().as_nanos());
+            assert_eq!(&value, expected);
+        }
+    }
+    assert_eq!(db.checkpoint(), checkpoint);
+    Ok(
+        json!({"phase":"point","rows":rows,"value_bytes":bytes,"get":distribution(times),
+        "source_encrypted":encrypted,"scope":"actual retained KV source, exact first/last64B or8KiB originals; no retry cache use"}),
+    )
+}
 #[cfg(feature = "archive")]
 fn archive(path: &Path, target: &Path, encrypted: bool) -> Result<Value> {
     let began = Instant::now();
@@ -195,6 +219,14 @@ fn main() -> Result<()> {
                 return Err("retry bounds".into());
             }
             retry(path, rows, bytes, working_set, rounds, encrypted)?
+        }
+        "point" if args.len() == 6 => {
+            let rows = args[3].parse()?;
+            let bytes = args[4].parse()?;
+            if !(2..=8192).contains(&rows) || !(8..=1 << 20).contains(&bytes) {
+                return Err("point bounds".into());
+            }
+            point(path, rows, bytes, encrypted)?
         }
         #[cfg(feature = "archive")]
         "archive" if args.len() == 5 => archive(path, Path::new(&args[3]), encrypted)?,
