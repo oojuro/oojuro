@@ -1,10 +1,13 @@
 # Explicit disk-backed Record2 work
 
-This is the generic embedded database path. It does not change o-cloud's
-`record::projection::Index` consumer, implement SQL compatibility, add agent
-capture, or implement a standalone `.ojo` container. The authority remains a
-sealed Record2 directory. The original `RecordLog`, `Reader::open`, and
-`Reader::open_disk` retain their 100,000-record / 128 MiB admission limits.
+This is the retained `oojuro-engine::record` directory/lexical path for existing
+consumers. The minimal standalone byte engine is [crates/ojo](../crates/ojo/README.md)
+with its independent experimental wire 0.1 format. Measurements and limits here
+do not describe that file engine. This change adds no SQL compatibility or agent
+capture and does not migrate o-cloud's `record::projection::Index` consumer.
+Record2 authority remains a sealed directory. The original `RecordLog`,
+`Reader::open`, and `Reader::open_disk` retain their 100,000-record / 128 MiB
+admission limits.
 
 The opt-in API takes a trusted disk admission policy:
 

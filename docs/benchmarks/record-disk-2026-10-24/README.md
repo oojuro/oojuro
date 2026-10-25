@@ -1,6 +1,7 @@
 # Disk-path diagnostic, 2026-10-24
 
-This is incomplete engineering evidence, not one-million-record acceptance,
+This measures the retained Record2 directory/lexical consumer path, not the
+minimal `crates/ojo` file engine. This is incomplete engineering evidence, not one-million-record acceptance,
 a hosted result, an SLA, or an overall performance/storage win. The directory
 API and the remaining scale work are described in
 [RECORD_DISK_PATH.md](../../RECORD_DISK_PATH.md).
