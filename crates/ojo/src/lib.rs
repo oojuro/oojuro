@@ -123,6 +123,10 @@ pub struct Database {
     end: u64,
     tail: u64,
     transactions: Vec<Transaction>,
+    // Replay validates bytes but cannot establish that an earlier failed sync
+    // reached stable storage. Some(n) records a successful barrier on this
+    // handle covering the first n transactions, including a synced header.
+    durable_transactions: Option<usize>,
     latest: HashMap<Vec<u8>, Location>,
     // Built only for prefix traversal. The ordinary point-read path retains its
     // hash lookup and does not allocate this additional ordered key index.
@@ -176,7 +180,9 @@ impl Database {
         file.write_all(&header)?;
         file.sync_all()?;
         directory.sync_all()?;
-        Ok(Self::empty(file, header, cipher, true))
+        let mut db = Self::empty(file, header, cipher, true);
+        db.durable_transactions = Some(0);
+        Ok(db)
     }
     fn empty(
         file: File,
@@ -194,6 +200,7 @@ impl Database {
             end: FILE as u64,
             tail: 0,
             transactions: Vec::new(),
+            durable_transactions: None,
             latest: HashMap::new(),
             ordered_keys: None,
             requests: HashMap::new(),
@@ -292,6 +299,7 @@ impl Database {
         if writable && db.tail > 0 {
             db.file.set_len(db.end)?;
             db.file.sync_all()?;
+            db.durable_transactions = Some(db.transactions.len());
         }
         Ok(db)
     }
@@ -305,6 +313,26 @@ impl Database {
             sequence: self.transactions.len() as u64,
             digest: self.transactions.last().map_or([0; 32], |tx| tx.digest),
         }
+    }
+
+    /// Makes the current verified prefix durable before an application
+    /// acknowledges an already accepted operation reconstructed after reopen.
+    /// Requires a healthy writable handle. A successful barrier covers the whole
+    /// prefix; repeats on that unchanged healthy handle perform no extra sync.
+    /// A sync failure poisons the handle and must never become a success ACK.
+    pub fn confirm(&mut self) -> Result<Checkpoint> {
+        self.healthy()?;
+        if !self.writable {
+            return Err(Error::ReadOnly);
+        }
+        if self.durable_transactions != Some(self.transactions.len()) {
+            if let Err(error) = self.file.sync_all() {
+                self.poisoned = true;
+                return Err(error.into());
+            }
+            self.durable_transactions = Some(self.transactions.len());
+        }
+        Ok(self.checkpoint())
     }
     /// Refuses a different file identity, missing prefix, or changed committed prefix.
     pub fn require_checkpoint(&self, checkpoint: &Checkpoint) -> Result<()> {
@@ -381,6 +409,9 @@ impl Database {
             };
             if previous != fingerprint {
                 return Err(Error::Conflict);
+            }
+            if durable {
+                self.confirm()?;
             }
             return Ok(self.receipt(transaction));
         }
@@ -480,6 +511,9 @@ impl Database {
             fingerprint: Some(fingerprint),
         });
         self.end = end;
+        if durable {
+            self.durable_transactions = Some(self.transactions.len());
+        }
         self.operations += changes.len();
         self.key_bytes += key_bytes;
         Ok(self.receipt(transaction))
@@ -859,7 +893,7 @@ impl Database {
             }
             // No archive transaction was acknowledged externally. Sync every byte before
             // publishing the separate file; ordinary public commits still sync individually.
-            archive.file.sync_all()?;
+            archive.confirm()?;
             // Link creates the final name without a replacement race.
             std::fs::hard_link(&temporary, destination)?;
             directory.sync_all()?;

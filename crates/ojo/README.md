@@ -6,6 +6,14 @@ opaque cursors, exact retries, append/time scans and an embedded live collector.
 The KV API below remains available and retains wire 0.1 compatibility. The
 published v0.1.0 preview predates the Event API.
 
+Reopen verifies complete transactions but does not prove that an earlier failed
+file sync reached stable storage. The first exact retry after such a replay
+confirms the verified prefix before acknowledging success. `Database::confirm`
+and `events::Journal::confirm` provide the same barrier for applications that
+reconstruct their own accepted batch identity and return without calling commit.
+They require a writable handle and poison it on sync failure. Repeats on an
+unchanged, already confirmed healthy handle need no additional sync.
+
 A fresh implementation of the experimental [wire 0.1 specification](../../spec/0.1/FORMAT.md).
 One synchronous Rust library. One file. Opaque byte keys and values. Four direct
 runtime dependencies: SHA-256, CRC32, authenticated encryption and OS randomness.
