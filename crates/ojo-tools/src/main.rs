@@ -252,6 +252,9 @@ fn run() -> Result<()> {
             return Err("request ID must be nonzero".into());
         }
         let selected = unhex(&args.positional[1], 65536)?;
+        if selected.is_empty() {
+            return Err("key must contain at least one byte".into());
+        }
         let value = if command == "put" {
             let mut reader: Box<dyn Read> = if args.positional[2] == "-" {
                 Box::new(io::stdin().lock())

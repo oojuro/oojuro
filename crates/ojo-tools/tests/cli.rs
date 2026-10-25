@@ -135,6 +135,11 @@ fn incomplete_tail_recovery_and_complete_corruption_are_distinct() {
             .status
             .success()
     );
+    assert!(
+        !s.run(&["put", "db.ojo", "", "value", "--request", SECOND])
+            .status
+            .success()
+    );
     assert_eq!(fs::read(s.0.join("db.ojo")).unwrap(), torn);
     let inspected: Value = serde_json::from_slice(&s.ok(&["inspect", "db.ojo"]).stdout).unwrap();
     assert_eq!(inspected["incomplete_tail_bytes"], 4);
