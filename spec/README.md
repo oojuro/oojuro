@@ -1,6 +1,6 @@
 # The .ojo specification
 
-Specification version: **0.1.0-draft.1**. Status: **experimental draft**.
+Specification version: **0.1.0-draft.2**. Status: **experimental draft**.
 Wire version: **0.1**. This version is independently maintained from engine,
 CLI, ojo-journal and ojo-cloud releases.
 

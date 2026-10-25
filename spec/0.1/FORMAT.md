@@ -1,6 +1,6 @@
 # .ojo wire version 0.1
 
-Specification release: **0.1.0-draft.1**, experimental. MUST, MUST NOT, SHOULD
+Specification release: **0.1.0-draft.2**, experimental. MUST, MUST NOT, SHOULD
 and MAY express conformance requirements. All offsets are zero-based; integers
 are unsigned little-endian. Concatenation is written `||`. No field uses native
 pointer widths, Rust layouts, varints, implicit padding or engine version IDs.
@@ -195,6 +195,16 @@ the original commit without writing again. Reuse with a different fingerprint
 is a conflict. A client uncertain whether its acknowledgement arrived MUST NOT
 generate a new ID for the same logical transaction. Future transactions resume
 the committed sequence and digest chain.
+
+Verification after reopen proves byte validity, not successful durability of an
+earlier ambiguous write. A complete valid frame can remain visible after its
+file sync failed. Before acknowledging a replayed exact retry (or an accepted
+application operation reconstructed from that prefix), the writer MUST observe
+a successful file sync covering that prefix, unless it already observed such a
+successful barrier. A sync failure MUST NOT become a success acknowledgement.
+An unchanged healthy handle may reuse its own successful durability barrier;
+it need not sync again for each retry. This clarifies acknowledgement semantics
+without changing wire bytes, accepted transactions or frozen vectors.
 
 ## 8. Recovery and corruption
 
