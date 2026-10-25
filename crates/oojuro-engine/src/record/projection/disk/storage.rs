@@ -15,6 +15,8 @@ const FORMAT: u32 = 1;
 pub(super) const TEXT: u8 = 1;
 pub(super) const COLUMNS: u8 = 2;
 const MANIFEST: &str = "PROJECTION_CURRENT";
+#[cfg(test)]
+thread_local! { pub(super) static FAIL_AFTER_MANIFEST_RENAME: std::cell::Cell<bool> = const { std::cell::Cell::new(false) }; }
 
 #[derive(Clone)]
 pub(super) struct Authority {
@@ -753,6 +755,10 @@ pub(super) fn publish(
         .and_then(|_| file.sync_all())
         .map_err(|_| Error::Unavailable)?;
     tree::Authority::rename_file(authority, &temporary, &root.join(MANIFEST))?;
+    #[cfg(test)]
+    if FAIL_AFTER_MANIFEST_RENAME.with(|fail| fail.replace(false)) {
+        return Err(Error::Unavailable);
+    }
     sync_directory(root)
 }
 pub(super) fn open(root: &Path, key: &[u8; 32], binding: &Binding) -> Result<Index> {

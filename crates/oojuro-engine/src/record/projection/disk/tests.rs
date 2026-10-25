@@ -180,6 +180,73 @@ fn construction_quota_covers_temporary_files_before_publication() {
 }
 
 #[test]
+fn source_work_budget_refuses_before_fetching_an_oversized_original() {
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let mut original = row(1);
+        original.text.push_str(&" long original".repeat(64));
+        let mut builder = Builder::create(
+            scratch.0.join("index"),
+            &[9; 32],
+            binding(),
+            Limits {
+                original_bytes_per_query: 64,
+                compression,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        builder.push(original).unwrap();
+        let index = builder.finish().unwrap();
+        let q = query("alpha", Filter::default(), i64::MIN, i64::MAX);
+        let mut calls = 0;
+        assert!(matches!(
+            index.search(&binding(), &q, |_| {
+                calls += 1;
+                Err(Error::Unavailable)
+            }),
+            Err(Error::Bounds)
+        ));
+        assert_eq!(calls, 0);
+    }
+}
+
+#[test]
+fn ambiguous_descriptor_publication_keeps_its_complete_generation_readable() {
+    let scratch = Scratch::new();
+    let path = scratch.0.join("index");
+    let first = row(1);
+    let second = row(2);
+    let mut builder = Builder::create(&path, &[9; 32], binding(), Limits::default()).unwrap();
+    builder.push(first.clone()).unwrap();
+    storage::FAIL_AFTER_MANIFEST_RENAME.with(|fail| fail.set(true));
+    assert!(matches!(builder.finish(), Err(Error::Unavailable)));
+    let old = Index::open(&path, &[9; 32], &binding()).unwrap();
+    assert_eq!(old.row_count(), 1);
+    let mut next = binding();
+    next.view[0] ^= 1;
+    let mut append =
+        Appender::extend_validated_prefix(&old, next.clone(), Limits::default()).unwrap();
+    append.push(second.clone()).unwrap();
+    storage::FAIL_AFTER_MANIFEST_RENAME.with(|fail| fail.set(true));
+    assert!(matches!(append.finish(), Err(Error::Unavailable)));
+    let index = Index::open(&path, &[9; 32], &next).unwrap();
+    assert_eq!(index.row_count(), 2);
+    let q = query("alpha", Filter::default(), i64::MIN, i64::MAX);
+    assert_eq!(
+        index
+            .search(&next, &q, |id| Ok(if id == first.id {
+                first.clone()
+            } else {
+                second.clone()
+            }))
+            .unwrap()
+            .len(),
+        2
+    );
+}
+
+#[test]
 fn incremental_prefix_append_retire_and_reopen_match_complete_global_model() {
     for compression in [Compression::Raw, Compression::Zstd] {
         let scratch = Scratch::new();

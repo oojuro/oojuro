@@ -318,6 +318,7 @@ impl Appender {
             .as_ref()
             .unwrap()
             .relocate(&previous_directory, &b.directory)?;
+        b.finished = true;
         publish(&b.root, &cipher, &authority, &mut manifest)?;
         let lock = open_file(&b.directory.join("LOCK"))?;
         lock.try_lock_shared().map_err(|_| Error::Unavailable)?;
@@ -341,7 +342,6 @@ impl Appender {
                     .and_then(|m| bytes.checked_add(m.blocks() * 512))
             })
             .ok_or(Error::Unavailable)?;
-        b.finished = true;
         let mut authority = authority;
         authority.budget = None;
         Ok(Index {

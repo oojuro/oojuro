@@ -67,7 +67,7 @@ impl Limits {
             || self.metadata_bytes < std::mem::size_of::<Column>()
             || self.query_terms == 0
             || self.query_terms > 4096
-            || self.original_bytes_per_query < MAX_TEXT_BYTES
+            || self.original_bytes_per_query == 0
         {
             return Err(Error::Bounds);
         }
@@ -362,9 +362,14 @@ impl Index {
             if hit.id != meta.id || !self.column(hit.ordinal)?.live() {
                 return Err(Error::Authority);
             }
+            read = read
+                .checked_add(meta.text.bytes as usize)
+                .ok_or(Error::Bounds)?;
+            if read > self.manifest.limits.original_bytes_per_query {
+                return Err(Error::Bounds);
+            }
             let row = fetch(&hit.id)?;
-            read = read.checked_add(row.text.len()).ok_or(Error::Bounds)?;
-            if read > self.manifest.limits.original_bytes_per_query || !meta.matches(&row) {
+            if !meta.matches(&row) {
                 return Err(Error::Authority);
             }
             let value = super::materialize(&row, &row.text, hit.bits, hit.continued, q)?;

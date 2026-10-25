@@ -313,8 +313,10 @@ impl Builder {
             .as_ref()
             .unwrap()
             .relocate(&previous, &self.directory)?;
-        publish(&self.root, &cipher, &self.authority, &mut manifest)?;
+        // Once publication can name this complete generation, an ambiguous
+        // descriptor sync failure must not make Drop unlink its files.
         self.finished = true;
+        publish(&self.root, &cipher, &self.authority, &mut manifest)?;
         storage::open_with_cipher(&self.root, cipher, &self.binding, self.limits)
     }
     fn read_rows(&self, mut visit: impl FnMut(u32, Analysis) -> Result<()>) -> Result<()> {
