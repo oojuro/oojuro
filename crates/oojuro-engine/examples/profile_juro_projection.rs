@@ -241,7 +241,7 @@ fn distribution(mut times: Vec<u128>) -> Value {
 }
 fn footprint(index: &EventIndex) -> Value {
     json!({"index_bytes":index.index_bytes(),"allocated_index_bytes":index.allocated_index_bytes(),
-        "estimated_index_heap_bytes":index.estimated_heap_bytes(),"text_bytes":index.text_bytes(),"indexed_rows":index.row_count()})
+        "estimated_index_heap_bytes":index.estimated_heap_bytes(),"text_bytes":index.text_bytes(),"indexed_rows":index.row_count(),"build_metrics":index.build_metrics()})
 }
 fn main() -> Result<()> {
     let args: Vec<_> = std::env::args().collect();
