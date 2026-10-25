@@ -1,6 +1,6 @@
 //! Byte grammar for experimental wire 0.1. No application schema lives here.
 use crate::{Error, Result};
-use chacha20poly1305::{AeadInPlace, XChaCha20Poly1305, XNonce, aead::KeyInit};
+use chacha20poly1305::{AeadInPlace, Tag, XChaCha20Poly1305, XNonce, aead::KeyInit};
 use sha2::{Digest, Sha256};
 
 pub const FILE: usize = 64;
@@ -91,64 +91,88 @@ pub fn validate_head(head: &[u8; HEAD], sequence: u64, previous: &[u8; 32]) -> R
     Ok(())
 }
 
-fn aad(file: &[u8; FILE], head: &[u8; HEAD]) -> Vec<u8> {
-    let mut bytes = Vec::with_capacity(192);
-    bytes.extend_from_slice(b"oojuro/ojo/0.1/transaction\0");
-    bytes.extend_from_slice(file);
-    bytes.extend_from_slice(head);
+const DOMAIN: &[u8] = b"oojuro/ojo/0.1/transaction\0";
+fn aad(file: &[u8; FILE], head: &[u8; HEAD]) -> [u8; DOMAIN.len() + FILE + HEAD] {
+    let mut bytes = [0; DOMAIN.len() + FILE + HEAD];
+    bytes[..DOMAIN.len()].copy_from_slice(DOMAIN);
+    bytes[DOMAIN.len()..DOMAIN.len() + FILE].copy_from_slice(file);
+    bytes[DOMAIN.len() + FILE..].copy_from_slice(head);
     bytes
 }
+/// Encrypt a preallocated nonce-prefix/body slice; the caller appends the returned tag.
 pub fn encrypt(
     cipher: &XChaCha20Poly1305,
     file: &[u8; FILE],
     head: &[u8; HEAD],
-    mut body: Vec<u8>,
-) -> Result<Vec<u8>> {
+    stored: &mut [u8],
+) -> Result<[u8; 16]> {
     let nonce = random::<24>()?;
-    cipher
-        .encrypt_in_place(XNonce::from_slice(&nonce), &aad(file, head), &mut body)
+    let (prefix, body) = stored.split_at_mut(24);
+    prefix.copy_from_slice(&nonce);
+    let tag = cipher
+        .encrypt_in_place_detached(XNonce::from_slice(&nonce), &aad(file, head), body)
         .map_err(|_| Error::Corrupt("encryption"))?;
-    let mut stored = Vec::with_capacity(24 + body.len());
-    stored.extend_from_slice(&nonce);
-    stored.extend_from_slice(&body);
-    Ok(stored)
+    Ok(tag.into())
+}
+
+/// An owned decoded transaction with a borrowed view past its nonce prefix.
+pub struct Body {
+    bytes: Vec<u8>,
+    start: usize,
+}
+impl std::ops::Deref for Body {
+    type Target = [u8];
+    fn deref(&self) -> &[u8] {
+        &self.bytes[self.start..]
+    }
 }
 pub fn decode(
     cipher: Option<&XChaCha20Poly1305>,
     file: &[u8; FILE],
     head: &[u8; HEAD],
-    mut body: Vec<u8>,
-) -> Result<Vec<u8>> {
+    mut bytes: Vec<u8>,
+) -> Result<Body> {
+    let mut start = 0;
     if let Some(cipher) = cipher {
-        if body.len() < 40 {
-            return Err(Error::Corrupt("short ciphertext"));
+        if bytes.len() < 40 {
+            return Err(Error::Corrupt("encrypted body"));
         }
-        let nonce: [u8; 24] = body[..24].try_into().unwrap();
-        body.drain(..24);
+        let nonce: [u8; 24] = bytes[..24].try_into().unwrap();
+        let end = bytes.len() - 16;
+        let tag: [u8; 16] = bytes[end..].try_into().unwrap();
         cipher
-            .decrypt_in_place(XNonce::from_slice(&nonce), &aad(file, head), &mut body)
+            .decrypt_in_place_detached(
+                XNonce::from_slice(&nonce),
+                &aad(file, head),
+                &mut bytes[24..end],
+                Tag::from_slice(&tag),
+            )
             .map_err(|_| Error::Corrupt("authentication"))?;
+        bytes.truncate(end);
+        start = 24;
     }
     if head[36] == 1 {
         #[cfg(not(feature = "archive"))]
         return Err(Error::Unsupported);
         #[cfg(feature = "archive")]
         {
-            if !body.starts_with(&[0x28, 0xb5, 0x2f, 0xfd])
-                || zstd::zstd_safe::find_frame_compressed_size(&body).ok() != Some(body.len())
-                || zstd::zstd_safe::get_dict_id_from_frame(&body).is_some()
+            let packed = &bytes[start..];
+            if !packed.starts_with(&[0x28, 0xb5, 0x2f, 0xfd])
+                || zstd::zstd_safe::find_frame_compressed_size(packed).ok() != Some(packed.len())
+                || zstd::zstd_safe::get_dict_id_from_frame(packed).is_some()
             {
                 return Err(Error::Corrupt("zstd frame"));
             }
             let mut decoder = zstd::bulk::Decompressor::new()?;
             decoder.set_parameter(zstd::zstd_safe::DParameter::WindowLogMax(25))?;
-            body = decoder.decompress(&body, u64_at(head, 24) as usize)?;
+            bytes = decoder.decompress(packed, u64_at(head, 24) as usize)?;
+            start = 0;
         }
     }
-    if body.len() as u64 != u64_at(head, 24) {
+    if (bytes.len() - start) as u64 != u64_at(head, 24) {
         return Err(Error::Corrupt("decoded length"));
     }
-    Ok(body)
+    Ok(Body { bytes, start })
 }
 
 /// Visit borrowed values while validating the entire transaction, without copying it per operation.

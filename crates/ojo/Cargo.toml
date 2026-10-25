@@ -29,3 +29,7 @@ libc = "0.2"
 [[example]]
 name = "acid_bench"
 required-features = ["bench"]
+
+[[example]]
+name = "io_profile"
+required-features = ["bench", "archive"]
