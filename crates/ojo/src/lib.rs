@@ -852,7 +852,7 @@ fn new_file(path: &Path) -> Result<File> {
 
 #[cfg(feature = "archive")]
 impl Database {
-    /// Creates a separate compressed .ojo file, preserving all transactions, request IDs and encryption.
+    /// Creates a separate compressed .juro file, preserving all transactions, request IDs and encryption.
     /// The source is untouched. The archive has a fresh identity, so its physical checkpoints differ.
     /// Publication is atomic and never replaces an existing destination; a failed build removes its temporary file.
     pub fn archive_to(&mut self, destination: impl AsRef<Path>) -> Result<Checkpoint> {
@@ -863,7 +863,7 @@ impl Database {
         let destination = destination.as_ref();
         let directory = File::open(parent(destination))?;
         let temporary = parent(destination).join(format!(
-            ".ojo-{:032x}.tmp",
+            ".juro-{:032x}.tmp",
             u128::from_le_bytes(wire::random()?)
         ));
         let mut header = self.header;

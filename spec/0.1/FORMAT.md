@@ -1,4 +1,4 @@
-# .ojo wire version 0.1
+# .juro wire version 0.1
 
 Specification release: **0.1.0-draft.2**, experimental. MUST, MUST NOT, SHOULD
 and MAY express conformance requirements. All offsets are zero-based; integers
@@ -9,8 +9,10 @@ pointer widths, Rust layouts, varints, implicit padding or engine version IDs.
 
 A database is one regular file: a 64-byte header followed by zero or more atomic
 transactions. It needs no WAL, directory manifest, index, dictionary or sidecar
-to recover committed keys and values. The `.ojo` extension is conventional; the
-header determines the format.
+to recover committed keys and values. `.juro` is the canonical new filename
+extension; previously published `.ojo` files remain compatible and keep their
+paths. The header and version determine the format, never the extension.
+The naming convention does not change magic bytes, wire versions or vectors.
 
 Applications update this file directly. Committed bytes are immutable: put and
 delete operations append new versions to the same file. No full-file snapshot

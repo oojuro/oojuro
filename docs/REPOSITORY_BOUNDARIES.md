@@ -3,6 +3,10 @@
 The engine has one purpose: durable, compressed, searchable storage. The
 agent-journal application and managed service are separate consumers.
 
+The canonical new database filename extension is `.juro`; existing `.ojo`
+files retain their paths and remain readable. This is a filename convention,
+not a repository/product/CLI rename or a wire/profile change.
+
 | Owner | Source responsibility |
 | --- | --- |
 | `oojuro/oojuro` | Engine, rank, store, legacy compatibility libraries and storage/retrieval benchmarks |

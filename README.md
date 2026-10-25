@@ -1,9 +1,14 @@
 # Oojuro
 
-A minimal Rust engine for durable `.ojo` files: opaque bytes, atomic batches,
+A minimal Rust engine for durable `.juro` files: opaque bytes, atomic batches,
 exact reads, crash recovery and optional authenticated encryption. Normal writes
 are uncompressed. The fresh implementation in [`crates/ojo`](crates/ojo/README.md)
 is independent of the older storage/search crates.
+
+New files use `.juro`. Existing `.ojo` files and explicit paths remain supported
+without renaming or conversion; the header and version determine compatibility.
+Oojuro and its CLI/API names are unchanged. See the
+[filename decision](https://github.com/oojuro/oojuro/issues/110).
 
 The additive experimental [Event API](docs/EVENT_DATABASE.md) accepts just data;
 the engine supplies UTC acceptance time and an append cursor. It adds exact
@@ -35,7 +40,7 @@ The [v0.1.0 preview release](https://github.com/oojuro/oojuro/releases/tag/ojo-v
 also provides a checksummed Linux x86-64 package. See the
 [curl, Cargo and Homebrew installation options](crates/ojo-tools/README.md#install-from-source).
 
-The optional archive feature creates a separate compressed `.ojo` file while
+The optional archive feature creates a separate compressed `.juro` file while
 preserving the original, its checkpoints and encryption. Session lifecycle and
 24-hour idle scheduling belong to ojo-journal/ojo-cloud. See the
 [engine API, guarantees and limits](crates/ojo/README.md).
@@ -46,7 +51,7 @@ for measured workloads, SQLite comparisons and performance tradeoffs.
 
 | Repository | Purpose |
 | --- | --- |
-| [oojuro](https://github.com/oojuro/oojuro) | Embedded database engine and `.ojo` format |
+| [oojuro](https://github.com/oojuro/oojuro) | Embedded database engine and `.juro` format |
 | [o-journal](https://github.com/oojuro/o-journal) | Agent capture, sessions, recorder, CLI/MCP integrations and client SDKs |
 | [o-cloud](https://github.com/oojuro/o-cloud) | Managed hosting, sharing, accounts, billing and the `oojuro.com` website |
 | [o-release-operator](https://github.com/oojuro/o-release-operator) | Trusted release coordination for this family |

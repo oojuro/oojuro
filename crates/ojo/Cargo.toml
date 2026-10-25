@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.89"
 license = "Apache-2.0"
-description = "Embedded database for durable .ojo key/value and timestamped event journals"
+description = "Embedded database for durable .juro key/value and timestamped event journals"
 repository = "https://github.com/oojuro/oojuro"
 publish = false
 

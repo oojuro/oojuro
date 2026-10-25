@@ -115,7 +115,7 @@ fn main() -> Result<()> {
         scan_us = start.elapsed().as_secs_f64() * 1e6;
         #[cfg(feature = "archive")]
         {
-            let compressed = root.join("archive.ojo");
+            let compressed = root.join("archive.juro");
             let start = Instant::now();
             journal.archive_to(&compressed)?;
             let build_us = start.elapsed().as_secs_f64() * 1e6;

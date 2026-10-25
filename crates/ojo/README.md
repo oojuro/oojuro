@@ -1,4 +1,4 @@
-# Minimal .ojo engine
+# Minimal .juro engine
 
 For timestamp-and-data journals, use the additive experimental
 [`ojo::events` API](../../docs/EVENT_DATABASE.md). It supplies acceptance time,
@@ -25,7 +25,7 @@ use ojo::{Change, Database};
 # let root = std::env::temp_dir().join(format!("ojo-example-{:032x}",u128::from_le_bytes(ojo::request_id()?)));
 # std::fs::create_dir(&root)?;
 let key = ojo::generate_key()?; // retain securely outside the database
-let path = std::path::Path::new("session.ojo");
+let path = std::path::Path::new("session.juro");
 # let path = root.join(path);
 let mut db = Database::create(&path, Some(&key))?;
 let request = ojo::request_id()?; // retain this ID until success is certain
@@ -81,7 +81,7 @@ distributed transactions or replication. Checksums are not signatures.
 Normal `commit` always writes raw bytes, even with the `archive` feature enabled.
 The default build contains no compression library; compressed transactions return
 `Unsupported`. Enable `archive` to read both wire codecs and call
-`db.archive_to("session.archive.ojo")`. This creates a separate, atomically
+`db.archive_to("session.archive.juro")`. This creates a separate, atomically
 published file, preserves encryption/history/retry IDs, and leaves the original
 unchanged. The archive has a new file ID and physical checkpoints. Small or
 incompressible bodies stay raw. Keeping both files consumes extra disk space.

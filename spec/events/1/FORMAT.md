@@ -1,4 +1,4 @@
-# .ojo Event profile 1
+# .juro Event profile 1
 
 Profile specification: **1.0.0-draft.1**, experimental. This version is
 independent of engine releases and the underlying wire version. Normative
@@ -6,6 +6,11 @@ MUST/MUST NOT requirements supplement [wire 0.1](../../0.1/FORMAT.md).
 Together these two documents define every byte needed to read an Event file;
 no application schema, cloud service, or reference-engine code is required.
 Wire 0.1 itself is unchanged. Ordinary wire 0.1 key/value files are not Event files.
+
+Use `.juro` for new filenames. Existing `.ojo` filenames remain supported;
+renaming is never required for compatibility. Profile detection uses the
+validated header/version and marker below. The marker still contains `ojo`;
+the filename convention does not rename cryptographic domains or wire bytes.
 
 ## Logical records
 
