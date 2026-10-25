@@ -42,6 +42,13 @@ An already committed request returns the original cursor/time without an
 additional event; a changed original conflicts. Independent identical appends
 remain distinct. Retry state is engine bookkeeping, not an application schema.
 
+`get_prepared(&intent)` resolves that engine-owned identity to the exact event,
+including its original cursor/time/data, without decoding the intent's fields
+in application code. It validates journal identity, original time and data hash,
+returns `None` for an absent request, and works on read-only handles. This is a
+read, not a durable acknowledgement; confirm or retry the write before returning
+an application write ACK for a prefix reconstructed after reopen.
+
 `append_prepared_batch(&[(&intent, data), ...])` shares one final durability
 barrier across at most 1,024 events and 64 MiB of original data. Each event keeps
 its existing profile frame, individual acceptance time and exact-retry identity;
