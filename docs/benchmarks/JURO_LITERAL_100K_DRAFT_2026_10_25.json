@@ -1,0 +1,1097 @@
+{
+  "scope": "Actual100k varied NOCOMPRESS Event file and verified selected Journal.get originals, oneCPU/2GiB child address-space cap, retained OS caches. One-client3round andten-client1round results are diagnostic samples, not robust p95/hosted acceptance. Cache bytes unchanged between353d078 and068956c.",
+  "baseline": {
+    "source_revision": "353d078d04f0d6cfea95a4f25c59b6769b83e0f9",
+    "elf_sha256": "9d6211d02d59313153338298f8100152eb18d60b8dc74b894e67ba3d3a8e42bd",
+    "scope": "Actual varied 100000-row plaintext NOCOMPRESS Event source. Same verified executable compares existing layout2 versus newly built positional layout3/codec2. One CPU,2GiB address-space cap, retained OS caches. Ten-client one-round observations are diagnostic smoke, not robust p95 qualification. No1M/hosted/third-space claim.",
+    "observations": [
+      {
+        "label": "raw-v3-build",
+        "layout": 3,
+        "args": [
+          "build",
+          "<owned synthetic directory>",
+          "100000",
+          "raw",
+          "1",
+          "1",
+          "plain"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "process_metrics": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-codec-qualification-20261025/profile-literal-codec build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-scale-bench-20261025/100000 100000 raw 1 1 plain\"\n\tUser time (seconds): 165.73\n\tSystem time (seconds): 4.95\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 2:57.28\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 70068\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 1\n\tMinor (reclaiming a frame) page faults: 30390\n\tVoluntary context switches: 20783\n\tInvoluntary context switches: 6171\n\tSwaps: 0\n\tFile system inputs: 40488\n\tFile system outputs: 5579824\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "dataset": "diverse",
+          "derived_layout": 3,
+          "footprint": {
+            "allocated_index_bytes": 308817920,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 1594179584,
+              "peak_files": 279,
+              "peak_logical_bytes": 1594135531
+            },
+            "estimated_index_heap_bytes": 36651226,
+            "index_bytes": 308806972,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_build_ns": 177030243632,
+          "index_compression": "raw",
+          "phase": "build",
+          "rows": 100000,
+          "scope": "actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation",
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 245771681
+        }
+      },
+      {
+        "label": "raw-v2-single-dense",
+        "layout": 2,
+        "args": [
+          "retained-fresh",
+          "<owned synthetic directory>",
+          "100000",
+          "raw",
+          "1",
+          "3",
+          "plain",
+          "dense_phrase"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "process_metrics": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-codec-qualification-20261025/profile-literal-codec retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-scale-bench-20261025/100000 100000 raw 1 3 plain dense_phrase\"\n\tUser time (seconds): 10.08\n\tSystem time (seconds): 0.80\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:10.98\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 60876\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 16983\n\tVoluntary context switches: 39\n\tInvoluntary context switches: 210\n\tSwaps: 0\n\tFile system inputs: 415920\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 1,
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 238686208,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 996638720,
+              "peak_files": 127,
+              "peak_logical_bytes": 996615560
+            },
+            "estimated_index_heap_bytes": 36650842,
+            "index_bytes": 238679458,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "raw",
+          "index_open_ns": 31754658,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 2290096269,
+              "query_text": "\"battery electrode\"",
+              "signature": "888c12a306aa696b942e3cbba280a40305d7c26b89a2a09b9042f379a33c45da",
+              "timing": {
+                "count": 3,
+                "p50_ms": 2821.654268,
+                "p95_ms": 2868.75149,
+                "samples_ns": [
+                  2805957749,
+                  2821654268,
+                  2868751490
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 161673366
+        }
+      },
+      {
+        "label": "raw-v3-single-dense",
+        "layout": 3,
+        "args": [
+          "retained-fresh",
+          "<owned synthetic directory>",
+          "100000",
+          "raw",
+          "1",
+          "3",
+          "plain",
+          "dense_phrase"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "process_metrics": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-codec-qualification-20261025/profile-literal-codec retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-scale-bench-20261025/100000 100000 raw 1 3 plain dense_phrase\"\n\tUser time (seconds): 10.33\n\tSystem time (seconds): 0.81\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:11.24\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 61892\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 17258\n\tVoluntary context switches: 2\n\tInvoluntary context switches: 210\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 1,
+          "dataset": "diverse",
+          "derived_layout": 3,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 308817920,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 1594179584,
+              "peak_files": 279,
+              "peak_logical_bytes": 1594135531
+            },
+            "estimated_index_heap_bytes": 36651226,
+            "index_bytes": 308806972,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "raw",
+          "index_open_ns": 19795728,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 2336627896,
+              "query_text": "\"battery electrode\"",
+              "signature": "888c12a306aa696b942e3cbba280a40305d7c26b89a2a09b9042f379a33c45da",
+              "timing": {
+                "count": 3,
+                "p50_ms": 2902.583047,
+                "p95_ms": 2926.83021,
+                "samples_ns": [
+                  2876108192,
+                  2902583047,
+                  2926830210
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 168790855
+        }
+      },
+      {
+        "label": "raw-v2-ten-dense",
+        "layout": 2,
+        "args": [
+          "retained-fresh",
+          "<owned synthetic directory>",
+          "100000",
+          "raw",
+          "10",
+          "1",
+          "plain",
+          "dense_phrase"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "process_metrics": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-codec-qualification-20261025/profile-literal-codec retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-scale-bench-20261025/100000 100000 raw 10 1 plain dense_phrase\"\n\tUser time (seconds): 29.54\n\tSystem time (seconds): 1.77\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:31.60\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 79488\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 21612\n\tVoluntary context switches: 13725\n\tInvoluntary context switches: 15745\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 238686208,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 996638720,
+              "peak_files": 127,
+              "peak_logical_bytes": 996615560
+            },
+            "estimated_index_heap_bytes": 36650842,
+            "index_bytes": 238679458,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "raw",
+          "index_open_ns": 19942726,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 2148313753,
+              "query_text": "\"battery electrode\"",
+              "signature": "888c12a306aa696b942e3cbba280a40305d7c26b89a2a09b9042f379a33c45da",
+              "timing": {
+                "count": 10,
+                "p50_ms": 29158.967088,
+                "p95_ms": 29230.61526,
+                "samples_ns": [
+                  28998530736,
+                  28998588766,
+                  29015279461,
+                  29107629058,
+                  29158967088,
+                  29195739669,
+                  29201538142,
+                  29214827906,
+                  29228122453,
+                  29230615260
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 1,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 173562435
+        }
+      },
+      {
+        "label": "raw-v3-ten-dense",
+        "layout": 3,
+        "args": [
+          "retained-fresh",
+          "<owned synthetic directory>",
+          "100000",
+          "raw",
+          "10",
+          "1",
+          "plain",
+          "dense_phrase"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "process_metrics": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-codec-qualification-20261025/profile-literal-codec retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-scale-bench-20261025/100000 100000 raw 10 1 plain dense_phrase\"\n\tUser time (seconds): 30.67\n\tSystem time (seconds): 1.97\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:32.94\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 77692\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 21186\n\tVoluntary context switches: 13967\n\tInvoluntary context switches: 16486\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 3,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 308817920,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 1594179584,
+              "peak_files": 279,
+              "peak_logical_bytes": 1594135531
+            },
+            "estimated_index_heap_bytes": 36651226,
+            "index_bytes": 308806972,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "raw",
+          "index_open_ns": 20672142,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 2247259432,
+              "query_text": "\"battery electrode\"",
+              "signature": "888c12a306aa696b942e3cbba280a40305d7c26b89a2a09b9042f379a33c45da",
+              "timing": {
+                "count": 10,
+                "p50_ms": 30294.30364,
+                "p95_ms": 30491.103396,
+                "samples_ns": [
+                  29855582437,
+                  30062255173,
+                  30078827439,
+                  30223215207,
+                  30294303640,
+                  30416357174,
+                  30431744284,
+                  30442493191,
+                  30459529779,
+                  30491103396
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 1,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 169718981
+        }
+      },
+      {
+        "label": "zstd-v3-build",
+        "layout": 3,
+        "args": [
+          "build",
+          "<owned synthetic directory>",
+          "100000",
+          "zstd",
+          "1",
+          "1",
+          "plain"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "process_metrics": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-codec-qualification-20261025/profile-literal-codec build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-scale-bench-20261025/100000 100000 zstd 1 1 plain\"\n\tUser time (seconds): 167.50\n\tSystem time (seconds): 4.66\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 2:58.33\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 70348\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 23826\n\tVoluntary context switches: 18340\n\tInvoluntary context switches: 5792\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 5281600\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "dataset": "diverse",
+          "derived_layout": 3,
+          "footprint": {
+            "allocated_index_bytes": 153550848,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 1447821312,
+              "peak_files": 279,
+              "peak_logical_bytes": 1447780505
+            },
+            "estimated_index_heap_bytes": 36651229,
+            "index_bytes": 153535195,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_build_ns": 178170409014,
+          "index_compression": "zstd",
+          "phase": "build",
+          "rows": 100000,
+          "scope": "actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation",
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 161530462
+        }
+      },
+      {
+        "label": "zstd-v2-single-dense",
+        "layout": 2,
+        "args": [
+          "retained-fresh",
+          "<owned synthetic directory>",
+          "100000",
+          "zstd",
+          "1",
+          "3",
+          "plain",
+          "dense_phrase"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "process_metrics": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-codec-qualification-20261025/profile-literal-codec retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-scale-bench-20261025/100000 100000 zstd 1 3 plain dense_phrase\"\n\tUser time (seconds): 11.03\n\tSystem time (seconds): 0.64\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:11.78\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 61072\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 16975\n\tVoluntary context switches: 26\n\tInvoluntary context switches: 241\n\tSwaps: 0\n\tFile system inputs: 112536\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 1,
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 83419136,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 850280448,
+              "peak_files": 127,
+              "peak_logical_bytes": 850258824
+            },
+            "estimated_index_heap_bytes": 36650845,
+            "index_bytes": 83407726,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "zstd",
+          "index_open_ns": 24885011,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 2396896729,
+              "query_text": "\"battery electrode\"",
+              "signature": "888c12a306aa696b942e3cbba280a40305d7c26b89a2a09b9042f379a33c45da",
+              "timing": {
+                "count": 3,
+                "p50_ms": 3075.81424,
+                "p95_ms": 3115.542371,
+                "samples_ns": [
+                  2997069352,
+                  3075814240,
+                  3115542371
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 163783872
+        }
+      },
+      {
+        "label": "zstd-v3-single-dense",
+        "layout": 3,
+        "args": [
+          "retained-fresh",
+          "<owned synthetic directory>",
+          "100000",
+          "zstd",
+          "1",
+          "3",
+          "plain",
+          "dense_phrase"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "process_metrics": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-codec-qualification-20261025/profile-literal-codec retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-scale-bench-20261025/100000 100000 zstd 1 3 plain dense_phrase\"\n\tUser time (seconds): 11.35\n\tSystem time (seconds): 0.63\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:12.08\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 62532\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 17274\n\tVoluntary context switches: 2\n\tInvoluntary context switches: 345\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 1,
+          "dataset": "diverse",
+          "derived_layout": 3,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 153550848,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 1447821312,
+              "peak_files": 279,
+              "peak_logical_bytes": 1447780505
+            },
+            "estimated_index_heap_bytes": 36651229,
+            "index_bytes": 153535195,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "zstd",
+          "index_open_ns": 15288384,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 2486046682,
+              "query_text": "\"battery electrode\"",
+              "signature": "888c12a306aa696b942e3cbba280a40305d7c26b89a2a09b9042f379a33c45da",
+              "timing": {
+                "count": 3,
+                "p50_ms": 3151.929533,
+                "p95_ms": 3154.243369,
+                "samples_ns": [
+                  3100199685,
+                  3151929533,
+                  3154243369
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 168697426
+        }
+      },
+      {
+        "label": "zstd-v2-ten-dense",
+        "layout": 2,
+        "args": [
+          "retained-fresh",
+          "<owned synthetic directory>",
+          "100000",
+          "zstd",
+          "10",
+          "1",
+          "plain",
+          "dense_phrase"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "process_metrics": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-codec-qualification-20261025/profile-literal-codec retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-scale-bench-20261025/100000 100000 zstd 10 1 plain dense_phrase\"\n\tUser time (seconds): 32.47\n\tSystem time (seconds): 1.60\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:34.35\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 76624\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 20842\n\tVoluntary context switches: 14154\n\tInvoluntary context switches: 16896\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 2,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 83419136,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 850280448,
+              "peak_files": 127,
+              "peak_logical_bytes": 850258824
+            },
+            "estimated_index_heap_bytes": 36650845,
+            "index_bytes": 83407726,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "zstd",
+          "index_open_ns": 14854482,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 2379309033,
+              "query_text": "\"battery electrode\"",
+              "signature": "888c12a306aa696b942e3cbba280a40305d7c26b89a2a09b9042f379a33c45da",
+              "timing": {
+                "count": 10,
+                "p50_ms": 31714.74747,
+                "p95_ms": 31782.34396,
+                "samples_ns": [
+                  31606832885,
+                  31670362957,
+                  31700833637,
+                  31706358913,
+                  31714747470,
+                  31750584054,
+                  31755212751,
+                  31758642864,
+                  31767084174,
+                  31782343960
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 1,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 166821758
+        }
+      },
+      {
+        "label": "zstd-v3-ten-dense",
+        "layout": 3,
+        "args": [
+          "retained-fresh",
+          "<owned synthetic directory>",
+          "100000",
+          "zstd",
+          "10",
+          "1",
+          "plain",
+          "dense_phrase"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "process_metrics": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-codec-qualification-20261025/profile-literal-codec retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-scale-bench-20261025/100000 100000 zstd 10 1 plain dense_phrase\"\n\tUser time (seconds): 33.38\n\tSystem time (seconds): 1.65\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:35.32\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 81588\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 22145\n\tVoluntary context switches: 14386\n\tInvoluntary context switches: 17332\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 3,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 153550848,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 1447821312,
+              "peak_files": 279,
+              "peak_logical_bytes": 1447780505
+            },
+            "estimated_index_heap_bytes": 36651229,
+            "index_bytes": 153535195,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "zstd",
+          "index_open_ns": 14832310,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 2511484393,
+              "query_text": "\"battery electrode\"",
+              "signature": "888c12a306aa696b942e3cbba280a40305d7c26b89a2a09b9042f379a33c45da",
+              "timing": {
+                "count": 10,
+                "p50_ms": 32346.805139,
+                "p95_ms": 32615.04932,
+                "samples_ns": [
+                  32229914928,
+                  32242338919,
+                  32294067988,
+                  32306638989,
+                  32346805139,
+                  32371690492,
+                  32482122855,
+                  32541901969,
+                  32542090277,
+                  32615049320
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 1,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 168084709
+        }
+      }
+    ],
+    "filesystem": {
+      "source_bytes": 196038218,
+      "source_allocated_bytes": 196038656,
+      "indexes": {
+        "raw-v2": {
+          "file_count": 7,
+          "apparent_bytes": 238679458,
+          "allocated_bytes_including_directories": 238686208
+        },
+        "raw-v3": {
+          "file_count": 9,
+          "apparent_bytes": 308806972,
+          "allocated_bytes_including_directories": 308817920
+        },
+        "zstd-v2": {
+          "file_count": 7,
+          "apparent_bytes": 83407726,
+          "allocated_bytes_including_directories": 83419136
+        },
+        "zstd-v3": {
+          "file_count": 9,
+          "apparent_bytes": 153535195,
+          "allocated_bytes_including_directories": 153550848
+        }
+      }
+    },
+    "owned_source_and_index_copies_removed": false
+  },
+  "single_probe": {
+    "revision": "068956c0e2e75fd7b323a87713f146e0e8da39b7",
+    "elf_sha256": "2be4eb5958d16c3fed7c30bc44aac081ec57a5a8c6aeda30707f1806abb11010",
+    "scope": "Diagnostic only: same actual100k varied source+codec2 indexes, one client/three rounds, final-result cache bypassed,1CPU/2GiB address cap, retained OS caches. Not robust p95/hosted acceptance.",
+    "observations": [
+      {
+        "codec": "raw",
+        "args": [
+          "retained-fresh",
+          "<owned synthetic directory>",
+          "100000",
+          "raw",
+          "1",
+          "3",
+          "plain",
+          "dense_phrase"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "process_metrics": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-row-range-qualification-20261025/profile-literal-row-range retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-scale-bench-20261025/100000 100000 raw 1 3 plain dense_phrase\"\n\tUser time (seconds): 0.55\n\tSystem time (seconds): 0.05\n\tPercent of CPU this job got: 98%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.61\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 61056\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 17070\n\tVoluntary context switches: 72\n\tInvoluntary context switches: 8\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 1,
+          "dataset": "diverse",
+          "derived_layout": 3,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 308817920,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 1594179584,
+              "peak_files": 279,
+              "peak_logical_bytes": 1594135531
+            },
+            "estimated_index_heap_bytes": 36651226,
+            "index_bytes": 308806972,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "raw",
+          "index_open_ns": 19737640,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 103917792,
+              "query_text": "\"battery electrode\"",
+              "signature": "888c12a306aa696b942e3cbba280a40305d7c26b89a2a09b9042f379a33c45da",
+              "timing": {
+                "count": 3,
+                "p50_ms": 106.292024,
+                "p95_ms": 114.159872,
+                "samples_ns": [
+                  103683221,
+                  106292024,
+                  114159872
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 158799167
+        }
+      },
+      {
+        "codec": "zstd",
+        "args": [
+          "retained-fresh",
+          "<owned synthetic directory>",
+          "100000",
+          "zstd",
+          "1",
+          "3",
+          "plain",
+          "dense_phrase"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "process_metrics": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-row-range-qualification-20261025/profile-literal-row-range retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-scale-bench-20261025/100000 100000 zstd 1 3 plain dense_phrase\"\n\tUser time (seconds): 0.54\n\tSystem time (seconds): 0.05\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.59\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 61444\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 17024\n\tVoluntary context switches: 6\n\tInvoluntary context switches: 17\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 1,
+          "dataset": "diverse",
+          "derived_layout": 3,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 153550848,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 1447821312,
+              "peak_files": 279,
+              "peak_logical_bytes": 1447780505
+            },
+            "estimated_index_heap_bytes": 36651229,
+            "index_bytes": 153535195,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "zstd",
+          "index_open_ns": 14905703,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 105639359,
+              "query_text": "\"battery electrode\"",
+              "signature": "888c12a306aa696b942e3cbba280a40305d7c26b89a2a09b9042f379a33c45da",
+              "timing": {
+                "count": 3,
+                "p50_ms": 103.278244,
+                "p95_ms": 104.43129,
+                "samples_ns": [
+                  102811997,
+                  103278244,
+                  104431290
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 3,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 160747159
+        }
+      }
+    ]
+  },
+  "ten_probe": {
+    "revision": "068956c0e2e75fd7b323a87713f146e0e8da39b7",
+    "elf_sha256": "2be4eb5958d16c3fed7c30bc44aac081ec57a5a8c6aeda30707f1806abb11010",
+    "scope": "Diagnostic only: same actual100k varied source+codec2 indexes, ten clients/one round, final-result cache bypassed,1CPU/2GiB address cap, retained OS caches. Not robust p95/hosted acceptance.",
+    "observations": [
+      {
+        "codec": "raw",
+        "args": [
+          "retained-fresh",
+          "<owned synthetic directory>",
+          "100000",
+          "raw",
+          "10",
+          "1",
+          "plain",
+          "dense_phrase"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "process_metrics": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-row-range-qualification-20261025/profile-literal-row-range retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-scale-bench-20261025/100000 100000 raw 10 1 plain dense_phrase\"\n\tUser time (seconds): 1.10\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.16\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 75600\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 20648\n\tVoluntary context switches: 191\n\tInvoluntary context switches: 432\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 3,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 308817920,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 1594179584,
+              "peak_files": 279,
+              "peak_logical_bytes": 1594135531
+            },
+            "estimated_index_heap_bytes": 36651226,
+            "index_bytes": 308806972,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "raw",
+          "index_open_ns": 19614084,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 103453225,
+              "query_text": "\"battery electrode\"",
+              "signature": "888c12a306aa696b942e3cbba280a40305d7c26b89a2a09b9042f379a33c45da",
+              "timing": {
+                "count": 10,
+                "p50_ms": 856.565344,
+                "p95_ms": 872.557556,
+                "samples_ns": [
+                  839687116,
+                  840766081,
+                  842824225,
+                  851529987,
+                  856565344,
+                  861975366,
+                  866208098,
+                  870211957,
+                  871363538,
+                  872557556
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 1,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 159319857
+        }
+      },
+      {
+        "codec": "zstd",
+        "args": [
+          "retained-fresh",
+          "<owned synthetic directory>",
+          "100000",
+          "zstd",
+          "10",
+          "1",
+          "plain",
+          "dense_phrase"
+        ],
+        "returncode": 0,
+        "stderr": "",
+        "process_metrics": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-row-range-qualification-20261025/profile-literal-row-range retained-fresh /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/literal-scale-bench-20261025/100000 100000 zstd 10 1 plain dense_phrase\"\n\tUser time (seconds): 1.10\n\tSystem time (seconds): 0.04\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:01.16\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 75668\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 20617\n\tVoluntary context switches: 148\n\tInvoluntary context switches: 426\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 0\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "result": {
+          "clients": 10,
+          "dataset": "diverse",
+          "derived_layout": 3,
+          "final_rank_reuse": false,
+          "footprint": {
+            "allocated_index_bytes": 153550848,
+            "build_metrics": {
+              "peak_allocated_bytes_observed": 1447821312,
+              "peak_files": 279,
+              "peak_logical_bytes": 1447780505
+            },
+            "estimated_index_heap_bytes": 36651229,
+            "index_bytes": 153535195,
+            "indexed_rows": 99899,
+            "text_bytes": 176436947
+          },
+          "index_compression": "zstd",
+          "index_open_ns": 14785870,
+          "initial_query_warms_index_pages_and_postings": true,
+          "phase": "retained-fresh",
+          "queries": [
+            {
+              "case": "dense_phrase",
+              "initial_query_ns": 105466318,
+              "query_text": "\"battery electrode\"",
+              "signature": "888c12a306aa696b942e3cbba280a40305d7c26b89a2a09b9042f379a33c45da",
+              "timing": {
+                "count": 10,
+                "p50_ms": 846.239153,
+                "p95_ms": 870.574336,
+                "samples_ns": [
+                  837880396,
+                  844663381,
+                  845004237,
+                  845293831,
+                  846239153,
+                  849983002,
+                  851496247,
+                  862373223,
+                  863394970,
+                  870574336
+                ]
+              }
+            }
+          ],
+          "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+          "rounds": 1,
+          "rows": 100000,
+          "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+          "source_bytes": 196038218,
+          "source_compression": "NOCOMPRESS",
+          "source_encrypted": false,
+          "source_open_ns": 159077118
+        }
+      }
+    ]
+  },
+  "old_syscalls": {
+    "scope": "Instrumented syscall counts for actual100k varied dense phrase; two full queries (initial+one timed), source/index opens included. Instrumented timings are not latency qualification.",
+    "args": [
+      "<owned synthetic path>",
+      "-f",
+      "-c",
+      "-e",
+      "trace=openat,pread64,close",
+      "-o",
+      "<owned synthetic path>",
+      "taskset",
+      "-c",
+      "0",
+      "<owned synthetic path>",
+      "retained-fresh",
+      "<owned synthetic path>",
+      "100000",
+      "raw",
+      "1",
+      "1",
+      "plain",
+      "dense_phrase"
+    ],
+    "elf_sha256": "9d6211d02d59313153338298f8100152eb18d60b8dc74b894e67ba3d3a8e42bd",
+    "returncode": 0,
+    "stderr": "",
+    "syscalls": "% time     seconds  usecs/call     calls    errors syscall\n------ ----------- ----------- --------- --------- ----------------\n 42.13    0.113624           0    201873        12 openat\n 34.73    0.093665           0    201877           pread64\n 23.15    0.062430           0    201861           close\n------ ----------- ----------- --------- --------- ----------------\n100.00    0.269719           0    605611        12 total\n",
+    "result": {
+      "clients": 1,
+      "dataset": "diverse",
+      "derived_layout": 3,
+      "final_rank_reuse": false,
+      "footprint": {
+        "allocated_index_bytes": 308817920,
+        "build_metrics": {
+          "peak_allocated_bytes_observed": 1594179584,
+          "peak_files": 279,
+          "peak_logical_bytes": 1594135531
+        },
+        "estimated_index_heap_bytes": 36651226,
+        "index_bytes": 308806972,
+        "indexed_rows": 99899,
+        "text_bytes": 176436947
+      },
+      "index_compression": "raw",
+      "index_open_ns": 25562228,
+      "initial_query_warms_index_pages_and_postings": true,
+      "phase": "retained-fresh",
+      "queries": [
+        {
+          "case": "dense_phrase",
+          "initial_query_ns": 6674025149,
+          "query_text": "\"battery electrode\"",
+          "signature": "888c12a306aa696b942e3cbba280a40305d7c26b89a2a09b9042f379a33c45da",
+          "timing": {
+            "count": 1,
+            "p50_ms": 7743.214844,
+            "p95_ms": 7743.214844,
+            "samples_ns": [
+              7743214844
+            ]
+          }
+        }
+      ],
+      "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+      "rounds": 1,
+      "rows": 100000,
+      "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+      "source_bytes": 196038218,
+      "source_compression": "NOCOMPRESS",
+      "source_encrypted": false,
+      "source_open_ns": 200290248
+    }
+  },
+  "new_syscalls": {
+    "scope": "Instrumented syscall counts for actual100k varied dense phrase; two full queries (initial+one timed), source/index opens included. Instrumented timings are not latency qualification.",
+    "args": [
+      "<owned synthetic path>",
+      "-f",
+      "-c",
+      "-e",
+      "trace=openat,pread64,close",
+      "-o",
+      "<owned synthetic path>",
+      "taskset",
+      "-c",
+      "0",
+      "<owned synthetic path>",
+      "retained-fresh",
+      "<owned synthetic path>",
+      "100000",
+      "raw",
+      "1",
+      "1",
+      "plain",
+      "dense_phrase"
+    ],
+    "elf_sha256": "2be4eb5958d16c3fed7c30bc44aac081ec57a5a8c6aeda30707f1806abb11010",
+    "returncode": 0,
+    "stderr": "",
+    "syscalls": "% time     seconds  usecs/call     calls    errors syscall\n------ ----------- ----------- --------- --------- ----------------\n 76.91    0.000976           1       760           pread64\n 14.42    0.000183           0       756        12 openat\n  8.67    0.000110           0       744           close\n------ ----------- ----------- --------- --------- ----------------\n100.00    0.001269           0      2260        12 total\n",
+    "result": {
+      "clients": 1,
+      "dataset": "diverse",
+      "derived_layout": 3,
+      "final_rank_reuse": false,
+      "footprint": {
+        "allocated_index_bytes": 308817920,
+        "build_metrics": {
+          "peak_allocated_bytes_observed": 1594179584,
+          "peak_files": 279,
+          "peak_logical_bytes": 1594135531
+        },
+        "estimated_index_heap_bytes": 36651226,
+        "index_bytes": 308806972,
+        "indexed_rows": 99899,
+        "text_bytes": 176436947
+      },
+      "index_compression": "raw",
+      "index_open_ns": 25112336,
+      "initial_query_warms_index_pages_and_postings": true,
+      "phase": "retained-fresh",
+      "queries": [
+        {
+          "case": "dense_phrase",
+          "initial_query_ns": 117334431,
+          "query_text": "\"battery electrode\"",
+          "signature": "888c12a306aa696b942e3cbba280a40305d7c26b89a2a09b9042f379a33c45da",
+          "timing": {
+            "count": 1,
+            "p50_ms": 125.903184,
+            "p95_ms": 125.903184,
+            "samples_ns": [
+              125903184
+            ]
+          }
+        }
+      ],
+      "retained_source_callbacks_serialize_on_one_healthy_handle": true,
+      "rounds": 1,
+      "rows": 100000,
+      "scope": "actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
+      "source_bytes": 196038218,
+      "source_compression": "NOCOMPRESS",
+      "source_encrypted": false,
+      "source_open_ns": 189386568
+    }
+  }
+}
