@@ -171,22 +171,22 @@ impl Appender {
         while let Some((offset, analysis)) = reader.next()? {
             let ordinal =
                 u32::try_from(self.previous.rows + u64::from(offset)).map_err(|_| Error::Bounds)?;
-            if let Some(positions) = &mut sorted_positions {
-                if analysis.metadata.indexed {
-                    let bytes = read_blob(
-                        &directory,
-                        &cipher,
-                        &authority,
-                        &b.blobs.files,
-                        &analysis.metadata.text,
-                        MAX_TEXT_BYTES,
-                    )?;
-                    if *blake3::hash(&bytes).as_bytes() != analysis.metadata.text_digest {
-                        return Err(Error::Authority);
-                    }
-                    let text = std::str::from_utf8(&bytes).map_err(|_| Error::Authority)?;
-                    literal::push(positions, ordinal, text)?;
+            if let Some(positions) = &mut sorted_positions
+                && analysis.metadata.indexed
+            {
+                let bytes = read_blob(
+                    &directory,
+                    &cipher,
+                    &authority,
+                    &b.blobs.files,
+                    &analysis.metadata.text,
+                    MAX_TEXT_BYTES,
+                )?;
+                if *blake3::hash(&bytes).as_bytes() != analysis.metadata.text_digest {
+                    return Err(Error::Authority);
                 }
+                let text = std::str::from_utf8(&bytes).map_err(|_| Error::Authority)?;
+                literal::push(positions, ordinal, text)?;
             }
             sorted_ids.push(tree::Entry {
                 key: analysis.metadata.id.as_bytes().to_vec(),

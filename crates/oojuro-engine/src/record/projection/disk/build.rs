@@ -242,22 +242,22 @@ impl Builder {
             .then(|| tree::Sorter::new(make(tree::Purpose::ProjectionTerms)))
             .transpose()?;
         self.read_rows(|ordinal, analysis| {
-            if let Some(positions) = &mut position_rows {
-                if analysis.metadata.indexed {
-                    let bytes = read_blob(
-                        &directory,
-                        &cipher,
-                        &authority,
-                        &self.blobs.files,
-                        &analysis.metadata.text,
-                        MAX_TEXT_BYTES,
-                    )?;
-                    if *blake3::hash(&bytes).as_bytes() != analysis.metadata.text_digest {
-                        return Err(Error::Authority);
-                    }
-                    let text = std::str::from_utf8(&bytes).map_err(|_| Error::Authority)?;
-                    literal::push(positions, ordinal, text)?;
+            if let Some(positions) = &mut position_rows
+                && analysis.metadata.indexed
+            {
+                let bytes = read_blob(
+                    &directory,
+                    &cipher,
+                    &authority,
+                    &self.blobs.files,
+                    &analysis.metadata.text,
+                    MAX_TEXT_BYTES,
+                )?;
+                if *blake3::hash(&bytes).as_bytes() != analysis.metadata.text_digest {
+                    return Err(Error::Authority);
                 }
+                let text = std::str::from_utf8(&bytes).map_err(|_| Error::Authority)?;
+                literal::push(positions, ordinal, text)?;
             }
             ids.push(tree::Entry {
                 key: analysis.metadata.id.as_bytes().to_vec(),

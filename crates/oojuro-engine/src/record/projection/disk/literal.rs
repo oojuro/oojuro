@@ -396,9 +396,12 @@ impl<'a> Cursor<'a> {
                 .groups
                 .iter()
                 .flat_map(|group| {
-                    group.rows.iter().enumerate().filter_map(|(word, mask)| {
-                        (*mask != 0).then(|| base + (word * 64) as u32 + mask.trailing_zeros())
-                    })
+                    group
+                        .rows
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, mask)| **mask != 0)
+                        .map(|(word, mask)| base + (word * 64) as u32 + mask.trailing_zeros())
                 })
                 .min()
                 .ok_or(Error::Authority)?;

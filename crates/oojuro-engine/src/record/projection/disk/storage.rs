@@ -31,6 +31,7 @@ pub(super) struct Authority {
     pub budget: Option<Arc<budget::Budget>>,
 }
 impl Authority {
+    #[cfg(test)]
     pub fn new(binding: &Binding) -> Result<Self> {
         Self::for_layout(binding, FORMAT)
     }
