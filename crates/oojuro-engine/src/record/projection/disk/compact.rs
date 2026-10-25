@@ -7,6 +7,7 @@ pub(super) struct TfBlock {
     bytes: Vec<u8>,
     present: [u64; 4],
     count: usize,
+    maximum: u32,
 }
 impl TfBlock {
     pub(super) fn encode(base: u32, pairs: &[(u32, u32)]) -> Result<Vec<u8>> {
@@ -128,11 +129,24 @@ impl TfBlock {
                 return Err(Error::Authority);
             }
         }
+        let maximum = match bytes[0] {
+            0 => bytes[3..]
+                .as_chunks::<5>()
+                .0
+                .iter()
+                .map(|pair| u32::from_le_bytes(pair[1..].try_into().unwrap()))
+                .max()
+                .unwrap(),
+            1 => u32::MAX >> (32 - bytes[1]),
+            2 => u32::from_le_bytes(bytes[1..5].try_into().unwrap()),
+            _ => unreachable!(),
+        };
         Ok(Self {
             base,
             bytes,
             present,
             count,
+            maximum,
         })
     }
     pub(super) fn pairs(&self) -> Vec<(u32, u32)> {
@@ -164,6 +178,9 @@ impl TfBlock {
             }
         }
         None
+    }
+    pub(super) fn maximum(&self) -> u32 {
+        self.maximum
     }
     pub(super) fn presence(&self) -> [u64; 4] {
         self.present
@@ -279,13 +296,17 @@ pub(super) struct Mass {
     pub(super) live: Vec<u64>,
     length: Vec<(u8, Vec<u64>)>,
     scope: Vec<(u8, Vec<u64>)>,
+    pub(super) shapes: Vec<BlockShape>,
 }
 
 // Under a fixed exact (length,scope) shape, score is monotone in every TF.
 // Scope also appears positively as TF*scope/length, so independently minimizing
 // length/scope is unsafe. Heterogeneous/empty shapes deliberately do not prune.
-#[cfg(test)]
-fn shape_bound(model: &scorer::Model, shapes: &[(u32, u32)], maximum_tf: &[u32]) -> Option<f64> {
+pub(super) fn shape_bound(
+    model: &scorer::Model,
+    shapes: &[(u32, u32)],
+    maximum_tf: &[u32],
+) -> Option<f64> {
     if shapes.is_empty() || shapes.len() > 16 || maximum_tf.len() != model.plan.terms.len() {
         return None;
     }
@@ -326,6 +347,41 @@ fn scope_bounds_preserve_positive_scope_mass_and_exact_shape_arithmetic() {
     assert!(shape_bound(&model, &[(0, 0)], &[1]).is_none());
     assert!(shape_bound(&model, &[(100, 10); 17], &[1]).is_none());
 }
+pub(super) struct BlockShape {
+    values: [(u32, u32); 16],
+    count: usize,
+    pub(super) time: i64,
+    pub(super) label: u128,
+}
+impl Default for BlockShape {
+    fn default() -> Self {
+        Self {
+            values: [(0, 0); 16],
+            count: 0,
+            time: i64::MIN,
+            label: u128::MAX,
+        }
+    }
+}
+impl BlockShape {
+    pub(super) fn values(&self) -> &[(u32, u32)] {
+        if self.count > 16 {
+            &[]
+        } else {
+            &self.values[..self.count]
+        }
+    }
+    fn add(&mut self, column: &Column) {
+        self.time = self.time.max(column.valid_at);
+        self.label = self.label.min(column.label);
+        if self.count <= 16 && !self.values[..self.count].contains(&(column.length, column.scope)) {
+            if self.count < 16 {
+                self.values[self.count] = (column.length, column.scope);
+            }
+            self.count += 1;
+        }
+    }
+}
 impl Mass {
     pub(super) fn required(rows: usize, length: u32, scope: u32) -> Result<usize> {
         let planes = (length.count_ones() + scope.count_ones()) as usize;
@@ -334,7 +390,9 @@ impl Mass {
             .and_then(|bytes| bytes.checked_mul(1 + planes))
             .and_then(|bytes| {
                 bytes.checked_add(
-                    planes * std::mem::size_of::<(u8, Vec<u64>)>() + std::mem::size_of::<Self>(),
+                    planes * std::mem::size_of::<(u8, Vec<u64>)>()
+                        + std::mem::size_of::<Self>()
+                        + rows.div_ceil(256) * std::mem::size_of::<BlockShape>(),
                 )
             })
             .ok_or(Error::Bounds)
@@ -372,11 +430,15 @@ impl Mass {
             live: vec![0; words],
             length: make(length),
             scope: make(scope),
+            shapes: std::iter::repeat_with(BlockShape::default)
+                .take(rows.div_ceil(256))
+                .collect(),
         };
         for (ordinal, column) in columns.iter().flat_map(|block| block.iter()).enumerate() {
             if !column.live() || !column.indexed() {
                 continue;
             }
+            result.shapes[ordinal / 256].add(column);
             let word = ordinal / 64;
             let flag = 1u64 << (ordinal % 64);
             result.live[word] |= flag;
@@ -421,6 +483,7 @@ impl Mass {
     }
     pub(super) fn bytes(&self) -> usize {
         self.live.capacity() * 8
+            + self.shapes.capacity() * std::mem::size_of::<BlockShape>()
             + (self.length.capacity() + self.scope.capacity())
                 * std::mem::size_of::<(u8, Vec<u64>)>()
             + self

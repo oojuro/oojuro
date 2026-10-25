@@ -92,6 +92,28 @@ impl Pairs {
         }
         self.next(block, at)
     }
+    pub fn maximum(&self, base: u32) -> Option<u32> {
+        let Self::Compact { blocks, .. } = self else {
+            return None;
+        };
+        Some(
+            blocks
+                .binary_search_by_key(&base, compact::TfBlock::base)
+                .ok()
+                .map_or(0, |at| blocks[at].maximum()),
+        )
+    }
+    pub fn tf(&self, row: u32) -> Option<u32> {
+        let Self::Compact { blocks, .. } = self else {
+            return None;
+        };
+        Some(
+            blocks
+                .binary_search_by_key(&(row & !255), compact::TfBlock::base)
+                .ok()
+                .map_or(0, |at| blocks[at].tf(row as u8)),
+        )
+    }
     pub fn presence(
         &self,
         union: &mut [u64],

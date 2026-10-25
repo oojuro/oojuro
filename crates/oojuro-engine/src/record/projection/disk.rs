@@ -8,6 +8,7 @@ mod build;
 mod compact;
 mod events;
 mod query_cache;
+mod score_blocks;
 mod storage;
 mod term_cache;
 use super::*;
@@ -557,6 +558,9 @@ impl Index {
         };
         let anchored = plan.continues();
         let model = stats.finish(plan);
+        if let Some(top) = self.rank_compact_blocks(&model, &selection, q.k)? {
+            return Ok((self.ranked(top)?, anchored));
+        }
         let mut scores = self
             .mass
             .as_ref()
@@ -880,6 +884,21 @@ impl Top {
             heap: BinaryHeap::new(),
             limit,
         }
+    }
+    fn admits_bound(&self, bits: f64, time: i64, label: u128) -> bool {
+        self.heap.len() < self.limit
+            || self.heap.peek().is_none_or(|worst| {
+                compare(
+                    &Scored {
+                        ordinal: 0,
+                        bits,
+                        time,
+                        label,
+                    },
+                    worst,
+                )
+                .is_le()
+            })
     }
     fn push(&mut self, value: Scored) {
         if self.limit == 0 {

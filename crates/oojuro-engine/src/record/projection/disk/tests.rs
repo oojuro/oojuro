@@ -540,6 +540,112 @@ fn incremental_prefix_append_retire_and_reopen_match_complete_global_model() {
 }
 
 #[test]
+fn compact_block_bounds_match_complete_rank_bits_ties_filters_and_retirement() {
+    let mut rows: Vec<_> = (0..20_001)
+        .map(|i| {
+            let mut row = row(i);
+            row.text = "alpha beta".into();
+            row.indexed = true;
+            row
+        })
+        .collect();
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("compact");
+        let index = build_layout(&path, &rows, compression, true);
+        let q = query("alpha beta", Filter::default(), i64::MIN, i64::MAX);
+        let plan = scorer::Plan::new(q.text, false, None, &BTreeSet::new(), &BTreeMap::new());
+        let model = index
+            .compact_statistics(&plan, None)
+            .unwrap()
+            .unwrap()
+            .finish(plan);
+        // More rows than the bounded exhaustive trial: Some proves that this
+        // cohort actually prunes blocks and can complete under that work cap.
+        assert!(
+            index
+                .rank_compact_blocks(&model, &Selection::new(&q), q.k)
+                .unwrap()
+                .is_some()
+        );
+        let mut next = binding();
+        next.view[0] ^= 1;
+        let mut append = Appender::extend_validated_prefix(
+            &index,
+            next.clone(),
+            Limits {
+                compression,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        let retired = rows[58].id.clone();
+        append.retire(&retired).unwrap();
+        let index = append.finish().unwrap();
+        let live: Vec<_> = rows
+            .iter()
+            .filter(|row| row.id != retired)
+            .cloned()
+            .collect();
+        let originals: BTreeMap<_, _> = live
+            .iter()
+            .map(|row| (row.id.clone(), row.clone()))
+            .collect();
+        let reference = super::super::Index::build(next.clone(), live).unwrap();
+        for text in ["alpha beta", "alpha alpha beta", "alpha absent", "beta"] {
+            for filter in [
+                Filter::default(),
+                Filter {
+                    agent_id: Some("agent-3".into()),
+                    ..Filter::default()
+                },
+            ] {
+                for (from, to) in [(i64::MIN, i64::MAX), (-5, 7)] {
+                    let q = query(text, filter.clone(), from, to);
+                    let got = index.rank_uncached(&next, &q).unwrap();
+                    assert_eq!(
+                        fingerprint(
+                            &index
+                                .materialize(&next, &q, &got, |id| Ok(originals[id].clone()))
+                                .unwrap()
+                        ),
+                        fingerprint(&reference.search(&next, &q).unwrap()),
+                        "{text} {compression:?} {from} {to}"
+                    );
+                }
+            }
+        }
+    }
+    // Deliberately heterogeneous TF/shape correlations exercise a loose bound
+    // and the exact bounded-work fallback instead of independent minima.
+    for (i, row) in rows.iter_mut().enumerate() {
+        row.text = format!("{} beta", "alpha ".repeat(1 + i % 37));
+    }
+    let scratch = Scratch::new();
+    let index = build_layout(
+        &scratch.0.join("heterogeneous"),
+        &rows,
+        Compression::Raw,
+        true,
+    );
+    let reference = super::super::Index::build(binding(), rows.clone()).unwrap();
+    let originals: BTreeMap<_, _> = rows
+        .iter()
+        .map(|row| (row.id.clone(), row.clone()))
+        .collect();
+    let q = query("alpha beta", Filter::default(), i64::MIN, i64::MAX);
+    let ranked = index.rank_uncached(&binding(), &q).unwrap();
+    assert_eq!(
+        fingerprint(
+            &index
+                .materialize(&binding(), &q, &ranked, |id| Ok(originals[id].clone()))
+                .unwrap()
+        ),
+        fingerprint(&reference.search(&binding(), &q).unwrap())
+    );
+}
+
+#[test]
 fn sparse_identifier_driver_keeps_exact_floor_and_filtered_view_statistics() {
     let mut rows = (0..1300).map(row).collect::<Vec<_>>();
     for (i, row) in rows.iter_mut().enumerate() {
