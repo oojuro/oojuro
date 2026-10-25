@@ -66,6 +66,11 @@ exposure, scale measurements and consumer adoption are tracked by
 [issue #106](https://github.com/oojuro/oojuro/issues/106). No legacy search or KV
 benchmark may stand in for Event-path evidence.
 
+The [generic file tool](../crates/ojo-tools/README.md) also exposes `init`,
+`append`, `read`, `scan` and a bounded `follow` page. Existing KV commands retain
+their meanings. CLI follow drops read handles between snapshots; a persistent
+writer uses the embedded collector or an application-owned service instead.
+
 ## Independent non-agent example
 
 ```sh

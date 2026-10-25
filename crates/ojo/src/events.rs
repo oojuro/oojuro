@@ -262,10 +262,41 @@ impl Journal {
 
     pub fn append_prepared(&mut self, intent: &AppendIntent, data: &[u8]) -> Result<Receipt> {
         self.writable(data)?;
+        self.check_intent_data(intent, data)?;
+        self.accept(intent.request, intent.accepted_at, data)
+    }
+
+    /// Validates retained input without requiring a writable handle or changing
+    /// a torn tail. A previously committed request also checks its exact original.
+    /// This is validation, not a durable acknowledgement or writer reservation.
+    pub fn check_intent(&mut self, intent: &AppendIntent, data: &[u8]) -> Result<()> {
+        self.check_intent_data(intent, data)?;
+        if let Some(&index) = self.db.requests.get(&intent.request) {
+            if index == 0 || self.events[index - 1].accepted_at != intent.accepted_at {
+                return Err(Error::Conflict);
+            }
+            let cursor = self.cursor(index as u64, self.events[index - 1]);
+            if self
+                .get(cursor)?
+                .ok_or(Error::Corrupt("missing retry original"))?
+                .data
+                != data
+            {
+                return Err(Error::Conflict);
+            }
+        }
+        Ok(())
+    }
+
+    fn check_intent_data(&self, intent: &AppendIntent, data: &[u8]) -> Result<()> {
+        self.db.healthy()?;
+        if data.len() > wire::MAX_VALUE {
+            return Err(Error::Invalid("event data length"));
+        }
         if intent.journal != self.id || wire::hash(&[data]) != intent.data_hash {
             return Err(Error::Conflict);
         }
-        self.accept(intent.request, intent.accepted_at, data)
+        Ok(())
     }
 
     fn writable(&self, data: &[u8]) -> Result<()> {

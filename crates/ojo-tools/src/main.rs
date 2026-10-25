@@ -1,4 +1,5 @@
 //! Generic file tools; agent/session policy belongs to ojo-journal.
+mod events;
 use ojo::{Change, Checkpoint, Database};
 use serde_json::{Value, json};
 use std::{
@@ -11,6 +12,23 @@ use std::{
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 const HELP: &str = "ojo — portable .ojo file tools (experimental wire 0.1)
 
+  ojo init FILE [--key-file PRIVATE_KEY]
+  ojo append FILE DATA_FILE [--intent PRIVATE_INTENT] [--key-file PRIVATE_KEY]
+  ojo read FILE CURSOR_HEX [--output NEW_FILE] [--key-file PRIVATE_KEY]
+  ojo scan FILE [--after CURSOR_HEX] [--limit N] [--from MICROS] [--to MICROS]
+  ojo follow FILE [--after CURSOR_HEX] [--limit N] [--wait-ms N]
+    scan/follow also accept --key-file PRIVATE_KEY.
+
+init creates a timestamp-and-data journal. append supplies engine UTC time and
+an opaque cursor. DATA_FILE may be - for stdin. Retain --intent for safe retries
+after a lost acknowledgement; the engine creates it privately before committing.
+read writes exact bytes. scan emits a bounded JSON page with hexadecimal data;
+time ranges use [from,to) UTC Unix microseconds. follow returns one bounded live
+page, waiting up to 1,000 ms by default (maximum 60,000); resume with its cursor.
+CLI follow reopens between polls; embedded applications can use the healthy
+Collector API. A persistent external writer excludes CLI readers under wire 0.1.
+
+Key/value compatibility and file inspection:
   ojo create FILE [--key-file PRIVATE_KEY]
   ojo keygen PRIVATE_KEY
   ojo request-id
@@ -39,6 +57,12 @@ struct Arguments {
     key_file: Option<PathBuf>,
     request: Option<OsString>,
     output: Option<PathBuf>,
+    intent: Option<PathBuf>,
+    after: Option<OsString>,
+    limit: Option<OsString>,
+    from: Option<OsString>,
+    to: Option<OsString>,
+    wait_ms: Option<OsString>,
 }
 
 fn arguments(values: impl Iterator<Item = OsString>) -> Result<Arguments> {
@@ -63,6 +87,36 @@ fn arguments(values: impl Iterator<Item = OsString>) -> Result<Arguments> {
                 return Err("duplicate --output".into());
             }
             result.output = Some(values.next().ok_or("missing output file")?.into());
+        } else if !positional_only && value == "--intent" {
+            if result.intent.is_some() {
+                return Err("duplicate --intent".into());
+            }
+            result.intent = Some(values.next().ok_or("missing intent file")?.into());
+        } else if !positional_only && value == "--after" {
+            if result.after.is_some() {
+                return Err("duplicate --after".into());
+            }
+            result.after = Some(values.next().ok_or("missing event cursor")?);
+        } else if !positional_only && value == "--limit" {
+            if result.limit.is_some() {
+                return Err("duplicate --limit".into());
+            }
+            result.limit = Some(values.next().ok_or("missing page limit")?);
+        } else if !positional_only && value == "--from" {
+            if result.from.is_some() {
+                return Err("duplicate --from".into());
+            }
+            result.from = Some(values.next().ok_or("missing lower timestamp")?);
+        } else if !positional_only && value == "--to" {
+            if result.to.is_some() {
+                return Err("duplicate --to".into());
+            }
+            result.to = Some(values.next().ok_or("missing upper timestamp")?);
+        } else if !positional_only && value == "--wait-ms" {
+            if result.wait_ms.is_some() {
+                return Err("duplicate --wait-ms".into());
+            }
+            result.wait_ms = Some(values.next().ok_or("missing wait duration")?);
         } else if !positional_only && value.to_str().is_some_and(|s| s.starts_with("--")) {
             return Err("unknown option; see ojo --help".into());
         } else {
@@ -120,9 +174,13 @@ fn write_new(path: &Path, bytes: &[u8]) -> Result<()> {
 
 fn key(path: Option<&Path>) -> Result<Option<[u8; 32]>> {
     let Some(path) = path else { return Ok(None) };
+    Ok(Some(private_bytes(path, 32)?.try_into().unwrap()))
+}
+
+fn private_bytes(path: &Path, size: usize) -> Result<Vec<u8>> {
     let before = fs::symlink_metadata(path)?;
     if !before.is_file() {
-        return Err("key file must be a regular file".into());
+        return Err("private input must be a regular file".into());
     }
     let mut file = File::open(path)?;
     let metadata = file.metadata()?;
@@ -130,22 +188,41 @@ fn key(path: Option<&Path>) -> Result<Option<[u8; 32]>> {
     {
         use std::os::unix::fs::{MetadataExt, PermissionsExt};
         if metadata.permissions().mode() & 0o077 != 0 {
-            return Err("key file must not grant group or other access (use chmod 600)".into());
+            return Err(
+                "private input must not grant group or other access (use chmod 600)".into(),
+            );
         }
         if before.dev() != metadata.dev() || before.ino() != metadata.ino() {
-            return Err("key file changed while opening".into());
+            return Err("private input changed while opening".into());
         }
     }
-    if !metadata.is_file() || metadata.len() != 32 {
-        return Err("key file must contain exactly 32 raw bytes".into());
+    if !metadata.is_file() || metadata.len() != size as u64 {
+        return Err("private input has the wrong byte length".into());
     }
-    let mut bytes = [0; 32];
+    let mut bytes = vec![0; size];
     file.read_exact(&mut bytes)?;
     let mut extra = [0; 1];
     if file.read(&mut extra)? != 0 {
-        return Err("key file changed while reading".into());
+        return Err("private input changed while reading".into());
     }
-    Ok(Some(bytes))
+    Ok(bytes)
+}
+
+fn value_file(path: &OsStr) -> Result<Vec<u8>> {
+    let mut reader: Box<dyn Read> = if path == "-" {
+        Box::new(io::stdin().lock())
+    } else {
+        Box::new(File::open(path)?)
+    };
+    let mut bytes = Vec::new();
+    reader
+        .by_ref()
+        .take((16 << 20) + 1)
+        .read_to_end(&mut bytes)?;
+    if bytes.len() > 16 << 20 {
+        return Err("value exceeds the 16 MiB wire limit".into());
+    }
+    Ok(bytes)
 }
 
 fn checkpoint(value: Checkpoint) -> Value {
@@ -203,13 +280,26 @@ fn run() -> Result<()> {
     if args.request.is_some() && !matches!(command, "put" | "delete") {
         return Err("--request is only valid for put/delete".into());
     }
-    if args.output.is_some() && command != "get" {
-        return Err("--output is only valid for get".into());
+    if args.output.is_some() && !matches!(command, "get" | "read") {
+        return Err("--output is only valid for get/read".into());
+    }
+    if args.intent.is_some() && command != "append" {
+        return Err("--intent is only valid for append".into());
+    }
+    if (args.after.is_some() || args.limit.is_some()) && !matches!(command, "scan" | "follow") {
+        return Err("--after/--limit are only valid for scan/follow".into());
+    }
+    if (args.from.is_some() || args.to.is_some()) && command != "scan" {
+        return Err("--from/--to are only valid for scan".into());
+    }
+    if args.wait_ms.is_some() && command != "follow" {
+        return Err("--wait-ms is only valid for follow".into());
     }
     let expected = match command {
         "request-id" => 0,
-        "create" | "keygen" | "inspect" | "verify" | "recover" | "dump" => 1,
-        "get" | "delete" | "export" | "archive" => 2,
+        "create" | "keygen" | "inspect" | "verify" | "recover" | "dump" | "init" | "scan"
+        | "follow" => 1,
+        "get" | "delete" | "export" | "archive" | "append" | "read" => 2,
         "put" => 3,
         _ => return Err("unknown command; see ojo --help".into()),
     };
@@ -230,6 +320,9 @@ fn run() -> Result<()> {
         return Ok(());
     }
     let key = key(args.key_file.as_deref())?;
+    if matches!(command, "init" | "append" | "read" | "scan" | "follow") {
+        return events::run(command, &args, key.as_ref());
+    }
     if command == "create" {
         let db = Database::create(path, key.as_ref())?;
         println!(
@@ -256,20 +349,7 @@ fn run() -> Result<()> {
             return Err("key must contain at least one byte".into());
         }
         let value = if command == "put" {
-            let mut reader: Box<dyn Read> = if args.positional[2] == "-" {
-                Box::new(io::stdin().lock())
-            } else {
-                Box::new(File::open(&args.positional[2])?)
-            };
-            let mut bytes = Vec::new();
-            reader
-                .by_ref()
-                .take((16 << 20) + 1)
-                .read_to_end(&mut bytes)?;
-            if bytes.len() > 16 << 20 {
-                return Err("value exceeds the 16 MiB wire limit".into());
-            }
-            Some(bytes)
+            Some(value_file(&args.positional[2])?)
         } else {
             None
         };

@@ -4,6 +4,51 @@
 It uses the same Rust engine and independently versioned wire 0.1 as applications.
 Agent capture, session conventions and integrations live in ojo-journal.
 
+The current source adds generic timestamp-and-data journals. These commands
+postdate the immutable v0.1.0 preview; build from this source until a newer
+qualified package is published.
+
+```sh
+ojo keygen private.key
+ojo init sensors.ojo --key-file private.key
+printf 'sensor=alpha temperature=21.5\n' > sample.bin
+ojo append sensors.ojo sample.bin --intent sample.intent --key-file private.key
+ojo scan sensors.ojo --limit 100 --key-file private.key
+```
+
+`append` requires only the data: the engine assigns its UTC acceptance time and
+opaque cursor. Read exact bytes with `ojo read sensors.ojo CURSOR_HEX`, adding
+the key option for encrypted files. `--output NEW_FILE` refuses replacement.
+Data may be a file, empty bytes, binary bytes, or `-` for stdin; it is never
+implicitly decoded or rewritten.
+
+`--intent` is optional engine retry bookkeeping. For writes whose acknowledgement
+may be lost, choose a new private intent file per logical append. The tool
+durably stores its engine-issued intent before committing. Reuse that exact
+file with the same data after uncertainty to obtain the original cursor/time
+without duplication. Changed data or a foreign journal is refused. Existing
+intent/data validation runs on a read-only snapshot before writable tail recovery.
+Distinct appends without a retained intent remain distinct even for identical data.
+
+`scan` emits one JSON object with exact `data_hex` originals and a `page` object.
+Resume using `page.cursor` with `--after`; `page.has_more` describes that snapshot.
+Optional `--from`/`--to` use signed UTC Unix microseconds and a [from,to) time
+range. Timestamp ordering is separate from append ordering.
+
+`follow` returns one bounded append-order page, waiting up to `--wait-ms` (default
+1,000; maximum 60,000). Resume with its cursor even after an empty page. Each
+snapshot closes before waiting or writing stdout, so another short-lived CLI
+append can proceed. A persistent external writer still excludes these readers
+under wire 0.1. Follow validates on reopen and has no large-history latency
+claim; embedded concurrent applications should use the healthy Collector API.
+Pages contain at most 1,024 records and 64 MiB of original data; output encodes
+binary data as hex. An incomplete tail is reported separately in page metadata.
+
+`init` uses the explicit Event profile. Existing `create`, `put`, `get`, `delete`
+and `dump` retain their KV compatibility semantics; Event commands refuse KV
+files without reinterpretation. Generic export/archive work on either profile.
+See [Event API and profile](../../docs/EVENT_DATABASE.md).
+
 ## Install from source
 
 ```sh
