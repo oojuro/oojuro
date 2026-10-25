@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.89"
 license = "Apache-2.0"
-description = "Inspect, verify and manipulate portable .ojo databases"
+description = "Inspect, search and manipulate portable .juro databases"
 repository = "https://github.com/oojuro/oojuro"
 publish = false
 
@@ -13,9 +13,12 @@ name = "ojo"
 path = "src/main.rs"
 
 [features]
-default = ["archive"]
+default = ["archive", "search"]
 archive = ["ojo/archive"]
+search = ["dep:oojuro-engine", "dep:sha2"]
 
 [dependencies]
 ojo = { path = "../ojo" }
 serde_json.workspace = true
+oojuro-engine = { path = "../oojuro-engine", optional = true }
+sha2 = { version = "0.10.9", optional = true }

@@ -54,6 +54,51 @@ and `dump` retain their KV compatibility semantics; Event commands refuse KV
 files without reinterpretation. Generic export/archive work on either profile.
 See [Event API and profile](../../docs/EVENT_DATABASE.md).
 
+## Search a file
+
+```sh
+ojo keygen search.key
+ojo index sensors.juro sensor-index --index-key search.key \
+  --key-file private.key --compression zstd
+ojo search sensors.juro sensor-index 'temperature' --index-key search.key \
+  --key-file private.key --limit 20
+```
+
+The index directory must be new. It contains disposable encrypted derived data;
+keep its private32-byte key separately, just as for the source. `--compression`
+selects raw or Zstandard index storage; it does not change the source file.
+Valid UTF-8 events are indexed, including empty text; non-UTF-8 originals remain
+exactly readable and are counted as `opaque_binary_events` in build output.
+
+Search binds the index to the verified source file's physical identity and exact
+checkpoint, then fetches each selected original from that file and checks its
+metadata/text against the index before returning an excerpt. Results include
+opaque hex cursor, `accepted_at`, score, byte offsets and the exact excerpt.
+`--from`/`--to` select a half-open UTC microsecond range. Existing `.ojo` filenames
+and exact exports work. A source append, unrelated file or compressed archive
+changes the checkpoint and refuses stale index reuse; build into a new directory.
+No command overwrites an existing cache or edits/recover-truncates its source.
+An interrupted build may retain its new directory for inspection/removal; source
+originals never depend on the cache.
+
+The default logical index/build budget is8GiB; choose a different positive value
+with `--max-index-bytes` on build or search. Index admission permits up to2million
+UTF-8 events,64GiB indexed text and256MiB numeric metadata policy. These limits
+and observed allocated bytes/estimated heap are not hard filesystem or RSS quotas.
+Search defaults to64MiB of original/cache-text work per query. Set
+`--max-original-bytes` on `index` to store a different maximum, and on `search`
+to select a caller cap. Both default to64MiB; the stricter cap applies, so a
+search cannot raise an index's stored maximum.
+At most1,024 hits and a1MiB result payload are admitted; an exceeded budget refuses
+without emitting a partial answer. Source engine and per-event16MiB limits apply.
+
+Each CLI invocation reopens and verifies the entire Event file and reads numeric
+index metadata. This provides no warm-query latency claim. Long-lived embedded
+owners can retain handles while independently validating their source snapshot.
+Functional file-path qualification is separate from million-record index-only
+benchmarks and hosted guarantees. The immutable v0.1.0 preview does not include
+these commands.
+
 ## Install from source
 
 ```sh
@@ -78,8 +123,10 @@ brew tap oojuro/engine https://github.com/oojuro/oojuro
 brew install oojuro/engine/ojo
 ```
 
-Rust 1.89+; Linux is the qualified platform. Archive support is enabled for the
-normal tool build and needs a C compiler. The default engine library remains
+Rust 1.89+; Linux is the qualified platform. Archive and search support are enabled
+for the normal tool build and need a C compiler. `--no-default-features --features
+search` includes search without source archive commands; `--no-default-features`
+keeps the minimal raw file tools. The default engine library remains
 raw-only and retains its four direct runtime dependencies.
 
 Versioned binaries are packaged with their full notices, dependency inventory,

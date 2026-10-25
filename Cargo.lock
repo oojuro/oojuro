@@ -4612,7 +4612,9 @@ name = "ojo-tools"
 version = "0.1.0"
 dependencies = [
  "ojo",
+ "oojuro-engine",
  "serde_json",
+ "sha2 0.10.9",
 ]
 
 [[package]]
