@@ -165,6 +165,9 @@ impl TfBlock {
         }
         None
     }
+    pub(super) fn presence(&self) -> [u64; 4] {
+        self.present
+    }
     pub(super) fn base(&self) -> u32 {
         self.base
     }
@@ -209,11 +212,71 @@ impl TfBlock {
     }
 }
 
+// Query-local memoization keeps the exact scorer's operation order. Metadata
+// and every TF participate in the key; time/label only order equal scores.
+// Bounded shape diversity falls back to ordinary exact scoring after 1024 keys.
+pub(super) struct Scores {
+    shape: Vec<u32>,
+    ready: crate::lexical::FastMap<Vec<u32>, f64>,
+}
+impl Scores {
+    pub(super) fn new(terms: usize) -> Option<Self> {
+        (terms <= 16).then(|| Self {
+            shape: Vec::with_capacity(terms + 2),
+            ready: Default::default(),
+        })
+    }
+    pub(super) fn score(
+        &mut self,
+        model: &scorer::Model,
+        length: u32,
+        scope: u32,
+        tf: &[u32],
+    ) -> f64 {
+        self.shape.clear();
+        self.shape.extend([length, scope]);
+        self.shape.extend(tf);
+        if let Some(score) = self.ready.get(self.shape.as_slice()) {
+            return *score;
+        }
+        let score = model.score(length, scope, tf);
+        if self.ready.len() < 1024 {
+            self.ready.insert(self.shape.clone(), score);
+        }
+        score
+    }
+}
+#[test]
+fn exact_score_memoization_includes_all_shape_fields_and_bounds_diversity() {
+    let plan = scorer::Plan::new(
+        "battery electrode transaction",
+        false,
+        None,
+        &BTreeSet::new(),
+        &BTreeMap::new(),
+    );
+    let model = scorer::Stats::scope_counts(&plan, vec![80, 40, 20], 1000, 2000)
+        .unwrap()
+        .finish(plan);
+    let mut scores = Scores::new(3).unwrap();
+    for row in 0..3000u32 {
+        let (length, scope) = (1 + row % 1100, 1 + row % 21);
+        let tf = [row % 11, row % 3, row % 7];
+        for _ in 0..2 {
+            assert_eq!(
+                scores.score(&model, length, scope, &tf).to_bits(),
+                model.score(length, scope, &tf).to_bits()
+            );
+        }
+    }
+    assert_eq!(scores.ready.len(), 1024);
+    assert!(Scores::new(17).is_none());
+}
+
 // Exact integer mass over arbitrary candidate unions without rescoring every
 // numeric row. Allocation is admitted before any full-width plane is created.
-#[cfg(test)]
-struct Mass {
-    live: Vec<u64>,
+pub(super) struct Mass {
+    pub(super) live: Vec<u64>,
     length: Vec<(u8, Vec<u64>)>,
     scope: Vec<(u8, Vec<u64>)>,
 }
@@ -263,9 +326,20 @@ fn scope_bounds_preserve_positive_scope_mass_and_exact_shape_arithmetic() {
     assert!(shape_bound(&model, &[(0, 0)], &[1]).is_none());
     assert!(shape_bound(&model, &[(100, 10); 17], &[1]).is_none());
 }
-#[cfg(test)]
 impl Mass {
-    fn new(columns: &[Arc<[Column]>], limit: usize) -> Result<Self> {
+    pub(super) fn required(rows: usize, length: u32, scope: u32) -> Result<usize> {
+        let planes = (length.count_ones() + scope.count_ones()) as usize;
+        rows.div_ceil(64)
+            .checked_mul(8)
+            .and_then(|bytes| bytes.checked_mul(1 + planes))
+            .and_then(|bytes| {
+                bytes.checked_add(
+                    planes * std::mem::size_of::<(u8, Vec<u64>)>() + std::mem::size_of::<Self>(),
+                )
+            })
+            .ok_or(Error::Bounds)
+    }
+    pub(super) fn new(columns: &[Arc<[Column]>], limit: usize) -> Result<Self> {
         let rows = columns.iter().try_fold(0usize, |rows, block| {
             rows.checked_add(block.len()).ok_or(Error::Bounds)
         })?;
@@ -281,16 +355,7 @@ impl Mass {
                 scope |= column.scope;
             }
         }
-        let planes = (length.count_ones() + scope.count_ones()) as usize;
-        let bytes = words
-            .checked_mul(8)
-            .and_then(|bytes| bytes.checked_mul(1 + planes))
-            .and_then(|bytes| {
-                bytes.checked_add(
-                    planes * std::mem::size_of::<(u8, Vec<u64>)>() + std::mem::size_of::<Self>(),
-                )
-            })
-            .ok_or(Error::Bounds)?;
+        let bytes = Self::required(rows, length, scope)?;
         if bytes > limit {
             return Err(Error::Bounds);
         }
@@ -339,7 +404,7 @@ impl Mass {
         }
         Ok(())
     }
-    fn sum(&self, mask: &[u64], scope: bool) -> Result<u64> {
+    pub(super) fn sum(&self, mask: &[u64], scope: bool) -> Result<u64> {
         self.validate(mask)?;
         let mut total = 0u64;
         for (bit, plane) in if scope { &self.scope } else { &self.length } {
@@ -354,7 +419,7 @@ impl Mass {
         }
         Ok(total)
     }
-    fn bytes(&self) -> usize {
+    pub(super) fn bytes(&self) -> usize {
         self.live.capacity() * 8
             + (self.length.capacity() + self.scope.capacity())
                 * std::mem::size_of::<(u8, Vec<u64>)>()

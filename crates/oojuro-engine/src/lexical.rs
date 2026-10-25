@@ -14,6 +14,7 @@ pub mod segments;
 mod text;
 use crate::capture_log::{CaptureLog, Event, ParsedBatch};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
+pub(crate) use text::FastMap;
 use text::{literal_probability, literal_query, normalize_word, phrase_start, query_terms};
 
 const MU: f64 = 128.0;

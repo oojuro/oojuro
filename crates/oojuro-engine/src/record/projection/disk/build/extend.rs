@@ -265,7 +265,7 @@ impl Appender {
                 u32::try_from(self.previous.rows + u64::from(offset)).map_err(|_| Error::Bounds)?;
             metadata.insert(tree::Entry::new(
                 ordinal.to_be_bytes().to_vec(),
-                pack_json(&analysis.metadata, b.limits.compression)?,
+                encode_metadata(&analysis.metadata, b.limits.compression, b.format)?,
             )?)?;
             let block = ordinal as usize / COLUMN_ROWS;
             let column = analysis.metadata.column(labels[offset as usize]);
@@ -302,6 +302,7 @@ impl Appender {
         remove_tree(&directory, &authority, &temporary_ids)?;
         remove_tree(&directory, &authority, &flat_postings)?;
         tree::Authority::remove_file(&authority, &directory.join(SPOOL))?;
+        let mass = index_mass(&self.columns, b.format, b.limits.metadata_bytes)?;
         let mut manifest = Manifest {
             format: b.format,
             generation: b.generation.clone(),
@@ -360,6 +361,7 @@ impl Appender {
             pages: self.pages,
             manifest,
             columns: self.columns,
+            mass,
             totals: self.totals,
             queries: query_cache::QueryCache::default(),
             terms: term_cache::TermCache::default(),

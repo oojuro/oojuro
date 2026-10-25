@@ -141,6 +141,65 @@ fn generic_events_preserve_cursor_timestamp_and_exact_data_contract() {
 }
 
 #[test]
+fn compact_numeric_mass_is_admitted_before_publication_and_open_allocation() {
+    let scratch = Scratch::new();
+    let path = scratch.0.join("index");
+    let previous = build(&path, &[row(1)], Compression::Raw);
+    let descriptor = fs::read(path.join("PROJECTION_CURRENT")).unwrap();
+    let mut builder = Builder::create_compact(
+        &path,
+        &[9; 32],
+        binding(),
+        Limits {
+            metadata_bytes: std::mem::size_of::<Column>(),
+            ..Limits::default()
+        },
+    )
+    .unwrap();
+    assert!(matches!(builder.push(row(1)), Err(Error::Bounds)));
+    drop(builder);
+    assert_eq!(
+        fs::read(path.join("PROJECTION_CURRENT")).unwrap(),
+        descriptor
+    );
+    assert_eq!(previous.row_count(), 1);
+    let compact_path = scratch.0.join("compact");
+    let rows: Vec<_> = (0..500).map(row).collect();
+    let index = build_layout(&compact_path, &rows, Compression::Raw, true);
+    let columns = index
+        .columns
+        .iter()
+        .map(|block| std::mem::size_of_val(block.as_ref()) + 2 * std::mem::size_of::<usize>())
+        .sum::<usize>()
+        + index.columns.capacity() * std::mem::size_of::<Arc<[Column]>>();
+    let admitted = columns + index.mass.as_ref().unwrap().bytes();
+    assert!(
+        Index::open_with_limits(
+            &compact_path,
+            &[9; 32],
+            &binding(),
+            Limits {
+                metadata_bytes: admitted,
+                ..Limits::default()
+            }
+        )
+        .is_ok()
+    );
+    assert!(matches!(
+        Index::open_with_limits(
+            &compact_path,
+            &[9; 32],
+            &binding(),
+            Limits {
+                metadata_bytes: admitted - 1,
+                ..Limits::default()
+            }
+        ),
+        Err(Error::Bounds)
+    ));
+}
+
+#[test]
 fn construction_quota_covers_temporary_files_before_publication() {
     let scratch = Scratch::new();
     let path = scratch.0.join("index");
@@ -563,6 +622,25 @@ fn query<'a>(text: &'a str, filter: Filter, from: i64, to: i64) -> Query<'a> {
         max_bytes: 16384,
     }
 }
+fn build_layout(path: &Path, rows: &[Row], compression: Compression, compact: bool) -> Index {
+    if !compact {
+        return build(path, rows, compression);
+    }
+    let mut builder = Builder::create_compact(
+        path,
+        &[9; 32],
+        binding(),
+        Limits {
+            compression,
+            ..Limits::default()
+        },
+    )
+    .unwrap();
+    for row in rows {
+        builder.push(row.clone()).unwrap();
+    }
+    builder.finish().unwrap()
+}
 fn build(path: &Path, rows: &[Row], compression: Compression) -> Index {
     let mut b = Builder::create(
         path,
@@ -602,10 +680,15 @@ fn disk_projection_matches_ram_bits_filters_excerpts_and_reopen() {
     let rows = (0..1200).rev().map(row).collect::<Vec<_>>();
     let originals: BTreeMap<_, _> = rows.iter().map(|r| (r.id.clone(), r.clone())).collect();
     let reference = super::super::Index::build(binding(), rows.clone()).unwrap();
-    for compression in [Compression::Raw, Compression::Zstd] {
+    for (compression, compact) in [
+        (Compression::Raw, false),
+        (Compression::Zstd, false),
+        (Compression::Raw, true),
+        (Compression::Zstd, true),
+    ] {
         let scratch = Scratch::new();
         let path = scratch.0.join("index");
-        let index = build(&path, &rows, compression);
+        let index = build_layout(&path, &rows, compression, compact);
         assert_eq!(index.row_count(), 1200);
         assert_eq!(
             index.text_bytes(),
@@ -623,6 +706,8 @@ fn disk_projection_matches_ram_bits_filters_excerpts_and_reopen() {
             "k-00000003",
             "café",
             "alpha alpha",
+            "alpha beta",
+            "alpha ordinary rare",
             "\"create_config\"",
         ] {
             for filter in [

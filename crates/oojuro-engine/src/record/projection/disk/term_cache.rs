@@ -92,6 +92,44 @@ impl Pairs {
         }
         self.next(block, at)
     }
+    pub fn presence(
+        &self,
+        union: &mut [u64],
+        live: &[u64],
+        selected: Option<&[u64]>,
+    ) -> Result<u64> {
+        if union.len() != live.len() || selected.is_some_and(|bits| bits.len() != live.len()) {
+            return Err(Error::Authority);
+        }
+        let mut count = 0u64;
+        let mut add = |word: usize, mask: u64| -> Result<()> {
+            let active = mask
+                & *live.get(word).ok_or(Error::Authority)?
+                & selected.map_or(u64::MAX, |bits| bits[word]);
+            union[word] |= active;
+            count = count
+                .checked_add(u64::from(active.count_ones()))
+                .ok_or(Error::Bounds)?;
+            Ok(())
+        };
+        match self {
+            Self::Plain(pairs) => {
+                for &(row, _) in pairs {
+                    add(row as usize / 64, 1 << (row % 64))?;
+                }
+            }
+            Self::Compact { blocks, .. } => {
+                for block in blocks {
+                    for (offset, mask) in block.presence().into_iter().enumerate() {
+                        if mask != 0 {
+                            add(block.base() as usize / 64 + offset, mask)?;
+                        }
+                    }
+                }
+            }
+        }
+        Ok(count)
+    }
     pub fn iter(&self) -> impl Iterator<Item = (u32, u32)> + '_ {
         let (mut block, mut at) = (0, 0);
         std::iter::from_fn(move || self.next(&mut block, &mut at))

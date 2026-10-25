@@ -33,6 +33,8 @@ pub struct Builder {
     spool_bytes: u64,
     rows: u64,
     source_bytes: u64,
+    length_bits: u32,
+    scope_bits: u32,
     stems: HashMap<String, String>,
     failed: bool,
     finished: bool,
@@ -117,6 +119,8 @@ impl Builder {
             spool_bytes: 0,
             rows: 0,
             source_bytes: 0,
+            length_bits: 0,
+            scope_bits: 0,
             stems: HashMap::new(),
             failed: false,
             finished: false,
@@ -157,10 +161,32 @@ impl Builder {
         let length = u32::try_from(terms.iter().map(|(_, n)| u64::from(*n)).sum::<u64>())
             .map_err(|_| Error::Bounds)?;
         let scope = u32::try_from(terms.len()).map_err(|_| Error::Bounds)?;
+        if self.format == COMPACT_FORMAT {
+            let rows = self.rows as usize + 1;
+            let blocks = rows.div_ceil(COLUMN_ROWS);
+            let columns = rows
+                .checked_mul(std::mem::size_of::<Column>())
+                .and_then(|bytes| {
+                    bytes.checked_add(
+                        blocks
+                            * (std::mem::size_of::<Arc<[Column]>>()
+                                + 2 * std::mem::size_of::<usize>()),
+                    )
+                })
+                .ok_or(Error::Bounds)?;
+            let mass =
+                compact::Mass::required(rows, self.length_bits | length, self.scope_bits | scope)?;
+            if columns
+                .checked_add(mass)
+                .is_none_or(|bytes| bytes > self.limits.metadata_bytes)
+            {
+                return Err(Error::Bounds);
+            }
+        }
         let text = self.blobs.put(TEXT, row.text.as_bytes())?;
         let metadata = Metadata::from_row(row, text, length, scope);
         // Refuse oversized individual metadata before it reaches a tree page.
-        pack_json(&metadata, self.limits.compression)?;
+        encode_metadata(&metadata, self.limits.compression, self.format)?;
         let plain = json(&Analysis { metadata, terms }, MAX_BATCH_BYTES)?;
         let sealed = self
             .cipher
@@ -177,6 +203,8 @@ impl Builder {
             .map_err(|_| Error::Unavailable)?;
         self.rows += 1;
         self.source_bytes = bytes;
+        self.length_bits |= length;
+        self.scope_bits |= scope;
         Ok(())
     }
     pub fn finish(mut self) -> Result<Index> {
@@ -296,7 +324,7 @@ impl Builder {
         while let Some((ordinal, analysis)) = reader.next()? {
             metadata.push(tree::Entry::new(
                 ordinal.to_be_bytes().to_vec(),
-                pack_json(&analysis.metadata, self.limits.compression)?,
+                encode_metadata(&analysis.metadata, self.limits.compression, self.format)?,
             )?)?;
             block.push(analysis.metadata.column(labels[ordinal as usize]));
             if block.len() == COLUMN_ROWS {

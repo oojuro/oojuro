@@ -1,3 +1,4 @@
+mod metadata;
 use super::*;
 use oojuro_store::crypto::{SEAL_OVERHEAD, random_key};
 use serde::de::DeserializeOwned;
@@ -538,6 +539,24 @@ pub(super) fn pack_json<T: Serialize>(value: &T, compression: Compression) -> Re
 pub(super) fn unpack_json<T: DeserializeOwned>(bytes: &[u8], _: &Limits) -> Result<T> {
     serde_json::from_slice(&unpack_bytes(bytes, MAX_META)?).map_err(|_| Error::Authority)
 }
+pub(super) fn encode_metadata(
+    value: &Metadata,
+    compression: Compression,
+    format: u32,
+) -> Result<Vec<u8>> {
+    match format {
+        1 => pack_json(value, compression),
+        COMPACT_FORMAT => metadata::encode(value, compression),
+        _ => Err(Error::Authority),
+    }
+}
+pub(super) fn decode_metadata(bytes: &[u8], limits: &Limits, format: u32) -> Result<Metadata> {
+    match format {
+        1 => unpack_json(bytes, limits),
+        COMPACT_FORMAT => metadata::decode(bytes),
+        _ => Err(Error::Authority),
+    }
+}
 pub(super) fn encode_layout_postings(
     rows: &[(u32, u32)],
     compression: Compression,
@@ -883,7 +902,7 @@ pub(super) fn open_with_cipher(
     if manifest.metadata.count != manifest.rows || manifest.ids.count != manifest.rows {
         return Err(Error::Authority);
     }
-    let mut columns = Vec::with_capacity(manifest.columns.len());
+    let mut columns: Vec<Arc<[Column]>> = Vec::with_capacity(manifest.columns.len());
     let mut rows = 0usize;
     let mut live = 0u64;
     let mut totals = Totals::default();
@@ -921,6 +940,7 @@ pub(super) fn open_with_cipher(
     if rows != manifest.rows as usize || live != manifest.live_rows {
         return Err(Error::Authority);
     }
+    let mass = index_mass(&columns, manifest.format, limits.metadata_bytes)?;
     let retained_disk_bytes = directory_bytes(&directory)?
         .checked_add(sealed.len() as u64)
         .ok_or(Error::Bounds)?;
@@ -945,6 +965,7 @@ pub(super) fn open_with_cipher(
         pages,
         manifest,
         columns,
+        mass,
         totals,
         queries: query_cache::QueryCache::default(),
         terms: term_cache::TermCache::default(),
@@ -952,6 +973,25 @@ pub(super) fn open_with_cipher(
         retained_allocated_bytes,
         _lock: lock,
     })
+}
+pub(super) fn index_mass(
+    columns: &Vec<Arc<[Column]>>,
+    format: u32,
+    limit: usize,
+) -> Result<Option<compact::Mass>> {
+    if format != COMPACT_FORMAT {
+        return Ok(None);
+    }
+    let column_bytes = columns
+        .iter()
+        .map(|block| std::mem::size_of_val(block.as_ref()) + 2 * std::mem::size_of::<usize>())
+        .sum::<usize>()
+        .checked_add(columns.capacity() * std::mem::size_of::<Arc<[Column]>>())
+        .ok_or(Error::Bounds)?;
+    Ok(Some(compact::Mass::new(
+        columns,
+        limit.checked_sub(column_bytes).ok_or(Error::Bounds)?,
+    )?))
 }
 pub(super) fn allocated_directory_bytes(directory: &Path) -> Result<u64> {
     let mut bytes = fs::metadata(directory)
