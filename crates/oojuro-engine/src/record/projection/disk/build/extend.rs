@@ -99,15 +99,29 @@ impl Appender {
     /// Retires one previously supplied live immutable ID. It does not delete or
     /// rewrite any source original. A missing/already retired ID is refused.
     pub fn retire(&mut self, id: &str) -> Result<()> {
-        let result = self.retire_inner(id);
+        let result = self.retire_inner(id, true).map(|_| ());
         if result.is_err() {
             self.builder.failed = true;
         }
         result
     }
-    fn retire_inner(&mut self, id: &str) -> Result<()> {
+    /// Retire an ID from the previous bound projection only when it is live.
+    /// Missing/already retired IDs return false without changing the pending
+    /// generation. Bounds, authentication and I/O errors still poison it.
+    /// This does not retire rows newly supplied to this pending appender.
+    pub fn retire_if_present(&mut self, id: &str) -> Result<bool> {
+        let result = self.retire_inner(id, false);
+        if result.is_err() {
+            self.builder.failed = true;
+        }
+        result
+    }
+    fn retire_inner(&mut self, id: &str, required: bool) -> Result<bool> {
         if self.builder.failed {
             return Err(Error::Unavailable);
+        }
+        if !required && !name(id, 1024) {
+            return Err(Error::Bounds);
         }
         let ctx = context(
             &self.builder.directory,
@@ -116,21 +130,35 @@ impl Appender {
             tree::Purpose::ProjectionIds,
             Some(&self.pages),
         );
-        let value =
-            tree::get_ancestor(ctx, &self.previous.ids, id.as_bytes())?.ok_or(Error::Conflict)?;
+        let Some(value) = tree::get_ancestor(ctx, &self.previous.ids, id.as_bytes())? else {
+            return if required {
+                Err(Error::Conflict)
+            } else {
+                Ok(false)
+            };
+        };
         let (ordinal, _) = id_value(&value)?;
         let block = ordinal as usize / COLUMN_ROWS;
+        let previous = self
+            .columns
+            .get(block)
+            .and_then(|block| block.get(ordinal as usize % COLUMN_ROWS))
+            .ok_or(Error::Authority)?;
+        if !previous.live() {
+            return if required {
+                Err(Error::Conflict)
+            } else {
+                Ok(false)
+            };
+        }
         let column = Arc::make_mut(self.columns.get_mut(block).ok_or(Error::Authority)?)
             .get_mut(ordinal as usize % COLUMN_ROWS)
             .ok_or(Error::Authority)?;
-        if !column.live() {
-            return Err(Error::Conflict);
-        }
         self.totals.remove(column)?;
         column.flags &= !2;
         self.changed.insert(block);
         self.retired += 1;
-        Ok(())
+        Ok(true)
     }
     pub fn finish(mut self) -> Result<Index> {
         let b = &mut self.builder;

@@ -29,6 +29,143 @@ fn binding() -> Binding {
 }
 
 #[test]
+fn retire_if_present_keeps_missing_and_retired_ids_nonfatal_and_counts_exact() {
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("index");
+        let rows = vec![row(1), row(2), row(3)];
+        let old = build(&path, &rows, compression);
+        let mut next = binding();
+        next.view[0] ^= 1;
+        let limits = Limits {
+            compression,
+            ..Limits::default()
+        };
+        let mut appender = Appender::extend_validated_prefix(&old, next.clone(), limits).unwrap();
+        assert!(!appender.retire_if_present("absent").unwrap());
+        assert!(appender.retire_if_present(&rows[0].id).unwrap());
+        assert!(!appender.retire_if_present(&rows[0].id).unwrap());
+        let added = row(4);
+        assert!(!appender.retire_if_present(&added.id).unwrap());
+        appender.push(added.clone()).unwrap();
+        // This method addresses the previous projection, never pending rows.
+        assert!(!appender.retire_if_present(&added.id).unwrap());
+        let index = appender.finish().unwrap();
+        assert_eq!(old.row_count(), 3);
+        assert_eq!(index.row_count(), 3);
+        let live = vec![rows[1].clone(), rows[2].clone(), added];
+        let reference = super::super::Index::build(next.clone(), live.clone()).unwrap();
+        let originals: BTreeMap<_, _> = live.into_iter().map(|row| (row.id.clone(), row)).collect();
+        let q = query("alpha beta", Filter::default(), i64::MIN, i64::MAX);
+        assert_eq!(
+            fingerprint(
+                &index
+                    .search(&next, &q, |id| Ok(originals[id].clone()))
+                    .unwrap()
+            ),
+            fingerprint(&reference.search(&next, &q).unwrap())
+        );
+        drop(index);
+        let reopened = Index::open(&path, &[9; 32], &next).unwrap();
+        let mut last = next.clone();
+        last.view[0] ^= 2;
+        let mut appender =
+            Appender::extend_validated_prefix(&reopened, last.clone(), limits).unwrap();
+        assert!(!appender.retire_if_present(&rows[0].id).unwrap());
+        assert!(appender.retire_if_present(&rows[1].id).unwrap());
+        assert_eq!(appender.finish().unwrap().row_count(), 2);
+    }
+}
+
+#[test]
+fn retire_if_present_preserves_strict_retirement_and_poisoning_on_real_failures() {
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("index");
+        let old = build(&path, &[row(1)], compression);
+        let before = fs::read(path.join("PROJECTION_CURRENT")).unwrap();
+        let limits = Limits {
+            compression,
+            ..Limits::default()
+        };
+        let mut next = binding();
+        next.view[0] ^= 1;
+        let mut strict = Appender::extend_validated_prefix(&old, next.clone(), limits).unwrap();
+        assert!(matches!(strict.retire("absent"), Err(Error::Conflict)));
+        assert!(matches!(
+            strict.retire_if_present(&row(1).id),
+            Err(Error::Unavailable)
+        ));
+        assert!(matches!(strict.finish(), Err(Error::Unavailable)));
+        for change in 0..4 {
+            let mut handle = Index::open(&path, &[9; 32], &binding()).unwrap();
+            match change {
+                1 => handle.manifest.ids.node.as_mut().unwrap().digest[0] ^= 1,
+                2 => handle.manifest.ids.node.as_mut().unwrap().generation[0] ^= 1,
+                3 => handle.manifest.ids.binding[0] ^= 1,
+                _ => {}
+            }
+            let mut appender =
+                Appender::extend_validated_prefix(&handle, next.clone(), limits).unwrap();
+            let id = if change == 0 {
+                "x".repeat(1025)
+            } else {
+                row(1).id
+            };
+            assert!(
+                appender.retire_if_present(&id).is_err(),
+                "mutation {change}"
+            );
+            assert!(matches!(
+                appender.retire_if_present("absent"),
+                Err(Error::Unavailable)
+            ));
+            assert!(matches!(appender.finish(), Err(Error::Unavailable)));
+            assert_eq!(fs::read(path.join("PROJECTION_CURRENT")).unwrap(), before);
+        }
+        assert_eq!(
+            Index::open(&path, &[9; 32], &binding())
+                .unwrap()
+                .row_count(),
+            1
+        );
+    }
+}
+
+#[test]
+fn generic_event_retire_if_present_handles_unindexed_binary_cursors() {
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("events");
+        let limits = Limits {
+            compression,
+            ..Limits::default()
+        };
+        let mut builder = EventBuilder::create(&path, &[9; 32], binding(), limits).unwrap();
+        assert!(builder.push(&[1; 40], 1, b"exact original").unwrap());
+        assert!(!builder.push(&[2; 40], 2, &[0xff, 0]).unwrap());
+        let index = builder.finish().unwrap();
+        let mut next = binding();
+        next.view[0] ^= 1;
+        let mut appender = EventAppender::extend_validated_prefix(&index, next, limits).unwrap();
+        assert!(matches!(
+            appender.retire_if_present(&[]),
+            Err(Error::Bounds)
+        ));
+        assert!(matches!(
+            appender.retire_if_present(&[0; 513]),
+            Err(Error::Bounds)
+        ));
+        // Existing Event cursor validation precedes the inner appender call.
+        // Those wrapper errors leave this pending appender usable.
+        assert!(!appender.retire_if_present(&[2; 40]).unwrap());
+        assert!(appender.retire_if_present(&[1; 40]).unwrap());
+        assert!(!appender.retire_if_present(&[1; 40]).unwrap());
+        assert_eq!(appender.finish().unwrap().row_count(), 0);
+    }
+}
+
+#[test]
 fn generic_events_preserve_cursor_timestamp_and_exact_data_contract() {
     fn cursor(i: u64) -> Vec<u8> {
         let mut value = vec![0x83; 16];

@@ -135,6 +135,11 @@ impl EventAppender {
     pub fn retire(&mut self, cursor: &[u8]) -> Result<()> {
         self.inner.retire(&cursor_id(cursor)?)
     }
+    /// Retire a live cursor from the previous projection; absent/already
+    /// retired cursors return false. Source originals remain authoritative.
+    pub fn retire_if_present(&mut self, cursor: &[u8]) -> Result<bool> {
+        self.inner.retire_if_present(&cursor_id(cursor)?)
+    }
     pub fn finish(self) -> Result<EventIndex> {
         Ok(EventIndex {
             inner: self.inner.finish()?,
