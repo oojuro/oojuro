@@ -75,6 +75,12 @@ pub(crate) trait Authority {
     fn remove_file(&self, path: &Path) -> Result<()> {
         fs::remove_file(path).map_err(|_| Error::Unavailable)
     }
+    fn sync_file(&self, file: &File, _purpose: Purpose) -> Result<()> {
+        file.sync_all().map_err(|_| Error::Unavailable)
+    }
+    fn sync_directory(&self, directory: &Path) -> Result<()> {
+        sync_dir(directory)
+    }
 }
 #[derive(Clone)]
 pub(crate) struct Context<'a> {
@@ -366,12 +372,12 @@ impl<'a> Pack<'a> {
         }
         if let Some(file) = self.current.take() {
             self.poisoned = true;
-            file.sync_all().map_err(|_| Error::Unavailable)?;
+            self.ctx.authority.sync_file(&file, self.ctx.purpose)?;
             self.ctx.authority.rename_file(
                 &path(self.ctx.directory, self.generation, self.number, true),
                 &path(self.ctx.directory, self.generation, self.number, false),
             )?;
-            sync_dir(self.ctx.directory)?;
+            self.ctx.authority.sync_directory(self.ctx.directory)?;
             #[cfg(test)]
             test_phase("PackPublished");
             self.poisoned = false;

@@ -164,10 +164,7 @@ impl Builder {
         if self.failed {
             return Err(Error::Unavailable);
         }
-        self.spool
-            .flush()
-            .and_then(|_| self.spool.get_ref().sync_all())
-            .map_err(|_| Error::Unavailable)?;
+        self.flush_spool()?;
         self.stems.clear();
         self.stems.shrink_to_fit();
         self.authority.budget.as_ref().unwrap().observe()?;
@@ -324,6 +321,18 @@ impl Builder {
         let mut reader = RowReader::new(&self.directory, &self.cipher, &self.authority, self.rows)?;
         while let Some((ordinal, row)) = reader.next()? {
             visit(ordinal, row)?;
+        }
+        Ok(())
+    }
+    fn flush_spool(&mut self) -> Result<()> {
+        self.spool.flush().map_err(|_| Error::Unavailable)?;
+        // BUILD_ROWS is temporary and removed before publication. Drain large
+        // cold-build spools; tiny refreshes need only become readable locally.
+        if self.spool_bytes > 1 << 20 {
+            self.spool
+                .get_ref()
+                .sync_all()
+                .map_err(|_| Error::Unavailable)?;
         }
         Ok(())
     }

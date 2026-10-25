@@ -72,8 +72,8 @@ impl<'a> SpoolWriter<'a> {
         if self.ctx.check()? != self.binding {
             return Err(Error::Conflict);
         }
-        self.file.sync_all().map_err(|_| Error::Unavailable)?;
-        sync_dir(self.ctx.directory)?;
+        self.ctx.authority.sync_file(&self.file, self.ctx.purpose)?;
+        self.ctx.authority.sync_directory(self.ctx.directory)?;
         Ok(self.spool)
     }
 }

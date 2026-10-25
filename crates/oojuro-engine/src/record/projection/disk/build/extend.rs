@@ -126,10 +126,7 @@ impl Appender {
         if b.failed {
             return Err(Error::Unavailable);
         }
-        b.spool
-            .flush()
-            .and_then(|_| b.spool.get_ref().sync_all())
-            .map_err(|_| Error::Unavailable)?;
+        b.flush_spool()?;
         b.stems.clear();
         b.stems.shrink_to_fit();
         b.authority.budget.as_ref().unwrap().observe()?;

@@ -46,6 +46,23 @@ impl Authority {
     }
 }
 impl tree::Authority for Authority {
+    fn sync_file(&self, file: &File, purpose: tree::Purpose) -> Result<()> {
+        // Small intermediate sort files are never named by a published root.
+        // Keep explicit writeback for larger runs to bound dirty working data.
+        if matches!(
+            purpose,
+            tree::Purpose::Sort | tree::Purpose::ProjectionTerms
+        ) && file.metadata().map_err(|_| Error::Unavailable)?.len() <= 1 << 20
+        {
+            return Ok(());
+        }
+        file.sync_all().map_err(|_| Error::Unavailable)
+    }
+    fn sync_directory(&self, _directory: &Path) -> Result<()> {
+        // finish_directory syncs the complete generation once, after every
+        // persistent pack/blob is synced and all temporary files are removed.
+        Ok(())
+    }
     fn reserve_file(&self, path: &Path, length: u64) -> Result<()> {
         self.reserve(path, length)
     }
@@ -604,8 +621,7 @@ impl Blobs {
         Ok(())
     }
     pub fn finish(&mut self) -> Result<()> {
-        self.close()?;
-        sync_directory(&self.directory)
+        self.close()
     }
 }
 pub(super) fn read_blob(
@@ -880,6 +896,7 @@ pub(super) fn finish_directory(root: &Path, directory: &Path, name: &str) -> Res
         return Err(Error::Invalid);
     }
     let destination = root.join(name);
+    sync_directory(directory)?;
     fs::rename(directory, &destination).map_err(|_| Error::Unavailable)?;
     sync_directory(root)?;
     Ok(destination)
