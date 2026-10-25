@@ -78,3 +78,9 @@ independent receipts, full fields and clocks; baseline timed reads materialize
 Doc text and use their own lexical scores. It is not a general storage or
 performance ranking. Original source hashes remain available on
 `codex/record-disk-evidence-2026-10-24` after the topic's rebase onto current main.
+
+`rebased-gates.json` records the exact post-rebase integration gate at `980c0f5`:
+186 engine tests pass (11 explicit subprocess helpers remain ignored), 8 rank
+tests pass, and core/store/Nine plus the independent minimal file engine's archive
+and frozen-vector checks pass. It records correctness/build gates, not latency.
+Subsequent documentation-only commits do not change those tested runtime bytes.

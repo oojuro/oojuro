@@ -1,0 +1,41 @@
+{
+  "source": "980c0f57566251aa49f4321521badc2833b8d3c4",
+  "gates": [
+    {
+      "gate": "minimal-file",
+      "exit_code": 0,
+      "wall_seconds": 5.089043614003458
+    },
+    {
+      "gate": "engine-rank",
+      "exit_code": 0,
+      "wall_seconds": 145.1289398730005
+    },
+    {
+      "gate": "runtime-storage",
+      "exit_code": 0,
+      "wall_seconds": 131.11992737800028
+    },
+    {
+      "gate": "record-examples",
+      "exit_code": 0,
+      "wall_seconds": 17.989359525003238
+    },
+    {
+      "gate": "concurrent-example",
+      "exit_code": 0,
+      "wall_seconds": 10.588183980995382
+    }
+  ],
+  "note": "Runtime checks after clean rebase onto c892586; docs-only 761072a follows the tested source.",
+  "passed_test_counts": {
+    "minimal_archive_integration": 16,
+    "engine": 186,
+    "engine_explicit_ignored_helpers": 11,
+    "rank": 8,
+    "nine": 94,
+    "core": 8,
+    "store_unit_and_integration": 39,
+    "store_explicit_ignored_measurement": 1
+  }
+}
