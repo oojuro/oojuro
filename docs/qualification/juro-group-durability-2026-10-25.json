@@ -1,0 +1,234 @@
+{
+  "format": 1,
+  "base_commit": "0e4241229c48e1c90ac475d881c5664d7bba9476",
+  "synthetic_local_only": true,
+  "toolchain": "Rust 1.99.1; Linux x86-64",
+  "checks": [
+    {
+      "command": [
+        "cargo",
+        "fmt",
+        "-p",
+        "ojo",
+        "--",
+        "--check"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "ojo"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "ojo",
+        "--features",
+        "archive"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "ojo",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "ojo",
+        "--all-targets",
+        "--features",
+        "archive",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/verify-ojo-sync-retry.py"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/verify-ojo-sync-retry.py",
+        "--features",
+        "archive"
+      ],
+      "exit": 0
+    }
+  ],
+  "fault_cases": {
+    "existing_raw_encrypted_file_directory_and_alias": 12,
+    "new_group_raw_encrypted_file_directory": 8,
+    "group_file_trace": "FFSS",
+    "group_directory_trace": "SSSFFS"
+  },
+  "benchmark": {
+    "synthetic_local_only": true,
+    "release_optimized": true,
+    "rows": [
+      {
+        "encrypted": false,
+        "round": 0,
+        "grouped": false,
+        "rows": 100,
+        "data_bytes_per_row": 1024,
+        "filesystem_nocompress": true,
+        "total_ms": 895.388266,
+        "file_bytes": 122261
+      },
+      {
+        "encrypted": false,
+        "round": 0,
+        "grouped": true,
+        "rows": 100,
+        "data_bytes_per_row": 1024,
+        "filesystem_nocompress": true,
+        "total_ms": 8.875100999999999,
+        "file_bytes": 122261
+      },
+      {
+        "encrypted": false,
+        "round": 1,
+        "grouped": true,
+        "rows": 100,
+        "data_bytes_per_row": 1024,
+        "filesystem_nocompress": true,
+        "total_ms": 11.552249,
+        "file_bytes": 122261
+      },
+      {
+        "encrypted": false,
+        "round": 1,
+        "grouped": false,
+        "rows": 100,
+        "data_bytes_per_row": 1024,
+        "filesystem_nocompress": true,
+        "total_ms": 837.6691149999999,
+        "file_bytes": 122261
+      },
+      {
+        "encrypted": false,
+        "round": 2,
+        "grouped": false,
+        "rows": 100,
+        "data_bytes_per_row": 1024,
+        "filesystem_nocompress": true,
+        "total_ms": 823.178344,
+        "file_bytes": 122261
+      },
+      {
+        "encrypted": false,
+        "round": 2,
+        "grouped": true,
+        "rows": 100,
+        "data_bytes_per_row": 1024,
+        "filesystem_nocompress": true,
+        "total_ms": 11.129572000000001,
+        "file_bytes": 122261
+      },
+      {
+        "encrypted": true,
+        "round": 0,
+        "grouped": false,
+        "rows": 100,
+        "data_bytes_per_row": 1024,
+        "filesystem_nocompress": true,
+        "total_ms": 836.5301469999999,
+        "file_bytes": 126301
+      },
+      {
+        "encrypted": true,
+        "round": 0,
+        "grouped": true,
+        "rows": 100,
+        "data_bytes_per_row": 1024,
+        "filesystem_nocompress": true,
+        "total_ms": 11.482713,
+        "file_bytes": 126301
+      },
+      {
+        "encrypted": true,
+        "round": 1,
+        "grouped": true,
+        "rows": 100,
+        "data_bytes_per_row": 1024,
+        "filesystem_nocompress": true,
+        "total_ms": 9.356302000000001,
+        "file_bytes": 126301
+      },
+      {
+        "encrypted": true,
+        "round": 1,
+        "grouped": false,
+        "rows": 100,
+        "data_bytes_per_row": 1024,
+        "filesystem_nocompress": true,
+        "total_ms": 848.703838,
+        "file_bytes": 126301
+      },
+      {
+        "encrypted": true,
+        "round": 2,
+        "grouped": false,
+        "rows": 100,
+        "data_bytes_per_row": 1024,
+        "filesystem_nocompress": true,
+        "total_ms": 806.573441,
+        "file_bytes": 126301
+      },
+      {
+        "encrypted": true,
+        "round": 2,
+        "grouped": true,
+        "rows": 100,
+        "data_bytes_per_row": 1024,
+        "filesystem_nocompress": true,
+        "total_ms": 9.025884,
+        "file_bytes": 126301
+      }
+    ],
+    "medians_ms": {
+      "plaintext-individual": 837.6691149999999,
+      "plaintext-group": 11.129572000000001,
+      "encrypted-individual": 836.5301469999999,
+      "encrypted-group": 9.356302000000001
+    }
+  },
+  "benchmark_scope": "Release build, persistent Btrfs NOCOMPRESS verified on each file, shared build/timing exclusion lock, 100 x 1KiB pre-prepared intents. Three alternating rounds per plaintext/encrypted mode. Whole-group elapsed time including final durability, excluding preparation and post-write read/reopen verification. No SQLite, compressed archive, scale or hosted claim.",
+  "owned_benchmark_datasets_removed": true,
+  "source_sha256": {
+    "crates/ojo/src/lib.rs": "cfab0cc39fefff9e0f7317ecbe2593e7f41cefc1d6d81718443d49ca6da94519",
+    "crates/ojo/src/events.rs": "8bff30659cee7d9c6bd90789b33a77c9e5dccba9cf3c3e290d4eefdf1d87b562",
+    "crates/ojo/tests/group_retry.rs": "60a1f9d9aaddbcca77e4be9b15c8a34219d79caa0052d3adbd156924f757bbe7",
+    "scripts/verify-ojo-sync-retry.py": "500a5a48998c91dc77a4e94ff82b6f546e15617b10bc6408386733846d91dbd2"
+  },
+  "unchanged_wire_sha256": "098dac41756907534317415d72ecf34b78d3ebaa176ebe8d102323d42dd7149f"
+}

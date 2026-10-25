@@ -42,6 +42,22 @@ An already committed request returns the original cursor/time without an
 additional event; a changed original conflicts. Independent identical appends
 remain distinct. Retry state is engine bookkeeping, not an application schema.
 
+`append_prepared_batch(&[(&intent, data), ...])` shares one final durability
+barrier across at most 1,024 events and 64 MiB of original data. Each event keeps
+its existing profile frame, individual acceptance time and exact-retry identity;
+normal appends remain uncompressed, including when archive support is enabled.
+Every input and any existing retry original are checked before writing. Success
+confirms all returned receipts, including duplicates reconstructed after reopen.
+An unchanged, already confirmed exact retry needs no additional file sync.
+
+This operation provides group durability. It does not provide atomic visibility
+or rollback across events: an interruption can leave any complete prefix visible
+on reopen. Retain all intents and exact originals before calling, and retry the
+whole group after dropping an errored handle. Surviving events keep their original
+cursor/time. Application transaction markers and visibility rules belong in the
+application's data. The embedded `Collector` exposes the same bounded operation
+under its owning lock and wakes followers after it returns.
+
 The [separately versioned profile specification](../spec/events/1/FORMAT.md)
 defines the marker, exact bytes, cursors and optional retry-intent encoding.
 Existing KV files are refused before any writable recovery. There is no silent

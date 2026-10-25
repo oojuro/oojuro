@@ -103,6 +103,8 @@ struct Transaction {
 #[derive(Clone, Copy)]
 enum CommitMode {
     Durable,
+    // Internal Event group only; its caller confirms before returning receipts.
+    Buffered,
     // Only for an unpublished archive temporary; archive_to syncs before publication.
     #[cfg(feature = "archive")]
     Archive,
@@ -447,11 +449,10 @@ impl Database {
             return Ok(self.receipt(transaction));
         }
         self.admit(changes.len(), key_bytes)?;
-        let codec = if !durable {
-            #[cfg(not(feature = "archive"))]
-            return Err(Error::Unsupported);
+        let codec = match mode {
+            CommitMode::Durable | CommitMode::Buffered => 0,
             #[cfg(feature = "archive")]
-            {
+            CommitMode::Archive => {
                 let packed = self.codecs.compress(&frame[prefix..])?;
                 if packed.len() < length {
                     frame.truncate(prefix);
@@ -461,8 +462,6 @@ impl Database {
                     0
                 }
             }
-        } else {
-            0
         };
         let mut head = [0; HEAD];
         head[..8].copy_from_slice(b"OJOTXN1\0");

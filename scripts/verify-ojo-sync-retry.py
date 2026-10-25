@@ -16,7 +16,7 @@ ROOT = Path(__file__).resolve().parents[1]
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--features", default="")
-    parser.add_argument("--case", choices=["all", "file", "namespace"], default="all")
+    parser.add_argument("--case", choices=["all", "file", "namespace", "group"], default="all")
     args = parser.parse_args()
     if platform.system() != "Linux":
         parser.exit(2, "this syscall-fault gate requires Linux\n")
@@ -26,7 +26,8 @@ def main():
         compiler = shlex.split(os.environ.get("CC", "cc"))
         subprocess.run([*compiler, "-shared", "-fPIC", "-O2", "-Wall", "-Wextra", "-Werror",
                         str(ROOT / "scripts/fixtures/ojo-fsync-fault.c"), "-o", str(preload)], check=True)
-        scopes = ["file", "namespace"] if args.case == "all" else [args.case]
+        scopes = ["file", "namespace", "group-file", "group-namespace"] if args.case == "all" else (
+            ["group-file", "group-namespace"] if args.case == "group" else [args.case])
         cases = [(scope, encrypted, alias) for scope in scopes for encrypted in [False, True]
                  for alias in ([False, True] if scope == "namespace" else [False])]
         for scope, encrypted, alias in cases:
@@ -42,16 +43,19 @@ def main():
             env.pop("OJO_SYNC_FAULT_ALIAS", None)
             if encrypted:
                 env["OJO_SYNC_FAULT_ENCRYPTED"] = "1"
-            if scope == "namespace":
+            if scope.endswith("namespace"):
                 env["OJO_SYNC_FAULT_DIRECTORY"] = str(case)
-                env["OJO_SYNC_FAULT_SKIP"] = "1"
+                if scope == "namespace":
+                    env["OJO_SYNC_FAULT_SKIP"] = "1"
             if alias:
                 env["OJO_SYNC_FAULT_ALIAS"] = "1"
-            command = ["cargo", "test", "--locked", "-p", "ojo", "--test", "namespace_retry" if scope == "namespace" else "sync_retry"]
+            test = "group_retry" if scope.startswith("group-") else ("namespace_retry" if scope == "namespace" else "sync_retry")
+            command = ["cargo", "test", "--locked", "-p", "ojo", "--test", test]
             if args.features:
                 command += ["--features", args.features]
             command += ["--", "--ignored", "--exact",
-                        "uncertain_creation_needs_directory_confirmation_before_a_new_ack" if scope == "namespace" else "complete_but_unsynced_retry_never_receives_a_durable_ack", "--test-threads=1"]
+                        "event_group_never_acknowledges_an_unconfirmed_prefix" if scope.startswith("group-") else (
+                            "uncertain_creation_needs_directory_confirmation_before_a_new_ack" if scope == "namespace" else "complete_but_unsynced_retry_never_receives_a_durable_ack"), "--test-threads=1"]
             subprocess.run(command, cwd=ROOT, env=env, check=True)
             print(json.dumps({"case": case.name, "real_fsync_fault_gate": "passed",
                               "observed_syncs": (case / "calls").read_text(),
