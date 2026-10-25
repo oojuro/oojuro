@@ -184,7 +184,11 @@ impl Journal {
                     body,
                 } => {
                     if operations != 1 {
-                        return Err(Error::Invalid("Event transaction shape"));
+                        return Err(Error::Invalid(if sequence == 1 {
+                            "Event profile required"
+                        } else {
+                            "Event transaction shape"
+                        }));
                     }
                     let mut parsed = Err(Error::Invalid("Event transaction"));
                     wire::walk(body, operations, |_, key, value| {
@@ -1063,6 +1067,58 @@ mod tests {
             })
             .unwrap();
         assert_eq!(equal, [receipts[0].cursor, receipts[2].cursor]);
+    }
+
+    #[test]
+    fn first_multi_operation_kv_is_wrong_profile_but_later_event_shape_is_invalid() {
+        for key in [None, Some([73; 32])] {
+            let root = Scratch::new();
+            let changes = [
+                Change {
+                    key: b"manifest",
+                    value: Some(b"original metadata"),
+                },
+                Change {
+                    key: b"original",
+                    value: Some(b"exact\0 original"),
+                },
+            ];
+            let legacy = root.file("legacy.juro");
+            let mut db = Database::create(&legacy, key.as_ref()).unwrap();
+            db.commit(request_id().unwrap(), &changes).unwrap();
+            drop(db);
+            let established = root.file("established.juro");
+            drop(Journal::create(&established, key.as_ref()).unwrap());
+            let mut db = Database::open(&established, key.as_ref(), true).unwrap();
+            db.commit(request_id().unwrap(), &changes).unwrap();
+            drop(db);
+            for (path, expected) in [
+                (&legacy, "Event profile required"),
+                (&established, "Event transaction shape"),
+            ] {
+                for torn in [false, true] {
+                    if torn {
+                        std::fs::OpenOptions::new()
+                            .append(true)
+                            .open(path)
+                            .unwrap()
+                            .write_all(b"torn tail")
+                            .unwrap();
+                    }
+                    let before = std::fs::read(path).unwrap();
+                    for writable in [false, true] {
+                        assert!(
+                            matches!(Journal::open(path, key.as_ref(), writable), Err(Error::Invalid(message)) if message == expected)
+                        );
+                        assert_eq!(
+                            std::fs::read(path).unwrap(),
+                            before,
+                            "profile refusal recovered a tail"
+                        );
+                    }
+                }
+            }
+        }
     }
 
     #[test]
