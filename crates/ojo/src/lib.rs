@@ -220,11 +220,33 @@ impl Database {
     pub fn open(path: impl AsRef<Path>, key: Option<&[u8; 32]>, writable: bool) -> Result<Self> {
         Self::open_observed(path.as_ref(), key, writable, |_| Ok(()))
     }
+    /// Validates application state after verified replay and before any writable
+    /// tail recovery. The callback may read the verified prefix through this
+    /// handle, but commit/confirm refuse with ReadOnly during validation.
+    /// Returning an error refuses open without truncation. Do not publish state
+    /// or acknowledgements from the callback: later recovery I/O can still fail.
+    pub fn open_checked(
+        path: impl AsRef<Path>,
+        key: Option<&[u8; 32]>,
+        writable: bool,
+        check: impl FnOnce(&mut Self) -> Result<()>,
+    ) -> Result<Self> {
+        Self::open_with_check(path.as_ref(), key, writable, |_| Ok(()), check)
+    }
     fn open_observed(
         path: &Path,
         key: Option<&[u8; 32]>,
         writable: bool,
+        observe: impl FnMut(Replay<'_>) -> Result<()>,
+    ) -> Result<Self> {
+        Self::open_with_check(path, key, writable, observe, |_| Ok(()))
+    }
+    fn open_with_check(
+        path: &Path,
+        key: Option<&[u8; 32]>,
+        writable: bool,
         mut observe: impl FnMut(Replay<'_>) -> Result<()>,
+        check: impl FnOnce(&mut Self) -> Result<()>,
     ) -> Result<Self> {
         let mut file = OpenOptions::new().read(true).write(writable).open(path)?;
         if !file.metadata()?.is_file() {
@@ -318,6 +340,9 @@ impl Database {
         drop(reader);
         db.tail = length - db.end;
         observe(Replay::Finish)?;
+        db.writable = false;
+        check(&mut db)?;
+        db.writable = writable;
         if writable && db.tail > 0 {
             db.file.set_len(db.end)?;
             db.file.sync_all()?;
