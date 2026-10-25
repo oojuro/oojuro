@@ -9,9 +9,8 @@ caller paths continue to work; the tool neither renames nor silently converts
 them. File headers and versions determine compatibility, not suffixes. The
 immutable v0.1.0 release predates this convention and keeps its original name.
 
-The current source adds generic timestamp-and-data journals. These commands
-postdate the immutable v0.1.0 preview; build from this source until a newer
-qualified package is published.
+The v0.2.0 experimental preview includes generic timestamp-and-data journals
+and file-search commands. These postdate the immutable v0.1.0 KV preview.
 
 ```sh
 ojo keygen private.key
@@ -97,7 +96,7 @@ index metadata. This provides no warm-query latency claim. Long-lived embedded
 owners can retain handles while independently validating their source snapshot.
 Functional file-path qualification is separate from million-record index-only
 benchmarks and hosted guarantees. The immutable v0.1.0 preview does not include
-these commands.
+these commands; use v0.2.0 or build the current source.
 
 ## Install from source
 
@@ -111,9 +110,9 @@ The published preview can also be installed by HTTPS or from its immutable
 source tag:
 
 ```sh
-curl -fsSL https://raw.githubusercontent.com/oojuro/oojuro/ojo-v0.1.0/scripts/install-ojo.sh | sh
+curl -fsSL https://raw.githubusercontent.com/oojuro/oojuro/ojo-v0.2.0/scripts/install-ojo.sh | sh
 cargo install --locked --git https://github.com/oojuro/oojuro \
-  --tag ojo-v0.1.0 --bin ojo ojo-tools
+  --tag ojo-v0.2.0 --bin ojo ojo-tools
 ```
 
 Homebrew uses this repository's formula and the same checksummed binary package:

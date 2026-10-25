@@ -36,19 +36,20 @@ shutil.copyfile(pathlib.Path(os.environ['OJO_TEST_FIXTURE'])/name,output)
                                 'OJO_INSTALL_DIR': str(self.root / 'prefix/bin'),
                                 'OJO_VERSION': '0.1.0', 'TMPDIR': str(self.root)}
 
-    def archive(self, *, unsafe=False, version='0.1.0'):
-        path = self.fixture / (PACKAGE + '.tar.gz')
+    def archive(self, *, unsafe=False, version='0.1.0', artifact_version='0.1.0'):
+        package = f'ojo-v{artifact_version}-x86_64-unknown-linux-gnu'
+        path = self.fixture / (package + '.tar.gz')
         files = {'bin/ojo': f'#!/bin/sh\nprintf "ojo {version} (wire 0.1)\\n"\n'.encode(),
                  'LICENSE': b'synthetic license', 'NOTICE': b'synthetic notice',
                  'manifest.json': b'{"synthetic":true}', 'licenses/dep/LICENSE': b'synthetic third party'}
         with tarfile.open(path, 'w:gz') as archive:
             for name, content in files.items():
-                member = tarfile.TarInfo(PACKAGE + '/' + name)
+                member = tarfile.TarInfo(package + '/' + name)
                 member.size = len(content)
                 member.mode = 0o755 if name == 'bin/ojo' else 0o644
                 archive.addfile(member, io.BytesIO(content))
             if unsafe:
-                member = tarfile.TarInfo(PACKAGE + '/outside')
+                member = tarfile.TarInfo(package + '/outside')
                 member.type = tarfile.SYMTYPE
                 member.linkname = str(self.root / 'must-not-write')
                 archive.addfile(member)
@@ -80,6 +81,16 @@ shutil.copyfile(pathlib.Path(os.environ['OJO_TEST_FIXTURE'])/name,output)
         self.assertNotEqual(self.run_installer().returncode, 0)
         self.assertEqual(binary.read_bytes(), b'synthetic existing installation')
         self.assertFalse(list(self.root.glob('ojo-install.*')))
+
+    def test_current_default_installs_new_version_with_its_notices(self):
+        self.archive(version='0.2.0', artifact_version='0.2.0')
+        self.env.pop('OJO_VERSION')
+        result = self.run_installer()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        binary = self.root / 'prefix/bin/ojo'
+        self.assertEqual(subprocess.check_output([binary, '--version'], text=True).strip(),
+                         'ojo 0.2.0 (wire 0.1)')
+        self.assertTrue((self.root / 'prefix/share/ojo/0.2.0/licenses/dep/LICENSE').is_file())
 
     def test_links_are_refused_before_extracting(self):
         self.archive(unsafe=True)

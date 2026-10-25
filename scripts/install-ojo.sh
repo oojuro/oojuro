@@ -2,7 +2,7 @@
 set -eu
 
 fail() { printf '%s\n' "ojo installer: $*" >&2; exit 1; }
-version=${OJO_VERSION:-0.1.0}
+version=${OJO_VERSION:-0.2.0}
 case "$version" in ''|*[!0-9A-Za-z.+-]*) fail 'invalid OJO_VERSION';; esac
 case "$(uname -s):$(uname -m)" in
   Linux:x86_64|Linux:amd64) target=x86_64-unknown-linux-gnu;;
