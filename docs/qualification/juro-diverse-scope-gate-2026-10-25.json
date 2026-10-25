@@ -1,0 +1,129 @@
+{
+  "runtime": "85e11258b2db0a7ba322bca41ca2e60a6d791192",
+  "checks": [
+    {
+      "mutable_artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "conformance",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        }
+      ],
+      "label": "diverse-fullgate",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "--lib",
+        "--tests",
+        "-p",
+        "oojuro-engine",
+        "-p",
+        "oojuro-rank",
+        "--message-format=json",
+        "--",
+        "--test-threads=1"
+      ],
+      "returncode": 0,
+      "test_summaries": [
+        [
+          "201",
+          "0",
+          "10"
+        ],
+        [
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "8",
+          "0",
+          "0"
+        ]
+      ],
+      "source_fence": {
+        "cleaned_mutable_packages": true,
+        "cleaned_profiles": [
+          "dev",
+          "release"
+        ],
+        "cwd": "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source",
+        "revisions": {
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source": "85e11258b2db0a7ba322bca41ca2e60a6d791192"
+        },
+        "source_fence": "f4b9efb443af70ef0c78d2a72866fb5c323f966600e9597a51365dbbe335c8c4",
+        "source_fence_format": 2,
+        "target": "/home/rocket3/Projects/.readiness/ojo-product-completion-2026-10-25/targets/engine-performance"
+      },
+      "new_bound_test_present": true
+    },
+    {
+      "mutable_artifacts": [],
+      "label": "diverse-clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--lib",
+        "--tests",
+        "--example",
+        "profile_juro_append",
+        "--example",
+        "profile_juro_projection",
+        "--no-deps",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "returncode": 0,
+      "test_summaries": [],
+      "source_fence": {
+        "cleaned_mutable_packages": false,
+        "cleaned_profiles": [],
+        "cwd": "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source",
+        "revisions": {
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/diverse-score-bounds-source": "85e11258b2db0a7ba322bca41ca2e60a6d791192"
+        },
+        "source_fence": "f4b9efb443af70ef0c78d2a72866fb5c323f966600e9597a51365dbbe335c8c4",
+        "source_fence_format": 2,
+        "target": "/home/rocket3/Projects/.readiness/ojo-product-completion-2026-10-25/targets/engine-performance"
+      }
+    }
+  ]
+}
