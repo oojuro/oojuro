@@ -50,3 +50,31 @@ missing samples have been reconstructed.
 The group-commit follow-up is a separate change (`a013089`). It must compare
 direct and grouped native modes separately, and give SQLite/raw JSONL/Zstd JSONL
 the same bounded queue/count/byte/wait policy before comparing grouped results.
+
+The first matched group smoke is retained in `group-smoke-1000.json` with binary
+provenance in `group-binaries.json`. It uses a later source (`adec786`) and a
+stronger complete-field/assigned-clock original digest; it is not a rerun of the
+metadata AB/BA. It has one 1k, ten-client, phase-separated trial per arm/mode,
+500 one-ID and 500 twenty-ID reads, 60 searches and 50 independent writes. Every
+arm uses the same queue limit (10), submitted-Doc byte limit (32 MiB), collector
+limit (10 requests) and collection wait (2 ms). Search original-text reads are
+inside the search timer. The JSON retains every read/write latency, individual
+search durations and queue group sizes/waits. Grouping changes request scheduling,
+so direct and grouped distributions must be read separately.
+
+| 1k records, phase separated | Direct write p95 (ms) | Grouped write p95 (ms) |
+| --- | --- | --- |
+| Record2, source and derived caches synced | 5487.7 | 331.1 |
+| SQLite WAL, FULL, FTS5 | 744.6 | 26.7 |
+| Raw JSONL and counted indexes | 1076.2 | 37.5 |
+| JSONL + Zstd and counted indexes | 859.6 | 31.4 |
+
+Record2 still misses the 250 ms write target in that smoke. Initial/post-write
+allocation, complete reopen checks, peak RSS and raw tails remain in the JSON.
+The native group sizes vary with its post-ACK read/search visibility probes;
+all baseline groups happened to contain ten requests. This is equivalent queue
+policy, not identical service demand: native records are encrypted and preserve
+independent receipts, full fields and clocks; baseline timed reads materialize
+Doc text and use their own lexical scores. It is not a general storage or
+performance ranking. Original source hashes remain available on
+`codex/record-disk-evidence-2026-10-24` after the topic's rebase onto current main.
