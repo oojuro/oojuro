@@ -103,6 +103,17 @@ impl Pairs {
                 .map_or(0, |at| blocks[at].maximum()),
         )
     }
+    pub fn maximum_scope_mass(&self, base: u32) -> Option<f64> {
+        let Self::Compact { blocks, .. } = self else {
+            return None;
+        };
+        Some(
+            blocks
+                .binary_search_by_key(&base, compact::TfBlock::base)
+                .ok()
+                .map_or(0., |at| blocks[at].maximum_scope_mass()),
+        )
+    }
     pub fn tf(&self, row: u32) -> Option<u32> {
         let Self::Compact { blocks, .. } = self else {
             return None;
@@ -377,6 +388,7 @@ fn load(index: &Index, term: [u8; 32], upper: usize) -> Result<TermList> {
     let mut input = DiskPostings::new_hash(index, term)?;
     let mut pairs = Pairs::new(index.manifest.format == COMPACT_FORMAT, upper);
     let mut pending = Vec::with_capacity(256);
+    let mut maximum_scope_mass = 0.0f64;
     let mut statistics = Statistics::default();
     let mut groups = Some(BTreeMap::<(u32, u32, u32), BinaryHeap<GroupHit>>::new());
     while let Some((ordinal, tf)) = input.next()? {
@@ -429,7 +441,19 @@ fn load(index: &Index, term: [u8; 32], upper: usize) -> Result<TermList> {
                         index.manifest.rows,
                         compact::TfBlock::encode(base, &pending)?,
                     )?);
+                    blocks
+                        .last_mut()
+                        .unwrap()
+                        .set_scope_mass(maximum_scope_mass);
                     pending.clear();
+                    maximum_scope_mass = 0.;
+                }
+                if column.live() {
+                    if column.length == 0 {
+                        return Err(Error::Authority);
+                    }
+                    maximum_scope_mass = maximum_scope_mass
+                        .max(tf as f64 * column.scope as f64 / column.length as f64);
                 }
                 pending.push((ordinal, tf));
                 *count += 1;
@@ -445,6 +469,10 @@ fn load(index: &Index, term: [u8; 32], upper: usize) -> Result<TermList> {
             index.manifest.rows,
             compact::TfBlock::encode(base, &pending)?,
         )?);
+        blocks
+            .last_mut()
+            .unwrap()
+            .set_scope_mass(maximum_scope_mass);
     }
     let groups = groups.map(|groups| {
         groups

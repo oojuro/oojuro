@@ -33,18 +33,31 @@ impl Index {
         });
         let mut top = Top::new(limit);
         let mut tf = vec![0u32; lists.len()];
+        let mut maximum_mass = vec![0.0f64; lists.len()];
         let mut scores = compact::Scores::new(lists.len()).unwrap();
         let mut examined = 0;
         for block in order {
             let base = u32::try_from(block * 256).map_err(|_| Error::Bounds)?;
             for (at, list) in lists.iter().enumerate() {
                 tf[at] = list.pairs.maximum(base).ok_or(Error::Authority)?;
+                maximum_mass[at] = list
+                    .pairs
+                    .maximum_scope_mass(base)
+                    .ok_or(Error::Authority)?;
             }
             if tf.iter().all(|tf| *tf == 0) {
                 continue;
             }
             let shape = &mass.shapes[block];
-            if let Some(bound) = compact::shape_bound(model, shape.values(), &tf)
+            let shaped = compact::shape_bound(model, shape.values(), &tf);
+            let scoped = model.scope_bound(shape.minimum_scope, &maximum_mass);
+            let bound = match (shaped, scoped) {
+                (Some(a), Some(b)) => Some(a.min(b)),
+                (Some(a), None) => Some(a),
+                (None, Some(b)) => Some(b),
+                _ => None,
+            };
+            if let Some(bound) = bound
                 && !top.admits_bound(bound, shape.time, shape.label)
             {
                 continue;
