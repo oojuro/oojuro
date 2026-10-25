@@ -449,7 +449,7 @@ fn load(index: &Index, term: [u8; 32], upper: usize) -> Result<TermList> {
                     maximum_scope_mass = 0.;
                 }
                 if column.live() {
-                    if column.length == 0 {
+                    if column.length == 0 || column.scope == 0 {
                         return Err(Error::Authority);
                     }
                     maximum_scope_mass = maximum_scope_mass
