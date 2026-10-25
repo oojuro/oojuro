@@ -88,8 +88,8 @@ score bounds evaluate concrete shapes because independently minimizing length
 and scope is unsafe. Optimistic score/time/label tuples can prune only blocks
 that cannot enter the current exact top-k. If a trial examines more than 16,384
 rows, the complete scorer runs; no partial trial result is returned. Literals
-retain the existing exact text check. This optimization is not yet qualified by
-million-record receipts.
+retain the existing exact text check. The actual-file million-record cohort below covers this runtime; incremental
+and diverse/dense qualification remains open.
 
 The next `4e9c514` cohort alternates layouts for three observations per codec,
 each with 30 ten-client forced-fresh requests per query. All exact signatures
@@ -102,3 +102,45 @@ Future harness output includes the exact query text, so labels cannot obscure
 this distinction. These homogeneous fixtures permit tight bounds. They do not
 qualify heterogeneous data, literal queries, cold handles, a hosted workload or
 million-record latency. All 1k mixed/adverse observations are retained too.
+
+The actual-file 1M cohort at `4e9c514` now passes all paired signatures across
+both layouts and encodings. It uses the same plaintext NOCOMPRESS source,
+998,996 UTF-8 indexed rows (1,004 binary originals remain readable), actual
+`Journal.get`, checkpoint guards, one CPU and a 2 GiB child address cap. Each
+encoding has three alternating observations per layout and 30 timed ten-client
+forced-fresh requests per query per observation, after an initial warming query.
+The layout-1 cache is the retained complete cache from the earlier actual-file
+cohort; no v1 build timing was repeated here.
+
+| 1M retained ten-client query p95 | Layout 1 raw ms | Layout 2 raw ms | Layout 1 Zstd ms | Layout 2 Zstd ms |
+| --- | ---: | ---: | ---: | ---: |
+| Two matching terms | 1,024–1,048 | 26–29 | 1,183–1,211 | 24–32 |
+| Three matching terms | 1,391–1,774 | 26–31 | 1,714–1,760 | 29–31 |
+| Pair plus absent term | 1,047–1,078 | 28–30 | 1,196–1,206 | 26–29 |
+| Single common term | 10–20 | 23–25 | 24–28 | 23–26 |
+| Identifier anchor | 55–65 | 50–68 | 58–67 | 51–64 |
+
+The single-common-term raw case regresses in these observations. All rows in
+this synthetic fixture have closely related text/TF shapes; the multi-term
+improvement does not qualify heterogeneous corpora or dense literal search.
+A single-client cold source/index reopen plus pair query remains 1.10 seconds
+raw and 1.06 seconds Zstd for layout 2 (1.21/1.13 seconds layout 1). OS caches
+remain retained even for reopened handles. This is not a general 100 ms promise.
+
+Retained raw cache bytes are 1,106,391,854 versus 663,059,132; Zstd bytes are
+759,609,940 versus 570,925,451. Adding the 278,960,161-byte actual source gives
+1,385,352,015 versus 942,019,293 bytes raw and 1,038,570,101 versus 849,885,612
+bytes Zstd. Layout 2 therefore does not establish a one-third combined-size
+claim. Previous generations and construction scratch are additional. New v2
+builds take 135.85 seconds raw and 155.95 seconds Zstd; peak logical new-index
+footprints are 1,953,315,379 /1,861,189,782 bytes, with observed allocated peaks
+1,953,349,632 /1,861,226,496 bytes and 191 files. These observations are not a
+filesystem quota. No v2 full-cold rebuild or encrypted 1M source cohort was run.
+
+The retained v2 index heap estimate is 138.77 MB, including the full cache
+policies, numeric columns, bitplanes and shape summaries; source handles and
+query temporaries are additional. Build RSS peaks are 567,160 /567,484 KiB;
+first retained-query observations peak at 550,660 /550,900 KiB. The complete
+196-engine-test/eight-rank gate passes for this runtime with ten documented
+helpers/opt-in tests ignored. This remains a draft until incremental, diverse
+and dense qualification and final review. No package or hosted service changed.
