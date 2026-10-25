@@ -84,3 +84,35 @@ performance ranking. Original source hashes remain available on
 tests pass, and core/store/Nine plus the independent minimal file engine's archive
 and frozen-vector checks pass. It records correctness/build gates, not latency.
 Subsequent documentation-only commits do not change those tested runtime bytes.
+
+The fresh source-synced/cache-policy diagnostic is retained in
+`cache-policy-phases.json` with exact source/binary provenance in
+`cache-policy-binary.json`. It is a one-writer phase probe, ordered durable then
+rebuildable at each size. Each trial makes 50 independent single-row requests
+using groups of one or ten after 1000-row initial ingest batches. It is neither
+an AB/BA nor a ten-client latency trial. Authoritative source/header/receipt sync
+is always enabled; the explicit policy changes only disposable cache sync.
+
+| 10k initial records | Median indexed ACK (ms) | Total cache-loss rebuild (ms) | Checkpointed allocation before loss (bytes) |
+| --- | --- | --- | --- |
+| Durable caches, groups of one | 143.912 | 985.513 | 7,802,880 |
+| Rebuildable caches, groups of one | 10.365 | 399.594 | 7,798,784 |
+| Durable caches, groups of ten | 144.252 | 1029.745 | 3,903,488 |
+| Rebuildable caches, groups of ten | 9.443 | 385.432 | 3,907,584 |
+
+The JSON separates authoritative Store append from locator and lexical
+publication, and retains dirty/explicitly flushed apparent/allocated bytes,
+all group phase samples, checkpoint durations and peak RSS. An explicit
+checkpoint includes redundant clean-file syncs, so its duration is not exact
+incremental writeback debt. Similar allocation across policies does not imply
+that rebuildable caches eliminate storage work.
+
+After every trial's indexed ACKs the diagnostic drops the writer, removes the
+entire dedicated locator and lexical cache directories, and reopens with the
+retained source watermark. It verifies all 1050/10050 complete records and
+engine-clock digests, every client receipt and exact retry, current lexical
+visibility, and an old pinned prefix. That functional visibility proof is
+outside ACK and recovery timing. The recovery timer covers source verification
+and locator/index reconstruction, not the later complete-original comparison,
+visibility assertions or explicit cache checkpoint. Small fixture recovery
+results do not qualify one-million-record recovery or production availability.
