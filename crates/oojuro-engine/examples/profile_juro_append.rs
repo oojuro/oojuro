@@ -13,10 +13,24 @@ use oojuro_engine::record::{
 };
 use oojuro_engine::{EventAppender, EventBuilder, EventHit, EventIndex, EventQuery, EventRow};
 use serde_json::{Value, json};
-use std::{fs, io::Write, path::Path, time::Instant};
+use std::{fs, io::Write, path::Path, sync::OnceLock, time::Instant};
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 const SOURCE_KEY: [u8; 32] = [43; 32];
 const INDEX_KEY: [u8; 32] = [42; 32];
+#[derive(Clone, Copy, PartialEq)]
+enum Dataset {
+    Homogeneous,
+    Diverse,
+}
+static DATASET: OnceLock<Dataset> = OnceLock::new();
+fn dataset_name() -> &'static str {
+    if DATASET.get() == Some(&Dataset::Diverse) {
+        "diverse"
+    } else {
+        "homogeneous"
+    }
+}
+
 fn checked<T>(r: record::Result<T>) -> Result<T> {
     r.map_err(|e| format!("projection: {e:?}").into())
 }
@@ -37,11 +51,36 @@ fn binding(cp: Checkpoint) -> Binding {
 }
 fn payload(n: usize) -> Vec<u8> {
     if n.is_multiple_of(997) {
-        return [vec![0xff, 0], (n as u64).to_be_bytes().to_vec()].concat();
+        // Binary originals stay readable and are deliberately absent from text results.
+        return [vec![0xff, 0x00], (n as u64).to_be_bytes().to_vec()].concat();
     }
     let mut s = format!("Original λ\r\nmeasurement {n} battery electrode needle{n:08} ");
     if n.is_multiple_of(97) {
         s.push_str("lookup_needle ");
+    }
+    if DATASET.get() == Some(&Dataset::Diverse) {
+        // Synthetic non-agent measurements with heterogeneous lengths, scopes,
+        // and TF correlations. Original bytes remain the only result oracle.
+        for repeated in 0..(n % 73) {
+            if repeated % 3 == 0 {
+                s.push_str("battery ");
+            }
+            if repeated % 7 == 0 {
+                s.push_str("electrode ");
+            }
+            if repeated % 11 == 0 {
+                s.push_str("original ");
+            }
+            s.push_str("thermal_coating response ");
+        }
+        for word in 0..(n % 41) {
+            s.push_str(&format!(
+                "material{} region{} supplier{} ",
+                word,
+                (n + word) % 23,
+                (n * 3 + word) % 31
+            ));
+        }
     }
     s.push_str("exact original\0終");
     s.into_bytes()
@@ -152,6 +191,21 @@ fn main() -> Result<()> {
     {
         return Err("prepare ROOT ROWS DELTA INTENTS plain|encrypted; append ROOT ROWS DELTA raw|zstd INTENTS plain|encrypted validate|measure".into());
     }
+    let dataset = match std::env::var("JURO_BENCH_DATASET").as_deref() {
+        Err(std::env::VarError::NotPresent) | Ok("homogeneous") => Dataset::Homogeneous,
+        Ok("diverse") => Dataset::Diverse,
+        _ => return Err("JURO_BENCH_DATASET must be homogeneous or diverse".into()),
+    };
+    DATASET.set(dataset).map_err(|_| "dataset already set")?;
+    let flag = |name: &str| -> Result<bool> {
+        match std::env::var(name).as_deref() {
+            Err(std::env::VarError::NotPresent) | Ok("0") => Ok(false),
+            Ok("1") => Ok(true),
+            _ => Err(format!("{name} must be 0 or 1").into()),
+        }
+    };
+    let prewarm = flag("JURO_BENCH_PREWARM")?;
+    let extended = flag("JURO_BENCH_APPEND_EXTENDED")?;
     let compact = match std::env::var("JURO_BENCH_COMPACT").as_deref() {
         Err(std::env::VarError::NotPresent) | Ok("0") => false,
         Ok("1") => true,
@@ -174,10 +228,16 @@ fn main() -> Result<()> {
         _ => return Err("plain|encrypted".into()),
     };
     // Refuse an incomplete/wrong fixture before any writable recovery.
-    let before = Journal::open(root.join("source.juro"), key(encrypted), false)?;
+    let mut before = Journal::open(root.join("source.juro"), key(encrypted), false)?;
     if before.len() != rows || before.recovered_tail_bytes() != 0 {
         return Err("not a complete source fixture".into());
     }
+    before.scan(None, 2, |event| {
+        if event.data != payload(number(&event.cursor.to_bytes())) {
+            return Err(ojo::Error::Invalid("synthetic dataset differs"));
+        }
+        Ok(())
+    })?;
     let expected = before.checkpoint();
     drop(before);
     let mut source = Journal::open(root.join("source.juro"), key(encrypted), true)?;
@@ -205,7 +265,7 @@ fn main() -> Result<()> {
         fs::File::open(path.parent().ok_or("intent parent")?)?.sync_all()?;
         println!(
             "{}",
-            json!({"phase":"prepare","rows":rows,"delta":delta,"durable_intents_ns":began.elapsed().as_nanos(),"source_checkpoint_unchanged":source.checkpoint()==expected})
+            json!({"phase":"prepare","dataset":dataset_name(),"rows":rows,"delta":delta,"durable_intents_ns":began.elapsed().as_nanos(),"source_checkpoint_unchanged":source.checkpoint()==expected})
         );
         return Ok(());
     }
@@ -255,6 +315,15 @@ fn main() -> Result<()> {
         &binding(expected),
     ))?;
     let old_bytes = previous.index_bytes();
+    let prewarm_ns = if prewarm {
+        let started = Instant::now();
+        for text in ["battery", "battery electrode", "battery electrode original"] {
+            search(&previous, &mut source, text)?;
+        }
+        Some(started.elapsed().as_nanos())
+    } else {
+        None
+    };
     let began = Instant::now();
     let receipts = source.append_prepared_batch(&batch)?;
     let source_ns = began.elapsed().as_nanos();
@@ -287,14 +356,34 @@ fn main() -> Result<()> {
         .rev()
         .find(|n| !n.is_multiple_of(997))
         .ok_or("no indexed appended original")?;
-    let cases = [
+    let mut cases = vec![
         "battery".to_owned(),
         "lookup_needle battery".to_owned(),
         format!("needle{unique:08}"),
     ];
+    if extended {
+        cases.extend([
+            "battery electrode".to_owned(),
+            "battery electrode original".to_owned(),
+        ]);
+    }
     let mut results: Vec<Value> = Vec::new();
+    let mut source_refresh_first_query_ns = None;
     for text in &cases {
-        results.push(json!({"query":text,"signature":search(&index,&mut source,text)?}));
+        let query_started = Instant::now();
+        let found = search(&index, &mut source, text)?;
+        let first_query_ns = query_started.elapsed().as_nanos();
+        if source_refresh_first_query_ns.is_none() {
+            source_refresh_first_query_ns = Some(began.elapsed().as_nanos());
+        }
+        let warm_query_ns = if extended || prewarm {
+            let repeated = Instant::now();
+            assert_eq!(search(&index, &mut source, text)?, found);
+            Some(repeated.elapsed().as_nanos())
+        } else {
+            None
+        };
+        results.push(json!({"query":text,"signature":found,"first_query_ns":first_query_ns,"warm_query_ns":warm_query_ns}));
     }
     let mut oracle_ns = None;
     if validate {
@@ -315,7 +404,7 @@ fn main() -> Result<()> {
     }
     println!(
         "{}",
-        json!({"phase":"append","rows":rows,"delta":delta,"compression":args[5],"source_encrypted":encrypted,"source_compression":"NOCOMPRESS","derived_layout":if compact { 2 } else { 1 },
+        json!({"phase":"append","dataset":dataset_name(),"warm_before_append":prewarm,"prewarm_ns":prewarm_ns,"source_plus_refresh_first_query_ns":source_refresh_first_query_ns,"rows":rows,"delta":delta,"compression":args[5],"source_encrypted":encrypted,"source_compression":"NOCOMPRESS","derived_layout":if compact { 2 } else { 1 },
         "source_append_ns":source_ns,"index_refresh_ns":refresh_ns,"source_plus_refresh_ns":total_ns,"old_index_bytes":old_bytes,"new_index_bytes":index.index_bytes(),
         "allocated_index_bytes":index.allocated_index_bytes(),"estimated_heap_bytes":index.estimated_heap_bytes(),"build_metrics":index.build_metrics(),"queries":results,"oracle_ns":oracle_ns,
         "scope":"healthy actual source durable append plus COW refresh; excludes source/index open and separately retained intent persistence; exact original fetches/checkpoints"})
