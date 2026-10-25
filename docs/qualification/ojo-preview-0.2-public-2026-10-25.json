@@ -23,5 +23,25 @@
     "legacy_export_and_encrypted_archive_exact": true,
     "synthetic_keys_and_datasets_removed": true
   },
-  "scope": "Actual published Linux x86-64 archive and anonymous installer; no hosted performance or production promotion claim."
+  "scope": "Actual published Linux x86-64 archive, anonymous curl installer, Cargo installation from the immutable public Git tag and canonical public Homebrew tap; no hosted performance or production promotion claim.",
+  "cargo_installation": {
+    "public_git_tag": "ojo-v0.2.0",
+    "source_commit": "86ed2bd87a1296bb4e87cf1d402ffab12e214404",
+    "installed_cargo_version": "0.2.0",
+    "binary_sha256": "8728e8c664a095553c3af85b7d297be64efb2c2cb80514857913f1ab8ecb28ec",
+    "encrypted_read_and_index_search_passed": true,
+    "owned_fixture_removed": true
+  },
+  "homebrew_installation": {
+    "canonical_public_tap": "https://github.com/oojuro/oojuro",
+    "observed_tap_head": "9c0154308c7419d56113238b4314b71b3d19bb6c",
+    "actual_brew_upgrade": true,
+    "version": "ojo 0.2.0 (wire 0.1)",
+    "binary_sha256": "8728e8c664a095553c3af85b7d297be64efb2c2cb80514857913f1ab8ecb28ec",
+    "installed_notices_verified": true,
+    "formula_equivalent_append_index_search_read_passed": true,
+    "synthetic_fixture_removed": true,
+    "formula_framework_test": "Not executed; the prior isolated Ruby Prism bootstrap limitation is recorded separately.",
+    "local_environment_resolution": "The isolated test prefix initially denied Git global-config access when build tooling tried to clone homebrew/core with API installation disabled. Normal API-backed dependency lookup resolved it; formula/archive bytes and the public tap were unchanged."
+  }
 }

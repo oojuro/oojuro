@@ -26,10 +26,22 @@ excerpts, exact cursor reads, byte-for-byte export at a legacy .ojo filename and
 an encrypted compressed archive read. All synthetic source/index keys and datasets
 were removed after terminal verification.
 
-Homebrew's formula points to this exact public archive/checksum and tests a
-non-agent Event append/index/search flow. Cargo installation uses the immutable
-source tag. Their own installed-client results are recorded separately; neither
-source checks nor this local distribution proof establish Cloud performance,
-provisioning, restore, billing or a general storage advantage.
+Cargo installation from the public immutable `ojo-v0.2.0` Git tag passed, with
+credential helpers and HTTP authorization headers cleared for that command.
+Cargo's installed receipt identifies source `86ed2bd87a1296bb4e87cf1d402ffab12e214404`;
+the resulting binary has the same SHA-256 above. Its encrypted exact-read and
+index/search flow passed, and the synthetic fixture was removed.
+
+Homebrew upgraded the installed 0.1 package to 0.2 through the canonical public
+`oojuro/engine` tap. The installed binary has the same SHA-256 above, retains its
+notices, and passed append/index/search plus cursor-bound exact reads. The
+formula framework test did not execute because of the separately recorded
+isolated Ruby Prism bootstrap limitation; the installed formula-equivalent
+commands passed directly. The isolated prefix initially failed while looking
+up build tooling with API installation disabled; normal API-backed lookup
+resolved that local setup without changing formula or package bytes.
+
+These installation results do not establish Cloud performance, provisioning,
+restore, billing or a general storage advantage.
 
 [Machine-readable public release evidence](ojo-preview-0.2-public-2026-10-25.json).
