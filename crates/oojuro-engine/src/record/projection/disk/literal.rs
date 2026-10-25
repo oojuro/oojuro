@@ -285,15 +285,17 @@ impl Block {
     }
 }
 
-/// Join exact byte offsets once per shared list/mask rather than once per row.
-/// A work unit is a candidate position or a bounded (at most 4096 positions)
-/// binary search. Refusing
-/// a work budget returns no proof; the caller must use exact original text.
+/// Join exact offsets through a bounded sparse position-to-row-mask map. One
+/// work unit is an input group or an offset plus bounded map lookup (at most
+/// 8192 keys). Budget refusal discards the whole proof and uses exact text.
+/// Two maps can coexist; charging 128 bytes per entry reserves at most 2 MiB
+/// for map nodes, separately from the 8 MiB decoded-fragment allowance.
 pub(super) fn matches(
     base: u32,
     atoms: &[(u32, &[Block])],
     work: &mut usize,
 ) -> Result<Option<[u64; 4]>> {
+    const MAX_STARTS: usize = 8192;
     if atoms.is_empty() || atoms[0].0 != 0 || atoms.len() > MAX_ATOMS || base & 255 != 0 {
         return Err(Error::Invalid);
     }
@@ -303,48 +305,88 @@ pub(super) fn matches(
     {
         return Err(Error::Authority);
     }
-    let mut matched = [0u64; 4];
-    for first in atoms[0].1 {
-        for group in &first.groups {
-            for start in &group.positions {
-                let Some(remaining) = work.checked_sub(1) else {
+    fn charge(work: &mut usize) -> bool {
+        if let Some(remaining) = work.checked_sub(1) {
+            *work = remaining;
+            true
+        } else {
+            false
+        }
+    }
+    fn insert(starts: &mut BTreeMap<u32, [u64; 4]>, at: u32, rows: [u64; 4]) -> bool {
+        if let Some(previous) = starts.get_mut(&at) {
+            for (previous, rows) in previous.iter_mut().zip(rows) {
+                *previous |= rows;
+            }
+        } else {
+            if starts.len() == MAX_STARTS {
+                return false;
+            }
+            starts.insert(at, rows);
+        }
+        true
+    }
+    let mut starts = BTreeMap::new();
+    for block in atoms[0].1 {
+        for group in &block.groups {
+            if !charge(work) {
+                return Ok(None);
+            }
+            for position in &group.positions {
+                if !charge(work) || !insert(&mut starts, *position, group.rows) {
                     return Ok(None);
-                };
-                *work = remaining;
-                let mut active = group.rows;
-                for (offset, fragments) in &atoms[1..] {
-                    let Some(wanted) = start.checked_add(*offset) else {
-                        active = [0; 4];
-                        break;
-                    };
-                    let mut found = [0u64; 4];
-                    for fragment in *fragments {
-                        for group in &fragment.groups {
-                            let Some(remaining) = work.checked_sub(1) else {
-                                return Ok(None);
-                            };
-                            *work = remaining;
-                            if group.positions.binary_search(&wanted).is_ok() {
-                                for (found, mask) in found.iter_mut().zip(group.rows) {
-                                    *found |= mask;
-                                }
-                            }
-                        }
-                    }
-                    for (active, found) in active.iter_mut().zip(found) {
-                        *active &= found;
-                    }
-                    if active.iter().all(|mask| *mask == 0) {
-                        break;
-                    }
-                }
-                for (matched, active) in matched.iter_mut().zip(active) {
-                    *matched |= active;
                 }
             }
         }
     }
-    Ok(Some(matched))
+    for (offset, fragments) in &atoms[1..] {
+        let Some((&first, _)) = starts.first_key_value() else {
+            return Ok(Some([0; 4]));
+        };
+        let last = *starts.last_key_value().ok_or(Error::Authority)?.0;
+        let Some(first) = first.checked_add(*offset) else {
+            return Ok(Some([0; 4]));
+        };
+        let last = last.saturating_add(*offset);
+        let allowed = starts.values().fold([0u64; 4], |mut mask, rows| {
+            for (mask, rows) in mask.iter_mut().zip(rows) {
+                *mask |= rows;
+            }
+            mask
+        });
+        let mut next = BTreeMap::new();
+        for fragment in *fragments {
+            for group in &fragment.groups {
+                if !charge(work) {
+                    return Ok(None);
+                }
+                if group.rows.iter().zip(allowed).all(|(a, b)| a & b == 0) {
+                    continue;
+                }
+                let begin = group.positions.partition_point(|at| *at < first);
+                let end = group.positions.partition_point(|at| *at <= last);
+                for position in &group.positions[begin..end] {
+                    if !charge(work) {
+                        return Ok(None);
+                    }
+                    let at = *position - offset;
+                    if let Some(previous) = starts.get(&at) {
+                        let rows = std::array::from_fn(|word| previous[word] & group.rows[word]);
+                        if rows.iter().any(|word| *word != 0) && !insert(&mut next, at, rows) {
+                            return Ok(None);
+                        }
+                    }
+                }
+            }
+        }
+        starts = next;
+    }
+    Ok(Some(starts.values().fold([0u64; 4], |mut mask, rows| {
+        for (mask, rows) in mask.iter_mut().zip(rows) {
+            *mask |= rows;
+        }
+        mask
+    })))
 }
 
 struct Cursor<'a> {
@@ -598,5 +640,36 @@ mod tests {
             }
             assert!(matches(0, &refs, &mut 0).unwrap().is_none());
         }
+    }
+    #[test]
+    fn offset_join_caps_maps_and_handles_many_shared_fragment_positions_exactly() {
+        let mut blocks = Vec::new();
+        for chunk in 0..9 {
+            let positions: Vec<_> = (chunk * 1000..(chunk + 1) * 1000).collect();
+            blocks
+                .push(Block::decode(0, 1, &Block::encode(0, &[(0, positions)]).unwrap()).unwrap());
+        }
+        assert!(
+            matches(0, &[(0, &blocks)], &mut 1_000_000)
+                .unwrap()
+                .is_none()
+        );
+        let positions = |offset: u32| {
+            (0..10)
+                .map(|row| {
+                    let list = vec![row + offset, 100 + row + offset, 900 + row + offset];
+                    Block::decode(0, 10, &Block::encode(0, &[(row, list)]).unwrap()).unwrap()
+                })
+                .collect::<Vec<_>>()
+        };
+        let a = positions(0);
+        let b = positions(8);
+        let c = positions(19);
+        let mut budget = 1_000_000;
+        assert_eq!(
+            matches(0, &[(0, &a), (8, &b), (19, &c)], &mut budget).unwrap(),
+            Some([1023, 0, 0, 0])
+        );
+        assert!(budget >= 1_000_000 - 200);
     }
 }
