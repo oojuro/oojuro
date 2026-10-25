@@ -81,6 +81,28 @@ finished session has been idle for 24 hours. The caller in ojo-journal/ojo-cloud
 owns that timer; resumed activity resets it. The storage engine has no session
 state or scheduler. This crate supplies the archive operation, not that automation.
 
+`scan_prefix(prefix, after, limit, callback)` visits only the latest live values
+under a byte prefix, in bytewise key order, with an exclusive continuation key.
+Pages contain at most 1,024 values; empty values remain visible and tombstones
+are omitted. The callback borrows one selected value at a time and can return an
+error to stop immediately. Adjacent selected values in an encoded transaction
+share one verified decode within the call. No decoded values are retained between
+calls. Raw values retain their selected-value SHA-256 checks.
+
+The first prefix call builds an additional in-memory ordered index of live keys;
+ordinary point reads do not allocate it. Later pages use bounded range selection,
+and commits keep it current. Its key storage is additional to the ordinary index.
+The continuation key is a range bound, not a frozen snapshot across writes or
+reopens. Applications can use immutable monotonic keys and retained checkpoints
+for resumable exports. The handle keeps its existing inode lock until dropped;
+closing it before network work permits a writer, but reopening still validates
+the complete history.
+
+With `archive`, each handle lazily reuses independent Zstandard codec contexts.
+Every transaction retains its own complete frame with the same format, level
+and decoder limits. This reuses codec workspace, not source values, authority
+decisions or an external dictionary. The default build still has no codec library.
+
 Wire bounds are 64 KiB keys, 16 MiB values, 32 MiB decoded batches. This implementation
 also refuses more than 10 million operations or 256 MiB cumulative key bytes;
 these are index admission limits, not wire-format limits. Memory grows with unique

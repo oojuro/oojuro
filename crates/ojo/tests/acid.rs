@@ -266,6 +266,224 @@ fn reopened_retry_first_conflict_does_not_replace_the_original_fingerprint() {
 }
 
 #[test]
+fn prefix_pages_are_latest_byte_ordered_and_track_mutations() {
+    type Rows = Vec<(Vec<u8>, Vec<u8>)>;
+    fn page(
+        db: &mut Database,
+        prefix: &[u8],
+        after: Option<&[u8]>,
+        limit: usize,
+    ) -> (Rows, Option<Vec<u8>>) {
+        let mut rows = Vec::new();
+        let next = db
+            .scan_prefix(prefix, after, limit, |key, value| {
+                rows.push((key.to_vec(), value.to_vec()));
+                Ok(())
+            })
+            .unwrap();
+        (rows, next)
+    }
+    for key in [None, Some([42; 32])] {
+        let scratch = Scratch::new();
+        let path = scratch.file();
+        let mut db = Database::create(&path, key.as_ref()).unwrap();
+        db.commit(
+            id(1),
+            &[
+                put(b"p/2", b"old"),
+                put(b"other", b"outside"),
+                put(b"p/1", b"one"),
+                put(b"p/3", b""),
+                put(b"\xff\xff\0", b"binary"),
+                put(b"\xff\xfe", b"before"),
+            ],
+        )
+        .unwrap();
+        db.commit(
+            id(2),
+            &[
+                put(b"p/2", b"new"),
+                Change {
+                    key: b"p/4",
+                    value: None,
+                },
+            ],
+        )
+        .unwrap();
+        let (first, cursor) = page(&mut db, b"p/", None, 2);
+        assert_eq!(
+            first,
+            vec![
+                (b"p/1".to_vec(), b"one".to_vec()),
+                (b"p/2".to_vec(), b"new".to_vec())
+            ]
+        );
+        assert_eq!(cursor.as_deref(), Some(&b"p/2"[..]));
+        let (last, cursor) = page(&mut db, b"p/", cursor.as_deref(), 2);
+        assert_eq!(last, vec![(b"p/3".to_vec(), Vec::new())]);
+        assert_eq!(cursor, None);
+        assert_eq!(page(&mut db, b"p/", Some(b"z"), 2), (Vec::new(), None));
+        assert_eq!(page(&mut db, b"p/", Some(b"a"), 2).0, first);
+        assert_eq!(
+            page(&mut db, b"\xff\xff", None, 2).0,
+            vec![(b"\xff\xff\0".to_vec(), b"binary".to_vec())]
+        );
+        db.commit(
+            id(3),
+            &[
+                put(b"p/0", b"zero"),
+                Change {
+                    key: b"p/2",
+                    value: None,
+                },
+                put(b"p/1", b"updated"),
+            ],
+        )
+        .unwrap();
+        let expected = vec![
+            (b"p/0".to_vec(), b"zero".to_vec()),
+            (b"p/1".to_vec(), b"updated".to_vec()),
+            (b"p/3".to_vec(), Vec::new()),
+        ];
+        assert_eq!(page(&mut db, b"p/", None, 10), (expected.clone(), None));
+        let checkpoint = db.checkpoint();
+        let bytes = fs::read(&path).unwrap();
+        assert_eq!(page(&mut db, b"", None, 10).0.len(), 6);
+        assert_eq!(db.checkpoint(), checkpoint);
+        assert_eq!(fs::read(&path).unwrap(), bytes);
+        drop(db);
+        let mut db = Database::open(&path, key.as_ref(), false).unwrap();
+        assert_eq!(page(&mut db, b"p/", None, 10), (expected.clone(), None));
+        #[cfg(feature = "archive")]
+        {
+            let archive = scratch.0.join("prefix.archive.ojo");
+            db.archive_to(&archive).unwrap();
+            let mut archived = Database::open(archive, key.as_ref(), false).unwrap();
+            assert_eq!(page(&mut archived, b"p/", None, 10), (expected, None));
+        }
+    }
+    fn send_sync<T: Send + Sync>() {}
+    send_sync::<Database>();
+}
+
+#[test]
+fn prefix_visitors_stop_on_errors_and_refuse_invalid_bounds() {
+    let scratch = Scratch::new();
+    let mut db = Database::create(scratch.file(), None).unwrap();
+    db.commit(
+        id(1),
+        &[
+            put(b"p/1", b"one"),
+            put(b"p/2", b"two"),
+            put(b"p/3", b"three"),
+        ],
+    )
+    .unwrap();
+    let mut visited = 0;
+    let error = db.scan_prefix(b"p/", None, 10, |_, _| {
+        visited += 1;
+        if visited == 2 {
+            Err(Error::Invalid("visitor stopped"))
+        } else {
+            Ok(())
+        }
+    });
+    assert!(matches!(error, Err(Error::Invalid("visitor stopped"))));
+    assert_eq!(visited, 2);
+    for limit in [0, 1025] {
+        assert!(matches!(
+            db.scan_prefix(b"", None, limit, |_, _| panic!("invalid limit")),
+            Err(Error::Invalid(_))
+        ));
+    }
+    assert!(
+        db.scan_prefix(&vec![0; 65537], None, 1, |_, _| panic!("invalid prefix"))
+            .is_err()
+    );
+    assert!(
+        db.scan_prefix(b"", Some(&vec![0; 65537]), 1, |_, _| panic!(
+            "invalid cursor"
+        ))
+        .is_err()
+    );
+    let mut all = 0;
+    assert_eq!(
+        db.scan_prefix(b"p/", None, 10, |_, _| {
+            all += 1;
+            Ok(())
+        })
+        .unwrap(),
+        None
+    );
+    assert_eq!(all, 3);
+}
+
+#[test]
+fn prefix_reads_revalidate_values_after_the_ordered_index_is_warm() {
+    use std::io::{Read, Seek, SeekFrom, Write};
+    for key in [None, Some([42; 32])] {
+        for archive in [false, true] {
+            if archive && !cfg!(feature = "archive") {
+                continue;
+            }
+            let scratch = Scratch::new();
+            let source = scratch.file();
+            let mut db = Database::create(&source, key.as_ref()).unwrap();
+            db.commit(
+                id(1),
+                &[
+                    put(b"p/a", &vec![b'A'; 4096]),
+                    put(b"p/b", &vec![b'B'; 4096]),
+                ],
+            )
+            .unwrap();
+            #[cfg(feature = "archive")]
+            let path = if archive {
+                let path = scratch.0.join("prefix.archive.ojo");
+                db.archive_to(&path).unwrap();
+                path
+            } else {
+                source
+            };
+            #[cfg(not(feature = "archive"))]
+            let path = source;
+            drop(db);
+            let mut db = Database::open(&path, key.as_ref(), false).unwrap();
+            db.scan_prefix(b"p/", None, 10, |_, _| Ok(())).unwrap();
+            let mut external = fs::OpenOptions::new()
+                .read(true)
+                .write(true)
+                .open(path)
+                .unwrap();
+            external.seek(SeekFrom::End(-49)).unwrap();
+            let mut byte = [0];
+            external.read_exact(&mut byte).unwrap();
+            byte[0] ^= 1;
+            external.seek(SeekFrom::End(-49)).unwrap();
+            external.write_all(&byte).unwrap();
+            assert!(matches!(
+                db.scan_prefix(b"p/b", None, 1, |_, _| panic!("corrupt selected value")),
+                Err(Error::Corrupt(_))
+            ));
+            if archive || key.is_some() {
+                assert!(matches!(
+                    db.scan_prefix(b"p/a", None, 1, |_, _| panic!(
+                        "corrupt encoded transaction"
+                    )),
+                    Err(Error::Corrupt(_))
+                ));
+            } else {
+                db.scan_prefix(b"p/a", None, 1, |_, value| {
+                    assert_eq!(value, vec![b'A'; 4096]);
+                    Ok(())
+                })
+                .unwrap();
+            }
+        }
+    }
+}
+
+#[test]
 fn encoded_offsets_cover_variable_binary_keys_empty_values_and_tombstones() {
     for key in [None, Some([42; 32])] {
         let scratch = Scratch::new();
