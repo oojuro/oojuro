@@ -66,7 +66,9 @@ retains the existing literal text fallback, and makes no general 100 ms, 250 ms,
 The second exploratory cohort at `02187c9` compares layout 1 and layout 2 in the
 same frozen binary with identical actual source files and exact result checks.
 At 100k rows, raw cache bytes are 110,442,233 versus 66,212,762; Zstd bytes are
-75,658,372 versus 56,888,708. Ten-client forced-fresh pair/triple query p95s are
+75,658,372 versus 56,888,708. The stage-2 `common_triple` label actually queries `battery electrode transaction`;
+`transaction` is absent in this fixture, so it is a pair plus one absent term,
+not three matching terms. Ten-client forced-fresh pair/pair-with-absent-term p95s are
 132.94/144.19 ms versus 83.13/79.78 ms raw, and 88.52/126.33 versus 66.27/82.62 ms
 Zstd. Each query has 30 timed observations, after an initial warming query; final
 rank-result reuse is bypassed. These are small local synthetic cohorts, with

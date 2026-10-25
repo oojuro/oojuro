@@ -5083,6 +5083,15 @@
           "source_open_ns": 53772580
         }
       }
-    ]
+    ],
+    "query_texts": {
+      "unique": "needle plus the final indexed ordinal, padded to eight digits",
+      "common": "battery",
+      "common_pair": "battery electrode",
+      "common_triple": "battery electrode transaction (transaction is absent in this fixture)",
+      "missing": "unseenword999",
+      "identifier_anchor": "lookup_needle battery",
+      "dense_phrase": "\"battery electrode\""
+    }
   }
 }

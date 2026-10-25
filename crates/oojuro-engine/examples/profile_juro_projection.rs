@@ -339,7 +339,8 @@ fn main() -> Result<()> {
         ),
         ("common", "battery".into()),
         ("common_pair", "battery electrode".into()),
-        ("common_triple", "battery electrode transaction".into()),
+        ("common_triple", "battery electrode original".into()),
+        ("pair_with_absent", "battery electrode transaction".into()),
         ("missing", "unseenword999".into()),
         ("identifier_anchor", "lookup_needle battery".into()),
     ];
@@ -441,7 +442,7 @@ fn main() -> Result<()> {
             }
             Ok(times)
         })?;
-        results.push(json!({"case":name,"signature":wanted,"initial_query_ns":initial_ns,"timing":distribution(times)}));
+        results.push(json!({"case":name,"query_text":text,"signature":wanted,"initial_query_ns":initial_ns,"timing":distribution(times)}));
     }
     snapshot(
         &*source.lock().map_err(|_| "source lock poisoned")?,
