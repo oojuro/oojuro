@@ -104,6 +104,7 @@ pub struct Database {
     file: File,
     header: [u8; FILE],
     cipher: Option<XChaCha20Poly1305>,
+    codecs: wire::Codecs,
     writable: bool,
     poisoned: bool,
     end: u64,
@@ -171,6 +172,7 @@ impl Database {
             file,
             header,
             cipher,
+            codecs: wire::Codecs::default(),
             writable,
             poisoned: false,
             end: FILE as u64,
@@ -219,7 +221,13 @@ impl Database {
             if size > length - db.end {
                 break;
             }
-            let (body, digest) = read_body(&mut reader, &db.header, db.cipher.as_ref(), &head)?;
+            let (body, digest) = read_body(
+                &mut reader,
+                &db.header,
+                db.cipher.as_ref(),
+                &mut db.codecs,
+                &head,
+            )?;
             let mut key_bytes = 0;
             wire::walk(&body, u32_at(&head, 32), |_, key, _| key_bytes += key.len())?;
             db.admit(u32_at(&head, 32) as usize, key_bytes)?;
@@ -350,7 +358,7 @@ impl Database {
             return Err(Error::Unsupported);
             #[cfg(feature = "archive")]
             {
-                let packed = zstd::bulk::compress(&frame[prefix..], 3)?;
+                let packed = self.codecs.compress(&frame[prefix..])?;
                 if packed.len() < length {
                     frame.truncate(prefix);
                     frame.extend_from_slice(&packed);
@@ -495,7 +503,13 @@ impl Database {
         };
         let mut reader = BufReader::with_capacity(capacity, &self.file);
         for (index, tx) in self.transactions.iter().enumerate() {
-            let body = read_transaction(&mut reader, &self.header, self.cipher.as_ref(), tx)?;
+            let body = read_transaction(
+                &mut reader,
+                &self.header,
+                self.cipher.as_ref(),
+                &mut self.codecs,
+                tx,
+            )?;
             wire::walk(
                 &body,
                 u32_at(&self.transactions[index].head, 32),
@@ -541,13 +555,20 @@ impl Database {
     fn transaction_body(&mut self, index: usize) -> Result<Body> {
         let tx = &self.transactions[index];
         self.file.seek(SeekFrom::Start(tx.offset))?;
-        read_transaction(&mut &self.file, &self.header, self.cipher.as_ref(), tx)
+        read_transaction(
+            &mut &self.file,
+            &self.header,
+            self.cipher.as_ref(),
+            &mut self.codecs,
+            tx,
+        )
     }
 }
 fn read_transaction(
     reader: &mut impl Read,
     header: &[u8; FILE],
     cipher: Option<&XChaCha20Poly1305>,
+    codecs: &mut wire::Codecs,
     tx: &Transaction,
 ) -> Result<Body> {
     let mut head = [0; HEAD];
@@ -555,7 +576,7 @@ fn read_transaction(
     if head != tx.head {
         return Err(Error::Corrupt("changed transaction header"));
     }
-    let (body, digest) = read_body(reader, header, cipher, &head)?;
+    let (body, digest) = read_body(reader, header, cipher, codecs, &head)?;
     if digest != tx.digest {
         return Err(Error::Corrupt("changed transaction"));
     }
@@ -565,6 +586,7 @@ fn read_body(
     reader: &mut impl Read,
     header: &[u8; FILE],
     cipher: Option<&XChaCha20Poly1305>,
+    codecs: &mut wire::Codecs,
     head: &[u8; HEAD],
 ) -> Result<(Body, [u8; 32])> {
     let length = u64_at(head, 16) as usize;
@@ -576,7 +598,7 @@ fn read_body(
         return Err(Error::Corrupt("commit footer or digest"));
     }
     stored.truncate(length);
-    Ok((wire::decode(cipher, header, head, stored)?, digest))
+    Ok((wire::decode(codecs, cipher, header, head, stored)?, digest))
 }
 
 fn location(

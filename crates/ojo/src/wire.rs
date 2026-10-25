@@ -120,6 +120,26 @@ pub struct Body {
     bytes: Vec<u8>,
     start: usize,
 }
+
+/// Per-handle codec workspace. Each transaction remains an independent frame;
+/// no dictionary, decoded value or authority result is cached between reads.
+#[derive(Default)]
+pub struct Codecs {
+    #[cfg(feature = "archive")]
+    decoder: Option<zstd::bulk::Decompressor<'static>>,
+    #[cfg(feature = "archive")]
+    encoder: Option<zstd::bulk::Compressor<'static>>,
+}
+
+impl Codecs {
+    #[cfg(feature = "archive")]
+    pub fn compress(&mut self, body: &[u8]) -> Result<Vec<u8>> {
+        if self.encoder.is_none() {
+            self.encoder = Some(zstd::bulk::Compressor::new(3)?);
+        }
+        Ok(self.encoder.as_mut().unwrap().compress(body)?)
+    }
+}
 impl std::ops::Deref for Body {
     type Target = [u8];
     fn deref(&self) -> &[u8] {
@@ -127,11 +147,14 @@ impl std::ops::Deref for Body {
     }
 }
 pub fn decode(
+    codecs: &mut Codecs,
     cipher: Option<&XChaCha20Poly1305>,
     file: &[u8; FILE],
     head: &[u8; HEAD],
     mut bytes: Vec<u8>,
 ) -> Result<Body> {
+    #[cfg(not(feature = "archive"))]
+    let _ = codecs;
     let mut start = 0;
     if let Some(cipher) = cipher {
         if bytes.len() < 40 {
@@ -163,9 +186,16 @@ pub fn decode(
             {
                 return Err(Error::Corrupt("zstd frame"));
             }
-            let mut decoder = zstd::bulk::Decompressor::new()?;
-            decoder.set_parameter(zstd::zstd_safe::DParameter::WindowLogMax(25))?;
-            bytes = decoder.decompress(packed, u64_at(head, 24) as usize)?;
+            if codecs.decoder.is_none() {
+                let mut decoder = zstd::bulk::Decompressor::new()?;
+                decoder.set_parameter(zstd::zstd_safe::DParameter::WindowLogMax(25))?;
+                codecs.decoder = Some(decoder);
+            }
+            bytes = codecs
+                .decoder
+                .as_mut()
+                .unwrap()
+                .decompress(packed, u64_at(head, 24) as usize)?;
             start = 0;
         }
     }
@@ -173,6 +203,60 @@ pub fn decode(
         return Err(Error::Corrupt("decoded length"));
     }
     Ok(Body { bytes, start })
+}
+
+#[cfg(all(test, feature = "archive"))]
+mod tests {
+    use super::*;
+
+    fn decode_compressed(codecs: &mut Codecs, packed: Vec<u8>, length: usize) -> Result<Body> {
+        let mut head = [0; HEAD];
+        head[36] = 1;
+        head[24..32].copy_from_slice(&(length as u64).to_le_bytes());
+        decode(codecs, None, &[0; FILE], &head, packed)
+    }
+
+    #[test]
+    fn codec_workspaces_keep_frames_independent_and_recover_after_decode_error() {
+        let first = vec![b'A'; 4096];
+        let second = (0..65536).map(|i| (i * 31) as u8).collect::<Vec<_>>();
+        let mut codecs = Codecs::default();
+        let first_packed = codecs.compress(&first).unwrap();
+        let second_packed = codecs.compress(&second).unwrap();
+        assert_eq!(codecs.compress(&first).unwrap(), first_packed);
+        assert_eq!(
+            zstd::bulk::decompress(&first_packed, first.len()).unwrap(),
+            first
+        );
+        assert_eq!(
+            zstd::bulk::decompress(&second_packed, second.len()).unwrap(),
+            second
+        );
+        assert_eq!(
+            &*decode_compressed(&mut codecs, first_packed.clone(), first.len()).unwrap(),
+            first
+        );
+        assert_eq!(
+            &*decode_compressed(&mut codecs, second_packed, second.len()).unwrap(),
+            second
+        );
+
+        let mut checksummed = zstd::bulk::Compressor::new(3).unwrap();
+        checksummed
+            .set_parameter(zstd::zstd_safe::CParameter::ChecksumFlag(true))
+            .unwrap();
+        let mut broken = checksummed.compress(&first).unwrap();
+        *broken.last_mut().unwrap() ^= 1;
+        assert_eq!(
+            zstd::zstd_safe::find_frame_compressed_size(&broken).unwrap(),
+            broken.len()
+        );
+        assert!(decode_compressed(&mut codecs, broken, first.len()).is_err());
+        assert_eq!(
+            &*decode_compressed(&mut codecs, first_packed, first.len()).unwrap(),
+            first
+        );
+    }
 }
 
 /// Visit borrowed values while validating the entire transaction, without copying it per operation.
