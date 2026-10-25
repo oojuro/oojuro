@@ -672,4 +672,52 @@ mod tests {
         );
         assert!(budget >= 1_000_000 - 200);
     }
+    #[test]
+    fn offset_map_masks_match_exhaustive_randomized_row_position_joins() {
+        let mut seed = 29u64;
+        for _ in 0..16 {
+            let mut lists = [Vec::new(), Vec::new(), Vec::new()];
+            let mut expected = [0u64; 4];
+            for row in 0..256u32 {
+                let positions: [Vec<u32>; 3] = std::array::from_fn(|_| {
+                    let mut values = Vec::new();
+                    for at in 0..64u32 {
+                        seed ^= seed << 13;
+                        seed ^= seed >> 7;
+                        seed ^= seed << 17;
+                        if seed & 7 == 0 {
+                            values.push(at);
+                        }
+                    }
+                    if values.is_empty() {
+                        values.push(0);
+                    }
+                    values
+                });
+                if positions[0].iter().any(|start| {
+                    positions[1].binary_search(&(start + 3)).is_ok()
+                        && positions[2].binary_search(&(start + 8)).is_ok()
+                }) {
+                    expected[row as usize / 64] |= 1 << (row % 64);
+                }
+                for (list, positions) in lists.iter_mut().zip(positions) {
+                    list.push(
+                        Block::decode(0, 256, &Block::encode(0, &[(row, positions)]).unwrap())
+                            .unwrap(),
+                    );
+                }
+            }
+            let mut work = 1_000_000;
+            assert_eq!(
+                matches(
+                    0,
+                    &[(0, &lists[0]), (3, &lists[1]), (8, &lists[2])],
+                    &mut work
+                )
+                .unwrap(),
+                Some(expected)
+            );
+            assert!(work >= 900_000);
+        }
+    }
 }
