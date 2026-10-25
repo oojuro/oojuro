@@ -55,6 +55,14 @@ decoded-page policy before warming and an additional 4 MiB allowance for small
 allocation bookkeeping. This is an admission estimate, not a hard process RSS
 limit. Builder analysis vocabulary and run sorting have separate bounded
 working sets; measure process peak RSS when choosing a build reservation.
+An additional reserved4 MiB holds at most128 ranking results, with at most32
+in-flight computations coordinated for identical queries. Every materialization
+still fetches and checks source originals. A new immutable Index/Binding starts
+with an empty result cache. `rank_uncached` bypasses result reuse for fresh-work
+diagnostics; warmed page reuse can still occur. Default unfiltered queries use
+precomputed complete-view mass rather than scanning all numeric columns.
+Identifier queries drive their exact passes from anchored postings; a separate
+full-view pass runs when the unchanged ranker's probability floor requires it.
 
 `Limits.index_bytes` bounds logical bytes of the new generation's entire build,
 including encrypted text, row spool, sort queues/runs, tree packs, numeric

@@ -176,7 +176,48 @@ pub(super) struct Selection {
     tool: Option<[u8; 32]>,
     agent: Option<[u8; 32]>,
 }
+#[derive(Clone, Copy, Default)]
+pub(super) struct Totals {
+    pub length: u64,
+    pub scope: u64,
+}
+impl Totals {
+    pub fn add(&mut self, column: &Column) -> Result<()> {
+        if column.live() && column.indexed() {
+            self.length = self
+                .length
+                .checked_add(u64::from(column.length))
+                .ok_or(Error::Bounds)?;
+            self.scope = self
+                .scope
+                .checked_add(u64::from(column.scope))
+                .ok_or(Error::Bounds)?;
+        }
+        Ok(())
+    }
+    pub fn remove(&mut self, column: &Column) -> Result<()> {
+        if column.live() && column.indexed() {
+            self.length = self
+                .length
+                .checked_sub(u64::from(column.length))
+                .ok_or(Error::Authority)?;
+            self.scope = self
+                .scope
+                .checked_sub(u64::from(column.scope))
+                .ok_or(Error::Authority)?;
+        }
+        Ok(())
+    }
+}
 impl Selection {
+    pub fn unfiltered(&self) -> bool {
+        self.from == i64::MIN
+            && self.to == i64::MAX
+            && self.kind.is_none()
+            && self.status.is_none()
+            && self.tool.is_none()
+            && self.agent.is_none()
+    }
     pub fn new(q: &Query<'_>) -> Self {
         Self {
             from: q.from,
@@ -775,6 +816,7 @@ pub(super) fn open_with_cipher(
     let mut columns = Vec::with_capacity(manifest.columns.len());
     let mut rows = 0usize;
     let mut live = 0u64;
+    let mut totals = Totals::default();
     for reference in &manifest.columns {
         if reference.kind != COLUMNS {
             return Err(Error::Authority);
@@ -798,6 +840,9 @@ pub(super) fn open_with_cipher(
             .collect::<Result<Vec<_>>>()?;
         rows += block.len();
         live += block.iter().filter(|c| c.live()).count() as u64;
+        for column in &block {
+            totals.add(column)?;
+        }
         if rows < manifest.rows as usize && block.len() != COLUMN_ROWS {
             return Err(Error::Authority);
         }
@@ -830,6 +875,8 @@ pub(super) fn open_with_cipher(
         pages,
         manifest,
         columns,
+        totals,
+        queries: query_cache::QueryCache::default(),
         retained_disk_bytes,
         retained_allocated_bytes,
         _lock: lock,

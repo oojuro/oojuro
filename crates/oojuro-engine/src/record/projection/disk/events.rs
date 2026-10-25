@@ -172,18 +172,10 @@ impl EventIndex {
         self.inner.build_metrics()
     }
     pub fn rank(&self, binding: &Binding, q: &EventQuery<'_>) -> Result<Vec<EventRanked>> {
-        self.inner
-            .rank(binding, &q.query()?)?
-            .into_iter()
-            .map(|inner| {
-                Ok(EventRanked {
-                    cursor: decode_cursor(&inner.id)?,
-                    bits: inner.bits,
-                    continued: inner.continued,
-                    inner,
-                })
-            })
-            .collect()
+        event_ranks(self.inner.rank(binding, &q.query()?)?)
+    }
+    pub fn rank_uncached(&self, binding: &Binding, q: &EventQuery<'_>) -> Result<Vec<EventRanked>> {
+        event_ranks(self.inner.rank_uncached(binding, &q.query()?)?)
     }
     /// Callers revalidate the current source checkpoint/permission before and
     /// after this query, and through any network response completion.
@@ -247,6 +239,19 @@ impl EventIndex {
         }
         Ok(hits)
     }
+}
+fn event_ranks(ranked: Vec<Ranked>) -> Result<Vec<EventRanked>> {
+    ranked
+        .into_iter()
+        .map(|inner| {
+            Ok(EventRanked {
+                cursor: decode_cursor(&inner.id)?,
+                bits: inner.bits,
+                continued: inner.continued,
+                inner,
+            })
+        })
+        .collect()
 }
 fn neutral(cursor: &[u8], timestamp: i64, text: &str) -> Result<Row> {
     Ok(Row {

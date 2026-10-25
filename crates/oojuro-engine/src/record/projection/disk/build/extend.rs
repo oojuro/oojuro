@@ -11,6 +11,7 @@ pub struct Appender {
     changed: BTreeSet<usize>,
     pages: Arc<tree::PageCache>,
     retired: u64,
+    totals: Totals,
 }
 impl Appender {
     pub fn extend_validated_prefix(
@@ -62,6 +63,7 @@ impl Appender {
             changed: BTreeSet::new(),
             pages: previous.pages.clone(),
             retired: 0,
+            totals: previous.totals,
         })
     }
     pub fn push(&mut self, row: Row) -> Result<()> {
@@ -116,6 +118,7 @@ impl Appender {
         if !column.live() {
             return Err(Error::Conflict);
         }
+        self.totals.remove(column)?;
         column.flags &= !2;
         self.changed.insert(block);
         self.retired += 1;
@@ -259,6 +262,7 @@ impl Appender {
             )?)?;
             let block = ordinal as usize / COLUMN_ROWS;
             let column = analysis.metadata.column(labels[offset as usize]);
+            self.totals.add(&column)?;
             tail.push(column);
             if tail.len() == COLUMN_ROWS {
                 self.columns.push(Arc::from(std::mem::take(&mut tail)));
@@ -349,6 +353,8 @@ impl Appender {
             pages: self.pages,
             manifest,
             columns: self.columns,
+            totals: self.totals,
+            queries: query_cache::QueryCache::default(),
             retained_disk_bytes,
             retained_allocated_bytes,
             _lock: lock,

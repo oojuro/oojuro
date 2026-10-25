@@ -105,6 +105,12 @@ impl Plan {
     pub fn scope_model(&self) -> bool {
         self.scope_model
     }
+    pub fn anchor_driver(&self, at: usize) -> bool {
+        self.anchored && self.literal.is_none() && self.terms[at].0.contains('_')
+    }
+    pub fn anchored_driver(&self) -> bool {
+        self.anchored && self.literal.is_none()
+    }
 }
 pub(crate) struct Stats {
     collection: Vec<u64>,
@@ -128,6 +134,10 @@ impl Stats {
     }
     pub fn set_view_total(&mut self, total: u64) {
         self.view_total = total;
+    }
+    pub fn reset_view(&mut self) {
+        self.view.fill(0);
+        self.view_total = 0;
     }
     pub fn visit(
         &mut self,

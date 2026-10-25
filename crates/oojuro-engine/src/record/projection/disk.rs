@@ -6,6 +6,7 @@
 mod budget;
 mod build;
 mod events;
+mod query_cache;
 mod storage;
 use super::*;
 use crate::lexical::paged as scorer;
@@ -96,6 +97,8 @@ pub struct Index {
     pages: Arc<tree::PageCache>,
     manifest: Manifest,
     columns: Vec<Arc<[Column]>>,
+    totals: Totals,
+    queries: query_cache::QueryCache,
     retained_disk_bytes: u64,
     retained_allocated_bytes: u64,
     _lock: File,
@@ -176,6 +179,7 @@ impl Index {
             // Reserve the complete4MiB decoded-page policy before warming,
             // plus equal headroom for small-allocation bookkeeping.
             .saturating_add(8 << 20)
+            .saturating_add(query_cache::RESERVED_BYTES)
             .saturating_add(std::mem::size_of::<Self>() + std::mem::size_of::<FrameCipher>())
     }
     fn current(&self, binding: &Binding) -> Result<()> {
@@ -245,6 +249,14 @@ impl Index {
     /// Rank the complete bound projection, never per-shard score fusion. Callers
     /// still validate current source/auth before and after any provider I/O.
     pub fn rank(&self, binding: &Binding, q: &Query<'_>) -> Result<Vec<Ranked>> {
+        self.current(binding)?;
+        self.query(q)?;
+        self.queries
+            .rank(query_cache::key(q)?, || self.rank_uncached(binding, q))
+    }
+    /// Bypass bounded rank-result reuse. Source checks and materialization are
+    /// identical; immutable authenticated page reuse can still occur.
+    pub fn rank_uncached(&self, binding: &Binding, q: &Query<'_>) -> Result<Vec<Ranked>> {
         self.current(binding)?;
         self.query(q)?;
         if q.k == 0 || q.from > q.to {
@@ -409,7 +421,7 @@ impl Index {
             .as_ref()
             .map(|_| vec![0u64; (self.manifest.rows as usize).div_ceil(64)]);
         let mut read = 0usize;
-        self.walk(&plan, direct, |ordinal, tf| {
+        self.walk(&plan, direct, true, |ordinal, tf| {
             let column = self.column(ordinal)?;
             let visible = column.visible(&selection);
             let mut candidate =
@@ -427,24 +439,49 @@ impl Index {
                 .map_err(|_| Error::Bounds)
         })?;
         if stats.needs_view_total() {
-            let mut total = 0u64;
-            for block in &self.columns {
-                for col in block.iter().filter(|c| c.visible(&selection)) {
-                    total = total
-                        .checked_add(u64::from(if plan.scope_model() {
-                            col.scope
-                        } else {
-                            col.length
-                        }))
-                        .ok_or(Error::Bounds)?;
-                }
+            if plan.anchored_driver() {
+                stats.reset_view();
+                self.walk(&plan, direct, false, |ordinal, tf| {
+                    let col = self.column(ordinal)?;
+                    stats
+                        .visit(
+                            &plan,
+                            col.length,
+                            col.scope,
+                            tf,
+                            col.visible(&selection),
+                            false,
+                        )
+                        .map_err(|_| Error::Bounds)
+                })?;
             }
+            let total = if selection.unfiltered() {
+                if plan.scope_model() {
+                    self.totals.scope
+                } else {
+                    self.totals.length
+                }
+            } else {
+                let mut total = 0u64;
+                for block in &self.columns {
+                    for col in block.iter().filter(|c| c.visible(&selection)) {
+                        total = total
+                            .checked_add(u64::from(if plan.scope_model() {
+                                col.scope
+                            } else {
+                                col.length
+                            }))
+                            .ok_or(Error::Bounds)?;
+                    }
+                }
+                total
+            };
             stats.set_view_total(total);
         }
         let anchored = plan.continues();
         let model = stats.finish(plan);
         let mut top = Top::new(q.k);
-        self.walk(&model.plan, direct, |ordinal, tf| {
+        self.walk(&model.plan, direct, true, |ordinal, tf| {
             let col = self.column(ordinal)?;
             let candidate = model.plan.candidate_terms(
                 u64::from(ordinal),
@@ -479,6 +516,7 @@ impl Index {
         &self,
         plan: &scorer::Plan,
         direct: Option<Option<u64>>,
+        candidates_only: bool,
         mut visit: impl FnMut(u32, &[u32]) -> Result<()>,
     ) -> Result<()> {
         let mut tf = vec![0; plan.terms.len()];
@@ -503,9 +541,20 @@ impl Index {
             .iter_mut()
             .map(Postings::next)
             .collect::<Result<Vec<_>>>()?;
-        while let Some(row) = heads.iter().flatten().map(|(r, _)| *r).min() {
+        let anchored = candidates_only && plan.anchored_driver();
+        while let Some(row) = heads
+            .iter()
+            .enumerate()
+            .filter(|(i, _)| !anchored || plan.anchor_driver(*i))
+            .filter_map(|(_, head)| *head)
+            .map(|(row, _)| row)
+            .min()
+        {
             tf.fill(0);
             for (i, head) in heads.iter_mut().enumerate() {
+                if anchored && !plan.anchor_driver(i) && head.is_some_and(|(at, _)| at < row) {
+                    *head = cursors[i].at_least(row)?;
+                }
                 if head.is_some_and(|(r, _)| r == row) {
                     tf[i] = head.unwrap().1;
                     *head = cursors[i].next()?;
@@ -571,6 +620,19 @@ impl<'a> Postings<'a> {
                 != Some(entry.key[32..].to_vec())
             {
                 return Err(Error::Authority);
+            }
+        }
+    }
+    fn at_least(&mut self, wanted: u32) -> Result<Option<(u32, u32)>> {
+        loop {
+            let skip = self.buffer[self.at..].partition_point(|(row, _)| *row < wanted);
+            if skip != 0 {
+                self.last = Some(self.buffer[self.at + skip - 1].0);
+                self.at += skip;
+            }
+            let found = self.next()?;
+            if found.is_none_or(|(row, _)| row >= wanted) {
+                return Ok(found);
             }
         }
     }

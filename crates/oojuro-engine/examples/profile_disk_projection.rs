@@ -112,10 +112,19 @@ fn query(case: &Case) -> Query<'_> {
     }
 }
 fn search(index: &Index, case: &Case) -> record::Result<Vec<Hit>> {
-    index.search(&binding(), &query(case), |id| {
+    search_mode(index, case, true)
+}
+fn search_mode(index: &Index, case: &Case, reuse: bool) -> record::Result<Vec<Hit>> {
+    let fetch = |id: &str| {
         let number = usize::from_str_radix(id, 16).map_err(|_| record::Error::Invalid)?;
         Ok(row(number))
-    })
+    };
+    if reuse {
+        index.search(&binding(), &query(case), fetch)
+    } else {
+        let ranked = index.rank_uncached(&binding(), &query(case))?;
+        index.materialize(&binding(), &query(case), &ranked, fetch)
+    }
 }
 fn signature(hits: &[Hit]) -> String {
     let checks: Vec<_> = hits
@@ -231,7 +240,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "{}",
             json!({"phase":"append","rows":count,"added":32,"compression":args[4],"open_ns":open_ns,"append_ns":append_ns,"index_bytes":index.index_bytes(),"allocated_index_bytes":index.allocated_index_bytes(),"estimated_heap_bytes":index.estimated_heap_bytes(),"build_metrics":index.build_metrics(),"signatures":signatures,"scope":"derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded"})
         );
-    } else if args[1] == "query" {
+    } else if ["query", "query-fresh", "query-burst"].contains(&args[1].as_str()) {
+        let reuse = args[1] != "query-fresh";
+        let warm_rank = args[1] == "query";
         let began = Instant::now();
         let index = Arc::new(checked(Index::open(root, &[9; 32], &binding()))?);
         let open_ns = began.elapsed().as_nanos();
@@ -241,7 +252,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let mut signatures = Vec::new();
         for case in &cases {
             let began = Instant::now();
-            let hits = checked(search(&index, case))?;
+            let hits = checked(search_mode(&index, case, warm_rank))?;
             initial.push(began.elapsed().as_nanos());
             signatures.push(signature(&hits));
         }
@@ -262,7 +273,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
                         for offset in 0..cases.len() {
                             let i = (offset + client + round) % cases.len();
                             let began = Instant::now();
-                            let hits = search(&index, &cases[i]).unwrap();
+                            let hits = search_mode(&index, &cases[i], reuse).unwrap();
                             times[i].push(began.elapsed().as_nanos());
                             assert_eq!(signature(&hits), signatures[i]);
                         }
@@ -282,7 +293,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let results: Vec<_> = cases.iter().enumerate().map(|(i, case)| json!({"case":case.name,"initial_ns":initial[i],"signature":signatures[i],"timing":distribution(std::mem::take(&mut times[i]))})).collect();
         println!(
             "{}",
-            json!({"phase":"query","rows":count,"compression":args[4],"clients":clients,"rounds":rounds,"open_ns":open_ns,"elapsed_ns":elapsed_ns,
+            json!({"phase":"query","rank_reuse":reuse,"warm_rank_before_cohort":warm_rank,"rows":count,"compression":args[4],"clients":clients,"rounds":rounds,"open_ns":open_ns,"elapsed_ns":elapsed_ns,
             "index_bytes":index.index_bytes(),"allocated_index_bytes":index.allocated_index_bytes(),"estimated_heap_bytes":index.estimated_heap_bytes(),"queries":results,
             "scope":"local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .ojo/provider freshness acceptance"})
         );

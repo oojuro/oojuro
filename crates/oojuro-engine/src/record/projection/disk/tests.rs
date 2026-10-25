@@ -186,6 +186,11 @@ fn incremental_prefix_append_retire_and_reopen_match_complete_global_model() {
         let path = scratch.0.join("index");
         let initial = (0..2040).step_by(2).rev().map(row).collect::<Vec<_>>();
         let old = build(&path, &initial, compression);
+        old.rank(
+            &binding(),
+            &query("alpha", Filter::default(), i64::MIN, i64::MAX),
+        )
+        .unwrap();
         let old_columns = old.columns.clone();
         let mut next = binding();
         next.view[0] ^= 1;
@@ -284,6 +289,50 @@ fn incremental_prefix_append_retire_and_reopen_match_complete_global_model() {
         assert_eq!(fs::read(path.join("PROJECTION_CURRENT")).unwrap(), current);
     }
 }
+
+#[test]
+fn sparse_identifier_driver_keeps_exact_floor_and_filtered_view_statistics() {
+    let mut rows = (0..1300).map(row).collect::<Vec<_>>();
+    for (i, row) in rows.iter_mut().enumerate() {
+        if i % 97 == 0 {
+            row.text.push_str(" needle_exact");
+        }
+    }
+    let originals: BTreeMap<_, _> = rows
+        .iter()
+        .map(|row| (row.id.clone(), row.clone()))
+        .collect();
+    let reference = super::super::Index::build(binding(), rows.clone()).unwrap();
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let index = build(&scratch.0.join("index"), &rows, compression);
+        for text in [
+            "needle_exact alpha",
+            "needle_exact missing",
+            "missing_identifier alpha",
+            "needle_exact create_config",
+        ] {
+            for filter in [
+                Filter::default(),
+                Filter {
+                    agent_id: Some("agent-3".into()),
+                    ..Filter::default()
+                },
+            ] {
+                let q = query(text, filter, -8, 7);
+                assert_eq!(
+                    fingerprint(
+                        &index
+                            .search(&binding(), &q, |id| Ok(originals[id].clone()))
+                            .unwrap()
+                    ),
+                    fingerprint(&reference.search(&binding(), &q).unwrap()),
+                    "{text} {compression:?}"
+                );
+            }
+        }
+    }
+}
 fn row(i: usize) -> Row {
     Row {
         id: format!("id/{i:08x}"),
@@ -372,7 +421,7 @@ fn disk_projection_matches_ram_bits_filters_excerpts_and_reopen() {
             rows.iter().map(|r| r.text.len() as u64).sum::<u64>()
         );
         assert!(index.index_bytes() > 0);
-        assert!(index.estimated_heap_bytes() < 12 << 20);
+        assert!(index.estimated_heap_bytes() < 16 << 20);
         for text in [
             "alpha",
             "create_config",
