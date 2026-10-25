@@ -161,7 +161,10 @@ impl Index {
             let row = self.documents.len();
             let posting_row = u32::try_from(row).map_err(|_| Error::Invalid)?;
             for (term, tf) in terms {
-                self.postings.entry(term).or_default().push((posting_row, tf));
+                self.postings
+                    .entry(term)
+                    .or_default()
+                    .push((posting_row, tf));
             }
             // Internal lexical carrier only. Never a fabricated capture receipt:
             // no harness identity/policy/provenance is exported from this path.
@@ -240,7 +243,10 @@ impl Index {
             let row = self.documents.len();
             let posting_row = u32::try_from(row).map_err(|_| Error::Invalid)?;
             for (term, count) in terms {
-                self.postings.entry(term).or_default().push((posting_row, count));
+                self.postings
+                    .entry(term)
+                    .or_default()
+                    .push((posting_row, count));
             }
             self.documents.push(Document {
                 event: event.clone(),
@@ -385,7 +391,7 @@ thread_local! { static ANALYSES: std::cell::Cell<usize> = const { std::cell::Cel
 fn analyze(text: &str) -> Result<Vec<(String, u32)>> {
     analyze_with_stems(text, &mut HashMap::new())
 }
-fn analyze_with_stems(
+pub(crate) fn analyze_with_stems(
     text: &str,
     stems: &mut HashMap<String, String>,
 ) -> Result<Vec<(String, u32)>> {

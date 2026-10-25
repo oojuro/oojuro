@@ -4669,6 +4669,7 @@ dependencies = [
  "rust-stemmers",
  "serde",
  "serde_json",
+ "zstd 0.13.3",
 ]
 
 [[package]]
