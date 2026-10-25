@@ -1,5 +1,6 @@
-//! Native sealed raw/parsed capture authority and bounded in-memory lexical retrieval.
-//! Disk index/merge, access policy, erasure/audit and hosted replicated commits remain separate milestones.
+//! Sealed sources and exact lexical retrieval with disposable memory/disk projections.
+//! The event adapter accepts opaque cursors, timestamps and exact data. Callers
+//! validate current source snapshots and permissions before using a projection.
 pub mod raw;
 
 #[cfg(unix)]

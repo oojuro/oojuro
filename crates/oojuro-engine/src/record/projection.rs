@@ -1,6 +1,7 @@
 //! Pure disposable query projection of a caller-resolved immutable snapshot.
 //! Binding is a caller assertion, not proof of remote commit/auth/freshness.
-//! No files, clock, Store append, local receipt, DEK or independent authority.
+//! The original in-memory Index owns no files; the disk submodule supplies an
+//! optional encrypted cache. Source appends, clocks and authority remain external.
 use super::*;
 use crate::lexical::{self, RecordVisibility, passage};
 use std::collections::BTreeSet;
