@@ -253,13 +253,27 @@ impl Appender {
         } else {
             Vec::with_capacity(COLUMN_ROWS)
         };
+        let mut metadata_batch = Vec::with_capacity(tree::MAX_BATCH_ENTRIES);
+        let mut metadata_bytes = 0usize;
         while let Some((offset, analysis)) = reader.next()? {
             let ordinal =
                 u32::try_from(self.previous.rows + u64::from(offset)).map_err(|_| Error::Bounds)?;
-            metadata.insert(tree::Entry::new(
+            let entry = tree::Entry::new(
                 ordinal.to_be_bytes().to_vec(),
                 pack_json(&analysis.metadata, b.limits.compression)?,
-            )?)?;
+            )?;
+            let bytes = entry.key.len() + entry.value.len() + 8;
+            if metadata_batch.len() == tree::MAX_BATCH_ENTRIES
+                || metadata_bytes + bytes > tree::MAX_BATCH_BYTES
+            {
+                metadata.insert_batch(std::mem::replace(
+                    &mut metadata_batch,
+                    Vec::with_capacity(tree::MAX_BATCH_ENTRIES),
+                ))?;
+                metadata_bytes = 0;
+            }
+            metadata_bytes += bytes;
+            metadata_batch.push(entry);
             let block = ordinal as usize / COLUMN_ROWS;
             let column = analysis.metadata.column(labels[offset as usize]);
             self.totals.add(&column)?;
@@ -269,6 +283,9 @@ impl Appender {
                 tail = Vec::with_capacity(COLUMN_ROWS);
             }
             self.changed.insert(block);
+        }
+        if !metadata_batch.is_empty() {
+            metadata.insert_batch(metadata_batch)?;
         }
         if !tail.is_empty() {
             self.columns.push(Arc::from(tail));
