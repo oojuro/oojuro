@@ -69,6 +69,7 @@ impl Fixture {
             class: KeyClass::Data,
             sort_of: None,
             cache: None,
+            cache_durability: CacheDurability::Durable,
         }
     }
 }
@@ -287,4 +288,32 @@ fn bounded_batch_editor_matches_sorted_map_and_preserves_ancestor_pages() {
         edit.insert_batch((7000..8001).map(entry).collect()),
         Err(Error::Bounds)
     );
+}
+
+#[test]
+fn cache_mode_is_bound_to_roots_pages_and_plaintext_reuse_and_cannot_weaken_control() {
+    let f = Fixture::new();
+    let cipher = Arc::new(FrameCipher::new(&[99; 32]));
+    let cache = PageCache::new(cipher.clone());
+    let mut weak = f.ctx();
+    weak.cipher = &cipher;
+    weak.cache = Some(&cache);
+    weak.cache_durability = CacheDurability::Rebuildable;
+    let mut builder = Builder::new(weak.clone()).unwrap();
+    builder.push(entry(1)).unwrap();
+    let root = builder.finish().unwrap();
+    assert!(
+        get(weak.clone(), &root, &1u64.to_be_bytes())
+            .unwrap()
+            .is_some()
+    );
+    let mut strong = weak.clone();
+    strong.cache_durability = CacheDurability::Durable;
+    assert!(root.check(&strong).is_err());
+    let mut forged = root.clone();
+    forged.cache_durability = CacheDurability::Durable;
+    assert!(get(strong, &forged, &1u64.to_be_bytes()).is_err());
+    weak.class = KeyClass::RetainedControl;
+    weak.purpose = Purpose::Prefix;
+    assert_eq!(weak.check(), Err(Error::Scope));
 }

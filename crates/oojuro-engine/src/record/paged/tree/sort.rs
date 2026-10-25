@@ -22,6 +22,7 @@ fn spool_aad(ctx: &Context<'_>, id: [u8; 32], sequence: u64, binding: &[u8]) -> 
     a.extend(id);
     a.extend(sequence.to_le_bytes());
     a.extend(binding);
+    ctx.cache_durability.bind(&mut a);
     a
 }
 struct SpoolWriter<'a> {
@@ -62,8 +63,10 @@ impl<'a> SpoolWriter<'a> {
         if self.ctx.check()? != self.binding {
             return Err(Error::Conflict);
         }
-        self.file.sync_all().map_err(|_| Error::Unavailable)?;
-        sync_dir(self.ctx.directory)?;
+        if self.ctx.cache_durability.is_durable() {
+            self.file.sync_all().map_err(|_| Error::Unavailable)?;
+            sync_dir(self.ctx.directory)?;
+        }
         Ok(self.spool)
     }
 }

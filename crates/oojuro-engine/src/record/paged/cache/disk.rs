@@ -6,6 +6,8 @@ const DISK_MANIFEST: &str = "DISK_RECORD_INDEX";
 #[serde(deny_unknown_fields)]
 struct Descriptor {
     format: u32,
+    #[serde(default, skip_serializing_if = "CacheDurability::is_durable")]
+    cache_durability: CacheDurability,
     origin: [u8; 32],
     identity: [u8; 32],
     prefix: Watermark,
@@ -102,6 +104,7 @@ impl Index {
             (
                 Manifest {
                     format: FORMAT,
+                    cache_durability: reader.cache_durability,
                     origin: d.origin,
                     identity: d.identity,
                     prefix: d.prefix,
@@ -118,6 +121,7 @@ impl Index {
             (
                 Manifest {
                     format: FORMAT,
+                    cache_durability: reader.cache_durability,
                     origin: tip.origin,
                     identity: tip.identity,
                     prefix: tip.clone(),
@@ -182,6 +186,7 @@ impl Index {
         let mut draft = Draft {
             manifest: Manifest {
                 format: FORMAT,
+                cache_durability: reader.cache_durability,
                 origin: prefix.origin,
                 identity: prefix.identity,
                 prefix: prefix.clone(),
@@ -309,28 +314,28 @@ impl Index {
                 return Err(Error::Bounds);
             }
             let temporary = self.directory.join(format!("vis-tmp-{}.idx", reference.id));
-            write_new(&temporary, &sealed)?;
+            write_cache_new(reader, &temporary, &sealed)?;
             self.phase(Phase::VisibilityTemp);
             fs::rename(
                 temporary,
                 self.directory.join(format!("vis-{}.idx", reference.id)),
             )
             .map_err(|_| Error::Unavailable)?;
-            directory_sync(&self.directory)?;
+            cache_directory_sync(reader, &self.directory)?;
             self.phase(Phase::VisibilityPublished);
             reference.visibility = Some(metadata);
         }
         let sealed = reader.seal(&segment_aad(&draft.manifest, &reference)?, bytes);
         reference.digest = *blake3::hash(&sealed).as_bytes();
         let tmp = self.directory.join(format!("tmp-{}.idx", reference.id));
-        write_new(&tmp, &sealed)?;
+        write_cache_new(reader, &tmp, &sealed)?;
         self.phase(Phase::SegmentTemp);
         fs::rename(
             tmp,
             self.directory.join(format!("seg-{}.idx", reference.id)),
         )
         .map_err(|_| Error::Unavailable)?;
-        directory_sync(&self.directory)?;
+        cache_directory_sync(reader, &self.directory)?;
         self.phase(Phase::SegmentPublished);
         draft.sink.push(Entry::new(
             reference.start.to_be_bytes().to_vec(),
@@ -341,6 +346,7 @@ impl Index {
         let root = draft.sink.finish()?;
         self.phase(Phase::DirectoryPagesDurable);
         let descriptor = Descriptor {
+            cache_durability: reader.cache_durability,
             format: if reader.capacity == DiskLimits::LEGACY {
                 1
             } else {
@@ -365,17 +371,17 @@ impl Index {
         }
         let bytes = json(&descriptor, ROOT_BYTES)?;
         let sealed = reader.seal(
-            &descriptor_aad(descriptor.origin, descriptor.identity),
+            &descriptor_aad(reader, descriptor.origin, descriptor.identity),
             &bytes,
         );
         let tmp = self
             .directory
             .join(format!("disk-{}.tmp", hex(&random_key())));
-        write_new(&tmp, &sealed)?;
+        write_cache_new(reader, &tmp, &sealed)?;
         self.phase(Phase::ManifestTemp);
         fs::rename(tmp, self.directory.join(DISK_MANIFEST)).map_err(|_| Error::Unavailable)?;
         self.phase(Phase::ManifestPublished);
-        directory_sync(&self.directory)?;
+        cache_directory_sync(reader, &self.directory)?;
         self.phase(Phase::ManifestDurable);
         self.manifest = draft.manifest;
         self.disk = Some(References {
@@ -393,6 +399,7 @@ impl Index {
             let mut draft = Draft {
                 manifest: Manifest {
                     format: FORMAT,
+                    cache_durability: reader.cache_durability,
                     origin: prefix.origin,
                     identity: prefix.identity,
                     prefix,
@@ -523,25 +530,27 @@ impl Index {
                 .map_err(|_| Error::Unavailable)?;
             }
         }
-        directory_sync(&self.directory)
+        cache_directory_sync(reader, &self.directory)
     }
 }
 const ROOT_BYTES: usize = 64 << 10;
-fn descriptor_aad(origin: [u8; 32], identity: [u8; 32]) -> Vec<u8> {
+fn descriptor_aad(reader: &Reader, origin: [u8; 32], identity: [u8; 32]) -> Vec<u8> {
     let mut out = b"oojuro/record-paged/disk-manifest/v1\0".to_vec();
     out.extend(origin);
     out.extend(identity);
+    reader.cache_durability.bind(&mut out);
     out
 }
 fn load_descriptor(reader: &Reader, path: &Path) -> Result<Descriptor> {
     let tip = reader.watermark()?;
     let sealed = read_bounded(&path.join(DISK_MANIFEST), ROOT_BYTES + SEAL_OVERHEAD)?;
-    let plain = reader.unseal(&descriptor_aad(tip.origin, tip.identity), &sealed)?;
+    let plain = reader.unseal(&descriptor_aad(reader, tip.origin, tip.identity), &sealed)?;
     serde_json::from_slice(&plain).map_err(|_| Error::Authority)
 }
 fn validate_descriptor_header(reader: &Reader, d: &Descriptor) -> Result<()> {
     let tip = reader.watermark()?;
     if !matches!(d.format, 1 | 2)
+        || d.cache_durability != reader.cache_durability
         || d.origin != tip.origin
         || d.identity != tip.identity
         || d.rows > reader.capacity.records
@@ -566,6 +575,7 @@ fn validate_descriptor(reader: &Reader, path: &Path, d: &Descriptor) -> Result<(
     };
     let m = Manifest {
         format: FORMAT,
+        cache_durability: reader.cache_durability,
         origin: d.origin,
         identity: d.identity,
         prefix: d.prefix.clone(),

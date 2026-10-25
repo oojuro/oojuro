@@ -810,17 +810,27 @@ fn disk_policy(records: usize) -> DiskLimits {
     DiskLimits::new(records, 1 << 30, 1 << 30, 10000).unwrap()
 }
 fn disk_writer(f: &Fixture, records: usize) -> Writer {
-    Writer::open_clock(
+    disk_writer_mode(f, records, CacheDurability::Durable, None)
+}
+fn disk_writer_mode(
+    f: &Fixture,
+    records: usize,
+    mode: CacheDurability,
+    minimum: Option<&Watermark>,
+) -> Writer {
+    Writer::open_clock_with_cache_policy(
         &f.root.join("authority"),
         &KEY,
         identity(),
         &f.root.join("directory"),
-        None,
+        minimum,
         disk_policy(records),
         Arc::new(|| Ok(100)),
+        mode,
     )
     .unwrap()
 }
+
 #[test]
 fn disk_writer_exact_retry_current_index_old_snapshot_and_native_rank_match() {
     let f = Fixture::new();
@@ -1137,7 +1147,12 @@ fn disk_writer_crash_child() {
         root: PathBuf::from(std::env::var("OOJURO_WRITER_CRASH_ROOT").unwrap()),
     };
     let phase = std::env::var("OOJURO_WRITER_CRASH_PHASE").unwrap();
-    let mut writer = disk_writer(&f, 1000);
+    let mode = if std::env::var_os("OOJURO_WRITER_REBUILDABLE").is_some() {
+        CacheDurability::Rebuildable
+    } else {
+        CacheDurability::Durable
+    };
+    let mut writer = disk_writer_mode(&f, 1000, mode, None);
     let mut index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
     if phase == "AfterStore" {
         writer.hook = Some(Box::new(|at| {
@@ -1192,13 +1207,17 @@ fn writer_boundary() {
 }
 #[test]
 fn disk_writer_sigkill_actual_append_directory_and_index_publication_recovers_receipts() {
-    writer_crash_matrix(false);
+    writer_crash_matrix(false, CacheDurability::Durable);
 }
 #[test]
 fn disk_group_sigkill_independent_receipts_and_searchable_ack_boundaries() {
-    writer_crash_matrix(true);
+    writer_crash_matrix(true, CacheDurability::Durable);
 }
-fn writer_crash_matrix(grouped: bool) {
+#[test]
+fn disk_rebuildable_group_sigkill_preserves_source_receipts_and_old_snapshots() {
+    writer_crash_matrix(true, CacheDurability::Rebuildable);
+}
+fn writer_crash_matrix(grouped: bool, mode: CacheDurability) {
     use std::{
         io::{BufRead, BufReader},
         process::{Command, Stdio},
@@ -1222,8 +1241,11 @@ fn writer_crash_matrix(grouped: bool) {
         "index:ManifestPublished",
         "index:ManifestDurable",
     ] {
+        if !mode.is_durable() && phase.contains("Durable") {
+            continue;
+        }
         let f = Fixture::new();
-        let mut writer = disk_writer(&f, 1000);
+        let mut writer = disk_writer_mode(&f, 1000, mode, None);
         let mut index =
             Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
         writer
@@ -1270,6 +1292,9 @@ fn writer_crash_matrix(grouped: bool) {
         if grouped {
             command.env("OOJURO_WRITER_GROUP", "1");
         }
+        if !mode.is_durable() {
+            command.env("OOJURO_WRITER_REBUILDABLE", "1");
+        }
         let mut child = command.spawn().unwrap();
         let output = child.stdout.take().unwrap();
         let (tx, rx) = mpsc::channel();
@@ -1288,7 +1313,7 @@ fn writer_crash_matrix(grouped: bool) {
         assert!(reached.is_ok(), "phase={phase}");
         use std::os::unix::process::ExitStatusExt;
         assert_eq!(status.signal(), Some(libc::SIGKILL));
-        let mut writer = disk_writer(&f, 1000);
+        let mut writer = disk_writer_mode(&f, 1000, mode, None);
         let receipt = writer.reader().unwrap().receipt("child").unwrap().unwrap();
         assert_eq!(receipt.ids, vec![11]);
         if grouped {
@@ -1876,4 +1901,300 @@ fn disk_word_query_uses_only_required_scoring_passes_without_changing_results() 
         .search_profiled(writer.reader().unwrap(), &literal)
         .unwrap();
     assert!(literal_work.segment_loads > work.segment_loads);
+}
+
+#[test]
+fn disk_rebuildable_cache_loss_mode_switches_and_publication_errors_preserve_authority() {
+    let f = Fixture::new();
+    let weak = CacheDurability::Rebuildable;
+    let mut writer = disk_writer_mode(&f, 1000, weak, None);
+    assert_eq!(writer.reader().unwrap().cache_durability(), weak);
+    let cache = f.root.join("disk-index");
+    let mut index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    let first = [
+        row("alpha exact original", Some("memory"), 10),
+        row("alpha independent", None, 11),
+    ];
+    let a = writer.append_indexed(&mut index, "first", &first).unwrap();
+    let old = writer
+        .reader()
+        .unwrap()
+        .view(scope(), AsOf::default())
+        .unwrap();
+    let old_hits = signature(
+        index
+            .search_view(
+                writer.reader().unwrap(),
+                &old,
+                &query("alpha", AsOf::default()),
+            )
+            .unwrap(),
+    );
+    let second = [row("alpha current", Some("memory"), 20)];
+    let b = writer
+        .append_indexed(&mut index, "second", &second)
+        .unwrap();
+    let current_hits = signature(
+        index
+            .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+            .unwrap(),
+    );
+    let minimum = writer.reader().unwrap().watermark().unwrap();
+    drop(index);
+    drop(writer);
+    fs::write(f.root.join("directory/DIRECTORY"), b"torn derived root").unwrap();
+    fs::write(cache.join("DISK_RECORD_INDEX"), b"torn derived descriptor").unwrap();
+    let writer = disk_writer_mode(&f, 1000, weak, Some(&minimum));
+    let index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    assert_eq!(
+        signature(
+            index
+                .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+                .unwrap()
+        ),
+        current_hits
+    );
+    assert_eq!(
+        signature(
+            index
+                .search_view(
+                    writer.reader().unwrap(),
+                    &old,
+                    &query("alpha", AsOf::default())
+                )
+                .unwrap()
+        ),
+        old_hits
+    );
+    assert_eq!(
+        writer.reader().unwrap().receipt("first").unwrap(),
+        Some(a.clone())
+    );
+    drop(index);
+    drop(writer);
+    fs::remove_dir_all(f.root.join("directory")).unwrap();
+    fs::remove_dir_all(&cache).unwrap();
+    let writer = disk_writer_mode(&f, 1000, weak, Some(&minimum));
+    let mut weak_index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    assert_eq!(
+        writer.reader().unwrap().receipt("second").unwrap(),
+        Some(b.clone())
+    );
+    drop(writer);
+    // Strong mode cannot claim durability for the old weak index object/pages.
+    let mut strong = disk_writer_mode(&f, 1000, CacheDurability::Durable, Some(&minimum));
+    assert!(
+        strong
+            .append_indexed(&mut weak_index, "must-not-commit", &second)
+            .is_err()
+    );
+    assert!(
+        strong
+            .reader()
+            .unwrap()
+            .receipt("must-not-commit")
+            .unwrap()
+            .is_none()
+    );
+    drop(weak_index);
+    let mut index = Index::open_disk(strong.reader().unwrap(), &cache).unwrap();
+    assert_eq!(index.opened(), Opened::Rebuilt);
+    assert_eq!(
+        signature(
+            index
+                .search(strong.reader().unwrap(), &query("alpha", AsOf::default()))
+                .unwrap()
+        ),
+        current_hits
+    );
+    assert_eq!(
+        strong.append_indexed(&mut index, "first", &first).unwrap(),
+        a
+    );
+    drop(index);
+    drop(strong);
+    // Moving back to weak mode also rebuilds with its own authenticated context.
+    let mut writer = disk_writer_mode(&f, 1000, weak, Some(&minimum));
+    let mut index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    assert_eq!(index.opened(), Opened::Rebuilt);
+    assert_eq!(
+        writer
+            .append_indexed(&mut index, "second", &second)
+            .unwrap(),
+        b
+    );
+    fs::remove_file(cache.join("DISK_RECORD_INDEX")).unwrap();
+    fs::create_dir(cache.join("DISK_RECORD_INDEX")).unwrap();
+    let failure = [row("alpha committed despite cache failure", None, 30)];
+    assert!(
+        writer
+            .append_indexed(&mut index, "failed publication", &failure)
+            .is_err()
+    );
+    assert!(
+        index
+            .search(writer.reader().unwrap(), &query("alpha", AsOf::default()))
+            .is_err()
+    );
+    let receipt = writer
+        .reader()
+        .unwrap()
+        .receipt("failed publication")
+        .unwrap()
+        .unwrap();
+    fs::remove_dir(cache.join("DISK_RECORD_INDEX")).unwrap();
+    drop(index);
+    drop(writer);
+    let mut writer = disk_writer_mode(&f, 1000, weak, Some(&minimum));
+    let mut index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    assert_eq!(
+        writer
+            .append_indexed(&mut index, "failed publication", &failure)
+            .unwrap(),
+        receipt
+    );
+    assert_eq!(
+        signature(
+            index
+                .search_view(
+                    writer.reader().unwrap(),
+                    &old,
+                    &query("alpha", AsOf::default())
+                )
+                .unwrap()
+        ),
+        old_hits
+    );
+    let root = f.root.join("directory/DIRECTORY");
+    fs::remove_file(&root).unwrap();
+    fs::create_dir(&root).unwrap();
+    let unknown = [row("alpha directory publication failure", None, 40)];
+    assert!(
+        writer
+            .append_indexed(&mut index, "failed directory", &unknown)
+            .is_err()
+    );
+    assert!(writer.reader().is_err());
+    drop(index);
+    drop(writer);
+    fs::remove_dir(&root).unwrap();
+    let mut writer = disk_writer_mode(&f, 1000, weak, Some(&minimum));
+    let receipt = writer
+        .reader()
+        .unwrap()
+        .receipt("failed directory")
+        .unwrap()
+        .unwrap();
+    let mut index = Index::open_disk(writer.reader().unwrap(), &cache).unwrap();
+    assert_eq!(
+        writer
+            .append_indexed(&mut index, "failed directory", &unknown)
+            .unwrap(),
+        receipt
+    );
+}
+
+#[test]
+fn disk_rebuildable_same_origin_fork_and_stale_cache_cannot_adopt_main_watermark() {
+    let f = Fixture::new();
+    let mode = CacheDurability::Rebuildable;
+    let mut main = disk_writer_mode(&f, 1000, mode, None);
+    main.append("shared", &[row("alpha shared", Some("memory"), 10)])
+        .unwrap();
+    let old = main
+        .reader()
+        .unwrap()
+        .view(scope(), AsOf::default())
+        .unwrap();
+    let fork = f.root.join("fork-source");
+    copy(&f.root.join("authority"), &fork);
+    let mut fork_writer = Writer::open_clock_with_cache_policy(
+        &fork,
+        &KEY,
+        identity(),
+        &f.root.join("fork-directory"),
+        None,
+        disk_policy(1000),
+        Arc::new(|| Ok(100)),
+        mode,
+    )
+    .unwrap();
+    fork_writer
+        .append(
+            "fork-tail",
+            &[row("alpha forkbranchneedle", Some("memory"), 20)],
+        )
+        .unwrap();
+    drop(fork_writer);
+    let mut index = Index::open_disk(main.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    main.append_indexed(
+        &mut index,
+        "main-tail",
+        &[row("alpha mainbranchneedle", Some("memory"), 20)],
+    )
+    .unwrap();
+    let minimum = main.reader().unwrap().watermark().unwrap();
+    drop(index);
+    drop(main);
+    assert!(
+        Reader::open_disk_with_cache_policy(
+            &fork,
+            &KEY,
+            identity(),
+            &f.root.join("directory"),
+            Some(&minimum),
+            disk_policy(1000),
+            mode
+        )
+        .is_err()
+    );
+    let fork_reader = Reader::open_disk_with_cache_policy(
+        &fork,
+        &KEY,
+        identity(),
+        &f.root.join("directory"),
+        None,
+        disk_policy(1000),
+        mode,
+    )
+    .unwrap();
+    let fork_index = Index::open_disk(&fork_reader, &f.root.join("disk-index")).unwrap();
+    assert!(
+        fork_index
+            .search(&fork_reader, &query("mainbranchneedle", AsOf::default()))
+            .unwrap()
+            .hits
+            .is_empty()
+    );
+    assert_eq!(
+        fork_index
+            .search(&fork_reader, &query("forkbranchneedle", AsOf::default()))
+            .unwrap()
+            .hits
+            .len(),
+        1
+    );
+    assert_eq!(
+        fork_reader
+            .get_key(&old, "memory", 10000)
+            .unwrap()
+            .unwrap()
+            .text,
+        "alpha shared"
+    );
+    drop(fork_index);
+    drop(fork_reader);
+    let main = disk_writer_mode(&f, 1000, mode, Some(&minimum));
+    let index = Index::open_disk(main.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    assert_eq!(
+        index
+            .search(
+                main.reader().unwrap(),
+                &query("mainbranchneedle", AsOf::default())
+            )
+            .unwrap()
+            .hits
+            .len(),
+        1
+    );
 }

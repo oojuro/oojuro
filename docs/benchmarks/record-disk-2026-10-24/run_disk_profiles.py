@@ -19,6 +19,7 @@ parser.add_argument("--out", type=Path, required=True)
 parser.add_argument("--counts", default="1000,10000")
 parser.add_argument("--phases", default="isolated,mixed")
 parser.add_argument("--writes", default="direct,grouped")
+parser.add_argument("--native-cache", choices=("durable","rebuildable"), default="durable")
 parser.add_argument("--arms", default="candidate,sqlite,jsonl,jsonl-zstd")
 parser.add_argument("--clients", type=int, default=10)
 parser.add_argument("--searches", type=int, default=6)
@@ -88,6 +89,7 @@ for count in map(int, args.counts.split(",")):
                     "/usr/bin/time", "-v", "-o", str(resources), str(binary),
                     str(directory), arm, str(count), str(args.clients),
                     str(args.searches), phase, write_mode,
+                    args.native_cache if arm=="native-disk" else "durable",
                 ]
                 entry = {"run": stem, "system_before": system_state()}
                 began = time.monotonic()

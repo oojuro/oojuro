@@ -7,6 +7,26 @@ mod tree;
 use super::*;
 pub use cache::{Index, Opened, SearchProfile};
 pub use reader::{Append, Reader, Snapshot, WriteProfile, Writer};
+/// Only disposable caches use this policy. Source/header/receipt durability
+/// always uses synced Store writes, independently of this choice.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum CacheDurability {
+    #[default]
+    Durable,
+    /// Current before ACK, but may be rebuilt from synced source after a crash.
+    Rebuildable,
+}
+impl CacheDurability {
+    pub fn is_durable(&self) -> bool {
+        matches!(self, Self::Durable)
+    }
+    fn bind(&self, aad: &mut Vec<u8>) {
+        if !self.is_durable() {
+            aad.extend(b"\0oojuro/rebuildable-cache/v1");
+        }
+    }
+}
 /// Trusted caller policy for the explicit disk-backed path, never loaded from a cache.
 /// These are disk admission limits, not permission to retain a population in memory.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

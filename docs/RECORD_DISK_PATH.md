@@ -139,3 +139,38 @@ phases, removes all dedicated derived directories after indexed ACKs, and opens
 with the retained minimum watermark. It compares complete original/clock digests,
 every receipt and exact retry, current search visibility and an old pinned prefix.
 Passing its 1k/10k probes does not qualify million-record recovery time.
+
+## Explicit rebuildable caches
+
+The default remains `CacheDurability::Durable`. The separate
+`Writer::open_disk_with_cache_policy(..., CacheDurability::Rebuildable)` API keeps
+**source/header/receipt writes synced** and requires complete current locator
+and lexical publication before an indexed ACK. It omits sync for disposable
+cache pages, segments and descriptors; those caches may be lost after a crash.
+The policy is not passed to authoritative Store options. Retained-control tree
+contexts reject rebuildable policy.
+
+Cache policy is authenticated in derived roots/descriptors and page/segment AAD,
+including the decoded-page-cache key. Durable mode cannot reuse weak material
+and claim it was synced. Switching modes rebuilds derived material from verified
+source. An old weak index object is rejected before an indexed source append
+with a durable writer. Saved source watermarks, IDs, clocks, exact receipts and
+pinned snapshots remain independent of cache policy. Existing durable caches
+retain their old AAD/default representation.
+
+Opening still verifies source and the caller's minimum watermark before trusting
+or rebuilding a cache. Missing/torn cache files cannot establish record authority.
+Publication failure after source commit keeps the same unknown-outcome/retry
+contract. The mode tests cover actual grouped SIGKILL publication, full cache
+loss, torn roots/descriptors, stale/same-origin fork roots, I/O failure, both mode
+switch directions and exact retries. Source erasure/retention APIs are unchanged;
+this direct Record2 path adds no physical-erasure guarantee.
+
+The diagnostic reports dirty and explicitly checkpointed apparent/allocated
+bytes, plus the explicit checkpoint duration outside ACK timing. That duration
+includes redundant clean-file sync calls and is not a precise measurement of
+incremental writeback debt. Checkpointing does not relabel weak cache pages as
+durable; a later durable open still rebuilds. Full cache-loss recovery is measured
+separately. A fast source-synced ACK does not remove the physical storage or
+recovery work, and small-fixture probes do not qualify one-million-record
+recovery or ten-client latency.
