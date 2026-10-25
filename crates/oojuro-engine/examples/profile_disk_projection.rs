@@ -100,6 +100,51 @@ fn cases(count: usize) -> Vec<Case> {
     }
     cases
 }
+fn selected_cases(
+    count: usize,
+    selection: Option<&str>,
+) -> Result<Vec<Case>, Box<dyn std::error::Error>> {
+    if selection == Some("diverse") {
+        return Ok([
+            ("common_battery", "battery"),
+            ("common_electrode", "electrode"),
+            ("common_original", "original"),
+            ("common_record", "record"),
+            ("common_exact", "exact"),
+            ("common_lambda", "λ"),
+            ("common_ending", "終"),
+            ("mixed_battery_electrode", "battery electrode"),
+            ("mixed_original_record", "original record"),
+            ("mixed_exact_electrode", "exact electrode"),
+        ]
+        .into_iter()
+        .map(|(name, text)| Case {
+            name,
+            text: text.into(),
+            filter: Filter::default(),
+            from: i64::MIN,
+            to: i64::MAX,
+        })
+        .collect());
+    }
+    if selection == Some("dense") {
+        return Ok(vec![Case {
+            name: "dense_literal",
+            text: "\"battery electrode\"".into(),
+            filter: Filter::default(),
+            from: i64::MIN,
+            to: i64::MAX,
+        }]);
+    }
+    let mut cases = cases(count);
+    if let Some(name) = selection {
+        cases.retain(|case| case.name == name);
+        if cases.is_empty() {
+            return Err("unknown case selection".into());
+        }
+    }
+    Ok(cases)
+}
 fn query(case: &Case) -> Query<'_> {
     Query {
         text: &case.text,
@@ -160,9 +205,9 @@ fn distribution(mut times: Vec<u128>) -> serde_json::Value {
 }
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<_> = std::env::args().collect();
-    if args.len() != 7 {
+    if !(7..=8).contains(&args.len()) {
         return Err(
-            "profile_disk_projection build|query DIRECTORY ROWS raw|zstd CLIENTS ROUNDS".into(),
+            "profile_disk_projection build|query DIRECTORY ROWS raw|zstd CLIENTS ROUNDS [CASE|diverse|dense]".into(),
         );
     }
     let count: usize = args[3].parse()?;
@@ -247,7 +292,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         let index = Arc::new(checked(Index::open(root, &[9; 32], &binding()))?);
         let open_ns = began.elapsed().as_nanos();
         assert_eq!(index.row_count(), count as u64);
-        let cases = cases(count);
+        let cases = selected_cases(count, args.get(7).map(String::as_str))?;
         let mut initial = Vec::new();
         let mut signatures = Vec::new();
         for case in &cases {
@@ -295,7 +340,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "{}",
             json!({"phase":"query","rank_reuse":reuse,"warm_rank_before_cohort":warm_rank,"rows":count,"compression":args[4],"clients":clients,"rounds":rounds,"open_ns":open_ns,"elapsed_ns":elapsed_ns,
             "index_bytes":index.index_bytes(),"allocated_index_bytes":index.allocated_index_bytes(),"estimated_heap_bytes":index.estimated_heap_bytes(),"queries":results,
-            "scope":"local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .ojo/provider freshness acceptance"})
+            "scope":"local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .juro/provider freshness acceptance"})
         );
     } else {
         return Err("build|query".into());

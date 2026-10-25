@@ -64,15 +64,17 @@ precomputed complete-view mass rather than scanning all numeric columns.
 Identifier queries drive their exact passes from anchored postings; a separate
 full-view pass runs when the unchanged ranker's probability floor requires it.
 
-An additional12 MiB policy bounds validated posting lists, sufficient statistics
+An additional 12 MiB policy bounds validated posting lists, sufficient statistics
 and exact shape summaries. Active readers prevent a list's eviction, so its
 bytes stay charged through the last lease. When space is unavailable, queries
 use the existing disk cursor. Single-term unfiltered queries can reuse global
-statistics and the best32 rows in each identical (length,scope,term-frequency)
+statistics and the best 32 rows in each identical (length,scope,term-frequency)
 class; larger result limits or heterogeneous classes use complete scoring.
-This preserves the shared ranker's exact arithmetic. Sparse metadata filters
-use a temporary bitmap and visit eligible ordinals; it is about125 KiB per
-million retained rows, separate from retained-cache admission. All cache
+This preserves the shared ranker's exact arithmetic. Metadata-filter/time
+selection bitmaps share this same 12 MiB pool and retain active-lease charges.
+They contain about 125 KiB per million retained rows; when the cache cannot
+admit one, the query uses a temporary bitmap instead. Sparse views visit only
+eligible ordinals. All cache
 capacities are reserved by estimated_heap_bytes before they warm. These
 mechanisms cache index work; source validation and original reads still occur
 for every materialized response.

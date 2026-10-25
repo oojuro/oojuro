@@ -43,11 +43,35 @@ impl PartialOrd for GroupHit {
         Some(self.cmp(other))
     }
 }
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+struct CacheKey {
+    kind: u8,
+    hash: [u8; 32],
+}
+#[derive(Clone)]
+enum Entry {
+    Postings(Arc<TermList>),
+    Selection(Arc<Selected>),
+}
+impl Entry {
+    fn bytes(&self) -> usize {
+        match self {
+            Self::Postings(list) => list.bytes,
+            Self::Selection(view) => view.bits.capacity() * 8 + 512,
+        }
+    }
+    fn idle(&self) -> bool {
+        match self {
+            Self::Postings(list) => Arc::strong_count(list) == 1,
+            Self::Selection(view) => Arc::strong_count(view) == 1,
+        }
+    }
+}
 #[derive(Default)]
 struct State {
-    ready: BTreeMap<[u8; 32], Arc<TermList>>,
-    order: VecDeque<[u8; 32]>,
-    inflight: BTreeSet<[u8; 32]>,
+    ready: BTreeMap<CacheKey, Entry>,
+    order: VecDeque<CacheKey>,
+    inflight: BTreeSet<CacheKey>,
     used: usize,
 }
 pub(super) struct TermCache {
@@ -66,7 +90,7 @@ impl Default for TermCache {
 }
 struct Claim<'a> {
     cache: &'a TermCache,
-    key: [u8; 32],
+    key: CacheKey,
     reserved: usize,
     active: bool,
 }
@@ -82,79 +106,129 @@ impl Drop for Claim<'_> {
     }
 }
 impl TermCache {
-    pub fn get(&self, index: &Index, term: [u8; 32]) -> Result<Option<Arc<TermList>>> {
+    fn entry(
+        &self,
+        key: CacheKey,
+        estimate: impl FnOnce() -> Result<(usize, usize)>,
+        load: impl FnOnce(usize) -> Result<Entry>,
+    ) -> Result<Option<Entry>> {
+        let mut estimate = Some(estimate);
+        let mut estimated = None;
+        let mut load = Some(load);
         loop {
             let mut state = self.state.lock().map_err(|_| Error::Unavailable)?;
-            if let Some(list) = state.ready.get(&term) {
-                let list = list.clone();
-                if let Some(at) = state.order.iter().position(|old| *old == term) {
+            if let Some(entry) = state.ready.get(&key) {
+                let entry = entry.clone();
+                if let Some(at) = state.order.iter().position(|old| *old == key) {
                     state.order.remove(at);
                 }
-                state.order.push_back(term);
-                return Ok(Some(list));
+                state.order.push_back(key);
+                return Ok(Some(entry));
             }
-            if state.inflight.contains(&term) {
+            if state.inflight.contains(&key) {
                 drop(self.changed.wait(state).map_err(|_| Error::Unavailable)?);
                 continue;
             }
             drop(state);
-            let chunks = tree::count_prefix(
-                index.context(tree::Purpose::ProjectionPostings),
-                &index.manifest.postings,
-                &term,
-            )?;
-            let upper = chunks.saturating_mul(256).min(index.manifest.rows) as usize;
-            let reserved = upper
-                .checked_mul(8)
-                .and_then(|n| n.checked_add(GROUP_BYTES + 512))
-                .ok_or(Error::Bounds)?;
+            if estimated.is_none() {
+                estimated = Some(estimate.take().unwrap()()?);
+            }
+            let (reserved, argument) = estimated.unwrap();
             if reserved > self.capacity {
                 return Ok(None);
             }
             let mut state = self.state.lock().map_err(|_| Error::Unavailable)?;
-            if state.ready.contains_key(&term) || state.inflight.contains(&term) {
+            if state.ready.contains_key(&key) || state.inflight.contains(&key) {
                 drop(state);
                 continue;
             }
             while state.used + reserved > self.capacity
                 || state.ready.len() + state.inflight.len() >= MAX_ENTRIES
             {
-                let Some(at) = state.order.iter().position(|key| {
-                    state
-                        .ready
-                        .get(key)
-                        .is_some_and(|list| Arc::strong_count(list) == 1)
-                }) else {
+                let Some(at) = state
+                    .order
+                    .iter()
+                    .position(|key| state.ready.get(key).is_some_and(Entry::idle))
+                else {
                     return Ok(None);
                 };
-                let key = state.order.remove(at).unwrap();
-                if let Some(list) = state.ready.remove(&key) {
-                    state.used -= list.bytes;
+                let old = state.order.remove(at).unwrap();
+                if let Some(entry) = state.ready.remove(&old) {
+                    state.used -= entry.bytes();
                 }
             }
             state.used += reserved;
-            state.inflight.insert(term);
+            state.inflight.insert(key);
             drop(state);
             let mut claim = Claim {
                 cache: self,
-                key: term,
+                key,
                 reserved,
                 active: true,
             };
-            let list = Arc::new(load(index, term, upper)?);
-            if list.bytes > reserved {
+            let entry = load.take().unwrap()(argument)?;
+            if entry.bytes() > reserved {
                 return Err(Error::Bounds);
             }
             let mut state = self.state.lock().map_err(|_| Error::Unavailable)?;
-            state.inflight.remove(&term);
+            state.inflight.remove(&key);
             state.used -= reserved;
-            state.used += list.bytes;
-            state.order.push_back(term);
-            state.ready.insert(term, list.clone());
+            state.used += entry.bytes();
+            state.order.push_back(key);
+            state.ready.insert(key, entry.clone());
             claim.active = false;
             drop(state);
             self.changed.notify_all();
-            return Ok(Some(list));
+            return Ok(Some(entry));
+        }
+    }
+    pub fn get(&self, index: &Index, term: [u8; 32]) -> Result<Option<Arc<TermList>>> {
+        let entry = self.entry(
+            CacheKey {
+                kind: 0,
+                hash: term,
+            },
+            || {
+                let chunks = tree::count_prefix(
+                    index.context(tree::Purpose::ProjectionPostings),
+                    &index.manifest.postings,
+                    &term,
+                )?;
+                let upper = chunks.saturating_mul(256).min(index.manifest.rows) as usize;
+                let reserved = upper
+                    .checked_mul(8)
+                    .and_then(|n| n.checked_add(GROUP_BYTES + 512))
+                    .ok_or(Error::Bounds)?;
+                Ok((reserved, upper))
+            },
+            |upper| Ok(Entry::Postings(Arc::new(load(index, term, upper)?))),
+        )?;
+        match entry {
+            Some(Entry::Postings(list)) => Ok(Some(list)),
+            None => Ok(None),
+            _ => Err(Error::Authority),
+        }
+    }
+    pub fn selection(
+        &self,
+        index: &Index,
+        q: &Query<'_>,
+        selection: &Selection,
+    ) -> Result<Option<Arc<Selected>>> {
+        let bytes = serde_json::to_vec(&(q.from, q.to, &q.filter)).map_err(|_| Error::Invalid)?;
+        let key = CacheKey {
+            kind: 1,
+            hash: *blake3::hash(&bytes).as_bytes(),
+        };
+        let entry = self.entry(
+            key,
+            || Ok((((index.manifest.rows as usize).div_ceil(64)) * 8 + 512, 0)),
+            |_| Ok(Entry::Selection(Arc::new(index.select(selection)?))),
+        )?;
+        match entry {
+            Some(Entry::Selection(view)) => Ok(Some(view)),
+            None => Ok(None),
+            _ => Err(Error::Authority),
         }
     }
 }
@@ -279,7 +353,10 @@ mod tests {
         drop(lease);
         assert!(index.terms.get(&index, beta).unwrap().is_some());
         let state = index.terms.state.lock().unwrap();
-        assert!(!state.ready.contains_key(&alpha));
+        assert!(!state.ready.contains_key(&CacheKey {
+            kind: 0,
+            hash: alpha
+        }));
         assert!(state.used <= index.terms.capacity && state.inflight.is_empty());
     }
 }
