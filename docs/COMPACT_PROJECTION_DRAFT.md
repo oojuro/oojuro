@@ -186,3 +186,5 @@ candidate versus 131–157 ms baseline; plain 100k Zstd ranges 126–177 versus
 intent-persistence/open/provider/application costs nor other corpora are
 included. The original 242–289 ms 1M compressed result is preserved as the
 before-change evidence, rather than removed from qualification.
+
+The final numeric-refresh runtime `b328f79` passes the complete 200-engine-test /eight-rank gate (ten documented helper/opt-in tests ignored), strict runtime/tests/two-harness Clippy and changed-file formatting. The draft remains open for diverse and dense-literal work.

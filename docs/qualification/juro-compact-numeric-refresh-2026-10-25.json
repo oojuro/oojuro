@@ -1,0 +1,42 @@
+{
+  "runtime": "b328f79",
+  "parent_main": "9abee38be0acab284bf68aed75f899e9fdbf0906",
+  "scope": "Compact-v2 numeric incremental refresh; source formats and default layout1 unchanged. Full gate and matched actual-source observations are scoped separately. No hosted claim.",
+  "checks": [
+    {
+      "command": "cargo test --locked --no-default-features --lib --tests -p oojuro-engine -p oojuro-rank -- --test-threads=1",
+      "exit_code": 0,
+      "engine_passed": 200,
+      "engine_ignored": 10,
+      "rank_passed": 8,
+      "engine_seconds": 257.54
+    },
+    {
+      "command": "cargo test --locked -p oojuro-engine --lib incremental_mass_refresh -- --test-threads=1",
+      "exit_code": 0,
+      "tests": 1
+    },
+    {
+      "command": "cargo test --locked -p oojuro-engine --lib record::projection::disk::tests::incremental_prefix -- --test-threads=1",
+      "exit_code": 0,
+      "tests": 1
+    },
+    {
+      "command": "cargo clippy --locked -p oojuro-engine --lib --tests --example profile_juro_append --example profile_juro_projection --no-deps -- -D warnings",
+      "exit_code": 0
+    }
+  ],
+  "known_unrelated_check": "Broad all-examples Clippy has existing profile_projection_keys.rs manual_is_multiple_of /field_reassign_with_default lints; that example is unchanged.",
+  "matched_campaign": {
+    "baseline": "8661394dd6a4822819b806d27f5f066ee13e3ffd",
+    "candidate": "b328f79",
+    "observations": 36,
+    "all_exact_checks_passed": true,
+    "scope": "Actual synthetic NOCOMPRESS100k plain/encrypted and1M plain; compact raw/Zstd caches; oneCPU/2GiB cap; same durable intents; source+refresh excludes open/intents/provider/app; full oracles outside timer"
+  },
+  "remaining": [
+    "diverse actual-source diagnostics",
+    "dense positional-literal implementation and qualification",
+    "final coherent app/hosted deployment qualification"
+  ]
+}
