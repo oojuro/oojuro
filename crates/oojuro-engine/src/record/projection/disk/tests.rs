@@ -1844,6 +1844,17 @@ fn literal_numeric_groups_preserve_exact_case_spaces_weights_large_k_and_refresh
                     );
                 }
             }
+            let literal_plan = scorer::Plan::new(
+                "\"battery electrode\"",
+                false,
+                None,
+                &BTreeSet::new(),
+                &BTreeMap::new(),
+            );
+            assert!(matches!(
+                index.terms.literal_groups(&index, &literal_plan, &[]),
+                Err(Error::Authority)
+            ));
             if round == 0 {
                 let mut next = bound;
                 next.view[0] ^= 1;

@@ -40,9 +40,15 @@ impl Groups {
         budget: usize,
         literal: Option<&[u64]>,
     ) -> Result<Self> {
-        if !(plan.scope_model() && literal.is_none() || plan.literal.is_some() && literal.is_some())
-            || plan.terms.len() > 16
-        {
+        let supported = matches!(
+            (
+                plan.scope_model(),
+                plan.literal.is_some(),
+                literal.is_some()
+            ),
+            (true, false, false) | (false, true, true)
+        );
+        if !supported || plan.terms.len() > 16 {
             return Err(Error::Invalid);
         }
         if literal.is_some_and(|bits| bits.len() != (index.manifest.rows as usize).div_ceil(64)) {

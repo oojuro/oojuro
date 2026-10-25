@@ -314,6 +314,9 @@ impl TermCache {
         plan: &scorer::Plan,
         literal: &[u64],
     ) -> Result<Option<Arc<joint::Groups>>> {
+        if literal.len() != (index.manifest.rows as usize).div_ceil(64) {
+            return Err(Error::Authority);
+        }
         let Some(needle) = plan
             .literal
             .as_ref()
