@@ -287,6 +287,25 @@ fn bad_options_keys_budgets_and_torn_sources_refuse_without_source_changes() {
     s.refused(&["index", "events.juro", "missing-key"]);
     assert!(!s.0.join("missing-key").exists());
     s.ok(&["index", "events.juro", "index", "--index-key", "key"]);
+    s.ok(&[
+        "index",
+        "events.juro",
+        "capped-index",
+        "--index-key",
+        "key",
+        "--max-original-bytes",
+        "1",
+    ]);
+    s.refused(&[
+        "search",
+        "events.juro",
+        "capped-index",
+        "calibration",
+        "--index-key",
+        "key",
+        "--max-original-bytes",
+        "1024",
+    ]);
     for options in [
         vec!["--limit", "0"],
         vec!["--from", "9", "--to", "9"],

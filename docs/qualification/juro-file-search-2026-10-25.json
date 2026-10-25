@@ -94,7 +94,8 @@
     "independent archive physical checkpoint needs new index",
     "source append refuses stale index",
     "invalid flags and byte budgets refuse without partial answers",
-    "torn source remains byte-for-byte unchanged"
+    "torn source remains byte-for-byte unchanged",
+    "index stores explicit original-query cap; a search cannot raise that stored maximum"
   ],
   "not_qualified": [
     "million-record actual-source performance",
@@ -103,9 +104,9 @@
     "new package publication"
   ],
   "source_sha256": {
-    "crates/ojo-tools/src/main.rs": "88a5362660579bbc234cc524d70ec817d9636bb44b41c208a045fcf1ca92ea12",
+    "crates/ojo-tools/src/main.rs": "0b12f9464e1743361ac8c7445cd22fb51d3863f60ab0bbf66f5421e59cbac4a3",
     "crates/ojo-tools/src/search.rs": "021c91a09be48f203679f096545dd55cd1373c7421acfd1ee81c07c952cc8b59",
-    "crates/ojo-tools/tests/search.rs": "5c01d41cdde6d64f22300ab007396fbbaf6ace32070ba56bed07363fa421b450",
+    "crates/ojo-tools/tests/search.rs": "b5ff3a0bbf39a2c5def42b24f0ffb9d0f037946d24d136de6a6cc7897e74f8fc",
     "crates/ojo-tools/Cargo.toml": "d7bade1376dbc2ae8d12c358143b6e374d4f79298c7e28497cb24f4d6a9553c6",
     "Cargo.lock": "ca7e19f3e1bcfdd76be51890547c40bd1aa8f4e04d80784b828a97440f50dac0"
   },

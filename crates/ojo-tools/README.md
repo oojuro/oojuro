@@ -85,8 +85,10 @@ The default logical index/build budget is8GiB; choose a different positive value
 with `--max-index-bytes` on build or search. Index admission permits up to2million
 UTF-8 events,64GiB indexed text and256MiB numeric metadata policy. These limits
 and observed allocated bytes/estimated heap are not hard filesystem or RSS quotas.
-Search defaults to64MiB of original/cache-text work per query; a smaller/larger
-`--max-original-bytes` changes that caller cap, intersected with the built policy.
+Search defaults to64MiB of original/cache-text work per query. Set
+`--max-original-bytes` on `index` to store a different maximum, and on `search`
+to select a caller cap. Both default to64MiB; the stricter cap applies, so a
+search cannot raise an index's stored maximum.
 At most1,024 hits and a1MiB result payload are admitted; an exceeded budget refuses
 without emitting a partial answer. Source engine and per-event16MiB limits apply.
 

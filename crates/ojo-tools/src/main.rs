@@ -22,8 +22,8 @@ const HELP: &str = "ojo — portable .juro file tools (experimental wire 0.1)
     scan/follow also accept --key-file PRIVATE_KEY.
   ojo index FILE NEW_INDEX_DIR --index-key PRIVATE_KEY [--compression raw|zstd]
   ojo search FILE INDEX_DIR QUERY --index-key PRIVATE_KEY [--limit N]
-    index/search also accept --key-file PRIVATE_SOURCE_KEY and --max-index-bytes N;
-    search also accepts --from MICROS, --to MICROS and --max-original-bytes N.
+    index/search also accept --key-file PRIVATE_SOURCE_KEY, --max-index-bytes N
+    and --max-original-bytes N. search also accepts --from MICROS and --to MICROS.
 
 init creates a timestamp-and-data journal. append supplies engine UTC time and
 an opaque cursor. DATA_FILE may be - for stdin. Retain --intent for safe retries
@@ -342,8 +342,8 @@ fn run() -> Result<()> {
     if args.compression.is_some() && command != "index" {
         return Err("--compression is only valid for index".into());
     }
-    if args.original_bytes.is_some() && command != "search" {
-        return Err("--max-original-bytes is only valid for search".into());
+    if args.original_bytes.is_some() && !matches!(command, "index" | "search") {
+        return Err("--max-original-bytes is only valid for index/search".into());
     }
     let expected = match command {
         "request-id" => 0,
