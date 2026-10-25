@@ -183,6 +183,14 @@ Creation MUST use exclusive create, write and sync the complete header, and
 sync the parent directory before reporting success. A failed partial creation
 remains an invalid file requiring explicit operator handling.
 
+A failed directory sync can also leave a complete valid file visible under an
+unconfirmed filename. Before a later writable-open operation acknowledges that
+file, the writer MUST confirm its parent-directory publication as well as its
+file bytes, unless it already observed those successful barriers. Read-only
+verification alone does not confirm pathname publication. The caller must
+durably establish newly created ancestor directories; this file protocol does
+not create arbitrary directory trees or permit renaming an open database.
+
 While holding the exclusive lock, recover as below, construct and validate the
 entire next transaction, append its header, body and footer, and sync the FILE
 before acknowledging success. `fsync` or an equivalent that durably persists

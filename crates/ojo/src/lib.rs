@@ -115,6 +115,10 @@ const MAX_KEY_BYTES: usize = 256 << 20;
 
 pub struct Database {
     file: File,
+    // A visible name can outlive a failed creation-directory sync. A reopened
+    // writer confirms the selected parent before its first durable ACK, then
+    // releases this descriptor. Read-only handles do not need parent access.
+    pending_directory: Option<File>,
     header: [u8; FILE],
     cipher: Option<XChaCha20Poly1305>,
     codecs: wire::Codecs,
@@ -192,6 +196,7 @@ impl Database {
     ) -> Self {
         Self {
             file,
+            pending_directory: None,
             header,
             cipher,
             codecs: wire::Codecs::default(),
@@ -233,6 +238,21 @@ impl Database {
         read_exact(&mut file, &mut header)?;
         let cipher = wire::cipher(&header, key)?;
         let mut db = Self::empty(file, header, cipher, writable);
+        if writable {
+            // A caller may open an existing database through a symlink. Confirm
+            // the actual file's parent, without renaming either caller path.
+            let resolved = std::fs::canonicalize(path)?;
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::MetadataExt;
+                let named = std::fs::metadata(&resolved)?;
+                let opened = db.file.metadata()?;
+                if (named.dev(), named.ino()) != (opened.dev(), opened.ino()) {
+                    return Err(Error::Invalid("database pathname changed while opening"));
+                }
+            }
+            db.pending_directory = Some(File::open(parent(&resolved))?);
+        }
         let length = db.file.metadata()?.len();
         let mut reader = BufReader::with_capacity(0, &db.file);
         while db.end < length {
@@ -299,6 +319,8 @@ impl Database {
         if writable && db.tail > 0 {
             db.file.set_len(db.end)?;
             db.file.sync_all()?;
+            db.sync_pending_directory()?;
+            db.pending_directory = None;
             db.durable_transactions = Some(db.transactions.len());
         }
         Ok(db)
@@ -315,7 +337,7 @@ impl Database {
         }
     }
 
-    /// Makes the current verified prefix durable before an application
+    /// Confirms the verified file prefix and its parent-directory publication before an application
     /// acknowledges an already accepted operation reconstructed after reopen.
     /// Requires a healthy writable handle. A successful barrier covers the whole
     /// prefix; repeats on that unchanged healthy handle perform no extra sync.
@@ -325,12 +347,21 @@ impl Database {
         if !self.writable {
             return Err(Error::ReadOnly);
         }
-        if self.durable_transactions != Some(self.transactions.len()) {
-            if let Err(error) = self.file.sync_all() {
+        if self.durable_transactions != Some(self.transactions.len())
+            || self.pending_directory.is_some()
+        {
+            let confirmation = (|| {
+                if self.durable_transactions != Some(self.transactions.len()) {
+                    self.file.sync_all()?;
+                }
+                self.sync_pending_directory()
+            })();
+            if let Err(error) = confirmation {
                 self.poisoned = true;
                 return Err(error.into());
             }
             self.durable_transactions = Some(self.transactions.len());
+            self.pending_directory = None;
         }
         Ok(self.checkpoint())
     }
@@ -464,6 +495,7 @@ impl Database {
             self.file.write_all(&frame)?;
             if durable {
                 self.file.sync_all()?;
+                self.sync_pending_directory()?;
             }
             Ok(())
         })();
@@ -513,6 +545,7 @@ impl Database {
         self.end = end;
         if durable {
             self.durable_transactions = Some(self.transactions.len());
+            self.pending_directory = None;
         }
         self.operations += changes.len();
         self.key_bytes += key_bytes;
@@ -693,6 +726,12 @@ impl Database {
         } else {
             Ok(())
         }
+    }
+    fn sync_pending_directory(&self) -> std::io::Result<()> {
+        if let Some(directory) = &self.pending_directory {
+            directory.sync_all()?;
+        }
+        Ok(())
     }
     fn next_sequence(&self) -> Result<u64> {
         (self.transactions.len() as u64)
