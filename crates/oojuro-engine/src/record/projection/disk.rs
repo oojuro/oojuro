@@ -5,7 +5,6 @@
 //! The optional disk representation preserves the existing projection ranker.
 mod budget;
 mod build;
-#[cfg(test)]
 mod compact;
 mod events;
 mod query_cache;
@@ -478,7 +477,7 @@ impl Index {
                         }
                     }
                 } else {
-                    for &(ordinal, tf) in &list.pairs {
+                    for (ordinal, tf) in list.pairs.iter() {
                         let column = self.column(ordinal)?;
                         if column.live() {
                             top.push(Scored {
@@ -683,6 +682,8 @@ impl Index {
 
 struct DiskPostings<'a> {
     cursor: tree::Cursor<'a>,
+    rows: u64,
+    format: u32,
     term: [u8; 32],
     buffer: Vec<(u32, u32)>,
     at: usize,
@@ -698,6 +699,8 @@ impl<'a> DiskPostings<'a> {
                 &term,
             )?,
             term,
+            rows: index.manifest.rows,
+            format: index.manifest.format,
             buffer: vec![],
             at: 0,
             last: None,
@@ -728,7 +731,12 @@ impl<'a> DiskPostings<'a> {
             if entry.key.len() != 36 {
                 return Err(Error::Authority);
             }
-            self.buffer = decode_postings(&entry.value)?;
+            self.buffer = decode_layout_postings(
+                &entry.value,
+                parse_u32(&entry.key[32..])?,
+                self.rows,
+                self.format,
+            )?;
             self.at = 0;
             if self.buffer.first().map(|(r, _)| r.to_be_bytes().to_vec())
                 != Some(entry.key[32..].to_vec())
@@ -754,6 +762,7 @@ impl<'a> DiskPostings<'a> {
 enum Postings<'a> {
     Cached {
         list: Arc<term_cache::TermList>,
+        block: usize,
         at: usize,
     },
     Disk(Box<DiskPostings<'a>>),
@@ -762,7 +771,11 @@ impl<'a> Postings<'a> {
     fn new(index: &'a Index, term: &str) -> Result<Self> {
         let term = *blake3::hash(term.as_bytes()).as_bytes();
         if let Some(list) = index.terms.get(index, term)? {
-            Ok(Self::Cached { list, at: 0 })
+            Ok(Self::Cached {
+                list,
+                block: 0,
+                at: 0,
+            })
         } else {
             Ok(Self::Disk(Box::new(DiskPostings::new_hash(index, term)?)))
         }
@@ -770,20 +783,13 @@ impl<'a> Postings<'a> {
     fn next(&mut self) -> Result<Option<(u32, u32)>> {
         match self {
             Self::Disk(disk) => disk.next(),
-            Self::Cached { list, at } => {
-                let value = list.pairs.get(*at).copied();
-                *at += usize::from(value.is_some());
-                Ok(value)
-            }
+            Self::Cached { list, block, at } => Ok(list.pairs.next(block, at)),
         }
     }
     fn at_least(&mut self, wanted: u32) -> Result<Option<(u32, u32)>> {
         match self {
             Self::Disk(disk) => disk.at_least(wanted),
-            Self::Cached { list, at } => {
-                *at += list.pairs[*at..].partition_point(|(row, _)| *row < wanted);
-                self.next()
-            }
+            Self::Cached { list, block, at } => Ok(list.pairs.at_least(block, at, wanted)),
         }
     }
 }

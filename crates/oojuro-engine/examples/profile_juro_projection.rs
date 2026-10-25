@@ -121,10 +121,18 @@ fn build_index(
     journal: &mut Journal,
     directory: &Path,
     compression: Compression,
+    compact: bool,
 ) -> Result<EventIndex> {
     let checkpoint = journal.checkpoint();
     snapshot(journal, checkpoint)?;
-    let mut builder = checked(EventBuilder::create(
+    let create = |path: &Path, key: &[u8; 32], binding, limits| {
+        if compact {
+            EventBuilder::create_compact(path, key, binding, limits)
+        } else {
+            EventBuilder::create(path, key, binding, limits)
+        }
+    };
+    let mut builder = checked(create(
         directory,
         &INDEX_KEY,
         binding(checkpoint),
@@ -280,8 +288,17 @@ fn main() -> Result<()> {
         "zstd" => Compression::Zstd,
         _ => return Err("raw|zstd".into()),
     };
+    let compact = match std::env::var("JURO_BENCH_COMPACT").as_deref() {
+        Err(std::env::VarError::NotPresent) | Ok("0") => false,
+        Ok("1") => true,
+        _ => return Err("JURO_BENCH_COMPACT must be 0 or 1".into()),
+    };
     let root = Path::new(&args[2]);
-    let cache = root.join(format!("index-{}", args[4]));
+    let cache = root.join(format!(
+        "index-{}{}",
+        args[4],
+        if compact { "-v2" } else { "" }
+    ));
     let began = Instant::now();
     let mut journal = open_source(root, count, encrypted)?;
     let source_open_ns = began.elapsed().as_nanos();
@@ -292,12 +309,12 @@ fn main() -> Result<()> {
             return Err("build requires a fresh nonexistent cache".into());
         }
         let began = Instant::now();
-        let index = build_index(&mut journal, &cache, compression)?;
+        let index = build_index(&mut journal, &cache, compression, compact)?;
         println!(
             "{}",
             json!({"phase":"build","rows":count,"source_open_ns":source_open_ns,
             "index_build_ns":began.elapsed().as_nanos(),"footprint":footprint(&index),
-            "source_compression":"NOCOMPRESS","source_encrypted":encrypted,"index_compression":args[4],
+            "source_compression":"NOCOMPRESS","source_encrypted":encrypted,"index_compression":args[4],"derived_layout":if compact {2} else {1},
             "scope":"actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation"})
         );
         return Ok(());
@@ -379,7 +396,12 @@ fn main() -> Result<()> {
                                 ));
                                 let (index, cleanup) = if mode == "rebuild" {
                                     (
-                                        build_index(&mut journal, &directory, compression)?,
+                                        build_index(
+                                            &mut journal,
+                                            &directory,
+                                            compression,
+                                            compact,
+                                        )?,
                                         Some(directory),
                                     )
                                 } else {
@@ -424,7 +446,7 @@ fn main() -> Result<()> {
         "{}",
         json!({"phase":args[1],"rows":count,"clients":clients,"rounds":rounds,"queries":results,
         "source_open_ns":source_open_ns,"index_open_ns":index_open_ns,"footprint":heap,
-        "source_compression":"NOCOMPRESS","source_encrypted":encrypted,"index_compression":args[4],
+        "source_compression":"NOCOMPRESS","source_encrypted":encrypted,"index_compression":args[4],"derived_layout":if compact {2} else {1},
         "source_bytes":fs::metadata(root.join("source.juro"))?.len(),
         "scope":"actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
         "initial_query_warms_index_pages_and_postings":true,"final_rank_reuse":args[1]=="retained",

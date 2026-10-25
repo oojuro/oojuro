@@ -12,6 +12,7 @@ const PACK_BYTES: u64 = 256 << 20;
 const MAX_META: usize = (32 << 10) - 5;
 const MAX_DESCRIPTOR: usize = 8 << 20;
 const FORMAT: u32 = 1;
+pub(super) const COMPACT_FORMAT: u32 = 2;
 pub(super) const TEXT: u8 = 1;
 pub(super) const COLUMNS: u8 = 2;
 const MANIFEST: &str = "PROJECTION_CURRENT";
@@ -26,10 +27,20 @@ pub(super) struct Authority {
 }
 impl Authority {
     pub fn new(binding: &Binding) -> Result<Self> {
+        Self::for_layout(binding, FORMAT)
+    }
+    pub fn for_layout(binding: &Binding, format: u32) -> Result<Self> {
+        if !matches!(format, FORMAT | COMPACT_FORMAT) {
+            return Err(Error::Bounds);
+        }
         if !name(&binding.writer, 256) {
             return Err(Error::Bounds);
         }
-        let mut identity = b"OJPROJ01".to_vec();
+        let mut identity = if format == COMPACT_FORMAT {
+            b"OJPROJ02".to_vec()
+        } else {
+            b"OJPROJ01".to_vec()
+        };
         identity.extend(binding.namespace);
         identity.extend((binding.writer.len() as u16).to_le_bytes());
         identity.extend(binding.writer.as_bytes());
@@ -527,6 +538,39 @@ pub(super) fn pack_json<T: Serialize>(value: &T, compression: Compression) -> Re
 pub(super) fn unpack_json<T: DeserializeOwned>(bytes: &[u8], _: &Limits) -> Result<T> {
     serde_json::from_slice(&unpack_bytes(bytes, MAX_META)?).map_err(|_| Error::Authority)
 }
+pub(super) fn encode_layout_postings(
+    rows: &[(u32, u32)],
+    compression: Compression,
+    format: u32,
+) -> Result<Vec<u8>> {
+    if format == COMPACT_FORMAT {
+        let base = rows.first().ok_or(Error::Bounds)?.0 & !255;
+        pack_bytes(&compact::TfBlock::encode(base, rows)?, compression)
+    } else if format == 1 {
+        encode_postings(rows, compression)
+    } else {
+        Err(Error::Authority)
+    }
+}
+pub(super) fn decode_layout_postings(
+    bytes: &[u8],
+    first: u32,
+    rows: u64,
+    format: u32,
+) -> Result<Vec<(u32, u32)>> {
+    if format == COMPACT_FORMAT {
+        let raw = unpack_bytes(bytes, 1283)?;
+        let pairs = compact::TfBlock::decode(first & !255, rows, raw)?.pairs();
+        if pairs.first().map(|pair| pair.0) != Some(first) {
+            return Err(Error::Authority);
+        }
+        Ok(pairs)
+    } else if format == 1 {
+        decode_postings(bytes)
+    } else {
+        Err(Error::Authority)
+    }
+}
 pub(super) fn encode_postings(rows: &[(u32, u32)], compression: Compression) -> Result<Vec<u8>> {
     if rows.is_empty() || rows.len() > 256 {
         return Err(Error::Bounds);
@@ -784,11 +828,17 @@ pub(super) fn open_with_cipher(
     limits: Limits,
 ) -> Result<Index> {
     limits.validate()?;
-    let authority = Authority::new(binding)?;
+    let mut authority = Authority::new(binding)?;
     let sealed = read_bounded(&root.join(MANIFEST), MAX_DESCRIPTOR + SEAL_OVERHEAD)?;
-    let plain = cipher
-        .open_frame(&manifest_aad(&authority), &sealed)
-        .map_err(|_| Error::Authority)?;
+    let plain = match cipher.open_frame(&manifest_aad(&authority), &sealed) {
+        Ok(plain) => plain,
+        Err(_) => {
+            authority = Authority::for_layout(binding, COMPACT_FORMAT)?;
+            cipher
+                .open_frame(&manifest_aad(&authority), &sealed)
+                .map_err(|_| Error::Authority)?
+        }
+    };
     let mut manifest: Manifest = serde_json::from_slice(&plain).map_err(|_| Error::Authority)?;
     manifest.limits.validate()?;
     // Stored policy cannot loosen this handle's caller-supplied work caps.
@@ -799,7 +849,8 @@ pub(super) fn open_with_cipher(
         .original_bytes_per_query
         .min(limits.original_bytes_per_query);
     manifest.limits.query_terms = manifest.limits.query_terms.min(limits.query_terms);
-    if manifest.format != FORMAT
+    if !matches!(manifest.format, FORMAT | COMPACT_FORMAT)
+        || authority.identity.starts_with(b"OJPROJ02") != (manifest.format == COMPACT_FORMAT)
         || manifest.binding != authority.binding
         || !valid_generation(&manifest.generation)
         || manifest.files.len() > 4096

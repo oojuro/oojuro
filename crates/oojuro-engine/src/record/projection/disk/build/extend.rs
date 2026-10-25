@@ -38,6 +38,7 @@ impl Appender {
             previous.cipher.clone(),
             binding,
             limits,
+            previous.manifest.format,
         )?;
         // Immutable pack names are cryptographically random and their bytes
         // remain authenticated by roots/blob references. Hard links avoid a
@@ -220,7 +221,7 @@ impl Appender {
             key.extend(list[0].0.to_be_bytes());
             postings.insert(tree::Entry::new(
                 key,
-                encode_postings(list, b.limits.compression)?,
+                encode_layout_postings(list, b.limits.compression, b.format)?,
             )?)?;
             list.clear();
             Ok(())
@@ -230,7 +231,13 @@ impl Appender {
                 return Err(Error::Authority);
             }
             let next: [u8; 32] = entry.key[..32].try_into().unwrap();
-            if term.is_some_and(|term| term != next) || list.len() == 256 {
+            if term.is_some_and(|term| term != next)
+                || list.len() == 256
+                || (b.format == COMPACT_FORMAT
+                    && list.first().is_some_and(|(row, _)| {
+                        row / 256 != parse_u32(&entry.key[32..]).unwrap_or(u32::MAX) / 256
+                    }))
+            {
                 emit(term.unwrap(), &mut list)?;
             }
             term = Some(next);
@@ -296,7 +303,7 @@ impl Appender {
         remove_tree(&directory, &authority, &flat_postings)?;
         tree::Authority::remove_file(&authority, &directory.join(SPOOL))?;
         let mut manifest = Manifest {
-            format: 1,
+            format: b.format,
             generation: b.generation.clone(),
             binding: authority.binding.clone(),
             rows: self.previous.rows + b.rows,

@@ -1,16 +1,15 @@
-//! Private version2 block-codec prototype. Not selected by any public builder
-//! until the descriptor, authority purposes and complete pipeline are qualified.
+//! Version 2 disposable term blocks; source wire/profile formats are unrelated.
 use super::*;
 
 const ROWS: usize = 256;
-struct TfBlock {
+pub(super) struct TfBlock {
     base: u32,
     bytes: Vec<u8>,
     present: [u64; 4],
     count: usize,
 }
 impl TfBlock {
-    fn encode(base: u32, pairs: &[(u32, u32)]) -> Result<Vec<u8>> {
+    pub(super) fn encode(base: u32, pairs: &[(u32, u32)]) -> Result<Vec<u8>> {
         if base & 255 != 0 || pairs.is_empty() || pairs.len() > ROWS {
             return Err(Error::Invalid);
         }
@@ -66,7 +65,7 @@ impl TfBlock {
         }
         Ok(bytes)
     }
-    fn decode(base: u32, rows: u64, bytes: Vec<u8>) -> Result<Self> {
+    pub(super) fn decode(base: u32, rows: u64, bytes: Vec<u8>) -> Result<Self> {
         if base & 255 != 0
             || u64::from(base) >= rows
             || rows > u64::from(u32::MAX)
@@ -136,7 +135,40 @@ impl TfBlock {
             count,
         })
     }
-    fn tf(&self, offset: u8) -> u32 {
+    pub(super) fn pairs(&self) -> Vec<(u32, u32)> {
+        (0..256u32)
+            .filter_map(|offset| {
+                let tf = self.tf(offset as u8);
+                (tf != 0).then_some((self.base + offset, tf))
+            })
+            .collect()
+    }
+    pub(super) fn bytes(&self) -> usize {
+        self.bytes.capacity()
+    }
+    pub(super) fn next(&self, offset: usize) -> Option<(u32, u32)> {
+        if offset >= ROWS {
+            return None;
+        }
+        let start = offset / 64;
+        for word in start..4 {
+            let bits = self.present[word]
+                & if word == start {
+                    u64::MAX << (offset % 64)
+                } else {
+                    u64::MAX
+                };
+            if bits != 0 {
+                let at = word * 64 + bits.trailing_zeros() as usize;
+                return Some((self.base + at as u32, self.tf(at as u8)));
+            }
+        }
+        None
+    }
+    pub(super) fn base(&self) -> u32 {
+        self.base
+    }
+    pub(super) fn tf(&self, offset: u8) -> u32 {
         let at = usize::from(offset);
         if self.present[at / 64] & (1 << (at % 64)) == 0 {
             return 0;
@@ -179,6 +211,7 @@ impl TfBlock {
 
 // Exact integer mass over arbitrary candidate unions without rescoring every
 // numeric row. Allocation is admitted before any full-width plane is created.
+#[cfg(test)]
 struct Mass {
     live: Vec<u64>,
     length: Vec<(u8, Vec<u64>)>,
@@ -188,6 +221,7 @@ struct Mass {
 // Under a fixed exact (length,scope) shape, score is monotone in every TF.
 // Scope also appears positively as TF*scope/length, so independently minimizing
 // length/scope is unsafe. Heterogeneous/empty shapes deliberately do not prune.
+#[cfg(test)]
 fn shape_bound(model: &scorer::Model, shapes: &[(u32, u32)], maximum_tf: &[u32]) -> Option<f64> {
     if shapes.is_empty() || shapes.len() > 16 || maximum_tf.len() != model.plan.terms.len() {
         return None;
@@ -229,6 +263,7 @@ fn scope_bounds_preserve_positive_scope_mass_and_exact_shape_arithmetic() {
     assert!(shape_bound(&model, &[(0, 0)], &[1]).is_none());
     assert!(shape_bound(&model, &[(100, 10); 17], &[1]).is_none());
 }
+#[cfg(test)]
 impl Mass {
     fn new(columns: &[Arc<[Column]>], limit: usize) -> Result<Self> {
         let rows = columns.iter().try_fold(0usize, |rows, block| {

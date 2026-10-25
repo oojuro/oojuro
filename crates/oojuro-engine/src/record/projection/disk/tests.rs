@@ -332,11 +332,50 @@ fn ambiguous_descriptor_publication_keeps_its_complete_generation_readable() {
 
 #[test]
 fn incremental_prefix_append_retire_and_reopen_match_complete_global_model() {
-    for compression in [Compression::Raw, Compression::Zstd] {
+    for (compression, compact) in [
+        (Compression::Raw, false),
+        (Compression::Zstd, false),
+        (Compression::Raw, true),
+        (Compression::Zstd, true),
+    ] {
         let scratch = Scratch::new();
         let path = scratch.0.join("index");
         let initial = (0..2040).step_by(2).rev().map(row).collect::<Vec<_>>();
-        let old = build(&path, &initial, compression);
+        let old = if compact {
+            let mut b = Builder::create_compact(
+                &path,
+                &[9; 32],
+                binding(),
+                Limits {
+                    compression,
+                    ..Limits::default()
+                },
+            )
+            .unwrap();
+            for row in &initial {
+                b.push(row.clone()).unwrap();
+            }
+            let index = b.finish().unwrap();
+            assert_eq!(index.manifest.format, COMPACT_FORMAT);
+            let sealed = fs::read(path.join("PROJECTION_CURRENT")).unwrap();
+            let old_authority = Authority::new(&binding()).unwrap();
+            assert!(
+                index
+                    .cipher
+                    .open_frame(
+                        &{
+                            let mut aad = b"oojuro/projection/manifest/v1\0".to_vec();
+                            aad.extend(&old_authority.binding);
+                            aad
+                        },
+                        &sealed
+                    )
+                    .is_err()
+            );
+            index
+        } else {
+            build(&path, &initial, compression)
+        };
         old.rank(
             &binding(),
             &query("alpha", Filter::default(), i64::MIN, i64::MAX),
