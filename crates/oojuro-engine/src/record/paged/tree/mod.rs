@@ -3,7 +3,7 @@
 mod sort;
 use super::super::*;
 use oojuro_store::crypto::{FrameCipher, SEAL_OVERHEAD, random_key};
-pub(super) use sort::Sorter;
+pub(crate) use sort::Sorter;
 use std::{
     collections::VecDeque,
     fs::{self, File, OpenOptions},
@@ -12,7 +12,7 @@ use std::{
     path::{Path, PathBuf},
     sync::{Arc, Mutex},
 };
-pub(super) const PAGE_BYTES: usize = 64 << 10;
+pub(crate) const PAGE_BYTES: usize = 64 << 10;
 const PACK_BYTES: u64 = 64 << 20;
 const MAX_CHILDREN: usize = 128;
 const MAX_DEPTH: u8 = 16;
@@ -22,13 +22,18 @@ const MAX_VALUE: usize = 32 << 10;
 const MAGIC: &[u8; 8] = b"OJDIR001";
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
-pub(super) enum Purpose {
+pub(crate) enum Purpose {
     Prefix,
     Request,
     Record,
     KeyVersion,
     Segment,
     Sort,
+    ProjectionMetadata,
+    ProjectionIds,
+    ProjectionKeys,
+    ProjectionPostings,
+    ProjectionTerms,
 }
 impl Purpose {
     fn byte(self) -> u8 {
@@ -39,21 +44,40 @@ impl Purpose {
             Self::KeyVersion => 4,
             Self::Segment => 5,
             Self::Sort => 6,
+            Self::ProjectionMetadata => 7,
+            Self::ProjectionIds => 8,
+            Self::ProjectionKeys => 9,
+            Self::ProjectionPostings => 10,
+            Self::ProjectionTerms => 11,
         }
     }
 }
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub(super) enum KeyClass {
+pub(crate) enum KeyClass {
     Data,
     RetainedControl,
 }
 /// Trusted authority adapter, never a wire-selected authenticated bool.
-pub(super) trait Authority {
+pub(crate) trait Authority {
     fn current(&self) -> Result<Vec<u8>>;
+    fn matches_current(&self, expected: &[u8]) -> Result<bool> {
+        Ok(self.current()? == expected)
+    }
     fn validate_birth(&self, birth: &[u8], purpose: Purpose, class: KeyClass) -> Result<()>;
+    /// Optional disposable-cache admission. Source authorities keep their
+    /// existing write behavior through these default implementations.
+    fn reserve_file(&self, _path: &Path, _length: u64) -> Result<()> {
+        Ok(())
+    }
+    fn rename_file(&self, source: &Path, target: &Path) -> Result<()> {
+        fs::rename(source, target).map_err(|_| Error::Unavailable)
+    }
+    fn remove_file(&self, path: &Path) -> Result<()> {
+        fs::remove_file(path).map_err(|_| Error::Unavailable)
+    }
 }
 #[derive(Clone)]
-pub(super) struct Context<'a> {
+pub(crate) struct Context<'a> {
     pub directory: &'a Path,
     pub cipher: &'a FrameCipher,
     pub authority: &'a dyn Authority,
@@ -64,6 +88,12 @@ pub(super) struct Context<'a> {
     pub cache: Option<&'a PageCache>,
 }
 impl<'a> Context<'a> {
+    fn key_bound(&self) -> usize {
+        match self.sort_of.unwrap_or(self.purpose) {
+            Purpose::ProjectionIds | Purpose::ProjectionKeys => 1024,
+            _ => MAX_KEY,
+        }
+    }
     pub fn check(&self) -> Result<Vec<u8>> {
         let purpose = if self.purpose == Purpose::Sort {
             self.sort_of.ok_or(Error::Scope)?
@@ -94,7 +124,7 @@ impl<'a> Context<'a> {
 }
 /// Bounded decoded metadata cache bound to one owned immutable cipher instance.
 /// A new key/cipher object cannot reuse entries even if caller metadata is copied.
-pub(super) struct PageCache {
+pub(crate) struct PageCache {
     cipher: Arc<FrameCipher>,
     state: Mutex<CacheState>,
 }
@@ -180,7 +210,7 @@ fn node_accounted(node: &Node) -> Result<usize> {
     }
 }
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(super) struct Entry {
+pub(crate) struct Entry {
     pub key: Vec<u8>,
     pub value: Vec<u8>,
 }
@@ -195,9 +225,15 @@ impl Entry {
         self.key.len() + self.value.len() + 32
     }
 }
+fn validate_entry(entry: &Entry, key_bound: usize) -> Result<()> {
+    if entry.key.is_empty() || entry.key.len() > key_bound || entry.value.len() > MAX_VALUE {
+        return Err(Error::Bounds);
+    }
+    Ok(())
+}
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct Reference {
+pub(crate) struct Reference {
     pub generation: [u8; 32],
     pub file: u64,
     pub offset: u64,
@@ -211,7 +247,7 @@ pub(super) struct Reference {
 }
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(deny_unknown_fields)]
-pub(super) struct Root {
+pub(crate) struct Root {
     pub format: u32,
     pub purpose: Purpose,
     pub binding: Vec<u8>,
@@ -229,7 +265,7 @@ impl Root {
             return Err(Error::Authority);
         }
         if let Some(node) = &self.node {
-            check_ref(node)?;
+            check_ref_bound(node, ctx.key_bound())?;
         }
         Ok(())
     }
@@ -239,7 +275,7 @@ enum Node {
     Leaf(Vec<Entry>),
     Branch(Vec<Reference>),
 }
-fn check_ref(r: &Reference) -> Result<()> {
+fn check_ref_bound(r: &Reference, key_bound: usize) -> Result<()> {
     if r.bytes as usize > PAGE_BYTES + SEAL_OVERHEAD
         || r.bytes as usize <= SEAL_OVERHEAD
         || r.birth.is_empty()
@@ -247,8 +283,8 @@ fn check_ref(r: &Reference) -> Result<()> {
         || r.level > MAX_DEPTH
         || r.count == 0
         || r.first.is_empty()
-        || r.first.len() > MAX_KEY
-        || r.last.len() > MAX_KEY
+        || r.first.len() > key_bound
+        || r.last.len() > key_bound
         || r.first > r.last
         || r.offset
             .checked_add(u64::from(r.bytes))
@@ -264,7 +300,7 @@ fn aad(ctx: &Context<'_>, r: &Reference) -> Result<Vec<u8>> {
     bytes.push(ctx.sort_of.map_or(0, Purpose::byte));
     bytes.push(u8::from(ctx.class == KeyClass::RetainedControl));
     bytes.extend(ctx.identity);
-    bytes.extend(encode_ref(r)?);
+    bytes.extend(encode_ref(r, ctx.key_bound())?);
     Ok(bytes)
 }
 fn path(dir: &Path, generation: [u8; 32], file: u64, temp: bool) -> PathBuf {
@@ -282,7 +318,7 @@ fn sync_dir(dir: &Path) -> Result<()> {
         .and_then(|f| f.sync_all())
         .map_err(|_| Error::Unavailable)
 }
-pub(super) fn prepare_directory(dir: &Path) -> Result<()> {
+pub(crate) fn prepare_directory(dir: &Path) -> Result<()> {
     match fs::symlink_metadata(dir) {
         Ok(m) if !m.is_dir() || m.file_type().is_symlink() => return Err(Error::Invalid),
         Ok(_) => (),
@@ -302,7 +338,7 @@ fn file_new(path: &Path) -> Result<File> {
         .open(path)
         .map_err(|_| Error::Unavailable)
 }
-pub(super) struct Pack<'a> {
+pub(crate) struct Pack<'a> {
     ctx: Context<'a>,
     generation: [u8; 32],
     number: u64,
@@ -331,11 +367,10 @@ impl<'a> Pack<'a> {
         if let Some(file) = self.current.take() {
             self.poisoned = true;
             file.sync_all().map_err(|_| Error::Unavailable)?;
-            fs::rename(
-                path(self.ctx.directory, self.generation, self.number, true),
-                path(self.ctx.directory, self.generation, self.number, false),
-            )
-            .map_err(|_| Error::Unavailable)?;
+            self.ctx.authority.rename_file(
+                &path(self.ctx.directory, self.generation, self.number, true),
+                &path(self.ctx.directory, self.generation, self.number, false),
+            )?;
             sync_dir(self.ctx.directory)?;
             #[cfg(test)]
             test_phase("PackPublished");
@@ -351,7 +386,7 @@ impl<'a> Pack<'a> {
     }
     fn load(&self, r: &Reference) -> Result<Node> {
         if r.generation == self.generation && r.file == self.number && self.current.is_some() {
-            check_ref(r)?;
+            check_ref_bound(r, self.ctx.key_bound())?;
             self.ctx.authority.validate_birth(
                 &r.birth,
                 self.ctx.sort_of.unwrap_or(self.ctx.purpose),
@@ -375,7 +410,7 @@ impl<'a> Pack<'a> {
                 .cipher
                 .open_frame(&aad(&self.ctx, &header)?, &sealed)
                 .map_err(|_| Error::Authority)?;
-            let node = decode_node(&plain, r.level)?;
+            let node = decode_node_bound(&plain, r.level, self.ctx.key_bound())?;
             let (first, last, count) = node_bounds(&node)?;
             if first != r.first || last != r.last || count != r.count {
                 return Err(Error::Authority);
@@ -389,7 +424,7 @@ impl<'a> Pack<'a> {
         if self.poisoned {
             return Err(Error::Unavailable);
         }
-        let plain = encode_node(node, level)?;
+        let plain = encode_node_bound(node, level, self.ctx.key_bound())?;
         let (first, last, count) = node_bounds(node)?;
         if self.ctx.check()? != self.binding {
             return Err(Error::Conflict);
@@ -427,6 +462,12 @@ impl<'a> Pack<'a> {
         };
         let sealed = self.ctx.cipher.seal_frame(&aad(&self.ctx, &r)?, &plain);
         r.digest = *blake3::hash(&sealed).as_bytes();
+        self.ctx.authority.reserve_file(
+            &path(self.ctx.directory, self.generation, self.number, true),
+            self.offset
+                .checked_add(sealed.len() as u64)
+                .ok_or(Error::Bounds)?,
+        )?;
         self.poisoned = true;
         self.current
             .as_mut()
@@ -441,7 +482,7 @@ impl<'a> Pack<'a> {
     }
 }
 fn load(ctx: &Context<'_>, r: &Reference) -> Result<Node> {
-    check_ref(r)?;
+    check_ref_bound(r, ctx.key_bound())?;
     ctx.authority
         .validate_birth(&r.birth, ctx.sort_of.unwrap_or(ctx.purpose), ctx.class)?;
     if let Some(cache) = ctx.cache
@@ -475,7 +516,7 @@ fn load(ctx: &Context<'_>, r: &Reference) -> Result<Node> {
         .cipher
         .open_frame(&aad(ctx, &context)?, &sealed)
         .map_err(|_| Error::Authority)?;
-    let node = decode_node(&plain, r.level)?;
+    let node = decode_node_bound(&plain, r.level, ctx.key_bound())?;
     let (first, last, count) = node_bounds(&node)?;
     if first != r.first || last != r.last || count != r.count {
         return Err(Error::Authority);
@@ -485,7 +526,7 @@ fn load(ctx: &Context<'_>, r: &Reference) -> Result<Node> {
     }
     Ok(node)
 }
-pub(super) struct Builder<'a> {
+pub(crate) struct Builder<'a> {
     pack: Pack<'a>,
     leaf: Vec<Entry>,
     levels: Vec<Vec<Reference>>,
@@ -503,13 +544,15 @@ impl<'a> Builder<'a> {
         })
     }
     pub fn push(&mut self, entry: Entry) -> Result<()> {
-        Entry::new(entry.key.clone(), entry.value.clone())?;
+        validate_entry(&entry, self.pack.ctx.key_bound())?;
         if self.last.as_ref().is_some_and(|old| *old >= entry.key) {
             return Err(Error::Conflict);
         }
         let mut candidate = self.leaf.clone();
         candidate.push(entry.clone());
-        if self.leaf.len() >= MAX_CHILDREN || encode_node(&Node::Leaf(candidate), 0).is_err() {
+        if self.leaf.len() >= MAX_CHILDREN
+            || encode_node_bound(&Node::Leaf(candidate), 0, self.pack.ctx.key_bound()).is_err()
+        {
             self.flush_leaf()?;
         }
         self.last = Some(entry.key.clone());
@@ -536,7 +579,12 @@ impl<'a> Builder<'a> {
         candidate.push(r.clone());
         if !self.levels[at].is_empty()
             && (candidate.len() > MAX_CHILDREN
-                || encode_node(&Node::Branch(candidate), at as u8 + 1).is_err())
+                || encode_node_bound(
+                    &Node::Branch(candidate),
+                    at as u8 + 1,
+                    self.pack.ctx.key_bound(),
+                )
+                .is_err())
         {
             let node = Node::Branch(std::mem::take(&mut self.levels[at]));
             let parent = self.pack.put(&node, at as u8 + 1)?;
@@ -579,7 +627,7 @@ impl<'a> Builder<'a> {
         Ok(root)
     }
 }
-pub(super) struct Cursor<'a> {
+pub(crate) struct Cursor<'a> {
     ctx: Context<'a>,
     stack: Vec<(Reference, usize)>,
     leaf: VecDeque<Entry>,
@@ -646,7 +694,7 @@ impl<'a> Cursor<'a> {
     }
     pub fn next(&mut self) -> Result<Option<Entry>> {
         loop {
-            if self.ctx.check()? != self.binding {
+            if !self.ctx.authority.matches_current(&self.binding)? {
                 return Err(Error::Conflict);
             }
             if let Some(entry) = self.leaf.pop_front() {
@@ -666,7 +714,7 @@ impl<'a> Cursor<'a> {
         }
     }
 }
-pub(super) fn visit_pages(
+pub(crate) fn visit_pages(
     ctx: Context<'_>,
     root: &Root,
     mut visit: impl FnMut(&Reference) -> Result<()>,
@@ -691,15 +739,15 @@ pub(super) fn visit_pages(
     }
     Ok(())
 }
-pub(super) fn get(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
+pub(crate) fn get(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
     let mut c = Cursor::seek(ctx, root, key)?;
     Ok(c.next()?.filter(|e| e.key == key).map(|e| e.value))
 }
-pub(super) fn get_ancestor(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
+pub(crate) fn get_ancestor(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<Option<Vec<u8>>> {
     let mut c = Cursor::seek_ancestor(ctx, root, key)?;
     Ok(c.next()?.filter(|e| e.key == key).map(|e| e.value))
 }
-pub(super) fn validate_ancestor_root(ctx: &Context<'_>, root: &Root) -> Result<()> {
+pub(crate) fn validate_ancestor_root(ctx: &Context<'_>, root: &Root) -> Result<()> {
     ctx.check()?;
     if root.format != 1
         || root.purpose != ctx.purpose
@@ -710,7 +758,7 @@ pub(super) fn validate_ancestor_root(ctx: &Context<'_>, root: &Root) -> Result<(
     ctx.authority
         .validate_birth(&root.binding, ctx.sort_of.unwrap_or(ctx.purpose), ctx.class)
 }
-pub(super) struct Editor<'a> {
+pub(crate) struct Editor<'a> {
     pack: Pack<'a>,
     root: Root,
 }
@@ -723,7 +771,7 @@ impl<'a> Editor<'a> {
         })
     }
     pub fn insert(&mut self, entry: Entry) -> Result<()> {
-        Entry::new(entry.key.clone(), entry.value.clone())?;
+        validate_entry(&entry, self.pack.ctx.key_bound())?;
         let refs = if let Some(r) = &self.root.node {
             insert_at(&mut self.pack, r, entry)?
         } else {
@@ -771,7 +819,9 @@ fn insert_at(pack: &mut Pack<'_>, reference: &Reference, entry: Entry) -> Result
             Node::Branch(children)
         }
     };
-    if node_len(&node) <= MAX_CHILDREN && encode_node(&node, reference.level).is_ok() {
+    if node_len(&node) <= MAX_CHILDREN
+        && encode_node_bound(&node, reference.level, pack.ctx.key_bound()).is_ok()
+    {
         return Ok(vec![pack.put(&node, reference.level)?]);
     }
     let second = match &mut node {
@@ -856,8 +906,8 @@ impl<'a> In<'a> {
         Ok(self.bytes(n)?.to_vec())
     }
 }
-fn encode_ref(r: &Reference) -> Result<Vec<u8>> {
-    check_ref(r)?;
+fn encode_ref(r: &Reference, key_bound: usize) -> Result<Vec<u8>> {
+    check_ref_bound(r, key_bound)?;
     let mut o = Out(vec![]);
     o.bytes(&r.generation)?;
     o.bytes(&r.file.to_le_bytes())?;
@@ -870,7 +920,7 @@ fn encode_ref(r: &Reference) -> Result<Vec<u8>> {
     o.blob(&r.last)?;
     Ok(o.0)
 }
-fn decode_ref(i: &mut In<'_>) -> Result<Reference> {
+fn decode_ref(i: &mut In<'_>, key_bound: usize) -> Result<Reference> {
     let generation = i.bytes(32)?.try_into().unwrap();
     let file = u64::from_le_bytes(i.bytes(8)?.try_into().unwrap());
     let offset = u64::from_le_bytes(i.bytes(8)?.try_into().unwrap());
@@ -878,8 +928,8 @@ fn decode_ref(i: &mut In<'_>) -> Result<Reference> {
     let birth = i.blob(MAX_BINDING)?;
     let level = i.bytes(1)?[0];
     let count = u64::from_le_bytes(i.bytes(8)?.try_into().unwrap());
-    let first = i.blob(MAX_KEY)?;
-    let last = i.blob(MAX_KEY)?;
+    let first = i.blob(key_bound)?;
+    let last = i.blob(key_bound)?;
     let r = Reference {
         generation,
         file,
@@ -892,10 +942,10 @@ fn decode_ref(i: &mut In<'_>) -> Result<Reference> {
         first,
         last,
     };
-    check_ref(&r)?;
+    check_ref_bound(&r, key_bound)?;
     Ok(r)
 }
-fn encode_node(node: &Node, level: u8) -> Result<Vec<u8>> {
+fn encode_node_bound(node: &Node, level: u8, key_bound: usize) -> Result<Vec<u8>> {
     if node_len(node) == 0 || node_len(node) > MAX_CHILDREN || level > MAX_DEPTH {
         return Err(Error::Bounds);
     }
@@ -909,7 +959,7 @@ fn encode_node(node: &Node, level: u8) -> Result<Vec<u8>> {
                 return Err(Error::Authority);
             }
             for e in rows {
-                Entry::new(e.key.clone(), e.value.clone())?;
+                validate_entry(e, key_bound)?;
                 o.blob(&e.key)?;
                 o.blob(&e.value)?;
             }
@@ -922,7 +972,7 @@ fn encode_node(node: &Node, level: u8) -> Result<Vec<u8>> {
                 if r.level + 1 != level {
                     return Err(Error::Authority);
                 }
-                o.bytes(&encode_ref(r)?)?;
+                o.bytes(&encode_ref(r, key_bound)?)?;
                 o.bytes(&r.digest)?;
             }
         }
@@ -930,7 +980,7 @@ fn encode_node(node: &Node, level: u8) -> Result<Vec<u8>> {
     node_bounds(node)?;
     Ok(o.0)
 }
-fn decode_node(bytes: &[u8], level: u8) -> Result<Node> {
+fn decode_node_bound(bytes: &[u8], level: u8, key_bound: usize) -> Result<Node> {
     if bytes.len() > PAGE_BYTES {
         return Err(Error::Bounds);
     }
@@ -945,13 +995,18 @@ fn decode_node(bytes: &[u8], level: u8) -> Result<Node> {
     let node = if level == 0 {
         let mut rows = vec![];
         for _ in 0..n {
-            rows.push(Entry::new(i.blob(MAX_KEY)?, i.blob(MAX_VALUE)?)?);
+            let entry = Entry {
+                key: i.blob(key_bound)?,
+                value: i.blob(MAX_VALUE)?,
+            };
+            validate_entry(&entry, key_bound)?;
+            rows.push(entry);
         }
         Node::Leaf(rows)
     } else {
         let mut rows = vec![];
         for _ in 0..n {
-            let mut r = decode_ref(&mut i)?;
+            let mut r = decode_ref(&mut i, key_bound)?;
             r.digest = i.bytes(32)?.try_into().unwrap();
             if r.level + 1 != level {
                 return Err(Error::Authority);
@@ -970,7 +1025,7 @@ fn decode_node(bytes: &[u8], level: u8) -> Result<Node> {
 mod tests;
 
 #[cfg(test)]
-pub(super) fn test_phase(at: &str) {
+pub(crate) fn test_phase(at: &str) {
     if std::env::var("OOJURO_DIRECTORY_CRASH_PHASE").as_deref() == Ok(at) {
         println!("DIRECTORY_BOUNDARY_READY");
         std::io::stdout().flush().unwrap();
@@ -978,4 +1033,17 @@ pub(super) fn test_phase(at: &str) {
             std::thread::park();
         }
     }
+}
+
+#[cfg(test)]
+fn encode_node(node: &Node, level: u8) -> Result<Vec<u8>> {
+    encode_node_bound(node, level, MAX_KEY)
+}
+#[cfg(test)]
+fn decode_node(bytes: &[u8], level: u8) -> Result<Node> {
+    decode_node_bound(bytes, level, MAX_KEY)
+}
+#[cfg(test)]
+fn check_ref(r: &Reference) -> Result<()> {
+    check_ref_bound(r, MAX_KEY)
 }
