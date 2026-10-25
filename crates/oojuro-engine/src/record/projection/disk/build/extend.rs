@@ -7,6 +7,7 @@ use std::os::unix::fs::MetadataExt;
 pub struct Appender {
     builder: Builder,
     previous: Manifest,
+    previous_mass: Option<compact::Mass>,
     columns: Vec<Arc<[Column]>>,
     changed: BTreeSet<usize>,
     pages: Arc<tree::PageCache>,
@@ -30,6 +31,11 @@ impl Appender {
             || previous.manifest.rows as usize
                 > limits.metadata_bytes / std::mem::size_of::<Column>()
             || previous.manifest.source_bytes > limits.source_bytes
+        {
+            return Err(Error::Bounds);
+        }
+        if let Some(mass) = &previous.mass
+            && mass.bytes() > mass_limit(&previous.columns, limits.metadata_bytes)?
         {
             return Err(Error::Bounds);
         }
@@ -60,6 +66,7 @@ impl Appender {
         Ok(Self {
             builder,
             previous: previous.manifest.clone(),
+            previous_mass: previous.mass.clone(),
             columns: previous.columns.clone(),
             changed: BTreeSet::new(),
             pages: previous.pages.clone(),
@@ -298,6 +305,15 @@ impl Appender {
         if !tail.is_empty() {
             self.columns.push(Arc::from(tail));
         }
+        let mass = if b.format == COMPACT_FORMAT {
+            Some(self.previous_mass.take().ok_or(Error::Authority)?.refresh(
+                &self.columns,
+                &self.changed,
+                mass_limit(&self.columns, b.limits.metadata_bytes)?,
+            )?)
+        } else {
+            None
+        };
         let mut columns = self.previous.columns.clone();
         for block in self.changed {
             let mut bytes = Vec::with_capacity(self.columns[block].len() * COLUMN_BYTES);
@@ -320,7 +336,6 @@ impl Appender {
         remove_tree(&directory, &authority, &temporary_ids)?;
         remove_tree(&directory, &authority, &flat_postings)?;
         tree::Authority::remove_file(&authority, &directory.join(SPOOL))?;
-        let mass = index_mass(&self.columns, b.format, b.limits.metadata_bytes)?;
         let mut manifest = Manifest {
             format: b.format,
             generation: b.generation.clone(),
