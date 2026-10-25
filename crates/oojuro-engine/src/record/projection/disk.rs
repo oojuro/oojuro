@@ -407,6 +407,11 @@ impl Index {
                 }
                 if !split && term.contains('_') && column.visible(&selection) {
                     present.insert(term.clone());
+                    // Only literal planning consumes global DF. Identifier
+                    // presence needs one eligible witness, not the full list.
+                    if !scorer::is_literal(q.text) {
+                        break;
+                    }
                 }
             }
             df.insert(term, count);
