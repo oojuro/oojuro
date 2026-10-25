@@ -128,6 +128,175 @@ fn positional_literals_match_full_oracle_across_unicode_filters_refresh_and_reop
 }
 
 #[test]
+fn positional_literal_counts_and_block_bounds_preserve_exact_dense_scores() {
+    let rows: Vec<_> = (0..5001)
+        .map(|i| {
+            let mut row = row(i);
+            row.text = format!(
+                "the battery electrode original {} λ_電池\r\n終 {}",
+                "battery electrode ".repeat(i % 5),
+                if i.is_multiple_of(3) {
+                    "Battery  electrode"
+                } else {
+                    "battery  electrode"
+                }
+            );
+            row
+        })
+        .collect();
+    let reference = super::super::Index::build(binding(), rows.clone()).unwrap();
+    let originals: BTreeMap<_, _> = rows
+        .iter()
+        .map(|row| (row.id.clone(), row.clone()))
+        .collect();
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let mut builder = Builder::create_positional(
+            scratch.0.join("index"),
+            &[9; 32],
+            binding(),
+            Limits {
+                compression,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        for row in &rows {
+            builder.push(row.clone()).unwrap();
+        }
+        let index = builder.finish().unwrap();
+        for text in [
+            "\"battery electrode\"",
+            "\"battery  electrode\"",
+            "\"Battery  electrode\"",
+            "\"battery electrode original\"",
+            "\"the battery\"",
+            "\"λ_電池\r\n終\"",
+        ] {
+            for (from, to) in [(i64::MIN, i64::MAX), (-8, 7)] {
+                let q = query(text, Filter::default(), from, to);
+                let ranked = index.rank_uncached(&binding(), &q).unwrap();
+                assert_eq!(
+                    fingerprint(
+                        &index
+                            .materialize(&binding(), &q, &ranked, |id| Ok(originals[id].clone()))
+                            .unwrap()
+                    ),
+                    fingerprint(&reference.search(&binding(), &q).unwrap()),
+                    "{text} {compression:?}"
+                );
+            }
+        }
+        let q = query(
+            "\"battery electrode\"",
+            Filter::default(),
+            i64::MIN,
+            i64::MAX,
+        );
+        let plan = scorer::Plan::new(q.text, false, None, &BTreeSet::new(), &BTreeMap::new());
+        let mut proof = index
+            .literal_candidates("battery electrode")
+            .unwrap()
+            .unwrap();
+        let model = index
+            .literal_statistics(&plan, None, &mut proof)
+            .unwrap()
+            .unwrap()
+            .finish(plan);
+        assert!(
+            index
+                .rank_compact_blocks(&model, &Selection::new(&q), q.k, Some(&proof))
+                .unwrap()
+                .is_some()
+        );
+    }
+}
+
+#[test]
+fn positional_proof_ranks_without_cached_originals_and_fallback_still_authenticates_text() {
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("index");
+        let mut original = row(1);
+        original.text = "battery electrode ".into();
+        let mut builder = Builder::create_positional(
+            &path,
+            &[9; 32],
+            binding(),
+            Limits {
+                compression,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        builder.push(original.clone()).unwrap();
+        let index = builder.finish().unwrap();
+        let metadata = index.metadata(0).unwrap();
+        let mut file = fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(
+                index
+                    .directory
+                    .join(&index.manifest.files[metadata.text.file as usize]),
+            )
+            .unwrap();
+        file.seek(SeekFrom::Start(metadata.text.offset)).unwrap();
+        let mut byte = [0];
+        file.read_exact(&mut byte).unwrap();
+        byte[0] ^= 1;
+        file.seek(SeekFrom::Start(metadata.text.offset)).unwrap();
+        file.write_all(&byte).unwrap();
+        file.sync_all().unwrap();
+        let q = query(
+            "\"battery electrode\"",
+            Filter::default(),
+            i64::MIN,
+            i64::MAX,
+        );
+        let ranked = index.rank_uncached(&binding(), &q).unwrap();
+        assert_eq!(ranked.len(), 1);
+        assert_eq!(
+            index
+                .materialize(&binding(), &q, &ranked, |_| Ok(original.clone()))
+                .unwrap()
+                .len(),
+            1
+        );
+        let fallback = query(
+            "\"battery electrode \"",
+            Filter::default(),
+            i64::MIN,
+            i64::MAX,
+        );
+        assert!(matches!(
+            index.rank_uncached(&binding(), &fallback),
+            Err(Error::Authority)
+        ));
+        let tight = Index::open_with_limits(
+            &path,
+            &[9; 32],
+            &binding(),
+            Limits {
+                compression,
+                original_bytes_per_query: 1,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        let mut called = false;
+        assert!(matches!(
+            tight.search(&binding(), &q, |_| {
+                called = true;
+                Ok(original.clone())
+            }),
+            Err(Error::Bounds)
+        ));
+        assert!(!called);
+    }
+}
+
+#[test]
 fn generic_events_preserve_cursor_timestamp_and_exact_data_contract() {
     fn cursor(i: u64) -> Vec<u8> {
         let mut value = vec![0x83; 16];

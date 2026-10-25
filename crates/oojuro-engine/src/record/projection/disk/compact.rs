@@ -537,14 +537,18 @@ impl BlockShape {
     }
 }
 impl Mass {
-    pub(super) fn minimum_length(&self, base: u32) -> Result<u32> {
-        if base & 255 != 0 || base as usize >= self.rows {
+    pub(super) fn minimum_length(&self, base: u32, selected: Option<&[u64]>) -> Result<u32> {
+        if base & 255 != 0
+            || base as usize >= self.rows
+            || selected.is_some_and(|bits| bits.len() != self.live.len())
+        {
             return Err(Error::Authority);
         }
         let begin = base as usize / 64;
         let mut active = [0u64; 4];
         for (at, value) in active.iter_mut().enumerate() {
-            *value = self.live.get(begin + at).copied().unwrap_or(0);
+            *value = self.live.get(begin + at).copied().unwrap_or(0)
+                & selected.map_or(u64::MAX, |bits| bits.get(begin + at).copied().unwrap_or(0));
         }
         if active.iter().all(|word| *word == 0) {
             return Ok(0);
@@ -803,7 +807,7 @@ fn bitplane_mass_matches_complete_integer_oracle_and_admits_before_allocation() 
             .map(|column| column.length)
             .min()
             .unwrap_or(0);
-        assert_eq!(mass.minimum_length(base as u32).unwrap(), expected);
+        assert_eq!(mass.minimum_length(base as u32, None).unwrap(), expected);
     }
     assert!(mass.bytes() < 1 << 20);
     assert_eq!(
@@ -827,11 +831,23 @@ fn bitplane_mass_matches_complete_integer_oracle_and_admits_before_allocation() 
         }
         assert_eq!(mass.sum(&mask, false).unwrap(), expected.0);
         assert_eq!(mass.sum(&mask, true).unwrap(), expected.1);
+        for base in (0..columns.len()).step_by(256) {
+            let expected = (base..(base + 256).min(columns.len()))
+                .filter(|row| mask[*row / 64] & (1 << (*row % 64)) != 0)
+                .map(|row| columns[row].length)
+                .min()
+                .unwrap_or(0);
+            assert_eq!(
+                mass.minimum_length(base as u32, Some(&mask)).unwrap(),
+                expected
+            );
+        }
     }
     let mut bad = mass.live.clone();
     bad[0] |= 1;
     assert!(mass.sum(&bad, true).is_err());
     assert!(mass.sum(&[], true).is_err());
+    assert!(mass.minimum_length(0, Some(&[])).is_err());
 }
 
 #[test]

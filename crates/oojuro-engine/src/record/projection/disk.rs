@@ -448,8 +448,35 @@ impl Index {
             .as_ref()
             .filter(|view| view.count <= 65536)
             .map(|view| view.bits.as_slice());
+        let mut witness = Vec::new();
         for term in scorer::possible_terms(q.text) {
             if !scorer::is_literal(q.text) && (split || !term.contains('_')) {
+                continue;
+            }
+            if scorer::is_literal(q.text)
+                && self.manifest.positions.is_some()
+                && let Some(mass) = &self.mass
+                && let Some(list) = self
+                    .terms
+                    .get(self, *blake3::hash(term.as_bytes()).as_bytes())?
+            {
+                if !split && term.contains('_') {
+                    let visible = if selected.is_none() {
+                        list.statistics.df > 0
+                    } else {
+                        witness.resize(mass.live.len(), 0);
+                        witness.fill(0);
+                        list.pairs.presence(
+                            &mut witness,
+                            &mass.live,
+                            selected.as_ref().map(|view| view.bits.as_slice()),
+                        )? > 0
+                    };
+                    if visible {
+                        present.insert(term.clone());
+                    }
+                }
+                df.insert(term, list.statistics.df);
                 continue;
             }
             let mut cursor = Postings::new(self, &term)?;

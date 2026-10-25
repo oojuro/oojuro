@@ -1,0 +1,15 @@
+# Exact literal cache prototype
+
+This is unqualified source work on a separate topic. It is not a release, a stable storage format, or a latency/storage claim. Source wire 0.1, Event profile 1 and their frozen vectors are unchanged. Existing create APIs retain their existing disposable layouts.
+
+`Builder::create_positional` and the neutral `EventBuilder::create_positional` explicitly request disposable layout 3. Its authenticated identity is `OJPROJ03`; the descriptor must agree with that identity and contain a position root. Layouts 1/2 retain their encodings and remain readable. Older readers refuse layout 3; callers rebuild this disposable cache using a compatible reader.
+
+The additional encrypted tree records exact byte offsets of maximal alphanumeric/underscore runs and maximal separator runs. Case, Unicode, whitespace, punctuation and NUL bytes are preserved. Equal position lists share row masks inside aligned 256-row fragments. A fragment holds at most 4096 logical positions and 28 KiB of encoded data; frequent runs in one row can span fragments.
+
+A phrase whose first and last characters are word characters can receive a complete proof by intersecting raw-run identities and their exact relative byte offsets. This preserves the existing phrase boundary rule, including underscores and Unicode. Other phrases retain exact cached-original validation. A streamed proof limits the number of runs to 128, its conservative decoding allowance to 8 MiB, and its work to eight million candidate-position/bounded-binary-search units. A missing complete proof or exhausted allowance falls back to exact text. Malformed/authentication/EOF failures return errors rather than partial results.
+
+The proof supplies candidate row masks to exact TF-bitplane sums and the existing global statistics/model arithmetic. Literal score bounds use independent minimum length and maximum TF only because literal TF gain is independent of length. Final scores still use the unchanged scorer; there is no shard fusion or approximate top-k. Original materialization still fetches caller-supplied authoritative originals and verifies every field and exact text digest. The neutral event adapter continues to omit non-UTF8 data from text indexing while those bytes remain readable in the source.
+
+Construction rereads derived original blobs to create a bounded external sort. Incremental refresh adds only new run positions and preserves retired-row masks in the current numeric view. Existing logical all-build disk admission and observed allocated-byte metrics cover the added files; they are not filesystem quotas. No new retained cache policy is introduced, but position pages compete for the existing page cache and query decoding adds transient work.
+
+Original text is still present for complete fallback support. The position tree adds bytes. Qualification must report actual source plus index bytes, build scratch/logical and allocated peaks, file counts, retained estimates, process RSS, cold reopen, mixed/varied queries, dense literals, raw/Zstd and incremental/encrypted cases. No one-third-space claim is justified by this prototype.

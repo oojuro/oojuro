@@ -61,7 +61,7 @@ impl Index {
             let scoped = if model.plan.scope_model() {
                 model.scope_bound(shape.minimum_scope, &maximum_mass)
             } else {
-                model.literal_bound(mass.minimum_length(base)?, &tf)
+                model.literal_bound(mass.minimum_length(base, literal)?, &tf)
             };
             let bound = match (shaped, scoped) {
                 (Some(a), Some(b)) => Some(a.min(b)),
