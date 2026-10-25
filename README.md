@@ -16,7 +16,8 @@ original reads, append/time scans and an embedded live collector under an
 explicit [Event profile](spec/events/1/FORMAT.md). Existing KV files retain
 their meaning. The generic CLI can build disposable encrypted text indexes and
 search selected originals from their exact file snapshot. Scale qualification
-remains in progress; the published v0.1.0 preview predates this API and these commands.
+remains in progress. The v0.2.0 experimental preview includes these APIs and
+commands; the immutable v0.1.0 preview remains the earlier KV file-tool release.
 
 **Status: experimental.** The standalone [wire 0.1 specification](spec/README.md)
 and frozen interoperability vectors are versioned separately from the engine.
@@ -37,7 +38,7 @@ cargo install --locked --path crates/ojo-tools
 ojo --help
 ```
 
-The [v0.1.0 preview release](https://github.com/oojuro/oojuro/releases/tag/ojo-v0.1.0)
+The [v0.2.0 preview release](https://github.com/oojuro/oojuro/releases/tag/ojo-v0.2.0)
 also provides a checksummed Linux x86-64 package. See the
 [curl, Cargo and Homebrew installation options](crates/ojo-tools/README.md#install-from-source).
 
