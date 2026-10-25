@@ -1,0 +1,102 @@
+{
+  "format": 1,
+  "base_commit": "b7b6e86f490fbdf4a6a631194b5f1dafc659c958",
+  "synthetic_local_only": true,
+  "checks": [
+    {
+      "command": [
+        "cargo",
+        "fmt",
+        "-p",
+        "ojo",
+        "--",
+        "--check"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "ojo"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "ojo",
+        "--features",
+        "archive"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "ojo",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "ojo",
+        "--all-targets",
+        "--features",
+        "archive",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/verify-ojo-sync-retry.py"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "python3",
+        "scripts/verify-ojo-sync-retry.py",
+        "--features",
+        "archive"
+      ],
+      "exit": 0
+    }
+  ],
+  "invariants": [
+    "borrowed original callbacks only after complete wire/profile validation",
+    "Event and Finish refusal precede writable tail truncation",
+    "raw/encrypted readonly and writable late application rejection preserve all bytes",
+    "empty application profile can refuse at Finish without recovery",
+    "successful observer sees each original once and one Finish before ordinary recovery",
+    "retained intent relation binds logical journal/request/time/SHA256 original without app field decoding",
+    "callback receipts are not authentication or durability attestations",
+    "normal open delegates a no-op observer"
+  ],
+  "existing_actual_file_directory_group_eio_cases": 20,
+  "source_sha256": "4669c7939df0d6ab68af72a3275fb87799d6e409674075e03a836491ba6a7029",
+  "wire_sha256": "098dac41756907534317415d72ecf34b78d3ebaa176ebe8d102323d42dd7149f",
+  "wire_profile_versions_changed": false,
+  "new_release_published": false,
+  "deployment_changed": false
+}
