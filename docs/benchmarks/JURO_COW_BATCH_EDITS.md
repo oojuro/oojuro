@@ -16,7 +16,7 @@ The ordinary single-edit source path remains unchanged.
 Runtime `3147bc6ec7ea44d44c57f6d5ef9a27aacb6bf707` is compared with main
 `2d8dfe73` using identical opt-in `profile_juro_append` harnesses and distinct
 binary hashes. [Complete receipts](JURO_COW_BATCH_EDITS_2026_10_25.json) retain
-the preliminary metadata-only variant and all final 1k/100k observations.
+the preliminary metadata-only variant and all final 1k/100k/1M observations.
 These are actual `.juro` source appends, actual original reads and actual
 copy-on-write publication, with raw/Zstd derived indexes and a plain NOCOMPRESS
 source. Each process uses one CPU and a 2 GiB virtual-memory cap; OS caches are
@@ -36,10 +36,15 @@ and rounds. All generated per-observation copies are removed afterward.
 | 1k, Zstd index | 7.81 | 0.35 | 162–168 | 129–134 |
 | 100k, raw index | 14.58 | 2.60 | 170–185 | 114–145 |
 | 100k, Zstd index | 12.47 | 2.34 | 179–188 | 110–140 |
+| 1M, raw index | 26.54 | 6.30 | 261–272 | 144–164 |
+| 1M, Zstd index | 27.65 | 5.59 | 252–284 | 147–191 |
 
 Ranges contain three observations per variant. The preliminary metadata-only
 variant retained mixed/adverse latency results; batching all four trees reduces
-both physical growth and observed refresh time in these small final cohorts.
+both physical growth and observed refresh time in these small final cohorts. The 1M cases use the same actual source and
+retained 100 engine intents across both encodings and variants. One raw candidate
+case independently rebuilds the complete 1M index (138.23 seconds outside the
+append timer); its exact signatures also agree with all eleven other 1M cases.
 This is an incremental storage improvement, not a claim about the original
 index's full size or a universal speedup.
 
@@ -47,8 +52,9 @@ The source-plus-refresh timer starts with the already retained intents and a
 healthy source/index handle. It excludes separately reported intent persistence,
 source/index open, network/provider authorization and application policy. It
 therefore does not establish a hosted or complete application 250 ms target.
-One-million actual append qualification is still running separately; existing
-distinct/dense query and cold-index limitations remain unchanged.
+The separately durable 1M intent file takes 22.24 ms in this observation.
+Existing distinct/dense query, full-index size and cold-index limitations remain
+unchanged. The 1M source is plaintext; this does not qualify encrypted 1M appends.
 
 The final complete engine/rank gate passes 189 engine tests and eight rank
 checks, with ten existing opt-in/helper cases ignored. It covers historical
