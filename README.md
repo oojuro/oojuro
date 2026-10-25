@@ -16,6 +16,14 @@ cargo test --locked -p ojo
 cargo test --locked -p ojo --features archive
 ```
 
+The generic [`ojo` file tools](crates/ojo-tools/README.md) inspect, verify, recover,
+export and manipulate databases without any agent integration:
+
+```sh
+cargo install --locked --path crates/ojo-tools
+ojo --help
+```
+
 The optional archive feature creates a separate compressed `.ojo` file while
 preserving the original, its checkpoints and encryption. Session lifecycle and
 24-hour idle scheduling belong to ojo-journal/ojo-cloud. See the
