@@ -137,3 +137,10 @@ The opt-in `profile_disk_projection` example reports build, reopen and concurren
 synthetic query diagnostics. Its callback regenerates exact fixture rows rather
 than reading a `.ojo` file or provider, and its initial queries warm pages. Keep
 those measurements separate from event-log, durable storage and hosted results.
+
+The [bounded postings/selection qualification](benchmarks/JURO_DISK_QUERY_HOTPATH.md)
+retains repeated, distinct and dense query results, including the cases that
+still exceed the latency target. The [actual Event-file diagnostics](benchmarks/JURO_ACTUAL_FILE_PROJECTION.md)
+measure real source scan/get/checkpoints, retained/reopened/rebuilt handles and
+combined source-plus-index storage through 100k events. These are local synthetic
+observations, not hosted acceptance or a general space advantage.
