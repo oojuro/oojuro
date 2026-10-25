@@ -247,6 +247,29 @@ pub(crate) struct Model {
     query_count: f64,
 }
 impl Model {
+    /// Independent optimistic penalty/gain bounds for heterogeneous scopes.
+    /// Each maximum is computed with the exact score expression TF*scope/length,
+    /// not a separately rounded ratio. Different rows may maximize each term;
+    /// that only loosens the bound. Missing/nonfinite proofs refuse pruning.
+    pub fn scope_bound(&self, minimum_scope: u32, maximum_mass: &[f64]) -> Option<f64> {
+        if !self.plan.scope_model || maximum_mass.len() != self.plan.terms.len() {
+            return None;
+        }
+        let mut gain = -self.query_count * (1. + minimum_scope as f64 / MU).log2();
+        for (i, mass) in maximum_mass.iter().copied().enumerate() {
+            if !mass.is_finite() || mass < 0. {
+                return None;
+            }
+            if mass == 0. {
+                continue;
+            }
+            let scale = MU * self.background[i];
+            let count = self.plan.terms[i].1 as f64;
+            gain += count * (1. + mass / scale).log2();
+        }
+        gain += 0.;
+        gain.is_finite().then_some(gain)
+    }
     pub fn score(&self, length: u32, scope: u32, tf: &[u32]) -> f64 {
         let mut gain = -self.query_count * (1. + self.plan.mass(length, scope) as f64 / MU).log2();
         if self.plan.direct.is_some() || self.plan.scan {

@@ -17,13 +17,26 @@ use serde_json::{Value, json};
 use std::{
     fs,
     path::{Path, PathBuf},
-    sync::{Arc, Barrier, Mutex},
+    sync::{Arc, Barrier, Mutex, OnceLock},
     time::Instant,
 };
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
 const INDEX_KEY: [u8; 32] = [42; 32];
 const SOURCE_KEY: [u8; 32] = [43; 32];
+#[derive(Clone, Copy, PartialEq)]
+enum Dataset {
+    Homogeneous,
+    Diverse,
+}
+static DATASET: OnceLock<Dataset> = OnceLock::new();
+fn dataset_name() -> &'static str {
+    if DATASET.get() == Some(&Dataset::Diverse) {
+        "diverse"
+    } else {
+        "homogeneous"
+    }
+}
 
 fn checked<T>(r: record::Result<T>) -> Result<T> {
     r.map_err(|e| format!("projection: {e:?}").into())
@@ -54,6 +67,30 @@ fn payload(n: usize) -> Vec<u8> {
     let mut s = format!("Original λ\r\nmeasurement {n} battery electrode needle{n:08} ");
     if n.is_multiple_of(97) {
         s.push_str("lookup_needle ");
+    }
+    if DATASET.get() == Some(&Dataset::Diverse) {
+        // Synthetic non-agent measurements with heterogeneous lengths, scopes,
+        // and TF correlations. Original bytes remain the only result oracle.
+        for repeated in 0..(n % 73) {
+            if repeated % 3 == 0 {
+                s.push_str("battery ");
+            }
+            if repeated % 7 == 0 {
+                s.push_str("electrode ");
+            }
+            if repeated % 11 == 0 {
+                s.push_str("original ");
+            }
+            s.push_str("thermal_coating response ");
+        }
+        for word in 0..(n % 41) {
+            s.push_str(&format!(
+                "material{} region{} supplier{} ",
+                word,
+                (n + word) % 23,
+                (n * 3 + word) % 31
+            ));
+        }
     }
     s.push_str("exact original\0終");
     s.into_bytes()
@@ -112,7 +149,7 @@ fn create_source(root: &Path, count: usize, encrypted: bool) -> Result<Value> {
     Ok(
         json!({"phase":"source","rows":count,"source_write_ns":source_ns,
         "source_bytes":fs::metadata(root.join("source.juro"))?.len(),
-        "source_compression":"NOCOMPRESS","source_encrypted":encrypted,
+        "dataset":dataset_name(),"source_compression":"NOCOMPRESS","source_encrypted":encrypted,
         "group_durability_rows":1024,"checkpoint_sequence":checkpoint.sequence,
         "scope":"synthetic non-agent data, actual durable Event profile frames; includes prepare, append batches and final sync"}),
     )
@@ -253,6 +290,15 @@ fn footprint(index: &EventIndex) -> Value {
 }
 fn main() -> Result<()> {
     let args: Vec<_> = std::env::args().collect();
+    let dataset = match std::env::var("JURO_BENCH_DATASET").as_deref() {
+        Err(std::env::VarError::NotPresent) | Ok("homogeneous") => Dataset::Homogeneous,
+        Ok("diverse") => Dataset::Diverse,
+        _ => return Err("JURO_BENCH_DATASET must be homogeneous or diverse".into()),
+    };
+    DATASET
+        .set(dataset)
+        .map_err(|_| "dataset already initialized")?;
+
     if args.len() == 5 && args[1] == "source" {
         let count = args[3].parse()?;
         if !(100..=1_000_000).contains(&count) {
@@ -314,7 +360,7 @@ fn main() -> Result<()> {
             "{}",
             json!({"phase":"build","rows":count,"source_open_ns":source_open_ns,
             "index_build_ns":began.elapsed().as_nanos(),"footprint":footprint(&index),
-            "source_compression":"NOCOMPRESS","source_encrypted":encrypted,"index_compression":args[4],"derived_layout":if compact {2} else {1},
+            "dataset":dataset_name(),"source_compression":"NOCOMPRESS","source_encrypted":encrypted,"index_compression":args[4],"derived_layout":if compact {2} else {1},
             "scope":"actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation"})
         );
         return Ok(());
@@ -452,7 +498,7 @@ fn main() -> Result<()> {
         "{}",
         json!({"phase":args[1],"rows":count,"clients":clients,"rounds":rounds,"queries":results,
         "source_open_ns":source_open_ns,"index_open_ns":index_open_ns,"footprint":heap,
-        "source_compression":"NOCOMPRESS","source_encrypted":encrypted,"index_compression":args[4],"derived_layout":if compact {2} else {1},
+        "dataset":dataset_name(),"source_compression":"NOCOMPRESS","source_encrypted":encrypted,"index_compression":args[4],"derived_layout":if compact {2} else {1},
         "source_bytes":fs::metadata(root.join("source.juro"))?.len(),
         "scope":"actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
         "initial_query_warms_index_pages_and_postings":true,"final_rank_reuse":args[1]=="retained",

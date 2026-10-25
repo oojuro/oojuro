@@ -8,6 +8,7 @@ pub(super) struct TfBlock {
     present: [u64; 4],
     count: usize,
     maximum: u32,
+    maximum_scope_mass: f64,
 }
 impl TfBlock {
     pub(super) fn encode(base: u32, pairs: &[(u32, u32)]) -> Result<Vec<u8>> {
@@ -147,6 +148,7 @@ impl TfBlock {
             present,
             count,
             maximum,
+            maximum_scope_mass: f64::INFINITY,
         })
     }
     pub(super) fn pairs(&self) -> Vec<(u32, u32)> {
@@ -178,6 +180,12 @@ impl TfBlock {
             }
         }
         None
+    }
+    pub(super) fn set_scope_mass(&mut self, maximum: f64) {
+        self.maximum_scope_mass = maximum;
+    }
+    pub(super) fn maximum_scope_mass(&self) -> f64 {
+        self.maximum_scope_mass
     }
     pub(super) fn maximum(&self) -> u32 {
         self.maximum
@@ -329,6 +337,56 @@ pub(super) fn shape_bound(
 }
 
 #[test]
+fn heterogeneous_scope_envelopes_bound_exact_multi_term_scores_and_reject_invalid_proofs() {
+    let plan = scorer::Plan::new(
+        "battery electrode original",
+        false,
+        None,
+        &BTreeSet::new(),
+        &BTreeMap::new(),
+    );
+    let model = scorer::Stats::scope_counts(&plan, vec![80, 40, 20], 1000, 2000)
+        .unwrap()
+        .finish(plan);
+    let mut state = 0xabcde9137u64;
+    for generation in 0..100 {
+        let mut rows = Vec::new();
+        for row in 0..257 {
+            state ^= state << 13;
+            state ^= state >> 7;
+            state ^= state << 17;
+            let length = 1 + (state % 1024) as u32;
+            let scope = 1 + ((state >> 17) % u64::from(length)) as u32;
+            let mut remaining = length;
+            let mut tf = [0u32; 3];
+            for (at, n) in tf.iter_mut().enumerate() {
+                *n = ((state >> (at * 11)) % (u64::from(remaining) + 1)) as u32;
+                remaining -= *n;
+            }
+            // Recompute a live envelope after changing retirement membership.
+            if (row + generation) % 7 != 0 {
+                rows.push((length, scope, tf));
+            }
+        }
+        let minimum = rows.iter().map(|(_, scope, _)| *scope).min().unwrap();
+        let mut maximum = [0.0f64; 3];
+        for (length, scope, tf) in &rows {
+            for at in 0..3 {
+                maximum[at] = maximum[at].max(tf[at] as f64 * *scope as f64 / *length as f64);
+            }
+        }
+        let bound = model.scope_bound(minimum, &maximum).unwrap();
+        for (length, scope, tf) in rows {
+            assert!(model.score(length, scope, &tf).total_cmp(&bound).is_le());
+        }
+    }
+    for bad in [f64::NAN, f64::INFINITY, -1.] {
+        assert!(model.scope_bound(1, &[bad, 1., 1.]).is_none());
+    }
+    assert!(model.scope_bound(1, &[1., 1.]).is_none());
+}
+
+#[test]
 fn scope_bounds_preserve_positive_scope_mass_and_exact_shape_arithmetic() {
     let plan = scorer::Plan::new("battery", false, None, &BTreeSet::new(), &BTreeMap::new());
     let model = scorer::Stats::single_scope(&plan, 1, 100, 1_000_000)
@@ -353,6 +411,7 @@ fn scope_bounds_preserve_positive_scope_mass_and_exact_shape_arithmetic() {
 pub(super) struct BlockShape {
     values: [(u32, u32); 16],
     count: usize,
+    pub(super) minimum_scope: u32,
     pub(super) time: i64,
     pub(super) label: u128,
 }
@@ -361,6 +420,7 @@ impl Default for BlockShape {
         Self {
             values: [(0, 0); 16],
             count: 0,
+            minimum_scope: u32::MAX,
             time: i64::MIN,
             label: u128::MAX,
         }
@@ -375,6 +435,7 @@ impl BlockShape {
         }
     }
     fn add(&mut self, column: &Column) {
+        self.minimum_scope = self.minimum_scope.min(column.scope);
         self.time = self.time.max(column.valid_at);
         self.label = self.label.min(column.label);
         if self.count <= 16 && !self.values[..self.count].contains(&(column.length, column.scope)) {
