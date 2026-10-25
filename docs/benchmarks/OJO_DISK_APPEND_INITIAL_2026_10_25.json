@@ -1,0 +1,2406 @@
+{
+  "baseline": {
+    "source": "07078c5",
+    "scope": "32-row synthetic derived refresh only; prior index warmed; source durable append, provider and auth excluded",
+    "observations": [
+      {
+        "label": "append-1000-raw-0",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-raw-0.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-raw-0",
+          "1000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-raw-0 1000 raw 1 1\"\n\tUser time (seconds): 0.06\n\tSystem time (seconds): 0.02\n\tPercent of CPU this job got: 30%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.29\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6052\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 1\n\tMinor (reclaiming a frame) page faults: 1357\n\tVoluntary context switches: 167\n\tInvoluntary context switches: 10\n\tSwaps: 0\n\tFile system inputs: 1648\n\tFile system outputs: 9008\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 4616192,
+          "append_ns": 242512824,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 4657152,
+            "peak_files": 15,
+            "peak_logical_bytes": 4625080
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 8507929,
+          "index_bytes": 4590114,
+          "open_ns": 1739293,
+          "phase": "append",
+          "rows": 1000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "59cf174d2873a0d5242f18eafc1b290be8cadee1e6d04e04c22c97c0f37c3ead"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "b75002a0f75415cf1e09a46959d97270c01e38ad943c478981ff6f8fe280dd4f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+            },
+            {
+              "case": "literal_phrase",
+              "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-1000-raw-1",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-raw-1.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-raw-1",
+          "1000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-raw-1 1000 raw 1 1\"\n\tUser time (seconds): 0.06\n\tSystem time (seconds): 0.02\n\tPercent of CPU this job got: 30%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.29\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 5956\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1121\n\tVoluntary context switches: 180\n\tInvoluntary context switches: 11\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 9464\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 4587520,
+          "append_ns": 243619830,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 4628480,
+            "peak_files": 15,
+            "peak_logical_bytes": 4593497
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 8507929,
+          "index_bytes": 4558485,
+          "open_ns": 1148044,
+          "phase": "append",
+          "rows": 1000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "59cf174d2873a0d5242f18eafc1b290be8cadee1e6d04e04c22c97c0f37c3ead"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "b75002a0f75415cf1e09a46959d97270c01e38ad943c478981ff6f8fe280dd4f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+            },
+            {
+              "case": "literal_phrase",
+              "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-1000-raw-2",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-raw-2.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-raw-2",
+          "1000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-raw-2 1000 raw 1 1\"\n\tUser time (seconds): 0.06\n\tSystem time (seconds): 0.02\n\tPercent of CPU this job got: 29%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.30\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 5824\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1200\n\tVoluntary context switches: 157\n\tInvoluntary context switches: 10\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 9872\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 4616192,
+          "append_ns": 255350273,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 4657152,
+            "peak_files": 15,
+            "peak_logical_bytes": 4624621
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 8507929,
+          "index_bytes": 4589723,
+          "open_ns": 1190743,
+          "phase": "append",
+          "rows": 1000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "59cf174d2873a0d5242f18eafc1b290be8cadee1e6d04e04c22c97c0f37c3ead"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "b75002a0f75415cf1e09a46959d97270c01e38ad943c478981ff6f8fe280dd4f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+            },
+            {
+              "case": "literal_phrase",
+              "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-1000-zstd-0",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-zstd-0.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-zstd-0",
+          "1000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-zstd-0 1000 zstd 1 1\"\n\tUser time (seconds): 0.06\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 29%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.28\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6484\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1080\n\tVoluntary context switches: 169\n\tInvoluntary context switches: 10\n\tSwaps: 0\n\tFile system inputs: 1000\n\tFile system outputs: 8224\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 3469312,
+          "append_ns": 241799676,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 3510272,
+            "peak_files": 15,
+            "peak_logical_bytes": 3480961
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 8507931,
+          "index_bytes": 3446017,
+          "open_ns": 882889,
+          "phase": "append",
+          "rows": 1000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "59cf174d2873a0d5242f18eafc1b290be8cadee1e6d04e04c22c97c0f37c3ead"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "b75002a0f75415cf1e09a46959d97270c01e38ad943c478981ff6f8fe280dd4f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+            },
+            {
+              "case": "literal_phrase",
+              "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-1000-zstd-1",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-zstd-1.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-zstd-1",
+          "1000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-zstd-1 1000 zstd 1 1\"\n\tUser time (seconds): 0.05\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 26%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.27\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6156\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1076\n\tVoluntary context switches: 151\n\tInvoluntary context switches: 8\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8224\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 3469312,
+          "append_ns": 229591427,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 3510272,
+            "peak_files": 15,
+            "peak_logical_bytes": 3480689
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 8507931,
+          "index_bytes": 3445747,
+          "open_ns": 1085280,
+          "phase": "append",
+          "rows": 1000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "59cf174d2873a0d5242f18eafc1b290be8cadee1e6d04e04c22c97c0f37c3ead"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "b75002a0f75415cf1e09a46959d97270c01e38ad943c478981ff6f8fe280dd4f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+            },
+            {
+              "case": "literal_phrase",
+              "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-1000-zstd-2",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-zstd-2.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-zstd-2",
+          "1000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000-zstd-2 1000 zstd 1 1\"\n\tUser time (seconds): 0.06\n\tSystem time (seconds): 0.02\n\tPercent of CPU this job got: 31%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.30\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6280\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1098\n\tVoluntary context switches: 136\n\tInvoluntary context switches: 9\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8256\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 3469312,
+          "append_ns": 247011606,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 3510272,
+            "peak_files": 15,
+            "peak_logical_bytes": 3481056
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 8507931,
+          "index_bytes": 3446072,
+          "open_ns": 1200988,
+          "phase": "append",
+          "rows": 1000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "59cf174d2873a0d5242f18eafc1b290be8cadee1e6d04e04c22c97c0f37c3ead"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "b75002a0f75415cf1e09a46959d97270c01e38ad943c478981ff6f8fe280dd4f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+            },
+            {
+              "case": "literal_phrase",
+              "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-100000-raw-0",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-raw-0.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-raw-0",
+          "100000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-raw-0 100000 raw 1 1\"\n\tUser time (seconds): 0.09\n\tSystem time (seconds): 0.02\n\tPercent of CPU this job got: 34%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.36\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 20104\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 4345\n\tVoluntary context switches: 298\n\tInvoluntary context switches: 9\n\tSwaps: 0\n\tFile system inputs: 17728\n\tFile system outputs: 14048\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 121217024,
+          "append_ns": 283917740,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 121237504,
+            "peak_files": 15,
+            "peak_logical_bytes": 121204112
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 19604237,
+          "index_bytes": 121187995,
+          "open_ns": 19246649,
+          "phase": "append",
+          "rows": 100000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "932ca7222949670c28091ea62ca7ab7b9e468b1f628182e045ea2ae9bb955382"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "5855945c7c51847e5c23e4477007573df6f9e75c8c03ebe1e1a48a8ba78d615f"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "740f254a1e1b59c73d23da25bce6054fece027c0725396fdf428d30b4c9becf0"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "82cb16a75a3e92387e54ba01699c2cb8d7411ad560270bb0727eac5ff9bd2c04"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-100000-raw-1",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-raw-1.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-raw-1",
+          "100000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-raw-1 100000 raw 1 1\"\n\tUser time (seconds): 0.09\n\tSystem time (seconds): 0.02\n\tPercent of CPU this job got: 34%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.36\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 20096\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 4352\n\tVoluntary context switches: 156\n\tInvoluntary context switches: 15\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 14168\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 121212928,
+          "append_ns": 291666720,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 121233408,
+            "peak_files": 15,
+            "peak_logical_bytes": 121203949
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 19604237,
+          "index_bytes": 121187860,
+          "open_ns": 14765846,
+          "phase": "append",
+          "rows": 100000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "932ca7222949670c28091ea62ca7ab7b9e468b1f628182e045ea2ae9bb955382"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "5855945c7c51847e5c23e4477007573df6f9e75c8c03ebe1e1a48a8ba78d615f"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "740f254a1e1b59c73d23da25bce6054fece027c0725396fdf428d30b4c9becf0"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "82cb16a75a3e92387e54ba01699c2cb8d7411ad560270bb0727eac5ff9bd2c04"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-100000-raw-2",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-raw-2.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-raw-2",
+          "100000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-raw-2 100000 raw 1 1\"\n\tUser time (seconds): 0.09\n\tSystem time (seconds): 0.02\n\tPercent of CPU this job got: 37%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.32\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 20092\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 4353\n\tVoluntary context switches: 159\n\tInvoluntary context switches: 21\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 14136\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 121212928,
+          "append_ns": 251943565,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 121233408,
+            "peak_files": 15,
+            "peak_logical_bytes": 121203855
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 19604237,
+          "index_bytes": 121187753,
+          "open_ns": 14990263,
+          "phase": "append",
+          "rows": 100000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "932ca7222949670c28091ea62ca7ab7b9e468b1f628182e045ea2ae9bb955382"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "5855945c7c51847e5c23e4477007573df6f9e75c8c03ebe1e1a48a8ba78d615f"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "740f254a1e1b59c73d23da25bce6054fece027c0725396fdf428d30b4c9becf0"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "82cb16a75a3e92387e54ba01699c2cb8d7411ad560270bb0727eac5ff9bd2c04"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-100000-zstd-0",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-zstd-0.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-zstd-0",
+          "100000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-zstd-0 100000 zstd 1 1\"\n\tUser time (seconds): 0.10\n\tSystem time (seconds): 0.03\n\tPercent of CPU this job got: 39%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.34\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 20876\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 4436\n\tVoluntary context switches: 381\n\tInvoluntary context switches: 15\n\tSwaps: 0\n\tFile system inputs: 10328\n\tFile system outputs: 12248\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 79753216,
+          "append_ns": 250327565,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 79773696,
+            "peak_files": 15,
+            "peak_logical_bytes": 79735759
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 19604239,
+          "index_bytes": 79719586,
+          "open_ns": 20425892,
+          "phase": "append",
+          "rows": 100000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "932ca7222949670c28091ea62ca7ab7b9e468b1f628182e045ea2ae9bb955382"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "5855945c7c51847e5c23e4477007573df6f9e75c8c03ebe1e1a48a8ba78d615f"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "740f254a1e1b59c73d23da25bce6054fece027c0725396fdf428d30b4c9becf0"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "82cb16a75a3e92387e54ba01699c2cb8d7411ad560270bb0727eac5ff9bd2c04"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-100000-zstd-1",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-zstd-1.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-zstd-1",
+          "100000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-zstd-1 100000 zstd 1 1\"\n\tUser time (seconds): 0.09\n\tSystem time (seconds): 0.03\n\tPercent of CPU this job got: 39%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.32\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 20868\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 4456\n\tVoluntary context switches: 150\n\tInvoluntary context switches: 18\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 12408\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 79753216,
+          "append_ns": 250778922,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 79773696,
+            "peak_files": 15,
+            "peak_logical_bytes": 79735700
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 19604239,
+          "index_bytes": 79719521,
+          "open_ns": 14980488,
+          "phase": "append",
+          "rows": 100000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "932ca7222949670c28091ea62ca7ab7b9e468b1f628182e045ea2ae9bb955382"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "5855945c7c51847e5c23e4477007573df6f9e75c8c03ebe1e1a48a8ba78d615f"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "740f254a1e1b59c73d23da25bce6054fece027c0725396fdf428d30b4c9becf0"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "82cb16a75a3e92387e54ba01699c2cb8d7411ad560270bb0727eac5ff9bd2c04"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-100000-zstd-2",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-zstd-2.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-zstd-2",
+          "100000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-100000-zstd-2 100000 zstd 1 1\"\n\tUser time (seconds): 0.10\n\tSystem time (seconds): 0.02\n\tPercent of CPU this job got: 39%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.34\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 20808\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 4433\n\tVoluntary context switches: 174\n\tInvoluntary context switches: 15\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 11992\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 79753216,
+          "append_ns": 259209940,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 79773696,
+            "peak_files": 15,
+            "peak_logical_bytes": 79735984
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 19604239,
+          "index_bytes": 79719767,
+          "open_ns": 18399660,
+          "phase": "append",
+          "rows": 100000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "932ca7222949670c28091ea62ca7ab7b9e468b1f628182e045ea2ae9bb955382"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "5855945c7c51847e5c23e4477007573df6f9e75c8c03ebe1e1a48a8ba78d615f"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "740f254a1e1b59c73d23da25bce6054fece027c0725396fdf428d30b4c9becf0"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "82cb16a75a3e92387e54ba01699c2cb8d7411ad560270bb0727eac5ff9bd2c04"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-1000000-raw-0",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-raw-0.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-raw-0",
+          "1000000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-raw-0 1000000 raw 1 1\"\n\tUser time (seconds): 0.50\n\tSystem time (seconds): 0.10\n\tPercent of CPU this job got: 74%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.81\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 119300\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 29244\n\tVoluntary context switches: 310\n\tInvoluntary context switches: 65\n\tSwaps: 0\n\tFile system inputs: 9008\n\tFile system outputs: 22168\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 1168252928,
+          "append_ns": 280600116,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1168093184,
+            "peak_files": 27,
+            "peak_logical_bytes": 1168214523
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 120481591,
+          "index_bytes": 1168214523,
+          "open_ns": 157643503,
+          "phase": "append",
+          "rows": 1000000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "b0ea1d991681af6a07163b34ab4d25534b81248a55ed19667b5ececdf6b0f606"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "1cdb95b956873b6c326c029221896dc1a7fcc3b3d831bac25164a5377ea9fbd9"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "2014ef51493fc5210415ae2d6e2b05fe4acc96bbb2c9bc988b91d9a261880e5f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-1000000-raw-1",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-raw-1.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-raw-1",
+          "1000000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-raw-1 1000000 raw 1 1\"\n\tUser time (seconds): 0.50\n\tSystem time (seconds): 0.10\n\tPercent of CPU this job got: 74%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.82\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 119496\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 29277\n\tVoluntary context switches: 214\n\tInvoluntary context switches: 91\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 22360\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 1168252928,
+          "append_ns": 279833798,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1168093184,
+            "peak_files": 27,
+            "peak_logical_bytes": 1168213855
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 120481591,
+          "index_bytes": 1168213855,
+          "open_ns": 157971261,
+          "phase": "append",
+          "rows": 1000000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "b0ea1d991681af6a07163b34ab4d25534b81248a55ed19667b5ececdf6b0f606"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "1cdb95b956873b6c326c029221896dc1a7fcc3b3d831bac25164a5377ea9fbd9"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "2014ef51493fc5210415ae2d6e2b05fe4acc96bbb2c9bc988b91d9a261880e5f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-1000000-raw-2",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-raw-2.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-raw-2",
+          "1000000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-raw-2 1000000 raw 1 1\"\n\tUser time (seconds): 0.51\n\tSystem time (seconds): 0.09\n\tPercent of CPU this job got: 72%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.84\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 119608\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 29290\n\tVoluntary context switches: 187\n\tInvoluntary context switches: 70\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 22296\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 1168252928,
+          "append_ns": 310557640,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1168093184,
+            "peak_files": 27,
+            "peak_logical_bytes": 1168213759
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 120481591,
+          "index_bytes": 1168213759,
+          "open_ns": 153834780,
+          "phase": "append",
+          "rows": 1000000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "b0ea1d991681af6a07163b34ab4d25534b81248a55ed19667b5ececdf6b0f606"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "1cdb95b956873b6c326c029221896dc1a7fcc3b3d831bac25164a5377ea9fbd9"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "2014ef51493fc5210415ae2d6e2b05fe4acc96bbb2c9bc988b91d9a261880e5f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-1000000-zstd-0",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-zstd-0.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-zstd-0",
+          "1000000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-zstd-0 1000000 zstd 1 1\"\n\tUser time (seconds): 0.49\n\tSystem time (seconds): 0.07\n\tPercent of CPU this job got: 71%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.79\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 120164\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 29361\n\tVoluntary context switches: 177\n\tInvoluntary context switches: 65\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 20528\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 762449920,
+          "append_ns": 298655515,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 762290176,
+            "peak_files": 22,
+            "peak_logical_bytes": 762416384
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 120481593,
+          "index_bytes": 762416384,
+          "open_ns": 102493232,
+          "phase": "append",
+          "rows": 1000000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "b0ea1d991681af6a07163b34ab4d25534b81248a55ed19667b5ececdf6b0f606"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "1cdb95b956873b6c326c029221896dc1a7fcc3b3d831bac25164a5377ea9fbd9"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "2014ef51493fc5210415ae2d6e2b05fe4acc96bbb2c9bc988b91d9a261880e5f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-1000000-zstd-1",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-zstd-1.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-zstd-1",
+          "1000000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-zstd-1 1000000 zstd 1 1\"\n\tUser time (seconds): 0.48\n\tSystem time (seconds): 0.07\n\tPercent of CPU this job got: 72%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.78\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 120084\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 29362\n\tVoluntary context switches: 207\n\tInvoluntary context switches: 64\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 20432\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 762449920,
+          "append_ns": 285797223,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 762290176,
+            "peak_files": 22,
+            "peak_logical_bytes": 762416351
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 120481593,
+          "index_bytes": 762416351,
+          "open_ns": 102560212,
+          "phase": "append",
+          "rows": 1000000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "b0ea1d991681af6a07163b34ab4d25534b81248a55ed19667b5ececdf6b0f606"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "1cdb95b956873b6c326c029221896dc1a7fcc3b3d831bac25164a5377ea9fbd9"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "2014ef51493fc5210415ae2d6e2b05fe4acc96bbb2c9bc988b91d9a261880e5f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-1000000-zstd-2",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-zstd-2.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-zstd-2",
+          "1000000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-07078c5 append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-1000000-zstd-2 1000000 zstd 1 1\"\n\tUser time (seconds): 0.48\n\tSystem time (seconds): 0.08\n\tPercent of CPU this job got: 72%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.79\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 120152\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 29357\n\tVoluntary context switches: 180\n\tInvoluntary context switches: 78\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 20560\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 762449920,
+          "append_ns": 287280593,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 762290176,
+            "peak_files": 22,
+            "peak_logical_bytes": 762416287
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 120481593,
+          "index_bytes": 762416287,
+          "open_ns": 109198477,
+          "phase": "append",
+          "rows": 1000000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "b0ea1d991681af6a07163b34ab4d25534b81248a55ed19667b5ececdf6b0f606"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "1cdb95b956873b6c326c029221896dc1a7fcc3b3d831bac25164a5377ea9fbd9"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "2014ef51493fc5210415ae2d6e2b05fe4acc96bbb2c9bc988b91d9a261880e5f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd"
+            }
+          ]
+        }
+      }
+    ],
+    "sha256": "3802386601160ac72448aeabad76b7140fb7d910b44c024ea525140c6d3e73e4"
+  },
+  "batched_sync": {
+    "source": "5fd096c7b54f27944c7b76f2b4b145c4714463eb",
+    "scope": "32-row synthetic derived refresh only; prior index warmed; source durable append, provider and auth excluded",
+    "observations": [
+      {
+        "label": "append-sync-1000-raw-0",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-raw-0.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-raw-0",
+          "1000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-raw-0 1000 raw 1 1\"\n\tUser time (seconds): 0.03\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 38%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.13\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 5888\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1185\n\tVoluntary context switches: 78\n\tInvoluntary context switches: 18\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 7736\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 4587520,
+          "append_ns": 99444182,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 4628480,
+            "peak_files": 15,
+            "peak_logical_bytes": 4593160
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 8507939,
+          "index_bytes": 4558164,
+          "open_ns": 465473,
+          "phase": "append",
+          "rows": 1000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "59cf174d2873a0d5242f18eafc1b290be8cadee1e6d04e04c22c97c0f37c3ead"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "b75002a0f75415cf1e09a46959d97270c01e38ad943c478981ff6f8fe280dd4f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+            },
+            {
+              "case": "literal_phrase",
+              "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-1000-raw-1",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-raw-1.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-raw-1",
+          "1000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-raw-1 1000 raw 1 1\"\n\tUser time (seconds): 0.04\n\tSystem time (seconds): 0.00\n\tPercent of CPU this job got: 32%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.15\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 5768\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1220\n\tVoluntary context switches: 82\n\tInvoluntary context switches: 8\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8080\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 4616192,
+          "append_ns": 123528042,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 4657152,
+            "peak_files": 15,
+            "peak_logical_bytes": 4624747
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 8507939,
+          "index_bytes": 4589795,
+          "open_ns": 443325,
+          "phase": "append",
+          "rows": 1000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "59cf174d2873a0d5242f18eafc1b290be8cadee1e6d04e04c22c97c0f37c3ead"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "b75002a0f75415cf1e09a46959d97270c01e38ad943c478981ff6f8fe280dd4f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+            },
+            {
+              "case": "literal_phrase",
+              "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-1000-raw-2",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-raw-2.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-raw-2",
+          "1000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-raw-2 1000 raw 1 1\"\n\tUser time (seconds): 0.04\n\tSystem time (seconds): 0.00\n\tPercent of CPU this job got: 34%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.14\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 5940\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1265\n\tVoluntary context switches: 69\n\tInvoluntary context switches: 8\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8272\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 4616192,
+          "append_ns": 115771829,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 4657152,
+            "peak_files": 15,
+            "peak_logical_bytes": 4624459
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 8507939,
+          "index_bytes": 4589525,
+          "open_ns": 477253,
+          "phase": "append",
+          "rows": 1000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "59cf174d2873a0d5242f18eafc1b290be8cadee1e6d04e04c22c97c0f37c3ead"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "b75002a0f75415cf1e09a46959d97270c01e38ad943c478981ff6f8fe280dd4f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+            },
+            {
+              "case": "literal_phrase",
+              "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-1000-zstd-0",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-zstd-0.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-zstd-0",
+          "1000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-zstd-0 1000 zstd 1 1\"\n\tUser time (seconds): 0.03\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 36%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.15\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6272\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1087\n\tVoluntary context switches: 74\n\tInvoluntary context switches: 9\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 6848\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 3469312,
+          "append_ns": 118161712,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 3510272,
+            "peak_files": 15,
+            "peak_logical_bytes": 3481115
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 8507941,
+          "index_bytes": 3446153,
+          "open_ns": 407852,
+          "phase": "append",
+          "rows": 1000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "59cf174d2873a0d5242f18eafc1b290be8cadee1e6d04e04c22c97c0f37c3ead"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "b75002a0f75415cf1e09a46959d97270c01e38ad943c478981ff6f8fe280dd4f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+            },
+            {
+              "case": "literal_phrase",
+              "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-1000-zstd-1",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-zstd-1.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-zstd-1",
+          "1000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-zstd-1 1000 zstd 1 1\"\n\tUser time (seconds): 0.04\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 34%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.16\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6220\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1083\n\tVoluntary context switches: 72\n\tInvoluntary context switches: 7\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 6944\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 3469312,
+          "append_ns": 126888348,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 3510272,
+            "peak_files": 15,
+            "peak_logical_bytes": 3481302
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 8507941,
+          "index_bytes": 3446313,
+          "open_ns": 366615,
+          "phase": "append",
+          "rows": 1000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "59cf174d2873a0d5242f18eafc1b290be8cadee1e6d04e04c22c97c0f37c3ead"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "b75002a0f75415cf1e09a46959d97270c01e38ad943c478981ff6f8fe280dd4f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+            },
+            {
+              "case": "literal_phrase",
+              "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-1000-zstd-2",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-zstd-2.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-zstd-2",
+          "1000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000-zstd-2 1000 zstd 1 1\"\n\tUser time (seconds): 0.03\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 36%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.14\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6208\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1082\n\tVoluntary context switches: 75\n\tInvoluntary context switches: 7\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 6720\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 3469312,
+          "append_ns": 114789317,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 3510272,
+            "peak_files": 15,
+            "peak_logical_bytes": 3481544
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 8507941,
+          "index_bytes": 3446557,
+          "open_ns": 379220,
+          "phase": "append",
+          "rows": 1000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "59cf174d2873a0d5242f18eafc1b290be8cadee1e6d04e04c22c97c0f37c3ead"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "16b04a639062f16b1df2a8c2ac476e337b02b38a4be50f6ca3e94dadbde3e922"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "b75002a0f75415cf1e09a46959d97270c01e38ad943c478981ff6f8fe280dd4f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "09dc292e1a9656947a4419651eb5b4ab7caecbdaa0868f1bce496c91a2b51a4c"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b"
+            },
+            {
+              "case": "literal_phrase",
+              "signature": "c646e1ebcfe5b66e12c3ff7c63093ae10dd37cce0f08b1b9d081f2e5346f25b3"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-100000-raw-0",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-raw-0.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-raw-0",
+          "100000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-raw-0 100000 raw 1 1\"\n\tUser time (seconds): 0.08\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 51%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.20\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 20164\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 4340\n\tVoluntary context switches: 98\n\tInvoluntary context switches: 12\n\tSwaps: 0\n\tFile system inputs: 232\n\tFile system outputs: 12480\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 121217024,
+          "append_ns": 132334507,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 121237504,
+            "peak_files": 15,
+            "peak_logical_bytes": 121204715
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 19604247,
+          "index_bytes": 121188572,
+          "open_ns": 16174341,
+          "phase": "append",
+          "rows": 100000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "932ca7222949670c28091ea62ca7ab7b9e468b1f628182e045ea2ae9bb955382"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "5855945c7c51847e5c23e4477007573df6f9e75c8c03ebe1e1a48a8ba78d615f"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "740f254a1e1b59c73d23da25bce6054fece027c0725396fdf428d30b4c9becf0"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "82cb16a75a3e92387e54ba01699c2cb8d7411ad560270bb0727eac5ff9bd2c04"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-100000-raw-1",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-raw-1.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-raw-1",
+          "100000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-raw-1 100000 raw 1 1\"\n\tUser time (seconds): 0.08\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 50%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.20\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 19976\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 4337\n\tVoluntary context switches: 107\n\tInvoluntary context switches: 8\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 12512\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 121217024,
+          "append_ns": 135774291,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 121237504,
+            "peak_files": 15,
+            "peak_logical_bytes": 121204638
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 19604247,
+          "index_bytes": 121188492,
+          "open_ns": 15199811,
+          "phase": "append",
+          "rows": 100000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "932ca7222949670c28091ea62ca7ab7b9e468b1f628182e045ea2ae9bb955382"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "5855945c7c51847e5c23e4477007573df6f9e75c8c03ebe1e1a48a8ba78d615f"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "740f254a1e1b59c73d23da25bce6054fece027c0725396fdf428d30b4c9becf0"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "82cb16a75a3e92387e54ba01699c2cb8d7411ad560270bb0727eac5ff9bd2c04"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-100000-raw-2",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-raw-2.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-raw-2",
+          "100000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-raw-2 100000 raw 1 1\"\n\tUser time (seconds): 0.07\n\tSystem time (seconds): 0.02\n\tPercent of CPU this job got: 50%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.20\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 20116\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 4339\n\tVoluntary context switches: 110\n\tInvoluntary context switches: 15\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 12472\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 121212928,
+          "append_ns": 133661035,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 121233408,
+            "peak_files": 15,
+            "peak_logical_bytes": 121203835
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 19604247,
+          "index_bytes": 121187724,
+          "open_ns": 15036894,
+          "phase": "append",
+          "rows": 100000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "932ca7222949670c28091ea62ca7ab7b9e468b1f628182e045ea2ae9bb955382"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "5855945c7c51847e5c23e4477007573df6f9e75c8c03ebe1e1a48a8ba78d615f"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "740f254a1e1b59c73d23da25bce6054fece027c0725396fdf428d30b4c9becf0"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "82cb16a75a3e92387e54ba01699c2cb8d7411ad560270bb0727eac5ff9bd2c04"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-100000-zstd-0",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-zstd-0.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-zstd-0",
+          "100000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-zstd-0 100000 zstd 1 1\"\n\tUser time (seconds): 0.08\n\tSystem time (seconds): 0.02\n\tPercent of CPU this job got: 51%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.20\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 20992\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 4445\n\tVoluntary context switches: 114\n\tInvoluntary context switches: 16\n\tSwaps: 0\n\tFile system inputs: 72\n\tFile system outputs: 10744\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 79753216,
+          "append_ns": 131094905,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 79773696,
+            "peak_files": 15,
+            "peak_logical_bytes": 79736115
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 19604249,
+          "index_bytes": 79719909,
+          "open_ns": 11151833,
+          "phase": "append",
+          "rows": 100000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "932ca7222949670c28091ea62ca7ab7b9e468b1f628182e045ea2ae9bb955382"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "5855945c7c51847e5c23e4477007573df6f9e75c8c03ebe1e1a48a8ba78d615f"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "740f254a1e1b59c73d23da25bce6054fece027c0725396fdf428d30b4c9becf0"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "82cb16a75a3e92387e54ba01699c2cb8d7411ad560270bb0727eac5ff9bd2c04"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-100000-zstd-1",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-zstd-1.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-zstd-1",
+          "100000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-zstd-1 100000 zstd 1 1\"\n\tUser time (seconds): 0.08\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 52%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.20\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 20732\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 4426\n\tVoluntary context switches: 112\n\tInvoluntary context switches: 23\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 10648\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 79753216,
+          "append_ns": 126345324,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 79773696,
+            "peak_files": 15,
+            "peak_logical_bytes": 79736277
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 19604249,
+          "index_bytes": 79720051,
+          "open_ns": 10516945,
+          "phase": "append",
+          "rows": 100000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "932ca7222949670c28091ea62ca7ab7b9e468b1f628182e045ea2ae9bb955382"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "5855945c7c51847e5c23e4477007573df6f9e75c8c03ebe1e1a48a8ba78d615f"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "740f254a1e1b59c73d23da25bce6054fece027c0725396fdf428d30b4c9becf0"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "82cb16a75a3e92387e54ba01699c2cb8d7411ad560270bb0727eac5ff9bd2c04"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-100000-zstd-2",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-zstd-2.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-zstd-2",
+          "100000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-100000-zstd-2 100000 zstd 1 1\"\n\tUser time (seconds): 0.09\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 53%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.20\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 20928\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 4426\n\tVoluntary context switches: 105\n\tInvoluntary context switches: 18\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 10712\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 79753216,
+          "append_ns": 127119669,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 79773696,
+            "peak_files": 15,
+            "peak_logical_bytes": 79735762
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 19604249,
+          "index_bytes": 79719567,
+          "open_ns": 11452561,
+          "phase": "append",
+          "rows": 100000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "932ca7222949670c28091ea62ca7ab7b9e468b1f628182e045ea2ae9bb955382"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "5855945c7c51847e5c23e4477007573df6f9e75c8c03ebe1e1a48a8ba78d615f"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "740f254a1e1b59c73d23da25bce6054fece027c0725396fdf428d30b4c9becf0"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "82cb16a75a3e92387e54ba01699c2cb8d7411ad560270bb0727eac5ff9bd2c04"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-1000000-raw-0",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-raw-0.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-raw-0",
+          "1000000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-raw-0 1000000 raw 1 1\"\n\tUser time (seconds): 0.49\n\tSystem time (seconds): 0.09\n\tPercent of CPU this job got: 83%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.70\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 119616\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 29290\n\tVoluntary context switches: 220\n\tInvoluntary context switches: 70\n\tSwaps: 0\n\tFile system inputs: 3424\n\tFile system outputs: 20664\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 1168252928,
+          "append_ns": 173885623,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1168093184,
+            "peak_files": 27,
+            "peak_logical_bytes": 1168213145
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 120481601,
+          "index_bytes": 1168213145,
+          "open_ns": 147867561,
+          "phase": "append",
+          "rows": 1000000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "b0ea1d991681af6a07163b34ab4d25534b81248a55ed19667b5ececdf6b0f606"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "1cdb95b956873b6c326c029221896dc1a7fcc3b3d831bac25164a5377ea9fbd9"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "2014ef51493fc5210415ae2d6e2b05fe4acc96bbb2c9bc988b91d9a261880e5f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-1000000-raw-1",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-raw-1.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-raw-1",
+          "1000000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-raw-1 1000000 raw 1 1\"\n\tUser time (seconds): 0.49\n\tSystem time (seconds): 0.08\n\tPercent of CPU this job got: 84%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.68\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 119556\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 29266\n\tVoluntary context switches: 153\n\tInvoluntary context switches: 103\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 20792\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 1168252928,
+          "append_ns": 154365231,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1168093184,
+            "peak_files": 27,
+            "peak_logical_bytes": 1168214200
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 120481601,
+          "index_bytes": 1168214200,
+          "open_ns": 147660564,
+          "phase": "append",
+          "rows": 1000000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "b0ea1d991681af6a07163b34ab4d25534b81248a55ed19667b5ececdf6b0f606"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "1cdb95b956873b6c326c029221896dc1a7fcc3b3d831bac25164a5377ea9fbd9"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "2014ef51493fc5210415ae2d6e2b05fe4acc96bbb2c9bc988b91d9a261880e5f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-1000000-raw-2",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-raw-2.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-raw-2",
+          "1000000",
+          "raw",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-raw-2 1000000 raw 1 1\"\n\tUser time (seconds): 0.49\n\tSystem time (seconds): 0.08\n\tPercent of CPU this job got: 85%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.68\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 119492\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 29266\n\tVoluntary context switches: 156\n\tInvoluntary context switches: 90\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 20696\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 1168252928,
+          "append_ns": 153438892,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 1168093184,
+            "peak_files": 27,
+            "peak_logical_bytes": 1168214208
+          },
+          "compression": "raw",
+          "estimated_heap_bytes": 120481601,
+          "index_bytes": 1168214208,
+          "open_ns": 154403854,
+          "phase": "append",
+          "rows": 1000000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "b0ea1d991681af6a07163b34ab4d25534b81248a55ed19667b5ececdf6b0f606"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "1cdb95b956873b6c326c029221896dc1a7fcc3b3d831bac25164a5377ea9fbd9"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "2014ef51493fc5210415ae2d6e2b05fe4acc96bbb2c9bc988b91d9a261880e5f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-1000000-zstd-0",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-zstd-0.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-zstd-0",
+          "1000000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-zstd-0 1000000 zstd 1 1\"\n\tUser time (seconds): 0.49\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 80%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.68\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 120092\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 29360\n\tVoluntary context switches: 303\n\tInvoluntary context switches: 75\n\tSwaps: 0\n\tFile system inputs: 6224\n\tFile system outputs: 18896\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 762449920,
+          "append_ns": 185383660,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 762290176,
+            "peak_files": 22,
+            "peak_logical_bytes": 762416177
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 120481603,
+          "index_bytes": 762416177,
+          "open_ns": 104826442,
+          "phase": "append",
+          "rows": 1000000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "b0ea1d991681af6a07163b34ab4d25534b81248a55ed19667b5ececdf6b0f606"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "1cdb95b956873b6c326c029221896dc1a7fcc3b3d831bac25164a5377ea9fbd9"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "2014ef51493fc5210415ae2d6e2b05fe4acc96bbb2c9bc988b91d9a261880e5f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-1000000-zstd-1",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-zstd-1.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-zstd-1",
+          "1000000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-zstd-1 1000000 zstd 1 1\"\n\tUser time (seconds): 0.47\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 84%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.63\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 120228\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 29367\n\tVoluntary context switches: 104\n\tInvoluntary context switches: 80\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 18864\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 762449920,
+          "append_ns": 143327883,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 762290176,
+            "peak_files": 22,
+            "peak_logical_bytes": 762416365
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 120481603,
+          "index_bytes": 762416365,
+          "open_ns": 103505129,
+          "phase": "append",
+          "rows": 1000000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "b0ea1d991681af6a07163b34ab4d25534b81248a55ed19667b5ececdf6b0f606"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "1cdb95b956873b6c326c029221896dc1a7fcc3b3d831bac25164a5377ea9fbd9"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "2014ef51493fc5210415ae2d6e2b05fe4acc96bbb2c9bc988b91d9a261880e5f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd"
+            }
+          ]
+        }
+      },
+      {
+        "label": "append-sync-1000000-zstd-2",
+        "returncode": 0,
+        "command": [
+          "/usr/bin/time",
+          "-v",
+          "-o",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-zstd-2.time",
+          "taskset",
+          "-c",
+          "0",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync",
+          "append",
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-zstd-2",
+          "1000000",
+          "zstd",
+          "1",
+          "1"
+        ],
+        "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-batched-sync append /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/append-sync-1000000-zstd-2 1000000 zstd 1 1\"\n\tUser time (seconds): 0.46\n\tSystem time (seconds): 0.07\n\tPercent of CPU this job got: 77%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.70\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 120216\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 29363\n\tVoluntary context switches: 135\n\tInvoluntary context switches: 75\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 18608\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+        "stderr": "",
+        "result": {
+          "added": 32,
+          "allocated_index_bytes": 762449920,
+          "append_ns": 211051783,
+          "build_metrics": {
+            "peak_allocated_bytes_observed": 762290176,
+            "peak_files": 22,
+            "peak_logical_bytes": 762416237
+          },
+          "compression": "zstd",
+          "estimated_heap_bytes": 120481603,
+          "index_bytes": 762416237,
+          "open_ns": 99225269,
+          "phase": "append",
+          "rows": 1000000,
+          "scope": "derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded",
+          "signatures": [
+            {
+              "case": "lexical_unique",
+              "signature": "b0ea1d991681af6a07163b34ab4d25534b81248a55ed19667b5ececdf6b0f606"
+            },
+            {
+              "case": "lexical_common",
+              "signature": "1cdb95b956873b6c326c029221896dc1a7fcc3b3d831bac25164a5377ea9fbd9"
+            },
+            {
+              "case": "lexical_missing",
+              "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab"
+            },
+            {
+              "case": "explicit_key",
+              "signature": "2014ef51493fc5210415ae2d6e2b05fe4acc96bbb2c9bc988b91d9a261880e5f"
+            },
+            {
+              "case": "identifier_anchor",
+              "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e"
+            },
+            {
+              "case": "filtered_common",
+              "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd"
+            }
+          ]
+        }
+      }
+    ],
+    "sha256": "d524da1517a2bc7996730f3199e561c7c00bf1f18e96aa6f5dbecda7e3a18a30"
+  },
+  "scope": "derived cache refresh only; exact source callback regenerated; prior index warmed; source durability/provider/auth excluded",
+  "result": "all result signatures identical across candidates;3 observations per size/codec, no end-to-end percentile or productionSLA acceptance"
+}

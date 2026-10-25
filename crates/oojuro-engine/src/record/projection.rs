@@ -1,9 +1,11 @@
 //! Pure disposable query projection of a caller-resolved immutable snapshot.
 //! Binding is a caller assertion, not proof of remote commit/auth/freshness.
-//! No files, clock, Store append, local receipt, DEK or independent authority.
+//! The original in-memory Index owns no files; the disk submodule supplies an
+//! optional encrypted cache. Source appends, clocks and authority remain external.
 use super::*;
 use crate::lexical::{self, RecordVisibility, passage};
 use std::collections::BTreeSet;
+pub mod disk;
 #[derive(Clone, Debug, PartialEq, Eq, Serialize)]
 pub struct Binding {
     pub namespace: [u8; 32],
@@ -295,30 +297,33 @@ impl Index {
                 .map_err(|_| Error::Authority)?;
             let row = self.rows.get(at).ok_or(Error::Authority)?;
             let text = self.inner.record_text(at).ok_or(Error::Authority)?;
-            let (start, end) = match passage::extract_passage(text, q.text, q.excerpt_bytes)? {
-                Some(p) => (p.start, p.end),
-                None => {
-                    let mut end = text.len().min(q.excerpt_bytes);
-                    while !text.is_char_boundary(end) {
-                        end -= 1;
-                    }
-                    (0, end)
-                }
-            };
-            output.push(Hit {
-                id: row.id.clone(),
-                bits: h.bits,
-                continued: h.continued,
-                valid_at: row.valid_at,
-                reported_recorded_at: row.reported_recorded_at,
-                start,
-                end,
-                excerpt: text[start..end].into(),
-            });
+            output.push(materialize(row, text, h.bits, h.continued, q)?);
         }
         json_size(&output, q.max_bytes)?;
         Ok(output)
     }
+}
+fn materialize(row: &Row, text: &str, bits: f64, continued: bool, q: &Query<'_>) -> Result<Hit> {
+    let (start, end) = match passage::extract_passage(text, q.text, q.excerpt_bytes)? {
+        Some(p) => (p.start, p.end),
+        None => {
+            let mut end = text.len().min(q.excerpt_bytes);
+            while !text.is_char_boundary(end) {
+                end -= 1;
+            }
+            (0, end)
+        }
+    };
+    Ok(Hit {
+        id: row.id.clone(),
+        bits,
+        continued,
+        valid_at: row.valid_at,
+        reported_recorded_at: row.reported_recorded_at,
+        start,
+        end,
+        excerpt: text[start..end].into(),
+    })
 }
 #[cfg(test)]
 #[path = "projection_memory_tests.rs"]

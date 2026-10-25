@@ -1,5 +1,6 @@
-//! Native sealed raw/parsed capture authority and bounded in-memory lexical retrieval.
-//! Disk index/merge, access policy, erasure/audit and hosted replicated commits remain separate milestones.
+//! Sealed sources and exact lexical retrieval with disposable memory/disk projections.
+//! The event adapter accepts opaque cursors, timestamps and exact data. Callers
+//! validate current source snapshots and permissions before using a projection.
 pub mod raw;
 
 #[cfg(unix)]
@@ -16,6 +17,9 @@ pub mod receipts;
 
 /// Direct flat-record/time namespace; never an implicit harness-format conversion.
 pub mod record;
+pub use record::projection::disk::{
+    EventAppender, EventBuilder, EventHit, EventIndex, EventQuery, EventRanked, EventRow,
+};
 
 /// Opt-in content-free signed audit wire; persistence and current witnesses are external.
 pub mod audit;

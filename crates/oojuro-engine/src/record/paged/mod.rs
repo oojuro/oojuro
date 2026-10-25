@@ -2,7 +2,7 @@
 //! Existing Record2 limits remain; O(batch) locators and streamed key scans are intermediate.
 mod cache;
 mod reader;
-mod tree;
+pub(crate) mod tree;
 use super::*;
 pub use cache::{Index, Opened};
 pub use reader::{Reader, Snapshot};

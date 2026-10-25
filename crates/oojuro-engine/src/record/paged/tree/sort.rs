@@ -29,17 +29,20 @@ struct SpoolWriter<'a> {
     file: File,
     spool: Spool,
     binding: Vec<u8>,
+    bytes: u64,
 }
 impl<'a> SpoolWriter<'a> {
     fn new(ctx: Context<'a>) -> Result<Self> {
         let id = random_key();
         let binding = ctx.check()?;
+        ctx.authority.reserve_file(&spool_path(&ctx, id), 0)?;
         let file = file_new(&spool_path(&ctx, id))?;
         Ok(Self {
             ctx,
             file,
             spool: Spool { id, count: 0 },
             binding,
+            bytes: 0,
         })
     }
     fn push(&mut self, root: &Root) -> Result<()> {
@@ -51,6 +54,13 @@ impl<'a> SpoolWriter<'a> {
             &spool_aad(&self.ctx, self.spool.id, self.spool.count, &self.binding),
             &plain,
         );
+        self.bytes = self
+            .bytes
+            .checked_add(4 + sealed.len() as u64)
+            .ok_or(Error::Bounds)?;
+        self.ctx
+            .authority
+            .reserve_file(&spool_path(&self.ctx, self.spool.id), self.bytes)?;
         self.file
             .write_all(&(sealed.len() as u32).to_le_bytes())
             .and_then(|_| self.file.write_all(&sealed))
@@ -62,8 +72,8 @@ impl<'a> SpoolWriter<'a> {
         if self.ctx.check()? != self.binding {
             return Err(Error::Conflict);
         }
-        self.file.sync_all().map_err(|_| Error::Unavailable)?;
-        sync_dir(self.ctx.directory)?;
+        self.ctx.authority.sync_file(&self.file, self.ctx.purpose)?;
+        self.ctx.authority.sync_directory(self.ctx.directory)?;
         Ok(self.spool)
     }
 }
@@ -177,11 +187,11 @@ impl<'a> Sorter<'a> {
         })
     }
     #[cfg(test)]
-    pub(super) fn budget_for_test(&mut self, bytes: usize) {
+    pub(crate) fn budget_for_test(&mut self, bytes: usize) {
         self.budget = bytes;
     }
     pub fn push(&mut self, entry: Entry) -> Result<()> {
-        Entry::new(entry.key.clone(), entry.value.clone())?;
+        validate_entry(&entry, self.ctx.key_bound())?;
         let cap = {
             #[cfg(test)]
             {
@@ -241,7 +251,9 @@ impl<'a> Sorter<'a> {
             }
             let old = current;
             current = target.finish()?;
-            fs::remove_file(spool_path(&self.sort, old.id)).map_err(|_| Error::Unavailable)?;
+            self.sort
+                .authority
+                .remove_file(&spool_path(&self.sort, old.id))?;
         }
         let mut source = SpoolReader::new(self.sort.clone(), current)?;
         let roots = take_group(&mut source)?;
@@ -250,7 +262,9 @@ impl<'a> Sorter<'a> {
         }
         let root = merge(self.sort.clone(), self.ctx, &roots)?;
         remove_runs(&self.sort, &roots)?;
-        fs::remove_file(spool_path(&self.sort, current.id)).map_err(|_| Error::Unavailable)?;
+        self.sort
+            .authority
+            .remove_file(&spool_path(&self.sort, current.id))?;
         Ok(root)
     }
 }
@@ -300,8 +314,8 @@ fn remove_runs(ctx: &Context<'_>, roots: &[Root]) -> Result<()> {
                 return Err(Error::Authority);
             }
             for number in 0..=node.file {
-                fs::remove_file(path(ctx.directory, generation, number, false))
-                    .map_err(|_| Error::Unavailable)?;
+                ctx.authority
+                    .remove_file(&path(ctx.directory, generation, number, false))?;
             }
         }
     }

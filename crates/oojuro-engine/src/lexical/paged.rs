@@ -71,13 +71,16 @@ impl Plan {
         }
     }
     pub fn candidate(&self, id: u64, indexed: bool, text: &str, visible: bool, tf: &[u32]) -> bool {
-        if !visible
-            || (!self.empty && self.direct.is_none() && !indexed)
-            || self
+        self.candidate_terms(id, indexed, visible, tf)
+            && self
                 .literal
                 .as_deref()
-                .is_some_and(|p| phrase_start(text, p).is_none())
-        {
+                .is_none_or(|p| phrase_start(text, p).is_some())
+    }
+    /// Candidate eligibility without opening an original merely to reject a
+    /// missing term. A caller with a literal must still verify its exact bytes.
+    pub fn candidate_terms(&self, id: u64, indexed: bool, visible: bool, tf: &[u32]) -> bool {
+        if !visible || (!self.empty && self.direct.is_none() && !indexed) {
             return false;
         }
         if let Some(direct) = self.direct {
@@ -99,6 +102,15 @@ impl Plan {
     pub fn continues(&self) -> bool {
         self.anchored && self.literal.is_none()
     }
+    pub fn scope_model(&self) -> bool {
+        self.scope_model
+    }
+    pub fn anchor_driver(&self, at: usize) -> bool {
+        self.anchored && self.literal.is_none() && self.terms[at].0.contains('_')
+    }
+    pub fn anchored_driver(&self) -> bool {
+        self.anchored && self.literal.is_none()
+    }
 }
 pub(crate) struct Stats {
     collection: Vec<u64>,
@@ -114,6 +126,18 @@ impl Stats {
             total: 0,
             view_total: 0,
         }
+    }
+    /// Sparse postings visits already cover every visible term occurrence.
+    /// Only a small candidate collection needs mass from nonmatching rows.
+    pub fn needs_view_total(&self) -> bool {
+        self.collection.iter().any(|n| *n > 0) && (self.total as f64) < FLOOR_RECORDS * MU
+    }
+    pub fn set_view_total(&mut self, total: u64) {
+        self.view_total = total;
+    }
+    pub fn reset_view(&mut self) {
+        self.view.fill(0);
+        self.view_total = 0;
     }
     pub fn visit(
         &mut self,

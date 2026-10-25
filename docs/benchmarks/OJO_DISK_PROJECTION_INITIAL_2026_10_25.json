@@ -1,0 +1,3005 @@
+{
+  "source": "f69b18f60155e2b20ca0725a798bb6bcbb1a9793",
+  "sha256": "58ba0f94b6796f7241f5a31a287968d0c63e0108b94c6dcdb5654e3b570def70",
+  "cpu": 0,
+  "scope": "synthetic local derived projection; generated exact originals, no provider/authority/source file latency",
+  "observations": [
+    {
+      "label": "1000-raw-build-1",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-raw-build-1.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "build",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-raw",
+        "1000",
+        "raw",
+        "1",
+        "1"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-raw 1000 raw 1 1\"\n\tUser time (seconds): 0.10\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 35%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.32\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 5832\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 882\n\tVoluntary context switches: 166\n\tInvoluntary context switches: 45\n\tSwaps: 0\n\tFile system inputs: 24\n\tFile system outputs: 8560\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 1175552,
+        "build_metrics": {
+          "peak_allocated_bytes_observed": 2453504,
+          "peak_files": 10,
+          "peak_logical_bytes": 2433069
+        },
+        "compression": "raw",
+        "estimated_heap_bytes": 8504720,
+        "index_bytes": 1159364,
+        "ns": 322899040,
+        "phase": "build",
+        "rows": 1000,
+        "scope": "synthetic encrypted derived projection; deterministic fixture originals; no authority or end-to-end file latency",
+        "text_bytes": 75044
+      }
+    },
+    {
+      "label": "1000-raw-query-1",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-raw-query-1.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "query",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-raw",
+        "1000",
+        "raw",
+        "1",
+        "3"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f query /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-raw 1000 raw 1 3\"\n\tUser time (seconds): 0.05\n\tSystem time (seconds): 0.00\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.06\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 5320\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 565\n\tVoluntary context switches: 3\n\tInvoluntary context switches: 10\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 1175552,
+        "clients": 1,
+        "compression": "raw",
+        "elapsed_ns": 48564016,
+        "estimated_heap_bytes": 8504720,
+        "index_bytes": 1159364,
+        "open_ns": 742438,
+        "phase": "query",
+        "queries": [
+          {
+            "case": "lexical_unique",
+            "initial_ns": 276042,
+            "signature": "37e91b359e76759806c82db95d35b03ec048e3670c382b2143d73f26743211ff",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.10501,
+              "min_ms": 0.064493,
+              "p50_ms": 0.065535,
+              "p95_ms": 0.10501,
+              "samples_ns": [
+                64493,
+                65535,
+                105010
+              ]
+            }
+          },
+          {
+            "case": "lexical_common",
+            "initial_ns": 961893,
+            "signature": "4aaedb1fd9a1b411461b085f65c81024db1084c9f3a318e7ebcc2079f39af24a",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.586459,
+              "min_ms": 0.554365,
+              "p50_ms": 0.58626,
+              "p95_ms": 0.586459,
+              "samples_ns": [
+                554365,
+                586260,
+                586459
+              ]
+            }
+          },
+          {
+            "case": "lexical_missing",
+            "initial_ns": 82406,
+            "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.040316,
+              "min_ms": 0.033805,
+              "p50_ms": 0.035571,
+              "p95_ms": 0.040316,
+              "samples_ns": [
+                33805,
+                35571,
+                40316
+              ]
+            }
+          },
+          {
+            "case": "explicit_key",
+            "initial_ns": 39429,
+            "signature": "1aa54d32b93fb7cae112b9ff2445b3e4cceef98815dbd653a1b3a32712bb7150",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.046125,
+              "min_ms": 0.040094,
+              "p50_ms": 0.045113,
+              "p95_ms": 0.046125,
+              "samples_ns": [
+                40094,
+                45113,
+                46125
+              ]
+            }
+          },
+          {
+            "case": "identifier_anchor",
+            "initial_ns": 1358769,
+            "signature": "50f44e8b41055033c1fb1f4cca6693632d442b7b4891881b7439960aeea950d1",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.838062,
+              "min_ms": 0.820845,
+              "p50_ms": 0.836682,
+              "p95_ms": 0.838062,
+              "samples_ns": [
+                820845,
+                836682,
+                838062
+              ]
+            }
+          },
+          {
+            "case": "filtered_common",
+            "initial_ns": 110084,
+            "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.125081,
+              "min_ms": 0.121973,
+              "p50_ms": 0.122646,
+              "p95_ms": 0.125081,
+              "samples_ns": [
+                121973,
+                122646,
+                125081
+              ]
+            }
+          },
+          {
+            "case": "literal_phrase",
+            "initial_ns": 11932523,
+            "signature": "2f0ae1edbc8515a9c67ef5e884fad262d762cbadff0b4122a14ef956b42aecbf",
+            "timing": {
+              "count": 3,
+              "max_ms": 14.502884,
+              "min_ms": 14.250858,
+              "p50_ms": 14.382724,
+              "p95_ms": 14.502884,
+              "samples_ns": [
+                14250858,
+                14382724,
+                14502884
+              ]
+            }
+          }
+        ],
+        "rounds": 3,
+        "rows": 1000,
+        "scope": "local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .ojo/provider freshness acceptance"
+      }
+    },
+    {
+      "label": "1000-raw-query-10",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-raw-query-10.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "query",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-raw",
+        "1000",
+        "raw",
+        "10",
+        "3"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f query /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-raw 1000 raw 10 3\"\n\tUser time (seconds): 0.44\n\tSystem time (seconds): 0.05\n\tPercent of CPU this job got: 97%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.51\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6920\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 1004\n\tVoluntary context switches: 233\n\tInvoluntary context switches: 298\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 1175552,
+        "clients": 10,
+        "compression": "raw",
+        "elapsed_ns": 494634463,
+        "estimated_heap_bytes": 8504720,
+        "index_bytes": 1159364,
+        "open_ns": 457075,
+        "phase": "query",
+        "queries": [
+          {
+            "case": "lexical_unique",
+            "initial_ns": 260303,
+            "signature": "37e91b359e76759806c82db95d35b03ec048e3670c382b2143d73f26743211ff",
+            "timing": {
+              "count": 30,
+              "max_ms": 22.689215,
+              "min_ms": 0.058618,
+              "p50_ms": 0.064149,
+              "p95_ms": 0.122384,
+              "samples_ns": [
+                58618,
+                58627,
+                60864,
+                60930,
+                61108,
+                61404,
+                61881,
+                61988,
+                62255,
+                62432,
+                62749,
+                62893,
+                63640,
+                63942,
+                64149,
+                64329,
+                64731,
+                65659,
+                67969,
+                70217,
+                70555,
+                70803,
+                70864,
+                70983,
+                71044,
+                71048,
+                72941,
+                92983,
+                122384,
+                22689215
+              ]
+            }
+          },
+          {
+            "case": "lexical_common",
+            "initial_ns": 962058,
+            "signature": "4aaedb1fd9a1b411461b085f65c81024db1084c9f3a318e7ebcc2079f39af24a",
+            "timing": {
+              "count": 30,
+              "max_ms": 24.05869,
+              "min_ms": 0.53339,
+              "p50_ms": 0.559298,
+              "p95_ms": 20.390829,
+              "samples_ns": [
+                533390,
+                540125,
+                540679,
+                545298,
+                546957,
+                548116,
+                549532,
+                549829,
+                551110,
+                552031,
+                555077,
+                555578,
+                556378,
+                559240,
+                559298,
+                561102,
+                561691,
+                564439,
+                566637,
+                578574,
+                598769,
+                669346,
+                889644,
+                2222199,
+                3431726,
+                3437118,
+                16679641,
+                20310732,
+                20390829,
+                24058690
+              ]
+            }
+          },
+          {
+            "case": "lexical_missing",
+            "initial_ns": 82049,
+            "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+            "timing": {
+              "count": 30,
+              "max_ms": 14.203285,
+              "min_ms": 0.033866,
+              "p50_ms": 0.035602,
+              "p95_ms": 0.069613,
+              "samples_ns": [
+                33866,
+                34150,
+                34657,
+                34678,
+                34754,
+                34850,
+                34866,
+                34957,
+                35021,
+                35121,
+                35198,
+                35342,
+                35558,
+                35591,
+                35602,
+                35688,
+                35704,
+                35811,
+                35820,
+                35858,
+                35917,
+                36090,
+                36698,
+                36907,
+                37466,
+                38691,
+                38966,
+                42202,
+                69613,
+                14203285
+              ]
+            }
+          },
+          {
+            "case": "explicit_key",
+            "initial_ns": 38701,
+            "signature": "1aa54d32b93fb7cae112b9ff2445b3e4cceef98815dbd653a1b3a32712bb7150",
+            "timing": {
+              "count": 30,
+              "max_ms": 5.765514,
+              "min_ms": 0.037907,
+              "p50_ms": 0.041161,
+              "p95_ms": 0.086829,
+              "samples_ns": [
+                37907,
+                38626,
+                38664,
+                39179,
+                39698,
+                40007,
+                40308,
+                40593,
+                40642,
+                40651,
+                40773,
+                40806,
+                40863,
+                40881,
+                41161,
+                41806,
+                42125,
+                42138,
+                42761,
+                42810,
+                42817,
+                43004,
+                43579,
+                43723,
+                43888,
+                43945,
+                45091,
+                58813,
+                86829,
+                5765514
+              ]
+            }
+          },
+          {
+            "case": "identifier_anchor",
+            "initial_ns": 1299589,
+            "signature": "50f44e8b41055033c1fb1f4cca6693632d442b7b4891881b7439960aeea950d1",
+            "timing": {
+              "count": 30,
+              "max_ms": 45.431269,
+              "min_ms": 0.789281,
+              "p50_ms": 0.826805,
+              "p95_ms": 39.685511,
+              "samples_ns": [
+                789281,
+                801672,
+                802674,
+                811693,
+                812534,
+                815263,
+                818355,
+                818524,
+                820271,
+                821884,
+                823566,
+                823791,
+                824661,
+                825412,
+                826805,
+                827552,
+                829929,
+                830671,
+                835048,
+                889916,
+                898320,
+                5754249,
+                8468727,
+                12352419,
+                17833131,
+                24199649,
+                25663257,
+                32514260,
+                39685511,
+                45431269
+              ]
+            }
+          },
+          {
+            "case": "filtered_common",
+            "initial_ns": 111301,
+            "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b",
+            "timing": {
+              "count": 30,
+              "max_ms": 27.677791,
+              "min_ms": 0.114302,
+              "p50_ms": 0.125231,
+              "p95_ms": 11.495913,
+              "samples_ns": [
+                114302,
+                116202,
+                117596,
+                122641,
+                123147,
+                123620,
+                123724,
+                123993,
+                124027,
+                124146,
+                124676,
+                124721,
+                124804,
+                124948,
+                125231,
+                125256,
+                125342,
+                125382,
+                125416,
+                125445,
+                125452,
+                125508,
+                125677,
+                126336,
+                126989,
+                128422,
+                128533,
+                130752,
+                11495913,
+                27677791
+              ]
+            }
+          },
+          {
+            "case": "literal_phrase",
+            "initial_ns": 11795098,
+            "signature": "2f0ae1edbc8515a9c67ef5e884fad262d762cbadff0b4122a14ef956b42aecbf",
+            "timing": {
+              "count": 30,
+              "max_ms": 190.355374,
+              "min_ms": 102.075624,
+              "p50_ms": 140.306253,
+              "p95_ms": 188.183098,
+              "samples_ns": [
+                102075624,
+                109939830,
+                110289068,
+                110298787,
+                115218964,
+                120676715,
+                121082751,
+                125465293,
+                127021307,
+                128378982,
+                131533158,
+                133146607,
+                135107983,
+                136157764,
+                140306253,
+                142530316,
+                142556857,
+                143832225,
+                144986119,
+                151520393,
+                151577819,
+                154538049,
+                156020894,
+                168641984,
+                173094062,
+                174053877,
+                177654163,
+                180037821,
+                188183098,
+                190355374
+              ]
+            }
+          }
+        ],
+        "rounds": 3,
+        "rows": 1000,
+        "scope": "local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .ojo/provider freshness acceptance"
+      }
+    },
+    {
+      "label": "1000-zstd-build-1",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-zstd-build-1.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "build",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-zstd",
+        "1000",
+        "zstd",
+        "1",
+        "1"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-zstd 1000 zstd 1 1\"\n\tUser time (seconds): 0.12\n\tSystem time (seconds): 0.00\n\tPercent of CPU this job got: 44%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.29\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 6108\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 990\n\tVoluntary context switches: 171\n\tInvoluntary context switches: 18\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8088\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 757760,
+        "build_metrics": {
+          "peak_allocated_bytes_observed": 2035712,
+          "peak_files": 10,
+          "peak_logical_bytes": 2019106
+        },
+        "compression": "zstd",
+        "estimated_heap_bytes": 8504723,
+        "index_bytes": 745410,
+        "ns": 293444826,
+        "phase": "build",
+        "rows": 1000,
+        "scope": "synthetic encrypted derived projection; deterministic fixture originals; no authority or end-to-end file latency",
+        "text_bytes": 75044
+      }
+    },
+    {
+      "label": "1000-zstd-query-1",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-zstd-query-1.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "query",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-zstd",
+        "1000",
+        "zstd",
+        "1",
+        "3"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f query /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-zstd 1000 zstd 1 3\"\n\tUser time (seconds): 0.07\n\tSystem time (seconds): 0.00\n\tPercent of CPU this job got: 94%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.08\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 5280\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 770\n\tVoluntary context switches: 3\n\tInvoluntary context switches: 15\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 757760,
+        "clients": 1,
+        "compression": "zstd",
+        "elapsed_ns": 65977344,
+        "estimated_heap_bytes": 8504723,
+        "index_bytes": 745410,
+        "open_ns": 806648,
+        "phase": "query",
+        "queries": [
+          {
+            "case": "lexical_unique",
+            "initial_ns": 668623,
+            "signature": "37e91b359e76759806c82db95d35b03ec048e3670c382b2143d73f26743211ff",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.128038,
+              "min_ms": 0.073325,
+              "p50_ms": 0.078708,
+              "p95_ms": 0.128038,
+              "samples_ns": [
+                73325,
+                78708,
+                128038
+              ]
+            }
+          },
+          {
+            "case": "lexical_common",
+            "initial_ns": 1392174,
+            "signature": "4aaedb1fd9a1b411461b085f65c81024db1084c9f3a318e7ebcc2079f39af24a",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.80829,
+              "min_ms": 0.729643,
+              "p50_ms": 0.747305,
+              "p95_ms": 0.80829,
+              "samples_ns": [
+                729643,
+                747305,
+                808290
+              ]
+            }
+          },
+          {
+            "case": "lexical_missing",
+            "initial_ns": 67900,
+            "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.039632,
+              "min_ms": 0.032711,
+              "p50_ms": 0.034664,
+              "p95_ms": 0.039632,
+              "samples_ns": [
+                32711,
+                34664,
+                39632
+              ]
+            }
+          },
+          {
+            "case": "explicit_key",
+            "initial_ns": 47301,
+            "signature": "1aa54d32b93fb7cae112b9ff2445b3e4cceef98815dbd653a1b3a32712bb7150",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.061553,
+              "min_ms": 0.049022,
+              "p50_ms": 0.050355,
+              "p95_ms": 0.061553,
+              "samples_ns": [
+                49022,
+                50355,
+                61553
+              ]
+            }
+          },
+          {
+            "case": "identifier_anchor",
+            "initial_ns": 1296501,
+            "signature": "50f44e8b41055033c1fb1f4cca6693632d442b7b4891881b7439960aeea950d1",
+            "timing": {
+              "count": 3,
+              "max_ms": 1.123796,
+              "min_ms": 1.09083,
+              "p50_ms": 1.100467,
+              "p95_ms": 1.123796,
+              "samples_ns": [
+                1090830,
+                1100467,
+                1123796
+              ]
+            }
+          },
+          {
+            "case": "filtered_common",
+            "initial_ns": 135645,
+            "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.169568,
+              "min_ms": 0.161967,
+              "p50_ms": 0.162195,
+              "p95_ms": 0.169568,
+              "samples_ns": [
+                161967,
+                162195,
+                169568
+              ]
+            }
+          },
+          {
+            "case": "literal_phrase",
+            "initial_ns": 15530348,
+            "signature": "2f0ae1edbc8515a9c67ef5e884fad262d762cbadff0b4122a14ef956b42aecbf",
+            "timing": {
+              "count": 3,
+              "max_ms": 22.048482,
+              "min_ms": 18.459772,
+              "p50_ms": 18.469056,
+              "p95_ms": 22.048482,
+              "samples_ns": [
+                18459772,
+                18469056,
+                22048482
+              ]
+            }
+          }
+        ],
+        "rounds": 3,
+        "rows": 1000,
+        "scope": "local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .ojo/provider freshness acceptance"
+      }
+    },
+    {
+      "label": "1000-zstd-query-10",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-zstd-query-10.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "query",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-zstd",
+        "1000",
+        "zstd",
+        "10",
+        "3"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f query /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000-zstd 1000 zstd 10 3\"\n\tUser time (seconds): 0.59\n\tSystem time (seconds): 0.04\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.64\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 7232\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 3431\n\tVoluntary context switches: 296\n\tInvoluntary context switches: 369\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 757760,
+        "clients": 10,
+        "compression": "zstd",
+        "elapsed_ns": 627223508,
+        "estimated_heap_bytes": 8504723,
+        "index_bytes": 745410,
+        "open_ns": 375433,
+        "phase": "query",
+        "queries": [
+          {
+            "case": "lexical_unique",
+            "initial_ns": 275549,
+            "signature": "37e91b359e76759806c82db95d35b03ec048e3670c382b2143d73f26743211ff",
+            "timing": {
+              "count": 30,
+              "max_ms": 24.62835,
+              "min_ms": 0.062196,
+              "p50_ms": 0.075551,
+              "p95_ms": 19.919329,
+              "samples_ns": [
+                62196,
+                62998,
+                66544,
+                67994,
+                68990,
+                69043,
+                69177,
+                70787,
+                72313,
+                72389,
+                72567,
+                72844,
+                73766,
+                74154,
+                75551,
+                75635,
+                75775,
+                76334,
+                76356,
+                76645,
+                77347,
+                77590,
+                79484,
+                80217,
+                83330,
+                107192,
+                11434419,
+                19846838,
+                19919329,
+                24628350
+              ]
+            }
+          },
+          {
+            "case": "lexical_common",
+            "initial_ns": 907584,
+            "signature": "4aaedb1fd9a1b411461b085f65c81024db1084c9f3a318e7ebcc2079f39af24a",
+            "timing": {
+              "count": 30,
+              "max_ms": 34.718936,
+              "min_ms": 0.708709,
+              "p50_ms": 0.741252,
+              "p95_ms": 20.676387,
+              "samples_ns": [
+                708709,
+                710520,
+                719128,
+                726579,
+                732819,
+                732846,
+                733458,
+                735991,
+                737006,
+                737975,
+                739277,
+                739824,
+                739997,
+                740393,
+                741252,
+                741838,
+                745875,
+                746211,
+                748987,
+                751010,
+                759983,
+                762805,
+                764445,
+                803624,
+                812346,
+                866785,
+                16627303,
+                17802949,
+                20676387,
+                34718936
+              ]
+            }
+          },
+          {
+            "case": "lexical_missing",
+            "initial_ns": 69270,
+            "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+            "timing": {
+              "count": 30,
+              "max_ms": 16.98602,
+              "min_ms": 0.030823,
+              "p50_ms": 0.033967,
+              "p95_ms": 0.04957,
+              "samples_ns": [
+                30823,
+                31721,
+                32042,
+                32798,
+                33055,
+                33151,
+                33235,
+                33338,
+                33358,
+                33451,
+                33529,
+                33600,
+                33861,
+                33872,
+                33967,
+                34325,
+                34578,
+                34607,
+                34643,
+                34670,
+                34686,
+                34760,
+                34972,
+                35337,
+                35614,
+                37105,
+                37587,
+                37774,
+                49570,
+                16986020
+              ]
+            }
+          },
+          {
+            "case": "explicit_key",
+            "initial_ns": 46992,
+            "signature": "1aa54d32b93fb7cae112b9ff2445b3e4cceef98815dbd653a1b3a32712bb7150",
+            "timing": {
+              "count": 30,
+              "max_ms": 24.408704,
+              "min_ms": 0.045004,
+              "p50_ms": 0.050065,
+              "p95_ms": 0.085902,
+              "samples_ns": [
+                45004,
+                46354,
+                47408,
+                48024,
+                48376,
+                48422,
+                49066,
+                49218,
+                49251,
+                49383,
+                49705,
+                49902,
+                49986,
+                50054,
+                50065,
+                50603,
+                50650,
+                50796,
+                51074,
+                51373,
+                51550,
+                51664,
+                52880,
+                53510,
+                55895,
+                57458,
+                57856,
+                74713,
+                85902,
+                24408704
+              ]
+            }
+          },
+          {
+            "case": "identifier_anchor",
+            "initial_ns": 1292488,
+            "signature": "50f44e8b41055033c1fb1f4cca6693632d442b7b4891881b7439960aeea950d1",
+            "timing": {
+              "count": 30,
+              "max_ms": 42.604472,
+              "min_ms": 1.082227,
+              "p50_ms": 1.129342,
+              "p95_ms": 29.442623,
+              "samples_ns": [
+                1082227,
+                1083482,
+                1084715,
+                1085030,
+                1090482,
+                1091662,
+                1093406,
+                1095761,
+                1098524,
+                1099618,
+                1102408,
+                1116510,
+                1117286,
+                1123427,
+                1129342,
+                1136559,
+                1155374,
+                1182569,
+                1184854,
+                7433059,
+                9672175,
+                18018548,
+                20864406,
+                20971943,
+                23501029,
+                23761540,
+                24679956,
+                28668120,
+                29442623,
+                42604472
+              ]
+            }
+          },
+          {
+            "case": "filtered_common",
+            "initial_ns": 146469,
+            "signature": "a930254db41c827352cadfa49dbf7cb4eccfa3a7a417a5ec3ad7d58687a3e33b",
+            "timing": {
+              "count": 30,
+              "max_ms": 51.712926,
+              "min_ms": 0.14924,
+              "p50_ms": 0.161466,
+              "p95_ms": 26.497326,
+              "samples_ns": [
+                149240,
+                149373,
+                150995,
+                157441,
+                158868,
+                158901,
+                159490,
+                159661,
+                159850,
+                159852,
+                160486,
+                160543,
+                160558,
+                161280,
+                161466,
+                161575,
+                161604,
+                161684,
+                162307,
+                162557,
+                163330,
+                164064,
+                165052,
+                165087,
+                166635,
+                167783,
+                172560,
+                5886040,
+                26497326,
+                51712926
+              ]
+            }
+          },
+          {
+            "case": "literal_phrase",
+            "initial_ns": 14627692,
+            "signature": "2f0ae1edbc8515a9c67ef5e884fad262d762cbadff0b4122a14ef956b42aecbf",
+            "timing": {
+              "count": 30,
+              "max_ms": 293.402273,
+              "min_ms": 92.364267,
+              "p50_ms": 177.205988,
+              "p95_ms": 242.137459,
+              "samples_ns": [
+                92364267,
+                113206922,
+                128373029,
+                143820742,
+                146654982,
+                148818960,
+                160659629,
+                161523753,
+                161555805,
+                162296429,
+                163465781,
+                165110415,
+                165255686,
+                167661680,
+                177205988,
+                177705574,
+                179609567,
+                180782372,
+                182250417,
+                182573871,
+                184927645,
+                185979821,
+                193362038,
+                199223174,
+                205538126,
+                210405643,
+                222215468,
+                229342156,
+                242137459,
+                293402273
+              ]
+            }
+          }
+        ],
+        "rounds": 3,
+        "rows": 1000,
+        "scope": "local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .ojo/provider freshness acceptance"
+      }
+    },
+    {
+      "label": "100000-raw-build-1",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-raw-build-1.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "build",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-raw",
+        "100000",
+        "raw",
+        "1",
+        "1"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-raw 100000 raw 1 1\"\n\tUser time (seconds): 11.10\n\tSystem time (seconds): 0.43\n\tPercent of CPU this job got: 93%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:12.33\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 31196\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 10215\n\tVoluntary context switches: 2371\n\tInvoluntary context switches: 533\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 586488\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 115691520,
+        "build_metrics": {
+          "peak_allocated_bytes_observed": 244051968,
+          "peak_files": 26,
+          "peak_logical_bytes": 244033386
+        },
+        "compression": "raw",
+        "estimated_heap_bytes": 19602774,
+        "index_bytes": 115678213,
+        "ns": 12333013930,
+        "phase": "build",
+        "rows": 100000,
+        "scope": "synthetic encrypted derived projection; deterministic fixture originals; no authority or end-to-end file latency",
+        "text_bytes": 7703324
+      }
+    },
+    {
+      "label": "100000-raw-query-1",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-raw-query-1.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "query",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-raw",
+        "100000",
+        "raw",
+        "1",
+        "3"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f query /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-raw 100000 raw 1 3\"\n\tUser time (seconds): 0.09\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.10\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 23300\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 5092\n\tVoluntary context switches: 3\n\tInvoluntary context switches: 9\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 115691520,
+        "clients": 1,
+        "compression": "raw",
+        "elapsed_ns": 65591632,
+        "estimated_heap_bytes": 19602774,
+        "index_bytes": 115678213,
+        "open_ns": 15429134,
+        "phase": "query",
+        "queries": [
+          {
+            "case": "lexical_unique",
+            "initial_ns": 971881,
+            "signature": "5ce4c365797caef51bd85b8789712283a134f13f4c33e3e60a3f28a4035f8c9f",
+            "timing": {
+              "count": 3,
+              "max_ms": 1.004547,
+              "min_ms": 0.835243,
+              "p50_ms": 0.930694,
+              "p95_ms": 1.004547,
+              "samples_ns": [
+                835243,
+                930694,
+                1004547
+              ]
+            }
+          },
+          {
+            "case": "lexical_common",
+            "initial_ns": 7296112,
+            "signature": "09957ad78b0ec269f332e11550c9686e892535b061514987303923a4cfd33da3",
+            "timing": {
+              "count": 3,
+              "max_ms": 6.396183,
+              "min_ms": 6.207035,
+              "p50_ms": 6.34928,
+              "p95_ms": 6.396183,
+              "samples_ns": [
+                6207035,
+                6349280,
+                6396183
+              ]
+            }
+          },
+          {
+            "case": "lexical_missing",
+            "initial_ns": 223296,
+            "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.289039,
+              "min_ms": 0.254478,
+              "p50_ms": 0.270381,
+              "p95_ms": 0.289039,
+              "samples_ns": [
+                254478,
+                270381,
+                289039
+              ]
+            }
+          },
+          {
+            "case": "explicit_key",
+            "initial_ns": 89092,
+            "signature": "284033cda068d1500b11650ed9bbceb4b816d454606e5f11e83458a85b94705a",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.210524,
+              "min_ms": 0.10514,
+              "p50_ms": 0.109911,
+              "p95_ms": 0.210524,
+              "samples_ns": [
+                105140,
+                109911,
+                210524
+              ]
+            }
+          },
+          {
+            "case": "identifier_anchor",
+            "initial_ns": 6897562,
+            "signature": "baa71fed9d8b8232cffcd0459d61d6e457182a1aa9b8413e5e45f76f8673d7a5",
+            "timing": {
+              "count": 3,
+              "max_ms": 7.545491,
+              "min_ms": 6.855245,
+              "p50_ms": 6.95889,
+              "p95_ms": 7.545491,
+              "samples_ns": [
+                6855245,
+                6958890,
+                7545491
+              ]
+            }
+          },
+          {
+            "case": "filtered_common",
+            "initial_ns": 7014937,
+            "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29",
+            "timing": {
+              "count": 3,
+              "max_ms": 7.330729,
+              "min_ms": 6.628971,
+              "p50_ms": 6.933045,
+              "p95_ms": 7.330729,
+              "samples_ns": [
+                6628971,
+                6933045,
+                7330729
+              ]
+            }
+          }
+        ],
+        "rounds": 3,
+        "rows": 100000,
+        "scope": "local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .ojo/provider freshness acceptance"
+      }
+    },
+    {
+      "label": "100000-raw-query-10",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-raw-query-10.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "query",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-raw",
+        "100000",
+        "raw",
+        "10",
+        "3"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f query /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-raw 100000 raw 10 3\"\n\tUser time (seconds): 0.56\n\tSystem time (seconds): 0.02\n\tPercent of CPU this job got: 98%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.59\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 33396\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 8050\n\tVoluntary context switches: 190\n\tInvoluntary context switches: 264\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 115691520,
+        "clients": 10,
+        "compression": "raw",
+        "elapsed_ns": 549072073,
+        "estimated_heap_bytes": 19602774,
+        "index_bytes": 115678213,
+        "open_ns": 15367520,
+        "phase": "query",
+        "queries": [
+          {
+            "case": "lexical_unique",
+            "initial_ns": 1020076,
+            "signature": "5ce4c365797caef51bd85b8789712283a134f13f4c33e3e60a3f28a4035f8c9f",
+            "timing": {
+              "count": 30,
+              "max_ms": 39.051931,
+              "min_ms": 0.357208,
+              "p50_ms": 0.489764,
+              "p95_ms": 34.380279,
+              "samples_ns": [
+                357208,
+                363555,
+                377940,
+                381731,
+                387287,
+                416915,
+                433581,
+                445104,
+                446752,
+                448355,
+                456672,
+                462870,
+                480004,
+                484991,
+                489764,
+                501966,
+                530851,
+                549311,
+                585728,
+                636865,
+                687661,
+                726839,
+                772569,
+                949221,
+                8086586,
+                9480428,
+                25987982,
+                28162386,
+                34380279,
+                39051931
+              ]
+            }
+          },
+          {
+            "case": "lexical_common",
+            "initial_ns": 7134596,
+            "signature": "09957ad78b0ec269f332e11550c9686e892535b061514987303923a4cfd33da3",
+            "timing": {
+              "count": 30,
+              "max_ms": 87.330699,
+              "min_ms": 41.134048,
+              "p50_ms": 54.66586,
+              "p95_ms": 80.810241,
+              "samples_ns": [
+                41134048,
+                41141451,
+                41312097,
+                43540342,
+                43597524,
+                43885579,
+                44136592,
+                48951846,
+                49381667,
+                49615448,
+                51887046,
+                51957075,
+                54247359,
+                54498408,
+                54665860,
+                54892849,
+                55639588,
+                55683300,
+                55824911,
+                56360815,
+                57128942,
+                60719385,
+                63901686,
+                64071670,
+                64394197,
+                66520407,
+                75561132,
+                76073281,
+                80810241,
+                87330699
+              ]
+            }
+          },
+          {
+            "case": "lexical_missing",
+            "initial_ns": 198278,
+            "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+            "timing": {
+              "count": 30,
+              "max_ms": 41.668031,
+              "min_ms": 0.067729,
+              "p50_ms": 0.084442,
+              "p95_ms": 17.525735,
+              "samples_ns": [
+                67729,
+                72157,
+                74450,
+                75501,
+                75840,
+                76691,
+                78200,
+                79800,
+                80956,
+                82400,
+                82414,
+                82439,
+                82775,
+                83199,
+                84442,
+                86532,
+                87716,
+                88537,
+                89126,
+                90446,
+                141942,
+                208662,
+                226638,
+                253882,
+                265514,
+                320314,
+                2502128,
+                6235539,
+                17525735,
+                41668031
+              ]
+            }
+          },
+          {
+            "case": "explicit_key",
+            "initial_ns": 77655,
+            "signature": "284033cda068d1500b11650ed9bbceb4b816d454606e5f11e83458a85b94705a",
+            "timing": {
+              "count": 30,
+              "max_ms": 0.339369,
+              "min_ms": 0.075483,
+              "p50_ms": 0.086756,
+              "p95_ms": 0.212659,
+              "samples_ns": [
+                75483,
+                77583,
+                79441,
+                80130,
+                81160,
+                81754,
+                82060,
+                82564,
+                83505,
+                84405,
+                84606,
+                84863,
+                86060,
+                86641,
+                86756,
+                87023,
+                90137,
+                91605,
+                92217,
+                96901,
+                98695,
+                99358,
+                102262,
+                113775,
+                121319,
+                124632,
+                198436,
+                208240,
+                212659,
+                339369
+              ]
+            }
+          },
+          {
+            "case": "identifier_anchor",
+            "initial_ns": 6812677,
+            "signature": "baa71fed9d8b8232cffcd0459d61d6e457182a1aa9b8413e5e45f76f8673d7a5",
+            "timing": {
+              "count": 30,
+              "max_ms": 105.998201,
+              "min_ms": 30.71728,
+              "p50_ms": 54.470883,
+              "p95_ms": 93.103245,
+              "samples_ns": [
+                30717280,
+                30876179,
+                31051209,
+                33286140,
+                35174901,
+                39363908,
+                39679007,
+                44995686,
+                45281470,
+                48409830,
+                49407426,
+                53105688,
+                53657629,
+                54424901,
+                54470883,
+                55083196,
+                57494705,
+                57580559,
+                61105236,
+                63406343,
+                64404142,
+                64447968,
+                65303261,
+                67413983,
+                69046022,
+                73766219,
+                77511113,
+                80462996,
+                93103245,
+                105998201
+              ]
+            }
+          },
+          {
+            "case": "filtered_common",
+            "initial_ns": 6836522,
+            "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29",
+            "timing": {
+              "count": 30,
+              "max_ms": 106.668059,
+              "min_ms": 12.210286,
+              "p50_ms": 52.684676,
+              "p95_ms": 90.195444,
+              "samples_ns": [
+                12210286,
+                16559634,
+                35422497,
+                39870193,
+                39964322,
+                40024447,
+                40109001,
+                44043837,
+                44973282,
+                48289504,
+                50001210,
+                51205970,
+                51266060,
+                51517347,
+                52684676,
+                53599011,
+                53974398,
+                54674454,
+                55431657,
+                55905595,
+                56572657,
+                57480479,
+                57723195,
+                60798217,
+                62925881,
+                69957160,
+                74848492,
+                76078610,
+                90195444,
+                106668059
+              ]
+            }
+          }
+        ],
+        "rounds": 3,
+        "rows": 100000,
+        "scope": "local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .ojo/provider freshness acceptance"
+      }
+    },
+    {
+      "label": "100000-zstd-build-1",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-zstd-build-1.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "build",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-zstd",
+        "100000",
+        "zstd",
+        "1",
+        "1"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-zstd 100000 zstd 1 1\"\n\tUser time (seconds): 12.39\n\tSystem time (seconds): 0.44\n\tPercent of CPU this job got: 94%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:13.66\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 30480\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 11897\n\tVoluntary context switches: 2615\n\tInvoluntary context switches: 582\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 507232\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 75182080,
+        "build_metrics": {
+          "peak_allocated_bytes_observed": 203538432,
+          "peak_files": 26,
+          "peak_logical_bytes": 203517258
+        },
+        "compression": "zstd",
+        "estimated_heap_bytes": 19602777,
+        "index_bytes": 75164349,
+        "ns": 13657108552,
+        "phase": "build",
+        "rows": 100000,
+        "scope": "synthetic encrypted derived projection; deterministic fixture originals; no authority or end-to-end file latency",
+        "text_bytes": 7703324
+      }
+    },
+    {
+      "label": "100000-zstd-query-1",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-zstd-query-1.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "query",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-zstd",
+        "100000",
+        "zstd",
+        "1",
+        "3"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f query /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-zstd 100000 zstd 1 3\"\n\tUser time (seconds): 0.10\n\tSystem time (seconds): 0.01\n\tPercent of CPU this job got: 98%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.11\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 18824\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 3969\n\tVoluntary context switches: 3\n\tInvoluntary context switches: 9\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 75182080,
+        "clients": 1,
+        "compression": "zstd",
+        "elapsed_ns": 68933104,
+        "estimated_heap_bytes": 19602777,
+        "index_bytes": 75164349,
+        "open_ns": 19310820,
+        "phase": "query",
+        "queries": [
+          {
+            "case": "lexical_unique",
+            "initial_ns": 927561,
+            "signature": "5ce4c365797caef51bd85b8789712283a134f13f4c33e3e60a3f28a4035f8c9f",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.61925,
+              "min_ms": 0.364985,
+              "p50_ms": 0.439883,
+              "p95_ms": 0.61925,
+              "samples_ns": [
+                364985,
+                439883,
+                619250
+              ]
+            }
+          },
+          {
+            "case": "lexical_common",
+            "initial_ns": 8202878,
+            "signature": "09957ad78b0ec269f332e11550c9686e892535b061514987303923a4cfd33da3",
+            "timing": {
+              "count": 3,
+              "max_ms": 7.940016,
+              "min_ms": 7.87587,
+              "p50_ms": 7.897161,
+              "p95_ms": 7.940016,
+              "samples_ns": [
+                7875870,
+                7897161,
+                7940016
+              ]
+            }
+          },
+          {
+            "case": "lexical_missing",
+            "initial_ns": 319830,
+            "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.082085,
+              "min_ms": 0.075867,
+              "p50_ms": 0.077986,
+              "p95_ms": 0.082085,
+              "samples_ns": [
+                75867,
+                77986,
+                82085
+              ]
+            }
+          },
+          {
+            "case": "explicit_key",
+            "initial_ns": 101027,
+            "signature": "284033cda068d1500b11650ed9bbceb4b816d454606e5f11e83458a85b94705a",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.099348,
+              "min_ms": 0.091266,
+              "p50_ms": 0.092739,
+              "p95_ms": 0.099348,
+              "samples_ns": [
+                91266,
+                92739,
+                99348
+              ]
+            }
+          },
+          {
+            "case": "identifier_anchor",
+            "initial_ns": 8449865,
+            "signature": "baa71fed9d8b8232cffcd0459d61d6e457182a1aa9b8413e5e45f76f8673d7a5",
+            "timing": {
+              "count": 3,
+              "max_ms": 7.152398,
+              "min_ms": 7.048989,
+              "p50_ms": 7.093003,
+              "p95_ms": 7.152398,
+              "samples_ns": [
+                7048989,
+                7093003,
+                7152398
+              ]
+            }
+          },
+          {
+            "case": "filtered_common",
+            "initial_ns": 8241001,
+            "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29",
+            "timing": {
+              "count": 3,
+              "max_ms": 7.364475,
+              "min_ms": 7.064785,
+              "p50_ms": 7.166637,
+              "p95_ms": 7.364475,
+              "samples_ns": [
+                7064785,
+                7166637,
+                7364475
+              ]
+            }
+          }
+        ],
+        "rounds": 3,
+        "rows": 100000,
+        "scope": "local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .ojo/provider freshness acceptance"
+      }
+    },
+    {
+      "label": "100000-zstd-query-10",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-zstd-query-10.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "query",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-zstd",
+        "100000",
+        "zstd",
+        "10",
+        "3"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f query /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/100000-zstd 100000 zstd 10 3\"\n\tUser time (seconds): 0.70\n\tSystem time (seconds): 0.02\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.73\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 20608\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 4883\n\tVoluntary context switches: 179\n\tInvoluntary context switches: 314\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 75182080,
+        "clients": 10,
+        "compression": "zstd",
+        "elapsed_ns": 685609297,
+        "estimated_heap_bytes": 19602777,
+        "index_bytes": 75164349,
+        "open_ns": 18529510,
+        "phase": "query",
+        "queries": [
+          {
+            "case": "lexical_unique",
+            "initial_ns": 975927,
+            "signature": "5ce4c365797caef51bd85b8789712283a134f13f4c33e3e60a3f28a4035f8c9f",
+            "timing": {
+              "count": 30,
+              "max_ms": 36.206678,
+              "min_ms": 0.371668,
+              "p50_ms": 0.456708,
+              "p95_ms": 21.571033,
+              "samples_ns": [
+                371668,
+                383136,
+                393234,
+                395564,
+                398645,
+                401017,
+                421767,
+                426957,
+                430163,
+                435769,
+                440934,
+                441913,
+                453077,
+                453339,
+                456708,
+                459479,
+                472547,
+                475162,
+                488015,
+                494197,
+                529363,
+                531016,
+                535357,
+                537044,
+                561378,
+                740722,
+                5199789,
+                5312522,
+                21571033,
+                36206678
+              ]
+            }
+          },
+          {
+            "case": "lexical_common",
+            "initial_ns": 8260265,
+            "signature": "09957ad78b0ec269f332e11550c9686e892535b061514987303923a4cfd33da3",
+            "timing": {
+              "count": 30,
+              "max_ms": 139.247874,
+              "min_ms": 31.906685,
+              "p50_ms": 66.427836,
+              "p95_ms": 137.47377,
+              "samples_ns": [
+                31906685,
+                40478453,
+                43194405,
+                49457136,
+                50701439,
+                53223374,
+                53954876,
+                57162557,
+                57715998,
+                59646845,
+                61118397,
+                61193848,
+                62253902,
+                63254364,
+                66427836,
+                69772370,
+                70888443,
+                72939999,
+                74088382,
+                81262582,
+                81926382,
+                82009798,
+                83141271,
+                86379672,
+                93908947,
+                98481757,
+                110952850,
+                125397750,
+                137473770,
+                139247874
+              ]
+            }
+          },
+          {
+            "case": "lexical_missing",
+            "initial_ns": 217914,
+            "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+            "timing": {
+              "count": 30,
+              "max_ms": 0.098296,
+              "min_ms": 0.070972,
+              "p50_ms": 0.078269,
+              "p95_ms": 0.093522,
+              "samples_ns": [
+                70972,
+                71670,
+                72497,
+                73795,
+                73855,
+                74202,
+                74386,
+                75350,
+                76026,
+                76881,
+                77742,
+                77764,
+                77817,
+                77832,
+                78269,
+                78667,
+                79629,
+                79651,
+                79827,
+                80424,
+                81083,
+                81450,
+                81948,
+                82035,
+                85511,
+                86075,
+                87478,
+                90293,
+                93522,
+                98296
+              ]
+            }
+          },
+          {
+            "case": "explicit_key",
+            "initial_ns": 102660,
+            "signature": "284033cda068d1500b11650ed9bbceb4b816d454606e5f11e83458a85b94705a",
+            "timing": {
+              "count": 30,
+              "max_ms": 0.148661,
+              "min_ms": 0.083086,
+              "p50_ms": 0.091222,
+              "p95_ms": 0.140284,
+              "samples_ns": [
+                83086,
+                84836,
+                84843,
+                85414,
+                86961,
+                87114,
+                88084,
+                88334,
+                88515,
+                88817,
+                88995,
+                89931,
+                90081,
+                90202,
+                91222,
+                91971,
+                94752,
+                95764,
+                96351,
+                96455,
+                96937,
+                97827,
+                98618,
+                102815,
+                103894,
+                106433,
+                108165,
+                111907,
+                140284,
+                148661
+              ]
+            }
+          },
+          {
+            "case": "identifier_anchor",
+            "initial_ns": 8765930,
+            "signature": "baa71fed9d8b8232cffcd0459d61d6e457182a1aa9b8413e5e45f76f8673d7a5",
+            "timing": {
+              "count": 30,
+              "max_ms": 119.668882,
+              "min_ms": 10.361227,
+              "p50_ms": 65.591974,
+              "p95_ms": 111.055891,
+              "samples_ns": [
+                10361227,
+                24896605,
+                35689727,
+                43651597,
+                43723879,
+                50777600,
+                51642368,
+                56419199,
+                56499647,
+                58843554,
+                59820264,
+                60555448,
+                61637128,
+                61656982,
+                65591974,
+                66605105,
+                68314299,
+                70703886,
+                71508968,
+                71781886,
+                75675899,
+                80883041,
+                85323155,
+                86135744,
+                92639100,
+                93166916,
+                95576276,
+                97552824,
+                111055891,
+                119668882
+              ]
+            }
+          },
+          {
+            "case": "filtered_common",
+            "initial_ns": 8169188,
+            "signature": "9cdaadcbf45921f63d3d8da9611df46dc2d8cc17353fe3004b2726adb694ae29",
+            "timing": {
+              "count": 30,
+              "max_ms": 116.985041,
+              "min_ms": 23.25099,
+              "p50_ms": 66.540291,
+              "p95_ms": 116.766007,
+              "samples_ns": [
+                23250990,
+                37197630,
+                46393307,
+                46670537,
+                51033958,
+                51212529,
+                55279065,
+                56162481,
+                57416651,
+                57985913,
+                58719956,
+                61777589,
+                64892790,
+                65917536,
+                66540291,
+                67822169,
+                70056376,
+                70225619,
+                72452375,
+                73219056,
+                82696447,
+                84081575,
+                84590568,
+                85958311,
+                95335319,
+                96108182,
+                96915246,
+                109108806,
+                116766007,
+                116985041
+              ]
+            }
+          }
+        ],
+        "rounds": 3,
+        "rows": 100000,
+        "scope": "local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .ojo/provider freshness acceptance"
+      }
+    },
+    {
+      "label": "1000000-raw-build-1",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-raw-build-1.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "build",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-raw",
+        "1000000",
+        "raw",
+        "1",
+        "1"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-raw 1000000 raw 1 1\"\n\tUser time (seconds): 138.85\n\tSystem time (seconds): 4.87\n\tPercent of CPU this job got: 95%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 2:30.46\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 137592\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 53433\n\tVoluntary context switches: 17997\n\tInvoluntary context switches: 10852\n\tSwaps: 0\n\tFile system inputs: 32\n\tFile system outputs: 6641120\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 1158750208,
+        "build_metrics": {
+          "peak_allocated_bytes_observed": 2444320768,
+          "peak_files": 195,
+          "peak_logical_bytes": 2444267576
+        },
+        "compression": "raw",
+        "estimated_heap_bytes": 120481081,
+        "index_bytes": 1158718626,
+        "ns": 150455226773,
+        "phase": "build",
+        "rows": 1000000,
+        "scope": "synthetic encrypted derived projection; deterministic fixture originals; no authority or end-to-end file latency",
+        "text_bytes": 78033230
+      }
+    },
+    {
+      "label": "1000000-raw-query-1",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-raw-query-1.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "query",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-raw",
+        "1000000",
+        "raw",
+        "1",
+        "3"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f query /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-raw 1000000 raw 1 3\"\n\tUser time (seconds): 0.85\n\tSystem time (seconds): 0.09\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.95\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 122908\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 30134\n\tVoluntary context switches: 14\n\tInvoluntary context switches: 29\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 1158750208,
+        "clients": 1,
+        "compression": "raw",
+        "elapsed_ns": 591436449,
+        "estimated_heap_bytes": 120481081,
+        "index_bytes": 1158718626,
+        "open_ns": 158281675,
+        "phase": "query",
+        "queries": [
+          {
+            "case": "lexical_unique",
+            "initial_ns": 5820347,
+            "signature": "b50ccddb913b65f2bb5c12b4d9d8c923f3eecd40ce8b1302b53cd1af8ae34bef",
+            "timing": {
+              "count": 3,
+              "max_ms": 6.459164,
+              "min_ms": 5.60143,
+              "p50_ms": 5.718559,
+              "p95_ms": 6.459164,
+              "samples_ns": [
+                5601430,
+                5718559,
+                6459164
+              ]
+            }
+          },
+          {
+            "case": "lexical_common",
+            "initial_ns": 67701566,
+            "signature": "158d837406db23e78d1ed5b7443007c4e7f1a4514a9d35d9acb676735e7a49d2",
+            "timing": {
+              "count": 3,
+              "max_ms": 72.928637,
+              "min_ms": 67.796225,
+              "p50_ms": 68.877718,
+              "p95_ms": 72.928637,
+              "samples_ns": [
+                67796225,
+                68877718,
+                72928637
+              ]
+            }
+          },
+          {
+            "case": "lexical_missing",
+            "initial_ns": 283132,
+            "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.358608,
+              "min_ms": 0.259865,
+              "p50_ms": 0.318832,
+              "p95_ms": 0.358608,
+              "samples_ns": [
+                259865,
+                318832,
+                358608
+              ]
+            }
+          },
+          {
+            "case": "explicit_key",
+            "initial_ns": 272025,
+            "signature": "8b30d10a5d480d7d32c7687cc2192abd869bd426dd317d1a9124164f1a21e8c7",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.306931,
+              "min_ms": 0.175347,
+              "p50_ms": 0.305915,
+              "p95_ms": 0.306931,
+              "samples_ns": [
+                175347,
+                305915,
+                306931
+              ]
+            }
+          },
+          {
+            "case": "identifier_anchor",
+            "initial_ns": 60262655,
+            "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e",
+            "timing": {
+              "count": 3,
+              "max_ms": 63.676978,
+              "min_ms": 60.768747,
+              "p50_ms": 61.700267,
+              "p95_ms": 63.676978,
+              "samples_ns": [
+                60768747,
+                61700267,
+                63676978
+              ]
+            }
+          },
+          {
+            "case": "filtered_common",
+            "initial_ns": 59951449,
+            "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd",
+            "timing": {
+              "count": 3,
+              "max_ms": 58.958253,
+              "min_ms": 58.391246,
+              "p50_ms": 58.428411,
+              "p95_ms": 58.958253,
+              "samples_ns": [
+                58391246,
+                58428411,
+                58958253
+              ]
+            }
+          }
+        ],
+        "rounds": 3,
+        "rows": 1000000,
+        "scope": "local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .ojo/provider freshness acceptance"
+      }
+    },
+    {
+      "label": "1000000-raw-query-10",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-raw-query-10.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "query",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-raw",
+        "1000000",
+        "raw",
+        "10",
+        "3"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f query /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-raw 1000000 raw 10 3\"\n\tUser time (seconds): 5.40\n\tSystem time (seconds): 0.17\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:05.62\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 139196\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 39320\n\tVoluntary context switches: 1380\n\tInvoluntary context switches: 2464\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 1158750208,
+        "clients": 10,
+        "compression": "raw",
+        "elapsed_ns": 5277795103,
+        "estimated_heap_bytes": 120481081,
+        "index_bytes": 1158718626,
+        "open_ns": 147380556,
+        "phase": "query",
+        "queries": [
+          {
+            "case": "lexical_unique",
+            "initial_ns": 5617078,
+            "signature": "b50ccddb913b65f2bb5c12b4d9d8c923f3eecd40ce8b1302b53cd1af8ae34bef",
+            "timing": {
+              "count": 30,
+              "max_ms": 98.956639,
+              "min_ms": 27.855896,
+              "p50_ms": 51.207133,
+              "p95_ms": 89.244533,
+              "samples_ns": [
+                27855896,
+                28670702,
+                33597637,
+                36925378,
+                37498155,
+                39249053,
+                41809117,
+                42336020,
+                42955039,
+                44615079,
+                45361200,
+                46047053,
+                46208506,
+                46907560,
+                51207133,
+                51277913,
+                54732130,
+                55755075,
+                56265549,
+                58264480,
+                60029144,
+                68899963,
+                69419663,
+                77531607,
+                79932776,
+                80428971,
+                82977373,
+                85475909,
+                89244533,
+                98956639
+              ]
+            }
+          },
+          {
+            "case": "lexical_common",
+            "initial_ns": 67547704,
+            "signature": "158d837406db23e78d1ed5b7443007c4e7f1a4514a9d35d9acb676735e7a49d2",
+            "timing": {
+              "count": 30,
+              "max_ms": 710.526566,
+              "min_ms": 442.612009,
+              "p50_ms": 608.420738,
+              "p95_ms": 705.856245,
+              "samples_ns": [
+                442612009,
+                505148340,
+                508836498,
+                519071135,
+                522615005,
+                528350724,
+                552249380,
+                566828628,
+                570527618,
+                572791096,
+                582391856,
+                589361821,
+                597098285,
+                603922444,
+                608420738,
+                614868134,
+                625764611,
+                640669849,
+                648592157,
+                649554401,
+                650151290,
+                656380009,
+                660736503,
+                672945308,
+                673586837,
+                679462679,
+                682904900,
+                705587344,
+                705856245,
+                710526566
+              ]
+            }
+          },
+          {
+            "case": "lexical_missing",
+            "initial_ns": 301861,
+            "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+            "timing": {
+              "count": 30,
+              "max_ms": 26.217103,
+              "min_ms": 0.104827,
+              "p50_ms": 0.294487,
+              "p95_ms": 18.895584,
+              "samples_ns": [
+                104827,
+                106078,
+                107463,
+                116807,
+                216528,
+                270833,
+                275041,
+                278878,
+                280104,
+                280153,
+                281580,
+                282947,
+                285432,
+                290670,
+                294487,
+                296879,
+                300040,
+                300235,
+                301992,
+                306720,
+                317489,
+                330143,
+                333315,
+                336904,
+                365411,
+                15340352,
+                17455541,
+                17595511,
+                18895584,
+                26217103
+              ]
+            }
+          },
+          {
+            "case": "explicit_key",
+            "initial_ns": 260076,
+            "signature": "8b30d10a5d480d7d32c7687cc2192abd869bd426dd317d1a9124164f1a21e8c7",
+            "timing": {
+              "count": 30,
+              "max_ms": 19.93547,
+              "min_ms": 0.097417,
+              "p50_ms": 0.313702,
+              "p95_ms": 11.452514,
+              "samples_ns": [
+                97417,
+                100738,
+                114213,
+                131707,
+                136905,
+                166602,
+                186392,
+                191350,
+                279600,
+                282804,
+                286028,
+                301334,
+                301407,
+                309605,
+                313702,
+                314693,
+                315871,
+                322200,
+                323089,
+                330690,
+                336948,
+                365094,
+                367640,
+                385274,
+                391836,
+                425092,
+                444368,
+                577083,
+                11452514,
+                19935470
+              ]
+            }
+          },
+          {
+            "case": "identifier_anchor",
+            "initial_ns": 59414120,
+            "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e",
+            "timing": {
+              "count": 30,
+              "max_ms": 651.418279,
+              "min_ms": 433.501333,
+              "p50_ms": 557.276798,
+              "p95_ms": 625.534892,
+              "samples_ns": [
+                433501333,
+                437833200,
+                446924478,
+                447672853,
+                464685755,
+                483543962,
+                484638033,
+                502367393,
+                503466924,
+                528817464,
+                533621408,
+                536088917,
+                546155550,
+                549363205,
+                557276798,
+                559041931,
+                566463444,
+                568702459,
+                569860954,
+                570197392,
+                573125058,
+                580705167,
+                582139064,
+                598021573,
+                599678719,
+                601018410,
+                612614718,
+                621924091,
+                625534892,
+                651418279
+              ]
+            }
+          },
+          {
+            "case": "filtered_common",
+            "initial_ns": 56672926,
+            "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd",
+            "timing": {
+              "count": 30,
+              "max_ms": 663.122069,
+              "min_ms": 429.042413,
+              "p50_ms": 507.055387,
+              "p95_ms": 625.431269,
+              "samples_ns": [
+                429042413,
+                441504374,
+                448508603,
+                456835162,
+                462386134,
+                463772979,
+                465217063,
+                465243569,
+                466315809,
+                468086256,
+                473496170,
+                476069595,
+                483984896,
+                487614329,
+                507055387,
+                517427949,
+                520945313,
+                528567511,
+                531595211,
+                532586524,
+                538666832,
+                542711830,
+                559713401,
+                579780405,
+                588373312,
+                590316781,
+                598007994,
+                603569293,
+                625431269,
+                663122069
+              ]
+            }
+          }
+        ],
+        "rounds": 3,
+        "rows": 1000000,
+        "scope": "local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .ojo/provider freshness acceptance"
+      }
+    },
+    {
+      "label": "1000000-zstd-build-1",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-zstd-build-1.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "build",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-zstd",
+        "1000000",
+        "zstd",
+        "1",
+        "1"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f build /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-zstd 1000000 zstd 1 1\"\n\tUser time (seconds): 154.33\n\tSystem time (seconds): 5.00\n\tPercent of CPU this job got: 96%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 2:45.36\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 138500\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 93331\n\tVoluntary context switches: 21289\n\tInvoluntary context switches: 10527\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 5864160\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 753885184,
+        "build_metrics": {
+          "peak_allocated_bytes_observed": 2039463936,
+          "peak_files": 195,
+          "peak_logical_bytes": 2039422110
+        },
+        "compression": "zstd",
+        "estimated_heap_bytes": 120481084,
+        "index_bytes": 753861629,
+        "ns": 165357764501,
+        "phase": "build",
+        "rows": 1000000,
+        "scope": "synthetic encrypted derived projection; deterministic fixture originals; no authority or end-to-end file latency",
+        "text_bytes": 78033230
+      }
+    },
+    {
+      "label": "1000000-zstd-query-1",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-zstd-query-1.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "query",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-zstd",
+        "1000000",
+        "zstd",
+        "1",
+        "3"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f query /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-zstd 1000000 zstd 1 3\"\n\tUser time (seconds): 0.82\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:00.89\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 121564\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 29679\n\tVoluntary context switches: 3\n\tInvoluntary context switches: 129\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 753885184,
+        "clients": 1,
+        "compression": "zstd",
+        "elapsed_ns": 586899264,
+        "estimated_heap_bytes": 120481084,
+        "index_bytes": 753861629,
+        "open_ns": 107178950,
+        "phase": "query",
+        "queries": [
+          {
+            "case": "lexical_unique",
+            "initial_ns": 5883956,
+            "signature": "b50ccddb913b65f2bb5c12b4d9d8c923f3eecd40ce8b1302b53cd1af8ae34bef",
+            "timing": {
+              "count": 3,
+              "max_ms": 5.79749,
+              "min_ms": 5.682225,
+              "p50_ms": 5.714151,
+              "p95_ms": 5.79749,
+              "samples_ns": [
+                5682225,
+                5714151,
+                5797490
+              ]
+            }
+          },
+          {
+            "case": "lexical_common",
+            "initial_ns": 70102268,
+            "signature": "158d837406db23e78d1ed5b7443007c4e7f1a4514a9d35d9acb676735e7a49d2",
+            "timing": {
+              "count": 3,
+              "max_ms": 68.857552,
+              "min_ms": 67.890144,
+              "p50_ms": 68.442149,
+              "p95_ms": 68.857552,
+              "samples_ns": [
+                67890144,
+                68442149,
+                68857552
+              ]
+            }
+          },
+          {
+            "case": "lexical_missing",
+            "initial_ns": 243980,
+            "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.331718,
+              "min_ms": 0.272131,
+              "p50_ms": 0.279043,
+              "p95_ms": 0.331718,
+              "samples_ns": [
+                272131,
+                279043,
+                331718
+              ]
+            }
+          },
+          {
+            "case": "explicit_key",
+            "initial_ns": 185441,
+            "signature": "8b30d10a5d480d7d32c7687cc2192abd869bd426dd317d1a9124164f1a21e8c7",
+            "timing": {
+              "count": 3,
+              "max_ms": 0.327727,
+              "min_ms": 0.182984,
+              "p50_ms": 0.271758,
+              "p95_ms": 0.327727,
+              "samples_ns": [
+                182984,
+                271758,
+                327727
+              ]
+            }
+          },
+          {
+            "case": "identifier_anchor",
+            "initial_ns": 60877334,
+            "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e",
+            "timing": {
+              "count": 3,
+              "max_ms": 62.025546,
+              "min_ms": 61.290176,
+              "p50_ms": 61.341034,
+              "p95_ms": 62.025546,
+              "samples_ns": [
+                61290176,
+                61341034,
+                62025546
+              ]
+            }
+          },
+          {
+            "case": "filtered_common",
+            "initial_ns": 58643658,
+            "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd",
+            "timing": {
+              "count": 3,
+              "max_ms": 60.474257,
+              "min_ms": 58.659357,
+              "p50_ms": 58.670298,
+              "p95_ms": 60.474257,
+              "samples_ns": [
+                58659357,
+                58670298,
+                60474257
+              ]
+            }
+          }
+        ],
+        "rounds": 3,
+        "rows": 1000000,
+        "scope": "local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .ojo/provider freshness acceptance"
+      }
+    },
+    {
+      "label": "1000000-zstd-query-10",
+      "command": [
+        "/usr/bin/time",
+        "-v",
+        "-o",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-zstd-query-10.time",
+        "taskset",
+        "-c",
+        "0",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f",
+        "query",
+        "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-zstd",
+        "1000000",
+        "zstd",
+        "10",
+        "3"
+      ],
+      "returncode": 0,
+      "time": "\tCommand being timed: \"taskset -c 0 /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/profile-f69b18f query /home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/disk-projection-20261025/1000000-zstd 1000000 zstd 10 3\"\n\tUser time (seconds): 6.02\n\tSystem time (seconds): 0.06\n\tPercent of CPU this job got: 99%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:06.14\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 134592\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 33042\n\tVoluntary context switches: 465\n\tInvoluntary context switches: 3139\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 8\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+      "stderr": "",
+      "result": {
+        "allocated_index_bytes": 753885184,
+        "clients": 10,
+        "compression": "zstd",
+        "elapsed_ns": 5837268177,
+        "estimated_heap_bytes": 120481084,
+        "index_bytes": 753861629,
+        "open_ns": 102330269,
+        "phase": "query",
+        "queries": [
+          {
+            "case": "lexical_unique",
+            "initial_ns": 5691500,
+            "signature": "b50ccddb913b65f2bb5c12b4d9d8c923f3eecd40ce8b1302b53cd1af8ae34bef",
+            "timing": {
+              "count": 30,
+              "max_ms": 80.74125,
+              "min_ms": 24.599288,
+              "p50_ms": 45.347281,
+              "p95_ms": 69.792821,
+              "samples_ns": [
+                24599288,
+                26703468,
+                26824681,
+                27046416,
+                28289767,
+                31931658,
+                32513949,
+                33779585,
+                35146031,
+                35201282,
+                37606307,
+                38838820,
+                39781603,
+                42015384,
+                45347281,
+                45733352,
+                47668061,
+                49192614,
+                49594078,
+                50680010,
+                51328299,
+                53993268,
+                54117224,
+                55970332,
+                59393463,
+                63228248,
+                65123516,
+                65163384,
+                69792821,
+                80741250
+              ]
+            }
+          },
+          {
+            "case": "lexical_common",
+            "initial_ns": 70489259,
+            "signature": "158d837406db23e78d1ed5b7443007c4e7f1a4514a9d35d9acb676735e7a49d2",
+            "timing": {
+              "count": 30,
+              "max_ms": 773.876038,
+              "min_ms": 625.895664,
+              "p50_ms": 693.293875,
+              "p95_ms": 743.617724,
+              "samples_ns": [
+                625895664,
+                637840629,
+                654871788,
+                657105614,
+                660976358,
+                663135759,
+                665467004,
+                669938123,
+                674449195,
+                678761285,
+                682397081,
+                685529433,
+                686812710,
+                691584682,
+                693293875,
+                694903071,
+                697687789,
+                700031767,
+                700711977,
+                705136900,
+                706821794,
+                709840389,
+                713828386,
+                725174101,
+                728068848,
+                729485113,
+                733608039,
+                733675803,
+                743617724,
+                773876038
+              ]
+            }
+          },
+          {
+            "case": "lexical_missing",
+            "initial_ns": 234413,
+            "signature": "d53d18c23212ea7b6300594bb89bce60218f6eff2b9d628b8cc42d3e79bbd5ab",
+            "timing": {
+              "count": 30,
+              "max_ms": 16.061839,
+              "min_ms": 0.101546,
+              "p50_ms": 0.111495,
+              "p95_ms": 6.156013,
+              "samples_ns": [
+                101546,
+                102192,
+                102262,
+                102901,
+                104079,
+                104520,
+                106074,
+                106158,
+                106901,
+                107751,
+                109615,
+                109836,
+                110045,
+                110045,
+                111495,
+                115559,
+                115719,
+                116049,
+                116488,
+                117238,
+                124001,
+                136149,
+                287074,
+                302002,
+                320242,
+                335046,
+                341476,
+                371825,
+                6156013,
+                16061839
+              ]
+            }
+          },
+          {
+            "case": "explicit_key",
+            "initial_ns": 174087,
+            "signature": "8b30d10a5d480d7d32c7687cc2192abd869bd426dd317d1a9124164f1a21e8c7",
+            "timing": {
+              "count": 30,
+              "max_ms": 27.894228,
+              "min_ms": 0.105492,
+              "p50_ms": 0.117547,
+              "p95_ms": 0.360515,
+              "samples_ns": [
+                105492,
+                105497,
+                105555,
+                106088,
+                109313,
+                110164,
+                111581,
+                111822,
+                112353,
+                113759,
+                114387,
+                115663,
+                115915,
+                116833,
+                117547,
+                117926,
+                119938,
+                120624,
+                125970,
+                127927,
+                148847,
+                150848,
+                171643,
+                187895,
+                201382,
+                203006,
+                229488,
+                249252,
+                360515,
+                27894228
+              ]
+            }
+          },
+          {
+            "case": "identifier_anchor",
+            "initial_ns": 60313040,
+            "signature": "f20b8b14a2ca461fc818471cfd429aa6b922fe2cb959ac18e7577a928c552e3e",
+            "timing": {
+              "count": 30,
+              "max_ms": 683.754064,
+              "min_ms": 564.19861,
+              "p50_ms": 602.505496,
+              "p95_ms": 678.964333,
+              "samples_ns": [
+                564198610,
+                565103062,
+                575548096,
+                578150636,
+                581251419,
+                583526417,
+                585553422,
+                588369319,
+                589142006,
+                589460180,
+                592250194,
+                592698971,
+                597449775,
+                597586989,
+                602505496,
+                605425313,
+                608022055,
+                608576119,
+                612328401,
+                619025641,
+                622299198,
+                626025963,
+                626952111,
+                634758494,
+                641354197,
+                643343859,
+                645175544,
+                671985202,
+                678964333,
+                683754064
+              ]
+            }
+          },
+          {
+            "case": "filtered_common",
+            "initial_ns": 57972648,
+            "signature": "0479e2efa54e8d80ee2993b1530b47333a67315296a724735274a770c69d2acd",
+            "timing": {
+              "count": 30,
+              "max_ms": 652.035882,
+              "min_ms": 480.111214,
+              "p50_ms": 582.381269,
+              "p95_ms": 650.643254,
+              "samples_ns": [
+                480111214,
+                509805534,
+                521091109,
+                540037059,
+                541452774,
+                552081988,
+                556264507,
+                562088617,
+                562945764,
+                567818137,
+                571181957,
+                574508745,
+                581951695,
+                582166062,
+                582381269,
+                584127896,
+                586514141,
+                586563018,
+                587240129,
+                588884824,
+                589242492,
+                594706947,
+                596338709,
+                598920824,
+                601520119,
+                603957777,
+                609578210,
+                638270757,
+                650643254,
+                652035882
+              ]
+            }
+          }
+        ],
+        "rounds": 3,
+        "rows": 1000000,
+        "scope": "local encrypted projection with regenerated exact source callbacks; initial queries warm pages; no end-to-end .ojo/provider freshness acceptance"
+      }
+    }
+  ],
+  "qualification": "capacity diagnostics only; 1M ten-client common/anchor/filtered latency fails100ms target; source callback is regenerated exact synthetic Row; no durable source/provider/auth measurement",
+  "methodology": {
+    "build": "one observation per size/codec",
+    "query": "3rounds/client, one process per codec/size/clientcount; initial queries warm pages; client order rotates; CPU0 affinity; no compilation overlaps shared flock",
+    "filesystem": "persistent Btrfs parent with inherited no-compression flag chattr+m; apparent and Linux blocks reported separately",
+    "limits": "default disk Limits; original legacy RAM guards unchanged; all 1M rows contribute to global model; dense literals onlyrun at1k; no coldcache or productionFS equivalence claim"
+  }
+}
