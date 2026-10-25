@@ -198,3 +198,72 @@ profile_record_write NEW_PRIVATE_DIRECTORY 1000000 10 5 rebuildable
 This establishes functional capacity for this bounded directory path/fixture.
 The one-million-record ten-client read/search/write distributions and equivalent
 full-scale SQLite/JSONL storage/performance controls remain unqualified.
+
+The separate CRC follow-up changes only the local checksum implementation to a
+constant 256-entry IEEE table. It preserves checksums, authority/index bytes and
+corruption detection and adds a frozen bitwise-format oracle. The full gate at
+`2415b8c` passes 187 engine tests (11 explicit helpers ignored) plus 8 rank tests;
+all release profile examples build (`crc-gates.json`). It adds no dependency or
+retained cache. Relative to the previously tested `980c0f5`, the only runtime
+source change is `lexical/segments/codec.rs`.
+
+`crc-query-abba.jsonl` and `crc-query-binaries.json` retain a source-separated
+control/candidate/candidate/control warm-query profile at each of 1k and 10k.
+Each process opens the same existing synthetic post-write fixture, verifies
+source and caches before query timing, and makes five repetitions of seven query
+classes with one client. All returned ID/fixture-number/score-bit signatures and
+non-time work counters match. This is a small CPU-cost probe, not a ten-client
+latency or cold-open result.
+
+| 10,050 visible records | Bitwise control median (ms) | Table candidate median (ms) |
+| --- | --- | --- |
+| Unique token | 31.840 | 26.299 |
+| All-row common token | 31.886 | 26.384 |
+| Common compound | 32.587 | 26.914 |
+| Missing term | 30.295 | 24.547 |
+| Half-history cutoff | 34.617 | 29.090 |
+| Typed source filter | 32.902 | 27.666 |
+| Rare literal | 46.170 | 38.250 |
+
+Medians pool the two exposures per binary (ten query samples per class). The
+scorer still makes the same full-project visits and decodes the same bounded
+segments/visibility pages. This improves checksum CPU work while leaving the
+large-corpus query architecture and million-record concurrent target open.
+
+The next fixed 100k ten-client cohort is retained completely in
+`cache-concurrent-100k.jsonl` (16 trials) and
+`cache-concurrent-100k-binary.json`. It uses the tested table-CRC source, the same
+fixture generator/query mix and explicit native rebuildable-cache policy, the
+same direct/grouped queues for all arms, and all earlier correctness/reopen
+oracles. Each size/phase/mode/arm cell still has only one trial. These are the
+checked local harness implementations, not general claims about SQLite, FTS5
+or JSONL performance, and the cache durability/scoring/field contracts remain
+different as described above. All raw results, including failed latency targets,
+are retained; one JSON object per trial keeps the evidence machine-readable.
+
+| 100k records, grouped | Phase | Read 1 p95 (ms) | Read 20 p95 (ms) | Search p95 (ms) | Indexed write p95 (ms) | Post-write allocation (bytes) |
+| --- | --- | --- | --- | --- | --- | --- |
+| Record2, rebuildable caches | separated | 7.084 | 94.304 | 539.532 | 493.751 | 43,429,888 |
+| SQLite WAL/FULL/FTS5 | separated | 0.210 | 2.490 | 3151.628 | 39.507 | 42,594,304 |
+| Raw indexed JSONL | separated | 0.881 | 10.784 | 3048.993 | 58.411 | 56,979,456 |
+| Indexed JSONL + Zstd | separated | 1.087 | 13.968 | 3087.977 | 51.882 | 36,503,552 |
+| Record2, rebuildable caches | mixed | 6.314 | 93.598 | 558.343 | 452.953 | 43,675,648 |
+| SQLite WAL/FULL/FTS5 | mixed | 0.227 | 2.715 | 3158.152 | 39.325 | 42,577,920 |
+| Raw indexed JSONL | mixed | 1.249 | 12.777 | 3109.706 | 139.322 | 56,991,744 |
+| Indexed JSONL + Zstd | mixed | 0.915 | 13.612 | 3111.863 | 112.596 | 36,511,744 |
+
+The native grouped search and write tails fail their 250 ms targets here. Native
+direct-write p95 is 9605.011 ms with phases separated and 8617.044 ms mixed.
+All sixteen trials pass their functional originals/receipt/reopen/visibility
+checks. Peak native RSS is about 54–56 MiB in these concurrent trials; complete
+process/resource/footprint data is retained for every arm. This is a measured
+100k scale gap, not an accepted 1M concurrent path.
+
+The required next query work is architectural: select terms/partitions and avoid
+full-project metadata/posting walks while preserving exact two-clock/filter/key
+winners, corpus/candidate mass and score bits. The current scorer depends on
+candidate-union mass as well as corpus statistics, so a cached corpus row count
+alone does not justify skipping the statistics pass. A routed persistent term
+index with authenticated per-segment statistics is a plausible next step; broad
+term pruning needs a separate exact proof, and arbitrary clocks/filters need
+correct fallbacks. None of that unimplemented work is counted as a speedup.
