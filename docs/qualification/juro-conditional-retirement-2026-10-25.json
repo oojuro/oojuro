@@ -1,0 +1,181 @@
+{
+  "runtime_implementation": "0b5fe63",
+  "qualified_source_head": "95c3963237dded1e2eae04f4f3d991cc2eb4a843",
+  "baseline": "9abee38be0acab284bf68aed75f899e9fdbf0906",
+  "scope": "Generic conditional retirement only; no source/cache format, provider/key semantics, performance or deployment claims.",
+  "checks": [
+    {
+      "label": "conditional-retirement-disk",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--lib",
+        "record::projection::disk",
+        "--message-format=json",
+        "--",
+        "--test-threads=1"
+      ],
+      "returncode": 0,
+      "mutable_artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        }
+      ],
+      "test_summaries": [
+        [
+          "20",
+          "0",
+          "0"
+        ]
+      ],
+      "source_fence": {
+        "cleaned_mutable_packages": true,
+        "cleaned_profiles": [
+          "dev",
+          "release"
+        ],
+        "cwd": "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/retire-if-present-source",
+        "revisions": {
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/retire-if-present-source": "95c3963237dded1e2eae04f4f3d991cc2eb4a843"
+        },
+        "source_fence": "faa4c8e7e263d62169ad87f1757e04e5f4f1ee10d5b7412fba849c66496af94c",
+        "source_fence_format": 2,
+        "target": "/home/rocket3/Projects/.readiness/ojo-product-completion-2026-10-25/targets/engine-performance"
+      },
+      "new_cases_present": 3
+    },
+    {
+      "label": "conditional-retirement-memory-fixtures",
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--lib",
+        "record::projection::tests::",
+        "--message-format=json",
+        "--",
+        "--test-threads=1"
+      ],
+      "returncode": 0,
+      "mutable_artifacts": [
+        {
+          "target": "oojuro_core",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_rank",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": true
+        },
+        {
+          "target": "ojo",
+          "fresh": true
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": true
+        }
+      ],
+      "test_summaries": [
+        [
+          "8",
+          "0",
+          "0"
+        ]
+      ],
+      "source_fence": {
+        "cleaned_mutable_packages": false,
+        "cleaned_profiles": [],
+        "cwd": "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/retire-if-present-source",
+        "revisions": {
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/retire-if-present-source": "95c3963237dded1e2eae04f4f3d991cc2eb4a843"
+        },
+        "source_fence": "faa4c8e7e263d62169ad87f1757e04e5f4f1ee10d5b7412fba849c66496af94c",
+        "source_fence_format": 2,
+        "target": "/home/rocket3/Projects/.readiness/ojo-product-completion-2026-10-25/targets/engine-performance"
+      }
+    },
+    {
+      "label": "conditional-retirement-clippy",
+      "command": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--lib",
+        "--tests",
+        "--no-deps",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "returncode": 0,
+      "mutable_artifacts": [],
+      "test_summaries": [],
+      "source_fence": {
+        "cleaned_mutable_packages": false,
+        "cleaned_profiles": [],
+        "cwd": "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/retire-if-present-source",
+        "revisions": {
+          "/home/rocket3/Projects/oojuro-codec-workspace-2026-10-25/.scratch/retire-if-present-source": "95c3963237dded1e2eae04f4f3d991cc2eb4a843"
+        },
+        "source_fence": "faa4c8e7e263d62169ad87f1757e04e5f4f1ee10d5b7412fba849c66496af94c",
+        "source_fence_format": 2,
+        "target": "/home/rocket3/Projects/.readiness/ojo-product-completion-2026-10-25/targets/engine-performance"
+      }
+    }
+  ],
+  "frozen_test_elf_sha256": "b99a1ae842600969855fae773bd519cb351e2674479c6275ac0cf882ecb089cc",
+  "frozen_case_list_assertions": {
+    "disk": 20,
+    "memory_fixtures": 8,
+    "new_conditional_retirement_cases": 3
+  },
+  "event_boundary": "Event cursor validation precedes inner calls, matching existing wrapper behavior; empty/oversized cursors return Bounds without poisoning. Actual inner bounds/authentication/scope/I/O errors poison the generic pending appender.",
+  "earlier_check": "The initial 28b0451 source-fenced20 disk cases passed; strict Clippy exposed11 existing fixture-only style lints. Mechanical fixture cleanup and its affected8 cases are qualified above. Original failed output is retained in the private audit directory."
+}
