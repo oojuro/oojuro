@@ -30,22 +30,20 @@ impl Groups {
             + 128
     }
     pub fn estimate(index: &Index, plan: &scorer::Plan) -> usize {
-        let terms: Vec<_> = plan
-            .terms
-            .iter()
-            .map(|(term, _)| *blake3::hash(term.as_bytes()).as_bytes())
-            .collect();
-        (Self::base_bytes(terms.len())
-            + (index.manifest.rows as usize).min(MAX_GROUPS) * Self::per_group(terms.len()))
+        (Self::base_bytes(plan.terms.len())
+            + (index.manifest.rows as usize).min(MAX_GROUPS) * Self::per_group(plan.terms.len()))
         .min(BYTES)
     }
     pub fn build(index: &Index, plan: &scorer::Plan, budget: usize) -> Result<Self> {
+        if !plan.scope_model() || plan.terms.len() > 16 {
+            return Err(Error::Invalid);
+        }
         let terms: Vec<_> = plan
             .terms
             .iter()
             .map(|(term, _)| *blake3::hash(term.as_bytes()).as_bytes())
             .collect();
-        let base = Self::base_bytes(terms.len());
+        let base = Self::base_bytes(terms.capacity());
         if base > budget {
             return Err(Error::Bounds);
         }

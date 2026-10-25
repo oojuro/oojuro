@@ -254,6 +254,9 @@ impl Drop for Claim<'_> {
 }
 impl TermCache {
     pub fn joint(&self, index: &Index, plan: &scorer::Plan) -> Result<Option<Arc<joint::Groups>>> {
+        if !plan.scope_model() || plan.terms.len() > 16 {
+            return Err(Error::Invalid);
+        }
         let entry = self.entry(
             CacheKey {
                 kind: 2,
@@ -660,6 +663,12 @@ mod tests {
         let mut index = builder.finish().unwrap();
         let alpha = scorer::Plan::new("alpha", false, None, &BTreeSet::new(), &BTreeMap::new());
         let beta = scorer::Plan::new("beta", false, None, &BTreeSet::new(), &BTreeMap::new());
+        let literal =
+            scorer::Plan::new("\"alpha\"", false, None, &BTreeSet::new(), &BTreeMap::new());
+        assert!(matches!(
+            index.terms.joint(&index, &literal),
+            Err(Error::Invalid)
+        ));
         index.terms.capacity = joint::Groups::estimate(&index, &alpha);
         let lease = index.terms.joint(&index, &alpha).unwrap().unwrap();
         assert!(lease.complete && lease.groups.len() == 1);
