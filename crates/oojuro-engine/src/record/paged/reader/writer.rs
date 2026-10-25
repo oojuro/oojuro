@@ -17,6 +17,20 @@ pub struct Append<'a> {
     pub request: &'a str,
     pub inputs: &'a [Input],
 }
+/// Request-local write phases. Authority time includes Store compression,
+/// encryption and sync; derived phases include construction and publication.
+#[derive(Clone, Debug, Default, Serialize)]
+pub struct WriteProfile {
+    pub total_ns: u128,
+    pub admission_ns: u128,
+    pub authority_append_ns: u128,
+    pub locator_publish_ns: u128,
+    pub lexical_publish_ns: u128,
+    pub submitted_rows: u64,
+    pub rows_committed: u64,
+    pub fresh_requests: u64,
+    pub source_encoded_bytes: u64,
+}
 impl Writer {
     pub fn open_disk(
         dir: &Path,
@@ -85,6 +99,14 @@ impl Writer {
     /// are accepted. This API does not wait to collect work; callers bound queue/wait.
     /// No request is acknowledged before every new frame and locator is durable.
     pub fn append_group(&mut self, requests: &[Append<'_>]) -> Result<Vec<Commit>> {
+        self.append_group_work(requests, None)
+    }
+    fn append_group_work(
+        &mut self,
+        requests: &[Append<'_>],
+        mut profile: Option<&mut WriteProfile>,
+    ) -> Result<Vec<Commit>> {
+        let admission_began = profile.as_ref().map(|_| std::time::Instant::now());
         let reader = &mut self.reader;
         reader.healthy()?;
         if requests.is_empty() || requests.len() > 1000 {
@@ -220,7 +242,16 @@ impl Writer {
             encoded.push(bytes);
             sequence = sequence.checked_add(1).ok_or(Error::Bounds)?;
         }
+        if let Some(profile) = profile.as_deref_mut() {
+            profile.submitted_rows = input_count as u64;
+            profile.fresh_requests = batches.len() as u64;
+            profile.rows_committed = previous.records - reader.tip.records;
+            profile.source_encoded_bytes = encoded_bytes as u64;
+        }
         if batches.is_empty() {
+            if let Some(profile) = profile.as_deref_mut() {
+                profile.admission_ns += admission_began.unwrap().elapsed().as_nanos();
+            }
             return Ok(output);
         }
         let bytes = reader
@@ -229,6 +260,9 @@ impl Writer {
             .ok_or(Error::Bounds)?;
         if bytes > reader.capacity.source_bytes {
             return Err(Error::Bounds);
+        }
+        if let Some(profile) = profile.as_deref_mut() {
+            profile.admission_ns += admission_began.unwrap().elapsed().as_nanos();
         }
         #[cfg(test)]
         if let Some(hook) = &self.hook {
@@ -241,10 +275,14 @@ impl Writer {
             .iter()
             .map(|bytes| authority::carrier(bytes))
             .collect();
+        let authority_began = profile.as_ref().map(|_| std::time::Instant::now());
         let actual = reader
             .store
             .append(&carriers)
             .map_err(|_| Error::Unavailable)?;
+        if let Some(profile) = profile.as_deref_mut() {
+            profile.authority_append_ns += authority_began.unwrap().elapsed().as_nanos();
+        }
         if actual != first {
             return Err(Error::Authority);
         }
@@ -252,7 +290,11 @@ impl Writer {
         if let Some(hook) = &self.hook {
             hook(authority::Phase::AfterStore);
         }
+        let locator_began = profile.as_ref().map(|_| std::time::Instant::now());
         reader.publish_group(&batches)?;
+        if let Some(profile) = profile.as_deref_mut() {
+            profile.locator_publish_ns += locator_began.unwrap().elapsed().as_nanos();
+        }
         reader.encoded_bytes = bytes;
         reader.failed = false;
         #[cfg(test)]
@@ -283,6 +325,22 @@ impl Writer {
         let receipts = self.append_group(requests)?;
         index.refresh(self.reader()?)?;
         Ok(receipts)
+    }
+    /// The same searchable-ACK contract with request-local phase measurements.
+    /// Ordinary append entrypoints do not collect phase clocks.
+    pub fn append_group_indexed_profiled(
+        &mut self,
+        index: &mut Index,
+        requests: &[Append<'_>],
+    ) -> Result<(Vec<Commit>, WriteProfile)> {
+        let began = std::time::Instant::now();
+        let mut profile = WriteProfile::default();
+        let receipts = self.append_group_work(requests, Some(&mut profile))?;
+        let lexical_began = std::time::Instant::now();
+        index.refresh(self.reader()?)?;
+        profile.lexical_publish_ns = lexical_began.elapsed().as_nanos();
+        profile.total_ns = began.elapsed().as_nanos();
+        Ok((receipts, profile))
     }
 }
 fn commit(batch: &Batch) -> Commit {
