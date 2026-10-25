@@ -223,18 +223,21 @@ struct CacheKey {
 enum Entry {
     Postings(Arc<TermList>),
     Selection(Arc<Selected>),
+    Literal(Arc<literal::Proof>),
 }
 impl Entry {
     fn bytes(&self) -> usize {
         match self {
             Self::Postings(list) => list.bytes,
             Self::Selection(view) => view.bits.capacity() * 8 + 512,
+            Self::Literal(proof) => proof.bytes(),
         }
     }
     fn idle(&self) -> bool {
         match self {
             Self::Postings(list) => Arc::strong_count(list) == 1,
             Self::Selection(view) => Arc::strong_count(view) == 1,
+            Self::Literal(proof) => Arc::strong_count(proof) == 1,
         }
     }
 }
@@ -277,6 +280,33 @@ impl Drop for Claim<'_> {
     }
 }
 impl TermCache {
+    pub fn literal(&self, index: &Index, needle: &str) -> Result<Option<Arc<literal::Proof>>> {
+        if index.manifest.positions.is_none() {
+            return Ok(None);
+        }
+        let mut key = blake3::Hasher::new_derive_key("oojuro exact raw literal proof v1");
+        key.update(needle.as_bytes());
+        let entry = self.entry(
+            CacheKey {
+                kind: 3,
+                hash: *key.finalize().as_bytes(),
+            },
+            || {
+                let bytes = literal::Proof::estimate(index.manifest.rows)?;
+                Ok((bytes, bytes))
+            },
+            |_| {
+                Ok(Entry::Literal(Arc::new(literal::Proof {
+                    bits: index.literal_candidates_uncached(needle)?,
+                })))
+            },
+        )?;
+        match entry {
+            Some(Entry::Literal(proof)) => Ok(Some(proof)),
+            None => Ok(None),
+            _ => Err(Error::Authority),
+        }
+    }
     fn entry(
         &self,
         key: CacheKey,
@@ -625,6 +655,79 @@ mod tests {
             kind: 0,
             hash: alpha
         }));
+        assert!(state.used <= index.terms.capacity && state.inflight.is_empty());
+    }
+    #[test]
+    fn literal_proof_singleflight_leases_and_admission_share_the_existing_policy() {
+        let root = Scratch(std::env::temp_dir().join(format!(
+            "literal-cache-{}",
+            hex(&oojuro_store::crypto::random_key())
+        )));
+        fs::create_dir(&root.0).unwrap();
+        let binding = Binding {
+            namespace: [1; 32],
+            writer: "literal-fixture".into(),
+            view: [2; 32],
+        };
+        let mut builder =
+            Builder::create_positional(root.0.join("index"), &[9; 32], binding, Limits::default())
+                .unwrap();
+        for i in 0..128 {
+            builder
+                .push(Row {
+                    id: format!("{i:08x}"),
+                    key: None,
+                    text: "alpha beta".into(),
+                    valid_at: i,
+                    reported_recorded_at: i,
+                    kind: Kind::Raw,
+                    tool: None,
+                    status: None,
+                    agent_id: String::new(),
+                    indexed: true,
+                })
+                .unwrap();
+        }
+        let mut index = builder.finish().unwrap();
+        index.terms.capacity = literal::Proof::estimate(index.manifest.rows).unwrap();
+        let index = Arc::new(index);
+        let barrier = Arc::new(std::sync::Barrier::new(10));
+        let leases: Vec<_> = std::thread::scope(|scope| {
+            let threads: Vec<_> = (0..10)
+                .map(|_| {
+                    let index = index.clone();
+                    let barrier = barrier.clone();
+                    scope.spawn(move || {
+                        barrier.wait();
+                        index.terms.literal(&index, "alpha beta").unwrap().unwrap()
+                    })
+                })
+                .collect();
+            threads
+                .into_iter()
+                .map(|thread| thread.join().unwrap())
+                .collect()
+        });
+        let lease = leases[0].clone();
+        assert!(leases.iter().all(|other| Arc::ptr_eq(other, &lease)));
+        drop(leases);
+        assert_eq!(lease.bits.as_deref(), Some([u64::MAX; 2].as_slice()));
+        let mut copy = index.literal_candidates("alpha beta").unwrap().unwrap();
+        copy.fill(0);
+        assert_eq!(lease.bits.as_deref(), Some([u64::MAX; 2].as_slice()));
+        let charged = index.terms.state.lock().unwrap().used;
+        assert_eq!(charged, lease.bytes());
+        assert!(index.terms.literal(&index, "beta alpha").unwrap().is_none());
+        assert_eq!(
+            index.literal_candidates("beta alpha").unwrap(),
+            Some(vec![0; 2])
+        );
+        assert_eq!(index.terms.state.lock().unwrap().used, charged);
+        drop(lease);
+        let replacement = index.terms.literal(&index, "beta alpha").unwrap().unwrap();
+        assert_eq!(replacement.bits.as_deref(), Some([0; 2].as_slice()));
+        let state = index.terms.state.lock().unwrap();
+        assert_eq!(state.ready.len(), 1);
         assert!(state.used <= index.terms.capacity && state.inflight.is_empty());
     }
 }

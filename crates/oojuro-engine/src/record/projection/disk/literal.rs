@@ -617,8 +617,35 @@ impl<'a> Cursor<'a> {
         Ok(Some(blocks))
     }
 }
+pub(super) struct Proof {
+    pub bits: Option<Vec<u64>>,
+}
+impl Proof {
+    pub fn estimate(rows: u64) -> Result<usize> {
+        usize::try_from(rows)
+            .map_err(|_| Error::Bounds)?
+            .div_ceil(64)
+            .checked_mul(8)
+            .and_then(|bytes| bytes.checked_add(512))
+            .ok_or(Error::Bounds)
+    }
+    pub fn bytes(&self) -> usize {
+        512 + self.bits.as_ref().map_or(0, |bits| bits.capacity() * 8)
+    }
+}
+
 impl Index {
     pub(super) fn literal_candidates(&self, needle: &str) -> Result<Option<Vec<u64>>> {
+        if self.manifest.positions.is_none() {
+            return Ok(None);
+        }
+        if let Some(proof) = self.terms.literal(self, needle)? {
+            // Selection/driver refinement mutates the owned per-query copy.
+            return Ok(proof.bits.clone());
+        }
+        self.literal_candidates_uncached(needle)
+    }
+    pub(super) fn literal_candidates_uncached(&self, needle: &str) -> Result<Option<Vec<u64>>> {
         if self.manifest.positions.is_none() {
             return Ok(None);
         }
