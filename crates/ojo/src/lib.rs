@@ -2,6 +2,7 @@
 //! All successful commits include a file sync. Readers share a lock; a writer excludes all readers.
 //! Values are opaque bytes: UTF-8 text and tool-call JSON require no special storage path.
 #![doc = include_str!("../README.md")]
+pub mod events;
 mod wire;
 use chacha20poly1305::XChaCha20Poly1305;
 use std::{
@@ -50,6 +51,18 @@ impl From<std::fs::TryLockError> for Error {
     }
 }
 pub type Result<T> = std::result::Result<T, Error>;
+
+// Profile readers observe the already verified replay. Finish runs before any
+// writable tail recovery, so a wrong profile cannot modify an unrelated file.
+enum Replay<'a> {
+    Transaction {
+        sequence: u64,
+        request: [u8; 16],
+        operations: u32,
+        body: &'a [u8],
+    },
+    Finish,
+}
 
 #[derive(Clone, Copy, Debug)]
 pub struct Change<'a> {
@@ -191,6 +204,14 @@ impl Database {
     /// Locks the inode for this handle's lifetime. Read opens never modify the file.
     /// A writable open removes only a verified incomplete tail, after validating every complete transaction.
     pub fn open(path: impl AsRef<Path>, key: Option<&[u8; 32]>, writable: bool) -> Result<Self> {
+        Self::open_observed(path.as_ref(), key, writable, |_| Ok(()))
+    }
+    fn open_observed(
+        path: &Path,
+        key: Option<&[u8; 32]>,
+        writable: bool,
+        mut observe: impl FnMut(Replay<'_>) -> Result<()>,
+    ) -> Result<Self> {
         let mut file = OpenOptions::new().read(true).write(writable).open(path)?;
         if !file.metadata()?.is_file() {
             return Err(Error::Invalid("regular file required"));
@@ -234,6 +255,12 @@ impl Database {
             )?;
             let mut key_bytes = 0;
             wire::walk(&body, u32_at(&head, 32), |_, key, _| key_bytes += key.len())?;
+            observe(Replay::Transaction {
+                sequence: db.next_sequence()?,
+                request,
+                operations: u32_at(&head, 32),
+                body: &body,
+            })?;
             db.admit(u32_at(&head, 32) as usize, key_bytes)?;
             let transaction = db.transactions.len();
             wire::walk(&body, u32_at(&head, 32), |operation, key, value| {
@@ -261,6 +288,7 @@ impl Database {
         }
         drop(reader);
         db.tail = length - db.end;
+        observe(Replay::Finish)?;
         if writable && db.tail > 0 {
             db.file.set_len(db.end)?;
             db.file.sync_all()?;

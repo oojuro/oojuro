@@ -22,8 +22,12 @@ The new `crates/ojo` engine implements the experimental, independently versioned
 [wire 0.1](../spec/0.1/FORMAT.md). It is a standalone synchronous library with no
 dependency on the older storage/search crates. It stores opaque bytes with raw
 writes, inode locks, synced atomic commits, exact retries and verified recovery.
-Compression is an optional separate-archive operation. Agent timestamps and
-session lifecycle remain caller policy. See [API and limits](../crates/ojo/README.md).
+Compression is an optional separate-archive operation. The additive
+[Event profile](../spec/events/1/FORMAT.md) and [Event API](EVENT_DATABASE.md)
+provide engine acceptance timestamps plus exact data, without required caller
+keys or application metadata. Provider/source timestamps and session lifecycle
+remain application data and policy. Existing KV wire semantics are unchanged.
+See [API and limits](../crates/ojo/README.md).
 
 Historical stores remain directories with their existing component formats;
 there is no automatic conversion or change to existing consumer pins.

@@ -1,5 +1,11 @@
 # Minimal .ojo engine
 
+For timestamp-and-data journals, use the additive experimental
+[`ojo::events` API](../../docs/EVENT_DATABASE.md). It supplies acceptance time,
+opaque cursors, exact retries, append/time scans and an embedded live collector.
+The KV API below remains available and retains wire 0.1 compatibility. The
+published v0.1.0 preview predates the Event API.
+
 A fresh implementation of the experimental [wire 0.1 specification](../../spec/0.1/FORMAT.md).
 One synchronous Rust library. One file. Opaque byte keys and values. Four direct
 runtime dependencies: SHA-256, CRC32, authenticated encryption and OS randomness.
