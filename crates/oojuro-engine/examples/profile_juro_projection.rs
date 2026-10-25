@@ -338,10 +338,15 @@ fn main() -> Result<()> {
             ),
         ),
         ("common", "battery".into()),
+        ("common_pair", "battery electrode".into()),
+        ("common_triple", "battery electrode transaction".into()),
         ("missing", "unseenword999".into()),
         ("identifier_anchor", "lookup_needle battery".into()),
     ];
     if count <= 1000 {
+        cases.push(("dense_phrase", "\"battery electrode\"".into()));
+    }
+    if count > 1000 && args.get(8).is_some_and(|case| case == "dense_phrase") {
         cases.push(("dense_phrase", "\"battery electrode\"".into()));
     }
     if let Some(selected) = args.get(8) {
