@@ -1,5 +1,7 @@
 //! Generic file tools; agent/session policy belongs to ojo-journal.
 mod events;
+#[cfg(feature = "search")]
+mod search;
 use ojo::{Change, Checkpoint, Database};
 use serde_json::{Value, json};
 use std::{
@@ -18,6 +20,10 @@ const HELP: &str = "ojo — portable .juro file tools (experimental wire 0.1)
   ojo scan FILE [--after CURSOR_HEX] [--limit N] [--from MICROS] [--to MICROS]
   ojo follow FILE [--after CURSOR_HEX] [--limit N] [--wait-ms N]
     scan/follow also accept --key-file PRIVATE_KEY.
+  ojo index FILE NEW_INDEX_DIR --index-key PRIVATE_KEY [--compression raw|zstd]
+  ojo search FILE INDEX_DIR QUERY --index-key PRIVATE_KEY [--limit N]
+    index/search also accept --key-file PRIVATE_SOURCE_KEY and --max-index-bytes N;
+    search also accepts --from MICROS, --to MICROS and --max-original-bytes N.
 
 init creates a timestamp-and-data journal. append supplies engine UTC time and
 an opaque cursor. DATA_FILE may be - for stdin. Retain --intent for safe retries
@@ -27,6 +33,11 @@ time ranges use [from,to) UTC Unix microseconds. follow returns one bounded live
 page, waiting up to 1,000 ms by default (maximum 60,000); resume with its cursor.
 CLI follow reopens between polls; embedded applications can use the healthy
 Collector API. A persistent external writer excludes CLI readers under wire 0.1.
+index builds a disposable encrypted lexical index of UTF-8 event data. Binary
+events remain exactly readable. search checks the current file checkpoint and
+fetches selected originals from that file; a stale index refuses and needs a
+new build. Generate a separate index key with keygen and keep it separately.
+Each CLI invocation verifies the source history; it has no warm-search SLA.
 
 Key/value compatibility and file inspection:
   ojo create FILE [--key-file PRIVATE_KEY]
@@ -47,6 +58,7 @@ durable byte-for-byte database copy, retaining identity, history and retry IDs.
 Key files contain exactly 32 raw bytes and must be private on Unix.
 recover and writable opens truncate only verified incomplete trailing data;
 complete corruption is refused. Archive support is optional at build time.
+Index/search support is also optional at build time.
 No operation overwrites an existing destination file. Keep encryption keys
 separately from databases.
 ";
@@ -63,6 +75,10 @@ struct Arguments {
     from: Option<OsString>,
     to: Option<OsString>,
     wait_ms: Option<OsString>,
+    index_key: Option<PathBuf>,
+    compression: Option<OsString>,
+    index_bytes: Option<OsString>,
+    original_bytes: Option<OsString>,
 }
 
 fn arguments(values: impl Iterator<Item = OsString>) -> Result<Arguments> {
@@ -117,6 +133,26 @@ fn arguments(values: impl Iterator<Item = OsString>) -> Result<Arguments> {
                 return Err("duplicate --wait-ms".into());
             }
             result.wait_ms = Some(values.next().ok_or("missing wait duration")?);
+        } else if !positional_only && value == "--index-key" {
+            if result.index_key.is_some() {
+                return Err("duplicate --index-key".into());
+            }
+            result.index_key = Some(values.next().ok_or("missing index key")?.into());
+        } else if !positional_only && value == "--compression" {
+            if result.compression.is_some() {
+                return Err("duplicate --compression".into());
+            }
+            result.compression = Some(values.next().ok_or("missing compression mode")?);
+        } else if !positional_only && value == "--max-index-bytes" {
+            if result.index_bytes.is_some() {
+                return Err("duplicate --max-index-bytes".into());
+            }
+            result.index_bytes = Some(values.next().ok_or("missing index byte budget")?);
+        } else if !positional_only && value == "--max-original-bytes" {
+            if result.original_bytes.is_some() {
+                return Err("duplicate --max-original-bytes".into());
+            }
+            result.original_bytes = Some(values.next().ok_or("missing original byte budget")?);
         } else if !positional_only && value.to_str().is_some_and(|s| s.starts_with("--")) {
             return Err("unknown option; see ojo --help".into());
         } else {
@@ -286,21 +322,35 @@ fn run() -> Result<()> {
     if args.intent.is_some() && command != "append" {
         return Err("--intent is only valid for append".into());
     }
-    if (args.after.is_some() || args.limit.is_some()) && !matches!(command, "scan" | "follow") {
-        return Err("--after/--limit are only valid for scan/follow".into());
+    if args.after.is_some() && !matches!(command, "scan" | "follow") {
+        return Err("--after is only valid for scan/follow".into());
     }
-    if (args.from.is_some() || args.to.is_some()) && command != "scan" {
-        return Err("--from/--to are only valid for scan".into());
+    if args.limit.is_some() && !matches!(command, "scan" | "follow" | "search") {
+        return Err("--limit is only valid for scan/follow/search".into());
+    }
+    if (args.from.is_some() || args.to.is_some()) && !matches!(command, "scan" | "search") {
+        return Err("--from/--to are only valid for scan/search".into());
     }
     if args.wait_ms.is_some() && command != "follow" {
         return Err("--wait-ms is only valid for follow".into());
+    }
+    if (args.index_key.is_some() || args.index_bytes.is_some())
+        && !matches!(command, "index" | "search")
+    {
+        return Err("--index-key/--max-index-bytes are only valid for index/search".into());
+    }
+    if args.compression.is_some() && command != "index" {
+        return Err("--compression is only valid for index".into());
+    }
+    if args.original_bytes.is_some() && command != "search" {
+        return Err("--max-original-bytes is only valid for search".into());
     }
     let expected = match command {
         "request-id" => 0,
         "create" | "keygen" | "inspect" | "verify" | "recover" | "dump" | "init" | "scan"
         | "follow" => 1,
-        "get" | "delete" | "export" | "archive" | "append" | "read" => 2,
-        "put" => 3,
+        "get" | "delete" | "export" | "archive" | "append" | "read" | "index" => 2,
+        "put" | "search" => 3,
         _ => return Err("unknown command; see ojo --help".into()),
     };
     if args.positional.len() != expected {
@@ -320,6 +370,12 @@ fn run() -> Result<()> {
         return Ok(());
     }
     let key = key(args.key_file.as_deref())?;
+    if matches!(command, "index" | "search") {
+        #[cfg(feature = "search")]
+        return search::run(command, &args, key.as_ref());
+        #[cfg(not(feature = "search"))]
+        return Err("search support was disabled when building this tool".into());
+    }
     if matches!(command, "init" | "append" | "read" | "scan" | "follow") {
         return events::run(command, &args, key.as_ref());
     }

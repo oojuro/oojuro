@@ -82,12 +82,19 @@ stream originals one at a time. A lazy timestamp index contains metadata only.
 Reopen still verifies the complete history and retains in-memory bookkeeping;
 these limits are not million-record qualification.
 
-The complete product scope also includes indexed lexical/full-text search.
-The Event storage/follow foundation alone does not establish that capability.
-The neutral engine disk projection, Event search adapter, generic command-line
-exposure, scale measurements and consumer adoption are tracked by
+The `oojuro-engine` neutral disk projection can index UTF-8 Event data while
+keeping binary originals readable. The generic CLI's explicit `index`/`search`
+composition binds it to the verified file's physical ID, sequence and digest;
+every selected hit fetches its exact current original through `Journal::get`.
+An appended, unrelated or independently archived source requires a new index.
+An exact byte-for-byte export retains its physical checkpoint and may reuse the
+same index. Index encryption keys remain separate from source files and keys.
+See the [file-search commands and limits](../crates/ojo-tools/README.md#search-a-file).
+
+Scale measurements and consumer adoption remain tracked by
 [issue #106](https://github.com/oojuro/oojuro/issues/106). No legacy search or KV
-benchmark may stand in for Event-path evidence.
+benchmark may stand in for actual Event-file-path evidence. The published
+v0.1.0 preview predates these source APIs and commands.
 
 The [generic file tool](../crates/ojo-tools/README.md) also exposes `init`,
 `append`, `read`, `scan` and a bounded `follow` page. Existing KV commands retain

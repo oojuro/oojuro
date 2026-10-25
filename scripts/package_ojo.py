@@ -61,7 +61,10 @@ def package(binary, output, target):
     tree = run('cargo', 'tree', '--locked', '--offline', '-p', 'ojo-tools', '--edges', 'normal,build',
                '--target', target, '--prefix', 'none', '--format', '{p}')
     selected = set(re.findall(r'^([\w-]+) v([^\s]+)', tree, re.M))
-    require(('ojo-tools', '0.1.0') in selected and ('ojo', '0.1.0') in selected, 'missing file-tool graph')
+    tools = tomllib.loads((ROOT / 'crates/ojo-tools/Cargo.toml').read_text())
+    engine_version = tomllib.loads((ROOT / 'crates/ojo/Cargo.toml').read_text())['package']['version']
+    tool_version = tools['package']['version']
+    require(('ojo-tools', tool_version) in selected and ('ojo', engine_version) in selected, 'missing file-tool graph')
     lock = tomllib.loads((ROOT / 'Cargo.lock').read_text())['package']
     locked = {(p['name'], p['version']): p for p in lock}
     cache = Path(os.environ.get('CARGO_HOME', Path.home() / '.cargo')) / 'registry/cache'
@@ -89,6 +92,13 @@ def package(binary, output, target):
     require(dependencies, 'empty dependency notice inventory')
     for name in ['LICENSE', 'NOTICE', 'Cargo.lock']:
         put(ROOT / name, output / name)
+    if any(name == 'oojuro-store' for name, _ in selected):
+        # The optional search graph links the retained store library. Include its
+        # checked-in dictionary attribution and project supplements explicitly.
+        for source in sorted((ROOT / 'licenses').rglob('*')):
+            if source.is_file():
+                put(source, output / 'licenses/project-supplements' / source.relative_to(ROOT / 'licenses'))
+        put(ROOT / 'crates/oojuro-store/dict/README.md', output / 'licenses/dictionary-provenance.md')
     rust = Path(run('rustc', '--print', 'sysroot')) / 'share/doc/rust'
     put(rust / 'COPYRIGHT-library.html', output / 'licenses/rust/COPYRIGHT-library.html')
     for path in sorted((rust / 'licenses').iterdir()):
@@ -96,10 +106,10 @@ def package(binary, output, target):
     put(binary, output / 'bin/ojo')
     (output / 'bin/ojo').chmod(0o755)
     version = run(str(binary), '--version')
-    require(version == 'ojo 0.1.0 (wire 0.1)', 'binary version disagrees with reviewed package')
+    require(version == f'ojo {tool_version} (wire 0.1)', 'binary version disagrees with reviewed package')
     manifest = {'source_commit': run('git', 'rev-parse', 'HEAD'), 'target': target, 'version': version,
                 'rustc': run('rustc', '-vV'), 'cargo': run('cargo', '--version'),
-                'dependencies': dependencies, 'features': ['archive'],
+                'dependencies': dependencies, 'features': tools['features']['default'],
                 'files': {str(p.relative_to(output)): sha(p) for p in sorted(output.rglob('*')) if p.is_file()}}
     (output / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n')
     for name, digest in manifest['files'].items():

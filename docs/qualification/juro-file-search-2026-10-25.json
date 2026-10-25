@@ -1,0 +1,113 @@
+{
+  "format": 1,
+  "base_commit": "3257ae871ff63e39521f39ffc5c3742299fd2c4d",
+  "synthetic_local_only": true,
+  "checks": [
+    {
+      "command": [
+        "cargo",
+        "fmt",
+        "-p",
+        "ojo-tools",
+        "--",
+        "--check"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "ojo-tools"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "ojo-tools",
+        "--no-default-features",
+        "--features",
+        "search"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "test",
+        "--locked",
+        "-p",
+        "ojo-tools",
+        "--no-default-features"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "ojo-tools",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit": 0
+    },
+    {
+      "command": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "-p",
+        "ojo-tools",
+        "--no-default-features",
+        "--all-targets",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "exit": 0
+    }
+  ],
+  "functional_modes": [
+    "raw and authenticated-encrypted actual Event files",
+    "raw and Zstd encrypted disk indexes",
+    "search without source archive feature",
+    "minimal raw build without index dependency"
+  ],
+  "invariants": [
+    "selected original callback reads actual Journal::get rather than regenerating data",
+    "exact cursor/time/byte offsets and excerpts match source originals",
+    "binary originals remain exact and unindexed",
+    "time half-open filtering",
+    "wrong key and foreign checkpoint refuse",
+    "exact legacy .ojo export preserves index binding without rename",
+    "independent archive physical checkpoint needs new index",
+    "source append refuses stale index",
+    "invalid flags and byte budgets refuse without partial answers",
+    "torn source remains byte-for-byte unchanged"
+  ],
+  "not_qualified": [
+    "million-record actual-source performance",
+    "hosted authorization/provider/audit/EOF acceptance",
+    "warm-query SLA for CLI full-history reopen",
+    "new package publication"
+  ],
+  "source_sha256": {
+    "crates/ojo-tools/src/main.rs": "88a5362660579bbc234cc524d70ec817d9636bb44b41c208a045fcf1ca92ea12",
+    "crates/ojo-tools/src/search.rs": "021c91a09be48f203679f096545dd55cd1373c7421acfd1ee81c07c952cc8b59",
+    "crates/ojo-tools/tests/search.rs": "5c01d41cdde6d64f22300ab007396fbbaf6ace32070ba56bed07363fa421b450",
+    "crates/ojo-tools/Cargo.toml": "d7bade1376dbc2ae8d12c358143b6e374d4f79298c7e28497cb24f4d6a9553c6",
+    "Cargo.lock": "ca7e19f3e1bcfdd76be51890547c40bd1aa8f4e04d80784b828a97440f50dac0"
+  },
+  "wire_sha256": "098dac41756907534317415d72ecf34b78d3ebaa176ebe8d102323d42dd7149f"
+}

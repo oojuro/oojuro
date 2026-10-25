@@ -14,8 +14,9 @@ The additive experimental [Event API](docs/EVENT_DATABASE.md) accepts just data;
 the engine supplies UTC acceptance time and an append cursor. It adds exact
 original reads, append/time scans and an embedded live collector under an
 explicit [Event profile](spec/events/1/FORMAT.md). Existing KV files retain
-their meaning. Indexed Event search and its scale qualification are still in
-progress; the published v0.1.0 file-tool preview predates this API.
+their meaning. The generic CLI can build disposable encrypted text indexes and
+search selected originals from their exact file snapshot. Scale qualification
+remains in progress; the published v0.1.0 preview predates this API and these commands.
 
 **Status: experimental.** The standalone [wire 0.1 specification](spec/README.md)
 and frozen interoperability vectors are versioned separately from the engine.
