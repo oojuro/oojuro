@@ -169,3 +169,20 @@ before allocation. A focused multi-generation growth/retirement/new-bit test
 matches full rebuild sums and bounds, and the raw/Zstd append/retire rank oracle
 passes. Its performance is not yet qualified; the prior adverse observations
 remain authoritative until matched runs complete.
+
+The matched numeric-refresh followup is complete: 36 observations compare frozen
+`8661394` with `b328f79` using the same actual source, compact-v2 cache and durable
+intents. Both raw/Zstd 100k plain/encrypted cases and the 1M plain case preserve
+all exact signatures; candidate complete rebuild oracles pass, including the
+211.48-second 1M raw oracle outside the append timer. At 1M, candidate +100
+source+refresh ranges 169–212 ms raw and 170–200 ms Zstd, versus 194–225 and
+243–294 ms before this numeric change. Candidate index refresh alone ranges
+152–174 ms for both codecs. These are three observations per variant/codec,
+not a hosted write-latency qualification.
+
+Adverse cases remain: encrypted 100k raw source+refresh ranges 138–245 ms
+candidate versus 131–157 ms baseline; plain 100k Zstd ranges 126–177 versus
+144–155 ms. Every observation and component timing is retained. Neither the
+intent-persistence/open/provider/application costs nor other corpora are
+included. The original 242–289 ms 1M compressed result is preserved as the
+before-change evidence, rather than removed from qualification.
