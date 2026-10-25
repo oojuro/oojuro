@@ -340,6 +340,50 @@ impl Index {
         let ranked = self.rank(binding, q)?;
         self.materialize(binding, q, &ranked, fetch)
     }
+    /// Validate selected original identities and the complete input-byte budget
+    /// before a caller batches provider reads. Sizes come from authenticated
+    /// metadata, in ranked order; they are not source authority or permission.
+    /// Callers still revalidate the source/Binding before and after those reads
+    /// and pass exact originals to `materialize` for full field/hash validation.
+    pub fn originals_plan(
+        &self,
+        binding: &Binding,
+        q: &Query<'_>,
+        ranked: &[Ranked],
+    ) -> Result<Vec<(String, usize)>> {
+        self.originals_request(binding, q, ranked)?;
+        let mut read = 0;
+        let mut plan = Vec::with_capacity(ranked.len());
+        for hit in ranked {
+            let meta = self.original_metadata(hit, &mut read)?;
+            plan.push((meta.id, meta.text.bytes as usize));
+        }
+        Ok(plan)
+    }
+    fn originals_request(&self, binding: &Binding, q: &Query<'_>, ranked: &[Ranked]) -> Result<()> {
+        self.current(binding)?;
+        self.query(q)?;
+        if ranked.len() > q.k {
+            return Err(Error::Bounds);
+        }
+        Ok(())
+    }
+    fn original_metadata(&self, hit: &Ranked, read: &mut usize) -> Result<Metadata> {
+        if !hit.bits.is_finite() {
+            return Err(Error::Invalid);
+        }
+        let meta = self.metadata(hit.ordinal)?;
+        if hit.id != meta.id || !self.column(hit.ordinal)?.live() {
+            return Err(Error::Authority);
+        }
+        *read = read
+            .checked_add(meta.text.bytes as usize)
+            .ok_or(Error::Bounds)?;
+        if *read > self.manifest.limits.original_bytes_per_query {
+            return Err(Error::Bounds);
+        }
+        Ok(meta)
+    }
     /// Compare complete original bytes and every Row metadata field before
     /// producing excerpts. A derived projection cannot substitute for a source.
     pub fn materialize(
@@ -349,28 +393,12 @@ impl Index {
         ranked: &[Ranked],
         mut fetch: impl FnMut(&str) -> Result<Row>,
     ) -> Result<Vec<Hit>> {
-        self.current(binding)?;
-        self.query(q)?;
-        if ranked.len() > q.k {
-            return Err(Error::Bounds);
-        }
+        self.originals_request(binding, q, ranked)?;
         let mut out = Vec::new();
         let mut read = 0usize;
         let mut bytes = 2usize;
         for hit in ranked {
-            if !hit.bits.is_finite() {
-                return Err(Error::Invalid);
-            }
-            let meta = self.metadata(hit.ordinal)?;
-            if hit.id != meta.id || !self.column(hit.ordinal)?.live() {
-                return Err(Error::Authority);
-            }
-            read = read
-                .checked_add(meta.text.bytes as usize)
-                .ok_or(Error::Bounds)?;
-            if read > self.manifest.limits.original_bytes_per_query {
-                return Err(Error::Bounds);
-            }
+            let meta = self.original_metadata(hit, &mut read)?;
             let row = fetch(&hit.id)?;
             if !meta.matches(&row) {
                 return Err(Error::Authority);
