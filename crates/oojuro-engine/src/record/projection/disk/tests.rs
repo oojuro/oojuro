@@ -29,6 +29,125 @@ fn binding() -> Binding {
 }
 
 #[test]
+fn joint_numeric_groups_preserve_exact_weights_ties_filters_and_large_k_fallback() {
+    let mut rows: Vec<_> = (0..6001)
+        .map(|i| {
+            let mut value = row(i);
+            value.text = format!(
+                "{} beta {}",
+                "alpha ".repeat(1 + i % 73),
+                (0..i % 41)
+                    .map(|n| format!("material{n} "))
+                    .collect::<String>()
+            );
+            if i.is_multiple_of(97) {
+                value.text.push_str("lookup_needle");
+            }
+            value
+        })
+        .collect();
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("index");
+        let mut index = build_layout(&path, &rows, compression, true);
+        for round in 0..2 {
+            let bound = index.binding().clone();
+            let live: Vec<_> = rows
+                .iter()
+                .filter(|value| round == 0 || value.id != row(1).id)
+                .cloned()
+                .collect();
+            let reference = super::super::Index::build(bound.clone(), live.clone()).unwrap();
+            let originals: BTreeMap<_, _> =
+                live.into_iter().map(|row| (row.id.clone(), row)).collect();
+            for text in [
+                "alpha",
+                "alpha beta",
+                "alpha alpha beta",
+                "alpha beta absent",
+                "lookup_needle alpha",
+            ] {
+                for k in [1, 20, 21, 32] {
+                    let mut q = query(text, Filter::default(), i64::MIN, i64::MAX);
+                    q.k = k;
+                    let ranked = index.rank_uncached(&bound, &q).unwrap();
+                    assert_eq!(
+                        fingerprint(
+                            &index
+                                .materialize(&bound, &q, &ranked, |id| Ok(originals[id].clone()))
+                                .unwrap()
+                        ),
+                        fingerprint(&reference.search(&bound, &q).unwrap()),
+                        "{text} k={k} {compression:?} round={round}"
+                    );
+                }
+                let q = query(
+                    text,
+                    Filter {
+                        agent_id: Some("agent-3".into()),
+                        ..Filter::default()
+                    },
+                    -8,
+                    7,
+                );
+                assert_eq!(
+                    fingerprint(
+                        &index
+                            .search(&bound, &q, |id| Ok(originals[id].clone()))
+                            .unwrap()
+                    ),
+                    fingerprint(&reference.search(&bound, &q).unwrap())
+                );
+            }
+            let plan = scorer::Plan::new(
+                "alpha beta",
+                false,
+                None,
+                &BTreeSet::new(),
+                &BTreeMap::new(),
+            );
+            let weighted = scorer::Plan::new(
+                "alpha alpha beta",
+                false,
+                None,
+                &BTreeSet::new(),
+                &BTreeMap::new(),
+            );
+            assert_eq!(joint::key(&plan), joint::key(&weighted));
+            let groups = index.terms.joint(&index, &plan).unwrap().unwrap();
+            assert!(
+                groups.complete && groups.groups.len() > 1024 && groups.bytes() <= joint::BYTES
+            );
+            if round == 0 {
+                let mut next = bound.clone();
+                next.view[0] ^= 1;
+                let mut append = Appender::extend_validated_prefix(
+                    &index,
+                    next.clone(),
+                    Limits {
+                        compression,
+                        ..Limits::default()
+                    },
+                )
+                .unwrap();
+                append.retire(&row(1).id).unwrap();
+                let mut added = row(7001);
+                added.text = "alpha alpha beta".into();
+                append.push(added.clone()).unwrap();
+                rows.push(added);
+                let updated = append.finish().unwrap();
+                drop(updated);
+                drop(index);
+                index = Index::open(&path, &[9; 32], &next).unwrap();
+                let replacement = index.terms.joint(&index, &plan).unwrap().unwrap();
+                assert!(!Arc::ptr_eq(&groups, &replacement));
+            }
+        }
+        rows.pop();
+    }
+}
+
+#[test]
 fn retire_if_present_keeps_missing_and_retired_ids_nonfatal_and_counts_exact() {
     for compression in [Compression::Raw, Compression::Zstd] {
         let scratch = Scratch::new();

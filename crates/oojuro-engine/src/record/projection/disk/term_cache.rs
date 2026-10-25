@@ -196,18 +196,21 @@ struct CacheKey {
 enum Entry {
     Postings(Arc<TermList>),
     Selection(Arc<Selected>),
+    Joint(Arc<joint::Groups>),
 }
 impl Entry {
     fn bytes(&self) -> usize {
         match self {
             Self::Postings(list) => list.bytes,
             Self::Selection(view) => view.bits.capacity() * 8 + 512,
+            Self::Joint(groups) => groups.bytes(),
         }
     }
     fn idle(&self) -> bool {
         match self {
             Self::Postings(list) => Arc::strong_count(list) == 1,
             Self::Selection(view) => Arc::strong_count(view) == 1,
+            Self::Joint(groups) => Arc::strong_count(groups) == 1,
         }
     }
 }
@@ -250,6 +253,28 @@ impl Drop for Claim<'_> {
     }
 }
 impl TermCache {
+    pub fn joint(&self, index: &Index, plan: &scorer::Plan) -> Result<Option<Arc<joint::Groups>>> {
+        let entry = self.entry(
+            CacheKey {
+                kind: 2,
+                hash: joint::key(plan),
+            },
+            || {
+                let bytes = joint::Groups::estimate(index, plan);
+                Ok((bytes, bytes))
+            },
+            |budget| {
+                Ok(Entry::Joint(Arc::new(joint::Groups::build(
+                    index, plan, budget,
+                )?)))
+            },
+        )?;
+        match entry {
+            Some(Entry::Joint(groups)) => Ok(Some(groups)),
+            None => Ok(None),
+            _ => Err(Error::Authority),
+        }
+    }
     fn entry(
         &self,
         key: CacheKey,
@@ -597,6 +622,79 @@ mod tests {
         assert!(!state.ready.contains_key(&CacheKey {
             kind: 0,
             hash: alpha
+        }));
+        assert!(state.used <= index.terms.capacity && state.inflight.is_empty());
+    }
+
+    #[test]
+    fn joint_shape_leases_share_budget_and_rejected_proofs_remain_incomplete() {
+        let root = Scratch(std::env::temp_dir().join(format!(
+            "joint-cache-{}",
+            hex(&oojuro_store::crypto::random_key())
+        )));
+        fs::create_dir(&root.0).unwrap();
+        let binding = Binding {
+            namespace: [1; 32],
+            writer: "numeric-fixture".into(),
+            view: [2; 32],
+        };
+        let mut builder =
+            Builder::create_compact(root.0.join("index"), &[9; 32], binding, Limits::default())
+                .unwrap();
+        for i in 0..128 {
+            builder
+                .push(Row {
+                    id: format!("{i:08x}"),
+                    key: None,
+                    text: "alpha beta".into(),
+                    valid_at: i,
+                    reported_recorded_at: i,
+                    kind: Kind::Raw,
+                    tool: None,
+                    status: None,
+                    agent_id: String::new(),
+                    indexed: true,
+                })
+                .unwrap();
+        }
+        let mut index = builder.finish().unwrap();
+        let alpha = scorer::Plan::new("alpha", false, None, &BTreeSet::new(), &BTreeMap::new());
+        let beta = scorer::Plan::new("beta", false, None, &BTreeSet::new(), &BTreeMap::new());
+        index.terms.capacity = joint::Groups::estimate(&index, &alpha);
+        let lease = index.terms.joint(&index, &alpha).unwrap().unwrap();
+        assert!(lease.complete && lease.groups.len() == 1);
+        let charged = index.terms.state.lock().unwrap().used;
+        assert!(index.terms.joint(&index, &beta).unwrap().is_none());
+        assert_eq!(index.terms.state.lock().unwrap().used, charged);
+        let incomplete = joint::Groups::build(&index, &alpha, 1024).unwrap();
+        assert!(!incomplete.complete && incomplete.groups.is_empty());
+        drop(lease);
+        assert!(index.terms.joint(&index, &beta).unwrap().is_some());
+        index.terms.capacity = RESERVED_BYTES;
+        let pair = scorer::Plan::new(
+            "alpha beta",
+            false,
+            None,
+            &BTreeSet::new(),
+            &BTreeMap::new(),
+        );
+        let concurrent = std::thread::scope(|scope| {
+            let jobs: Vec<_> = (0..4)
+                .map(|_| scope.spawn(|| index.terms.joint(&index, &pair).unwrap().unwrap()))
+                .collect();
+            jobs.into_iter()
+                .map(|job| job.join().unwrap())
+                .collect::<Vec<_>>()
+        });
+        assert!(
+            concurrent
+                .iter()
+                .all(|entry| Arc::ptr_eq(entry, &concurrent[0]))
+        );
+        let state = index.terms.state.lock().unwrap();
+        assert!(!state.ready.contains_key(&CacheKey {
+            kind: 2,
+            hash: joint::key(&alpha)
         }));
         assert!(state.used <= index.terms.capacity && state.inflight.is_empty());
     }

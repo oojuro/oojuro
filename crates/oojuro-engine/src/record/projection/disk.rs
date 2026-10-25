@@ -7,6 +7,7 @@ mod budget;
 mod build;
 mod compact;
 mod events;
+mod joint;
 mod query_cache;
 mod score_blocks;
 mod storage;
@@ -508,6 +509,9 @@ impl Index {
                         }
                     }
                 } else {
+                    if let Some(top) = self.rank_joint(&model, &selection, q.k)? {
+                        return Ok((self.ranked(top)?, false));
+                    }
                     for (ordinal, tf) in list.pairs.iter() {
                         let column = self.column(ordinal)?;
                         if column.live() {
@@ -586,6 +590,9 @@ impl Index {
         };
         let anchored = plan.continues();
         let model = stats.finish(plan);
+        if let Some(top) = self.rank_joint(&model, &selection, q.k)? {
+            return Ok((self.ranked(top)?, anchored));
+        }
         if let Some(top) = self.rank_compact_blocks(&model, &selection, q.k)? {
             return Ok((self.ranked(top)?, anchored));
         }
