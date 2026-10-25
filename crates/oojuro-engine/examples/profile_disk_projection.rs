@@ -26,7 +26,7 @@ fn binding() -> Binding {
 }
 fn row(number: usize) -> Row {
     let mut text = format!("Original λ\r\nrecord {number} battery electrode needle{number:08} ");
-    if number % 97 == 0 {
+    if number.is_multiple_of(97) {
         text.push_str("lookup_needle ");
     }
     text.push_str("exact original\0終");
@@ -36,19 +36,19 @@ fn row(number: usize) -> Row {
         text,
         valid_at: (number % 17) as i64,
         reported_recorded_at: -99,
-        kind: if number % 7 == 0 {
+        kind: if number.is_multiple_of(7) {
             Kind::ToolResult
         } else {
             Kind::Output
         },
-        tool: (number % 5 == 0).then(|| "fixture-tool".into()),
-        status: Some(if number % 2 == 0 {
+        tool: (number.is_multiple_of(5)).then(|| "fixture-tool".into()),
+        status: Some(if number.is_multiple_of(2) {
             Status::Ok
         } else {
             Status::Error
         }),
         agent_id: format!("agent{}", number % 3),
-        indexed: number % 19 != 0,
+        indexed: !number.is_multiple_of(19),
     }
 }
 #[derive(Clone)]
@@ -60,7 +60,7 @@ struct Case {
     to: i64,
 }
 fn cases(count: usize) -> Vec<Case> {
-    let middle = (count / 2..count).find(|n| n % 19 != 0).unwrap();
+    let middle = (count / 2..count).find(|n| !n.is_multiple_of(19)).unwrap();
     let mut cases: Vec<_> = [
         ("lexical_unique", format!("needle{middle:08}")),
         ("lexical_common", "battery".into()),

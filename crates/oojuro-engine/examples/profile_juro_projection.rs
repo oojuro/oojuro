@@ -47,12 +47,12 @@ fn binding(checkpoint: Checkpoint) -> Binding {
     }
 }
 fn payload(n: usize) -> Vec<u8> {
-    if n % 997 == 0 {
+    if n.is_multiple_of(997) {
         // Binary originals stay readable and are deliberately absent from text results.
         return [vec![0xff, 0x00], (n as u64).to_be_bytes().to_vec()].concat();
     }
     let mut s = format!("Original λ\r\nmeasurement {n} battery electrode needle{n:08} ");
-    if n % 97 == 0 {
+    if n.is_multiple_of(97) {
         s.push_str("lookup_needle ");
     }
     s.push_str("exact original\0終");
@@ -317,7 +317,7 @@ fn main() -> Result<()> {
             "unique",
             format!(
                 "needle{:08}",
-                (1..count).rev().find(|n| n % 997 != 0).unwrap()
+                (1..count).rev().find(|n| !n.is_multiple_of(997)).unwrap()
             ),
         ),
         ("common", "battery".into()),
@@ -383,10 +383,7 @@ fn main() -> Result<()> {
                                         Some(directory),
                                     )
                                 } else {
-                                    (
-                                        checked(EventIndex::open(&cache, &INDEX_KEY, &current))?,
-                                        None,
-                                    )
+                                    (checked(EventIndex::open(cache, &INDEX_KEY, current))?, None)
                                 };
                                 let hits =
                                     search(&index, &Mutex::new(journal), expected, &text, false)?;
