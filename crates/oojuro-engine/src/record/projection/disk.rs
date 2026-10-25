@@ -405,7 +405,10 @@ impl Index {
         let selected = if selection.unfiltered() {
             None
         } else {
-            Some(self.select(&selection)?)
+            Some(match self.terms.selection(self, q, &selection)? {
+                Some(view) => view,
+                None => Arc::new(self.select(&selection)?),
+            })
         };
         let sparse = selected
             .as_ref()
