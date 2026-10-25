@@ -148,6 +148,16 @@ fn generic_event_retire_if_present_handles_unindexed_binary_cursors() {
         let mut next = binding();
         next.view[0] ^= 1;
         let mut appender = EventAppender::extend_validated_prefix(&index, next, limits).unwrap();
+        assert!(matches!(
+            appender.retire_if_present(&[]),
+            Err(Error::Bounds)
+        ));
+        assert!(matches!(
+            appender.retire_if_present(&[0; 513]),
+            Err(Error::Bounds)
+        ));
+        // Existing Event cursor validation precedes the inner appender call.
+        // Those wrapper errors leave this pending appender usable.
         assert!(!appender.retire_if_present(&[2; 40]).unwrap());
         assert!(appender.retire_if_present(&[1; 40]).unwrap());
         assert!(!appender.retire_if_present(&[1; 40]).unwrap());
