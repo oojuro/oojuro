@@ -183,15 +183,35 @@ impl Block {
             mask[offset / 64] |= 1 << (offset % 64);
             last = Some(*ordinal);
         }
-        let mut bytes = vec![1];
+        let mut bytes = vec![2];
         bytes.extend((grouped.len() as u16).to_le_bytes());
         for (positions, rows) in grouped {
-            for mask in rows {
-                bytes.extend(mask.to_le_bytes());
+            let population: u32 = rows.iter().map(|word| word.count_ones()).sum();
+            if population <= 28 {
+                bytes.push(population as u8);
+                for (at, mut word) in rows.into_iter().enumerate() {
+                    while word != 0 {
+                        let offset = word.trailing_zeros();
+                        bytes.push((at * 64 + offset as usize) as u8);
+                        word &= word - 1;
+                    }
+                }
+            } else {
+                bytes.push(0);
+                for mask in rows {
+                    bytes.extend(mask.to_le_bytes());
+                }
             }
             bytes.extend((positions.len() as u16).to_le_bytes());
+            let mut previous = 0;
             for position in positions {
-                bytes.extend(position.to_le_bytes());
+                let mut delta = position - previous;
+                previous = position;
+                while delta >= 128 {
+                    bytes.push((delta as u8 & 127) | 128);
+                    delta >>= 7;
+                }
+                bytes.push(delta as u8);
             }
         }
         if bytes.len() > MAX_BYTES {
@@ -199,14 +219,28 @@ impl Block {
         }
         Ok(bytes)
     }
+    /// Include group containers, decoded offsets and the temporary canonical
+    /// ordering check before allocating. Delta bytes can expand into u32s.
+    pub fn decoded_charge(bytes: &[u8]) -> Result<usize> {
+        if !matches!(bytes.first(), Some(1 | 2)) || bytes.len() > MAX_BYTES {
+            return Err(Error::Authority);
+        }
+        let count = u16::from_le_bytes(bytes.get(1..3).ok_or(Error::Authority)?.try_into().unwrap())
+            as usize;
+        if count == 0 || count > 256 {
+            return Err(Error::Authority);
+        }
+        Ok(bytes.len() * 8 + count * 128 + 4096)
+    }
     pub fn decode(base: u32, rows: u64, bytes: &[u8]) -> Result<Self> {
         if base & 255 != 0
             || u64::from(base) >= rows
             || bytes.len() > MAX_BYTES
-            || bytes.first() != Some(&1)
+            || !matches!(bytes.first(), Some(1 | 2))
         {
             return Err(Error::Authority);
         }
+        let version = bytes[0];
         let mut input = bytes.get(1..).ok_or(Error::Authority)?;
         fn take<const N: usize>(input: &mut &[u8]) -> Result<[u8; N]> {
             let value = input.get(..N).ok_or(Error::Authority)?.try_into().unwrap();
@@ -223,8 +257,33 @@ impl Block {
         let mut previous: Option<Vec<u32>> = None;
         for _ in 0..count {
             let mut mask = [0u64; 4];
-            for (at, word) in mask.iter_mut().enumerate() {
-                *word = u64::from_le_bytes(take(&mut input)?);
+            let sparse = if version == 1 {
+                0
+            } else {
+                take::<1>(&mut input)?[0]
+            };
+            if sparse == 0 {
+                for word in &mut mask {
+                    *word = u64::from_le_bytes(take(&mut input)?);
+                }
+                if version == 2 && mask.iter().map(|word| word.count_ones()).sum::<u32>() <= 28 {
+                    return Err(Error::Authority);
+                }
+            } else {
+                if sparse > 28 {
+                    return Err(Error::Authority);
+                }
+                let mut previous = None;
+                for _ in 0..sparse {
+                    let at = take::<1>(&mut input)?[0];
+                    if previous.is_some_and(|last| last >= at) {
+                        return Err(Error::Authority);
+                    }
+                    mask[at as usize / 64] |= 1 << (at % 64);
+                    previous = Some(at);
+                }
+            }
+            for (at, word) in mask.iter().enumerate() {
                 if seen[at] & *word != 0 {
                     return Err(Error::Authority);
                 }
@@ -244,7 +303,32 @@ impl Block {
             }
             let mut positions = Vec::with_capacity(length);
             for _ in 0..length {
-                let position = u32::from_le_bytes(take(&mut input)?);
+                let position = if version == 1 {
+                    u32::from_le_bytes(take(&mut input)?)
+                } else {
+                    let mut delta = 0u32;
+                    let mut complete = false;
+                    for shift in (0..28).step_by(7) {
+                        let byte = take::<1>(&mut input)?[0];
+                        delta |= u32::from(byte & 127) << shift;
+                        if byte & 128 == 0 {
+                            if shift != 0 && byte == 0 {
+                                return Err(Error::Authority);
+                            }
+                            complete = true;
+                            break;
+                        }
+                    }
+                    if !complete {
+                        return Err(Error::Authority);
+                    }
+                    positions
+                        .last()
+                        .copied()
+                        .unwrap_or(0u32)
+                        .checked_add(delta)
+                        .ok_or(Error::Authority)?
+                };
                 if position as usize >= MAX_TEXT_BYTES
                     || positions.last().is_some_and(|last| *last >= position)
                 {
@@ -392,6 +476,7 @@ pub(super) fn matches(
 struct Cursor<'a> {
     cursor: tree::Cursor<'a>,
     hash: [u8; 32],
+    codec: u8,
     head: Option<tree::Entry>,
 }
 impl<'a> Cursor<'a> {
@@ -402,7 +487,12 @@ impl<'a> Cursor<'a> {
             &hash,
         )?;
         let head = cursor.next()?;
-        Ok(Self { cursor, hash, head })
+        Ok(Self {
+            cursor,
+            hash,
+            codec: index.manifest.position_codec.unwrap_or(1),
+            head,
+        })
     }
     fn base(&self) -> Result<Option<u32>> {
         let Some(entry) = &self.head else {
@@ -428,7 +518,10 @@ impl<'a> Cursor<'a> {
         let mut blocks = Vec::new();
         while self.base()? == Some(base) {
             let entry = self.head.take().ok_or(Error::Authority)?;
-            let Some(left) = remaining.checked_sub(entry.value.len() * 4 + 4096) else {
+            if entry.value.first().is_none_or(|codec| *codec > self.codec) {
+                return Err(Error::Authority);
+            }
+            let Some(left) = remaining.checked_sub(Block::decoded_charge(&entry.value)?) else {
                 return Ok(None);
             };
             *remaining = left;
@@ -718,6 +811,58 @@ mod tests {
                 Some(expected)
             );
             assert!(work >= 900_000);
+        }
+    }
+    #[test]
+    fn sparse_mask_delta_codec_reads_legacy_and_refuses_noncanonical_values() {
+        let mut legacy = vec![1, 2, 0];
+        for word in [3u64, 0, 0, 0] {
+            legacy.extend(word.to_le_bytes());
+        }
+        legacy.extend(3u16.to_le_bytes());
+        for position in [0u32, 8, 16] {
+            legacy.extend(position.to_le_bytes());
+        }
+        for word in [0u64, 0, 0, 1 << 63] {
+            legacy.extend(word.to_le_bytes());
+        }
+        legacy.extend(2u16.to_le_bytes());
+        for position in [99u32, 10_000] {
+            legacy.extend(position.to_le_bytes());
+        }
+        let rows = vec![
+            (0, vec![0, 8, 16]),
+            (1, vec![0, 8, 16]),
+            (255, vec![99, 10_000]),
+        ];
+        let compact = Block::encode(0, &rows).unwrap();
+        assert_eq!(compact[0], 2);
+        assert!(compact.len() < legacy.len() / 2);
+        for bytes in [&legacy, &compact] {
+            let block = Block::decode(0, 256, bytes).unwrap();
+            for (row, positions) in &rows {
+                assert_eq!(block.positions(*row), Some(positions.as_slice()));
+            }
+            assert!(Block::decoded_charge(bytes).unwrap() >= bytes.len() * 8 + 4096);
+        }
+        // An overlong absolute zero, duplicate sparse row offsets, a noncanonical
+        // dense single-row mask, an unterminated delta, and an unknown codec.
+        let mut dense = vec![2, 1, 0, 0];
+        for word in [1u64, 0, 0, 0] {
+            dense.extend(word.to_le_bytes());
+        }
+        dense.extend([1, 0, 0]);
+        for bytes in [
+            vec![2, 1, 0, 1, 0, 1, 0, 128, 0],
+            vec![2, 1, 0, 2, 0, 0, 1, 0, 0],
+            dense,
+            vec![2, 1, 0, 1, 0, 1, 0, 128, 128, 128, 128],
+            vec![3, 1, 0],
+        ] {
+            assert!(Block::decode(0, 256, &bytes).is_err());
+        }
+        for bytes in [vec![3, 1, 0], vec![2, 0, 0], vec![2, 1]] {
+            assert!(Block::decoded_charge(&bytes).is_err());
         }
     }
 }

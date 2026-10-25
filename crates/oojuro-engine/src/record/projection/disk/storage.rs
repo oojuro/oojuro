@@ -177,6 +177,8 @@ pub(super) struct Manifest {
     pub postings: tree::Root,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub positions: Option<tree::Root>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub position_codec: Option<u8>,
 }
 #[derive(Clone, Copy)]
 pub(super) struct Column {
@@ -877,6 +879,9 @@ pub(super) fn open_with_cipher(
     manifest.limits.query_terms = manifest.limits.query_terms.min(limits.query_terms);
     if manifest.format != format
         || manifest.positions.is_some() != (format == POSITIONAL_FORMAT)
+        || manifest
+            .position_codec
+            .is_some_and(|codec| format != POSITIONAL_FORMAT || codec != 2)
         || manifest.binding != authority.binding
         || !valid_generation(&manifest.generation)
         || manifest.files.len() > 4096

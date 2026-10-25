@@ -1418,3 +1418,109 @@ fn ten_concurrent_queries_share_one_immutable_index() {
     fn send_sync<T: Send + Sync>() {}
     send_sync::<Index>();
 }
+
+#[test]
+fn positional_codec_requirement_refuses_unknown_and_undeclared_codecs_before_original_callbacks() {
+    let scratch = Scratch::new();
+    let path = scratch.0.join("index");
+    let mut original = row(1);
+    original.text = "battery electrode".into();
+    let mut builder =
+        Builder::create_positional(&path, &[9; 32], binding(), Limits::default()).unwrap();
+    builder.push(original).unwrap();
+    let index = builder.finish().unwrap();
+    assert_eq!(index.manifest.position_codec, Some(2));
+    for codec in [Some(1), Some(3)] {
+        let mut manifest = index.manifest.clone();
+        manifest.position_codec = codec;
+        publish(&path, &index.cipher, &index.authority, &mut manifest).unwrap();
+        assert!(matches!(
+            Index::open(&path, &[9; 32], &binding()),
+            Err(Error::Bounds)
+        ));
+    }
+    let mut undeclared = index.manifest.clone();
+    undeclared.position_codec = None;
+    publish(&path, &index.cipher, &index.authority, &mut undeclared).unwrap();
+    let undeclared = Index::open(&path, &[9; 32], &binding()).unwrap();
+    let q = query(
+        "\"battery electrode\"",
+        Filter::default(),
+        i64::MIN,
+        i64::MAX,
+    );
+    let mut called = false;
+    assert!(matches!(
+        undeclared.search(&binding(), &q, |_| {
+            called = true;
+            unreachable!()
+        }),
+        Err(Error::Authority)
+    ));
+    assert!(!called);
+}
+
+#[test]
+fn positional_legacy_codec_generation_reopens_and_extends_with_mixed_codec_pages() {
+    let scratch = Scratch::new();
+    let path = scratch.0.join("index");
+    let mut rows: Vec<_> = (0..2).map(row).collect();
+    for row in &mut rows {
+        row.text = "battery electrode".into();
+    }
+    let mut builder =
+        Builder::create_positional(&path, &[9; 32], binding(), Limits::default()).unwrap();
+    for row in &rows {
+        builder.push(row.clone()).unwrap();
+    }
+    let index = builder.finish().unwrap();
+    let mut legacy = tree::Builder::new(index.context(tree::Purpose::ProjectionPostings)).unwrap();
+    // Frozen codec-1 grammar: one group, two row bits, one absolute u32 offset.
+    for (hash, positions) in literal::analyze("battery electrode") {
+        let mut key = hash.to_vec();
+        key.extend(0u32.to_be_bytes());
+        key.extend(positions[0].to_be_bytes());
+        let mut value = vec![1, 1, 0];
+        for word in [3u64, 0, 0, 0] {
+            value.extend(word.to_le_bytes());
+        }
+        value.extend(1u16.to_le_bytes());
+        value.extend(positions[0].to_le_bytes());
+        legacy.push(tree::Entry::new(key, value).unwrap()).unwrap();
+    }
+    let mut manifest = index.manifest.clone();
+    manifest.positions = Some(legacy.finish().unwrap());
+    manifest.position_codec = None;
+    publish(&path, &index.cipher, &index.authority, &mut manifest).unwrap();
+    drop(index);
+    let legacy = Index::open(&path, &[9; 32], &binding()).unwrap();
+    let mut next = binding();
+    next.view[0] ^= 1;
+    let mut append =
+        Appender::extend_validated_prefix(&legacy, next.clone(), Limits::default()).unwrap();
+    let mut addition = row(2);
+    addition.text = "extra battery electrode".into();
+    append.push(addition.clone()).unwrap();
+    rows.push(addition);
+    let updated = append.finish().unwrap();
+    assert_eq!(updated.manifest.position_codec, Some(2));
+    drop(updated);
+    drop(legacy);
+    let updated = Index::open(&path, &[9; 32], &next).unwrap();
+    let reference = super::super::Index::build(next.clone(), rows.clone()).unwrap();
+    let originals: BTreeMap<_, _> = rows.into_iter().map(|row| (row.id.clone(), row)).collect();
+    let q = query(
+        "\"battery electrode\"",
+        Filter::default(),
+        i64::MIN,
+        i64::MAX,
+    );
+    assert_eq!(
+        fingerprint(
+            &updated
+                .search(&next, &q, |id| Ok(originals[id].clone()))
+                .unwrap()
+        ),
+        fingerprint(&reference.search(&next, &q).unwrap())
+    );
+}

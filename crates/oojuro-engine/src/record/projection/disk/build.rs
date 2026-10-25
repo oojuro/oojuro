@@ -405,6 +405,7 @@ impl Builder {
             keys,
             postings,
             positions,
+            position_codec: (self.format == POSITIONAL_FORMAT).then_some(2),
         };
         // Publish while the budget paths still name the owned build directory;
         // only metadata publication follows its atomic generation rename.

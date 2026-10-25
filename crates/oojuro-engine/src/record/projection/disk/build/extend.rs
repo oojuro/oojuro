@@ -389,6 +389,7 @@ impl Appender {
             keys,
             postings,
             positions,
+            position_codec: (b.format == POSITIONAL_FORMAT).then_some(2),
         };
         let previous_directory = b.directory.clone();
         b.directory = finish_directory(&b.root, &b.directory, &b.generation)?;
