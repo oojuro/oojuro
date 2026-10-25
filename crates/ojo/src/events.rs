@@ -5,9 +5,9 @@
 //! journal has no required application keys or provider/session/agent fields.
 //! This profile is additive: ordinary wire 0.1 key/value files are refused.
 
-use crate::{Change, Database, Error, Replay, Result, request_id, wire};
+use crate::{Change, CommitMode, Database, Error, Replay, Result, request_id, wire};
 use std::{
-    collections::BTreeSet,
+    collections::{BTreeMap, BTreeSet},
     fs::File,
     ops::Bound::{Excluded, Included, Unbounded},
     path::Path,
@@ -271,6 +271,61 @@ impl Journal {
         self.accept(intent.request, intent.accepted_at, data)
     }
 
+    /// Appends up to 1,024 retained intents and 64 MiB of data, sharing one final
+    /// durability barrier. Each event keeps its own unchanged profile frame.
+    /// All input is checked before writing, and success confirms every receipt.
+    ///
+    /// This is group durability, not an atomic visibility or rollback boundary.
+    /// An interrupted/erroring group may leave any complete prefix visible on
+    /// reopen. Retain every original intent and retry the entire group. Already
+    /// committed events retain their original cursor/time without duplication.
+    /// A failure after writing starts poisons the handle; drop and reopen it.
+    pub fn append_prepared_batch(
+        &mut self,
+        items: &[(&AppendIntent, &[u8])],
+    ) -> Result<Vec<Receipt>> {
+        self.writable(&[])?;
+        if items.is_empty() || items.len() > MAX_PAGE {
+            return Err(Error::Invalid("event batch count"));
+        }
+        let mut bytes = 0usize;
+        let mut requests: BTreeMap<[u8; 16], (&AppendIntent, &[u8])> = BTreeMap::new();
+        for &(intent, data) in items {
+            bytes = bytes.checked_add(data.len()).ok_or(Error::Limit)?;
+            if bytes > MAX_COLLECTED_BYTES {
+                return Err(Error::Limit);
+            }
+            self.check_intent(intent, data)?;
+            if let Some((previous, original)) = requests.insert(intent.request, (intent, data))
+                && (previous.accepted_at != intent.accepted_at || original != data)
+            {
+                return Err(Error::Conflict);
+            }
+        }
+        let new_events = requests
+            .keys()
+            .filter(|request| !self.db.requests.contains_key(*request))
+            .count();
+        self.db.admit(new_events, new_events * 36)?;
+        let result = (|| {
+            let mut receipts = Vec::with_capacity(items.len());
+            for &(intent, data) in items {
+                receipts.push(self.accept_mode(
+                    intent.request,
+                    intent.accepted_at,
+                    data,
+                    CommitMode::Buffered,
+                )?);
+            }
+            self.db.confirm()?;
+            Ok(receipts)
+        })();
+        if result.is_err() {
+            self.db.poisoned = true;
+        }
+        result
+    }
+
     /// Validates retained input without requiring a writable handle or changing
     /// a torn tail. A previously committed request also checks its exact original.
     /// This is validation, not a durable acknowledgement or writer reservation.
@@ -325,6 +380,16 @@ impl Journal {
     }
 
     fn accept(&mut self, request: [u8; 16], accepted_at: i64, data: &[u8]) -> Result<Receipt> {
+        self.accept_mode(request, accepted_at, data, CommitMode::Durable)
+    }
+
+    fn accept_mode(
+        &mut self,
+        request: [u8; 16],
+        accepted_at: i64,
+        data: &[u8],
+        mode: CommitMode,
+    ) -> Result<Receipt> {
         let previous = self.db.requests.get(&request).copied();
         let ordinal = match previous {
             Some(0) => return Err(Error::Conflict),
@@ -342,12 +407,13 @@ impl Journal {
             length: data.len(),
         };
         let key = event_key(ordinal, metadata);
-        self.db.commit(
+        self.db.commit_encoded(
             request,
             &[Change {
                 key: &key,
                 value: Some(data),
             }],
+            mode,
         )?;
         if previous.is_none() {
             self.events.push(metadata);
@@ -532,6 +598,16 @@ impl Collector {
         self.changed.notify_all();
         receipt
     }
+    /// Shares the journal's bounded group durability barrier under its owner lock.
+    pub fn append_prepared_batch(&self, items: &[(&AppendIntent, &[u8])]) -> Result<Vec<Receipt>> {
+        let receipts = self
+            .journal
+            .lock()
+            .map_err(|_| Error::Poisoned)?
+            .append_prepared_batch(items);
+        self.changed.notify_all();
+        receipts
+    }
     pub fn get(&self, cursor: Cursor) -> Result<Option<Event>> {
         self.journal
             .lock()
@@ -675,6 +751,146 @@ mod tests {
         let duplicate = journal.append(data).unwrap();
         assert_ne!(duplicate.cursor, receipt.cursor);
         assert_eq!(journal.len(), 3);
+    }
+
+    #[test]
+    fn batch_validates_every_intent_before_writing_and_preserves_exact_retries() {
+        for key in [None, Some([81; 32])] {
+            let root = Scratch::new();
+            let path = root.file("group.juro");
+            let mut journal = Journal::create(&path, key.as_ref()).unwrap();
+            let a = journal.prepare(b"first\0\xff").unwrap();
+            let b = journal.prepare(b"").unwrap();
+            let items = [(&a, b"first\0\xff".as_slice()), (&b, b"".as_slice())];
+            let original = std::fs::read(&path).unwrap();
+            assert!(matches!(
+                journal.append_prepared_batch(&[items[0], (&b, b"changed")]),
+                Err(Error::Conflict)
+            ));
+            let mut changed_time = a;
+            changed_time.accepted_at += 1;
+            assert!(matches!(
+                journal.append_prepared_batch(&[items[0], (&changed_time, items[0].1)]),
+                Err(Error::Conflict)
+            ));
+            assert!(journal.append_prepared_batch(&[]).is_err());
+            assert!(
+                journal
+                    .append_prepared_batch(&vec![items[0]; 1025])
+                    .is_err()
+            );
+            let operations = journal.db.operations;
+            journal.db.operations = crate::MAX_OPERATIONS - 1;
+            assert!(matches!(
+                journal.append_prepared_batch(&items),
+                Err(Error::Limit)
+            ));
+            journal.db.operations = operations;
+            let key_bytes = journal.db.key_bytes;
+            journal.db.key_bytes = crate::MAX_KEY_BYTES - 36;
+            assert!(matches!(
+                journal.append_prepared_batch(&items),
+                Err(Error::Limit)
+            ));
+            journal.db.key_bytes = key_bytes;
+            journal.db.healthy().unwrap();
+            assert_eq!(std::fs::read(&path).unwrap(), original);
+            assert_eq!(journal.len(), 0);
+            let receipts = journal.append_prepared_batch(&items).unwrap();
+            assert_eq!(journal.len(), 2);
+            let checkpoint = journal.checkpoint();
+            assert_eq!(journal.append_prepared_batch(&items).unwrap(), receipts);
+            assert_eq!(journal.checkpoint(), checkpoint);
+            assert_eq!(
+                journal
+                    .append_prepared_batch(&[items[0], items[0]])
+                    .unwrap(),
+                vec![receipts[0], receipts[0]]
+            );
+            drop(journal);
+            let mut replay = Journal::open(&path, key.as_ref(), true).unwrap();
+            assert_eq!(replay.append_prepared_batch(&items).unwrap(), receipts);
+            for (receipt, (_, data)) in receipts.iter().zip(items) {
+                let event = replay.get(receipt.cursor).unwrap().unwrap();
+                assert_eq!(event.accepted_at, receipt.accepted_at);
+                assert_eq!(event.data, data);
+            }
+            assert_eq!(replay.checkpoint(), checkpoint);
+            drop(replay);
+            let mut reader = Journal::open(&path, key.as_ref(), false).unwrap();
+            assert!(matches!(
+                reader.append_prepared_batch(&items),
+                Err(Error::ReadOnly)
+            ));
+        }
+    }
+
+    #[test]
+    fn partial_group_retry_preserves_surviving_prefix_receipts() {
+        for key in [None, Some([82; 32])] {
+            let root = Scratch::new();
+            let path = root.file("partial-group.juro");
+            let mut journal = Journal::create(&path, key.as_ref()).unwrap();
+            journal.append(b"older original").unwrap();
+            let a = journal.prepare(b"one").unwrap();
+            let b = journal.prepare(b"two\0\xff").unwrap();
+            let c = journal.prepare(b"").unwrap();
+            let items = [
+                (&a, b"one".as_slice()),
+                (&b, b"two\0\xff".as_slice()),
+                (&c, b"".as_slice()),
+            ];
+            let start = std::fs::metadata(&path).unwrap().len() as usize;
+            let receipts = journal.append_prepared_batch(&items).unwrap();
+            let checkpoint = journal.checkpoint();
+            let ends = journal
+                .db
+                .transactions
+                .iter()
+                .skip(2)
+                .map(|tx| tx.offset as usize)
+                .collect::<Vec<_>>();
+            drop(journal);
+            let all = std::fs::read(&path).unwrap();
+            let mut cuts = vec![start, all.len()];
+            for end in ends.into_iter().skip(1) {
+                cuts.extend([end - 1, end, end + 1]);
+            }
+            cuts.push(all.len() - 1);
+            cuts.sort_unstable();
+            cuts.dedup();
+            for end in cuts {
+                std::fs::write(&path, &all[..end]).unwrap();
+                let mut replay = Journal::open(&path, key.as_ref(), true).unwrap();
+                assert_eq!(replay.append_prepared_batch(&items).unwrap(), receipts);
+                assert_eq!(replay.len(), 4);
+                // Encrypted recovery may reseal the missing suffix with fresh nonces.
+                assert_eq!(replay.checkpoint().sequence, checkpoint.sequence);
+                for (receipt, (_, data)) in receipts.iter().zip(items) {
+                    assert_eq!(replay.get(receipt.cursor).unwrap().unwrap().data, data);
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn batch_full_original_limit_and_aggregate_budget_are_independent() {
+        let root = Scratch::new();
+        let path = root.file("group-budget.juro");
+        let mut journal = Journal::create(&path, None).unwrap();
+        let data = vec![0xa5; wire::MAX_VALUE];
+        let intent = journal.prepare(&data).unwrap();
+        let extra = journal.prepare(b"x").unwrap();
+        let checkpoint = journal.checkpoint();
+        let item = (&intent, data.as_slice());
+        assert!(matches!(
+            journal.append_prepared_batch(&[item, item, item, item, (&extra, b"x")]),
+            Err(Error::Limit)
+        ));
+        assert_eq!(journal.checkpoint(), checkpoint);
+        let receipts = journal.append_prepared_batch(&[item]).unwrap();
+        assert_eq!(journal.get(receipts[0].cursor).unwrap().unwrap().data, data);
+        assert_eq!(journal.db.transactions.last().unwrap().head[36], 0);
     }
 
     #[test]
