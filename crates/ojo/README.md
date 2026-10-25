@@ -34,7 +34,7 @@ agent integration runs inside this library.
 ## Guarantees
 
 - A transaction contains 1–1,024 puts/deletes. All become visible together.
-- Creation syncs the header and its parent directory. Every commit calls
+- Creation syncs the header and its parent directory. Every public commit calls
   `sync_all` before returning success; there is no unsafe/no-sync mode.
 - Readers hold shared inode locks. A writer holds an exclusive lock for its
   lifetime. Opens refuse contention; readers and writers cannot coexist.
@@ -44,6 +44,8 @@ agent integration runs inside this library.
 - Keep a request ID across uncertain acknowledgements. An identical retry
   returns its original receipt, including after reopening; changed input conflicts.
   A write/sync error poisons the handle: reopen, recover and retry that ID.
+  After open, the first retry of an existing transaction also reads that transaction
+  to derive its retry fingerprint; later retries reuse that derived fingerprint.
 - Open and scans verify complete transactions. Unencrypted raw point reads seek
   directly to the selected value and verify its SHA-256 against the trusted
   in-memory index built at commit/open. They detect changes to that value;
@@ -69,6 +71,10 @@ The default build contains no compression library; compressed transactions retur
 published file, preserves encryption/history/retry IDs, and leaves the original
 unchanged. The archive has a new file ID and physical checkpoints. Small or
 incompressible bodies stay raw. Keeping both files consumes extra disk space.
+Archive transactions are assembled in an unpublished temporary file, then all
+contents are synced before its final name is published and the directory synced.
+Public commits continue to sync individually. A failed final data sync prevents
+archive publication.
 
 The local/cloud policy is automatic archiving with an opt-out, after an explicitly
 finished session has been idle for 24 hours. The caller in ojo-journal/ojo-cloud
@@ -105,3 +111,6 @@ for applications that can use ordinal keys. Use persistent
 disk; tmpfs numbers cannot establish durable device performance.
 
 See the [measured results and limitations](../../docs/benchmarks/OJO_MINIMAL_ACID.md).
+The [optimization qualification](../../docs/benchmarks/OJO_IO_OPTIMIZATION.md)
+compares the same raw workload before/after, plus encrypted reads and archive
+creation. It includes first-retry costs and cases that remain limited by disk sync.

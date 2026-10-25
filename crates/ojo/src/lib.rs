@@ -7,10 +7,11 @@ use chacha20poly1305::XChaCha20Poly1305;
 use std::{
     collections::HashMap,
     fs::{File, OpenOptions},
-    io::{Read, Seek, SeekFrom, Write},
+    io::{BufReader, Read, Seek, SeekFrom, Write},
     path::Path,
 };
-use wire::{FILE, FOOT, HEAD, hash, u32_at, u64_at};
+use wire::{Body, FILE, FOOT, HEAD, hash, u32_at, u64_at};
+const READ_BUFFER: usize = 64 << 10;
 
 #[derive(Debug)]
 pub enum Error {
@@ -75,13 +76,23 @@ enum Location {
     },
     Encoded {
         transaction: usize,
-        operation: u32,
+        value: Option<(usize, usize)>,
     },
 }
 struct Transaction {
     offset: u64,
     head: [u8; HEAD],
     digest: [u8; 32],
+    // Derived retry bookkeeping. Open already validates the committed body/digest;
+    // compute this second digest only if a caller actually retries that transaction.
+    fingerprint: Option<[u8; 32]>,
+}
+#[derive(Clone, Copy)]
+enum CommitMode {
+    Durable,
+    // Only for an unpublished archive temporary; archive_to syncs before publication.
+    #[cfg(feature = "archive")]
+    Archive,
 }
 
 /// Memory admission limits, independent of wire bounds. Exceeding them refuses an open/write.
@@ -99,7 +110,7 @@ pub struct Database {
     tail: u64,
     transactions: Vec<Transaction>,
     latest: HashMap<Vec<u8>, Location>,
-    requests: HashMap<[u8; 16], (usize, [u8; 32])>,
+    requests: HashMap<[u8; 16], usize>,
     operations: usize,
     key_bytes: usize,
 }
@@ -189,13 +200,17 @@ impl Database {
         let cipher = wire::cipher(&header, key)?;
         let mut db = Self::empty(file, header, cipher, writable);
         let length = db.file.metadata()?.len();
+        let mut reader = BufReader::with_capacity(0, &db.file);
         while db.end < length {
             if length - db.end < HEAD as u64 {
                 break;
             }
             let mut head = [0; HEAD];
-            read_exact(&mut db.file, &mut head)?;
+            read_exact(&mut reader, &mut head)?;
             wire::validate_head(&head, db.next_sequence()?, &db.checkpoint().digest)?;
+            if db.transactions.is_empty() && u64_at(&head, 16) < (READ_BUFFER / 4) as u64 {
+                reader = BufReader::with_capacity(READ_BUFFER, reader.into_inner());
+            }
             let request = head[72..88].try_into().unwrap();
             if db.requests.contains_key(&request) {
                 return Err(Error::Corrupt("duplicate request id"));
@@ -204,7 +219,7 @@ impl Database {
             if size > length - db.end {
                 break;
             }
-            let (body, digest) = db.read_body(&head)?;
+            let (body, digest) = read_body(&mut reader, &db.header, db.cipher.as_ref(), &head)?;
             let mut key_bytes = 0;
             wire::walk(&body, u32_at(&head, 32), |_, key, _| key_bytes += key.len())?;
             db.admit(u32_at(&head, 32) as usize, key_bytes)?;
@@ -221,16 +236,18 @@ impl Database {
                 );
                 db.latest.insert(key.to_vec(), location);
             })?;
-            db.requests.insert(request, (transaction, hash(&[&body])));
+            db.requests.insert(request, transaction);
             db.transactions.push(Transaction {
                 offset: db.end,
                 head,
                 digest,
+                fingerprint: None,
             });
             db.operations += u32_at(&head, 32) as usize;
             db.key_bytes += key_bytes;
             db.end += size;
         }
+        drop(reader);
         db.tail = length - db.end;
         if writable && db.tail > 0 {
             db.file.set_len(db.end)?;
@@ -269,14 +286,15 @@ impl Database {
     /// Atomically appends all changes, uncompressed. Reuse the SAME request id after an ambiguous error.
     /// An exact retry returns its original commit; a changed request under that id is a conflict.
     pub fn commit(&mut self, request: [u8; 16], changes: &[Change<'_>]) -> Result<Commit> {
-        self.commit_encoded(request, changes, false)
+        self.commit_encoded(request, changes, CommitMode::Durable)
     }
     fn commit_encoded(
         &mut self,
         request: [u8; 16],
         changes: &[Change<'_>],
-        compress: bool,
+        mode: CommitMode,
     ) -> Result<Commit> {
+        let durable = matches!(mode, CommitMode::Durable);
         self.healthy()?;
         if !self.writable {
             return Err(Error::ReadOnly);
@@ -300,30 +318,42 @@ impl Database {
         if length > wire::MAX_BODY {
             return Err(Error::Invalid("transaction length"));
         }
-        let mut body = Vec::with_capacity(length);
+        let prefix = HEAD + if self.cipher.is_some() { 24 } else { 0 };
+        let mut frame =
+            Vec::with_capacity(HEAD + length + FOOT + if self.cipher.is_some() { 40 } else { 0 });
+        frame.resize(prefix, 0);
         for change in changes {
-            body.extend_from_slice(&[u8::from(change.value.is_none()), 0, 0, 0]);
-            body.extend_from_slice(&(change.key.len() as u32).to_le_bytes());
-            body.extend_from_slice(&(change.value.map_or(0, <[u8]>::len) as u64).to_le_bytes());
-            body.extend_from_slice(change.key);
-            body.extend_from_slice(change.value.unwrap_or_default());
+            frame.extend_from_slice(&[u8::from(change.value.is_none()), 0, 0, 0]);
+            frame.extend_from_slice(&(change.key.len() as u32).to_le_bytes());
+            frame.extend_from_slice(&(change.value.map_or(0, <[u8]>::len) as u64).to_le_bytes());
+            frame.extend_from_slice(change.key);
+            frame.extend_from_slice(change.value.unwrap_or_default());
         }
-        let fingerprint = hash(&[&body]);
-        if let Some(&(transaction, previous)) = self.requests.get(&request) {
+        let fingerprint = hash(&[&frame[prefix..]]);
+        if let Some(&transaction) = self.requests.get(&request) {
+            let previous = match self.transactions[transaction].fingerprint {
+                Some(previous) => previous,
+                None => {
+                    let previous = hash(&[&self.transaction_body(transaction)?]);
+                    self.transactions[transaction].fingerprint = Some(previous);
+                    previous
+                }
+            };
             if previous != fingerprint {
                 return Err(Error::Conflict);
             }
             return Ok(self.receipt(transaction));
         }
         self.admit(changes.len(), key_bytes)?;
-        let codec = if compress {
+        let codec = if !durable {
             #[cfg(not(feature = "archive"))]
             return Err(Error::Unsupported);
             #[cfg(feature = "archive")]
             {
-                let packed = zstd::bulk::compress(&body, 3)?;
-                if packed.len() < body.len() {
-                    body = packed;
+                let packed = zstd::bulk::compress(&frame[prefix..], 3)?;
+                if packed.len() < length {
+                    frame.truncate(prefix);
+                    frame.extend_from_slice(&packed);
                     1
                 } else {
                     0
@@ -335,7 +365,7 @@ impl Database {
         let mut head = [0; HEAD];
         head[..8].copy_from_slice(b"OJOTXN1\0");
         head[8..16].copy_from_slice(&self.next_sequence()?.to_le_bytes());
-        let stored = body.len() + if self.cipher.is_some() { 40 } else { 0 };
+        let stored = frame.len() - HEAD + if self.cipher.is_some() { 16 } else { 0 };
         head[16..24].copy_from_slice(&(stored as u64).to_le_bytes());
         head[24..32].copy_from_slice(&(length as u64).to_le_bytes());
         head[32..36].copy_from_slice(&(changes.len() as u32).to_le_bytes());
@@ -343,13 +373,13 @@ impl Database {
         head[40..72].copy_from_slice(&self.checkpoint().digest);
         head[72..88].copy_from_slice(&request);
         wire::seal_crc(&mut head);
+        frame[..HEAD].copy_from_slice(&head);
         if let Some(cipher) = &self.cipher {
-            body = wire::encrypt(cipher, &self.header, &head, body)?;
+            let tag = wire::encrypt(cipher, &self.header, &head, &mut frame[HEAD..])?;
+            frame.extend_from_slice(&tag);
         }
-        let digest = hash(&[&self.header, &head, &body]);
-        let mut frame = Vec::with_capacity(HEAD + stored + FOOT);
-        frame.extend_from_slice(&head);
-        frame.extend_from_slice(&body);
+        debug_assert_eq!(frame.len(), HEAD + stored);
+        let digest = hash(&[&self.header, &frame]);
         frame.extend_from_slice(b"OJOCMT1\0");
         frame.extend_from_slice(&head[8..16]);
         frame.extend_from_slice(&digest);
@@ -361,7 +391,10 @@ impl Database {
         let append = (|| -> std::io::Result<()> {
             self.file.seek(SeekFrom::Start(self.end))?;
             self.file.write_all(&frame)?;
-            self.file.sync_all()
+            if durable {
+                self.file.sync_all()?;
+            }
+            Ok(())
         })();
         if let Err(error) = append {
             self.poisoned = true;
@@ -369,7 +402,7 @@ impl Database {
         }
         let transaction = self.transactions.len();
         let mut value_offset = self.end + HEAD as u64;
-        for (operation, change) in changes.iter().enumerate() {
+        for change in changes {
             value_offset += 16 + change.key.len() as u64;
             let location = if self.cipher.is_none() && codec == 0 {
                 change.value.map(|value| Location::Raw {
@@ -382,16 +415,22 @@ impl Database {
             }
             .unwrap_or(Location::Encoded {
                 transaction,
-                operation: operation as u32,
+                value: change.value.map(|value| {
+                    (
+                        (value_offset - self.end - HEAD as u64) as usize,
+                        value.len(),
+                    )
+                }),
             });
             self.latest.insert(change.key.to_vec(), location);
             value_offset += change.value.map_or(0, <[u8]>::len) as u64;
         }
-        self.requests.insert(request, (transaction, fingerprint));
+        self.requests.insert(request, transaction);
         self.transactions.push(Transaction {
             offset: self.end,
             head,
             digest,
+            fingerprint: Some(fingerprint),
         });
         self.end = end;
         self.operations += changes.len();
@@ -409,40 +448,54 @@ impl Database {
             digest,
         } = location
         {
-            self.file.seek(SeekFrom::Start(offset))?;
             let mut value = vec![0; length];
-            read_exact(&mut self.file, &mut value)?;
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::FileExt;
+                self.file
+                    .read_exact_at(&mut value, offset)
+                    .map_err(read_error)?;
+            }
+            #[cfg(not(unix))]
+            {
+                self.file.seek(SeekFrom::Start(offset))?;
+                read_exact(&mut self.file, &mut value)?;
+            }
             if hash(&[&value]) != digest {
                 return Err(Error::Corrupt("changed value"));
             }
             return Ok(Some(value));
         }
-        let Location::Encoded {
-            transaction,
-            operation: selected,
-        } = location
-        else {
+        let Location::Encoded { transaction, value } = location else {
             unreachable!()
         };
+        // Revalidate and decode the WHOLE containing transaction, including tombstone reads.
+        // Its trusted digest binds the operation grammar and offsets checked at open/commit.
         let body = self.transaction_body(transaction)?;
-        let mut value = None;
-        wire::walk(
-            &body,
-            u32_at(&self.transactions[transaction].head, 32),
-            |operation, _, bytes| {
-                if operation == selected {
-                    value = bytes.map(<[u8]>::to_vec);
-                }
-            },
-        )?;
-        Ok(value)
+        let Some((start, length)) = value else {
+            return Ok(None);
+        };
+        let end = start
+            .checked_add(length)
+            .ok_or(Error::Corrupt("value range"))?;
+        let value = body.get(start..end).ok_or(Error::Corrupt("value range"))?;
+        Ok(Some(value.to_vec()))
     }
+
     /// Streams every committed version in order. Values are borrowed for the duration of the callback.
     /// A tombstone is `None`; an empty value is `Some(&[])`. This is a logical delete, not physical erasure.
     pub fn scan(&mut self, mut visit: impl FnMut(u64, u32, &[u8], Option<&[u8]>)) -> Result<()> {
         self.healthy()?;
-        for index in 0..self.transactions.len() {
-            let body = self.transaction_body(index)?;
+        self.file.seek(SeekFrom::Start(FILE as u64))?;
+        let mean_frame = (self.end - FILE as u64) / self.transactions.len().max(1) as u64;
+        let capacity = if mean_frame < (READ_BUFFER / 4) as u64 {
+            READ_BUFFER
+        } else {
+            0
+        };
+        let mut reader = BufReader::with_capacity(capacity, &self.file);
+        for (index, tx) in self.transactions.iter().enumerate() {
+            let body = read_transaction(&mut reader, &self.header, self.cipher.as_ref(), tx)?;
             wire::walk(
                 &body,
                 u32_at(&self.transactions[index].head, 32),
@@ -485,39 +538,50 @@ impl Database {
             operations: u32_at(&tx.head, 32),
         }
     }
-    fn transaction_body(&mut self, index: usize) -> Result<Vec<u8>> {
+    fn transaction_body(&mut self, index: usize) -> Result<Body> {
         let tx = &self.transactions[index];
         self.file.seek(SeekFrom::Start(tx.offset))?;
-        let mut head = [0; HEAD];
-        read_exact(&mut self.file, &mut head)?;
-        if head != tx.head {
-            return Err(Error::Corrupt("changed transaction header"));
-        }
-        let expected = tx.digest;
-        let (body, digest) = self.read_body(&head)?;
-        if digest != expected {
-            return Err(Error::Corrupt("changed transaction"));
-        }
-        Ok(body)
-    }
-    fn read_body(&mut self, head: &[u8; HEAD]) -> Result<(Vec<u8>, [u8; 32])> {
-        let mut stored = vec![0; u64_at(head, 16) as usize];
-        read_exact(&mut self.file, &mut stored)?;
-        let mut footer = [0; FOOT];
-        read_exact(&mut self.file, &mut footer)?;
-        let digest = hash(&[&self.header, head, &stored]);
-        if &footer[..8] != b"OJOCMT1\0" || footer[8..16] != head[8..16] || footer[16..] != digest {
-            return Err(Error::Corrupt("commit footer or digest"));
-        }
-        Ok((
-            wire::decode(self.cipher.as_ref(), &self.header, head, stored)?,
-            digest,
-        ))
+        read_transaction(&mut &self.file, &self.header, self.cipher.as_ref(), tx)
     }
 }
+fn read_transaction(
+    reader: &mut impl Read,
+    header: &[u8; FILE],
+    cipher: Option<&XChaCha20Poly1305>,
+    tx: &Transaction,
+) -> Result<Body> {
+    let mut head = [0; HEAD];
+    read_exact(reader, &mut head)?;
+    if head != tx.head {
+        return Err(Error::Corrupt("changed transaction header"));
+    }
+    let (body, digest) = read_body(reader, header, cipher, &head)?;
+    if digest != tx.digest {
+        return Err(Error::Corrupt("changed transaction"));
+    }
+    Ok(body)
+}
+fn read_body(
+    reader: &mut impl Read,
+    header: &[u8; FILE],
+    cipher: Option<&XChaCha20Poly1305>,
+    head: &[u8; HEAD],
+) -> Result<(Body, [u8; 32])> {
+    let length = u64_at(head, 16) as usize;
+    let mut stored = vec![0; length + FOOT];
+    read_exact(reader, &mut stored)?;
+    let footer = &stored[length..];
+    let digest = hash(&[header, head, &stored[..length]]);
+    if &footer[..8] != b"OJOCMT1\0" || footer[8..16] != head[8..16] || footer[16..] != digest {
+        return Err(Error::Corrupt("commit footer or digest"));
+    }
+    stored.truncate(length);
+    Ok((wire::decode(cipher, header, head, stored)?, digest))
+}
+
 fn location(
     transaction: usize,
-    operation: u32,
+    _operation: u32,
     head: &[u8; HEAD],
     plaintext: bool,
     offset: u64,
@@ -539,18 +603,25 @@ fn location(
     }
     Location::Encoded {
         transaction,
-        operation,
+        value: value.map(|value| {
+            (
+                value.as_ptr() as usize - body.as_ptr() as usize,
+                value.len(),
+            )
+        }),
     }
 }
-fn read_exact(file: &mut File, bytes: &mut [u8]) -> Result<()> {
-    file.read_exact(bytes).map_err(|e| {
-        if e.kind() == std::io::ErrorKind::UnexpectedEof {
-            Error::Corrupt("incomplete committed bytes")
-        } else {
-            Error::Io(e)
-        }
-    })
+fn read_error(error: std::io::Error) -> Error {
+    if error.kind() == std::io::ErrorKind::UnexpectedEof {
+        Error::Corrupt("incomplete committed bytes")
+    } else {
+        Error::Io(error)
+    }
 }
+fn read_exact(reader: &mut impl Read, bytes: &mut [u8]) -> Result<()> {
+    reader.read_exact(bytes).map_err(read_error)
+}
+
 fn parent(path: &Path) -> &Path {
     path.parent()
         .filter(|p| !p.as_os_str().is_empty())
@@ -602,9 +673,16 @@ impl Database {
                 wire::walk(&body, u32_at(&head, 32), |_, key, value| {
                     changes.push(Change { key, value })
                 })?;
-                archive.commit_encoded(head[72..88].try_into().unwrap(), &changes, true)?;
+                archive.commit_encoded(
+                    head[72..88].try_into().unwrap(),
+                    &changes,
+                    CommitMode::Archive,
+                )?;
             }
-            // All bytes were synced by commit; link creates the final name without a replacement race.
+            // No archive transaction was acknowledged externally. Sync every byte before
+            // publishing the separate file; ordinary public commits still sync individually.
+            archive.file.sync_all()?;
+            // Link creates the final name without a replacement race.
             std::fs::hard_link(&temporary, destination)?;
             directory.sync_all()?;
             Ok(archive.checkpoint())

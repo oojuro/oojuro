@@ -1,5 +1,9 @@
 # Minimal .ojo: uncompressed ACID benchmark
 
+This report describes the initial standalone engine. The subsequent
+[I/O optimization qualification](OJO_IO_OPTIMIZATION.md) includes a matched
+before/after comparison, encrypted/archive profiles and adverse controls.
+
 The fresh file engine was measured against bundled SQLite 3.53.2 with WAL and FULL synchronous on a local Btrfs filesystem. Both engine and filesystem compression were disabled. A fresh parent directory was marked `chattr +m`; every resulting database retained the inherited no-compression flag. These results cover this synthetic workload and shared host, not a general database ranking.
 
 SQLite used a prepared statement, `INTEGER PRIMARY KEY` and a 64 MiB page cache. Its ordinal keys correspond to the same eight-byte ordinal keys in Ojo; arbitrary binary keys require a different SQLite schema. Payload bytes and transaction sizes were identical. Ojo retains request IDs/history and verifies value digests; SQLite does not implement those additional contracts in this comparison. All returned payloads were checked.

@@ -20,6 +20,8 @@ The optional archive feature creates a separate compressed `.ojo` file while
 preserving the original, its checkpoints and encryption. Session lifecycle and
 24-hour idle scheduling belong to ojo-journal/ojo-cloud. See the
 [engine API, guarantees and limits](crates/ojo/README.md).
+See the [file-engine benchmarks and optimization results](docs/benchmarks/OJO_IO_OPTIMIZATION.md)
+for measured workloads, SQLite comparisons and performance tradeoffs.
 
 ## One responsibility per repository
 

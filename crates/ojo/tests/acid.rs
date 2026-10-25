@@ -240,6 +240,111 @@ fn direct_raw_reads_detect_changed_values_after_open() {
 }
 
 #[test]
+fn reopened_retry_first_conflict_does_not_replace_the_original_fingerprint() {
+    for key in [None, Some([42; 32])] {
+        let scratch = Scratch::new();
+        let path = scratch.file();
+        let changes = [put(b"first", b"exact\0\xff"), put(b"empty", b"")];
+        let mut db = Database::create(&path, key.as_ref()).unwrap();
+        let original = db.commit(id(1), &changes).unwrap();
+        drop(db);
+        let before = fs::read(&path).unwrap();
+        let mut db = Database::open(&path, key.as_ref(), true).unwrap();
+        assert!(matches!(
+            db.commit(id(1), &[put(b"first", b"changed")]),
+            Err(Error::Conflict)
+        ));
+        assert_eq!(db.commit(id(1), &changes).unwrap(), original);
+        assert_eq!(db.commit(id(1), &changes).unwrap(), original);
+        assert_eq!(fs::read(&path).unwrap(), before);
+        db.commit(id(2), &[put(b"after-retry", b"new transaction")])
+            .unwrap();
+        drop(db);
+        let mut db = Database::open(&path, key.as_ref(), false).unwrap();
+        assert_eq!(db.get(b"after-retry").unwrap().unwrap(), b"new transaction");
+    }
+}
+
+#[test]
+fn encoded_offsets_cover_variable_binary_keys_empty_values_and_tombstones() {
+    for key in [None, Some([42; 32])] {
+        let scratch = Scratch::new();
+        let path = scratch.file();
+        let keys = (0u64..1024)
+            .map(|i| {
+                let mut bytes = i.to_be_bytes().to_vec();
+                bytes.extend(std::iter::repeat_n(0xff, i as usize % 23));
+                bytes
+            })
+            .collect::<Vec<_>>();
+        let values = (0usize..1024)
+            .map(|i| (i % 19 != 0).then(|| vec![i as u8; if i % 17 == 0 { 0 } else { i % 1301 }]))
+            .collect::<Vec<_>>();
+        let changes = keys
+            .iter()
+            .zip(&values)
+            .map(|(key, value)| Change {
+                key,
+                value: value.as_deref(),
+            })
+            .collect::<Vec<_>>();
+        let mut db = Database::create(&path, key.as_ref()).unwrap();
+        db.commit(id(1), &changes).unwrap();
+        for i in [0, 1, 17, 19, 511, 1023] {
+            assert_eq!(db.get(&keys[i]).unwrap(), values[i]);
+        }
+        drop(db);
+        let mut db = Database::open(&path, key.as_ref(), false).unwrap();
+        for i in [0, 1, 17, 19, 511, 1023] {
+            assert_eq!(db.get(&keys[i]).unwrap(), values[i]);
+        }
+        #[cfg(feature = "archive")]
+        {
+            let archive = scratch.0.join("archive.ojo");
+            db.archive_to(&archive).unwrap();
+            let mut archive = Database::open(archive, key.as_ref(), false).unwrap();
+            for i in [0, 1, 17, 19, 511, 1023] {
+                assert_eq!(archive.get(&keys[i]).unwrap(), values[i]);
+            }
+        }
+    }
+}
+
+#[test]
+fn encoded_and_tombstone_reads_still_verify_the_whole_containing_transaction() {
+    use std::io::{Seek, SeekFrom, Write};
+    for key in [None, Some([42; 32])] {
+        let scratch = Scratch::new();
+        let path = scratch.file();
+        let mut db = Database::create(&path, key.as_ref()).unwrap();
+        db.commit(
+            id(1),
+            &[
+                put(b"a", b"first"),
+                Change {
+                    key: b"deleted",
+                    value: None,
+                },
+                put(b"b", b"neighbor"),
+            ],
+        )
+        .unwrap();
+        drop(db);
+        let mut db = Database::open(&path, key.as_ref(), false).unwrap();
+        assert_eq!(db.get(b"deleted").unwrap(), None);
+        assert_eq!(db.get(b"a").unwrap().unwrap(), b"first");
+        let mut external = fs::OpenOptions::new().write(true).open(&path).unwrap();
+        external.seek(SeekFrom::End(-49)).unwrap();
+        external.write_all(b"X").unwrap();
+        assert!(matches!(db.get(b"deleted"), Err(Error::Corrupt(_))));
+        if key.is_some() {
+            assert!(matches!(db.get(b"a"), Err(Error::Corrupt(_))));
+        }
+        assert!(db.scan(|_, _, _, _| {}).is_err());
+    }
+}
+
+#[test]
 fn crash_child() {
     let Some(path) = std::env::var_os("OJO_CRASH_FIXTURE") else {
         return;
