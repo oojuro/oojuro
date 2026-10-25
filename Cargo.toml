@@ -3,6 +3,7 @@
 default-members = ["crates/ojo"]
 members = [
     "crates/ojo",
+    "crates/ojo-tools",
     "crates/oojuro-engine",
     "crates/oojuro-bench",
     "crates/oojuro-core",
