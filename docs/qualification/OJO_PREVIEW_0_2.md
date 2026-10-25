@@ -1,19 +1,19 @@
 # Ojo 0.2 public distribution qualification
 
 The [experimental release](https://github.com/oojuro/oojuro/releases/tag/ojo-v0.2.0)
-is an immutable annotated tag at source86ed2bd87a1296bb4e87cf1d402ffab12e214404,
-contained in main after PR121. The independent wire/profile versions remain0.1
-and Event profile1. The earlier0.1 tag and assets are retained unchanged.
+is an immutable annotated tag at source `86ed2bd87a1296bb4e87cf1d402ffab12e214404`,
+contained in main after PR #121. The independent wire/profile versions remain 0.1
+and Event profile 1. The earlier 0.1 tag and assets are retained unchanged.
 
-The Linux x86-64 archive is1,372,516 bytes with SHA-256
+The Linux x86-64 archive is 1,372,516 bytes with SHA-256
 `865c5411c95c46a892df14d32e07d8a7a8966ac8fea09537f68c471e2bdd3056`.
 The installed binary SHA-256 is
 `8728e8c664a095553c3af85b7d297be64efb2c2cb80514857913f1ab8ecb28ec`.
-It requires glibc2.34 and includes all53 selected registry dependency notices,
+It requires glibc 2.34 and includes all 53 selected registry dependency notices,
 Rust notices and dictionary attribution. Normal features are archive and search.
 
 Release gates passed core default/archive tests, CLI normal/minimal integrations,
-strict Clippy,20 actual fsync-EIO cases,5 installer tests, registry notice integrity
+strict Clippy, 20 actual fsync-EIO cases, 5 installer tests, registry notice integrity
 and normal dependency policy. The prepared real archive passed installation before
 publication. Uploaded draft assets were independently downloaded and SHA-verified.
 
