@@ -168,7 +168,7 @@ pub struct Database {
     end: u64,
     tail: u64,
     transactions: Vec<Transaction>,
-    fingerprints: FingerprintCache,
+    fingerprints: Option<Box<FingerprintCache>>,
     // Replay validates bytes but cannot establish that an earlier failed sync
     // reached stable storage. Some(n) records a successful barrier on this
     // handle covering the first n transactions, including a synced header.
@@ -247,7 +247,7 @@ impl Database {
             end: FILE as u64,
             tail: 0,
             transactions: Vec::new(),
-            fingerprints: FingerprintCache::default(),
+            fingerprints: None,
             durable_transactions: None,
             latest: HashMap::new(),
             ordered_keys: None,
@@ -497,11 +497,15 @@ impl Database {
         }
         let fingerprint = hash(&[&frame[prefix..]]);
         if let Some(&transaction) = self.requests.get(&request) {
-            let previous = match self.fingerprints.get(transaction) {
+            let previous = match self
+                .fingerprints
+                .as_mut()
+                .and_then(|cache| cache.get(transaction))
+            {
                 Some(previous) => previous,
                 None => {
                     let previous = hash(&[&self.transaction_body(transaction)?]);
-                    self.fingerprints.insert(transaction, previous);
+                    self.cache_fingerprint(transaction, previous);
                     previous
                 }
             };
@@ -605,7 +609,7 @@ impl Database {
             head,
             digest,
         });
-        self.fingerprints.insert(transaction, fingerprint);
+        self.cache_fingerprint(transaction, fingerprint);
         self.end = end;
         if durable {
             self.durable_transactions = Some(self.transactions.len());
@@ -783,6 +787,11 @@ impl Database {
             )?;
         }
         Ok(())
+    }
+    fn cache_fingerprint(&mut self, transaction: usize, fingerprint: [u8; 32]) {
+        self.fingerprints
+            .get_or_insert_with(Default::default)
+            .insert(transaction, fingerprint);
     }
     fn healthy(&self) -> Result<()> {
         if self.poisoned {
