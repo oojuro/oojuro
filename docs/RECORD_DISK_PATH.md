@@ -126,3 +126,16 @@ time bound, a typed source filter and a rare literal. It checks no new latency
 contract. Broad phrase verification and cold-open work remain separate costs;
 a rare-literal probe cannot qualify them. Phase profiles must be measured on an
 available benchmark lane before choosing a larger-scale optimization.
+
+`append_group_indexed_profiled` separates admission, the authoritative
+`Store::append(sync=true)` call, locator publication and lexical publication.
+The Store phase includes compression and encryption as well as source sync; the
+derived phases include building and validating pages as well as sync. These are
+operation phases, not kernel-only fsync measurements. Ordinary write entrypoints
+do not collect phase clocks.
+
+`profile_record_write` generates a private synthetic fixture, records these
+phases, removes all dedicated derived directories after indexed ACKs, and opens
+with the retained minimum watermark. It compares complete original/clock digests,
+every receipt and exact retry, current search visibility and an old pinned prefix.
+Passing its 1k/10k probes does not qualify million-record recovery time.

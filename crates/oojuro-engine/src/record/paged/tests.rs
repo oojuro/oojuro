@@ -1808,3 +1808,41 @@ fn disk_group_encoded_capacity_failure_does_not_publish_a_prefix() {
     assert_eq!(writer.reader().unwrap().watermark().unwrap().records, 0);
     assert!(writer.reader().unwrap().receipt("first").unwrap().is_none());
 }
+
+#[test]
+fn disk_write_phase_profile_preserves_receipts_and_distinguishes_fresh_from_retries() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 1000);
+    let mut index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    let first = [row("alpha first", None, 1)];
+    let second = [row("alpha second", None, 2)];
+    let requests = [
+        Append {
+            request: "first",
+            inputs: &first,
+        },
+        Append {
+            request: "second",
+            inputs: &second,
+        },
+    ];
+    let (receipts, profile) = writer
+        .append_group_indexed_profiled(&mut index, &requests)
+        .unwrap();
+    assert_eq!(profile.submitted_rows, 2);
+    assert_eq!(profile.rows_committed, 2);
+    assert_eq!(profile.fresh_requests, 2);
+    assert!(profile.source_encoded_bytes > 0);
+    let (retry, retry_work) = writer
+        .append_group_indexed_profiled(&mut index, &requests)
+        .unwrap();
+    assert_eq!(receipts, retry);
+    assert_eq!(retry_work.fresh_requests, 0);
+    assert_eq!(retry_work.rows_committed, 0);
+    assert_eq!(retry_work.authority_append_ns, 0);
+    assert_eq!(retry_work.locator_publish_ns, 0);
+    assert_eq!(
+        writer.reader().unwrap().receipt("first").unwrap(),
+        Some(receipts[0].clone())
+    );
+}
