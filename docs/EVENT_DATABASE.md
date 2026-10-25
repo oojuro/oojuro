@@ -74,8 +74,8 @@ writer uses the embedded collector or an application-owned service instead.
 ## Independent non-agent example
 
 ```sh
-cargo run --locked -p ojo --example sensor_journal -- new-sensors.ojo
-python3 examples/read_events.py new-sensors.ojo
+cargo run --locked -p ojo --example sensor_journal -- new-sensors.juro
+python3 examples/read_events.py new-sensors.juro
 python3 scripts/test_event_reader.py
 ```
 

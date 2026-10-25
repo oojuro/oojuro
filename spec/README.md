@@ -1,8 +1,13 @@
-# The .ojo specification
+# The .juro specification
 
 Specification version: **0.1.0-draft.2**. Status: **experimental draft**.
 Wire version: **0.1**. This version is independently maintained from engine,
 CLI, ojo-journal and ojo-cloud releases.
+
+New database filenames use `.juro`; existing `.ojo` files and caller-selected
+paths are preserved. Detection uses header/version, not extension. The canonical
+naming choice changes no byte grammar, magic, wire version or frozen vector.
+Historical specification/release references retain their original names.
 
 [0.1/FORMAT.md](0.1/FORMAT.md) is the complete normative definition of this
 wire version. A reader needs this document and the named standard codec and

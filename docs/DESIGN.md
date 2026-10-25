@@ -4,6 +4,11 @@ Oojuro is an embedded database engine for durable, compressed, searchable record
 Its scope is storage and retrieval. Applications decide which records to collect,
 how to interpret their metadata and which actions or user experiences they support.
 
+New database/journal filenames use `.juro`. Existing `.ojo` files and explicit
+paths remain valid and are never silently renamed. Header/version and explicit
+profiles define compatibility; the new filename choice changes no persisted
+magic, byte grammar or frozen vectors. Oojuro/CLI/API names remain unchanged.
+
 ## Engine responsibilities
 
 - Append exact caller-supplied records with durable acknowledgement and recovery.

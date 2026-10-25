@@ -10,7 +10,7 @@ use std::{
 };
 
 type Result<T> = std::result::Result<T, Box<dyn std::error::Error>>;
-const HELP: &str = "ojo — portable .ojo file tools (experimental wire 0.1)
+const HELP: &str = "ojo — portable .juro file tools (experimental wire 0.1)
 
   ojo init FILE [--key-file PRIVATE_KEY]
   ojo append FILE DATA_FILE [--intent PRIVATE_INTENT] [--key-file PRIVATE_KEY]
@@ -37,8 +37,8 @@ Key/value compatibility and file inspection:
   ojo put FILE KEY_HEX VALUE_FILE --request ID_HEX [--key-file PRIVATE_KEY]
   ojo delete FILE KEY_HEX --request ID_HEX [--key-file PRIVATE_KEY]
   ojo dump FILE [--key-file PRIVATE_KEY]
-  ojo export FILE NEW_COPY.ojo [--key-file PRIVATE_KEY]
-  ojo archive FILE NEW_ARCHIVE.ojo [--key-file PRIVATE_KEY]
+  ojo export FILE NEW_COPY.juro [--key-file PRIVATE_KEY]
+  ojo archive FILE NEW_ARCHIVE.juro [--key-file PRIVATE_KEY]
 
 Keys are hexadecimal bytes; request IDs are 16 bytes (32 hex digits).
 VALUE_FILE may be - for stdin. get writes exact raw bytes; dump emits hex JSONL
@@ -236,7 +236,7 @@ fn checked_copy(
     expected: Checkpoint,
 ) -> Result<()> {
     let temporary =
-        parent(destination).join(format!(".ojo-export-{}.tmp", hex(&ojo::request_id()?)));
+        parent(destination).join(format!(".juro-export-{}.tmp", hex(&ojo::request_id()?)));
     let mut output = private_new(&temporary)?;
     let result = (|| -> Result<()> {
         io::copy(&mut File::open(source)?, &mut output)?;

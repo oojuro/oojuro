@@ -126,7 +126,7 @@ impl Journal {
         let destination = path.as_ref();
         let directory = File::open(crate::parent(destination))?;
         let temporary = crate::parent(destination).join(format!(
-            ".ojo-event-{:032x}.tmp",
+            ".juro-event-{:032x}.tmp",
             u128::from_le_bytes(request_id()?)
         ));
         let header = wire::new_header(key)?;
@@ -653,7 +653,7 @@ mod tests {
     fn exact_bytes_and_lost_ack_retry_survive_reopen() {
         let root = Scratch::new();
         let key = [71; 32];
-        let path = root.file("events.ojo");
+        let path = root.file("events.juro");
         let mut journal = Journal::create(&path, Some(&key)).unwrap();
         let data = b"\xff\0exact\r\n";
         let intent = journal.prepare(data).unwrap();
@@ -681,7 +681,7 @@ mod tests {
     fn event_recovery_preserves_receipt_at_every_torn_boundary() {
         for key in [None, Some([29; 32])] {
             let root = Scratch::new();
-            let path = root.file("recovery.ojo");
+            let path = root.file("recovery.juro");
             let mut journal = Journal::create(&path, key.as_ref()).unwrap();
             journal.append(b"committed prefix").unwrap();
             let checkpoint = journal.checkpoint();
@@ -712,7 +712,7 @@ mod tests {
     #[test]
     fn full_value_limit_is_available_without_timestamp_payload_overhead() {
         let root = Scratch::new();
-        let mut journal = Journal::create(root.file("maximum.ojo"), None).unwrap();
+        let mut journal = Journal::create(root.file("maximum.juro"), None).unwrap();
         let data = vec![0xa5; wire::MAX_VALUE];
         let receipt = journal.append(&data).unwrap();
         assert_eq!(journal.get(receipt.cursor).unwrap().unwrap().data, data);
@@ -724,7 +724,7 @@ mod tests {
     #[test]
     fn clock_backtracking_does_not_change_append_order_or_time_pagination() {
         let root = Scratch::new();
-        let mut journal = Journal::create(root.file("clock.ojo"), None).unwrap();
+        let mut journal = Journal::create(root.file("clock.juro"), None).unwrap();
         let mut receipts = Vec::new();
         for (time, data) in [(20, b"a"), (10, b"b"), (20, b"c"), (-3, b"d")] {
             receipts.push(journal.accept(request_id().unwrap(), time, data).unwrap());
@@ -786,7 +786,7 @@ mod tests {
     #[test]
     fn wrong_profile_and_invalid_complete_transaction_never_recover_tail() {
         let root = Scratch::new();
-        let path = root.file("kv.ojo");
+        let path = root.file("kv.juro");
         let mut db = Database::create(&path, None).unwrap();
         db.commit(
             request_id().unwrap(),
@@ -807,7 +807,7 @@ mod tests {
         assert!(Journal::open(&path, None, true).is_err());
         assert_eq!(std::fs::read(&path).unwrap(), before);
 
-        let path = root.file("invalid-event.ojo");
+        let path = root.file("invalid-event.juro");
         drop(Journal::create(&path, None).unwrap());
         let mut db = Database::open(&path, None, true).unwrap();
         db.commit(
@@ -822,7 +822,7 @@ mod tests {
         let before = std::fs::read(&path).unwrap();
         assert!(Journal::open(&path, None, true).is_err());
         assert_eq!(std::fs::read(&path).unwrap(), before);
-        let empty = root.file("unmarked.ojo");
+        let empty = root.file("unmarked.juro");
         drop(Database::create(&empty, None).unwrap());
         assert!(Journal::open(&empty, None, true).is_err());
     }
@@ -830,8 +830,8 @@ mod tests {
     #[test]
     fn cursors_reject_foreign_and_divergent_sources_and_callbacks_stop() {
         let root = Scratch::new();
-        let first = root.file("first.ojo");
-        let second = root.file("second.ojo");
+        let first = root.file("first.juro");
+        let second = root.file("second.juro");
         let mut journal = Journal::create(&first, None).unwrap();
         let a = journal.append(b"a").unwrap();
         assert_eq!(Cursor::from_bytes(a.cursor.to_bytes()).unwrap(), a.cursor);
@@ -866,7 +866,7 @@ mod tests {
     fn follow_releases_owner_lock_and_reuses_original_position() {
         let root = Scratch::new();
         let collector = Arc::new(Collector::new(
-            Journal::create(root.file("follow.ojo"), None).unwrap(),
+            Journal::create(root.file("follow.juro"), None).unwrap(),
         ));
         let first = collector.append(b"before").unwrap();
         let follower = collector.clone();
@@ -894,8 +894,8 @@ mod tests {
     #[test]
     fn compressed_archive_preserves_logical_cursors_times_and_retry_receipts() {
         let root = Scratch::new();
-        let path = root.file("source.ojo");
-        let archive = root.file("archive.ojo");
+        let path = root.file("source.juro");
+        let archive = root.file("archive.juro");
         let key = [83; 32];
         let mut journal = Journal::create(&path, Some(&key)).unwrap();
         let data = vec![b'x'; 128 << 10];

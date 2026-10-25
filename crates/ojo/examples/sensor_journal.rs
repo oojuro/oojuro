@@ -8,7 +8,7 @@ fn hex(bytes: &[u8]) -> String {
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let path = std::env::args_os()
         .nth(1)
-        .ok_or("usage: sensor_journal NEW_FILE.ojo")?;
+        .ok_or("usage: sensor_journal NEW_FILE.juro")?;
     let mut journal = Journal::create(path, None)?;
     for data in [
         b"sensor=alpha temperature=21.5\n".as_slice(),

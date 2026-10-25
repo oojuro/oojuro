@@ -1,8 +1,13 @@
 # ojo file tools
 
-`ojo` creates, inspects, verifies and manipulates standalone `.ojo` databases.
+`ojo` creates, inspects, verifies and manipulates standalone `.juro` databases.
 It uses the same Rust engine and independently versioned wire 0.1 as applications.
 Agent capture, session conventions and integrations live in ojo-journal.
+
+`.juro` is the canonical new extension. Existing `.ojo` files and explicit
+caller paths continue to work; the tool neither renames nor silently converts
+them. File headers and versions determine compatibility, not suffixes. The
+immutable v0.1.0 release predates this convention and keeps its original name.
 
 The current source adds generic timestamp-and-data journals. These commands
 postdate the immutable v0.1.0 preview; build from this source until a newer
@@ -10,14 +15,14 @@ qualified package is published.
 
 ```sh
 ojo keygen private.key
-ojo init sensors.ojo --key-file private.key
+ojo init sensors.juro --key-file private.key
 printf 'sensor=alpha temperature=21.5\n' > sample.bin
-ojo append sensors.ojo sample.bin --intent sample.intent --key-file private.key
-ojo scan sensors.ojo --limit 100 --key-file private.key
+ojo append sensors.juro sample.bin --intent sample.intent --key-file private.key
+ojo scan sensors.juro --limit 100 --key-file private.key
 ```
 
 `append` requires only the data: the engine assigns its UTC acceptance time and
-opaque cursor. Read exact bytes with `ojo read sensors.ojo CURSOR_HEX`, adding
+opaque cursor. Read exact bytes with `ojo read sensors.juro CURSOR_HEX`, adding
 the key option for encrypted files. `--output NEW_FILE` refuses replacement.
 Data may be a file, empty bytes, binary bytes, or `-` for stdin; it is never
 implicitly decoded or rewritten.
@@ -88,14 +93,14 @@ source installation remains available where the engine is supported.
 
 ```sh
 ojo keygen private.key
-ojo create session.ojo --key-file private.key
+ojo create session.juro --key-file private.key
 printf 'hello\r\n' > original.bin
 request_id=$(ojo request-id)
-ojo put session.ojo 6d657373616765 original.bin \
+ojo put session.juro 6d657373616765 original.bin \
   --request "$request_id" --key-file private.key
-ojo get session.ojo 6d657373616765 --key-file private.key --output restored.bin
+ojo get session.juro 6d657373616765 --key-file private.key --output restored.bin
 cmp original.bin restored.bin
-ojo verify session.ojo --key-file private.key
+ojo verify session.juro --key-file private.key
 ```
 
 Keys are hexadecimal, so arbitrary binary keys do not depend on terminal text
@@ -117,10 +122,10 @@ in status JSON; keep the key separately from any exported database.
 ## Inspect, recover and move
 
 ```sh
-ojo inspect session.ojo --key-file private.key
-ojo dump session.ojo --key-file private.key > history.jsonl
-ojo export session.ojo portable-copy.ojo --key-file private.key
-ojo archive session.ojo compressed-copy.ojo --key-file private.key
+ojo inspect session.juro --key-file private.key
+ojo dump session.juro --key-file private.key > history.jsonl
+ojo export session.juro portable-copy.juro --key-file private.key
+ojo archive session.juro compressed-copy.juro --key-file private.key
 ```
 
 `inspect` validates the committed history and reports its checkpoint, historical
@@ -135,7 +140,7 @@ This is a diagnostic view, not a replacement serialization of transaction IDs.
 
 `export` creates a complete binary copy, validates its exact source checkpoint,
 syncs it and atomically publishes a new destination. It retains file identity,
-all original bytes, encryption and retry IDs. A copied `.ojo` can be opened
+all original bytes, encryption and retry IDs. A copied `.juro` can be opened
 directly by another compatible reader; no import conversion is needed.
 `archive` creates a separate compressed file with a fresh file identity and
 preserves the source unchanged. Neither operation overwrites an existing

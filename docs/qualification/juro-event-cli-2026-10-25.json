@@ -1,0 +1,69 @@
+{
+  "status": "source qualified; not published or deployed",
+  "owner_decision": "https://github.com/oojuro/oojuro/issues/110",
+  "generic_database_scope": "https://github.com/oojuro/oojuro/issues/106",
+  "canonical_new_extension": ".juro",
+  "legacy_extension": ".ojo",
+  "cli_name": "ojo (unchanged)",
+  "wire": "0.1 (unchanged)",
+  "event_profile": "1 (unchanged)",
+  "no_silent_rename": true,
+  "frozen_inputs_sha256": {
+    "spec/0.1/vectors.json": "6df1f5f71fc2b32edb902ef69d7e054c257c2b5dac98ccdffaf4c6992e4baa7b",
+    "spec/events/1/vectors.json": "83e2bdf7282b5a85c4f70fbf01df709851b2543d85b0a5cae8a581da714fc85f",
+    "crates/ojo/src/wire.rs": "098dac41756907534317415d72ecf34b78d3ebaa176ebe8d102323d42dd7149f"
+  },
+  "checks": [
+    {
+      "command": "cargo test --locked -p ojo-tools",
+      "legacy_cli_passed": 4,
+      "event_cli_passed": 4,
+      "failed": 0
+    },
+    {
+      "command": "cargo test --locked -p ojo-tools --no-default-features",
+      "legacy_cli_passed": 3,
+      "event_cli_passed": 4,
+      "failed": 0
+    },
+    {
+      "command": "cargo clippy --locked -p ojo-tools --all-targets -- -D warnings",
+      "exit": 0
+    },
+    {
+      "command": "cargo clippy --locked -p ojo-tools --no-default-features --all-targets -- -D warnings",
+      "exit": 0
+    },
+    {
+      "command": "cargo test --locked -p ojo --features archive",
+      "unit_passed": 9,
+      "acid_passed": 19,
+      "wire_compatibility_passed": 2,
+      "event_compatibility_passed": 1,
+      "doctests_passed": 1,
+      "opt_in_c_fault_ignored_in_normal_gate": 1,
+      "failed": 0
+    },
+    {
+      "command": "python3 scripts/verify-ojo-sync-retry.py",
+      "plaintext_and_encrypted_passed": true,
+      "observed_syncs": "FFFSSS"
+    },
+    {
+      "command": "python3 scripts/test_event_reader.py",
+      "passed": 3
+    }
+  ],
+  "actual_cli_scenarios": [
+    "new .juro file creation, binary stdin append with engine UTC and opaque cursor, exact read/new output, original OJOFILE header",
+    "legacy .ojo explicit export/read and .juro archive, original legacy path/bytes retained",
+    "lost stdout ACK with retained private intent, exact retry and conflict before torn-tail recovery",
+    "append/time pagination including repeated/backward frozen timestamps, foreign cursor refusal",
+    "follow releases read lock while waiting so another CLI appender proceeds, resume remains stable"
+  ],
+  "limits": [
+    "Follow returns one bounded long-poll page and revalidates history on reopen; persistent writers use healthy Collector/application service",
+    "No full-text search or scale claim from CLI correctness",
+    "New package release and actual Cloud promotion remain separate gates"
+  ]
+}

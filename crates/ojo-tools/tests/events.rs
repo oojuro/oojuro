@@ -46,10 +46,10 @@ impl Drop for Scratch {
 fn engine_assigns_time_and_binary_cursor_without_application_keys() {
     let s = Scratch::new();
     s.ok(&["keygen", "key"]);
-    s.ok(&["init", "events.ojo", "--key-file", "key"]);
+    s.ok(&["init", "events.juro", "--key-file", "key"]);
     let original = b"\xff\0sensor sample\r\n";
     let mut child = s
-        .command(&["append", "events.ojo", "-", "--key-file", "key"])
+        .command(&["append", "events.juro", "-", "--key-file", "key"])
         .stdin(Stdio::piped())
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
@@ -67,13 +67,13 @@ fn engine_assigns_time_and_binary_cursor_without_application_keys() {
     assert_eq!(cursor.len(), 80);
     assert!(receipt["accepted_at"].as_i64().unwrap() > 0);
     assert_eq!(
-        s.ok(&["read", "events.ojo", cursor, "--key-file", "key"])
+        s.ok(&["read", "events.juro", cursor, "--key-file", "key"])
             .stdout,
         original
     );
     s.ok(&[
         "read",
-        "events.ojo",
+        "events.juro",
         cursor,
         "--key-file",
         "key",
@@ -84,7 +84,7 @@ fn engine_assigns_time_and_binary_cursor_without_application_keys() {
     assert!(
         !s.run(&[
             "read",
-            "events.ojo",
+            "events.juro",
             cursor,
             "--key-file",
             "key",
@@ -95,17 +95,49 @@ fn engine_assigns_time_and_binary_cursor_without_application_keys() {
         .success()
     );
     let page: Value =
-        serde_json::from_slice(&s.ok(&["scan", "events.ojo", "--key-file", "key"]).stdout).unwrap();
+        serde_json::from_slice(&s.ok(&["scan", "events.juro", "--key-file", "key"]).stdout)
+            .unwrap();
     assert_eq!(page["events"][0]["cursor"], cursor);
     assert_eq!(page["events"][0]["accepted_at"], receipt["accepted_at"]);
     assert_eq!(page["page"]["cursor"], cursor);
     assert_eq!(page["page"]["has_more"], false);
-    assert!(!s.run(&["read", "events.ojo", cursor]).status.success());
+    assert!(!s.run(&["read", "events.juro", cursor]).status.success());
+    // An explicitly selected legacy filename stays at that path. Detection is
+    // based on its unchanged header/profile, not the canonical new suffix.
+    s.ok(&["export", "events.juro", "legacy.ojo", "--key-file", "key"]);
+    let legacy = fs::read(s.0.join("legacy.ojo")).unwrap();
+    assert_eq!(fs::read(s.0.join("events.juro")).unwrap(), legacy);
+    assert_eq!(&legacy[..8], b"OJOFILE\0");
+    assert_eq!(
+        s.ok(&["read", "legacy.ojo", cursor, "--key-file", "key"])
+            .stdout,
+        original
+    );
+    assert!(!s.0.join("legacy.juro").exists());
     #[cfg(feature = "archive")]
     {
-        s.ok(&["archive", "events.ojo", "archive.ojo", "--key-file", "key"]);
+        s.ok(&[
+            "archive",
+            "events.juro",
+            "archive.juro",
+            "--key-file",
+            "key",
+        ]);
         assert_eq!(
-            s.ok(&["read", "archive.ojo", cursor, "--key-file", "key"])
+            s.ok(&["read", "archive.juro", cursor, "--key-file", "key"])
+                .stdout,
+            original
+        );
+        s.ok(&[
+            "archive",
+            "legacy.ojo",
+            "legacy-archive.juro",
+            "--key-file",
+            "key",
+        ]);
+        assert_eq!(fs::read(s.0.join("legacy.ojo")).unwrap(), legacy);
+        assert_eq!(
+            s.ok(&["read", "legacy-archive.juro", cursor, "--key-file", "key"])
                 .stdout,
             original
         );
@@ -115,10 +147,10 @@ fn engine_assigns_time_and_binary_cursor_without_application_keys() {
 #[test]
 fn lost_stdout_ack_retries_retained_intent_and_bad_input_never_recovers_tail() {
     let s = Scratch::new();
-    s.ok(&["init", "events.ojo"]);
+    s.ok(&["init", "events.juro"]);
     let data = b"retained exact original\0\xff";
     fs::write(s.0.join("value"), data).unwrap();
-    let args = ["append", "events.ojo", "value", "--intent", "retry"];
+    let args = ["append", "events.juro", "value", "--intent", "retry"];
     let mut child = s
         .command(&args)
         .stdout(Stdio::piped())
@@ -129,16 +161,16 @@ fn lost_stdout_ack_retries_retained_intent_and_bad_input_never_recovers_tail() {
     assert!(!child.wait().unwrap().success());
     let intent =
         AppendIntent::from_bytes(fs::read(s.0.join("retry")).unwrap().try_into().unwrap()).unwrap();
-    let mut reader = Journal::open(s.0.join("events.ojo"), None, false).unwrap();
+    let mut reader = Journal::open(s.0.join("events.juro"), None, false).unwrap();
     assert_eq!(reader.len(), 1);
     reader.check_intent(&intent, data).unwrap();
     drop(reader);
-    let before = fs::read(s.0.join("events.ojo")).unwrap();
+    let before = fs::read(s.0.join("events.juro")).unwrap();
     let first: Value = serde_json::from_slice(&s.ok(&args).stdout).unwrap();
     let second: Value = serde_json::from_slice(&s.ok(&args).stdout).unwrap();
     assert_eq!(first["cursor"], second["cursor"]);
     assert_eq!(first["accepted_at"], second["accepted_at"]);
-    assert_eq!(fs::read(s.0.join("events.ojo")).unwrap(), before);
+    assert_eq!(fs::read(s.0.join("events.juro")).unwrap(), before);
     #[cfg(unix)]
     {
         use std::os::unix::fs::PermissionsExt;
@@ -153,21 +185,21 @@ fn lost_stdout_ack_retries_retained_intent_and_bad_input_never_recovers_tail() {
     }
     fs::OpenOptions::new()
         .append(true)
-        .open(s.0.join("events.ojo"))
+        .open(s.0.join("events.juro"))
         .unwrap()
         .write_all(b"torn")
         .unwrap();
-    let torn = fs::read(s.0.join("events.ojo")).unwrap();
+    let torn = fs::read(s.0.join("events.juro")).unwrap();
     fs::write(s.0.join("value"), b"different").unwrap();
     assert!(!s.run(&args).status.success());
-    assert_eq!(fs::read(s.0.join("events.ojo")).unwrap(), torn);
-    let kv = s.0.join("kv.ojo");
+    assert_eq!(fs::read(s.0.join("events.juro")).unwrap(), torn);
+    let kv = s.0.join("kv.juro");
     drop(ojo::Database::create(&kv, None).unwrap());
-    assert!(!s.run(&["append", "kv.ojo", "value"]).status.success());
+    assert!(!s.run(&["append", "kv.juro", "value"]).status.success());
     assert_eq!(fs::metadata(kv).unwrap().len(), 64);
     fs::write(s.0.join("value"), data).unwrap();
     s.ok(&args); // valid exact retry may recover the verified incomplete tail
-    assert_eq!(fs::read(s.0.join("events.ojo")).unwrap(), before);
+    assert_eq!(fs::read(s.0.join("events.juro")).unwrap(), before);
 }
 
 #[test]
@@ -181,37 +213,37 @@ fn time_ranges_append_pages_and_foreign_cursors_remain_distinct() {
         .step_by(2)
         .map(|i| u8::from_str_radix(&text[i..i + 2], 16).unwrap())
         .collect::<Vec<_>>();
-    fs::write(s.0.join("events.ojo"), raw).unwrap();
+    fs::write(s.0.join("events.juro"), raw).unwrap();
     let first: Value =
-        serde_json::from_slice(&s.ok(&["scan", "events.ojo", "--limit", "2"]).stdout).unwrap();
+        serde_json::from_slice(&s.ok(&["scan", "events.juro", "--limit", "2"]).stdout).unwrap();
     assert_eq!(first["events"].as_array().unwrap().len(), 2);
     assert_eq!(first["page"]["has_more"], true);
     let cursor = first["page"]["cursor"].as_str().unwrap();
     let last: Value =
-        serde_json::from_slice(&s.ok(&["scan", "events.ojo", "--after", cursor]).stdout).unwrap();
+        serde_json::from_slice(&s.ok(&["scan", "events.juro", "--after", cursor]).stdout).unwrap();
     assert_eq!(last["events"].as_array().unwrap().len(), 1);
     assert_eq!(last["events"][0]["data_hex"], "");
     let time: Value = serde_json::from_slice(
-        &s.ok(&["scan", "events.ojo", "--from", "-3", "--to", "17"])
+        &s.ok(&["scan", "events.juro", "--from", "-3", "--to", "17"])
             .stdout,
     )
     .unwrap();
     assert_eq!(time["events"].as_array().unwrap().len(), 1);
     assert_eq!(time["events"][0]["accepted_at"], -3);
     assert_eq!(time["events"][0]["data_hex"], "00ff0d0a");
-    s.ok(&["init", "foreign.ojo"]);
+    s.ok(&["init", "foreign.juro"]);
     assert!(
-        !s.run(&["scan", "foreign.ojo", "--after", cursor])
+        !s.run(&["scan", "foreign.juro", "--after", cursor])
             .status
             .success()
     );
     assert!(
-        !s.run(&["scan", "events.ojo", "--limit", "0"])
+        !s.run(&["scan", "events.juro", "--limit", "0"])
             .status
             .success()
     );
     assert!(
-        !s.run(&["scan", "events.ojo", "--from", "17", "--to", "17"])
+        !s.run(&["scan", "events.juro", "--from", "17", "--to", "17"])
             .status
             .success()
     );
@@ -220,10 +252,10 @@ fn time_ranges_append_pages_and_foreign_cursors_remain_distinct() {
 #[test]
 fn follow_releases_snapshot_lock_so_another_cli_can_append() {
     let s = Scratch::new();
-    s.ok(&["init", "events.ojo"]);
+    s.ok(&["init", "events.juro"]);
     fs::write(s.0.join("value"), b"arrived after follow").unwrap();
     let mut follower = s
-        .command(&["follow", "events.ojo", "--wait-ms", "3000"])
+        .command(&["follow", "events.juro", "--wait-ms", "3000"])
         .stdout(Stdio::piped())
         .stderr(Stdio::piped())
         .spawn()
@@ -232,7 +264,7 @@ fn follow_releases_snapshot_lock_so_another_cli_can_append() {
     assert!(follower.try_wait().unwrap().is_none());
     let deadline = Instant::now() + Duration::from_secs(2);
     let receipt = loop {
-        let output = s.run(&["append", "events.ojo", "value"]);
+        let output = s.run(&["append", "events.juro", "value"]);
         if output.status.success() {
             break serde_json::from_slice::<Value>(&output.stdout).unwrap();
         }
@@ -254,7 +286,7 @@ fn follow_releases_snapshot_lock_so_another_cli_can_append() {
     assert_eq!(page["events"][0]["cursor"], receipt["cursor"]);
     let cursor = page["page"]["cursor"].as_str().unwrap();
     let caught_up: Value = serde_json::from_slice(
-        &s.ok(&["follow", "events.ojo", "--after", cursor, "--wait-ms", "0"])
+        &s.ok(&["follow", "events.juro", "--after", cursor, "--wait-ms", "0"])
             .stdout,
     )
     .unwrap();
