@@ -12,7 +12,8 @@ pub struct EventRow {
 pub struct EventQuery<'a> {
     pub text: &'a str,
     pub from: i64,
-    pub to: i64,
+    /// Exclusive signed Unix-microsecond bound; None includes i64::MAX.
+    pub to: Option<i64>,
     pub limit: usize,
     pub excerpt_bytes: usize,
     pub max_bytes: usize,
@@ -22,22 +23,25 @@ impl<'a> EventQuery<'a> {
         Self {
             text,
             from: i64::MIN,
-            to: i64::MAX,
+            to: None,
             limit: 20,
             excerpt_bytes: 2048,
             max_bytes: 1 << 20,
         }
     }
-    fn query(&self) -> Query<'_> {
-        Query {
+    fn query(&self) -> Result<Query<'_>> {
+        if self.to.is_some_and(|to| to <= self.from) {
+            return Err(Error::Invalid);
+        }
+        Ok(Query {
             text: self.text,
             k: self.limit,
             from: self.from,
-            to: self.to,
+            to: self.to.map_or(i64::MAX, |to| to - 1),
             filter: Filter::default(),
             excerpt_bytes: self.excerpt_bytes,
             max_bytes: self.max_bytes,
-        }
+        })
     }
 }
 #[derive(Clone, Debug, Serialize)]
@@ -94,6 +98,38 @@ impl EventBuilder {
 pub struct EventIndex {
     inner: Index,
 }
+pub struct EventAppender {
+    inner: Appender,
+}
+impl EventAppender {
+    /// Requires the caller to prove that the old source prefix and scope are
+    /// unchanged and to revalidate the new Binding before publication/egress.
+    pub fn extend_validated_prefix(
+        previous: &EventIndex,
+        binding: Binding,
+        limits: Limits,
+    ) -> Result<Self> {
+        Ok(Self {
+            inner: Appender::extend_validated_prefix(&previous.inner, binding, limits)?,
+        })
+    }
+    pub fn push(&mut self, cursor: &[u8], timestamp: i64, data: &[u8]) -> Result<bool> {
+        cursor_id(cursor)?;
+        let Ok(text) = std::str::from_utf8(data) else {
+            return Ok(false);
+        };
+        self.inner.push(neutral(cursor, timestamp, text)?)?;
+        Ok(true)
+    }
+    pub fn retire(&mut self, cursor: &[u8]) -> Result<()> {
+        self.inner.retire(&cursor_id(cursor)?)
+    }
+    pub fn finish(self) -> Result<EventIndex> {
+        Ok(EventIndex {
+            inner: self.inner.finish()?,
+        })
+    }
+}
 impl EventIndex {
     pub fn open(
         directory: impl AsRef<Path>,
@@ -137,7 +173,7 @@ impl EventIndex {
     }
     pub fn rank(&self, binding: &Binding, q: &EventQuery<'_>) -> Result<Vec<EventRanked>> {
         self.inner
-            .rank(binding, &q.query())?
+            .rank(binding, &q.query()?)?
             .into_iter()
             .map(|inner| {
                 Ok(EventRanked {
@@ -176,12 +212,14 @@ impl EventIndex {
             }
         }
         let ranked = ranked.iter().map(|r| r.inner.clone()).collect::<Vec<_>>();
-        let candidates = self.inner.materialize(binding, &q.query(), &ranked, |id| {
-            let cursor = decode_cursor(id)?;
-            let event = fetch(&cursor)?;
-            let text = std::str::from_utf8(&event.data).map_err(|_| Error::Authority)?;
-            neutral(&cursor, event.timestamp, text)
-        })?;
+        let candidates = self
+            .inner
+            .materialize(binding, &q.query()?, &ranked, |id| {
+                let cursor = decode_cursor(id)?;
+                let event = fetch(&cursor)?;
+                let text = std::str::from_utf8(&event.data).map_err(|_| Error::Authority)?;
+                neutral(&cursor, event.timestamp, text)
+            })?;
         let mut bytes = 2usize;
         let mut hits = Vec::with_capacity(candidates.len());
         for hit in candidates {

@@ -95,7 +95,7 @@ fn generic_events_preserve_cursor_timestamp_and_exact_data_contract() {
         assert_eq!(hits[0].excerpt.as_bytes(), originals[&cursor(1)].data);
         assert_eq!(originals[&cursor(3)].data, [0xff, 0, 0x83]);
         q.from = -2;
-        q.to = 0;
+        q.to = Some(0);
         assert_eq!(
             index
                 .search(&binding(), &q, |cursor| Ok(originals[cursor].clone()))
@@ -117,6 +117,10 @@ fn generic_events_preserve_cursor_timestamp_and_exact_data_contract() {
                 Err(Error::Authority)
             ));
         }
+        q.to = Some(q.from);
+        assert!(matches!(index.rank(&binding(), &q), Err(Error::Invalid)));
+        q.to = Some(i64::MIN);
+        assert!(matches!(index.rank(&binding(), &q), Err(Error::Invalid)));
         q = EventQuery::new("alpha");
         q.max_bytes = 300;
         assert!(matches!(
@@ -173,6 +177,112 @@ fn construction_quota_covers_temporary_files_before_publication() {
             .starts_with(".build-")
     }));
     assert!(BuildMetrics::reservation(u64::MAX, 1, 4096, 4096).is_none());
+}
+
+#[test]
+fn incremental_prefix_append_retire_and_reopen_match_complete_global_model() {
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("index");
+        let initial = (0..2040).step_by(2).rev().map(row).collect::<Vec<_>>();
+        let old = build(&path, &initial, compression);
+        let old_columns = old.columns.clone();
+        let mut next = binding();
+        next.view[0] ^= 1;
+        let mut append = Appender::extend_validated_prefix(
+            &old,
+            next.clone(),
+            Limits {
+                compression,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        append.retire(&row(6).id).unwrap();
+        let additions = (1..120).step_by(2).map(row).collect::<Vec<_>>();
+        for row in &additions {
+            append.push(row.clone()).unwrap();
+        }
+        let index = append.finish().unwrap();
+        assert_eq!(index.row_count(), 1079);
+        assert_eq!(index.indexed_row_count(), 1080);
+        assert!(
+            old_columns
+                .iter()
+                .zip(&old.columns)
+                .all(|(before, after)| Arc::ptr_eq(before, after))
+        );
+        let rows = initial
+            .iter()
+            .filter(|r| r.id != row(6).id)
+            .cloned()
+            .chain(additions)
+            .collect::<Vec<_>>();
+        let originals: BTreeMap<_, _> = rows.iter().map(|r| (r.id.clone(), r.clone())).collect();
+        let reference = super::super::Index::build(next.clone(), rows).unwrap();
+        for text in [
+            "alpha",
+            "create_config",
+            "missing_name",
+            "\"exact id\"",
+            "key:k-00000006",
+            "k-00000006",
+        ] {
+            for filter in [
+                Filter::default(),
+                Filter {
+                    agent_id: Some("agent-3".into()),
+                    ..Filter::default()
+                },
+            ] {
+                let q = query(text, filter, -9, 9);
+                assert_eq!(
+                    fingerprint(
+                        &index
+                            .search(&next, &q, |id| Ok(originals[id].clone()))
+                            .unwrap()
+                    ),
+                    fingerprint(&reference.search(&next, &q).unwrap()),
+                    "{text} {compression:?}"
+                );
+                assert!(matches!(index.rank(&binding(), &q), Err(Error::Scope)));
+            }
+        }
+        drop(index);
+        let reopened = Index::open(&path, &[9; 32], &next).unwrap();
+        let q = query("alpha", Filter::default(), i64::MIN, i64::MAX);
+        assert_eq!(
+            fingerprint(
+                &reopened
+                    .search(&next, &q, |id| Ok(originals[id].clone()))
+                    .unwrap()
+            ),
+            fingerprint(&reference.search(&next, &q).unwrap())
+        );
+        assert_eq!(old.row_count(), 1020);
+        assert_eq!(
+            old.columns
+                .iter()
+                .map(|b| b.iter().filter(|c| c.live()).count())
+                .sum::<usize>(),
+            1020
+        );
+        let current = fs::read(path.join("PROJECTION_CURRENT")).unwrap();
+        let mut another = next.clone();
+        another.view[1] ^= 1;
+        let mut duplicate = Appender::extend_validated_prefix(
+            &reopened,
+            another,
+            Limits {
+                compression,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        duplicate.push(row(2)).unwrap();
+        assert!(matches!(duplicate.finish(), Err(Error::Conflict)));
+        assert_eq!(fs::read(path.join("PROJECTION_CURRENT")).unwrap(), current);
+    }
 }
 fn row(i: usize) -> Row {
     Row {

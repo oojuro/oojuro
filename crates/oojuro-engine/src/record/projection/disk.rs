@@ -11,8 +11,10 @@ use super::*;
 use crate::lexical::paged as scorer;
 use crate::record::paged::tree;
 pub use budget::BuildMetrics;
-pub use build::Builder;
-pub use events::{EventBuilder, EventHit, EventIndex, EventQuery, EventRanked, EventRow};
+pub use build::{Appender, Builder};
+pub use events::{
+    EventAppender, EventBuilder, EventHit, EventIndex, EventQuery, EventRanked, EventRow,
+};
 use oojuro_store::crypto::FrameCipher;
 use std::{
     collections::{BTreeMap, BTreeSet, BinaryHeap, HashMap},
@@ -91,7 +93,7 @@ pub struct Index {
     binding: Binding,
     authority: Authority,
     cipher: Arc<FrameCipher>,
-    pages: tree::PageCache,
+    pages: Arc<tree::PageCache>,
     manifest: Manifest,
     columns: Vec<Arc<[Column]>>,
     retained_disk_bytes: u64,

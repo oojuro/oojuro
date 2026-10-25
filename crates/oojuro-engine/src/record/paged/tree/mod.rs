@@ -793,10 +793,71 @@ impl<'a> Editor<'a> {
         };
         Ok(())
     }
+    /// Adjacent keys around an absent key, including unpublished edits. This
+    /// keeps incremental opaque-ID order labels independent of population size.
+    pub fn neighbors(&self, key: &[u8]) -> Result<(Option<Entry>, Option<Entry>)> {
+        if key.is_empty() || key.len() > self.pack.ctx.key_bound() {
+            return Err(Error::Bounds);
+        }
+        self.root
+            .node
+            .as_ref()
+            .map_or(Ok((None, None)), |node| neighbors_at(&self.pack, node, key))
+    }
     pub fn finish(mut self) -> Result<Root> {
         self.root.binding = self.pack.binding.clone();
         self.pack.finish()?;
         Ok(self.root)
+    }
+}
+fn extreme(pack: &Pack<'_>, reference: &Reference, last: bool) -> Result<Entry> {
+    match pack.load(reference)? {
+        Node::Leaf(mut entries) => if last {
+            entries.pop()
+        } else {
+            entries.into_iter().next()
+        }
+        .ok_or(Error::Authority),
+        Node::Branch(children) => extreme(
+            pack,
+            if last {
+                children.last()
+            } else {
+                children.first()
+            }
+            .ok_or(Error::Authority)?,
+            last,
+        ),
+    }
+}
+fn neighbors_at(
+    pack: &Pack<'_>,
+    reference: &Reference,
+    key: &[u8],
+) -> Result<(Option<Entry>, Option<Entry>)> {
+    match pack.load(reference)? {
+        Node::Leaf(entries) => {
+            match entries.binary_search_by(|entry| entry.key.as_slice().cmp(key)) {
+                Ok(_) => Err(Error::Conflict),
+                Err(at) => Ok((
+                    at.checked_sub(1).map(|i| entries[i].clone()),
+                    entries.get(at).cloned(),
+                )),
+            }
+        }
+        Node::Branch(children) => {
+            let at = children
+                .partition_point(|r| r.last.as_slice() < key)
+                .min(children.len() - 1);
+            let (mut before, mut after) = neighbors_at(pack, &children[at], key)?;
+            if before.is_none() && at > 0 {
+                before = Some(extreme(pack, &children[at - 1], true)?);
+            }
+            if after.is_none() && at + 1 < children.len() {
+                after = Some(extreme(pack, &children[at + 1], false)?);
+            }
+            Ok((before, after))
+        }
     }
 }
 fn insert_at(pack: &mut Pack<'_>, reference: &Reference, entry: Entry) -> Result<Vec<Reference>> {

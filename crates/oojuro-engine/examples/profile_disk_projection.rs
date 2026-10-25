@@ -4,7 +4,7 @@ use oojuro_engine::record::{
     self, Filter, Kind, Status,
     projection::{
         Binding, Hit, Query, Row,
-        disk::{Builder, Compression, Index, Limits},
+        disk::{Appender, Builder, Compression, Index, Limits},
     },
 };
 use serde_json::json;
@@ -195,6 +195,41 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
             "text_bytes":index.text_bytes(),"index_bytes":index.index_bytes(),"allocated_index_bytes":index.allocated_index_bytes(),
             "estimated_heap_bytes":index.estimated_heap_bytes(),"build_metrics":index.build_metrics(),
             "scope":"synthetic encrypted derived projection; deterministic fixture originals; no authority or end-to-end file latency"})
+        );
+    } else if args[1] == "append" {
+        let began = Instant::now();
+        let previous = checked(Index::open(root, &[9; 32], &binding()))?;
+        let open_ns = began.elapsed().as_nanos();
+        for case in cases(count) {
+            checked(search(&previous, &case))?;
+        }
+        let mut next = binding();
+        next.view[0] ^= 1;
+        let began = Instant::now();
+        let mut appender = checked(Appender::extend_validated_prefix(
+            &previous,
+            next.clone(),
+            Limits {
+                compression,
+                ..Limits::default()
+            },
+        ))?;
+        for i in count..count + 32 {
+            checked(appender.push(row(i)))?;
+        }
+        let index = checked(appender.finish())?;
+        let append_ns = began.elapsed().as_nanos();
+        assert_eq!(index.row_count(), (count + 32) as u64);
+        let mut signatures = Vec::new();
+        for case in cases(count + 32) {
+            let hits = checked(index.search(&next, &query(&case), |id| {
+                Ok(row(usize::from_str_radix(id, 16).unwrap()))
+            }))?;
+            signatures.push(json!({"case":case.name,"signature":signature(&hits)}));
+        }
+        println!(
+            "{}",
+            json!({"phase":"append","rows":count,"added":32,"compression":args[4],"open_ns":open_ns,"append_ns":append_ns,"index_bytes":index.index_bytes(),"allocated_index_bytes":index.allocated_index_bytes(),"estimated_heap_bytes":index.estimated_heap_bytes(),"build_metrics":index.build_metrics(),"signatures":signatures,"scope":"derived refresh only; caller-asserted unchanged prefix; existing index warmed before timing; source append and authority/provider checks excluded"})
         );
     } else if args[1] == "query" {
         let began = Instant::now();

@@ -738,7 +738,7 @@ pub(super) fn open_with_cipher(
     let directory = root.join(&manifest.generation);
     let lock = open_file(&directory.join("LOCK"))?;
     lock.try_lock_shared().map_err(|_| Error::Unavailable)?;
-    let pages = tree::PageCache::new(cipher.clone());
+    let pages = Arc::new(tree::PageCache::new(cipher.clone()));
     for (purpose, tree) in [
         (tree::Purpose::ProjectionMetadata, &manifest.metadata),
         (tree::Purpose::ProjectionIds, &manifest.ids),
@@ -753,7 +753,7 @@ pub(super) fn open_with_cipher(
             Some(&pages),
         ))?;
     }
-    if manifest.metadata.count != manifest.rows || manifest.ids.count != manifest.live_rows {
+    if manifest.metadata.count != manifest.rows || manifest.ids.count != manifest.rows {
         return Err(Error::Authority);
     }
     let mut columns = Vec::with_capacity(manifest.columns.len());

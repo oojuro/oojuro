@@ -5,6 +5,8 @@ use std::{
     fs,
     io::{BufReader, BufWriter, Read, Write},
 };
+mod extend;
+pub use extend::Appender;
 
 const SPOOL: &str = "BUILD_ROWS";
 #[derive(Serialize, Deserialize)]
@@ -50,9 +52,22 @@ impl Builder {
         binding: Binding,
         limits: Limits,
     ) -> Result<Self> {
+        Self::create_with_cipher(
+            directory.as_ref(),
+            Arc::new(FrameCipher::new(cache_key)),
+            binding,
+            limits,
+        )
+    }
+    fn create_with_cipher(
+        directory: &Path,
+        cipher: Arc<FrameCipher>,
+        binding: Binding,
+        limits: Limits,
+    ) -> Result<Self> {
         limits.validate()?;
         let mut authority = Authority::new(&binding)?;
-        let root = directory.as_ref().to_path_buf();
+        let root = directory.to_path_buf();
         let (lock, work, generation) = prepare(&root)?;
         authority.budget = Some(Arc::new(budget::Budget::new(
             &root,
@@ -62,7 +77,6 @@ impl Builder {
         authority.reserve(&work.join("LOCK"), 0)?;
         authority.reserve(&root.join("BUILD_LOCK"), 0)?;
         authority.reserve(&work.join(SPOOL), 0)?;
-        let cipher = Arc::new(FrameCipher::new(cache_key));
         let spool = BufWriter::with_capacity(64 << 10, new_file(&work.join(SPOOL))?);
         let blobs = Blobs::new(
             work.clone(),

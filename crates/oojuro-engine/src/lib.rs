@@ -17,7 +17,7 @@ pub mod receipts;
 /// Direct flat-record/time namespace; never an implicit harness-format conversion.
 pub mod record;
 pub use record::projection::disk::{
-    EventBuilder, EventHit, EventIndex, EventQuery, EventRanked, EventRow,
+    EventAppender, EventBuilder, EventHit, EventIndex, EventQuery, EventRanked, EventRow,
 };
 
 /// Opt-in content-free signed audit wire; persistence and current witnesses are external.

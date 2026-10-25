@@ -42,7 +42,7 @@ EventIndex::rank / EventIndex::materialize
 microseconds assigned by the source engine at first acceptance; retries retain
 the source's original timestamp and cursor. Cursors are opaque 1–512-byte
 identities and do not derive ordering from a wall clock. `EventQuery::new(text)`
-provides inclusive `from`/`to` timestamp bounds, a result `limit`, excerpt and
+provides `[from,to)` timestamp bounds (`to: Option<i64>`, None unbounded), a result `limit`, excerpt and
 serialized output budgets. A nonUTF8 original returns `false` from `push`, so it
 is omitted from this text index; its exact bytes remain readable in the
 authoritative database. No agent, source, severity or metadata map is required.
@@ -77,11 +77,27 @@ the same query model and exact-original checks. Zstd frames are independent,
 bounded and require no external dictionary. Compression changes derived cache
 files, never source bytes or source durability.
 
+`Appender::extend_validated_prefix(&previous, new_binding, limits)` performs
+copy-on-write refresh after the caller proves that the source prefix and scope
+are unchanged. `push` adds immutable IDs; `retire(id)` removes a prior live
+resolved winner from query eligibility. It hard-links immutable encrypted
+packs, shares unchanged numeric blocks and updates only affected index paths.
+Newly materialized results still use the source callback. Both bindings must
+have the same namespace/writer and different views; this check does not supply
+the caller's source-prefix proof. The neutral counterpart is `EventAppender`.
+
+Retired ordinals and encrypted bytes remain until a complete rebuild compacts
+the disposable cache; old generations remain separately owned. Logical/allocated
+admission conservatively counts hard-linked files per generation. Order-label
+space exhaustion returns an explicit refusal requiring a full rebuild, without
+publishing a partial index. Monotonic event cursors use reserved tail spacing.
+
 Current qualification covers exact legacy ranking across raw/Zstd, filter/time
 bounds, excerpts, reopen, duplicate raw keys, wrong keys/bindings, corrupted
 files, failed/over-budget builds, ten simultaneous immutable-handle queries,
-and the neutral event adapter. The source currently rebuilds on a changed
-snapshot; incremental refresh, million-row resource/latency acceptance and
+and the neutral event adapter, plus incremental append/retirement across a
+numeric-block boundary compared with a complete rebuild. Incremental latency,
+million-row concurrent latency acceptance and
 hosted end-to-end qualification remain open. No 1M, 250 ms or public service SLA
 claim follows from these functional checks.
 
