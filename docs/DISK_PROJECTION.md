@@ -118,6 +118,13 @@ Newly materialized results still use the source callback. Both bindings must
 have the same namespace/writer and different views; this check does not supply
 the caller's source-prefix proof. The neutral counterpart is `EventAppender`.
 
+`retire_if_present(id)` returns true when it retires a live ID from the previous
+projection, and false for a missing or already retired ID. It does not address
+rows newly pushed to the pending appender. Invalid bounds, authentication and I/O
+failures still poison the builder; `retire(id)` keeps its strict missing-ID
+error. `EventAppender::retire_if_present(cursor)` provides the neutral cursor
+counterpart. Neither method changes or deletes an authoritative source original.
+
 Retired ordinals and encrypted bytes remain until a complete rebuild compacts
 the disposable cache; old generations remain separately owned. Logical/allocated
 admission conservatively counts hard-linked files per generation. Order-label
