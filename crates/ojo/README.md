@@ -14,6 +14,15 @@ reconstruct their own accepted batch identity and return without calling commit.
 They require a writable handle and poison it on sync failure. Repeats on an
 unchanged, already confirmed healthy handle need no additional sync.
 
+A writable reopen also retains access to the file's parent directory until its
+first commit, explicit confirmation or tail-recovery barrier succeeds. This
+confirms a visible filename left by an earlier failed creation-directory sync.
+The first barrier syncs that parent once, then releases its descriptor; later
+healthy operations add no directory sync. Writable opens therefore need access
+to the containing directory. Read-only opens retain their existing requirements.
+Callers must durably establish directories they create before providing them
+to the engine; arbitrary ancestor creation/renaming is outside this file API.
+
 A fresh implementation of the experimental [wire 0.1 specification](../../spec/0.1/FORMAT.md).
 One synchronous Rust library. One file. Opaque byte keys and values. Four direct
 runtime dependencies: SHA-256, CRC32, authenticated encryption and OS randomness.
@@ -40,7 +49,8 @@ assert_eq!(db.get(b"2026-10-24T12:00:00Z/0001")?.unwrap(),
 # Ok(()) }
 ```
 
-Timestamps, tool names, schemas and session status belong to the caller. UTF-8
+Application timestamps, tool names, schemas and session status belong to the caller;
+the Event API assigns its own acceptance time. UTF-8
 text is a normal byte value; binary attachments also round-trip exactly. No text
 conversion, JSON parsing, network runtime, search/ranking, background worker or
 agent integration runs inside this library.
@@ -48,8 +58,9 @@ agent integration runs inside this library.
 ## Guarantees
 
 - A transaction contains 1–1,024 puts/deletes. All become visible together.
-- Creation syncs the header and its parent directory. Every public commit calls
-  `sync_all` before returning success; there is no unsafe/no-sync mode.
+- Creation syncs the header and its parent directory. Every successful new
+  commit syncs before acknowledgement; retries reuse an already confirmed
+  barrier or confirm a replayed prefix. There is no unsafe/no-sync public mode.
 - Readers hold shared inode locks. A writer holds an exclusive lock for its
   lifetime. Opens refuse contention; readers and writers cannot coexist.
 - Open verifies every complete transaction and rebuilds the in-memory key and

@@ -359,6 +359,9 @@ fn run() -> Result<()> {
     };
     let writable = matches!(command, "put" | "delete" | "recover");
     let mut db = Database::open(path, key.as_ref(), writable)?;
+    if command == "recover" {
+        db.confirm()?;
+    }
     if db.recovered_tail_bytes() != 0
         && !matches!(command, "recover" | "inspect" | "put" | "delete")
     {
