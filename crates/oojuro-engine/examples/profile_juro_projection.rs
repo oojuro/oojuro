@@ -30,6 +30,10 @@ enum Dataset {
     Diverse,
 }
 static DATASET: OnceLock<Dataset> = OnceLock::new();
+static POSITIONAL: OnceLock<bool> = OnceLock::new();
+fn positional() -> bool {
+    POSITIONAL.get().copied().unwrap_or(false)
+}
 fn dataset_name() -> &'static str {
     if DATASET.get() == Some(&Dataset::Diverse) {
         "diverse"
@@ -163,7 +167,9 @@ fn build_index(
     let checkpoint = journal.checkpoint();
     snapshot(journal, checkpoint)?;
     let create = |path: &Path, key: &[u8; 32], binding, limits| {
-        if compact {
+        if positional() {
+            EventBuilder::create_positional(path, key, binding, limits)
+        } else if compact {
             EventBuilder::create_compact(path, key, binding, limits)
         } else {
             EventBuilder::create(path, key, binding, limits)
@@ -339,11 +345,25 @@ fn main() -> Result<()> {
         Ok("1") => true,
         _ => return Err("JURO_BENCH_COMPACT must be 0 or 1".into()),
     };
+    let positions = match std::env::var("JURO_BENCH_POSITIONAL").as_deref() {
+        Err(std::env::VarError::NotPresent) | Ok("0") => false,
+        Ok("1") if compact => true,
+        _ => return Err("JURO_BENCH_POSITIONAL must be 0 or 1 and requires compact=1".into()),
+    };
+    POSITIONAL
+        .set(positions)
+        .map_err(|_| "positional configuration already set")?;
     let root = Path::new(&args[2]);
     let cache = root.join(format!(
         "index-{}{}",
         args[4],
-        if compact { "-v2" } else { "" }
+        if positional() {
+            "-v3"
+        } else if compact {
+            "-v2"
+        } else {
+            ""
+        }
     ));
     let began = Instant::now();
     let mut journal = open_source(root, count, encrypted)?;
@@ -360,7 +380,7 @@ fn main() -> Result<()> {
             "{}",
             json!({"phase":"build","rows":count,"source_open_ns":source_open_ns,
             "index_build_ns":began.elapsed().as_nanos(),"footprint":footprint(&index),
-            "dataset":dataset_name(),"source_compression":"NOCOMPRESS","source_encrypted":encrypted,"index_compression":args[4],"derived_layout":if compact {2} else {1},
+            "dataset":dataset_name(),"source_compression":"NOCOMPRESS","source_encrypted":encrypted,"index_compression":args[4],"derived_layout":if positional() {3} else if compact {2} else {1},
             "scope":"actual Journal.scan with exact fixture checks, EventBuilder finish and source checkpoint validation"})
         );
         return Ok(());
@@ -498,7 +518,7 @@ fn main() -> Result<()> {
         "{}",
         json!({"phase":args[1],"rows":count,"clients":clients,"rounds":rounds,"queries":results,
         "source_open_ns":source_open_ns,"index_open_ns":index_open_ns,"footprint":heap,
-        "dataset":dataset_name(),"source_compression":"NOCOMPRESS","source_encrypted":encrypted,"index_compression":args[4],"derived_layout":if compact {2} else {1},
+        "dataset":dataset_name(),"source_compression":"NOCOMPRESS","source_encrypted":encrypted,"index_compression":args[4],"derived_layout":if positional() {3} else if compact {2} else {1},
         "source_bytes":fs::metadata(root.join("source.juro"))?.len(),
         "scope":"actual local Event file + exact Journal.get + checkpoint checks; OS caches not evicted; no provider/network/auth timing",
         "initial_query_warms_index_pages_and_postings":true,"final_rank_reuse":args[1]=="retained",

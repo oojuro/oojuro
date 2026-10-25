@@ -29,6 +29,105 @@ fn binding() -> Binding {
 }
 
 #[test]
+fn positional_literals_match_full_oracle_across_unicode_filters_refresh_and_reopen() {
+    let samples = [
+        "battery electrode",
+        "Battery electrode",
+        "battery  electrode",
+        "battery\telectrode",
+        "x_battery electrode",
+        "battery electrode_x",
+        "λ_電池\r\n終",
+        "λ_電池\n終",
+        "___ ___",
+        "battery electrode battery electrode",
+        "e\u{301} exact\0終",
+        "終\0exact",
+        ".battery electrode.",
+    ];
+    let mut rows: Vec<_> = (0..300)
+        .map(|i| {
+            let mut value = row(i);
+            value.text = samples[i % samples.len()].into();
+            value
+        })
+        .collect();
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("positional");
+        let limits = Limits {
+            compression,
+            ..Limits::default()
+        };
+        let mut builder = Builder::create_positional(&path, &[9; 32], binding(), limits).unwrap();
+        for row in &rows {
+            builder.push(row.clone()).unwrap();
+        }
+        let mut index = builder.finish().unwrap();
+        assert_eq!(index.manifest.format, POSITIONAL_FORMAT);
+        assert!(index.manifest.positions.is_some());
+        for round in 0..2 {
+            let bound = index.binding().clone();
+            let live: Vec<_> = rows
+                .iter()
+                .filter(|row| round == 0 || row.id != rows[1].id)
+                .cloned()
+                .collect();
+            let reference = super::super::Index::build(bound.clone(), live.clone()).unwrap();
+            let originals: BTreeMap<_, _> =
+                live.into_iter().map(|row| (row.id.clone(), row)).collect();
+            for needle in samples.iter().chain(
+                [
+                    " battery",
+                    "battery ",
+                    ".",
+                    "absent",
+                    "battery electrode missing",
+                ]
+                .iter(),
+            ) {
+                let text = format!("\"{needle}\"");
+                for filter in [
+                    Filter::default(),
+                    Filter {
+                        agent_id: Some("agent-3".into()),
+                        ..Filter::default()
+                    },
+                ] {
+                    let q = query(&text, filter, -8, 7);
+                    let ranked = index.rank_uncached(&bound, &q).unwrap();
+                    assert_eq!(
+                        fingerprint(
+                            &index
+                                .materialize(&bound, &q, &ranked, |id| Ok(originals[id].clone()))
+                                .unwrap()
+                        ),
+                        fingerprint(&reference.search(&bound, &q).unwrap()),
+                        "{text} {compression:?} round {round}"
+                    );
+                }
+            }
+            if round == 0 {
+                let mut next = bound.clone();
+                next.view[0] ^= 1;
+                let mut append =
+                    Appender::extend_validated_prefix(&index, next.clone(), limits).unwrap();
+                append.retire(&rows[1].id).unwrap();
+                let mut addition = row(400);
+                addition.text = "battery electrode λ_電池\r\n終".into();
+                append.push(addition.clone()).unwrap();
+                rows.push(addition);
+                let updated = append.finish().unwrap();
+                drop(updated);
+                drop(index);
+                index = Index::open(&path, &[9; 32], &next).unwrap();
+            }
+        }
+        rows.pop();
+    }
+}
+
+#[test]
 fn generic_events_preserve_cursor_timestamp_and_exact_data_contract() {
     fn cursor(i: u64) -> Vec<u8> {
         let mut value = vec![0x83; 16];
@@ -668,7 +767,7 @@ fn compact_block_bounds_match_complete_rank_bits_ties_filters_and_retirement() {
         // cohort actually prunes blocks and can complete under that work cap.
         assert!(
             index
-                .rank_compact_blocks(&model, &Selection::new(&q), q.k)
+                .rank_compact_blocks(&model, &Selection::new(&q), q.k, None)
                 .unwrap()
                 .is_some()
         );

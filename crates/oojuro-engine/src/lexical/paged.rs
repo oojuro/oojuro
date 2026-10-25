@@ -106,6 +106,9 @@ impl Plan {
     pub fn scope_model(&self) -> bool {
         self.scope_model
     }
+    pub fn literal_driver(&self) -> Option<usize> {
+        self.literal.as_ref().and(self.rarest)
+    }
     pub fn anchor_driver(&self, at: usize) -> bool {
         self.anchored && self.literal.is_none() && self.terms[at].0.contains('_')
     }
@@ -155,6 +158,32 @@ impl Stats {
             view: counts,
             total: mass,
             view_total: view_mass,
+        })
+    }
+    /// Exact integer counts under a complete literal-position proof. The
+    /// unchanged finish/score methods retain the original arithmetic order.
+    pub fn literal_counts(
+        plan: &Plan,
+        collection: Vec<u64>,
+        view: Vec<u64>,
+        total: u64,
+        view_total: u64,
+    ) -> Result<Self> {
+        if plan.literal.is_none()
+            || plan.scope_model
+            || plan.direct.is_some()
+            || collection.len() != plan.terms.len()
+            || view.len() != plan.terms.len()
+            || total > view_total
+            || collection.iter().zip(&view).any(|(a, b)| a > b)
+        {
+            return Err(Error::Invalid);
+        }
+        Ok(Self {
+            collection,
+            view,
+            total,
+            view_total,
         })
     }
     /// Sparse postings visits already cover every visible term occurrence.
@@ -247,6 +276,18 @@ pub(crate) struct Model {
     query_count: f64,
 }
 impl Model {
+    /// Literal gain uses TF directly; only its negative penalty depends on
+    /// length. Independent minimum length and maximum TF are therefore safe.
+    pub fn literal_bound(&self, minimum_length: u32, maximum_tf: &[u32]) -> Option<f64> {
+        if self.plan.literal.is_none()
+            || self.plan.scope_model
+            || maximum_tf.len() != self.plan.terms.len()
+        {
+            return None;
+        }
+        let score = self.score(minimum_length, 0, maximum_tf);
+        score.is_finite().then_some(score)
+    }
     /// Independent optimistic penalty/gain bounds for heterogeneous scopes.
     /// Each maximum is computed with the exact score expression TF*scope/length,
     /// not a separately rounded ratio. Different rows may maximize each term;

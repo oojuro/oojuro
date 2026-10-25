@@ -8,9 +8,12 @@ impl Index {
         model: &scorer::Model,
         selection: &Selection,
         limit: usize,
+        literal: Option<&[u64]>,
     ) -> Result<Option<Top>> {
         let Some(mass) = self.mass.as_ref().filter(|_| {
-            model.plan.scope_model() && model.plan.terms.len() <= 16 && self.manifest.rows > 4096
+            (model.plan.scope_model() || (model.plan.literal.is_some() && literal.is_some()))
+                && model.plan.terms.len() <= 16
+                && self.manifest.rows > 4096
         }) else {
             return Ok(None);
         };
@@ -45,12 +48,21 @@ impl Index {
                     .maximum_scope_mass(base)
                     .ok_or(Error::Authority)?;
             }
-            if tf.iter().all(|tf| *tf == 0) {
+            if !lists.is_empty() && tf.iter().all(|tf| *tf == 0) {
+                continue;
+            }
+            if literal.is_some_and(|bits| {
+                (block * 4..((block + 1) * 4).min(bits.len())).all(|at| bits[at] == 0)
+            }) {
                 continue;
             }
             let shape = &mass.shapes[block];
             let shaped = compact::shape_bound(model, shape.values(), &tf);
-            let scoped = model.scope_bound(shape.minimum_scope, &maximum_mass);
+            let scoped = if model.plan.scope_model() {
+                model.scope_bound(shape.minimum_scope, &maximum_mass)
+            } else {
+                model.literal_bound(mass.minimum_length(base)?, &tf)
+            };
             let bound = match (shaped, scoped) {
                 (Some(a), Some(b)) => Some(a.min(b)),
                 (Some(a), None) => Some(a),
@@ -63,7 +75,7 @@ impl Index {
                 continue;
             }
             for word in block * 4..((block + 1) * 4).min(mass.live.len()) {
-                let mut active = mass.live[word];
+                let mut active = mass.live[word] & literal.map_or(u64::MAX, |bits| bits[word]);
                 while active != 0 {
                     let bit = active.trailing_zeros();
                     active &= active - 1;

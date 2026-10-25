@@ -1,6 +1,55 @@
 //! Version 2 disposable term blocks; source wire/profile formats are unrelated.
 use super::*;
 
+#[test]
+fn literal_tf_sums_and_penalty_bounds_match_complete_integer_and_score_oracles() {
+    let plan = scorer::Plan::new(
+        "\"battery electrode\"",
+        false,
+        None,
+        &BTreeSet::new(),
+        &BTreeMap::new(),
+    );
+    let model =
+        scorer::Stats::literal_counts(&plan, vec![400, 900], vec![1000, 2000], 20_000, 90_000)
+            .unwrap()
+            .finish(plan);
+    let cases: Vec<Vec<(u32, u32)>> = vec![
+        (0..256).map(|row| (row, 7)).collect(),
+        (0..256).map(|row| (row, 1 + row % 31)).collect(),
+        vec![(0, 1), (64, u32::MAX), (255, 900)],
+    ];
+    let mut codecs = BTreeSet::new();
+    let mut seed = 17u64;
+    for pairs in cases {
+        let bytes = TfBlock::encode(0, &pairs).unwrap();
+        codecs.insert(bytes[0]);
+        let block = TfBlock::decode(0, 256, bytes).unwrap();
+        for _ in 0..100 {
+            let mask = std::array::from_fn(|_| {
+                seed ^= seed << 13;
+                seed ^= seed >> 7;
+                seed ^= seed << 17;
+                seed
+            });
+            let expected: u64 = pairs
+                .iter()
+                .filter(|(row, _)| mask[*row as usize / 64] & (1 << (row % 64)) != 0)
+                .map(|(_, tf)| u64::from(*tf))
+                .sum();
+            assert_eq!(block.frequency(mask), expected);
+        }
+    }
+    assert_eq!(codecs, [0, 1, 2].into());
+    for minimum in [0, 1, 17, 1000] {
+        let bound = model.literal_bound(minimum, &[13, 19]).unwrap();
+        for row in 0..257 {
+            assert!(model.score(minimum + row, 900, &[row % 14, row % 20]) <= bound);
+        }
+    }
+    assert!(model.literal_bound(1, &[1]).is_none());
+}
+
 const ROWS: usize = 256;
 pub(super) struct TfBlock {
     base: u32,
@@ -11,6 +60,47 @@ pub(super) struct TfBlock {
     maximum_scope_mass: f64,
 }
 impl TfBlock {
+    pub(super) fn frequency(&self, mask: [u64; 4]) -> u64 {
+        match self.bytes[0] {
+            0 => self.bytes[3..]
+                .as_chunks::<5>()
+                .0
+                .iter()
+                .filter_map(|pair| {
+                    let row = pair[0] as usize;
+                    (mask[row / 64] & (1 << (row % 64)) != 0)
+                        .then(|| u64::from(u32::from_le_bytes(pair[1..].try_into().unwrap())))
+                })
+                .sum(),
+            1 => self.bytes[2..]
+                .as_chunks::<32>()
+                .0
+                .iter()
+                .enumerate()
+                .map(|(bit, plane)| {
+                    let count: u64 = plane
+                        .as_chunks::<8>()
+                        .0
+                        .iter()
+                        .zip(mask)
+                        .map(|(word, mask)| {
+                            u64::from((u64::from_le_bytes(*word) & mask).count_ones())
+                        })
+                        .sum();
+                    count << bit
+                })
+                .sum(),
+            2 => {
+                self.present
+                    .iter()
+                    .zip(mask)
+                    .map(|(word, mask)| u64::from((word & mask).count_ones()))
+                    .sum::<u64>()
+                    * u64::from(self.maximum)
+            }
+            _ => unreachable!("validated compact TF block"),
+        }
+    }
     pub(super) fn encode(base: u32, pairs: &[(u32, u32)]) -> Result<Vec<u8>> {
         if base & 255 != 0 || pairs.is_empty() || pairs.len() > ROWS {
             return Err(Error::Invalid);
@@ -447,6 +537,31 @@ impl BlockShape {
     }
 }
 impl Mass {
+    pub(super) fn minimum_length(&self, base: u32) -> Result<u32> {
+        if base & 255 != 0 || base as usize >= self.rows {
+            return Err(Error::Authority);
+        }
+        let begin = base as usize / 64;
+        let mut active = [0u64; 4];
+        for (at, value) in active.iter_mut().enumerate() {
+            *value = self.live.get(begin + at).copied().unwrap_or(0);
+        }
+        if active.iter().all(|word| *word == 0) {
+            return Ok(0);
+        }
+        let mut minimum = 0u32;
+        for (bit, plane) in self.length.iter().rev() {
+            let zeros = std::array::from_fn::<_, 4, _>(|at| {
+                active[at] & !plane.get(begin + at).copied().unwrap_or(0)
+            });
+            if zeros.iter().any(|word| *word != 0) {
+                active = zeros;
+            } else {
+                minimum |= 1 << bit;
+            }
+        }
+        Ok(minimum)
+    }
     pub(super) fn required(rows: usize, length: u32, scope: u32) -> Result<usize> {
         let planes = (length.count_ones() + scope.count_ones()) as usize;
         rows.div_ceil(64)
@@ -681,6 +796,15 @@ fn bitplane_mass_matches_complete_integer_oracle_and_admits_before_allocation() 
         .map(Arc::<[Column]>::from)
         .collect();
     let mass = Mass::new(&blocks, 1 << 20).unwrap();
+    for base in (0..columns.len()).step_by(256) {
+        let expected = columns[base..(base + 256).min(columns.len())]
+            .iter()
+            .filter(|column| column.live() && column.indexed())
+            .map(|column| column.length)
+            .min()
+            .unwrap_or(0);
+        assert_eq!(mass.minimum_length(base as u32).unwrap(), expected);
+    }
     assert!(mass.bytes() < 1 << 20);
     assert_eq!(
         Mass::new(&blocks, mass.bytes()).unwrap().bytes(),

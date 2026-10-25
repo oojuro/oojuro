@@ -32,6 +32,33 @@ pub(super) enum Pairs {
     },
 }
 impl Pairs {
+    pub fn frequency(&self, mask: &[u64]) -> Result<u64> {
+        let mut total = 0u64;
+        match self {
+            Self::Plain(pairs) => {
+                for &(row, tf) in pairs {
+                    let word = mask.get(row as usize / 64).ok_or(Error::Authority)?;
+                    if word & (1 << (row % 64)) != 0 {
+                        total = total.checked_add(u64::from(tf)).ok_or(Error::Bounds)?;
+                    }
+                }
+            }
+            Self::Compact { blocks, .. } => {
+                for block in blocks {
+                    let begin = block.base() as usize / 64;
+                    if begin >= mask.len() {
+                        return Err(Error::Authority);
+                    }
+                    let selected =
+                        std::array::from_fn(|at| mask.get(begin + at).copied().unwrap_or(0));
+                    total = total
+                        .checked_add(block.frequency(selected))
+                        .ok_or(Error::Bounds)?;
+                }
+            }
+        }
+        Ok(total)
+    }
     fn new(compact: bool, upper: usize) -> Self {
         if compact {
             Self::Compact {
@@ -338,7 +365,7 @@ impl TermCache {
                     &index.manifest.postings,
                     &term,
                 )?;
-                if index.manifest.format == COMPACT_FORMAT {
+                if compact_format(index.manifest.format) {
                     let upper = usize::try_from(chunks).map_err(|_| Error::Bounds)?;
                     let reserved = upper
                         .checked_mul(std::mem::size_of::<compact::TfBlock>() + 1283)
@@ -386,13 +413,13 @@ impl TermCache {
 }
 fn load(index: &Index, term: [u8; 32], upper: usize) -> Result<TermList> {
     let mut input = DiskPostings::new_hash(index, term)?;
-    let mut pairs = Pairs::new(index.manifest.format == COMPACT_FORMAT, upper);
+    let mut pairs = Pairs::new(compact_format(index.manifest.format), upper);
     let mut pending = Vec::with_capacity(256);
     let mut maximum_scope_mass = 0.0f64;
     let mut statistics = Statistics::default();
     let mut groups = Some(BTreeMap::<(u32, u32, u32), BinaryHeap<GroupHit>>::new());
     while let Some((ordinal, tf)) = input.next()? {
-        if index.manifest.format != COMPACT_FORMAT && pairs.len() == upper {
+        if !compact_format(index.manifest.format) && pairs.len() == upper {
             return Err(Error::Authority);
         }
         let column = index.column(ordinal)?;

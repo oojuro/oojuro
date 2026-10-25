@@ -14,6 +14,10 @@ const MAX_META: usize = (32 << 10) - 5;
 const MAX_DESCRIPTOR: usize = 8 << 20;
 const FORMAT: u32 = 1;
 pub(super) const COMPACT_FORMAT: u32 = 2;
+pub(super) const POSITIONAL_FORMAT: u32 = 3;
+pub(super) fn compact_format(format: u32) -> bool {
+    matches!(format, COMPACT_FORMAT | POSITIONAL_FORMAT)
+}
 pub(super) const TEXT: u8 = 1;
 pub(super) const COLUMNS: u8 = 2;
 const MANIFEST: &str = "PROJECTION_CURRENT";
@@ -31,16 +35,17 @@ impl Authority {
         Self::for_layout(binding, FORMAT)
     }
     pub fn for_layout(binding: &Binding, format: u32) -> Result<Self> {
-        if !matches!(format, FORMAT | COMPACT_FORMAT) {
+        if !matches!(format, FORMAT | COMPACT_FORMAT | POSITIONAL_FORMAT) {
             return Err(Error::Bounds);
         }
         if !name(&binding.writer, 256) {
             return Err(Error::Bounds);
         }
-        let mut identity = if format == COMPACT_FORMAT {
-            b"OJPROJ02".to_vec()
-        } else {
-            b"OJPROJ01".to_vec()
+        let mut identity = match format {
+            FORMAT => b"OJPROJ01".to_vec(),
+            COMPACT_FORMAT => b"OJPROJ02".to_vec(),
+            POSITIONAL_FORMAT => b"OJPROJ03".to_vec(),
+            _ => return Err(Error::Bounds),
         };
         identity.extend(binding.namespace);
         identity.extend((binding.writer.len() as u16).to_le_bytes());
@@ -169,6 +174,8 @@ pub(super) struct Manifest {
     pub ids: tree::Root,
     pub keys: tree::Root,
     pub postings: tree::Root,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub positions: Option<tree::Root>,
 }
 #[derive(Clone, Copy)]
 pub(super) struct Column {
@@ -546,14 +553,14 @@ pub(super) fn encode_metadata(
 ) -> Result<Vec<u8>> {
     match format {
         1 => pack_json(value, compression),
-        COMPACT_FORMAT => metadata::encode(value, compression),
+        COMPACT_FORMAT | POSITIONAL_FORMAT => metadata::encode(value, compression),
         _ => Err(Error::Authority),
     }
 }
 pub(super) fn decode_metadata(bytes: &[u8], limits: &Limits, format: u32) -> Result<Metadata> {
     match format {
         1 => unpack_json(bytes, limits),
-        COMPACT_FORMAT => metadata::decode(bytes),
+        COMPACT_FORMAT | POSITIONAL_FORMAT => metadata::decode(bytes),
         _ => Err(Error::Authority),
     }
 }
@@ -562,7 +569,7 @@ pub(super) fn encode_layout_postings(
     compression: Compression,
     format: u32,
 ) -> Result<Vec<u8>> {
-    if format == COMPACT_FORMAT {
+    if compact_format(format) {
         let base = rows.first().ok_or(Error::Bounds)?.0 & !255;
         pack_bytes(&compact::TfBlock::encode(base, rows)?, compression)
     } else if format == 1 {
@@ -577,7 +584,7 @@ pub(super) fn decode_layout_postings(
     rows: u64,
     format: u32,
 ) -> Result<Vec<(u32, u32)>> {
-    if format == COMPACT_FORMAT {
+    if compact_format(format) {
         let raw = unpack_bytes(bytes, 1283)?;
         let pairs = compact::TfBlock::decode(first & !255, rows, raw)?.pairs();
         if pairs.first().map(|pair| pair.0) != Some(first) {
@@ -847,17 +854,16 @@ pub(super) fn open_with_cipher(
     limits: Limits,
 ) -> Result<Index> {
     limits.validate()?;
-    let mut authority = Authority::new(binding)?;
     let sealed = read_bounded(&root.join(MANIFEST), MAX_DESCRIPTOR + SEAL_OVERHEAD)?;
-    let plain = match cipher.open_frame(&manifest_aad(&authority), &sealed) {
-        Ok(plain) => plain,
-        Err(_) => {
-            authority = Authority::for_layout(binding, COMPACT_FORMAT)?;
-            cipher
-                .open_frame(&manifest_aad(&authority), &sealed)
-                .map_err(|_| Error::Authority)?
+    let mut opened = None;
+    for format in [FORMAT, COMPACT_FORMAT, POSITIONAL_FORMAT] {
+        let authority = Authority::for_layout(binding, format)?;
+        if let Ok(plain) = cipher.open_frame(&manifest_aad(&authority), &sealed) {
+            opened = Some((format, authority, plain));
+            break;
         }
-    };
+    }
+    let (format, authority, plain) = opened.ok_or(Error::Authority)?;
     let mut manifest: Manifest = serde_json::from_slice(&plain).map_err(|_| Error::Authority)?;
     manifest.limits.validate()?;
     // Stored policy cannot loosen this handle's caller-supplied work caps.
@@ -868,8 +874,8 @@ pub(super) fn open_with_cipher(
         .original_bytes_per_query
         .min(limits.original_bytes_per_query);
     manifest.limits.query_terms = manifest.limits.query_terms.min(limits.query_terms);
-    if !matches!(manifest.format, FORMAT | COMPACT_FORMAT)
-        || authority.identity.starts_with(b"OJPROJ02") != (manifest.format == COMPACT_FORMAT)
+    if manifest.format != format
+        || manifest.positions.is_some() != (format == POSITIONAL_FORMAT)
         || manifest.binding != authority.binding
         || !valid_generation(&manifest.generation)
         || manifest.files.len() > 4096
@@ -896,6 +902,15 @@ pub(super) fn open_with_cipher(
             &cipher,
             &authority,
             purpose,
+            Some(&pages),
+        ))?;
+    }
+    if let Some(positions) = &manifest.positions {
+        positions.check(&context(
+            &directory,
+            &cipher,
+            &authority,
+            tree::Purpose::ProjectionPostings,
             Some(&pages),
         ))?;
     }
@@ -979,7 +994,7 @@ pub(super) fn index_mass(
     format: u32,
     limit: usize,
 ) -> Result<Option<compact::Mass>> {
-    if format != COMPACT_FORMAT {
+    if !compact_format(format) {
         return Ok(None);
     }
     Ok(Some(compact::Mass::new(

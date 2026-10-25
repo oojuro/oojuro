@@ -147,6 +147,9 @@ impl Appender {
         let make = |purpose| context(&directory, &cipher, &authority, purpose, Some(&self.pages));
         let mut sorted_ids = tree::Sorter::new(make(tree::Purpose::ProjectionIds))?;
         let mut sorted_postings = tree::Sorter::new(make(tree::Purpose::ProjectionTerms))?;
+        let mut sorted_positions = (b.format == POSITIONAL_FORMAT)
+            .then(|| tree::Sorter::new(make(tree::Purpose::ProjectionTerms)))
+            .transpose()?;
         let mut keys = tree::Editor::new(
             make(tree::Purpose::ProjectionKeys),
             self.previous.keys.clone(),
@@ -168,6 +171,23 @@ impl Appender {
         while let Some((offset, analysis)) = reader.next()? {
             let ordinal =
                 u32::try_from(self.previous.rows + u64::from(offset)).map_err(|_| Error::Bounds)?;
+            if let Some(positions) = &mut sorted_positions {
+                if analysis.metadata.indexed {
+                    let bytes = read_blob(
+                        &directory,
+                        &cipher,
+                        &authority,
+                        &b.blobs.files,
+                        &analysis.metadata.text,
+                        MAX_TEXT_BYTES,
+                    )?;
+                    if *blake3::hash(&bytes).as_bytes() != analysis.metadata.text_digest {
+                        return Err(Error::Authority);
+                    }
+                    let text = std::str::from_utf8(&bytes).map_err(|_| Error::Authority)?;
+                    literal::push(positions, ordinal, text)?;
+                }
+            }
             sorted_ids.push(tree::Entry {
                 key: analysis.metadata.id.as_bytes().to_vec(),
                 value: ordinal.to_be_bytes().to_vec(),
@@ -186,6 +206,23 @@ impl Appender {
         key_batch.flush(&mut keys)?;
         let temporary_ids = sorted_ids.finish()?;
         let flat_postings = sorted_postings.finish()?;
+        let positions = if let Some(rows) = sorted_positions {
+            let flat = rows.finish()?;
+            let mut output = tree::Editor::new(
+                make(tree::Purpose::ProjectionPostings),
+                self.previous.positions.clone().ok_or(Error::Authority)?,
+            )?;
+            let mut pending = Pending::new();
+            literal::fold_sorted(make(tree::Purpose::ProjectionTerms), &flat, |entry| {
+                pending.push(&mut output, entry)
+            })?;
+            pending.flush(&mut output)?;
+            let root = output.finish()?;
+            remove_tree(&directory, &authority, &flat)?;
+            Some(root)
+        } else {
+            None
+        };
         if temporary_ids.count != b.rows {
             return Err(Error::Conflict);
         }
@@ -254,7 +291,7 @@ impl Appender {
             let next: [u8; 32] = entry.key[..32].try_into().unwrap();
             if term.is_some_and(|term| term != next)
                 || list.len() == 256
-                || (b.format == COMPACT_FORMAT
+                || (compact_format(b.format)
                     && list.first().is_some_and(|(row, _)| {
                         row / 256 != parse_u32(&entry.key[32..]).unwrap_or(u32::MAX) / 256
                     }))
@@ -305,7 +342,7 @@ impl Appender {
         if !tail.is_empty() {
             self.columns.push(Arc::from(tail));
         }
-        let mass = if b.format == COMPACT_FORMAT {
+        let mass = if compact_format(b.format) {
             Some(self.previous_mass.take().ok_or(Error::Authority)?.refresh(
                 &self.columns,
                 &self.changed,
@@ -351,6 +388,7 @@ impl Appender {
             ids,
             keys,
             postings,
+            positions,
         };
         let previous_directory = b.directory.clone();
         b.directory = finish_directory(&b.root, &b.directory, &b.generation)?;

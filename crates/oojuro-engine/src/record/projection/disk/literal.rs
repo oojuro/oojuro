@@ -1,0 +1,599 @@
+//! Exact raw UTF-8 run positions for a separately versioned disposable cache.
+//! Runs retain case and every separator byte. They never normalize or stem.
+use super::*;
+
+const MAX_ATOMS: usize = 128;
+const MAX_POSITIONS: usize = 4096;
+const MAX_BYTES: usize = 28 << 10;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub(super) struct Atom {
+    pub hash: [u8; 32],
+    pub offset: u32,
+}
+fn word(c: char) -> bool {
+    c.is_alphanumeric() || c == '_'
+}
+fn runs(text: &str, mut visit: impl FnMut(bool, usize, &str)) {
+    let mut start = 0;
+    let mut previous = None;
+    for (offset, character) in text.char_indices() {
+        let current = word(character);
+        if previous.is_some_and(|previous| previous != current) {
+            visit(previous.unwrap(), start, &text[start..offset]);
+            start = offset;
+        }
+        previous = Some(current);
+    }
+    if let Some(previous) = previous {
+        visit(previous, start, &text[start..]);
+    }
+}
+fn hash(is_word: bool, text: &str) -> [u8; 32] {
+    let mut state = blake3::Hasher::new_derive_key("oojuro raw literal run v1");
+    state.update(&[u8::from(is_word)]);
+    state.update(text.as_bytes());
+    *state.finalize().as_bytes()
+}
+/// Complete proof is available when both needle edges are word characters.
+/// Other phrases use the existing exact-original fallback. This restriction
+/// avoids silently changing partial separator or word-boundary semantics.
+pub(super) fn query(needle: &str) -> Option<Vec<Atom>> {
+    if !needle.chars().next().is_some_and(word) || !needle.chars().next_back().is_some_and(word) {
+        return None;
+    }
+    let mut atoms = Vec::new();
+    runs(needle, |kind, offset, text| {
+        if atoms.len() <= MAX_ATOMS {
+            atoms.push(Atom {
+                hash: hash(kind, text),
+                offset: offset as u32,
+            });
+        }
+    });
+    (atoms.len() <= MAX_ATOMS).then_some(atoms)
+}
+pub(super) fn analyze(text: &str) -> BTreeMap<[u8; 32], Vec<u32>> {
+    let mut atoms = BTreeMap::new();
+    runs(text, |kind, offset, text| {
+        atoms
+            .entry(hash(kind, text))
+            .or_insert_with(Vec::new)
+            .push(offset as u32);
+    });
+    atoms
+}
+
+pub(super) fn push(sorter: &mut tree::Sorter<'_>, ordinal: u32, text: &str) -> Result<()> {
+    if text.len() > MAX_TEXT_BYTES {
+        return Err(Error::Bounds);
+    }
+    for (hash, positions) in analyze(text) {
+        for fragment in positions.chunks(1024) {
+            let mut key = hash.to_vec();
+            key.extend(ordinal.to_be_bytes());
+            key.extend(fragment[0].to_be_bytes());
+            let mut value = Vec::with_capacity(fragment.len() * 4);
+            for position in fragment {
+                value.extend(position.to_le_bytes());
+            }
+            sorter.push(tree::Entry::new(key, value)?)?;
+        }
+    }
+    Ok(())
+}
+
+pub(super) fn fold_sorted(
+    context: tree::Context<'_>,
+    root: &tree::Root,
+    mut emit: impl FnMut(tree::Entry) -> Result<()>,
+) -> Result<()> {
+    let mut input = tree::Cursor::seek(context, root, b"")?;
+    let mut term = None::<[u8; 32]>;
+    let mut base = 0;
+    let mut rows = Vec::<(u32, Vec<u32>)>::new();
+    let mut count = 0;
+    let flush = |term: Option<[u8; 32]>,
+                 base,
+                 rows: &mut Vec<(u32, Vec<u32>)>,
+                 emit: &mut dyn FnMut(tree::Entry) -> Result<()>|
+     -> Result<()> {
+        if rows.is_empty() {
+            return Ok(());
+        }
+        let mut key = term.ok_or(Error::Authority)?.to_vec();
+        key.extend(rows[0].0.to_be_bytes());
+        key.extend(rows[0].1[0].to_be_bytes());
+        emit(tree::Entry::new(key, Block::encode(base, rows)?)?)?;
+        rows.clear();
+        Ok(())
+    };
+    while let Some(entry) = input.next()? {
+        if entry.key.len() != 40
+            || entry.value.is_empty()
+            || entry.value.len() % 4 != 0
+            || entry.value.len() > 4096
+        {
+            return Err(Error::Authority);
+        }
+        let hash = entry.key[..32].try_into().unwrap();
+        let ordinal = parse_u32(&entry.key[32..36])?;
+        let positions: Vec<_> = entry
+            .value
+            .as_chunks::<4>()
+            .0
+            .iter()
+            .map(|bytes| u32::from_le_bytes(*bytes))
+            .collect();
+        if positions[0] != parse_u32(&entry.key[36..])? {
+            return Err(Error::Authority);
+        }
+        if term != Some(hash)
+            || base != ordinal & !255
+            || count + positions.len() > MAX_POSITIONS
+            || rows.last().is_some_and(|(row, _)| *row >= ordinal)
+        {
+            flush(term, base, &mut rows, &mut emit)?;
+            count = 0;
+        }
+        term = Some(hash);
+        base = ordinal & !255;
+        count += positions.len();
+        rows.push((ordinal, positions));
+    }
+    flush(term, base, &mut rows, &mut emit)
+}
+
+/// A bounded fragment of one aligned 256-row position block. Equal exact
+/// position lists share one row mask. Fragments may repeat rows when one row's
+/// run occurs very often; readers union those fragments before joining runs.
+pub(super) struct Block {
+    pub base: u32,
+    groups: Vec<Group>,
+}
+struct Group {
+    rows: [u64; 4],
+    positions: Vec<u32>,
+}
+impl Block {
+    pub fn encode(base: u32, rows: &[(u32, Vec<u32>)]) -> Result<Vec<u8>> {
+        if base & 255 != 0 || rows.is_empty() || rows.len() > 256 {
+            return Err(Error::Invalid);
+        }
+        let mut grouped = BTreeMap::<Vec<u32>, [u64; 4]>::new();
+        let mut last = None;
+        let mut count = 0;
+        for (ordinal, positions) in rows {
+            let offset = ordinal.checked_sub(base).ok_or(Error::Invalid)? as usize;
+            if offset >= 256
+                || last.is_some_and(|last| last >= *ordinal)
+                || positions.is_empty()
+                || positions.windows(2).any(|pair| pair[0] >= pair[1])
+                || positions
+                    .last()
+                    .is_some_and(|position| *position as usize >= MAX_TEXT_BYTES)
+            {
+                return Err(Error::Invalid);
+            }
+            count += positions.len();
+            if count > MAX_POSITIONS {
+                return Err(Error::Bounds);
+            }
+            let mask = grouped.entry(positions.clone()).or_default();
+            mask[offset / 64] |= 1 << (offset % 64);
+            last = Some(*ordinal);
+        }
+        let mut bytes = vec![1];
+        bytes.extend((grouped.len() as u16).to_le_bytes());
+        for (positions, rows) in grouped {
+            for mask in rows {
+                bytes.extend(mask.to_le_bytes());
+            }
+            bytes.extend((positions.len() as u16).to_le_bytes());
+            for position in positions {
+                bytes.extend(position.to_le_bytes());
+            }
+        }
+        if bytes.len() > MAX_BYTES {
+            return Err(Error::Bounds);
+        }
+        Ok(bytes)
+    }
+    pub fn decode(base: u32, rows: u64, bytes: &[u8]) -> Result<Self> {
+        if base & 255 != 0
+            || u64::from(base) >= rows
+            || bytes.len() > MAX_BYTES
+            || bytes.first() != Some(&1)
+        {
+            return Err(Error::Authority);
+        }
+        let mut input = bytes.get(1..).ok_or(Error::Authority)?;
+        fn take<const N: usize>(input: &mut &[u8]) -> Result<[u8; N]> {
+            let value = input.get(..N).ok_or(Error::Authority)?.try_into().unwrap();
+            *input = &input[N..];
+            Ok(value)
+        }
+        let count = u16::from_le_bytes(take(&mut input)?) as usize;
+        if count == 0 || count > 256 {
+            return Err(Error::Authority);
+        }
+        let mut groups = Vec::with_capacity(count);
+        let mut seen = [0u64; 4];
+        let mut total = 0;
+        let mut previous: Option<Vec<u32>> = None;
+        for _ in 0..count {
+            let mut mask = [0u64; 4];
+            for (at, word) in mask.iter_mut().enumerate() {
+                *word = u64::from_le_bytes(take(&mut input)?);
+                if seen[at] & *word != 0 {
+                    return Err(Error::Authority);
+                }
+                seen[at] |= *word;
+            }
+            if mask.iter().all(|word| *word == 0) {
+                return Err(Error::Authority);
+            }
+            let length = u16::from_le_bytes(take(&mut input)?) as usize;
+            total += length
+                * mask
+                    .iter()
+                    .map(|word| word.count_ones() as usize)
+                    .sum::<usize>();
+            if length == 0 || total > MAX_POSITIONS {
+                return Err(Error::Authority);
+            }
+            let mut positions = Vec::with_capacity(length);
+            for _ in 0..length {
+                let position = u32::from_le_bytes(take(&mut input)?);
+                if position as usize >= MAX_TEXT_BYTES
+                    || positions.last().is_some_and(|last| *last >= position)
+                {
+                    return Err(Error::Authority);
+                }
+                positions.push(position);
+            }
+            if previous.as_ref().is_some_and(|last| *last >= positions) {
+                return Err(Error::Authority);
+            }
+            previous = Some(positions.clone());
+            groups.push(Group {
+                rows: mask,
+                positions,
+            });
+        }
+        if !input.is_empty() {
+            return Err(Error::Authority);
+        }
+        for offset in 0..256 {
+            if seen[offset / 64] & (1 << (offset % 64)) != 0
+                && u64::from(base) + offset as u64 >= rows
+            {
+                return Err(Error::Authority);
+            }
+        }
+        Ok(Self { base, groups })
+    }
+    pub fn positions(&self, ordinal: u32) -> Option<&[u32]> {
+        let offset = ordinal.checked_sub(self.base)? as usize;
+        if offset >= 256 {
+            return None;
+        }
+        self.groups.iter().find_map(|group| {
+            (group.rows[offset / 64] & (1 << (offset % 64)) != 0)
+                .then_some(group.positions.as_slice())
+        })
+    }
+}
+
+/// Join exact byte offsets once per shared list/mask rather than once per row.
+/// A work unit is a candidate position or a bounded (at most 4096 positions)
+/// binary search. Refusing
+/// a work budget returns no proof; the caller must use exact original text.
+pub(super) fn matches(
+    base: u32,
+    atoms: &[(u32, &[Block])],
+    work: &mut usize,
+) -> Result<Option<[u64; 4]>> {
+    if atoms.is_empty() || atoms[0].0 != 0 || atoms.len() > MAX_ATOMS || base & 255 != 0 {
+        return Err(Error::Invalid);
+    }
+    if atoms
+        .iter()
+        .any(|(_, blocks)| blocks.iter().any(|block| block.base != base))
+    {
+        return Err(Error::Authority);
+    }
+    let mut matched = [0u64; 4];
+    for first in atoms[0].1 {
+        for group in &first.groups {
+            for start in &group.positions {
+                let Some(remaining) = work.checked_sub(1) else {
+                    return Ok(None);
+                };
+                *work = remaining;
+                let mut active = group.rows;
+                for (offset, fragments) in &atoms[1..] {
+                    let Some(wanted) = start.checked_add(*offset) else {
+                        active = [0; 4];
+                        break;
+                    };
+                    let mut found = [0u64; 4];
+                    for fragment in *fragments {
+                        for group in &fragment.groups {
+                            let Some(remaining) = work.checked_sub(1) else {
+                                return Ok(None);
+                            };
+                            *work = remaining;
+                            if group.positions.binary_search(&wanted).is_ok() {
+                                for (found, mask) in found.iter_mut().zip(group.rows) {
+                                    *found |= mask;
+                                }
+                            }
+                        }
+                    }
+                    for (active, found) in active.iter_mut().zip(found) {
+                        *active &= found;
+                    }
+                    if active.iter().all(|mask| *mask == 0) {
+                        break;
+                    }
+                }
+                for (matched, active) in matched.iter_mut().zip(active) {
+                    *matched |= active;
+                }
+            }
+        }
+    }
+    Ok(Some(matched))
+}
+
+struct Cursor<'a> {
+    cursor: tree::Cursor<'a>,
+    hash: [u8; 32],
+    head: Option<tree::Entry>,
+}
+impl<'a> Cursor<'a> {
+    fn new(index: &'a Index, hash: [u8; 32]) -> Result<Self> {
+        let mut cursor = tree::Cursor::seek(
+            index.context(tree::Purpose::ProjectionPostings),
+            index.manifest.positions.as_ref().ok_or(Error::Authority)?,
+            &hash,
+        )?;
+        let head = cursor.next()?;
+        Ok(Self { cursor, hash, head })
+    }
+    fn base(&self) -> Result<Option<u32>> {
+        let Some(entry) = &self.head else {
+            return Ok(None);
+        };
+        if !entry.key.starts_with(&self.hash) {
+            return Ok(None);
+        }
+        if entry.key.len() != 40 {
+            return Err(Error::Authority);
+        }
+        Ok(Some(parse_u32(&entry.key[32..36])? & !255))
+    }
+    fn blocks(
+        &mut self,
+        base: u32,
+        rows: u64,
+        remaining: &mut usize,
+    ) -> Result<Option<Vec<Block>>> {
+        while self.base()?.is_some_and(|current| current < base) {
+            self.head = self.cursor.next()?;
+        }
+        let mut blocks = Vec::new();
+        while self.base()? == Some(base) {
+            let entry = self.head.take().ok_or(Error::Authority)?;
+            let Some(left) = remaining.checked_sub(entry.value.len() * 4 + 4096) else {
+                return Ok(None);
+            };
+            *remaining = left;
+            let block = Block::decode(base, rows, &entry.value)?;
+            let ordinal = parse_u32(&entry.key[32..36])?;
+            let first = block
+                .groups
+                .iter()
+                .flat_map(|group| {
+                    group.rows.iter().enumerate().filter_map(|(word, mask)| {
+                        (*mask != 0).then(|| base + (word * 64) as u32 + mask.trailing_zeros())
+                    })
+                })
+                .min()
+                .ok_or(Error::Authority)?;
+            if first != ordinal
+                || block
+                    .positions(ordinal)
+                    .and_then(|positions| positions.first())
+                    .copied()
+                    != Some(parse_u32(&entry.key[36..])?)
+            {
+                return Err(Error::Authority);
+            }
+            blocks.push(block);
+            self.head = self.cursor.next()?;
+        }
+        Ok(Some(blocks))
+    }
+}
+impl Index {
+    pub(super) fn literal_candidates(&self, needle: &str) -> Result<Option<Vec<u64>>> {
+        if self.manifest.positions.is_none() {
+            return Ok(None);
+        }
+        let Some(atoms) = query(needle) else {
+            return Ok(None);
+        };
+        let mut cursors = atoms
+            .iter()
+            .map(|atom| Cursor::new(self, atom.hash))
+            .collect::<Result<Vec<_>>>()?;
+        let mut found = vec![0u64; (self.manifest.rows as usize).div_ceil(64)];
+        let mut work = 8_000_000usize;
+        let mut read = 0usize;
+        while let Some(base) = cursors[0].base()? {
+            let mut memory = 8 << 20;
+            let mut lists = Vec::with_capacity(atoms.len());
+            for cursor in &mut cursors {
+                let before = memory;
+                let Some(blocks) = cursor.blocks(base, self.manifest.rows, &mut memory)? else {
+                    return Ok(None);
+                };
+                read = read.checked_add(before - memory).ok_or(Error::Bounds)?;
+                if read > self.manifest.limits.original_bytes_per_query {
+                    return Ok(None);
+                }
+                lists.push(blocks);
+            }
+            let refs: Vec<_> = atoms
+                .iter()
+                .zip(&lists)
+                .map(|(atom, blocks)| (atom.offset, blocks.as_slice()))
+                .collect();
+            let Some(matched) = matches(base, &refs, &mut work)? else {
+                return Ok(None);
+            };
+            for (offset, mask) in matched.into_iter().enumerate() {
+                let at = base as usize / 64 + offset;
+                if let Some(word) = found.get_mut(at) {
+                    *word |= mask
+                } else if mask != 0 {
+                    return Err(Error::Authority);
+                }
+            }
+        }
+        Ok(Some(found))
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn raw_runs_prove_exact_unicode_case_and_separators() {
+        let texts = [
+            "battery electrode",
+            "Battery electrode",
+            "battery  electrode",
+            "battery\telectrode",
+            "x_battery electrode",
+            "battery electrode_x",
+            "λ_電池\r\n終",
+            "λ_電池\n終",
+            "___ ___",
+            "battery electrode battery electrode",
+            "e\u{301} exact\0終",
+            "終\0exact",
+        ];
+        for needle in texts {
+            let Some(atoms) = query(needle) else { continue };
+            for text in texts {
+                let indexed = analyze(text);
+                let proved = indexed.get(&atoms[0].hash).is_some_and(|starts| {
+                    starts.iter().any(|start| {
+                        atoms.iter().all(|atom| {
+                            indexed.get(&atom.hash).is_some_and(|positions| {
+                                positions.binary_search(&(start + atom.offset)).is_ok()
+                            })
+                        })
+                    })
+                });
+                let plan = scorer::Plan::new(
+                    &format!("\"{needle}\""),
+                    false,
+                    None,
+                    &BTreeSet::new(),
+                    &BTreeMap::new(),
+                );
+                assert_eq!(
+                    proved,
+                    plan.candidate(0, true, text, true, &vec![1; plan.terms.len()]),
+                    "{text:?} / {needle:?}"
+                );
+            }
+        }
+        for fallback in [" battery", "battery ", ".", "\0終", "\"battery\""] {
+            assert!(query(fallback).is_none());
+        }
+    }
+    #[test]
+    fn bounded_position_fragments_round_trip_and_refuse_corruption() {
+        let rows = vec![
+            (256, vec![0, 8, 16]),
+            (257, vec![0, 8, 16]),
+            (511, vec![3, 99]),
+        ];
+        let encoded = Block::encode(256, &rows).unwrap();
+        let block = Block::decode(256, 512, &encoded).unwrap();
+        for (row, positions) in rows {
+            assert_eq!(block.positions(row), Some(positions.as_slice()));
+        }
+        assert!(block.positions(258).is_none());
+        for length in 0..encoded.len() {
+            assert!(Block::decode(256, 512, &encoded[..length]).is_err());
+        }
+        let mut bad = encoded.clone();
+        bad.push(0);
+        assert!(Block::decode(256, 512, &bad).is_err());
+        assert!(Block::decode(256, 511, &encoded).is_err());
+        assert!(Block::encode(256, &[(257, vec![1, 1])]).is_err());
+        assert!(Block::encode(256, &[(257, vec![MAX_TEXT_BYTES as u32])]).is_err());
+    }
+
+    #[test]
+    fn mask_join_is_complete_across_fragments_and_refuses_partial_budget_proofs() {
+        let texts = [
+            "battery electrode",
+            "Battery electrode",
+            "battery  electrode",
+            "battery electrode battery electrode",
+            "λ_電池\r\n終",
+            "λ_電池\n終",
+        ];
+        for needle in texts {
+            let atoms = query(needle).unwrap();
+            let mut lists = Vec::new();
+            for atom in &atoms {
+                let rows: Vec<_> = texts
+                    .iter()
+                    .enumerate()
+                    .filter_map(|(row, text)| {
+                        analyze(text)
+                            .remove(&atom.hash)
+                            .map(|positions| (row as u32, positions))
+                    })
+                    .collect();
+                let mut blocks = Vec::new();
+                // Separate fragments exercise repeated bases and row-mask union.
+                for row in rows {
+                    blocks.push(
+                        Block::decode(0, texts.len() as u64, &Block::encode(0, &[row]).unwrap())
+                            .unwrap(),
+                    );
+                }
+                lists.push(blocks);
+            }
+            let refs: Vec<_> = atoms
+                .iter()
+                .zip(&lists)
+                .map(|(atom, blocks)| (atom.offset, blocks.as_slice()))
+                .collect();
+            let matched = matches(0, &refs, &mut 1_000_000).unwrap().unwrap();
+            for (row, text) in texts.iter().enumerate() {
+                let plan = scorer::Plan::new(
+                    &format!("\"{needle}\""),
+                    false,
+                    None,
+                    &BTreeSet::new(),
+                    &BTreeMap::new(),
+                );
+                assert_eq!(
+                    matched[row / 64] & (1 << (row % 64)) != 0,
+                    plan.candidate(0, true, text, true, &vec![1; plan.terms.len()])
+                );
+            }
+            assert!(matches(0, &refs, &mut 0).unwrap().is_none());
+        }
+    }
+}

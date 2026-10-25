@@ -78,6 +78,22 @@ impl Builder {
             COMPACT_FORMAT,
         )
     }
+    /// Opt-in version 3 disposable cache with exact raw-run positions. Existing
+    /// caches and all source wire/profile formats are unchanged.
+    pub fn create_positional(
+        directory: impl AsRef<Path>,
+        cache_key: &[u8; 32],
+        binding: Binding,
+        limits: Limits,
+    ) -> Result<Self> {
+        Self::create_with_cipher(
+            directory.as_ref(),
+            Arc::new(FrameCipher::new(cache_key)),
+            binding,
+            limits,
+            POSITIONAL_FORMAT,
+        )
+    }
     fn create_with_cipher(
         directory: &Path,
         cipher: Arc<FrameCipher>,
@@ -161,7 +177,7 @@ impl Builder {
         let length = u32::try_from(terms.iter().map(|(_, n)| u64::from(*n)).sum::<u64>())
             .map_err(|_| Error::Bounds)?;
         let scope = u32::try_from(terms.len()).map_err(|_| Error::Bounds)?;
-        if self.format == COMPACT_FORMAT {
+        if compact_format(self.format) {
             let rows = self.rows as usize + 1;
             let blocks = rows.div_ceil(COLUMN_ROWS);
             let columns = rows
@@ -222,7 +238,27 @@ impl Builder {
         let mut ids = tree::Sorter::new(make(tree::Purpose::ProjectionIds))?;
         let mut keys = tree::Sorter::new(make(tree::Purpose::ProjectionKeys))?;
         let mut posting_rows = tree::Sorter::new(make(tree::Purpose::ProjectionTerms))?;
+        let mut position_rows = (self.format == POSITIONAL_FORMAT)
+            .then(|| tree::Sorter::new(make(tree::Purpose::ProjectionTerms)))
+            .transpose()?;
         self.read_rows(|ordinal, analysis| {
+            if let Some(positions) = &mut position_rows {
+                if analysis.metadata.indexed {
+                    let bytes = read_blob(
+                        &directory,
+                        &cipher,
+                        &authority,
+                        &self.blobs.files,
+                        &analysis.metadata.text,
+                        MAX_TEXT_BYTES,
+                    )?;
+                    if *blake3::hash(&bytes).as_bytes() != analysis.metadata.text_digest {
+                        return Err(Error::Authority);
+                    }
+                    let text = std::str::from_utf8(&bytes).map_err(|_| Error::Authority)?;
+                    literal::push(positions, ordinal, text)?;
+                }
+            }
             ids.push(tree::Entry {
                 key: analysis.metadata.id.as_bytes().to_vec(),
                 value: ordinal.to_be_bytes().to_vec(),
@@ -242,6 +278,18 @@ impl Builder {
         let temporary_ids = ids.finish()?;
         let keys = keys.finish()?;
         let flat_postings = posting_rows.finish()?;
+        let positions = if let Some(rows) = position_rows {
+            let flat = rows.finish()?;
+            let mut output = tree::Builder::new(make(tree::Purpose::ProjectionPostings))?;
+            literal::fold_sorted(make(tree::Purpose::ProjectionTerms), &flat, |entry| {
+                output.push(entry)
+            })?;
+            let root = output.finish()?;
+            remove_tree(&directory, &authority, &flat)?;
+            Some(root)
+        } else {
+            None
+        };
         if temporary_ids.count != self.rows {
             return Err(Error::Conflict);
         }
@@ -298,7 +346,7 @@ impl Builder {
             let next: [u8; 32] = entry.key[..32].try_into().unwrap();
             if term.is_some_and(|t| t != next)
                 || list.len() == 256
-                || (self.format == COMPACT_FORMAT
+                || (compact_format(self.format)
                     && list.first().is_some_and(|(row, _)| {
                         row / 256 != parse_u32(&entry.key[32..]).unwrap_or(u32::MAX) / 256
                     }))
@@ -356,6 +404,7 @@ impl Builder {
             ids,
             keys,
             postings,
+            positions,
         };
         // Publish while the budget paths still name the owned build directory;
         // only metadata publication follows its atomic generation rename.
