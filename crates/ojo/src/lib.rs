@@ -467,7 +467,7 @@ impl Database {
             digest,
         } = location
         {
-            let mut value = Vec::new();
+            let mut value = vec![0; length];
             read_raw(&mut self.file, offset, length, digest, &mut value)?;
             return Ok(Some(value));
         }
