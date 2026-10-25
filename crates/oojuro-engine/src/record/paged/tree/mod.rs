@@ -1,7 +1,9 @@
 //! Private bounded encrypted metadata B+tree. Never an authority or a second WAL.
 //! Ref birth bindings are authenticated by parents and independently checked as ancestors.
+mod batch;
 mod sort;
 use super::super::*;
+pub(crate) use batch::{MAX_BATCH_BYTES, MAX_BATCH_ENTRIES};
 use oojuro_store::crypto::{FrameCipher, SEAL_OVERHEAD, random_key};
 pub(crate) use sort::Sorter;
 use std::{
