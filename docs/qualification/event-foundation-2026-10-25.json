@@ -51,11 +51,31 @@
     "examples/read_events.py": "5bc46e3c93242cc365891947c3a6d84cab62095de21d5fdb3c1d2067cdb4df3e"
   },
   "remaining": [
-    "Separate Event benchmark evidence and Rust-writer/Python-reader proof",
     "Generic Event CLI and indexed full-text search integration",
     "Million-record and concurrent-client measurements",
     "Journal migration and coherent consumer pins",
     "Public Event release and actual Cloud deployment"
   ],
-  "published": false
+  "published": false,
+  "source_commit": "b1888d4d902527fdbc27c875f23af1dfe9d6d55e",
+  "independent_nonagent_execution": {
+    "rust_writer_python_reader": true,
+    "exact_nonagent_binary_empty_data": true,
+    "identical_timestamps_and_cursors": true,
+    "file_sha256": "78f8ab2336792b227dd8d80e660bf592fa3fa2882e91d468b30290f4a3014703",
+    "binary_sha256": {
+      "sensor_journal": "27cf50a4da13d793d4d49b7d45f419f0190e4aaa397d0f45fdba92a95d3cb3a9",
+      "event_bench": "04d78f8bc17df39f95b291f5fb2ade822850374ea01a74f1918936cf77702e45"
+    }
+  },
+  "event_benchmarks": {
+    "receipt": "../benchmarks/events-foundation-2026-10-25.json",
+    "runs": 12,
+    "rows_per_arm": 1024,
+    "raw_and_encrypted": true,
+    "compressed_archive": true,
+    "owned_datasets_removed": true,
+    "search_measured": false,
+    "scale_or_concurrency_acceptance": false
+  }
 }

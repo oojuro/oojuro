@@ -1,0 +1,505 @@
+{
+  "utc": "2026-10-25T02:56:06.413916+00:00",
+  "source": "Frozen release examples built from Event foundation source",
+  "filesystem": "btrfs",
+  "filesystem_compression": "NOCOMP flag checked on every retained data file",
+  "shared_lock": true,
+  "rows_per_run": 1024,
+  "data_bytes": 1024,
+  "orders": [
+    [
+      "ojo",
+      "sqlite",
+      "ojo-encrypted"
+    ],
+    [
+      "sqlite",
+      "ojo-encrypted",
+      "ojo"
+    ],
+    [
+      "ojo-encrypted",
+      "ojo",
+      "sqlite"
+    ],
+    [
+      "sqlite",
+      "ojo",
+      "ojo-encrypted"
+    ]
+  ],
+  "binary_sha256": {
+    "sensor_journal": "27cf50a4da13d793d4d49b7d45f419f0190e4aaa397d0f45fdba92a95d3cb3a9",
+    "event_bench": "04d78f8bc17df39f95b291f5fb2ade822850374ea01a74f1918936cf77702e45"
+  },
+  "runs": [
+    {
+      "all_files_bytes": 1519623,
+      "archive": {
+        "build_us": 74223.821,
+        "file_bytes": 270082,
+        "get_us": {
+          "n": 1024,
+          "p50": 2.138,
+          "p95": 2.6359999999999997,
+          "p99": 2.9210000000000003
+        },
+        "reopen_us": 2260.678
+      },
+      "arm": "ojo",
+      "data_bytes": 1024,
+      "durability": "fsync / SQLite WAL FULL",
+      "get_us": {
+        "n": 1024,
+        "p50": 2.133,
+        "p95": 2.742,
+        "p99": 3.267
+      },
+      "ingest_us": 14803861.061999999,
+      "limits": "warm microbenchmark; SQLite arm omits retained retry identities and per-read original checksums; no full-text search measured",
+      "one_event_per_transaction": true,
+      "profile": "Event1",
+      "raw_file_bytes": 1249541,
+      "reopen_us": 4819.454,
+      "rows": 1024,
+      "verified_scan_us": 4725.865,
+      "write_us": {
+        "n": 1024,
+        "p50": 14139.548,
+        "p95": 21319.496,
+        "p99": 23949.226
+      },
+      "run": 0,
+      "file_attributes": {
+        "events": "---------------------m",
+        "archive.ojo": "---------------------m"
+      }
+    },
+    {
+      "all_files_bytes": 1409024,
+      "archive": null,
+      "arm": "sqlite",
+      "data_bytes": 1024,
+      "durability": "fsync / SQLite WAL FULL",
+      "get_us": {
+        "n": 1024,
+        "p50": 1.329,
+        "p95": 4.9559999999999995,
+        "p99": 6.457
+      },
+      "ingest_us": 12300836.594,
+      "limits": "warm microbenchmark; SQLite arm omits retained retry identities and per-read original checksums; no full-text search measured",
+      "one_event_per_transaction": true,
+      "profile": "Event1",
+      "raw_file_bytes": 1409024,
+      "reopen_us": 309.552,
+      "rows": 1024,
+      "verified_scan_us": 1519.65,
+      "write_us": {
+        "n": 1024,
+        "p50": 12991.661,
+        "p95": 18191.061,
+        "p99": 21580.196
+      },
+      "run": 0,
+      "file_attributes": {
+        "events": "---------------------m"
+      }
+    },
+    {
+      "all_files_bytes": 1601623,
+      "archive": {
+        "build_us": 93445.278,
+        "file_bytes": 311082,
+        "get_us": {
+          "n": 1024,
+          "p50": 4.705,
+          "p95": 5.742,
+          "p99": 6.37
+        },
+        "reopen_us": 6018.477000000001
+      },
+      "arm": "ojo-encrypted",
+      "data_bytes": 1024,
+      "durability": "fsync / SQLite WAL FULL",
+      "get_us": {
+        "n": 1024,
+        "p50": 5.614,
+        "p95": 8.967,
+        "p99": 22.354999999999997
+      },
+      "ingest_us": 13108520.976,
+      "limits": "warm microbenchmark; SQLite arm omits retained retry identities and per-read original checksums; no full-text search measured",
+      "one_event_per_transaction": true,
+      "profile": "Event1",
+      "raw_file_bytes": 1290541,
+      "reopen_us": 8656.045,
+      "rows": 1024,
+      "verified_scan_us": 4616.491,
+      "write_us": {
+        "n": 1024,
+        "p50": 13076.437,
+        "p95": 20616.87,
+        "p99": 23816.975000000002
+      },
+      "run": 0,
+      "file_attributes": {
+        "events": "---------------------m",
+        "archive.ojo": "---------------------m"
+      }
+    },
+    {
+      "all_files_bytes": 1409024,
+      "archive": null,
+      "arm": "sqlite",
+      "data_bytes": 1024,
+      "durability": "fsync / SQLite WAL FULL",
+      "get_us": {
+        "n": 1024,
+        "p50": 3.355,
+        "p95": 11.972,
+        "p99": 17.052
+      },
+      "ingest_us": 13696363.946,
+      "limits": "warm microbenchmark; SQLite arm omits retained retry identities and per-read original checksums; no full-text search measured",
+      "one_event_per_transaction": true,
+      "profile": "Event1",
+      "raw_file_bytes": 1409024,
+      "reopen_us": 900.893,
+      "rows": 1024,
+      "verified_scan_us": 3655.323,
+      "write_us": {
+        "n": 1024,
+        "p50": 13182.1,
+        "p95": 21054.567,
+        "p99": 24095.932
+      },
+      "run": 1,
+      "file_attributes": {
+        "events": "---------------------m"
+      }
+    },
+    {
+      "all_files_bytes": 1601623,
+      "archive": {
+        "build_us": 71157.64,
+        "file_bytes": 311082,
+        "get_us": {
+          "n": 1024,
+          "p50": 2.965,
+          "p95": 4.009,
+          "p99": 4.916
+        },
+        "reopen_us": 5019.863
+      },
+      "arm": "ojo-encrypted",
+      "data_bytes": 1024,
+      "durability": "fsync / SQLite WAL FULL",
+      "get_us": {
+        "n": 1024,
+        "p50": 5.259,
+        "p95": 9.529,
+        "p99": 10.396
+      },
+      "ingest_us": 10888959.154000001,
+      "limits": "warm microbenchmark; SQLite arm omits retained retry identities and per-read original checksums; no full-text search measured",
+      "one_event_per_transaction": true,
+      "profile": "Event1",
+      "raw_file_bytes": 1290541,
+      "reopen_us": 7587.084,
+      "rows": 1024,
+      "verified_scan_us": 4881.284,
+      "write_us": {
+        "n": 1024,
+        "p50": 9539.821,
+        "p95": 18747.719,
+        "p99": 21569.895
+      },
+      "run": 1,
+      "file_attributes": {
+        "events": "---------------------m",
+        "archive.ojo": "---------------------m"
+      }
+    },
+    {
+      "all_files_bytes": 1519623,
+      "archive": {
+        "build_us": 73873.751,
+        "file_bytes": 270082,
+        "get_us": {
+          "n": 1024,
+          "p50": 1.117,
+          "p95": 1.5799999999999998,
+          "p99": 2.013
+        },
+        "reopen_us": 1002.0719999999999
+      },
+      "arm": "ojo",
+      "data_bytes": 1024,
+      "durability": "fsync / SQLite WAL FULL",
+      "get_us": {
+        "n": 1024,
+        "p50": 0.5279999999999999,
+        "p95": 0.843,
+        "p99": 0.96
+      },
+      "ingest_us": 9657689.083999999,
+      "limits": "warm microbenchmark; SQLite arm omits retained retry identities and per-read original checksums; no full-text search measured",
+      "one_event_per_transaction": true,
+      "profile": "Event1",
+      "raw_file_bytes": 1249541,
+      "reopen_us": 1409.181,
+      "rows": 1024,
+      "verified_scan_us": 1076.9189999999999,
+      "write_us": {
+        "n": 1024,
+        "p50": 7117.318,
+        "p95": 18379.093999999997,
+        "p99": 21629.524
+      },
+      "run": 1,
+      "file_attributes": {
+        "events": "---------------------m",
+        "archive.ojo": "---------------------m"
+      }
+    },
+    {
+      "all_files_bytes": 1601623,
+      "archive": {
+        "build_us": 48246.268000000004,
+        "file_bytes": 311082,
+        "get_us": {
+          "n": 1024,
+          "p50": 2.106,
+          "p95": 2.37,
+          "p99": 2.641
+        },
+        "reopen_us": 2088.17
+      },
+      "arm": "ojo-encrypted",
+      "data_bytes": 1024,
+      "durability": "fsync / SQLite WAL FULL",
+      "get_us": {
+        "n": 1024,
+        "p50": 2.525,
+        "p95": 2.799,
+        "p99": 2.891
+      },
+      "ingest_us": 15506583.684,
+      "limits": "warm microbenchmark; SQLite arm omits retained retry identities and per-read original checksums; no full-text search measured",
+      "one_event_per_transaction": true,
+      "profile": "Event1",
+      "raw_file_bytes": 1290541,
+      "reopen_us": 2998.196,
+      "rows": 1024,
+      "verified_scan_us": 3154.296,
+      "write_us": {
+        "n": 1024,
+        "p50": 14186.031,
+        "p95": 21769.632,
+        "p99": 23995.896999999997
+      },
+      "run": 2,
+      "file_attributes": {
+        "events": "---------------------m",
+        "archive.ojo": "---------------------m"
+      }
+    },
+    {
+      "all_files_bytes": 1519623,
+      "archive": {
+        "build_us": 41198.195999999996,
+        "file_bytes": 270082,
+        "get_us": {
+          "n": 1024,
+          "p50": 0.721,
+          "p95": 0.823,
+          "p99": 0.904
+        },
+        "reopen_us": 828.87
+      },
+      "arm": "ojo",
+      "data_bytes": 1024,
+      "durability": "fsync / SQLite WAL FULL",
+      "get_us": {
+        "n": 1024,
+        "p50": 0.529,
+        "p95": 0.798,
+        "p99": 0.9209999999999999
+      },
+      "ingest_us": 12656910.35,
+      "limits": "warm microbenchmark; SQLite arm omits retained retry identities and per-read original checksums; no full-text search measured",
+      "one_event_per_transaction": true,
+      "profile": "Event1",
+      "raw_file_bytes": 1249541,
+      "reopen_us": 1361.58,
+      "rows": 1024,
+      "verified_scan_us": 1002.735,
+      "write_us": {
+        "n": 1024,
+        "p50": 13028.730000000001,
+        "p95": 18881.638,
+        "p99": 23183.804
+      },
+      "run": 2,
+      "file_attributes": {
+        "events": "---------------------m",
+        "archive.ojo": "---------------------m"
+      }
+    },
+    {
+      "all_files_bytes": 1409024,
+      "archive": null,
+      "arm": "sqlite",
+      "data_bytes": 1024,
+      "durability": "fsync / SQLite WAL FULL",
+      "get_us": {
+        "n": 1024,
+        "p50": 1.2890000000000001,
+        "p95": 4.387,
+        "p99": 5.9719999999999995
+      },
+      "ingest_us": 13507565.15,
+      "limits": "warm microbenchmark; SQLite arm omits retained retry identities and per-read original checksums; no full-text search measured",
+      "one_event_per_transaction": true,
+      "profile": "Event1",
+      "raw_file_bytes": 1409024,
+      "reopen_us": 300.10200000000003,
+      "rows": 1024,
+      "verified_scan_us": 1535.223,
+      "write_us": {
+        "n": 1024,
+        "p50": 13207.429,
+        "p95": 20973.043,
+        "p99": 24342.708000000002
+      },
+      "run": 2,
+      "file_attributes": {
+        "events": "---------------------m"
+      }
+    },
+    {
+      "all_files_bytes": 1409024,
+      "archive": null,
+      "arm": "sqlite",
+      "data_bytes": 1024,
+      "durability": "fsync / SQLite WAL FULL",
+      "get_us": {
+        "n": 1024,
+        "p50": 3.2880000000000003,
+        "p95": 10.727,
+        "p99": 18.043999999999997
+      },
+      "ingest_us": 13809274.944,
+      "limits": "warm microbenchmark; SQLite arm omits retained retry identities and per-read original checksums; no full-text search measured",
+      "one_event_per_transaction": true,
+      "profile": "Event1",
+      "raw_file_bytes": 1409024,
+      "reopen_us": 809.3679999999999,
+      "rows": 1024,
+      "verified_scan_us": 2387.631,
+      "write_us": {
+        "n": 1024,
+        "p50": 13109.8,
+        "p95": 20512.319,
+        "p99": 23903.085000000003
+      },
+      "run": 3,
+      "file_attributes": {
+        "events": "---------------------m"
+      }
+    },
+    {
+      "all_files_bytes": 1519623,
+      "archive": {
+        "build_us": 62178.275,
+        "file_bytes": 270082,
+        "get_us": {
+          "n": 1024,
+          "p50": 2.511,
+          "p95": 2.855,
+          "p99": 3.089
+        },
+        "reopen_us": 2477.5389999999998
+      },
+      "arm": "ojo",
+      "data_bytes": 1024,
+      "durability": "fsync / SQLite WAL FULL",
+      "get_us": {
+        "n": 1024,
+        "p50": 2.1430000000000002,
+        "p95": 2.948,
+        "p99": 3.5599999999999996
+      },
+      "ingest_us": 13408671.419,
+      "limits": "warm microbenchmark; SQLite arm omits retained retry identities and per-read original checksums; no full-text search measured",
+      "one_event_per_transaction": true,
+      "profile": "Event1",
+      "raw_file_bytes": 1249541,
+      "reopen_us": 5203.4439999999995,
+      "rows": 1024,
+      "verified_scan_us": 4095.739,
+      "write_us": {
+        "n": 1024,
+        "p50": 13087.173,
+        "p95": 20723.137,
+        "p99": 23807.273
+      },
+      "run": 3,
+      "file_attributes": {
+        "events": "---------------------m",
+        "archive.ojo": "---------------------m"
+      }
+    },
+    {
+      "all_files_bytes": 1601623,
+      "archive": {
+        "build_us": 47571.515,
+        "file_bytes": 311082,
+        "get_us": {
+          "n": 1024,
+          "p50": 2.8899999999999997,
+          "p95": 3.8279999999999994,
+          "p99": 4.661
+        },
+        "reopen_us": 4384.534
+      },
+      "arm": "ojo-encrypted",
+      "data_bytes": 1024,
+      "durability": "fsync / SQLite WAL FULL",
+      "get_us": {
+        "n": 1024,
+        "p50": 5.026,
+        "p95": 7.7589999999999995,
+        "p99": 9.177
+      },
+      "ingest_us": 8324724.504000001,
+      "limits": "warm microbenchmark; SQLite arm omits retained retry identities and per-read original checksums; no full-text search measured",
+      "one_event_per_transaction": true,
+      "profile": "Event1",
+      "raw_file_bytes": 1290541,
+      "reopen_us": 10870.381,
+      "rows": 1024,
+      "verified_scan_us": 4462.916,
+      "write_us": {
+        "n": 1024,
+        "p50": 7050.591,
+        "p95": 12019.328,
+        "p99": 12669.075
+      },
+      "run": 3,
+      "file_attributes": {
+        "events": "---------------------m",
+        "archive.ojo": "---------------------m"
+      }
+    }
+  ],
+  "limitations": [
+    "Warm local microbenchmark, four runs per arm; not cold-cache or hosted results",
+    "One durable event per transaction; timestamp/BLOB baseline, SQLite omits Ojo retained retry IDs and per-read checksum",
+    "No indexed search, million-record scale, concurrent-client or cloud latency claim"
+  ],
+  "owned_benchmark_datasets_removed": true,
+  "source_commit": "b1888d4d902527fdbc27c875f23af1dfe9d6d55e",
+  "cpu_affinity": "unrestricted; single process per arm, no concurrent cooperating build/benchmark"
+}

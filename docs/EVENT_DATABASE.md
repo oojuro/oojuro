@@ -87,3 +87,8 @@ retain persistent retry identities or perform Ojo's per-read original checksum;
 the result therefore compares a documented baseline with different guarantees.
 It measures neither full-text search nor concurrent hosted operations. Always
 run on persistent storage with filesystem compression disclosed.
+
+The [initial Event measurements](benchmarks/OJO_EVENT_FOUNDATION.md) publish
+all twelve small raw/encrypted/SQLite runs, archived-original checks and their
+limits. They include slower Event reopen and mixed encrypted-read results;
+none is a full-text-search or hosted scale claim.
