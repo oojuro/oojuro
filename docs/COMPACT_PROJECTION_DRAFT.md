@@ -188,3 +188,13 @@ included. The original 242–289 ms 1M compressed result is preserved as the
 before-change evidence, rather than removed from qualification.
 
 The final numeric-refresh runtime `b328f79` passes the complete 200-engine-test /eight-rank gate (ten documented helper/opt-in tests ignored), strict runtime/tests/two-harness Clippy and changed-file formatting. The draft remains open for diverse and dense-literal work.
+
+
+Source/binary provenance audit
+-----------------------------
+
+A shared Cargo target could reuse mutable worktree libraries through relative dependency information. The initial source-aware guard cleaned debug artifacts but left release libraries reusable. The corrected guard cleans debug, release and requested custom profiles whenever the source root/content/revision changes; the audit checks every mutable compiler artifact rather than only the example executable.
+
+Clean compilations reproduce both frozen ELFs in the numeric append comparison (8661394 and b328f79) byte for byte, and reproduce the 4e9c514 actual-million query ELF byte for byte. Every mutable library reports non-Fresh compilation. These existing performance receipts retain source attribution without repeating timings. The baseline first compiled in a fresh source root under guard1; its complete non-Fresh artifact record independently establishes that compilation.
+
+The separate diverse prototype's clean ELF differs from the earlier prototype ELF. No diverse timing had begun. Its pending campaign will use only the corrected frozen ELF after source-fenced, nonzero correctness gates. Historical test output and copied test ELFs remain preserved; final runtime correctness still requires the source-fenced final gate. Both the failed initial audit and successful attribution proof are in [the audit receipt](qualification/juro-compact-source-binary-audit-2026-10-25.json).
