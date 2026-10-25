@@ -157,3 +157,44 @@ sustained offered-load capacity, a Cloud result, or an SLA. Lexical work still
 walks whole-project posting/visibility pages. Native and comparator scoring,
 encryption, original field materialization and independent retry/receipt
 contracts still differ as documented above.
+
+`capacity-recovery.json` records a separate functional 100k → 1M probe from the
+same frozen tested source (`capacity-recovery-binary.json`). It uses the explicit
+rebuildable-cache policy with fully synced source and a trusted disk admission
+policy, without changing any legacy in-memory guards. The synthetic corpus has
+complete Record2 fields, unique text/hash data and no keyed revisions. Correct
+key winners, both clocks, filters, forks and actual SIGKILL failure boundaries
+remain separate unit/integration oracles, not million-row timing results.
+
+| Initial records | Independent acknowledged rows | Full cache-loss rebuild (s) | Peak process RSS (KiB) | Allocation before loss (bytes) | Allocation after rebuild (bytes) |
+| --- | --- | --- | --- | --- | --- |
+| 100,000 | 50 | 4.159 | 18,800 | 42,201,088 | 32,677,888 |
+| 1,000,000 | 50 | 43.003 | 40,768 | 465,743,872 | 327,143,424 |
+
+All 100,050/1,000,050 complete originals and assigned-clock digests are compared
+after total locator/lexical cache removal and reopen with the saved minimum
+watermark. All 50 new request receipts and exact retries, current lexical
+visibility and an old pinned prefix pass. Query visibility assertions use a
+full-project query containing the new unique terms and are outside the recovery
+and ACK timers; this is not a narrow-filter latency measurement. The one-writer
+median ten-request group ACK was 11.798 ms at 100k and 15.550 ms at 1M, from only
+five groups per size. It is not a concurrent tail result.
+
+At 1M, explicitly checkpointing disposable caches before removal took 24.467 s,
+and checkpointing the rebuilt cache took 10.149 s. Those durations include
+redundant clean-file sync calls and are not exact writeback debt. Inventory
+includes retained COW/orphan/metadata files; rebuilding removes obsolete cache
+material, explaining much of the allocation difference. Total fixture creation,
+ACK phases, complete original comparisons, checkpoints, reconstruction and
+functional assertions took 122.536 s at 1M. This local cache-loss exercise is
+not a regional disaster test or a Cloud recovery guarantee.
+
+Reproduction after building `profile_record_write` in release mode:
+
+```sh
+profile_record_write NEW_PRIVATE_DIRECTORY 1000000 10 5 rebuildable
+```
+
+This establishes functional capacity for this bounded directory path/fixture.
+The one-million-record ten-client read/search/write distributions and equivalent
+full-scale SQLite/JSONL storage/performance controls remain unqualified.

@@ -1,0 +1,238 @@
+[
+  {
+    "run": "100000-rebuildable-group10",
+    "exit_code": 0,
+    "wall_seconds": 15.361491556999681,
+    "system_before": {
+      "logical_cpus": 8,
+      "load_average": [
+        5.79931640625,
+        5.48876953125,
+        4.0322265625
+      ],
+      "cpu_pressure": "some avg10=3.83 avg60=10.05 avg300=14.58 total=1171940895\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+      "io_pressure": "some avg10=0.41 avg60=3.24 avg300=7.41 total=667231653\nfull avg10=0.32 avg60=2.35 avg300=5.86 total=539213550"
+    },
+    "system_after": {
+      "logical_cpus": 8,
+      "load_average": [
+        5.47998046875,
+        5.43212890625,
+        4.03662109375
+      ],
+      "cpu_pressure": "some avg10=4.95 avg60=8.85 avg300=14.06 total=1172744077\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+      "io_pressure": "some avg10=3.77 avg60=3.69 avg300=7.29 total=668268863\nfull avg10=2.62 avg60=2.66 avg300=5.75 total=540021008"
+    },
+    "result": {
+      "acknowledged_rows": 50,
+      "base_rows": 100000,
+      "cache_durability": "rebuildable",
+      "cache_loss_rebuild_ns": 4159089020,
+      "complete_original_clock_digest": "ff4fdc06acadbe236ae0e2516d0823dd61e8451addc27fb6d4a56a0f965d282e",
+      "complete_originals_after_total_cache_loss": 100050,
+      "deferred_cache_checkpoint_ns": 5415370315,
+      "dirty_footprint": {
+        "allocated_bytes": 42201088,
+        "apparent_bytes": 40890130,
+        "files": 640
+      },
+      "flushed_footprint": {
+        "allocated_bytes": 42201088,
+        "apparent_bytes": 40890130,
+        "files": 640
+      },
+      "group_size": 10,
+      "groups": 5,
+      "minimum_watermark_and_old_prefix_verified": true,
+      "profiles": [
+        {
+          "admission_ns": 152609,
+          "authority_append_ns": 12592604,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 1645122,
+          "locator_publish_ns": 1044264,
+          "rows_committed": 10,
+          "source_encoded_bytes": 12005,
+          "submitted_rows": 10,
+          "total_ns": 15444507
+        },
+        {
+          "admission_ns": 189411,
+          "authority_append_ns": 9068214,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 1788652,
+          "locator_publish_ns": 742508,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11982,
+          "submitted_rows": 10,
+          "total_ns": 11795926
+        },
+        {
+          "admission_ns": 186474,
+          "authority_append_ns": 6464085,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 1594433,
+          "locator_publish_ns": 873612,
+          "rows_committed": 10,
+          "source_encoded_bytes": 12006,
+          "submitted_rows": 10,
+          "total_ns": 9127305
+        },
+        {
+          "admission_ns": 217590,
+          "authority_append_ns": 9242106,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 1537469,
+          "locator_publish_ns": 792344,
+          "rows_committed": 10,
+          "source_encoded_bytes": 12010,
+          "submitted_rows": 10,
+          "total_ns": 11798440
+        },
+        {
+          "admission_ns": 230814,
+          "authority_append_ns": 8781297,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 2402318,
+          "locator_publish_ns": 943618,
+          "rows_committed": 10,
+          "source_encoded_bytes": 11992,
+          "submitted_rows": 10,
+          "total_ns": 12372262
+        }
+      ],
+      "recovered_dirty_footprint": {
+        "allocated_bytes": 32677888,
+        "apparent_bytes": 32038911,
+        "files": 209
+      },
+      "recovered_flushed_footprint": {
+        "allocated_bytes": 32677888,
+        "apparent_bytes": 32038911,
+        "files": 209
+      },
+      "recovery_checkpoint_ns": 1556819189,
+      "scope": "synthetic one-writer phase probe; source always sync=true, cache mode explicit; not an SLA"
+    },
+    "resources": "\tCommand being timed: \"/home/rocket3/Projects/.readiness/ojo-performance/rebased-record-binaries/profile_record_write /home/rocket3/Projects/.readiness/ojo-performance/rebased-capacity-recovery/100000-rebuildable-group10 100000 10 5 rebuildable\"\n\tUser time (seconds): 7.02\n\tSystem time (seconds): 0.46\n\tPercent of CPU this job got: 48%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 0:15.31\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 18800\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 19419\n\tVoluntary context switches: 5658\n\tInvoluntary context switches: 390\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 286040\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "stderr": "synthetic base progress 0/100000\n"
+  },
+  {
+    "run": "1000000-rebuildable-group10",
+    "exit_code": 0,
+    "wall_seconds": 122.53569188000256,
+    "system_before": {
+      "logical_cpus": 8,
+      "load_average": [
+        5.47998046875,
+        5.43212890625,
+        4.03662109375
+      ],
+      "cpu_pressure": "some avg10=4.95 avg60=8.85 avg300=14.06 total=1172744077\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+      "io_pressure": "some avg10=3.77 avg60=3.69 avg300=7.29 total=668268863\nfull avg10=2.62 avg60=2.66 avg300=5.75 total=540021008"
+    },
+    "system_after": {
+      "logical_cpus": 8,
+      "load_average": [
+        2.82275390625,
+        4.46435546875,
+        3.85107421875
+      ],
+      "cpu_pressure": "some avg10=0.27 avg60=1.39 avg300=9.35 total=1173892833\nfull avg10=0.00 avg60=0.00 avg300=0.00 total=0",
+      "io_pressure": "some avg10=7.17 avg60=5.34 avg300=7.00 total=677056396\nfull avg10=6.41 avg60=4.71 avg300=5.76 total=547925289"
+    },
+    "result": {
+      "acknowledged_rows": 50,
+      "base_rows": 1000000,
+      "cache_durability": "rebuildable",
+      "cache_loss_rebuild_ns": 43003399971,
+      "complete_original_clock_digest": "486332bb83a72346d72ba052b983f85058ac8c5cefce256cad826548edfed4de",
+      "complete_originals_after_total_cache_loss": 1000050,
+      "deferred_cache_checkpoint_ns": 24467056118,
+      "dirty_footprint": {
+        "allocated_bytes": 465743872,
+        "apparent_bytes": 455127781,
+        "files": 6041
+      },
+      "flushed_footprint": {
+        "allocated_bytes": 465743872,
+        "apparent_bytes": 455127781,
+        "files": 6041
+      },
+      "group_size": 10,
+      "groups": 5,
+      "minimum_watermark_and_old_prefix_verified": true,
+      "profiles": [
+        {
+          "admission_ns": 355212,
+          "authority_append_ns": 6749282,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 2265914,
+          "locator_publish_ns": 1504932,
+          "rows_committed": 10,
+          "source_encoded_bytes": 12156,
+          "submitted_rows": 10,
+          "total_ns": 10881922
+        },
+        {
+          "admission_ns": 384047,
+          "authority_append_ns": 6589651,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 2617249,
+          "locator_publish_ns": 1246638,
+          "rows_committed": 10,
+          "source_encoded_bytes": 12114,
+          "submitted_rows": 10,
+          "total_ns": 10844218
+        },
+        {
+          "admission_ns": 427089,
+          "authority_append_ns": 6786799,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 5417497,
+          "locator_publish_ns": 2971687,
+          "rows_committed": 10,
+          "source_encoded_bytes": 12158,
+          "submitted_rows": 10,
+          "total_ns": 15645296
+        },
+        {
+          "admission_ns": 975288,
+          "authority_append_ns": 7383269,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 5047056,
+          "locator_publish_ns": 2840235,
+          "rows_committed": 10,
+          "source_encoded_bytes": 12122,
+          "submitted_rows": 10,
+          "total_ns": 16277861
+        },
+        {
+          "admission_ns": 731883,
+          "authority_append_ns": 6814162,
+          "fresh_requests": 10,
+          "lexical_publish_ns": 4968748,
+          "locator_publish_ns": 3002495,
+          "rows_committed": 10,
+          "source_encoded_bytes": 12115,
+          "submitted_rows": 10,
+          "total_ns": 15550031
+        }
+      ],
+      "recovered_dirty_footprint": {
+        "allocated_bytes": 327143424,
+        "apparent_bytes": 322640384,
+        "files": 1968
+      },
+      "recovered_flushed_footprint": {
+        "allocated_bytes": 327143424,
+        "apparent_bytes": 322640384,
+        "files": 1968
+      },
+      "recovery_checkpoint_ns": 10149020410,
+      "scope": "synthetic one-writer phase probe; source always sync=true, cache mode explicit; not an SLA"
+    },
+    "resources": "\tCommand being timed: \"/home/rocket3/Projects/.readiness/ojo-performance/rebased-record-binaries/profile_record_write /home/rocket3/Projects/.readiness/ojo-performance/rebased-capacity-recovery/1000000-rebuildable-group10 1000000 10 5 rebuildable\"\n\tUser time (seconds): 74.50\n\tSystem time (seconds): 4.26\n\tPercent of CPU this job got: 64%\n\tElapsed (wall clock) time (h:mm:ss or m:ss): 2:02.49\n\tAverage shared text size (kbytes): 0\n\tAverage unshared data size (kbytes): 0\n\tAverage stack size (kbytes): 0\n\tAverage total size (kbytes): 0\n\tMaximum resident set size (kbytes): 40768\n\tAverage resident set size (kbytes): 0\n\tMajor (requiring I/O) page faults: 0\n\tMinor (reclaiming a frame) page faults: 187957\n\tVoluntary context switches: 30392\n\tInvoluntary context switches: 8227\n\tSwaps: 0\n\tFile system inputs: 0\n\tFile system outputs: 2242160\n\tSocket messages sent: 0\n\tSocket messages received: 0\n\tSignals delivered: 0\n\tPage size (bytes): 4096\n\tExit status: 0\n",
+    "stderr": "synthetic base progress 0/1000000\nsynthetic base progress 100000/1000000\nsynthetic base progress 200000/1000000\nsynthetic base progress 300000/1000000\nsynthetic base progress 400000/1000000\nsynthetic base progress 500000/1000000\nsynthetic base progress 600000/1000000\nsynthetic base progress 700000/1000000\nsynthetic base progress 800000/1000000\nsynthetic base progress 900000/1000000\n"
+  }
+]
