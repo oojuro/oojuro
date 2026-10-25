@@ -79,3 +79,26 @@ qualification. [All preliminary receipts](benchmarks/JURO_COMPACT_PROJECTION_DRA
 retain both stages, every observation, exact signatures, binary hashes and peak
 build allocation observations. A source file, other generations and build
 scratch are additional to the reported retained index bytes.
+
+An additional in-memory block summary is now being qualified. It retains at most
+16 exact `(length,scope)` shapes per 256-ordinal block plus conservative maximum
+time/minimum-label bounds, charged within the numeric metadata limit. More
+heterogeneous blocks use no score bound. Every term TF bound is an overestimate;
+score bounds evaluate concrete shapes because independently minimizing length
+and scope is unsafe. Optimistic score/time/label tuples can prune only blocks
+that cannot enter the current exact top-k. If a trial examines more than 16,384
+rows, the complete scorer runs; no partial trial result is returned. Literals
+retain the existing exact text check. This optimization is not yet qualified by
+million-record receipts.
+
+The next `4e9c514` cohort alternates layouts for three observations per codec,
+each with 30 ten-client forced-fresh requests per query. All exact signatures
+match. At 100k actual rows the raw pair p95 ranges 107–138 ms for layout 1 versus
+0.43–7.15 ms for layout 2; the actual three-matching-term query
+`battery electrode original` ranges 134–137 versus 0.43–0.45 ms. Zstd pair ranges
+90–144 versus 0.45–5.54 ms; the actual triple ranges 136–159 versus 0.49–11.20 ms.
+The separate `pair_with_absent` query retains the earlier `transaction` case.
+Future harness output includes the exact query text, so labels cannot obscure
+this distinction. These homogeneous fixtures permit tight bounds. They do not
+qualify heterogeneous data, literal queries, cold handles, a hosted workload or
+million-record latency. All 1k mixed/adverse observations are retained too.

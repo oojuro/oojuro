@@ -544,7 +544,7 @@ fn compact_block_bounds_match_complete_rank_bits_ties_filters_and_retirement() {
     let mut rows: Vec<_> = (0..20_001)
         .map(|i| {
             let mut row = row(i);
-            row.text = "alpha beta".into();
+            row.text = "alpha beta gamma".into();
             row.indexed = true;
             row
         })
@@ -592,7 +592,13 @@ fn compact_block_bounds_match_complete_rank_bits_ties_filters_and_retirement() {
             .map(|row| (row.id.clone(), row.clone()))
             .collect();
         let reference = super::super::Index::build(next.clone(), live).unwrap();
-        for text in ["alpha beta", "alpha alpha beta", "alpha absent", "beta"] {
+        for text in [
+            "alpha beta",
+            "alpha beta gamma",
+            "alpha alpha beta gamma",
+            "alpha absent",
+            "beta",
+        ] {
             for filter in [
                 Filter::default(),
                 Filter {
