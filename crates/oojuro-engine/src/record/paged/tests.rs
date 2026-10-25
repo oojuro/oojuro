@@ -1846,3 +1846,34 @@ fn disk_write_phase_profile_preserves_receipts_and_distinguishes_fresh_from_retr
         Some(receipts[0].clone())
     );
 }
+
+#[test]
+fn disk_word_query_uses_only_required_scoring_passes_without_changing_results() {
+    let f = Fixture::new();
+    let mut writer = disk_writer(&f, 1000);
+    let mut index = Index::open_disk(writer.reader().unwrap(), &f.root.join("disk-index")).unwrap();
+    for start in [0, 500] {
+        let inputs = (start..start + 500)
+            .map(|n| row("alpha foo_bar", None, n))
+            .collect::<Vec<_>>();
+        writer
+            .append_indexed(&mut index, &format!("batch-{start}"), &inputs)
+            .unwrap();
+    }
+    let q = query("alpha", AsOf::default());
+    let (found, work) = index.search_profiled(writer.reader().unwrap(), &q).unwrap();
+    assert_eq!(
+        signature(found),
+        signature(index.search(writer.reader().unwrap(), &q).unwrap())
+    );
+    assert_eq!(work.segment_loads, 2 * index.segment_count() as u64);
+    assert_eq!(work.visibility_pages, 2 * index.segment_count() as u64);
+    assert_eq!(work.rows_examined, 2000);
+    assert_eq!(work.term_pass_ns, 0);
+    assert_eq!(work.presence_pass_ns, 0);
+    let literal = query("\"absent_literal\"", AsOf::default());
+    let (_, literal_work) = index
+        .search_profiled(writer.reader().unwrap(), &literal)
+        .unwrap();
+    assert!(literal_work.segment_loads > work.segment_loads);
+}
