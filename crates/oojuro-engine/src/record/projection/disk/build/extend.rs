@@ -355,6 +355,7 @@ impl Appender {
             columns: self.columns,
             totals: self.totals,
             queries: query_cache::QueryCache::default(),
+            terms: term_cache::TermCache::default(),
             retained_disk_bytes,
             retained_allocated_bytes,
             _lock: lock,

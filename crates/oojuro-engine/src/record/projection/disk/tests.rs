@@ -262,6 +262,38 @@ fn stricter_open_work_caps_apply_to_fresh_and_reused_queries() {
 }
 
 #[test]
+fn heterogeneous_term_shapes_and_large_k_fall_back_to_exact_complete_scoring() {
+    let mut rows = (0..1100).map(row).collect::<Vec<_>>();
+    for (i, row) in rows.iter_mut().enumerate() {
+        row.text = "alpha ".repeat(i + 1);
+        row.indexed = true;
+    }
+    let originals: BTreeMap<_, _> = rows.iter().map(|r| (r.id.clone(), r.clone())).collect();
+    let reference = super::super::Index::build(binding(), rows.clone()).unwrap();
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let index = build(&scratch.0.join("index"), &rows, compression);
+        let mut q = query("alpha", Filter::default(), i64::MIN, i64::MAX);
+        q.k = 73;
+        q.max_bytes = 1 << 20;
+        let ranked = index.rank_uncached(&binding(), &q).unwrap();
+        let hits = index
+            .materialize(&binding(), &q, &ranked, |id| Ok(originals[id].clone()))
+            .unwrap();
+        assert_eq!(
+            fingerprint(&hits),
+            fingerprint(&reference.search(&binding(), &q).unwrap())
+        );
+        let list = index
+            .terms
+            .get(&index, *blake3::hash(b"alpha").as_bytes())
+            .unwrap()
+            .unwrap();
+        assert!(list.groups.is_none());
+    }
+}
+
+#[test]
 fn ambiguous_descriptor_publication_keeps_its_complete_generation_readable() {
     let scratch = Scratch::new();
     let path = scratch.0.join("index");
@@ -538,7 +570,7 @@ fn disk_projection_matches_ram_bits_filters_excerpts_and_reopen() {
             rows.iter().map(|r| r.text.len() as u64).sum::<u64>()
         );
         assert!(index.index_bytes() > 0);
-        assert!(index.estimated_heap_bytes() < 16 << 20);
+        assert!(index.estimated_heap_bytes() < 32 << 20);
         for text in [
             "alpha",
             "create_config",
