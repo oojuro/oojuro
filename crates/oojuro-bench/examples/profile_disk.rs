@@ -5,7 +5,7 @@ use oojuro_engine::{
     capture_log::Identity,
     record::{
         self, AsOf, Filter, Input, Kind, Limits, Query, Record, Scope,
-        paged::{Append, DiskLimits, Index, Writer},
+        paged::{Append, CacheDurability, DiskLimits, Index, Writer},
     },
 };
 use serde_json::{Value, json};
@@ -98,6 +98,28 @@ fn inventory(root: &Path) -> Result<Value> {
     walk(root, &mut files, &mut total)?;
     Ok(json!({"apparent_bytes":total.0,"allocated_bytes":total.1,"files":files.len()}))
 }
+fn checkpoint_native_cache(root: &Path) -> Result<u128> {
+    fn flush(path: &Path) -> Result<()> {
+        for entry in std::fs::read_dir(path)? {
+            let path = entry?.path();
+            let meta = path.symlink_metadata()?;
+            if meta.file_type().is_symlink() {
+                return Err("unexpected cache link".into());
+            }
+            if meta.is_dir() {
+                flush(&path)?
+            } else {
+                std::fs::File::open(path)?.sync_all()?
+            }
+        }
+        std::fs::File::open(path)?.sync_all()?;
+        Ok(())
+    }
+    let began = Instant::now();
+    flush(&root.join("directory"))?;
+    flush(&root.join("lexical"))?;
+    Ok(began.elapsed().as_nanos())
+}
 fn distribution(mut v: Vec<u128>) -> Value {
     let raw = v.clone();
     if v.is_empty() {
@@ -129,14 +151,15 @@ struct Native {
     index: Index,
 }
 impl Native {
-    fn open(root: &Path) -> Result<Self> {
-        let writer = check(Writer::open_disk(
+    fn open(root: &Path, mode: CacheDurability) -> Result<Self> {
+        let writer = check(Writer::open_disk_with_cache_policy(
             &root.join("source"),
             &KEY,
             identity(),
             &root.join("directory"),
             None,
             policy(),
+            mode,
         ))?;
         let index = check(Index::open_disk(
             writer.reader().map_err(|e| format!("{e:?}"))?,
@@ -422,8 +445,8 @@ fn group_server(
 }
 fn main() -> Result<()> {
     let a = std::env::args().collect::<Vec<_>>();
-    if !(7..=8).contains(&a.len()) {
-        return Err("profile_disk NEW_DIR native-disk|sqlite|jsonl|jsonl-zstd RECORDS CLIENTS SEARCHES_PER_CLIENT mixed|isolated [direct|grouped]".into());
+    if !(7..=9).contains(&a.len()) {
+        return Err("profile_disk NEW_DIR native-disk|sqlite|jsonl|jsonl-zstd RECORDS CLIENTS SEARCHES_PER_CLIENT mixed|isolated [direct|grouped] [durable|rebuildable-native-cache]".into());
     }
     let root = PathBuf::from(&a[1]);
     let name = &a[2];
@@ -447,20 +470,36 @@ fn main() -> Result<()> {
         "grouped" => true,
         _ => return Err("write mode must be direct or grouped".into()),
     };
+    let cache_policy = match a.get(8).map(String::as_str).unwrap_or("durable") {
+        "durable" => CacheDurability::Durable,
+        "rebuildable" => CacheDurability::Rebuildable,
+        _ => return Err("invalid native cache policy".into()),
+    };
+    if name != "native-disk" && !cache_policy.is_durable() {
+        return Err(
+            "rebuildable cache policy is native-only; baseline contracts remain unchanged".into(),
+        );
+    }
     std::fs::create_dir(&root)?;
     let mut batches = Vec::new();
     let report = if name == "native-disk" {
-        let mut native = Native::open(&root)?;
+        let mut native = Native::open(&root, cache_policy)?;
         for start in (0..count).step_by(1000) {
             let began = Instant::now();
             native.append(start, count.min(start + 1000) - start)?;
             batches.push(began.elapsed().as_nanos());
         }
         let original = native.verify(count)?;
+        let before_dirty = inventory(&root)?;
+        let initial_checkpoint_ns = if cache_policy.is_durable() {
+            0
+        } else {
+            checkpoint_native_cache(&root)?
+        };
         let before = inventory(&root)?;
         drop(native);
         let began = Instant::now();
-        let native = Native::open(&root)?;
+        let native = Native::open(&root, cache_policy)?;
         let reopen = began.elapsed().as_nanos();
         if native.verify(count)? != original {
             return Err("native reopen digest mismatch".into());
@@ -587,9 +626,15 @@ fn main() -> Result<()> {
         });
         state.read().unwrap().verify_client_writes(count, clients)?;
         drop(state);
-        let recovered = Native::open(&root)?;
+        let recovered = Native::open(&root, cache_policy)?;
         recovered.verify_client_writes(count, clients)?;
         drop(recovered);
+        let after_dirty = inventory(&root)?;
+        let final_checkpoint_ns = if cache_policy.is_durable() {
+            0
+        } else {
+            checkpoint_native_cache(&root)?
+        };
         let mut result = report(
             name,
             count,
@@ -602,6 +647,10 @@ fn main() -> Result<()> {
             inventory(&root)?,
         );
         result["native_complete_record_digest"] = json!(original.1);
+        result["storage_initial_dirty"] = before_dirty;
+        result["storage_after_client_writes_dirty"] = after_dirty;
+        result["initial_cache_checkpoint_ns"] = json!(initial_checkpoint_ns);
+        result["final_cache_checkpoint_ns"] = json!(final_checkpoint_ns);
         result["group_trace"] = json!(group_trace);
         result
     } else {
@@ -781,6 +830,11 @@ fn main() -> Result<()> {
     };
     let mut report = report;
     report["phase_mode"] = json!(a[6]);
+    report["cache_durability"] = if name == "native-disk" {
+        json!(cache_policy)
+    } else {
+        json!("durable SQLite WAL/FTS metadata; native cache policy not applied")
+    };
     report["write_mode"] = json!(if grouped { "grouped" } else { "direct" });
     report["original_oracle"] = json!(
         "native complete record fields + assigned-clock digest checked across reopen; baseline complete Docs checked across reopen; all client writes recovered"
@@ -790,7 +844,7 @@ fn main() -> Result<()> {
     );
     report["group_policy"] = json!({"queue_capacity":clients,"max_requests":clients.min(10),"max_wait_ms":2,"max_submitted_doc_bytes":32<<20});
     report["arm_info"] = if name == "native-disk" {
-        json!({"version":"sealed Record2 disk writer, paged lexical v2","durability":"sync authority + locator roots + current lexical descriptor before receipt","notes":"native independent idempotency receipts; benchmark known-at is latest; direct/grouped reported separately"})
+        json!({"version":"sealed Record2 disk writer, paged lexical v2","durability":"source always sync=true; locator/index current before receipt, cache persistence policy explicit","notes":"native independent idempotency receipts; benchmark known-at is latest; direct/grouped reported separately"})
     } else {
         serde_json::to_value(arms::builtin(name)?.info())?
     };

@@ -16,6 +16,8 @@ const ROOT_BYTES: usize = 64 << 10;
 #[serde(deny_unknown_fields)]
 struct Roots {
     format: u32,
+    #[serde(default, skip_serializing_if = "CacheDurability::is_durable")]
+    cache_durability: CacheDurability,
     binding: Vec<u8>,
     prefix: Root,
     request: Root,
@@ -50,6 +52,7 @@ impl Reader {
             minimum,
             DiskLimits::LEGACY,
             false,
+            CacheDurability::Durable,
         )
     }
     /// Disk-backed admission policy; legacy constructors retain their original limits.
@@ -61,7 +64,29 @@ impl Reader {
         minimum: Option<&Watermark>,
         limits: DiskLimits,
     ) -> Result<Self> {
-        Self::open_disk_inner(dir, key, identity, directory, minimum, limits, false)
+        Self::open_disk_inner(
+            dir,
+            key,
+            identity,
+            directory,
+            minimum,
+            limits,
+            false,
+            CacheDurability::Durable,
+        )
+    }
+    pub fn open_disk_with_cache_policy(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        directory: &Path,
+        minimum: Option<&Watermark>,
+        limits: DiskLimits,
+        policy: CacheDurability,
+    ) -> Result<Self> {
+        Self::open_disk_inner(
+            dir, key, identity, directory, minimum, limits, false, policy,
+        )
     }
     pub(super) fn open_disk_inner(
         dir: &Path,
@@ -71,8 +96,11 @@ impl Reader {
         minimum: Option<&Watermark>,
         limits: DiskLimits,
         initialize: bool,
+        policy: CacheDurability,
     ) -> Result<Self> {
+        // Source Store settings are fixed inside base and never receive this policy.
         let (mut reader, mut total) = Self::base(dir, key, identity, initialize, limits)?;
+        reader.cache_durability = policy;
         if total > limits.source_bytes {
             return Err(Error::Bounds);
         }
@@ -153,6 +181,7 @@ impl Reader {
             class: KeyClass::Data,
             sort_of: None,
             cache: Some(&self.pages),
+            cache_durability: self.cache_durability,
         }
     }
     fn binding_at(&self, sequence: u64, r: &Ref) -> Vec<u8> {
@@ -355,6 +384,7 @@ fn root_aad(reader: &Reader) -> Vec<u8> {
     let mut a = b"oojuro/record-directory/root/v1\0".to_vec();
     a.extend(reader.origin);
     a.extend(reader.identity_tag);
+    reader.cache_durability.bind(&mut a);
     a
 }
 fn lookup(
@@ -491,6 +521,7 @@ impl Directory {
         }
         let roots = Roots {
             format: 1,
+            cache_durability: reader.cache_durability,
             binding: reader.current()?,
             prefix: prefix.finish()?,
             request: request.finish()?,
@@ -613,7 +644,7 @@ fn validate_coverage(
     until: u64,
     historical: bool,
 ) -> Result<()> {
-    if roots.format != 1 {
+    if roots.format != 1 || roots.cache_durability != reader.cache_durability {
         return Err(Error::Authority);
     }
     let scalar = reader.scalar_at(until)?;
@@ -736,6 +767,7 @@ fn build(reader: &Reader, path: &Path) -> Result<Roots> {
     })?;
     let roots = Roots {
         format: 1,
+        cache_durability: reader.cache_durability,
         binding: reader.current()?,
         prefix: prefix.finish()?,
         request: request.finish().map_err(|e| {
@@ -784,6 +816,7 @@ fn extend(reader: &Reader, path: &Path, roots: Roots, old: u64) -> Result<Roots>
     })?;
     let roots = Roots {
         format: 1,
+        cache_durability: reader.cache_durability,
         binding: reader.current()?,
         prefix: prefix.finish()?,
         request: request.finish()?,
@@ -826,17 +859,20 @@ fn publish(reader: &Reader, path: &Path, roots: &Roots) -> Result<()> {
         .custom_flags(libc::O_NOFOLLOW)
         .open(&tmp)
         .map_err(|_| Error::Unavailable)?;
-    file.write_all(&sealed)
-        .and_then(|_| file.sync_all())
-        .map_err(|_| Error::Unavailable)?;
+    file.write_all(&sealed).map_err(|_| Error::Unavailable)?;
+    if reader.cache_durability.is_durable() {
+        file.sync_all().map_err(|_| Error::Unavailable)?;
+    }
     #[cfg(test)]
     tree::test_phase("RootTemp");
     fs::rename(tmp, path.join(ROOT)).map_err(|_| Error::Unavailable)?;
     #[cfg(test)]
     tree::test_phase("RootPublished");
-    File::open(path)
-        .and_then(|f| f.sync_all())
-        .map_err(|_| Error::Unavailable)?;
+    if reader.cache_durability.is_durable() {
+        File::open(path)
+            .and_then(|f| f.sync_all())
+            .map_err(|_| Error::Unavailable)?;
+    }
     #[cfg(test)]
     tree::test_phase("RootDurable");
     Ok(())
@@ -911,9 +947,13 @@ fn reap(path: &Path, roots: &Roots) -> Result<()> {
             fs::remove_file(entry.path()).map_err(|_| Error::Unavailable)?;
         }
     }
-    File::open(path)
-        .and_then(|f| f.sync_all())
-        .map_err(|_| Error::Unavailable)
+    if roots.cache_durability.is_durable() {
+        File::open(path)
+            .and_then(|f| f.sync_all())
+            .map_err(|_| Error::Unavailable)
+    } else {
+        Ok(())
+    }
 }
 #[cfg(test)]
 mod tests;

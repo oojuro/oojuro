@@ -51,6 +51,7 @@ pub struct Reader {
     tip: Ref,
     sequence: u64,
     pub(super) capacity: DiskLimits,
+    pub(super) cache_durability: CacheDurability,
     encoded_bytes: usize,
     failed: bool,
     disk: Option<directory::Directory>,
@@ -173,6 +174,7 @@ impl Reader {
                 tip: genesis,
                 sequence: 0,
                 capacity,
+                cache_durability: CacheDurability::Durable,
                 encoded_bytes: bytes,
                 failed: false,
                 disk: None,
@@ -223,6 +225,9 @@ impl Reader {
         } else {
             Ok(())
         }
+    }
+    pub fn cache_durability(&self) -> CacheDurability {
+        self.cache_durability
     }
     pub fn identity(&self) -> &Identity {
         &self.identity

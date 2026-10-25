@@ -2,6 +2,7 @@
 //! Ref birth bindings are authenticated by parents and independently checked as ancestors.
 mod sort;
 use super::super::*;
+use super::CacheDurability;
 use oojuro_store::crypto::{FrameCipher, SEAL_OVERHEAD, random_key};
 pub(super) use sort::Sorter;
 use std::{
@@ -62,6 +63,7 @@ pub(super) struct Context<'a> {
     pub class: KeyClass,
     pub sort_of: Option<Purpose>,
     pub cache: Option<&'a PageCache>,
+    pub cache_durability: CacheDurability,
 }
 impl<'a> Context<'a> {
     pub fn check(&self) -> Result<Vec<u8>> {
@@ -73,6 +75,9 @@ impl<'a> Context<'a> {
             }
             self.purpose
         };
+        if self.class == KeyClass::RetainedControl && !self.cache_durability.is_durable() {
+            return Err(Error::Scope);
+        }
         if self.class == KeyClass::RetainedControl
             && !matches!(purpose, Purpose::Prefix | Purpose::Request)
         {
@@ -213,6 +218,8 @@ pub(super) struct Reference {
 #[serde(deny_unknown_fields)]
 pub(super) struct Root {
     pub format: u32,
+    #[serde(default, skip_serializing_if = "CacheDurability::is_durable")]
+    pub cache_durability: CacheDurability,
     pub purpose: Purpose,
     pub binding: Vec<u8>,
     pub node: Option<Reference>,
@@ -222,6 +229,7 @@ pub(super) struct Root {
 impl Root {
     pub fn check(&self, ctx: &Context<'_>) -> Result<()> {
         if self.format != 1
+            || self.cache_durability != ctx.cache_durability
             || self.purpose != ctx.purpose
             || self.binding != ctx.check()?
             || self.node.as_ref().map_or(0, |n| n.count) != self.count
@@ -265,6 +273,7 @@ fn aad(ctx: &Context<'_>, r: &Reference) -> Result<Vec<u8>> {
     bytes.push(u8::from(ctx.class == KeyClass::RetainedControl));
     bytes.extend(ctx.identity);
     bytes.extend(encode_ref(r)?);
+    ctx.cache_durability.bind(&mut bytes);
     Ok(bytes)
 }
 fn path(dir: &Path, generation: [u8; 32], file: u64, temp: bool) -> PathBuf {
@@ -287,7 +296,12 @@ pub(super) fn prepare_directory(dir: &Path) -> Result<()> {
         Ok(m) if !m.is_dir() || m.file_type().is_symlink() => return Err(Error::Invalid),
         Ok(_) => (),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
-            fs::create_dir(dir).map_err(|_| Error::Unavailable)?
+            fs::create_dir(dir).map_err(|_| Error::Unavailable)?;
+            sync_dir(
+                dir.parent()
+                    .filter(|p| !p.as_os_str().is_empty())
+                    .unwrap_or(Path::new(".")),
+            )?;
         }
         Err(_) => return Err(Error::Unavailable),
     }
@@ -330,13 +344,17 @@ impl<'a> Pack<'a> {
         }
         if let Some(file) = self.current.take() {
             self.poisoned = true;
-            file.sync_all().map_err(|_| Error::Unavailable)?;
+            if self.ctx.cache_durability.is_durable() {
+                file.sync_all().map_err(|_| Error::Unavailable)?;
+            }
             fs::rename(
                 path(self.ctx.directory, self.generation, self.number, true),
                 path(self.ctx.directory, self.generation, self.number, false),
             )
             .map_err(|_| Error::Unavailable)?;
-            sync_dir(self.ctx.directory)?;
+            if self.ctx.cache_durability.is_durable() {
+                sync_dir(self.ctx.directory)?;
+            }
             #[cfg(test)]
             test_phase("PackPublished");
             self.poisoned = false;
@@ -568,6 +586,7 @@ impl<'a> Builder<'a> {
         };
         let root = Root {
             format: 1,
+            cache_durability: self.pack.ctx.cache_durability,
             purpose: self.pack.ctx.purpose,
             binding: self.pack.binding.clone(),
             node,
@@ -702,6 +721,7 @@ pub(super) fn get_ancestor(ctx: Context<'_>, root: &Root, key: &[u8]) -> Result<
 pub(super) fn validate_ancestor_root(ctx: &Context<'_>, root: &Root) -> Result<()> {
     ctx.check()?;
     if root.format != 1
+        || root.cache_durability != ctx.cache_durability
         || root.purpose != ctx.purpose
         || root.node.as_ref().map_or(0, |n| n.count) != root.count
     {
@@ -737,6 +757,7 @@ impl<'a> Editor<'a> {
         };
         self.root = Root {
             format: 1,
+            cache_durability: self.pack.ctx.cache_durability,
             purpose: self.pack.ctx.purpose,
             binding: self.pack.ctx.check()?,
             count: r.count,
@@ -775,6 +796,7 @@ impl<'a> Editor<'a> {
         let r = refs.pop().ok_or(Error::Authority)?;
         self.root = Root {
             format: 1,
+            cache_durability: self.pack.ctx.cache_durability,
             purpose: self.pack.ctx.purpose,
             binding: self.pack.binding.clone(),
             count: r.count,

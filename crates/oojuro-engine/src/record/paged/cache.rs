@@ -50,6 +50,8 @@ impl Reference {
 #[serde(deny_unknown_fields)]
 struct Manifest {
     format: u32,
+    #[serde(default, skip_serializing_if = "CacheDurability::is_durable")]
+    cache_durability: CacheDurability,
     origin: [u8; 32],
     identity: [u8; 32],
     prefix: Watermark,
@@ -108,6 +110,9 @@ enum Phase {
 }
 impl Index {
     pub fn open(reader: &Reader, directory: &Path) -> Result<Self> {
+        if !reader.cache_durability.is_durable() {
+            return Err(Error::Invalid);
+        }
         let tip = reader.watermark()?;
         let lock = directory_lock(directory)?;
         let loaded = (|| {
@@ -135,6 +140,7 @@ impl Index {
             Err(_) => (
                 Manifest {
                     format: FORMAT,
+                    cache_durability: reader.cache_durability,
                     origin: tip.origin,
                     identity: tip.identity,
                     prefix: tip,
@@ -171,7 +177,22 @@ impl Index {
             .as_ref()
             .map_or(self.manifest.segments.len(), |d| d.count())
     }
+    pub(super) fn compatible(&self, reader: &Reader) -> Result<()> {
+        if self.failed {
+            return Err(Error::Unavailable);
+        }
+        let tip = reader.watermark()?;
+        if self.manifest.origin != tip.origin
+            || self.manifest.identity != tip.identity
+            || self.manifest.cache_durability != reader.cache_durability
+        {
+            return Err(Error::Authority);
+        }
+        reader.validate(&self.manifest.prefix)?;
+        Ok(())
+    }
     fn current(&self, reader: &Reader) -> Result<()> {
+        self.compatible(reader)?;
         if self.failed {
             return Err(Error::Unavailable);
         }
@@ -222,6 +243,7 @@ impl Index {
         };
         let mut next = Manifest {
             format: FORMAT,
+            cache_durability: reader.cache_durability,
             origin: prefix.origin,
             identity: prefix.identity,
             prefix: prefix.clone(),
@@ -369,6 +391,7 @@ impl Index {
         let result = (|| {
             let mut next = Manifest {
                 format: FORMAT,
+                cache_durability: reader.cache_durability,
                 origin: self.manifest.origin,
                 identity: self.manifest.identity,
                 prefix: reader.watermark()?,
@@ -803,11 +826,13 @@ fn segment_aad(m: &Manifest, r: &Reference) -> Result<Vec<u8>> {
     a.extend(r.rows.to_le_bytes());
     a.extend((r.bytes as u64).to_le_bytes());
     a.extend((r.decoded as u64).to_le_bytes());
+    m.cache_durability.bind(&mut a);
     Ok(a)
 }
 fn check_manifest(reader: &Reader, m: &Manifest) -> Result<()> {
     let tip = reader.watermark()?;
     if m.format != FORMAT
+        || m.cache_durability != reader.cache_durability
         || m.origin != tip.origin
         || m.identity != tip.identity
         || m.rows > MAX_RECORDS
@@ -944,7 +969,20 @@ fn read_bounded(path: &Path, bound: usize) -> Result<Vec<u8>> {
     }
     Ok(bytes)
 }
+fn write_cache_new(reader: &Reader, path: &Path, bytes: &[u8]) -> Result<()> {
+    write_new_sync(path, bytes, reader.cache_durability.is_durable())
+}
+fn cache_directory_sync(reader: &Reader, path: &Path) -> Result<()> {
+    if reader.cache_durability.is_durable() {
+        directory_sync(path)
+    } else {
+        Ok(())
+    }
+}
 fn write_new(path: &Path, bytes: &[u8]) -> Result<()> {
+    write_new_sync(path, bytes, true)
+}
+fn write_new_sync(path: &Path, bytes: &[u8], durable: bool) -> Result<()> {
     let mut file = OpenOptions::new()
         .write(true)
         .create_new(true)
@@ -952,9 +990,12 @@ fn write_new(path: &Path, bytes: &[u8]) -> Result<()> {
         .custom_flags(libc::O_NOFOLLOW)
         .open(path)
         .map_err(|_| Error::Unavailable)?;
-    file.write_all(bytes)
-        .and_then(|_| file.sync_all())
-        .map_err(|_| Error::Unavailable)
+    file.write_all(bytes).map_err(|_| Error::Unavailable)?;
+    if durable {
+        file.sync_all().map_err(|_| Error::Unavailable)
+    } else {
+        Ok(())
+    }
 }
 fn directory_sync(dir: &Path) -> Result<()> {
     File::open(dir)

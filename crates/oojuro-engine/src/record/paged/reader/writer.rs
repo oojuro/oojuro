@@ -50,6 +50,26 @@ impl Writer {
             Arc::new(authority::now),
         )
     }
+    pub fn open_disk_with_cache_policy(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        directory: &Path,
+        minimum: Option<&Watermark>,
+        limits: DiskLimits,
+        policy: CacheDurability,
+    ) -> Result<Self> {
+        Self::open_clock_with_cache_policy(
+            dir,
+            key,
+            identity,
+            directory,
+            minimum,
+            limits,
+            Arc::new(authority::now),
+            policy,
+        )
+    }
     pub(in crate::record::paged) fn open_clock(
         dir: &Path,
         key: &[u8; 32],
@@ -59,7 +79,29 @@ impl Writer {
         limits: DiskLimits,
         clock: Arc<dyn Fn() -> Result<i64> + Send + Sync>,
     ) -> Result<Self> {
-        let reader = Reader::open_disk_inner(dir, key, identity, directory, minimum, limits, true)?;
+        Self::open_clock_with_cache_policy(
+            dir,
+            key,
+            identity,
+            directory,
+            minimum,
+            limits,
+            clock,
+            CacheDurability::Durable,
+        )
+    }
+    pub(in crate::record::paged) fn open_clock_with_cache_policy(
+        dir: &Path,
+        key: &[u8; 32],
+        identity: Identity,
+        directory: &Path,
+        minimum: Option<&Watermark>,
+        limits: DiskLimits,
+        clock: Arc<dyn Fn() -> Result<i64> + Send + Sync>,
+        policy: CacheDurability,
+    ) -> Result<Self> {
+        let reader =
+            Reader::open_disk_inner(dir, key, identity, directory, minimum, limits, true, policy)?;
         let parent = dir
             .parent()
             .filter(|p| !p.as_os_str().is_empty())
@@ -311,6 +353,7 @@ impl Writer {
         request: &str,
         inputs: &[Input],
     ) -> Result<Commit> {
+        index.compatible(self.reader()?)?;
         let commit = self.append(request, inputs)?;
         index.refresh(self.reader()?)?;
         Ok(commit)
@@ -322,6 +365,7 @@ impl Writer {
         index: &mut Index,
         requests: &[Append<'_>],
     ) -> Result<Vec<Commit>> {
+        index.compatible(self.reader()?)?;
         let receipts = self.append_group(requests)?;
         index.refresh(self.reader()?)?;
         Ok(receipts)
@@ -333,6 +377,7 @@ impl Writer {
         index: &mut Index,
         requests: &[Append<'_>],
     ) -> Result<(Vec<Commit>, WriteProfile)> {
+        index.compatible(self.reader()?)?;
         let began = std::time::Instant::now();
         let mut profile = WriteProfile::default();
         let receipts = self.append_group_work(requests, Some(&mut profile))?;
