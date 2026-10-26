@@ -1,6 +1,8 @@
 //! Generic file tools; agent/session policy belongs to ojo-journal.
 mod events;
 #[cfg(feature = "search")]
+mod query;
+#[cfg(feature = "search")]
 mod search;
 use ojo::{Change, Checkpoint, Database};
 use serde_json::{Value, json};
@@ -17,11 +19,12 @@ const HELP: &str = "ojo — portable .juro file tools (experimental wire 0.1)
   ojo init FILE [--key-file PRIVATE_KEY]
   ojo append FILE DATA_FILE [--intent PRIVATE_INTENT] [--key-file PRIVATE_KEY]
   ojo read FILE CURSOR_HEX [--output NEW_FILE] [--key-file PRIVATE_KEY]
-  ojo scan FILE [--after CURSOR_HEX] [--limit N] [--from MICROS] [--to MICROS]
-  ojo follow FILE [--after CURSOR_HEX] [--limit N] [--wait-ms N]
+  ojo scan FILE [--after CURSOR_HEX] [--limit N] [--from MICROS] [--to MICROS] [--text]
+  ojo follow FILE [--after CURSOR_HEX] [--limit N] [--wait-ms N] [--watch] [--text]
     scan/follow also accept --key-file PRIVATE_KEY.
   ojo index FILE NEW_INDEX_DIR --index-key PRIVATE_KEY [--compression raw|zstd]
   ojo search FILE INDEX_DIR QUERY --index-key PRIVATE_KEY [--limit N]
+  ojo query FILE QUERY --index-key PRIVATE_KEY [--cache PRIVATE_DIR] [--limit N]
     index/search also accept --key-file PRIVATE_SOURCE_KEY, --max-index-bytes N
     and --max-original-bytes N. search also accepts --from MICROS and --to MICROS.
 
@@ -31,6 +34,9 @@ after a lost acknowledgement; the engine creates it privately before committing.
 read writes exact bytes. scan emits a bounded JSON page with hexadecimal data;
 time ranges use [from,to) UTC Unix microseconds. follow returns one bounded live
 page, waiting up to 1,000 ms by default (maximum 60,000); resume with its cursor.
+Add --watch to keep following until interrupted. --text prints readable UTC
+timestamps and escaped text (binary events use hex); default output preserves
+bounded JSON pages and resume cursors. --watch emits one JSON page per line.
 CLI follow reopens between polls; embedded applications can use the healthy
 Collector API. A persistent external writer excludes CLI readers under wire 0.1.
 index builds a disposable encrypted lexical index of UTF-8 event data. Binary
@@ -38,6 +44,10 @@ events remain exactly readable. search checks the current file checkpoint and
 fetches selected originals from that file; a stale index refuses and needs a
 new build. Generate a separate index key with keygen and keep it separately.
 Each CLI invocation verifies the source history; it has no warm-search SLA.
+query manages a private encrypted cache (default FILE.cache), incrementally
+refreshes verified appends, and searches the current snapshot. It accepts the
+same budgets/time bounds as search and --compression raw|zstd. Cache contents
+are disposable; keep the index key separate. No cloud account is needed.
 
 Key/value compatibility and file inspection:
   ojo create FILE [--key-file PRIVATE_KEY]
@@ -79,6 +89,9 @@ struct Arguments {
     compression: Option<OsString>,
     index_bytes: Option<OsString>,
     original_bytes: Option<OsString>,
+    cache: Option<PathBuf>,
+    text: bool,
+    watch: bool,
 }
 
 fn arguments(values: impl Iterator<Item = OsString>) -> Result<Arguments> {
@@ -88,6 +101,16 @@ fn arguments(values: impl Iterator<Item = OsString>) -> Result<Arguments> {
     while let Some(value) = values.next() {
         if !positional_only && value == "--" {
             positional_only = true;
+        } else if !positional_only && value == "--text" {
+            if result.text {
+                return Err("duplicate --text".into());
+            }
+            result.text = true;
+        } else if !positional_only && value == "--watch" {
+            if result.watch {
+                return Err("duplicate --watch".into());
+            }
+            result.watch = true;
         } else if !positional_only && value == "--key-file" {
             if result.key_file.is_some() {
                 return Err("duplicate --key-file".into());
@@ -153,6 +176,11 @@ fn arguments(values: impl Iterator<Item = OsString>) -> Result<Arguments> {
                 return Err("duplicate --max-original-bytes".into());
             }
             result.original_bytes = Some(values.next().ok_or("missing original byte budget")?);
+        } else if !positional_only && value == "--cache" {
+            if result.cache.is_some() {
+                return Err("duplicate --cache".into());
+            }
+            result.cache = Some(values.next().ok_or("missing cache directory")?.into());
         } else if !positional_only && value.to_str().is_some_and(|s| s.starts_with("--")) {
             return Err("unknown option; see ojo --help".into());
         } else {
@@ -325,31 +353,41 @@ fn run() -> Result<()> {
     if args.after.is_some() && !matches!(command, "scan" | "follow") {
         return Err("--after is only valid for scan/follow".into());
     }
-    if args.limit.is_some() && !matches!(command, "scan" | "follow" | "search") {
-        return Err("--limit is only valid for scan/follow/search".into());
+    if args.limit.is_some() && !matches!(command, "scan" | "follow" | "search" | "query") {
+        return Err("--limit is only valid for scan/follow/search/query".into());
     }
-    if (args.from.is_some() || args.to.is_some()) && !matches!(command, "scan" | "search") {
-        return Err("--from/--to are only valid for scan/search".into());
+    if (args.from.is_some() || args.to.is_some()) && !matches!(command, "scan" | "search" | "query")
+    {
+        return Err("--from/--to are only valid for scan/search/query".into());
     }
     if args.wait_ms.is_some() && command != "follow" {
         return Err("--wait-ms is only valid for follow".into());
     }
+    if args.text && !matches!(command, "scan" | "follow") {
+        return Err("--text is only valid for scan/follow".into());
+    }
+    if args.watch && command != "follow" {
+        return Err("--watch is only valid for follow".into());
+    }
     if (args.index_key.is_some() || args.index_bytes.is_some())
-        && !matches!(command, "index" | "search")
+        && !matches!(command, "index" | "search" | "query")
     {
-        return Err("--index-key/--max-index-bytes are only valid for index/search".into());
+        return Err("--index-key/--max-index-bytes are only valid for index/search/query".into());
     }
-    if args.compression.is_some() && command != "index" {
-        return Err("--compression is only valid for index".into());
+    if args.compression.is_some() && !matches!(command, "index" | "query") {
+        return Err("--compression is only valid for index/query".into());
     }
-    if args.original_bytes.is_some() && !matches!(command, "index" | "search") {
-        return Err("--max-original-bytes is only valid for index/search".into());
+    if args.original_bytes.is_some() && !matches!(command, "index" | "search" | "query") {
+        return Err("--max-original-bytes is only valid for index/search/query".into());
+    }
+    if args.cache.is_some() && command != "query" {
+        return Err("--cache is only valid for query".into());
     }
     let expected = match command {
         "request-id" => 0,
         "create" | "keygen" | "inspect" | "verify" | "recover" | "dump" | "init" | "scan"
         | "follow" => 1,
-        "get" | "delete" | "export" | "archive" | "append" | "read" | "index" => 2,
+        "get" | "delete" | "export" | "archive" | "append" | "read" | "index" | "query" => 2,
         "put" | "search" => 3,
         _ => return Err("unknown command; see ojo --help".into()),
     };
@@ -370,6 +408,12 @@ fn run() -> Result<()> {
         return Ok(());
     }
     let key = key(args.key_file.as_deref())?;
+    if command == "query" {
+        #[cfg(feature = "search")]
+        return query::run(&args, key.as_ref());
+        #[cfg(not(feature = "search"))]
+        return Err("search support was disabled when building this tool".into());
+    }
     if matches!(command, "index" | "search") {
         #[cfg(feature = "search")]
         return search::run(command, &args, key.as_ref());

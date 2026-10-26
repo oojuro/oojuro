@@ -113,6 +113,24 @@ impl EventAppender {
             inner: Appender::extend_validated_prefix(&previous.inner, binding, limits)?,
         })
     }
+    /// Extend a validated prefix into a separate root on the same filesystem.
+    /// The previous root is unchanged, allowing a caller to publish associated
+    /// source-checkpoint metadata and the new index as one cache generation.
+    pub fn extend_validated_prefix_to(
+        previous: &EventIndex,
+        directory: impl AsRef<Path>,
+        binding: Binding,
+        limits: Limits,
+    ) -> Result<Self> {
+        Ok(Self {
+            inner: Appender::extend_validated_prefix_to(
+                &previous.inner,
+                directory,
+                binding,
+                limits,
+            )?,
+        })
+    }
     pub fn push(&mut self, cursor: &[u8], timestamp: i64, data: &[u8]) -> Result<bool> {
         cursor_id(cursor)?;
         let Ok(text) = std::str::from_utf8(data) else {
@@ -172,6 +190,11 @@ impl EventIndex {
     }
     pub fn binding(&self) -> &Binding {
         self.inner.binding()
+    }
+    /// Stored build limits and effective original-byte query ceiling. A derived
+    /// refresh must not raise that ceiling implicitly.
+    pub fn limits(&self) -> Limits {
+        self.inner.manifest.limits
     }
     pub fn build_metrics(&self) -> BuildMetrics {
         self.inner.build_metrics()

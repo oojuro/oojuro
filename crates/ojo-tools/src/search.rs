@@ -23,10 +23,10 @@ fn number<T: std::str::FromStr>(value: &OsStr) -> Result<T> {
         .parse()
         .map_err(|_| "invalid numeric argument".into())
 }
-fn index_error(error: IndexError) -> Box<dyn std::error::Error> {
+pub(super) fn index_error(error: IndexError) -> Box<dyn std::error::Error> {
     format!("index unavailable or outside its source/budget: {error:?}; rebuild a stale index in a new directory").into()
 }
-fn binding(checkpoint: Checkpoint) -> Binding {
+pub(super) fn binding(checkpoint: Checkpoint) -> Binding {
     let mut namespace = Sha256::new();
     namespace.update(b"oojuro/event-file-index/namespace/v1");
     namespace.update(checkpoint.file_id);
@@ -42,7 +42,17 @@ fn binding(checkpoint: Checkpoint) -> Binding {
     }
 }
 
-pub(super) fn run(command: &str, args: &Arguments, source_key: Option<&[u8; 32]>) -> Result<()> {
+pub(super) struct Settings<'a> {
+    pub key: [u8; 32],
+    pub limits: Limits,
+    pub query: EventQuery<'a>,
+}
+
+pub(super) fn settings<'a>(
+    args: &'a Arguments,
+    query_position: usize,
+    searching: bool,
+) -> Result<Settings<'a>> {
     let index_key: [u8; 32] = private_bytes(
         args.index_key
             .as_deref()
@@ -82,7 +92,7 @@ pub(super) fn run(command: &str, args: &Arguments, source_key: Option<&[u8; 32]>
     };
     let query_text = args
         .positional
-        .get(2)
+        .get(query_position)
         .map(|text| text.to_str().ok_or("query must be UTF-8"))
         .transpose()?;
     let mut query = EventQuery::new(query_text.unwrap_or(""));
@@ -102,9 +112,22 @@ pub(super) fn run(command: &str, args: &Arguments, source_key: Option<&[u8; 32]>
     if !(1..=1024).contains(&query.limit) || query.to.is_some_and(|to| to <= query.from) {
         return Err("search limit must be 1..=1024 and timestamp range must be [from,to)".into());
     }
-    if command == "search" && (query.text.trim().is_empty() || query.text.len() > 4096) {
+    if searching && (query.text.trim().is_empty() || query.text.len() > 4096) {
         return Err("search requires a nonempty query of at most4096 UTF-8 bytes".into());
     }
+    Ok(Settings {
+        key: index_key,
+        limits,
+        query,
+    })
+}
+
+pub(super) fn run(command: &str, args: &Arguments, source_key: Option<&[u8; 32]>) -> Result<()> {
+    let Settings {
+        key: index_key,
+        limits,
+        query,
+    } = settings(args, 2, command == "search")?;
     let source = Path::new(&args.positional[0]);
     let directory = Path::new(&args.positional[1]);
     let mut journal = Journal::open(source, source_key, false)?;

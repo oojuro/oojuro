@@ -123,7 +123,7 @@ pub(super) fn run(command: &str, args: &Arguments, key: Option<&[u8; 32]>) -> Re
             }
         }
         "scan" | "follow" => {
-            let after = args.after.as_deref().map(cursor).transpose()?;
+            let mut after = args.after.as_deref().map(cursor).transpose()?;
             let limit = args
                 .limit
                 .as_deref()
@@ -147,46 +147,116 @@ pub(super) fn run(command: &str, args: &Arguments, key: Option<&[u8; 32]>) -> Re
             if wait > 60_000 {
                 return Err("follow wait must be 0..=60000 ms".into());
             }
-            let deadline = Instant::now() + Duration::from_millis(wait);
-            let (events, page, observed, tail) = loop {
-                let opened = Journal::open(path, key, false);
-                let mut journal = match opened {
-                    Ok(journal) => journal,
-                    Err(ojo::Error::Locked) if command == "follow" && Instant::now() < deadline => {
-                        std::thread::sleep(Duration::from_millis(25));
-                        continue;
-                    }
-                    Err(error) => return Err(error.into()),
-                };
-                let (events, page) = packet(&mut journal, args, after, limit)?;
-                let observed = journal.checkpoint();
-                let tail = journal.recovered_tail_bytes();
-                drop(journal); // Output and waits must not hold a shared inode lock.
-                if command == "scan" || !events.is_empty() || Instant::now() >= deadline {
-                    break (events, page, observed, tail);
-                }
-                std::thread::sleep(Duration::from_millis(25));
-            };
-            let mut output = io::stdout().lock();
-            write!(output, "{{\"events\":[")?;
-            for (index, event) in events.iter().enumerate() {
-                if index > 0 {
-                    write!(output, ",")?;
-                }
-                serde_json::to_writer(
-                    &mut output,
-                    &json!({"accepted_at":event.accepted_at,
-                    "cursor":hex(&event.cursor.to_bytes()),"data_hex":hex(&event.data)}),
-                )?;
+            if args.watch && wait < 25 {
+                return Err("--watch requires --wait-ms of at least 25".into());
             }
-            writeln!(
-                output,
-                "],\"page\":{}}}",
-                json!({"profile":1,"cursor":page.cursor.map(|c|hex(&c.to_bytes())),
+            loop {
+                let deadline = Instant::now() + Duration::from_millis(wait);
+                let (events, page, observed, tail) = loop {
+                    let opened = Journal::open(path, key, false);
+                    let mut journal = match opened {
+                        Ok(journal) => journal,
+                        Err(ojo::Error::Locked)
+                            if command == "follow" && Instant::now() < deadline =>
+                        {
+                            std::thread::sleep(Duration::from_millis(25));
+                            continue;
+                        }
+                        Err(error) => return Err(error.into()),
+                    };
+                    let (events, page) = packet(&mut journal, args, after, limit)?;
+                    let observed = journal.checkpoint();
+                    let tail = journal.recovered_tail_bytes();
+                    drop(journal); // Output and waits must not hold a shared inode lock.
+                    if command == "scan" || !events.is_empty() || Instant::now() >= deadline {
+                        break (events, page, observed, tail);
+                    }
+                    std::thread::sleep(Duration::from_millis(25));
+                };
+                let mut output = io::stdout().lock();
+                if args.text {
+                    for event in &events {
+                        let data = match std::str::from_utf8(&event.data) {
+                            Ok(text) => serde_json::to_string(text)?,
+                            Err(_) => format!("hex:{}", hex(&event.data)),
+                        };
+                        writeln!(output, "{} {}", utc(event.accepted_at), data)?;
+                    }
+                } else {
+                    write!(output, "{{\"events\":[")?;
+                    for (index, event) in events.iter().enumerate() {
+                        if index > 0 {
+                            write!(output, ",")?;
+                        }
+                        serde_json::to_writer(
+                            &mut output,
+                            &json!({"accepted_at":event.accepted_at,
+                    "cursor":hex(&event.cursor.to_bytes()),"data_hex":hex(&event.data)}),
+                        )?;
+                    }
+                    writeln!(
+                        output,
+                        "],\"page\":{}}}",
+                        json!({"profile":1,"cursor":page.cursor.map(|c|hex(&c.to_bytes())),
                 "has_more":page.has_more,"checkpoint":checkpoint(observed),"incomplete_tail_bytes":tail})
-            )?;
+                    )?;
+                }
+                output.flush()?;
+                if !args.watch {
+                    break;
+                }
+                after = page.cursor;
+            }
         }
         _ => unreachable!(),
     }
     Ok(())
+}
+
+// Gregorian UTC conversion using Euclidean days, including dates before 1970.
+// No timezone database or application schema is involved.
+fn utc(micros: i64) -> String {
+    let seconds = micros.div_euclid(1_000_000);
+    let fraction = micros.rem_euclid(1_000_000);
+    let days = seconds.div_euclid(86_400);
+    let time = seconds.rem_euclid(86_400);
+    let z = days + 719_468;
+    let era = z.div_euclid(146_097);
+    let day_of_era = z - era * 146_097;
+    let year_of_era =
+        (day_of_era - day_of_era / 1460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
+    let mut year = year_of_era + era * 400;
+    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
+    let month_prime = (5 * day_of_year + 2) / 153;
+    let day = day_of_year - (153 * month_prime + 2) / 5 + 1;
+    let month = month_prime + if month_prime < 10 { 3 } else { -9 };
+    year += i64::from(month <= 2);
+    let year = if (0..=9999).contains(&year) {
+        format!("{year:04}")
+    } else {
+        format!("{year:+07}")
+    };
+    format!(
+        "{year}-{month:02}-{day:02}T{:02}:{:02}:{:02}.{fraction:06}Z",
+        time / 3600,
+        time / 60 % 60,
+        time % 60
+    )
+}
+
+#[cfg(test)]
+mod tests {
+    use super::utc;
+    #[test]
+    fn utc_rendering_covers_epoch_negative_times_and_leap_centuries() {
+        for (input, expected) in [
+            (0, "1970-01-01T00:00:00.000000Z"),
+            (-1, "1969-12-31T23:59:59.999999Z"),
+            (951_782_400_123_456, "2000-02-29T00:00:00.123456Z"),
+            (-2_203_891_200_000_000, "1900-03-01T00:00:00.000000Z"),
+            (4_107_542_400_000_000, "2100-03-01T00:00:00.000000Z"),
+        ] {
+            assert_eq!(utc(input), expected);
+        }
+    }
 }

@@ -74,7 +74,23 @@ The minimal `ojo` crate needs Rust 1.89+ (edition 2024). Its optional archive/be
 
 Plain `cargo build --locked` and `cargo test --locked` select only the new independent `ojo` crate. Run `cargo test --locked -p ojo --features archive` for compressed file/archive interoperability. Its source is in `crates/ojo`, with the independently versioned specification and frozen vectors in `spec/`. Agent CLI/runtime applications now live in `oojuro/o-journal`. The dependency policy gate checks these libraries independently, including conditional platform dependencies; see [DEPENDENCIES.md](DEPENDENCIES.md). Store JSON-reporting tools require `--features bench-tools`; `baselines` and `codecs` enable it automatically. No public library API is removed.
 
-The normal checks select runtime packages explicitly, without benchmark comparison features:
+Local file tools have their own integration checks:
+
+```bash
+cargo test --locked -p ojo-tools
+cargo test --locked -p ojo-tools --no-default-features
+cargo clippy --locked -p ojo-tools --all-targets -- -D warnings
+python3 scripts/test_event_reader.py
+python3 scripts/test_install_ojo.py
+python3 scripts/test_package_ojo.py
+python3 scripts/verify-ojo-sync-retry.py
+python3 scripts/verify-ojo-sync-retry.py --features archive
+```
+
+The sync-failure gates use a synthetic Linux syscall interposer and require a
+C compiler. Normal Rust tests intentionally skip those opt-in fixtures. CI
+runs the explicit gates, including uncertain file/directory acknowledgement
+and grouped retries. The normal checks for retained runtime packages are:
 
 ```bash
 cargo test --locked --no-default-features --lib --tests -p oojuro-core -p oojuro-store -p oojuro-nine
@@ -91,7 +107,7 @@ cloud deployment.
 
 The benchmark harnesses (`oojuro-bench`, `oojuro-tracebench`) build competitor engines and fetch public datasets. `oojuro-store`'s `baselines` and `codecs` features are also comparison tools. They are not part of normal CI. Run them deliberately for the change being measured; see `docs/BENCH_HARNESS.md` and `docs/TRACEBENCH.md`. Do not use `--workspace` or `--all-features` as a substitute for the runtime checks above.
 
-GitHub Actions is currently disabled at repository level. This PR proposes the workflow; an owner must review and enable Actions before remote check results exist. The workflow does not configure branch protection, require another reviewer, publish packages or deploy services. Keep trusted signing and release credentials outside PR jobs; see [publication boundaries](docs/PUBLICATION.md).
+GitHub Actions is enabled for the unprivileged checks in `.github/workflows/ci.yml`. Check the actual run for the commit under review; a workflow file alone is not passing evidence. The workflow does not configure branch protection, require another reviewer, publish packages or deploy services. Keep trusted signing and release credentials outside PR jobs; see [publication boundaries](docs/PUBLICATION.md).
 
 ## What a good change looks like
 
@@ -102,8 +118,9 @@ GitHub Actions is currently disabled at repository level. This PR proposes the w
 - **Measured.** A change that touches the write path, the index or search should include before and after
   numbers from the benchmark that covers it (`docs/TRACEBENCH.md`, `docs/PERF_SEARCH.md`, `docs/PERF_STORE.md`).
   A feature that slows ingest or search is not accepted.
-- **Lossless and provable.** Stored text must read back byte for byte, and erased text must be absent from
-  every file. Do not weaken those checks.
+- **Lossless and provable.** Originals must read back byte for byte. A KV tombstone
+  hides a current value but retains its history; the Event profile has no deletion
+  operation. Do not claim physical erasure for these append-only files.
 - **No real data.** Never commit transcripts, logs or datasets, and never commit anything from a real person's
   agent history. Tests use synthetic text. Benchmarks use public datasets that are fetched on demand.
 - **No secrets.** Real tokens, keys and credentials never go into the repository. Tests use invented values

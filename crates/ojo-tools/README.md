@@ -11,6 +11,9 @@ immutable v0.1.0 release predates this convention and keeps its original name.
 
 The v0.2.0 experimental preview includes generic timestamp-and-data journals
 and file-search commands. These postdate the immutable v0.1.0 KV preview.
+Current source additionally provides managed `query`, readable `--text` output
+and continuous `follow --watch`; these are not in the immutable v0.2.0 package.
+Start with the [local quickstart](../../docs/LOCAL_QUICKSTART.md).
 
 ```sh
 ojo keygen private.key
