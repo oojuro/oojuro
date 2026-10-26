@@ -19,6 +19,17 @@ impl Appender {
         binding: Binding,
         limits: Limits,
     ) -> Result<Self> {
+        Self::extend_validated_prefix_to(previous, &previous.root_directory, binding, limits)
+    }
+    /// Build into a supplied root on the same filesystem. A distinct destination
+    /// retains the previous root unchanged and owns its own descriptor. The
+    /// caller still proves source-prefix/scope continuity; packs are hard-linked.
+    pub fn extend_validated_prefix_to(
+        previous: &Index,
+        directory: impl AsRef<Path>,
+        binding: Binding,
+        limits: Limits,
+    ) -> Result<Self> {
         if binding.namespace != previous.binding.namespace
             || binding.writer != previous.binding.writer
             || binding.view == previous.binding.view
@@ -34,7 +45,7 @@ impl Appender {
             return Err(Error::Bounds);
         }
         let mut builder = Builder::create_with_cipher(
-            &previous.root_directory,
+            directory.as_ref(),
             previous.cipher.clone(),
             binding,
             limits,

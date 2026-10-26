@@ -43,6 +43,107 @@ impl Drop for Scratch {
 }
 
 #[test]
+fn readable_scan_preserves_text_controls_and_identifies_binary_without_conversion() {
+    let s = Scratch::new();
+    let mut journal = Journal::create(s.0.join("readable.juro"), None).unwrap();
+    journal.append(b"hello\n\x1b[31m\0\xcf\x80").unwrap();
+    journal.append(b"\xff\0binary").unwrap();
+    drop(journal);
+    let output = s.ok(&["scan", "readable.juro", "--text"]);
+    let output = String::from_utf8(output.stdout).unwrap();
+    let lines = output.lines().collect::<Vec<_>>();
+    assert_eq!(lines.len(), 2);
+    let (time, data) = lines[0].split_once(' ').unwrap();
+    assert!(time.ends_with('Z'));
+    assert!(time.contains('T'));
+    assert_eq!(
+        serde_json::from_str::<String>(data).unwrap().as_bytes(),
+        b"hello\n\x1b[31m\0\xcf\x80"
+    );
+    assert!(lines[1].ends_with(" hex:ff0062696e617279"));
+    assert!(!output.contains('\x1b'));
+    assert!(
+        !s.run(&["scan", "readable.juro", "--watch"])
+            .status
+            .success()
+    );
+    assert!(
+        !s.run(&["follow", "readable.juro", "--watch", "--wait-ms", "0"])
+            .status
+            .success()
+    );
+}
+
+#[test]
+fn watch_streams_new_events_without_duplicates_and_releases_source_between_pages() {
+    use std::io::{BufRead, BufReader};
+    struct Child(std::process::Child);
+    impl Drop for Child {
+        fn drop(&mut self) {
+            let _ = self.0.kill();
+            let _ = self.0.wait();
+        }
+    }
+    let s = Scratch::new();
+    s.ok(&["init", "watched.juro"]);
+    fs::write(s.0.join("input"), b"first").unwrap();
+    s.ok(&["append", "watched.juro", "input"]);
+    let mut child = Child(
+        s.command(&[
+            "follow",
+            "watched.juro",
+            "--watch",
+            "--limit",
+            "1",
+            "--wait-ms",
+            "100",
+        ])
+        .stdout(Stdio::piped())
+        .stderr(Stdio::piped())
+        .spawn()
+        .unwrap(),
+    );
+    let output = child.0.stdout.take().unwrap();
+    let (tx, rx) = std::sync::mpsc::channel();
+    let reader = std::thread::spawn(move || {
+        for line in BufReader::new(output).lines() {
+            if tx.send(line).is_err() {
+                break;
+            }
+        }
+    });
+    let first: Value =
+        serde_json::from_str(&rx.recv_timeout(Duration::from_secs(5)).unwrap().unwrap()).unwrap();
+    assert_eq!(first["events"][0]["data_hex"], "6669727374");
+    assert_eq!(first["events"].as_array().unwrap().len(), 1);
+    fs::write(s.0.join("input"), b"second").unwrap();
+    // The watcher must close its source snapshot before writing/waiting.
+    s.ok(&["append", "watched.juro", "input"]);
+    let mut cursor = first["page"]["cursor"].clone();
+    loop {
+        let page: Value =
+            serde_json::from_str(&rx.recv_timeout(Duration::from_secs(5)).unwrap().unwrap())
+                .unwrap();
+        if page["events"].as_array().unwrap().is_empty() {
+            assert_eq!(page["page"]["cursor"], cursor);
+            continue;
+        }
+        assert_eq!(page["events"].as_array().unwrap().len(), 1);
+        assert_eq!(page["events"][0]["data_hex"], "7365636f6e64");
+        assert_ne!(page["page"]["cursor"], cursor);
+        cursor = page["page"]["cursor"].clone();
+        break;
+    }
+    let heartbeat: Value =
+        serde_json::from_str(&rx.recv_timeout(Duration::from_secs(5)).unwrap().unwrap()).unwrap();
+    assert!(heartbeat["events"].as_array().unwrap().is_empty());
+    assert_eq!(heartbeat["page"]["cursor"], cursor);
+    drop(child);
+    drop(rx);
+    reader.join().unwrap();
+}
+
+#[test]
 fn engine_assigns_time_and_binary_cursor_without_application_keys() {
     let s = Scratch::new();
     s.ok(&["keygen", "key"]);

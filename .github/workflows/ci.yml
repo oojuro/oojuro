@@ -34,6 +34,39 @@ jobs:
           cargo +"$RUST_TOOLCHAIN" test --locked -p ojo
           cargo +"$RUST_TOOLCHAIN" test --locked -p ojo --features archive
 
+  tools:
+    name: Local CLI, interoperability and durability faults
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      RUSTUP_TOOLCHAIN: 1.99.1
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install pinned Rust
+        run: rustup toolchain install "$RUST_TOOLCHAIN" --profile minimal --component clippy --no-self-update
+      - name: Prepare private test scratch
+        run: mkdir -p -m 700 "$RUNNER_TEMP/oojuro-tests"
+      - name: Test normal and minimal local tools
+        env:
+          TMPDIR: ${{ runner.temp }}/oojuro-tests
+        run: |
+          cargo test --locked -p ojo-tools
+          cargo test --locked -p ojo-tools --no-default-features
+          cargo clippy --locked -p ojo-tools --all-targets -- -D warnings
+      - name: Test independent reader and installation scripts
+        run: |
+          python3 scripts/test_event_reader.py
+          python3 scripts/test_install_ojo.py
+          python3 scripts/test_package_ojo.py
+      - name: Exercise real file and directory sync failures
+        env:
+          TMPDIR: ${{ runner.temp }}/oojuro-tests
+        run: |
+          python3 scripts/verify-ojo-sync-retry.py
+          python3 scripts/verify-ojo-sync-retry.py --features archive
+
   storage:
     name: Legacy engine and shared storage
     runs-on: ubuntu-24.04

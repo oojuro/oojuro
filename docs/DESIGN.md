@@ -52,6 +52,8 @@ O-Cloud owns managed hosting and the `oojuro.com` website. The private release
 operator coordinates signing, publication and promotion; reproducible build
 scripts and tests stay with the corresponding source component. Each component
 has its own revision and release schedule.
+Managed hosting and Cloud development are currently suspended. The open source
+engine and local tools remain available without an account.
 
 See [repository boundaries](REPOSITORY_BOUNDARIES.md), [dependency policy](../DEPENDENCIES.md),
 [storage measurements](PERF_STORE.md), [search measurements](PERF_SEARCH.md) and

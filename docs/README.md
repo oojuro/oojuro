@@ -4,9 +4,12 @@
 
 | Document | What it covers |
 | --- | --- |
+| [LOCAL_QUICKSTART](LOCAL_QUICKSTART.md) | Install, append, exact reads, growing-file search, follow and recovery |
+| [Event API](EVENT_DATABASE.md) | General timestamp-and-data embedded API |
+| [File tools](../crates/ojo-tools/README.md) | CLI commands and limits |
 | [DESIGN](DESIGN.md) | The embedded engine and its storage/retrieval scope |
 | [REPOSITORY_BOUNDARIES](REPOSITORY_BOUNDARIES.md) | Engine, agent application, hosting and release ownership |
-| [OJO_FORMAT](OJO_FORMAT.md) | The `.ojo` extension and remaining standalone container work |
+| [OJO_FORMAT](OJO_FORMAT.md) | The `.juro` extension, existing `.ojo` paths and standalone container |
 | [Oojuro Journal](https://github.com/oojuro/o-journal) | Agent capture, CLI/MCP, setup and SDK documentation |
 
 ## Benchmarks and performance
