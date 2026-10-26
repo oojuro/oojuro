@@ -89,6 +89,17 @@ impl EventBuilder {
             inner: Builder::create_compact(directory, cache_key, binding, limits)?,
         })
     }
+    /// Opt-in version 3 disposable cache with exact raw-run positions.
+    pub fn create_positional(
+        directory: impl AsRef<Path>,
+        cache_key: &[u8; 32],
+        binding: Binding,
+        limits: Limits,
+    ) -> Result<Self> {
+        Ok(Self {
+            inner: Builder::create_positional(directory, cache_key, binding, limits)?,
+        })
+    }
     /// Signed UTC Unix microseconds. Returns false for nonUTF8 data; those
     /// events remain exact/readable in the authoritative event log. Indexing
     /// never edits, converts or removes their original bytes.
@@ -134,6 +145,11 @@ impl EventAppender {
     }
     pub fn retire(&mut self, cursor: &[u8]) -> Result<()> {
         self.inner.retire(&cursor_id(cursor)?)
+    }
+    /// Retire a live cursor from the previous projection; absent/already
+    /// retired cursors return false. Source originals remain authoritative.
+    pub fn retire_if_present(&mut self, cursor: &[u8]) -> Result<bool> {
+        self.inner.retire_if_present(&cursor_id(cursor)?)
     }
     pub fn finish(self) -> Result<EventIndex> {
         Ok(EventIndex {

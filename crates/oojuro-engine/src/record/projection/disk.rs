@@ -7,6 +7,8 @@ mod budget;
 mod build;
 mod compact;
 mod events;
+mod joint;
+mod literal;
 mod query_cache;
 mod score_blocks;
 mod storage;
@@ -176,6 +178,7 @@ impl Index {
                     + root_bytes(&self.manifest.keys)
                     + root_bytes(&self.manifest.postings),
             )
+            .saturating_add(self.manifest.positions.as_ref().map_or(0, root_bytes))
             .saturating_add(
                 self.directory.capacity()
                     + self.root_directory.capacity()
@@ -446,8 +449,35 @@ impl Index {
             .as_ref()
             .filter(|view| view.count <= 65536)
             .map(|view| view.bits.as_slice());
+        let mut witness = Vec::new();
         for term in scorer::possible_terms(q.text) {
             if !scorer::is_literal(q.text) && (split || !term.contains('_')) {
+                continue;
+            }
+            if scorer::is_literal(q.text)
+                && self.manifest.positions.is_some()
+                && let Some(mass) = &self.mass
+                && let Some(list) = self
+                    .terms
+                    .get(self, *blake3::hash(term.as_bytes()).as_bytes())?
+            {
+                if !split && term.contains('_') {
+                    let visible = if selected.is_none() {
+                        list.statistics.df > 0
+                    } else {
+                        witness.resize(mass.live.len(), 0);
+                        witness.fill(0);
+                        list.pairs.presence(
+                            &mut witness,
+                            &mass.live,
+                            selected.as_ref().map(|view| view.bits.as_slice()),
+                        )? > 0
+                    };
+                    if visible {
+                        present.insert(term.clone());
+                    }
+                }
+                df.insert(term, list.statistics.df);
                 continue;
             }
             let mut cursor = Postings::new(self, &term)?;
@@ -508,6 +538,9 @@ impl Index {
                         }
                     }
                 } else {
+                    if let Some(top) = self.rank_joint(&model, &selection, q.k, None)? {
+                        return Ok((self.ranked(top)?, false));
+                    }
                     for (ordinal, tf) in list.pairs.iter() {
                         let column = self.column(ordinal)?;
                         if column.live() {
@@ -523,11 +556,23 @@ impl Index {
                 return Ok((self.ranked(top)?, false));
             }
         }
-        let mut literal = plan
+        let proof = plan
             .literal
             .as_ref()
-            .map(|_| vec![0u64; (self.manifest.rows as usize).div_ceil(64)]);
-        let compact_stats = self.compact_statistics(&plan, selected.as_deref())?;
+            .map(|needle| self.literal_candidates(needle))
+            .transpose()?
+            .flatten();
+        let proven = proof.is_some();
+        let mut literal = proof.or_else(|| {
+            plan.literal
+                .as_ref()
+                .map(|_| vec![0u64; (self.manifest.rows as usize).div_ceil(64)])
+        });
+        let compact_stats = if proven {
+            self.literal_statistics(&plan, selected.as_deref(), literal.as_mut().unwrap())?
+        } else {
+            self.compact_statistics(&plan, selected.as_deref())?
+        };
         let stats = if let Some(stats) = compact_stats {
             stats
         } else {
@@ -539,11 +584,22 @@ impl Index {
                 let mut candidate =
                     plan.candidate_terms(u64::from(ordinal), column.indexed(), visible, tf);
                 if candidate && plan.literal.is_some() {
-                    let text = self.cached_text(ordinal, &mut read)?;
-                    candidate =
-                        plan.candidate(u64::from(ordinal), column.indexed(), &text, visible, tf);
-                    if candidate {
-                        literal.as_mut().unwrap()[ordinal as usize / 64] |= 1 << (ordinal % 64);
+                    if proven {
+                        candidate = literal.as_ref().unwrap()[ordinal as usize / 64]
+                            & (1 << (ordinal % 64))
+                            != 0;
+                    } else {
+                        let text = self.cached_text(ordinal, &mut read)?;
+                        candidate = plan.candidate(
+                            u64::from(ordinal),
+                            column.indexed(),
+                            &text,
+                            visible,
+                            tf,
+                        );
+                        if candidate {
+                            literal.as_mut().unwrap()[ordinal as usize / 64] |= 1 << (ordinal % 64);
+                        }
                     }
                 }
                 stats
@@ -586,7 +642,10 @@ impl Index {
         };
         let anchored = plan.continues();
         let model = stats.finish(plan);
-        if let Some(top) = self.rank_compact_blocks(&model, &selection, q.k)? {
+        if let Some(top) = self.rank_joint(&model, &selection, q.k, literal.as_deref())? {
+            return Ok((self.ranked(top)?, anchored));
+        }
+        if let Some(top) = self.rank_compact_blocks(&model, &selection, q.k, literal.as_deref())? {
             return Ok((self.ranked(top)?, anchored));
         }
         let mut scores = self
@@ -662,6 +721,66 @@ impl Index {
         let view = selected.map_or(self.totals.scope, |selected| selected.totals.scope);
         Ok(Some(
             scorer::Stats::scope_counts(plan, counts, total, view).map_err(|_| Error::Bounds)?,
+        ))
+    }
+    fn literal_statistics(
+        &self,
+        plan: &scorer::Plan,
+        selected: Option<&Selected>,
+        literal: &mut [u64],
+    ) -> Result<Option<scorer::Stats>> {
+        let Some(mass) = &self.mass else {
+            return Ok(None);
+        };
+        if plan.literal.is_none() || literal.len() != mass.live.len() {
+            return Err(Error::Authority);
+        }
+        let mut lists = Vec::with_capacity(plan.terms.len());
+        for (term, _) in &plan.terms {
+            let Some(list) = self
+                .terms
+                .get(self, *blake3::hash(term.as_bytes()).as_bytes())?
+            else {
+                return Ok(None);
+            };
+            lists.push(list);
+        }
+        let mut view = mass.live.clone();
+        if let Some(selected) = selected {
+            if selected.bits.len() != view.len() {
+                return Err(Error::Authority);
+            }
+            for (word, selected) in view.iter_mut().zip(&selected.bits) {
+                *word &= selected;
+            }
+        }
+        for (word, visible) in literal.iter_mut().zip(&view) {
+            *word &= visible;
+        }
+        if let Some(driver) = plan.literal_driver() {
+            let mut possible = vec![0u64; literal.len()];
+            lists.get(driver).ok_or(Error::Authority)?.pairs.presence(
+                &mut possible,
+                &mass.live,
+                selected.map(|selected| selected.bits.as_slice()),
+            )?;
+            for (word, possible) in literal.iter_mut().zip(possible) {
+                *word &= possible;
+            }
+        }
+        let collection = lists
+            .iter()
+            .map(|list| list.pairs.frequency(literal))
+            .collect::<Result<Vec<_>>>()?;
+        let frequencies = lists
+            .iter()
+            .map(|list| list.pairs.frequency(&view))
+            .collect::<Result<Vec<_>>>()?;
+        let total = mass.sum(literal, false)?;
+        let view_total = selected.map_or(self.totals.length, |selected| selected.totals.length);
+        Ok(Some(
+            scorer::Stats::literal_counts(plan, collection, frequencies, total, view_total)
+                .map_err(|_| Error::Bounds)?,
         ))
     }
     fn select(&self, selection: &Selection) -> Result<Selected> {

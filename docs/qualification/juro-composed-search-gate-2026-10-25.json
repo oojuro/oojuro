@@ -1,0 +1,219 @@
+{
+  "revision": "ddaedf1071f419b2176ed12835378f748843ec2b",
+  "includes_core_main": "2bb537b4f35b9e5902c1f135a6334c8a5d8c8e4a",
+  "scope": "Complete composed numeric/literal source, source-fenced normal runtime gate. No performance or consumer adoption claim.",
+  "checks": [
+    {
+      "step": "full",
+      "args": [
+        "cargo",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "--lib",
+        "--tests",
+        "-p",
+        "oojuro-engine",
+        "-p",
+        "oojuro-rank",
+        "--message-format=json",
+        "--",
+        "--test-threads=1"
+      ],
+      "returncode": 0,
+      "mutable_artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "conformance",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        }
+      ],
+      "test_summaries": [
+        [
+          "222",
+          "0",
+          "10"
+        ],
+        [
+          "0",
+          "0",
+          "0"
+        ],
+        [
+          "8",
+          "0",
+          "0"
+        ]
+      ],
+      "source_fence": {
+        "cleaned_mutable_packages": true,
+        "cleaned_profiles": [
+          "dev",
+          "release"
+        ],
+        "revisions": [
+          "ddaedf1071f419b2176ed12835378f748843ec2b"
+        ],
+        "source_fence": "c8121accdc05ff880e5f97a560569bfd70453bb166fd9812b13a97b44ea56e14",
+        "source_fence_format": 2
+      },
+      "copied_test_executables": [
+        {
+          "target": "oojuro_rank",
+          "sha256": "ace368af1ef3105afcdbf770bbb1a0a6b568c6c865126a36ed210d11c07591aa",
+          "case_count": 0
+        },
+        {
+          "target": "conformance",
+          "sha256": "7c09c33d637682a448f79216fddf85b3025629e7c8e83948f75bac0c193b14a2",
+          "case_count": 8
+        },
+        {
+          "target": "oojuro_engine",
+          "sha256": "a1bd80eb093d6987d322ba22cdb076b95ea34ab4a0a597692f3b6c516885b76c",
+          "case_count": 232
+        }
+      ]
+    },
+    {
+      "step": "clippy",
+      "args": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--lib",
+        "--tests",
+        "--example",
+        "profile_juro_projection",
+        "--example",
+        "profile_juro_append",
+        "--no-deps",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "returncode": 0,
+      "mutable_artifacts": [],
+      "test_summaries": [],
+      "source_fence": {
+        "cleaned_mutable_packages": false,
+        "cleaned_profiles": [],
+        "revisions": [
+          "ddaedf1071f419b2176ed12835378f748843ec2b"
+        ],
+        "source_fence": "c8121accdc05ff880e5f97a560569bfd70453bb166fd9812b13a97b44ea56e14",
+        "source_fence_format": 2
+      }
+    },
+    {
+      "step": "release",
+      "args": [
+        "cargo",
+        "build",
+        "--locked",
+        "--release",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--example",
+        "profile_juro_projection",
+        "--example",
+        "profile_juro_append",
+        "--message-format=json"
+      ],
+      "returncode": 0,
+      "mutable_artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        },
+        {
+          "target": "profile_juro_append",
+          "fresh": false
+        },
+        {
+          "target": "profile_juro_projection",
+          "fresh": false
+        }
+      ],
+      "test_summaries": [],
+      "source_fence": {
+        "cleaned_mutable_packages": false,
+        "cleaned_profiles": [],
+        "revisions": [
+          "ddaedf1071f419b2176ed12835378f748843ec2b"
+        ],
+        "source_fence": "c8121accdc05ff880e5f97a560569bfd70453bb166fd9812b13a97b44ea56e14",
+        "source_fence_format": 2
+      },
+      "frozen_binaries": [
+        {
+          "name": "profile_juro_projection",
+          "sha256": "3dc19e27910a839c4c0bec922a0eded2503c1ece69373c79bd56c7fad4d6fb9e"
+        },
+        {
+          "name": "profile_juro_append",
+          "sha256": "851432ec88d7c76549baabd97772f6c4e9324d50567729ae25b53d2e208a6195"
+        }
+      ]
+    }
+  ]
+}

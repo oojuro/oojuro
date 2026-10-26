@@ -29,6 +29,262 @@ fn binding() -> Binding {
 }
 
 #[test]
+fn joint_numeric_groups_preserve_exact_weights_ties_filters_and_large_k_fallback() {
+    let mut rows: Vec<_> = (0..6001)
+        .map(|i| {
+            let mut value = row(i);
+            value.text = format!(
+                "{} beta {}",
+                "alpha ".repeat(1 + i % 73),
+                (0..i % 41)
+                    .map(|n| format!("material{n} "))
+                    .collect::<String>()
+            );
+            if i.is_multiple_of(97) {
+                value.text.push_str("lookup_needle");
+            }
+            value
+        })
+        .collect();
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("index");
+        let mut index = build_layout(&path, &rows, compression, true);
+        for round in 0..2 {
+            let bound = index.binding().clone();
+            let live: Vec<_> = rows
+                .iter()
+                .filter(|value| round == 0 || value.id != row(1).id)
+                .cloned()
+                .collect();
+            let reference = super::super::Index::build(bound.clone(), live.clone()).unwrap();
+            let originals: BTreeMap<_, _> =
+                live.into_iter().map(|row| (row.id.clone(), row)).collect();
+            for text in [
+                "alpha",
+                "alpha beta",
+                "alpha alpha beta",
+                "alpha beta absent",
+                "lookup_needle alpha",
+            ] {
+                for k in [1, 20, 21, 32] {
+                    let mut q = query(text, Filter::default(), i64::MIN, i64::MAX);
+                    q.k = k;
+                    let ranked = index.rank_uncached(&bound, &q).unwrap();
+                    assert_eq!(
+                        fingerprint(
+                            &index
+                                .materialize(&bound, &q, &ranked, |id| Ok(originals[id].clone()))
+                                .unwrap()
+                        ),
+                        fingerprint(&reference.search(&bound, &q).unwrap()),
+                        "{text} k={k} {compression:?} round={round}"
+                    );
+                }
+                let q = query(
+                    text,
+                    Filter {
+                        agent_id: Some("agent-3".into()),
+                        ..Filter::default()
+                    },
+                    -8,
+                    7,
+                );
+                assert_eq!(
+                    fingerprint(
+                        &index
+                            .search(&bound, &q, |id| Ok(originals[id].clone()))
+                            .unwrap()
+                    ),
+                    fingerprint(&reference.search(&bound, &q).unwrap())
+                );
+            }
+            let plan = scorer::Plan::new(
+                "alpha beta",
+                false,
+                None,
+                &BTreeSet::new(),
+                &BTreeMap::new(),
+            );
+            let weighted = scorer::Plan::new(
+                "alpha alpha beta",
+                false,
+                None,
+                &BTreeSet::new(),
+                &BTreeMap::new(),
+            );
+            assert_eq!(joint::key(&plan), joint::key(&weighted));
+            let groups = index.terms.joint(&index, &plan).unwrap().unwrap();
+            assert!(
+                groups.complete && groups.groups.len() > 1024 && groups.bytes() <= joint::BYTES
+            );
+            if round == 0 {
+                let mut next = bound.clone();
+                next.view[0] ^= 1;
+                let mut append = Appender::extend_validated_prefix(
+                    &index,
+                    next.clone(),
+                    Limits {
+                        compression,
+                        ..Limits::default()
+                    },
+                )
+                .unwrap();
+                append.retire(&row(1).id).unwrap();
+                let mut added = row(7001);
+                added.text = "alpha alpha beta".into();
+                append.push(added.clone()).unwrap();
+                rows.push(added);
+                let updated = append.finish().unwrap();
+                drop(updated);
+                drop(index);
+                index = Index::open(&path, &[9; 32], &next).unwrap();
+                let replacement = index.terms.joint(&index, &plan).unwrap().unwrap();
+                assert!(!Arc::ptr_eq(&groups, &replacement));
+            }
+        }
+        rows.pop();
+    }
+}
+
+#[test]
+fn retire_if_present_keeps_missing_and_retired_ids_nonfatal_and_counts_exact() {
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("index");
+        let rows = vec![row(1), row(2), row(3)];
+        let old = build(&path, &rows, compression);
+        let mut next = binding();
+        next.view[0] ^= 1;
+        let limits = Limits {
+            compression,
+            ..Limits::default()
+        };
+        let mut appender = Appender::extend_validated_prefix(&old, next.clone(), limits).unwrap();
+        assert!(!appender.retire_if_present("absent").unwrap());
+        assert!(appender.retire_if_present(&rows[0].id).unwrap());
+        assert!(!appender.retire_if_present(&rows[0].id).unwrap());
+        let added = row(4);
+        assert!(!appender.retire_if_present(&added.id).unwrap());
+        appender.push(added.clone()).unwrap();
+        // This method addresses the previous projection, never pending rows.
+        assert!(!appender.retire_if_present(&added.id).unwrap());
+        let index = appender.finish().unwrap();
+        assert_eq!(old.row_count(), 3);
+        assert_eq!(index.row_count(), 3);
+        let live = vec![rows[1].clone(), rows[2].clone(), added];
+        let reference = super::super::Index::build(next.clone(), live.clone()).unwrap();
+        let originals: BTreeMap<_, _> = live.into_iter().map(|row| (row.id.clone(), row)).collect();
+        let q = query("alpha beta", Filter::default(), i64::MIN, i64::MAX);
+        assert_eq!(
+            fingerprint(
+                &index
+                    .search(&next, &q, |id| Ok(originals[id].clone()))
+                    .unwrap()
+            ),
+            fingerprint(&reference.search(&next, &q).unwrap())
+        );
+        drop(index);
+        let reopened = Index::open(&path, &[9; 32], &next).unwrap();
+        let mut last = next.clone();
+        last.view[0] ^= 2;
+        let mut appender =
+            Appender::extend_validated_prefix(&reopened, last.clone(), limits).unwrap();
+        assert!(!appender.retire_if_present(&rows[0].id).unwrap());
+        assert!(appender.retire_if_present(&rows[1].id).unwrap());
+        assert_eq!(appender.finish().unwrap().row_count(), 2);
+    }
+}
+
+#[test]
+fn retire_if_present_preserves_strict_retirement_and_poisoning_on_real_failures() {
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("index");
+        let old = build(&path, &[row(1)], compression);
+        let before = fs::read(path.join("PROJECTION_CURRENT")).unwrap();
+        let limits = Limits {
+            compression,
+            ..Limits::default()
+        };
+        let mut next = binding();
+        next.view[0] ^= 1;
+        let mut strict = Appender::extend_validated_prefix(&old, next.clone(), limits).unwrap();
+        assert!(matches!(strict.retire("absent"), Err(Error::Conflict)));
+        assert!(matches!(
+            strict.retire_if_present(&row(1).id),
+            Err(Error::Unavailable)
+        ));
+        assert!(matches!(strict.finish(), Err(Error::Unavailable)));
+        for change in 0..4 {
+            let mut handle = Index::open(&path, &[9; 32], &binding()).unwrap();
+            match change {
+                1 => handle.manifest.ids.node.as_mut().unwrap().digest[0] ^= 1,
+                2 => handle.manifest.ids.node.as_mut().unwrap().generation[0] ^= 1,
+                3 => handle.manifest.ids.binding[0] ^= 1,
+                _ => {}
+            }
+            let mut appender =
+                Appender::extend_validated_prefix(&handle, next.clone(), limits).unwrap();
+            let id = if change == 0 {
+                "x".repeat(1025)
+            } else {
+                row(1).id
+            };
+            assert!(
+                appender.retire_if_present(&id).is_err(),
+                "mutation {change}"
+            );
+            assert!(matches!(
+                appender.retire_if_present("absent"),
+                Err(Error::Unavailable)
+            ));
+            assert!(matches!(appender.finish(), Err(Error::Unavailable)));
+            assert_eq!(fs::read(path.join("PROJECTION_CURRENT")).unwrap(), before);
+        }
+        assert_eq!(
+            Index::open(&path, &[9; 32], &binding())
+                .unwrap()
+                .row_count(),
+            1
+        );
+    }
+}
+
+#[test]
+fn generic_event_retire_if_present_handles_unindexed_binary_cursors() {
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("events");
+        let limits = Limits {
+            compression,
+            ..Limits::default()
+        };
+        let mut builder = EventBuilder::create(&path, &[9; 32], binding(), limits).unwrap();
+        assert!(builder.push(&[1; 40], 1, b"exact original").unwrap());
+        assert!(!builder.push(&[2; 40], 2, &[0xff, 0]).unwrap());
+        let index = builder.finish().unwrap();
+        let mut next = binding();
+        next.view[0] ^= 1;
+        let mut appender = EventAppender::extend_validated_prefix(&index, next, limits).unwrap();
+        assert!(matches!(
+            appender.retire_if_present(&[]),
+            Err(Error::Bounds)
+        ));
+        assert!(matches!(
+            appender.retire_if_present(&[0; 513]),
+            Err(Error::Bounds)
+        ));
+        // Existing Event cursor validation precedes the inner appender call.
+        // Those wrapper errors leave this pending appender usable.
+        assert!(!appender.retire_if_present(&[2; 40]).unwrap());
+        assert!(appender.retire_if_present(&[1; 40]).unwrap());
+        assert!(!appender.retire_if_present(&[1; 40]).unwrap());
+        assert_eq!(appender.finish().unwrap().row_count(), 0);
+    }
+}
+
+#[test]
 fn generic_events_preserve_cursor_timestamp_and_exact_data_contract() {
     fn cursor(i: u64) -> Vec<u8> {
         let mut value = vec![0x83; 16];
@@ -668,7 +924,7 @@ fn compact_block_bounds_match_complete_rank_bits_ties_filters_and_retirement() {
         // cohort actually prunes blocks and can complete under that work cap.
         assert!(
             index
-                .rank_compact_blocks(&model, &Selection::new(&q), q.k)
+                .rank_compact_blocks(&model, &Selection::new(&q), q.k, None)
                 .unwrap()
                 .is_some()
         );
@@ -1149,4 +1405,472 @@ fn ten_concurrent_queries_share_one_immutable_index() {
     }
     fn send_sync<T: Send + Sync>() {}
     send_sync::<Index>();
+}
+
+#[test]
+fn positional_literals_match_full_oracle_across_unicode_filters_refresh_and_reopen() {
+    let samples = [
+        "battery electrode",
+        "Battery electrode",
+        "battery  electrode",
+        "battery\telectrode",
+        "x_battery electrode",
+        "battery electrode_x",
+        "λ_電池\r\n終",
+        "λ_電池\n終",
+        "___ ___",
+        "battery electrode battery electrode",
+        "e\u{301} exact\0終",
+        "終\0exact",
+        ".battery electrode.",
+    ];
+    let mut rows: Vec<_> = (0..300)
+        .map(|i| {
+            let mut value = row(i);
+            value.text = samples[i % samples.len()].into();
+            value
+        })
+        .collect();
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("positional");
+        let limits = Limits {
+            compression,
+            ..Limits::default()
+        };
+        let mut builder = Builder::create_positional(&path, &[9; 32], binding(), limits).unwrap();
+        for row in &rows {
+            builder.push(row.clone()).unwrap();
+        }
+        let mut index = builder.finish().unwrap();
+        assert_eq!(index.manifest.format, POSITIONAL_FORMAT);
+        assert!(index.manifest.positions.is_some());
+        for round in 0..2 {
+            let bound = index.binding().clone();
+            let live: Vec<_> = rows
+                .iter()
+                .filter(|row| round == 0 || row.id != rows[1].id)
+                .cloned()
+                .collect();
+            let reference = super::super::Index::build(bound.clone(), live.clone()).unwrap();
+            let originals: BTreeMap<_, _> =
+                live.into_iter().map(|row| (row.id.clone(), row)).collect();
+            for needle in samples.iter().chain(
+                [
+                    " battery",
+                    "battery ",
+                    ".",
+                    "absent",
+                    "battery electrode missing",
+                ]
+                .iter(),
+            ) {
+                let text = format!("\"{needle}\"");
+                for filter in [
+                    Filter::default(),
+                    Filter {
+                        agent_id: Some("agent-3".into()),
+                        ..Filter::default()
+                    },
+                ] {
+                    let q = query(&text, filter, -8, 7);
+                    let ranked = index.rank_uncached(&bound, &q).unwrap();
+                    assert_eq!(
+                        fingerprint(
+                            &index
+                                .materialize(&bound, &q, &ranked, |id| Ok(originals[id].clone()))
+                                .unwrap()
+                        ),
+                        fingerprint(&reference.search(&bound, &q).unwrap()),
+                        "{text} {compression:?} round {round}"
+                    );
+                }
+            }
+            if round == 0 {
+                let mut next = bound.clone();
+                next.view[0] ^= 1;
+                let mut append =
+                    Appender::extend_validated_prefix(&index, next.clone(), limits).unwrap();
+                append.retire(&rows[1].id).unwrap();
+                let mut addition = row(400);
+                addition.text = "battery electrode λ_電池\r\n終".into();
+                append.push(addition.clone()).unwrap();
+                rows.push(addition);
+                let updated = append.finish().unwrap();
+                drop(updated);
+                drop(index);
+                index = Index::open(&path, &[9; 32], &next).unwrap();
+            }
+        }
+        rows.pop();
+    }
+}
+
+#[test]
+fn positional_literal_counts_and_block_bounds_preserve_exact_dense_scores() {
+    let rows: Vec<_> = (0..5001)
+        .map(|i| {
+            let mut row = row(i);
+            row.text = format!(
+                "the battery electrode original {} λ_電池\r\n終 {}",
+                "battery electrode ".repeat(i % 5),
+                if i.is_multiple_of(3) {
+                    "Battery  electrode"
+                } else {
+                    "battery  electrode"
+                }
+            );
+            row
+        })
+        .collect();
+    let reference = super::super::Index::build(binding(), rows.clone()).unwrap();
+    let originals: BTreeMap<_, _> = rows
+        .iter()
+        .map(|row| (row.id.clone(), row.clone()))
+        .collect();
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let mut builder = Builder::create_positional(
+            scratch.0.join("index"),
+            &[9; 32],
+            binding(),
+            Limits {
+                compression,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        for row in &rows {
+            builder.push(row.clone()).unwrap();
+        }
+        let index = builder.finish().unwrap();
+        for text in [
+            "\"battery electrode\"",
+            "\"battery  electrode\"",
+            "\"Battery  electrode\"",
+            "\"battery electrode original\"",
+            "\"the battery\"",
+            "\"λ_電池\r\n終\"",
+        ] {
+            for (from, to) in [(i64::MIN, i64::MAX), (-8, 7)] {
+                let q = query(text, Filter::default(), from, to);
+                let ranked = index.rank_uncached(&binding(), &q).unwrap();
+                assert_eq!(
+                    fingerprint(
+                        &index
+                            .materialize(&binding(), &q, &ranked, |id| Ok(originals[id].clone()))
+                            .unwrap()
+                    ),
+                    fingerprint(&reference.search(&binding(), &q).unwrap()),
+                    "{text} {compression:?}"
+                );
+            }
+        }
+        let q = query(
+            "\"battery electrode\"",
+            Filter::default(),
+            i64::MIN,
+            i64::MAX,
+        );
+        let plan = scorer::Plan::new(q.text, false, None, &BTreeSet::new(), &BTreeMap::new());
+        let mut proof = index
+            .literal_candidates("battery electrode")
+            .unwrap()
+            .unwrap();
+        let model = index
+            .literal_statistics(&plan, None, &mut proof)
+            .unwrap()
+            .unwrap()
+            .finish(plan);
+        assert!(
+            index
+                .rank_compact_blocks(&model, &Selection::new(&q), q.k, Some(&proof))
+                .unwrap()
+                .is_some()
+        );
+    }
+}
+
+#[test]
+fn positional_proof_ranks_without_cached_originals_and_fallback_still_authenticates_text() {
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("index");
+        let mut original = row(1);
+        original.text = "battery electrode ".into();
+        let mut builder = Builder::create_positional(
+            &path,
+            &[9; 32],
+            binding(),
+            Limits {
+                compression,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        builder.push(original.clone()).unwrap();
+        let index = builder.finish().unwrap();
+        let metadata = index.metadata(0).unwrap();
+        let mut file = fs::OpenOptions::new()
+            .read(true)
+            .write(true)
+            .open(
+                index
+                    .directory
+                    .join(&index.manifest.files[metadata.text.file as usize]),
+            )
+            .unwrap();
+        file.seek(SeekFrom::Start(metadata.text.offset)).unwrap();
+        let mut byte = [0];
+        file.read_exact(&mut byte).unwrap();
+        byte[0] ^= 1;
+        file.seek(SeekFrom::Start(metadata.text.offset)).unwrap();
+        file.write_all(&byte).unwrap();
+        file.sync_all().unwrap();
+        let q = query(
+            "\"battery electrode\"",
+            Filter::default(),
+            i64::MIN,
+            i64::MAX,
+        );
+        let ranked = index.rank_uncached(&binding(), &q).unwrap();
+        assert_eq!(ranked.len(), 1);
+        assert_eq!(
+            index
+                .materialize(&binding(), &q, &ranked, |_| Ok(original.clone()))
+                .unwrap()
+                .len(),
+            1
+        );
+        let fallback = query(
+            "\"battery electrode \"",
+            Filter::default(),
+            i64::MIN,
+            i64::MAX,
+        );
+        assert!(matches!(
+            index.rank_uncached(&binding(), &fallback),
+            Err(Error::Authority)
+        ));
+        let tight = Index::open_with_limits(
+            &path,
+            &[9; 32],
+            &binding(),
+            Limits {
+                compression,
+                original_bytes_per_query: 1,
+                ..Limits::default()
+            },
+        )
+        .unwrap();
+        let mut called = false;
+        assert!(matches!(
+            tight.search(&binding(), &q, |_| {
+                called = true;
+                Ok(original.clone())
+            }),
+            Err(Error::Bounds)
+        ));
+        assert!(!called);
+    }
+}
+
+#[test]
+fn positional_codec_requirement_refuses_unknown_and_undeclared_codecs_before_original_callbacks() {
+    let scratch = Scratch::new();
+    let path = scratch.0.join("index");
+    let mut original = row(1);
+    original.text = "battery electrode".into();
+    let mut builder =
+        Builder::create_positional(&path, &[9; 32], binding(), Limits::default()).unwrap();
+    builder.push(original).unwrap();
+    let index = builder.finish().unwrap();
+    assert_eq!(index.manifest.position_codec, Some(2));
+    for codec in [Some(1), Some(3)] {
+        let mut manifest = index.manifest.clone();
+        manifest.position_codec = codec;
+        publish(&path, &index.cipher, &index.authority, &mut manifest).unwrap();
+        assert!(matches!(
+            Index::open(&path, &[9; 32], &binding()),
+            Err(Error::Bounds)
+        ));
+    }
+    let mut undeclared = index.manifest.clone();
+    undeclared.position_codec = None;
+    publish(&path, &index.cipher, &index.authority, &mut undeclared).unwrap();
+    let undeclared = Index::open(&path, &[9; 32], &binding()).unwrap();
+    let q = query(
+        "\"battery electrode\"",
+        Filter::default(),
+        i64::MIN,
+        i64::MAX,
+    );
+    let mut called = false;
+    assert!(matches!(
+        undeclared.search(&binding(), &q, |_| {
+            called = true;
+            unreachable!()
+        }),
+        Err(Error::Authority)
+    ));
+    assert!(!called);
+}
+
+#[test]
+fn positional_legacy_codec_generation_reopens_and_extends_with_mixed_codec_pages() {
+    let scratch = Scratch::new();
+    let path = scratch.0.join("index");
+    let mut rows: Vec<_> = (0..2).map(row).collect();
+    for row in &mut rows {
+        row.text = "battery electrode".into();
+    }
+    let mut builder =
+        Builder::create_positional(&path, &[9; 32], binding(), Limits::default()).unwrap();
+    for row in &rows {
+        builder.push(row.clone()).unwrap();
+    }
+    let index = builder.finish().unwrap();
+    let mut legacy = tree::Builder::new(index.context(tree::Purpose::ProjectionPostings)).unwrap();
+    // Frozen codec-1 grammar: one group, two row bits, one absolute u32 offset.
+    for (hash, positions) in literal::analyze("battery electrode") {
+        let mut key = hash.to_vec();
+        key.extend(0u32.to_be_bytes());
+        key.extend(positions[0].to_be_bytes());
+        let mut value = vec![1, 1, 0];
+        for word in [3u64, 0, 0, 0] {
+            value.extend(word.to_le_bytes());
+        }
+        value.extend(1u16.to_le_bytes());
+        value.extend(positions[0].to_le_bytes());
+        legacy.push(tree::Entry::new(key, value).unwrap()).unwrap();
+    }
+    let mut manifest = index.manifest.clone();
+    manifest.positions = Some(legacy.finish().unwrap());
+    manifest.position_codec = None;
+    publish(&path, &index.cipher, &index.authority, &mut manifest).unwrap();
+    drop(index);
+    let legacy = Index::open(&path, &[9; 32], &binding()).unwrap();
+    let mut next = binding();
+    next.view[0] ^= 1;
+    let mut append =
+        Appender::extend_validated_prefix(&legacy, next.clone(), Limits::default()).unwrap();
+    let mut addition = row(2);
+    addition.text = "extra battery electrode".into();
+    append.push(addition.clone()).unwrap();
+    rows.push(addition);
+    let updated = append.finish().unwrap();
+    assert_eq!(updated.manifest.position_codec, Some(2));
+    drop(updated);
+    drop(legacy);
+    let updated = Index::open(&path, &[9; 32], &next).unwrap();
+    let reference = super::super::Index::build(next.clone(), rows.clone()).unwrap();
+    let originals: BTreeMap<_, _> = rows.into_iter().map(|row| (row.id.clone(), row)).collect();
+    let q = query(
+        "\"battery electrode\"",
+        Filter::default(),
+        i64::MIN,
+        i64::MAX,
+    );
+    assert_eq!(
+        fingerprint(
+            &updated
+                .search(&next, &q, |id| Ok(originals[id].clone()))
+                .unwrap()
+        ),
+        fingerprint(&reference.search(&next, &q).unwrap())
+    );
+}
+
+#[test]
+fn literal_numeric_groups_preserve_exact_case_spaces_weights_large_k_and_refresh() {
+    let mut rows: Vec<_> = (0..3001)
+        .map(|i| {
+            let mut value = row(i);
+            value.text = format!(
+                "battery electrode {} {} {}",
+                "battery electrode ".repeat(i % 7),
+                if i % 3 == 0 {
+                    "Original battery  electrode"
+                } else {
+                    "original battery electrode"
+                },
+                "response ".repeat(i % 31)
+            );
+            value
+        })
+        .collect();
+    for compression in [Compression::Raw, Compression::Zstd] {
+        let scratch = Scratch::new();
+        let path = scratch.0.join("index");
+        let limits = Limits {
+            compression,
+            ..Limits::default()
+        };
+        let mut builder = Builder::create_positional(&path, &[9; 32], binding(), limits).unwrap();
+        for value in &rows {
+            builder.push(value.clone()).unwrap();
+        }
+        let mut index = builder.finish().unwrap();
+        for round in 0..2 {
+            let bound = index.binding().clone();
+            let live: Vec<_> = rows
+                .iter()
+                .filter(|value| round == 0 || value.id != row(1).id)
+                .cloned()
+                .collect();
+            let reference = super::super::Index::build(bound.clone(), live.clone()).unwrap();
+            let originals: BTreeMap<_, _> = live
+                .into_iter()
+                .map(|value| (value.id.clone(), value))
+                .collect();
+            for text in [
+                "\"battery electrode\"",
+                "\"battery electrode battery\"",
+                "\"battery  electrode\"",
+                "\"Original battery\"",
+            ] {
+                for k in [1, 20, 21, 32] {
+                    let mut q = query(text, Filter::default(), i64::MIN, i64::MAX);
+                    q.k = k;
+                    let ranked = index.rank_uncached(&bound, &q).unwrap();
+                    assert_eq!(
+                        fingerprint(
+                            &index
+                                .materialize(&bound, &q, &ranked, |id| Ok(originals[id].clone()))
+                                .unwrap()
+                        ),
+                        fingerprint(&reference.search(&bound, &q).unwrap()),
+                        "{text} k={k} {compression:?} round={round}"
+                    );
+                }
+            }
+            let literal_plan = scorer::Plan::new(
+                "\"battery electrode\"",
+                false,
+                None,
+                &BTreeSet::new(),
+                &BTreeMap::new(),
+            );
+            assert!(matches!(
+                index.terms.literal_groups(&index, &literal_plan, &[]),
+                Err(Error::Authority)
+            ));
+            if round == 0 {
+                let mut next = bound;
+                next.view[0] ^= 1;
+                let mut append =
+                    Appender::extend_validated_prefix(&index, next.clone(), limits).unwrap();
+                append.retire(&row(1).id).unwrap();
+                let mut addition = row(9000);
+                addition.text = "battery electrode battery electrode".into();
+                append.push(addition.clone()).unwrap();
+                rows.push(addition);
+                let updated = append.finish().unwrap();
+                drop(updated);
+                drop(index);
+                index = Index::open(&path, &[9; 32], &next).unwrap();
+            }
+        }
+        rows.pop();
+    }
 }

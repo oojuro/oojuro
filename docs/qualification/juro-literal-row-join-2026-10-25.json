@@ -1,0 +1,180 @@
+{
+  "revision": "068956c0e2e75fd7b323a87713f146e0e8da39b7",
+  "checks": [
+    {
+      "step": "compile-tests",
+      "args": [
+        "cargo",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--lib",
+        "--no-run",
+        "--message-format=json"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        }
+      ],
+      "source_fence": {
+        "cleaned_mutable_packages": true,
+        "cleaned_profiles": [
+          "dev",
+          "release"
+        ],
+        "revisions": [
+          "068956c0e2e75fd7b323a87713f146e0e8da39b7"
+        ],
+        "source_fence": "8047366d93298fa7d0a0c139ed82f0b1e5bd08a95355f6a5cb4cf51b7c995abf",
+        "source_fence_format": 2
+      },
+      "elf_sha256": "ba3cec8504aabb34e5dc4d6313f2bb0bcbf89e65541281e92dc0f74f3557eab3"
+    },
+    {
+      "step": "focused",
+      "filter": "record::projection::disk::literal::tests::",
+      "returncode": 0,
+      "test_summaries": [
+        [
+          "8",
+          "0",
+          "0"
+        ]
+      ],
+      "elf_sha256": "ba3cec8504aabb34e5dc4d6313f2bb0bcbf89e65541281e92dc0f74f3557eab3"
+    },
+    {
+      "step": "focused",
+      "filter": "record::projection::disk::tests::positional_",
+      "returncode": 0,
+      "test_summaries": [
+        [
+          "5",
+          "0",
+          "0"
+        ]
+      ],
+      "elf_sha256": "ba3cec8504aabb34e5dc4d6313f2bb0bcbf89e65541281e92dc0f74f3557eab3"
+    },
+    {
+      "step": "clippy",
+      "args": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--lib",
+        "--tests",
+        "--example",
+        "profile_juro_projection",
+        "--no-deps",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "returncode": 0,
+      "artifacts": [],
+      "source_fence": {
+        "cleaned_mutable_packages": false,
+        "cleaned_profiles": [],
+        "revisions": [
+          "068956c0e2e75fd7b323a87713f146e0e8da39b7"
+        ],
+        "source_fence": "8047366d93298fa7d0a0c139ed82f0b1e5bd08a95355f6a5cb4cf51b7c995abf",
+        "source_fence_format": 2
+      }
+    },
+    {
+      "step": "release",
+      "args": [
+        "cargo",
+        "build",
+        "--locked",
+        "--release",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--example",
+        "profile_juro_projection",
+        "--message-format=json"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        },
+        {
+          "target": "profile_juro_projection",
+          "fresh": false
+        }
+      ],
+      "source_fence": {
+        "cleaned_mutable_packages": false,
+        "cleaned_profiles": [],
+        "revisions": [
+          "068956c0e2e75fd7b323a87713f146e0e8da39b7"
+        ],
+        "source_fence": "8047366d93298fa7d0a0c139ed82f0b1e5bd08a95355f6a5cb4cf51b7c995abf",
+        "source_fence_format": 2
+      },
+      "elf_sha256": "2be4eb5958d16c3fed7c30bc44aac081ec57a5a8c6aeda30707f1806abb11010"
+    }
+  ],
+  "scope": "Focused bounded row-range/start-list proof qualification; source wire/profile and cache bytes unchanged. Full base208+8 separate; final combined current-main gate remains pending."
+}
