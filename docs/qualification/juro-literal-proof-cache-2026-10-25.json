@@ -1,0 +1,193 @@
+{
+  "revision": "2204473d85ea507d6a42e07e77ab1749c9352ebd",
+  "checks": [
+    {
+      "step": "compile-tests",
+      "args": [
+        "cargo",
+        "test",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--lib",
+        "--no-run",
+        "--message-format=json"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        }
+      ],
+      "source_fence": {
+        "cleaned_mutable_packages": true,
+        "cleaned_profiles": [
+          "dev",
+          "release"
+        ],
+        "revisions": [
+          "2204473d85ea507d6a42e07e77ab1749c9352ebd"
+        ],
+        "source_fence": "13ef6509a4a6d516035fdae564da40008e61a841e5be909b0aab20a640d7057e",
+        "source_fence_format": 2
+      },
+      "elf_sha256": "d657f29d7fee2945d7a0eec7a167512bbc4f81b65e12a69ebf4859afc5b2bfdd"
+    },
+    {
+      "step": "focused",
+      "filter": "record::projection::disk::literal::tests::",
+      "returncode": 0,
+      "test_summaries": [
+        [
+          "8",
+          "0",
+          "0"
+        ]
+      ],
+      "elf_sha256": "d657f29d7fee2945d7a0eec7a167512bbc4f81b65e12a69ebf4859afc5b2bfdd"
+    },
+    {
+      "step": "focused",
+      "filter": "record::projection::disk::tests::positional_",
+      "returncode": 0,
+      "test_summaries": [
+        [
+          "5",
+          "0",
+          "0"
+        ]
+      ],
+      "elf_sha256": "d657f29d7fee2945d7a0eec7a167512bbc4f81b65e12a69ebf4859afc5b2bfdd"
+    },
+    {
+      "step": "focused",
+      "filter": "record::projection::disk::term_cache::tests::literal_proof_",
+      "returncode": 0,
+      "test_summaries": [
+        [
+          "1",
+          "0",
+          "0"
+        ]
+      ],
+      "elf_sha256": "d657f29d7fee2945d7a0eec7a167512bbc4f81b65e12a69ebf4859afc5b2bfdd"
+    },
+    {
+      "step": "clippy",
+      "args": [
+        "cargo",
+        "clippy",
+        "--locked",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--lib",
+        "--tests",
+        "--example",
+        "profile_juro_projection",
+        "--no-deps",
+        "--",
+        "-D",
+        "warnings"
+      ],
+      "returncode": 0,
+      "artifacts": [],
+      "source_fence": {
+        "cleaned_mutable_packages": false,
+        "cleaned_profiles": [],
+        "revisions": [
+          "2204473d85ea507d6a42e07e77ab1749c9352ebd"
+        ],
+        "source_fence": "13ef6509a4a6d516035fdae564da40008e61a841e5be909b0aab20a640d7057e",
+        "source_fence_format": 2
+      }
+    },
+    {
+      "step": "release",
+      "args": [
+        "cargo",
+        "build",
+        "--locked",
+        "--release",
+        "--no-default-features",
+        "-p",
+        "oojuro-engine",
+        "--example",
+        "profile_juro_projection",
+        "--message-format=json"
+      ],
+      "returncode": 0,
+      "artifacts": [
+        {
+          "target": "oojuro_rank",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_core",
+          "fresh": false
+        },
+        {
+          "target": "ojo",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_store",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_nine",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_trace",
+          "fresh": false
+        },
+        {
+          "target": "oojuro_engine",
+          "fresh": false
+        },
+        {
+          "target": "profile_juro_projection",
+          "fresh": false
+        }
+      ],
+      "source_fence": {
+        "cleaned_mutable_packages": false,
+        "cleaned_profiles": [],
+        "revisions": [
+          "2204473d85ea507d6a42e07e77ab1749c9352ebd"
+        ],
+        "source_fence": "13ef6509a4a6d516035fdae564da40008e61a841e5be909b0aab20a640d7057e",
+        "source_fence_format": 2
+      },
+      "elf_sha256": "a95bc00f5a5c4235084158d92dd9a1dcd9c45bc6e2e917c0a130b0edb650e1bd"
+    }
+  ],
+  "scope": "Focused literal-proof mask lease/admission/reuse gate at2204473; included in later complete222+8 composed gate atddaedf1."
+}
